@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
+import { getDemoOrg } from "@/lib/demo/organizations";
 
 const NAV = [
   { href: "/app/dashboard", icon: "⊞", label: "Dashboard" },
@@ -30,6 +31,7 @@ export default function AppSidebar({
   memberships = [],
   currentOrgId,
   onOrgChange,
+  demoSession = false,
 }: {
   onAI: () => void;
   orgName: string;
@@ -38,11 +40,14 @@ export default function AppSidebar({
   memberships?: Membership[];
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
+  demoSession?: boolean;
 }) {
   const pathname = usePathname();
   const ws = useWorkspaceOptional();
   const sidebarName = ws?.state.session.name ?? userName;
   const sidebarRole = ws?.state.session.roleLabel ?? roleLabel;
+  const displayOrgName = ws?.state.session.orgName ?? orgName;
+  const demoAccent = demoSession && ws ? getDemoOrg(ws.state.session.activeOrgId)?.accent : undefined;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -63,9 +68,37 @@ export default function AppSidebar({
         </Link>
       </div>
       <div style={{ padding: "10px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <div style={{ background: "rgba(255,255,255,0.06)", borderRadius: 8, padding: "8px 10px" }}>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: 8,
+            padding: "8px 10px",
+            borderLeft: demoAccent ? `3px solid ${demoAccent}` : undefined,
+          }}
+        >
           <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginBottom: 1 }}>Organización</div>
-          {memberships.length > 1 && onOrgChange ? (
+          {demoSession && ws ? (
+            <select
+              value={ws.state.session.activeOrgId}
+              onChange={e => ws.switchDemoOrg(e.target.value)}
+              style={{
+                width: "100%",
+                marginTop: 4,
+                fontSize: 12,
+                color: "rgba(255,255,255,0.9)",
+                background: "rgba(0,0,0,0.2)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: 6,
+                padding: "4px 6px",
+              }}
+            >
+              {ws.state.demoOrganizations.map(o => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          ) : memberships.length > 1 && onOrgChange ? (
             <select
               value={currentOrgId ?? ""}
               onChange={e => onOrgChange(e.target.value)}
@@ -87,7 +120,7 @@ export default function AppSidebar({
               ))}
             </select>
           ) : (
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{orgName}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500 }}>{displayOrgName}</div>
           )}
         </div>
       </div>

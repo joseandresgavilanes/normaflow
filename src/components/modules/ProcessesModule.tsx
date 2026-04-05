@@ -37,6 +37,10 @@ export default function ProcessesModule() {
         .split(",")
         .map(s => s.trim())
         .filter(Boolean),
+      siteId: `${state.session.activeOrgId}-s1`,
+      linkedRiskCodes: [],
+      linkedDocCodes: [],
+      linkedIndicatorNames: [],
     };
     dispatch({ type: "addProcess", p });
     setCreateOpen(false);

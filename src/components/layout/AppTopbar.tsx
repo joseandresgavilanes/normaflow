@@ -25,6 +25,7 @@ export default function AppTopbar({ userName, roleLabel }: { userName: string; r
   const ws = useWorkspaceOptional();
   const displayName = ws?.state.session.name ?? userName;
   const displayRole = ws?.state.session.roleLabel ?? roleLabel;
+  const unread = ws?.state.notifications.filter(n => !n.read).length ?? 0;
   const crumbs = BREADCRUMBS[pathname] ?? ["Aplicación"];
   return (
     <header style={{ height: 58, background: "#fff", borderBottom: "1px solid #E5EAF2", display: "flex", alignItems: "center", padding: "0 28px", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
@@ -39,8 +40,28 @@ export default function AppTopbar({ userName, roleLabel }: { userName: string; r
           </span>
         ))}
       </div>
-      <Link href="/app/notifications" style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", borderRadius: 8, padding: "5px 12px", fontSize: 13, color: "#5E6B7A", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
-        🔔 <span style={{ background: "#123C66", color: "#fff", borderRadius: 99, fontSize: 10, padding: "1px 5px", fontWeight: 700 }}>•</span>
+      <Link
+        href="/app/notifications"
+        style={{
+          background: "#F7F9FC",
+          border: "1px solid #E5EAF2",
+          borderRadius: 8,
+          padding: "5px 12px",
+          fontSize: 13,
+          color: "#5E6B7A",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          textDecoration: "none",
+        }}
+      >
+        🔔
+        {unread > 0 ? (
+          <span style={{ background: "#C93C37", color: "#fff", borderRadius: 99, fontSize: 10, padding: "2px 6px", fontWeight: 700, minWidth: 18, textAlign: "center" }}>{unread > 9 ? "9+" : unread}</span>
+        ) : (
+          <span style={{ fontSize: 11, color: "#9aa5b1" }}>0</span>
+        )}
       </Link>
       <Link href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "inherit" }} title="Cuenta y perfil">
         <Avatar name={displayName} size={30} />

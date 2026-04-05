@@ -6,26 +6,57 @@ import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { DEMO_INDICATORS, DEMO_ACTIVITY, DEMO_ACTIONS, DEMO_RISKS } from "@/lib/demo-data";
 import type { DashboardPayload } from "@/lib/server-queries";
+import { useWorkspace } from "@/context/WorkspaceStore";
+
+function avgGap(rows: { score: number }[]) {
+  if (!rows.length) return 0;
+  return Math.round(rows.reduce((s, r) => s + r.score, 0) / rows.length);
+}
 
 export default function DashboardModule({
-  orgName = "Tecnoserv Industrial S.A.",
+  orgName: orgNameProp = "Tecnoserv Industrial S.A.",
   live,
 }: {
   orgName?: string;
   live?: DashboardPayload | null;
 }) {
-  const overdueDemo = DEMO_ACTIONS.filter(
-    a => a.status !== "COMPLETED" && a.priority === "CRITICAL" && a.due < new Date().toISOString().slice(0, 10)
-  ).length;
-  const overdue = live ? live.overdueCritical : overdueDemo || 1;
-  const criticalRisks = live ? live.criticalRisks : DEMO_RISKS.filter(r => r.score >= 15).length;
-  const docsPending = live?.documentsInReview ?? 3;
-  const auditsSoon = live?.auditsUpcoming ?? 2;
-  const openNcs = live?.openNcs ?? 2;
+  const { state } = useWorkspace();
+  const today = new Date().toISOString().slice(0, 10);
+  const in60 = new Date();
+  in60.setDate(in60.getDate() + 60);
+  const horizon = in60.toISOString().slice(0, 10);
 
-  const globalPct = live?.globalPct ?? 78;
-  const iso9001Pct = live?.iso9001Pct ?? 82;
-  const iso27001Pct = live?.iso27001Pct ?? 74;
+  const overdueDemo = DEMO_ACTIONS.filter(
+    a => a.status !== "COMPLETED" && a.priority === "CRITICAL" && a.due < today
+  ).length;
+  const overdueWs = state.actions.filter(
+    a => a.status !== "COMPLETED" && a.priority === "CRITICAL" && a.due < today
+  ).length;
+
+  const criticalDemo = DEMO_RISKS.filter(r => r.score >= 15).length;
+  const criticalWs = state.risks.filter(r => r.score >= 15).length;
+
+  const docsReviewWs = state.documents.filter(d => d.status === "IN_REVIEW" || d.status === "DRAFT").length;
+  const auditsSoonWs = state.audits.filter(
+    a => (a.status === "PLANNED" || a.status === "IN_PROGRESS") && a.date <= horizon
+  ).length;
+  const openNcsWs = state.nonconformities.filter(n => n.status !== "CLOSED").length;
+
+  const iso9001Ws = avgGap(state.gapIso9001);
+  const iso27001Ws = avgGap(state.gapIso27001);
+  const globalWs = Math.round((iso9001Ws + iso27001Ws) / 2);
+
+  const unreadWs = state.notifications.filter(n => !n.read).length;
+
+  const overdue = live ? live.overdueCritical : overdueWs || overdueDemo || 1;
+  const criticalRisks = live ? live.criticalRisks : criticalWs || criticalDemo;
+  const docsPending = live?.documentsInReview ?? docsReviewWs;
+  const auditsSoon = live?.auditsUpcoming ?? Math.max(auditsSoonWs, 1);
+  const openNcs = live?.openNcs ?? openNcsWs;
+
+  const globalPct = live?.globalPct ?? globalWs;
+  const iso9001Pct = live?.iso9001Pct ?? iso9001Ws;
+  const iso27001Pct = live?.iso27001Pct ?? iso27001Ws;
 
   const indicators =
     live && live.indicatorRows.length > 0
@@ -37,20 +68,41 @@ export default function DashboardModule({
           unit: row.unit,
           status: row.status as "ON_TRACK" | "AT_RISK" | "OFF_TRACK",
         }))
-      : DEMO_INDICATORS.map(d => ({
-          id: d.id,
-          name: d.name,
-          value: d.value,
-          target: d.target,
-          unit: d.unit,
-          status: d.status,
-        }));
+      : state.indicators.length > 0
+        ? state.indicators.map(d => ({
+            id: d.id,
+            name: d.name,
+            value: d.value,
+            target: d.target,
+            unit: d.unit,
+            status: d.status,
+          }))
+        : DEMO_INDICATORS.map(d => ({
+            id: d.id,
+            name: d.name,
+            value: d.value,
+            target: d.target,
+            unit: d.unit,
+            status: d.status,
+          }));
 
   const npsRow = indicators.find(i => i.name.toLowerCase().includes("nps")) ?? indicators[0];
   const npsDisplay = npsRow ? `${Math.round(npsRow.value)}${npsRow.unit}` : "72 pts";
 
   const gapPct = globalPct;
-  const pendingActions = live?.pendingActions ?? DEMO_ACTIONS.filter(a => a.status !== "COMPLETED").length;
+  const pendingActions = live?.pendingActions ?? state.actions.filter(a => a.status !== "COMPLETED").length;
+
+  const activityRows =
+    state.activityFeed.length > 0
+      ? state.activityFeed
+      : DEMO_ACTIVITY.map(a => ({ ...a, user: a.user, action: a.action, object: a.object, time: a.time }));
+
+  const upcomingActions = [...state.actions]
+    .filter(a => a.status !== "COMPLETED")
+    .sort((a, b) => a.due.localeCompare(b.due))
+    .slice(0, 4);
+
+  const orgName = live ? orgNameProp : state.session.orgName;
 
   return (
     <div>
@@ -61,12 +113,32 @@ export default function DashboardModule({
         </p>
       </div>
 
+      {!live && unreadWs > 0 && (
+        <Link
+          href="/app/notifications"
+          style={{
+            display: "block",
+            marginBottom: 16,
+            textDecoration: "none",
+            borderRadius: 12,
+            padding: "12px 16px",
+            background: "linear-gradient(90deg, rgba(18,60,102,0.08), rgba(214,138,26,0.12))",
+            border: "1px solid #E5EAF2",
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#123C66" }}>
+            Tiene {unreadWs} notificación{unreadWs > 1 ? "es" : ""} sin leer
+          </span>
+          <span style={{ fontSize: 13, color: "#5E6B7A", marginLeft: 8 }}>— Abrir centro de notificaciones →</span>
+        </Link>
+      )}
+
       <div style={{ background: "linear-gradient(135deg, #0D2E4E 0%, #123C66 60%, #1a5490 100%)", borderRadius: 16, padding: "28px 32px", marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, flexWrap: "wrap" }}>
           <div>
             <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>Índice de Cumplimiento Global</div>
             <div style={{ fontSize: 52, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{globalPct}%</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 6 }}>ISO 9001:2015 + ISO 27001:2022 · Actualizado hoy</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", marginTop: 6 }}>ISO 9001:2015 + ISO 27001:2022 · Sincronizado con GAP demo</div>
           </div>
           <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
             {[
@@ -89,8 +161,8 @@ export default function DashboardModule({
         {[
           { label: "Acciones Vencidas", value: overdue, sub: "Prioridad crítica", color: "#C93C37", icon: "⚡", href: "/app/actions" },
           { label: "Riesgos Críticos", value: criticalRisks, sub: "Score ≥ 15", color: "#D68A1A", icon: "⚠", href: "/app/risks" },
-          { label: "Documentos Pendientes", value: docsPending, sub: "En revisión", color: "#123C66", icon: "📄", href: "/app/documents" },
-          { label: "Auditorías Próximas", value: auditsSoon, sub: "Planificadas", color: "#2E8B57", icon: "✓", href: "/app/audits" },
+          { label: "Documentos Pendientes", value: docsPending, sub: "Borrador / revisión", color: "#123C66", icon: "📄", href: "/app/documents" },
+          { label: "Auditorías Próximas", value: auditsSoon, sub: "Planificadas o en curso", color: "#2E8B57", icon: "✓", href: "/app/audits" },
           { label: "No Conformidades", value: openNcs, sub: "Abiertas sin cerrar", color: "#C93C37", icon: "⊘", href: "/app/nonconformities" },
           { label: "NPS Clientes", value: npsDisplay, sub: "Meta indicadores", color: "#2E8B57", icon: "📊", href: "/app/indicators" },
         ].map(kpi => (
@@ -107,6 +179,72 @@ export default function DashboardModule({
             </Card>
           </Link>
         ))}
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+        {[
+          { href: "/app/gap", label: "Continuar GAP" },
+          { href: "/app/documents", label: "Revisar documentos" },
+          { href: "/app/actions", label: "Ver acciones" },
+          { href: "/app/audits", label: "Auditorías" },
+        ].map(q => (
+          <Link
+            key={q.href}
+            href={q.href}
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#123C66",
+              textDecoration: "none",
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: "1px solid #E5EAF2",
+              background: "#fff",
+            }}
+          >
+            {q.label}
+          </Link>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 20 }}>
+        <Card>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#142033", marginBottom: 12 }}>Resumen por sede (demo)</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {state.sites.map(s => (
+              <div key={s.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #E5EAF2" }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>{s.name}</div>
+                  <div style={{ fontSize: 11, color: "#5E6B7A" }}>
+                    {s.code} · {s.city}
+                  </div>
+                </div>
+                <Link href="/app/processes" style={{ fontSize: 12, color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
+                  Procesos →
+                </Link>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#142033", marginBottom: 12 }}>Próximos vencimientos</div>
+          {upcomingActions.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#5E6B7A", margin: 0 }}>No hay acciones pendientes en el workspace.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {upcomingActions.map(a => (
+                <Link key={a.id} href="/app/actions" style={{ textDecoration: "none", color: "inherit" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "6px 0", borderBottom: "1px solid #E5EAF2" }}>
+                    <span style={{ fontSize: 13, color: "#142033", fontWeight: 500 }}>{a.code}</span>
+                    <span style={{ fontSize: 12, color: a.due < today ? "#C93C37" : "#5E6B7A" }}>{a.due}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#5E6B7A" }}>{a.title}</div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 20 }}>
@@ -142,9 +280,14 @@ export default function DashboardModule({
         </Card>
 
         <Card>
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: "#142033", margin: "0 0 16px" }}>Actividad Reciente</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#142033", margin: 0 }}>Actividad reciente</h3>
+            <Link href="/app/notifications" style={{ fontSize: 12, color: "#123C66", textDecoration: "none", fontWeight: 600 }}>
+              Alertas →
+            </Link>
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {DEMO_ACTIVITY.map((a, i) => (
+            {activityRows.slice(0, 8).map((a, i) => (
               <div key={i} style={{ display: "flex", gap: 9, alignItems: "flex-start" }}>
                 <Avatar name={a.user} size={26} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -168,7 +311,7 @@ export default function DashboardModule({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
         {[
           { href: "/app/gap", icon: "◎", title: "GAP Assessment", desc: `ISO 9001 · Puntuación global: ${gapPct}%`, color: "#123C66" },
-          { href: "/app/audits", icon: "✓", title: "Auditorías", desc: `${auditsSoon} planificadas en calendario`, color: "#2E8B57" },
+          { href: "/app/audits", icon: "✓", title: "Auditorías", desc: `${auditsSoon} en calendario próximo`, color: "#2E8B57" },
           { href: "/app/risks", icon: "⚠", title: "Riesgos", desc: `${criticalRisks} críticos (score ≥ 15)`, color: "#C93C37" },
           { href: "/app/actions", icon: "⚡", title: "Plan de acción", desc: `${pendingActions} acciones activas`, color: "#D68A1A" },
         ].map(c => (

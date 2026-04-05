@@ -8,6 +8,13 @@ import AIPanel from "@/components/modules/AIPanel";
 import WorkspaceToast from "@/components/workspace/WorkspaceToast";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { ROLES } from "@/lib/constants";
+import type { AppRoleKey } from "@/lib/permissions/frontend";
+
+function normalizeRoleKey(role: string | undefined): AppRoleKey {
+  if (!role) return "COMPLIANCE_MANAGER";
+  const k = role.toUpperCase().replace(/\s+/g, "_") as AppRoleKey;
+  return k in ROLES ? k : "COMPLIANCE_MANAGER";
+}
 
 type SerializedCtx =
   | {
@@ -53,9 +60,11 @@ export default function AppRoot({
 
   const orgName = initial.mode === "live" ? initial.organization.name : "Tecnoserv Industrial S.A.";
   const userName = initial.mode === "live" ? initial.user.name : "Ana García";
-  const roleKey = initial.mode === "live" ? initial.role : "COMPLIANCE_MANAGER";
-  const roleLabel = ROLES[roleKey as keyof typeof ROLES] ?? roleKey;
+  const roleKey = normalizeRoleKey(initial.mode === "live" ? initial.role : "COMPLIANCE_MANAGER");
+  const roleLabel = ROLES[roleKey];
   const memberships = initial.mode === "live" ? initial.memberships : [];
+  const activeOrgId =
+    initial.mode === "live" ? initial.organization.id : "org_tecnoserv";
 
   const aiContext =
     pathname.includes("/gap") ? "gap"
@@ -71,12 +80,14 @@ export default function AppRoot({
       email: initial.mode === "live" ? initial.user.email : "demo@normaflow.io",
       orgName,
       roleLabel,
+      roleKey,
+      activeOrgId,
     }),
-    [userName, initial, orgName, roleLabel]
+    [userName, initial.mode, initial, orgName, roleLabel, roleKey, activeOrgId]
   );
 
   return (
-    <WorkspaceProvider key={profile.email + orgName} profile={profile}>
+    <WorkspaceProvider key={profile.email + activeOrgId} profile={profile}>
       <div style={{ display: "flex", background: "#F7F9FC", minHeight: "100vh", fontFamily: "Inter, -apple-system, sans-serif" }}>
         <AppSidebar
           onAI={() => setAiOpen(true)}
@@ -84,6 +95,7 @@ export default function AppRoot({
           userName={userName}
           roleLabel={roleLabel}
           memberships={memberships}
+          demoSession={initial.mode === "demo"}
           currentOrgId={initial.mode === "live" ? initial.organization.id : undefined}
           onOrgChange={async orgId => {
             await fetch("/api/auth/set-org", {

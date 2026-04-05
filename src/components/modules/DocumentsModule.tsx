@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -7,6 +8,7 @@ import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
+import { useDemoPermission } from "@/hooks/useDemoPermission";
 import type { Column } from "@/components/ui/Table";
 
 function isPdfUrl(url: string) {
@@ -37,8 +39,10 @@ function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }
 
 export default function DocumentsModule() {
   const { state, dispatch, showToast } = useWorkspace();
+  const perm = useDemoPermission();
   const { documents, documentVersions } = state;
   const [filter, setFilter] = useState("ALL");
+  const [folderFilter, setFolderFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState<DocumentRow | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -49,9 +53,22 @@ export default function DocumentsModule() {
   const [versionNote, setVersionNote] = useState("");
   const [nextVersion, setNextVersion] = useState("");
 
+  const folderOptions = useMemo(() => {
+    const u = new Set(documents.map(d => d.folder));
+    return Array.from(u).sort();
+  }, [documents]);
+
   const filtered = documents.filter(
-    d => (filter === "ALL" || d.status === filter) && (d.title.toLowerCase().includes(search.toLowerCase()) || d.code.toLowerCase().includes(search.toLowerCase()))
+    d =>
+      (filter === "ALL" || d.status === filter) &&
+      (folderFilter === "ALL" || d.folder === folderFilter) &&
+      (d.title.toLowerCase().includes(search.toLowerCase()) || d.code.toLowerCase().includes(search.toLowerCase()))
   );
+
+  const detailLive = useMemo(() => {
+    if (!detail) return null;
+    return documents.find(d => d.id === detail.id) ?? detail;
+  }, [detail, documents]);
 
   const columns: Column<DocumentRow>[] = [
     { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#123C66", fontWeight: 600 }}>{v}</span> },
@@ -61,6 +78,11 @@ export default function DocumentsModule() {
       render: v => <span style={{ fontWeight: 500, maxWidth: 280, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v}</span>,
     },
     { key: "type", label: "Tipo" },
+    {
+      key: "folder",
+      label: "Carpeta",
+      render: v => <span style={{ fontSize: 11, color: "#5E6B7A", fontWeight: 600 }}>{v}</span>,
+    },
     { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "#f0f4ff", color: "#123C66", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
     { key: "version", label: "Ver.", render: v => <span style={{ fontSize: 12, color: "#5E6B7A" }}>v{v}</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
@@ -87,6 +109,7 @@ export default function DocumentsModule() {
       previewUrl = URL.createObjectURL(newFile);
     }
     const sizeLabel = newFile ? `${(newFile.size / 1024).toFixed(0)} KB` : "—";
+    const procCode = state.processes[0]?.code ?? "P-01";
     const doc: DocumentRow = {
       id: `d-${Date.now()}`,
       code: newForm.code.trim(),
@@ -101,6 +124,10 @@ export default function DocumentsModule() {
       size: sizeLabel,
       tags: ["nuevo", "demo"],
       previewUrl,
+      folder: "SGC",
+      siteId: `${state.session.activeOrgId}-s1`,
+      linkedClause: newForm.clause.trim() || "8.5",
+      linkedProcessCode: procCode,
     };
     dispatch({ type: "addDocument", doc });
     setShowNew(false);
@@ -144,6 +171,18 @@ export default function DocumentsModule() {
           placeholder="Buscar por título o código..."
           style={{ flex: 1, minWidth: 220, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none" }}
         />
+        <select
+          value={folderFilter}
+          onChange={e => setFolderFilter(e.target.value)}
+          style={{ padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, background: "#fff" }}
+        >
+          <option value="ALL">Todas las carpetas</option>
+          {folderOptions.map(f => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+        </select>
         {["ALL", "APPROVED", "IN_REVIEW", "DRAFT", "OBSOLETE"].map(s => (
           <button
             key={s}
@@ -183,20 +222,27 @@ export default function DocumentsModule() {
         <DataTable columns={columns} rows={filtered} onRow={setDetail} emptyText="No se encontraron documentos con ese filtro" />
       </Card>
 
-      <Modal open={!!detail && !previewDoc && !historyDoc} onClose={() => setDetail(null)} title={detail?.title ?? ""} width={600}>
-        {detail && (
+      <Modal open={!!detail && !previewDoc && !historyDoc} onClose={() => setDetail(null)} title={detailLive?.title ?? ""} width={600}>
+        {detailLive && (
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
               {[
-                ["Código", detail.code],
-                ["Versión", `v${detail.version}`],
-                ["Estado", <Badge key="st" status={detail.status} />],
-                ["Tipo", detail.type],
-                ["Norma", detail.standard],
-                ["Cláusula", detail.clause],
-                ["Propietario", detail.owner],
-                ["Actualizado", detail.updated],
-                ["Tamaño", detail.size],
+                ["Código", detailLive.code],
+                ["Versión", `v${detailLive.version}`],
+                ["Estado", <Badge key="st" status={detailLive.status} />],
+                ["Carpeta", detailLive.folder],
+                ["Tipo", detailLive.type],
+                ["Norma", detailLive.standard],
+                ["Cláusula", detailLive.linkedClause || detailLive.clause],
+                [
+                  "Proceso",
+                  <Link key="proc" href="/app/processes" style={{ color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
+                    {detailLive.linkedProcessCode}
+                  </Link>,
+                ],
+                ["Propietario", detailLive.owner],
+                ["Actualizado", detailLive.updated],
+                ["Tamaño", detailLive.size],
               ].map(([k, v]) => (
                 <div key={String(k)}>
                   <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{k}</div>
@@ -207,18 +253,95 @@ export default function DocumentsModule() {
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {detail.tags.map(t => (
+                {detailLive.tags.map(t => (
                   <span key={t} style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", borderRadius: 99, padding: "2px 10px", fontSize: 12, color: "#5E6B7A" }}>
                     {t}
                   </span>
                 ))}
               </div>
             </div>
+            <div style={{ borderTop: "1px solid #E5EAF2", paddingTop: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental (demo)</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {detailLive.status === "DRAFT" && (
+                  <button
+                    type="button"
+                    disabled={!perm.documents.edit}
+                    title={!perm.documents.edit ? "Sin permiso para editar documentos" : undefined}
+                    onClick={() => {
+                      dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "IN_REVIEW" } });
+                      showToast("Enviado a revisión");
+                      setDetail(null);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: perm.documents.edit ? "#D68A1A" : "#e5eaf2",
+                      color: perm.documents.edit ? "#fff" : "#9aa5b1",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: perm.documents.edit ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    Enviar a revisión
+                  </button>
+                )}
+                {detailLive.status === "IN_REVIEW" && (
+                  <button
+                    type="button"
+                    disabled={!perm.documents.approve}
+                    title={!perm.documents.approve ? "Solo administración o compliance puede aprobar" : undefined}
+                    onClick={() => {
+                      dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "APPROVED" } });
+                      showToast("Documento aprobado");
+                      setDetail(null);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: perm.documents.approve ? "#2E8B57" : "#e5eaf2",
+                      color: perm.documents.approve ? "#fff" : "#9aa5b1",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: perm.documents.approve ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    Aprobar
+                  </button>
+                )}
+                {detailLive.status !== "OBSOLETE" && (
+                  <button
+                    type="button"
+                    disabled={!perm.documents.edit}
+                    onClick={() => {
+                      if (!window.confirm("¿Marcar este documento como obsoleto? (demo)")) return;
+                      dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "OBSOLETE" } });
+                      showToast("Marcado como obsoleto");
+                      setDetail(null);
+                    }}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: 8,
+                      border: "1px solid #E5EAF2",
+                      background: "#fff",
+                      color: perm.documents.edit ? "#5E6B7A" : "#9aa5b1",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: perm.documents.edit ? "pointer" : "not-allowed",
+                    }}
+                  >
+                    Marcar obsoleto
+                  </button>
+                )}
+              </div>
+            </div>
             <div style={{ borderTop: "1px solid #E5EAF2", paddingTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" onClick={() => setPreviewDoc(detail)} style={{ flex: 1, minWidth: 120, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button type="button" onClick={() => setPreviewDoc(detailLive)} style={{ flex: 1, minWidth: 120, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Ver Documento
               </button>
-              <button type="button" onClick={() => setHistoryDoc(detail)} style={{ flex: 1, minWidth: 120, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+              <button type="button" onClick={() => setHistoryDoc(detailLive)} style={{ flex: 1, minWidth: 120, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
                 Historial de versiones
               </button>
               <button type="button" onClick={() => showToast("Borrador IA (demo): usa el asistente en la barra lateral.")} style={{ flex: 1, minWidth: 120, background: "#2E8B5718", color: "#2E8B57", border: "1px solid #2E8B5740", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
