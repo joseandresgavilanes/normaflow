@@ -4,17 +4,17 @@ export const metadata = { title: "ISO 27001:2022 — NormaFlow" };
 export default function ISO27001Page() {
   return (
     <MarketingLayout>
-      <section style={{ background: "linear-gradient(135deg, #0D2E4E, #123C66)", padding: "80px 0 60px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+      <section style={{ background: "linear-gradient(135deg, #0D2E4E, #123C66)", padding: "clamp(48px, 10vw, 80px) 0 clamp(40px, 8vw, 60px)" }}>
+        <div className="nf-mkt-container" style={{ maxWidth: 720, textAlign: "center" }}>
           <div style={{ display: "inline-block", background: "rgba(46,139,87,0.25)", border: "1px solid rgba(46,139,87,0.4)", borderRadius: 8, padding: "4px 14px", fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 20 }}>ISO 27001:2022</div>
-          <h1 style={{ fontSize: 44, fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: "-1px", lineHeight: 1.1 }}>Sistema de Gestión de Seguridad de la Información</h1>
-          <p style={{ fontSize: 18, color: "rgba(255,255,255,0.72)", lineHeight: 1.65, marginBottom: 28 }}>Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con la versión 2022 y los 93 controles del Anexo A.</p>
+          <h1 style={{ fontSize: "clamp(22px, 5.5vw, 44px)", fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: "-0.03em", lineHeight: 1.12 }}>Sistema de Gestión de Seguridad de la Información</h1>
+          <p style={{ fontSize: "clamp(15px, 3.5vw, 18px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, marginBottom: 28 }}>Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con la versión 2022 y los 93 controles del Anexo A.</p>
           <Link href="/signup" style={{ display: "inline-block", padding: "12px 28px", background: "#2E8B57", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Solicitar demo gratuita →</Link>
         </div>
       </section>
-      <section style={{ background: "#fff", padding: "72px 0" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 20 }}>
+      <section style={{ background: "#fff", padding: "clamp(40px, 8vw, 72px) 0" }}>
+        <div className="nf-mkt-container">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 20 }}>
             {[
               { icon: "🔒", title: "Gestión de riesgos de SI", desc: "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.", control: "6.1.2" },
               { icon: "📋", title: "Controles Anexo A", desc: "Los 93 controles ISO 27001:2022 organizados por dominio, con estado y evidencia adjunta.", control: "Anexo A" },

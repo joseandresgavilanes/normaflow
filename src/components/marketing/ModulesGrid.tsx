@@ -1,13 +1,13 @@
 export default function ModulesGrid() {
   return (
-    <section style={{ background: "#fff", padding: "80px 0" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
+    <section style={{ background: "#fff", padding: "clamp(48px, 10vw, 80px) 0" }}>
+      <div className="nf-mkt-container">
+        <div style={{ textAlign: "center", marginBottom: "clamp(32px, 8vw, 48px)" }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: "#2E8B57", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Funcionalidades</div>
-          <h2 style={{ fontSize: 36, fontWeight: 800, color: "#142033", margin: "0 0 16px", letterSpacing: "-0.5px" }}>Todo lo que necesitas en una plataforma</h2>
-          <p style={{ fontSize: 18, color: "#5E6B7A", maxWidth: 560, margin: "0 auto" }}>Módulos diseñados para el ciclo de vida completo de tu sistema de gestión.</p>
+          <h2 style={{ fontSize: "clamp(22px, 5vw, 36px)", fontWeight: 800, color: "#142033", margin: "0 0 16px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>Todo lo que necesitas en una plataforma</h2>
+          <p style={{ fontSize: "clamp(15px, 3.5vw, 18px)", color: "#5E6B7A", maxWidth: 560, margin: "0 auto", lineHeight: 1.6 }}>Módulos diseñados para el ciclo de vida completo de tu sistema de gestión.</p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 14 }}>
           {[
             { icon: "◎", name: "GAP Assessment", desc: "Evalúa tu nivel de cumplimiento por cláusula", color: "#123C66" },
             { icon: "📄", name: "Control de Documentos", desc: "Versionado, aprobación y trazabilidad", color: "#2E8B57" },

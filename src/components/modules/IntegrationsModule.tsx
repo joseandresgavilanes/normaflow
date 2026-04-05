@@ -51,7 +51,7 @@ export default function IntegrationsModule() {
     <div>
       <SectionTitle title="Integraciones" sub="Catálogo de conectores para evidencias, identidad y operación — estados operativos simulados" />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 14 }}>
         {state.integrations.map(int => (
           <Card key={int.key} style={{ cursor: "pointer" }} onClick={() => setDetail(int)}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>

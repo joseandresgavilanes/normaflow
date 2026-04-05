@@ -59,7 +59,7 @@ export default function BillingModule() {
             <span style={{ color: "#4ade80", fontSize: 13, fontWeight: 700 }}>● Activo (simulado)</span>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+        <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 20 }}>
           {[
             ["Usuarios activos", "18 / 50"],
             ["Módulos", "Todos incluidos"],
@@ -149,7 +149,7 @@ export default function BillingModule() {
       </div>
 
       <h3 style={{ fontSize: 16, fontWeight: 700, color: "#142033", margin: "0 0 16px" }}>Comparativa de planes</h3>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+      <div className="nf-grid-stats" style={{ gap: 16 }}>
         {PLANS.map(plan => {
           const isCurrent = plan.key === billing.plan;
           return (

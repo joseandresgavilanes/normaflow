@@ -20,8 +20,8 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <MarketingLayout>
-      <article style={{ background: "#fff", padding: "56px 0 80px" }}>
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px" }}>
+      <article style={{ background: "#fff", padding: "clamp(40px, 8vw, 56px) 0 clamp(48px, 10vw, 80px)" }}>
+        <div className="nf-mkt-container" style={{ maxWidth: 760 }}>
           <Link href="/cases" style={{ fontSize: 14, color: "#123C66", textDecoration: "none", fontWeight: 600 }}>
             ← Casos de éxito
           </Link>
@@ -29,7 +29,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             <span style={{ background: c.color + "18", color: c.color, padding: "4px 12px", borderRadius: 99, fontSize: 12, fontWeight: 600 }}>{c.industry}</span>
             <span style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", color: "#5E6B7A", padding: "4px 12px", borderRadius: 99, fontSize: 12 }}>{c.normas}</span>
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, color: "#142033", margin: "16px 0 12px", letterSpacing: "-0.5px" }}>{c.company}</h1>
+          <h1 style={{ fontSize: "clamp(24px, 5.5vw, 36px)", fontWeight: 800, color: "#142033", margin: "16px 0 12px", letterSpacing: "-0.5px", lineHeight: 1.15 }}>{c.company}</h1>
           <p style={{ fontSize: 18, color: "#2E8B57", fontWeight: 600, margin: "0 0 28px" }}>{c.result}</p>
           <section style={{ marginBottom: 28 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#142033", marginBottom: 10 }}>Contexto</h2>

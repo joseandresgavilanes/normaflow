@@ -256,7 +256,7 @@ export default function ChangeControlModule() {
         {detailLive && (
           <div>
             <p style={{ fontSize: 13, color: "#5E6B7A", lineHeight: 1.6 }}>{detailLive.reason}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16, fontSize: 12 }}>
+            <div className="nf-grid-2" style={{ gap: 10, marginBottom: 16, fontSize: 12 }}>
               <div>
                 <strong>Categoría</strong> {detailLive.category}
               </div>

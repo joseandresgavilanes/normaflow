@@ -105,7 +105,7 @@ export default function AuditsModule() {
         </Link>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 20 }}>
         {[
           { label: "Total planificadas", value: audits.length, color: "#123C66" },
           { label: "En curso", value: audits.filter(a => a.status === "IN_PROGRESS").length, color: "#D68A1A" },
@@ -171,7 +171,7 @@ export default function AuditsModule() {
       <Modal open={!!detail} onClose={() => setDetail(null)} title={detailLive?.title ?? ""} width={560}>
         {detailLive && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div className="nf-grid-2" style={{ gap: 12, marginBottom: 20 }}>
               {[
                 ["Tipo", detailLive.type === "EXTERNAL" ? "Externa" : "Interna"],
                 ["Norma", detailLive.standard],
@@ -312,7 +312,7 @@ export default function AuditsModule() {
               style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Tipo
               <select
@@ -333,7 +333,7 @@ export default function AuditsModule() {
               />
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Fecha
               <input

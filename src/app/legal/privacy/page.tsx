@@ -8,8 +8,8 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <MarketingLayout>
-      <div style={{ maxWidth: 800, margin: "0 auto", padding: "56px 24px 80px" }}>
-        <h1 style={{ fontSize: 32, fontWeight: 800, color: "#142033", marginBottom: 12 }}>Política de privacidad</h1>
+      <div className="nf-mkt-container" style={{ maxWidth: 800, paddingTop: "clamp(40px, 8vw, 56px)", paddingBottom: "clamp(48px, 10vw, 80px)" }}>
+        <h1 style={{ fontSize: "clamp(24px, 5vw, 32px)", fontWeight: 800, color: "#142033", marginBottom: 12, lineHeight: 1.15 }}>Política de privacidad</h1>
         <p style={{ color: "#5E6B7A", marginBottom: 28 }}>Última actualización: abril de 2026</p>
         <div style={{ fontSize: 16, color: "#142033", lineHeight: 1.75 }}>
           <p>NormaFlow trata los datos de contacto y cuenta de clientes B2B para prestar el servicio SaaS, facturación y soporte.</p>

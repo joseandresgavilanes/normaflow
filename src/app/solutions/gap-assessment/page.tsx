@@ -16,15 +16,24 @@ export default function GapAssessmentLandingPage() {
 
   return (
     <MarketingLayout>
-      <section style={{ background: "linear-gradient(135deg, #0D2E4E, #123C66)", padding: "72px 0 56px" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px", display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 48, alignItems: "center" }}>
+      <section style={{ background: "linear-gradient(135deg, #0D2E4E, #123C66)", padding: "clamp(40px, 8vw, 72px) 0 clamp(36px, 7vw, 56px)" }}>
+        <div
+          className="nf-mkt-container"
+          style={{
+            maxWidth: 960,
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))",
+            gap: "clamp(28px, 5vw, 48px)",
+            alignItems: "center",
+          }}
+        >
           <div>
-            <h1 style={{ fontSize: 42, fontWeight: 900, color: "#fff", margin: "0 0 14px", lineHeight: 1.1 }}>GAP Assessment sin caos de hojas de cálculo</h1>
-            <p style={{ fontSize: 17, color: "rgba(255,255,255,0.7)", lineHeight: 1.65, margin: 0 }}>
+            <h1 style={{ fontSize: "clamp(24px, 5.5vw, 42px)", fontWeight: 900, color: "#fff", margin: "0 0 14px", lineHeight: 1.12 }}>GAP Assessment sin caos de hojas de cálculo</h1>
+            <p style={{ fontSize: "clamp(15px, 3.2vw, 17px)", color: "rgba(255,255,255,0.7)", lineHeight: 1.65, margin: 0 }}>
               Evalúa ISO 9001 e ISO 27001 por cláusula, con puntuación, comentarios y plan de acción. Versión resumida para leads; informe completo dentro de la plataforma.
             </p>
           </div>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 28, border: "1px solid #E5EAF2" }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(18px, 4vw, 28px)", border: "1px solid #E5EAF2" }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#142033", marginBottom: 14 }}>Solicitar evaluación de ejemplo</div>
             {sent ? (
               <p style={{ color: "#2E8B57", fontSize: 15, margin: 0 }}>Gracias. Te enviaremos un ejemplo en menos de un día laborable.</p>
@@ -40,9 +49,9 @@ export default function GapAssessmentLandingPage() {
           </div>
         </div>
       </section>
-      <section style={{ padding: "64px 0", background: "#F7F9FC" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px" }}>
-          <h2 style={{ fontSize: 26, fontWeight: 800, color: "#142033", marginBottom: 20 }}>Ejemplo de resultado (resumen)</h2>
+      <section style={{ padding: "clamp(40px, 8vw, 64px) 0", background: "#F7F9FC" }}>
+        <div className="nf-mkt-container" style={{ maxWidth: 900 }}>
+          <h2 style={{ fontSize: "clamp(20px, 4.5vw, 26px)", fontWeight: 800, color: "#142033", marginBottom: 20, lineHeight: 1.25 }}>Ejemplo de resultado (resumen)</h2>
           <div style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 14, padding: 24 }}>
             {[
               { c: "4 · Contexto", s: 85 },

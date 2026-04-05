@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useMatchMedia } from "@/hooks/useMatchMedia";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppTopbar from "@/components/layout/AppTopbar";
 import AIPanel from "@/components/modules/AIPanel";
@@ -37,6 +38,26 @@ export default function AppRoot({
   const pathname = usePathname();
   const router = useRouter();
   const [aiOpen, setAiOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const isCompactNav = useMatchMedia("(max-width: 768px)");
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!isCompactNav) setNavOpen(false);
+  }, [isCompactNav]);
+
+  useEffect(() => {
+    if (isCompactNav && navOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+    return undefined;
+  }, [isCompactNav, navOpen]);
 
   useEffect(() => {
     if (initial.mode === "needs_organization" && pathname !== "/app/onboarding") {
@@ -88,9 +109,15 @@ export default function AppRoot({
 
   return (
     <WorkspaceProvider key={profile.email + activeOrgId} profile={profile}>
-      <div style={{ display: "flex", background: "#F7F9FC", minHeight: "100vh", fontFamily: "Inter, -apple-system, sans-serif" }}>
+      <div className="nf-app-shell">
+        {isCompactNav && navOpen && (
+          <button type="button" className="nf-sidebar-backdrop" aria-label="Cerrar menú de navegación" onClick={() => setNavOpen(false)} />
+        )}
         <AppSidebar
-          onAI={() => setAiOpen(true)}
+          onAI={() => {
+            setNavOpen(false);
+            setAiOpen(true);
+          }}
           orgName={orgName}
           userName={userName}
           roleLabel={roleLabel}
@@ -105,10 +132,13 @@ export default function AppRoot({
             });
             router.refresh();
           }}
+          compact={isCompactNav}
+          drawerOpen={navOpen}
+          onNavigate={() => setNavOpen(false)}
         />
-        <div style={{ flex: 1, marginLeft: 224, minWidth: 0 }}>
-          <AppTopbar userName={userName} roleLabel={roleLabel} />
-          <main style={{ padding: "28px 32px", maxWidth: 1280 }}>{children}</main>
+        <div className="nf-app-main">
+          <AppTopbar userName={userName} roleLabel={roleLabel} onMenuClick={isCompactNav ? () => setNavOpen(true) : undefined} />
+          <main className="nf-app-main-inner">{children}</main>
         </div>
         <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
         <WorkspaceToast />

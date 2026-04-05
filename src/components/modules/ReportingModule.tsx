@@ -70,7 +70,7 @@ export default function ReportingModule() {
         </p>
       </Card>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 14 }}>
         {REPORTS.map(r => (
           <Card key={r.id}>
             <h3 style={{ margin: "0 0 8px", fontSize: 15, color: "#142033" }}>{r.title}</h3>

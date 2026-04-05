@@ -129,7 +129,7 @@ export default function ActionsModule() {
         onAction={openCreate}
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 16 }}>
         {[
           { label: "Total acciones", value: actions.length, color: "#123C66" },
           { label: "En curso", value: actions.filter(a => a.status === "IN_PROGRESS").length, color: "#D68A1A" },
@@ -259,7 +259,7 @@ export default function ActionsModule() {
               style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Prioridad
               <select
@@ -294,7 +294,7 @@ export default function ActionsModule() {
               style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Vencimiento
               <input

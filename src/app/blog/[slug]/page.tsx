@@ -33,13 +33,13 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
   return (
     <MarketingLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <article style={{ background: "#fff", padding: "48px 0 72px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 24px" }}>
+      <article style={{ background: "#fff", padding: "clamp(32px, 6vw, 48px) 0 clamp(48px, 10vw, 72px)" }}>
+        <div className="nf-mkt-container" style={{ maxWidth: 720 }}>
           <Link href="/blog" style={{ fontSize: 14, color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
             ← Blog
           </Link>
           <div style={{ fontSize: 13, color: "#123C66", fontWeight: 600, marginTop: 20 }}>{post.category}</div>
-          <h1 style={{ fontSize: 34, fontWeight: 800, color: "#142033", margin: "10px 0 12px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>{post.title}</h1>
+          <h1 style={{ fontSize: "clamp(22px, 5.5vw, 34px)", fontWeight: 800, color: "#142033", margin: "10px 0 12px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>{post.title}</h1>
           <p style={{ fontSize: 14, color: "#5E6B7A", marginBottom: 32 }}>
             {post.date} · {post.readTime}
           </p>

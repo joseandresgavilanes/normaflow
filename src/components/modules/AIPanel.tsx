@@ -44,7 +44,21 @@ export default function AIPanel({ open, onClose, context }: { open: boolean; onC
   if (!open) return null;
 
   return (
-    <div style={{ position: "fixed", right: 0, top: 0, bottom: 0, width: 400, background: "#fff", borderLeft: "1px solid #E5EAF2", zIndex: 900, display: "flex", flexDirection: "column", boxShadow: "-8px 0 40px rgba(0,0,0,0.07)" }}>
+    <div
+      className="nf-ai-panel"
+      style={{
+        position: "fixed",
+        right: 0,
+        top: 0,
+        bottom: 0,
+        background: "#fff",
+        borderLeft: "1px solid #E5EAF2",
+        zIndex: 900,
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "-8px 0 40px rgba(0,0,0,0.07)",
+      }}
+    >
       <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #E5EAF2", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

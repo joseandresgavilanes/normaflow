@@ -8,17 +8,28 @@ export default function CasesPage() {
   const cases = MARKETING_CASES;
   return (
     <MarketingLayout>
-      <section style={{ background: "#F7F9FC", padding: "80px 0" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
+      <section style={{ background: "#F7F9FC", padding: "clamp(48px, 10vw, 80px) 0" }}>
+        <div className="nf-mkt-container">
+          <div style={{ textAlign: "center", marginBottom: "clamp(32px, 8vw, 48px)" }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: "#123C66", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Casos de éxito</div>
-            <h1 style={{ fontSize: 40, fontWeight: 800, color: "#142033", margin: "0 0 14px", letterSpacing: "-0.5px" }}>Empresas que ya gestionan su cumplimiento con NormaFlow</h1>
+            <h1 style={{ fontSize: "clamp(24px, 5.5vw, 40px)", fontWeight: 800, color: "#142033", margin: "0 0 14px", letterSpacing: "-0.5px", lineHeight: 1.15 }}>
+              Empresas que ya gestionan su cumplimiento con NormaFlow
+            </h1>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             {cases.map(c => (
               <div
                 key={c.company}
-                style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: "32px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 48, alignItems: "center" }}
+                style={{
+                  background: "#fff",
+                  border: "1px solid #E5EAF2",
+                  borderRadius: 16,
+                  padding: "clamp(20px, 5vw, 32px)",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
+                  gap: "clamp(24px, 5vw, 48px)",
+                  alignItems: "center",
+                }}
               >
                 <div>
                   <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
@@ -58,7 +69,7 @@ export default function CasesPage() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div className="nf-grid-stats" style={{ gap: 12 }}>
                     {[
                       ["ISO certificadas", String(c.normas.split(" + ").length)],
                       ["Empleados", c.employees.split(" ")[0]],

@@ -193,7 +193,7 @@ export default function TrainingModule() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 20 }}>
         {[
           { label: "Cumplimiento global", value: `${compliance.pct}%`, color: "#2E8B57" },
           { label: "Completadas", value: compliance.done, color: "#123C66" },
@@ -312,7 +312,7 @@ export default function TrainingModule() {
       )}
 
       {tab === "people" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 12 }}>
           {demoPeople.map(p => {
             const mine = trainingAssignments.filter(a => a.assigneeEmail === p.email);
             return (

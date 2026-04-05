@@ -33,3 +33,320 @@
   button { font-family: inherit; }
   input, textarea, select { font-family: inherit; }
 }
+
+/* —— App shell (responsive) —— */
+.nf-app-shell {
+  display: flex;
+  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: Inter, -apple-system, sans-serif;
+}
+
+.nf-app-main {
+  flex: 1;
+  margin-left: 224px;
+  min-width: 0;
+}
+
+.nf-app-main-inner {
+  padding: 28px 32px;
+  max-width: 1280px;
+}
+
+.nf-sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 28, 50, 0.45);
+  z-index: 150;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .nf-app-main {
+    margin-left: 0;
+  }
+
+  .nf-app-main-inner {
+    padding: 16px 14px 24px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Top bar: compact on small screens */
+.nf-topbar {
+  height: 58px;
+  background: #fff;
+  border-bottom: 1px solid #e5eaf2;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-width: 0;
+}
+
+.nf-topbar-menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #e5eaf2;
+  background: #f7f9fc;
+  cursor: pointer;
+  flex-shrink: 0;
+  color: #123c66;
+  font-size: 18px;
+}
+
+.nf-topbar-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nf-topbar-profile-text {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .nf-topbar {
+    padding: 0 12px 0 10px;
+    gap: 8px;
+  }
+
+  .nf-topbar-menu {
+    display: flex;
+  }
+
+  .nf-topbar-profile-text {
+    display: none;
+  }
+}
+
+/* Section headers wrap on narrow viewports */
+.nf-section-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.nf-section-title > div:first-child {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+
+/* Responsive 2-column grids (forms / detail blocks) */
+.nf-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 10px;
+}
+
+/* Stat / KPI rows: never force 4 tiny columns on phone */
+.nf-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr));
+  gap: 10px;
+}
+
+/* AI drawer: full width on small screens */
+.nf-ai-panel {
+  width: min(100vw, 400px);
+}
+
+@media (max-width: 768px) {
+  .nf-ai-panel {
+    width: 100%;
+    max-width: 100vw;
+  }
+}
+
+/* Modal overlay padding on phones */
+@media (max-width: 480px) {
+  .nf-modal-overlay {
+    padding: 12px !important;
+    align-items: flex-end !important;
+  }
+
+  .nf-modal-panel {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 92dvh !important;
+  }
+}
+
+/* —— Marketing / landing —— */
+.nf-mkt-container {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.nf-mkt-container-wide {
+  max-width: 1140px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+.nf-mkt-header {
+  background: #fff;
+  border-bottom: 1px solid #e5eaf2;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.nf-mkt-header-inner {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 10px max(16px, env(safe-area-inset-left)) 10px max(16px, env(safe-area-inset-right));
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nf-mkt-nav-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nf-mkt-header-cta {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.nf-mkt-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid #e5eaf2;
+  background: #f7f9fc;
+  color: #123c66;
+  font-size: 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nf-mkt-backdrop {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(14, 28, 50, 0.35);
+  z-index: 198;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.nf-mkt-drawer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  z-index: 199;
+  overflow: auto;
+  padding: 12px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+}
+
+.nf-mkt-drawer a {
+  padding: 14px 12px;
+  font-size: 15px;
+  color: #142033;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.nf-mkt-drawer a:active,
+.nf-mkt-drawer a:hover {
+  background: #f7f9fc;
+}
+
+.nf-mkt-drawer-actions {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5eaf2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .nf-mkt-nav-desktop,
+  .nf-mkt-header-cta {
+    display: none;
+  }
+
+  .nf-mkt-menu-btn {
+    display: flex;
+  }
+}
+
+@media (min-width: 1025px) {
+  .nf-mkt-backdrop,
+  .nf-mkt-drawer {
+    display: none !important;
+  }
+}
+
+.nf-mkt-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: clamp(24px, 5vw, 40px);
+  margin-bottom: 40px;
+}
+
+@media (max-width: 600px) {
+  .nf-mkt-footer-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+.nf-mkt-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: clamp(20px, 4vw, 24px);
+}
+
+/* Features page: avoid RTL column swap breaking reading order on narrow screens */
+@media (max-width: 720px) {
+  .nf-mkt-feature-row {
+    direction: ltr !important;
+  }
+}

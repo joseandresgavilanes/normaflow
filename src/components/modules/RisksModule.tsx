@@ -163,10 +163,11 @@ export default function RisksModule() {
     <div>
       <SectionTitle title="Gestión de Riesgos" sub="Registro, evaluación y tratamiento de riesgos" action="+ Nuevo Riesgo" onAction={openCreate} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 20, marginBottom: 20 }}>
         <Card>
           <div style={{ fontSize: 14, fontWeight: 700, color: "#142033", marginBottom: 14 }}>Mapa de Calor 5×5</div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div style={{ display: "flex", gap: 8, minWidth: 260 }}>
             <div style={{ width: 24, display: "flex", flexDirection: "column", justifyContent: "space-around", paddingBottom: 20 }}>
               {[5, 4, 3, 2, 1].map(p => (
                 <span key={p} style={{ fontSize: 11, color: "#5E6B7A", textAlign: "center" }}>
@@ -220,7 +221,8 @@ export default function RisksModule() {
               <div style={{ fontSize: 11, color: "#5E6B7A", textAlign: "center", marginTop: 6 }}>Impacto →</div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 12, marginTop: 14, justifyContent: "center" }}>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 14, justifyContent: "center" }}>
             {[
               { label: "Crítico (≥15)", color: "#fecaca", text: "#991b1b" },
               { label: "Alto (8-14)", color: "#fef3c7", text: "#92400e" },
@@ -260,7 +262,7 @@ export default function RisksModule() {
       <Modal open={!!detail && !editOpen} onClose={() => setDetail(null)} title={`${detail?.code} — ${detail?.title}`} width={600}>
         {detail && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 100px), 1fr))", gap: 12, marginBottom: 20 }}>
               {[
                 ["Score", detail.score, detail.score >= 15 ? "#C93C37" : detail.score >= 8 ? "#D68A1A" : "#2E8B57"],
                 ["Probabilidad", `${detail.probability}/5`, "#D68A1A"],
@@ -443,7 +445,7 @@ function RiskFormFields({ form, setForm }: { form: RiskForm; setForm: (f: RiskFo
           style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
         />
       </label>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div className="nf-grid-2" style={{ gap: 10 }}>
         <label style={{ fontSize: 13, fontWeight: 500 }}>
           Categoría
           <input
@@ -461,7 +463,7 @@ function RiskFormFields({ form, setForm }: { form: RiskForm; setForm: (f: RiskFo
           />
         </label>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 10 }}>
         <label style={{ fontSize: 13, fontWeight: 500 }}>
           Prob. (1–5)
           <input
@@ -503,7 +505,7 @@ function RiskFormFields({ form, setForm }: { form: RiskForm; setForm: (f: RiskFo
           style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }}
         />
       </label>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div className="nf-grid-2" style={{ gap: 10 }}>
         <label style={{ fontSize: 13, fontWeight: 500 }}>
           Estado
           <select

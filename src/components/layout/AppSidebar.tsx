@@ -39,6 +39,9 @@ export default function AppSidebar({
   currentOrgId,
   onOrgChange,
   demoSession = false,
+  compact = false,
+  drawerOpen = false,
+  onNavigate,
 }: {
   onAI: () => void;
   orgName: string;
@@ -48,6 +51,10 @@ export default function AppSidebar({
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
   demoSession?: boolean;
+  /** Móvil / tablet estrecho: drawer superpuesto */
+  compact?: boolean;
+  drawerOpen?: boolean;
+  onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   const ws = useWorkspaceOptional();
@@ -62,9 +69,24 @@ export default function AppSidebar({
   }
 
   return (
-    <aside style={{ width: 224, background: "#0D2E4E", display: "flex", flexDirection: "column", height: "100vh", position: "fixed", left: 0, top: 0, zIndex: 100 }}>
+    <aside
+      style={{
+        width: compact ? "min(280px, 88vw)" : 224,
+        background: "#0D2E4E",
+        display: "flex",
+        flexDirection: "column",
+        position: "fixed",
+        left: 0,
+        top: 0,
+        bottom: 0,
+        zIndex: compact ? 160 : 100,
+        transform: compact ? (drawerOpen ? "translateX(0)" : "translateX(-100%)") : "none",
+        transition: compact ? "transform 0.22s ease" : undefined,
+        boxShadow: compact && drawerOpen ? "8px 0 32px rgba(0,0,0,0.2)" : undefined,
+      }}
+    >
       <div style={{ padding: "18px 16px 14px", borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+        <Link href="/home" onClick={() => onNavigate?.()} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{ width: 32, height: 32, background: "#2E8B57", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#fff", fontSize: 16, fontWeight: 800 }}>N</span>
           </div>
@@ -138,6 +160,7 @@ export default function AppSidebar({
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => onNavigate?.()}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -182,7 +205,7 @@ export default function AppSidebar({
         </div>
       </nav>
       <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 9 }}>
-        <Link href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flex: 1, minWidth: 0, color: "inherit" }}>
+        <Link href="/app/settings" onClick={() => onNavigate?.()} style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flex: 1, minWidth: 0, color: "inherit" }}>
           <Avatar name={sidebarName} size={28} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sidebarName}</div>

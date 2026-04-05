@@ -114,7 +114,7 @@ export default function IndicatorsModule() {
     <div>
       <SectionTitle title="Indicadores y KPIs" sub="Monitoreo de desempeño del sistema de gestión" action="+ Nuevo KPI" onAction={openCreate} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
+      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 16 }}>
         {[
           { label: "En objetivo", value: indicators.filter(i => i.status === "ON_TRACK").length, color: "#2E8B57" },
           { label: "En riesgo", value: indicators.filter(i => i.status === "AT_RISK").length, color: "#D68A1A" },
@@ -130,7 +130,7 @@ export default function IndicatorsModule() {
       {indicators.length === 0 ? (
         <Card style={{ padding: 40, textAlign: "center", color: "#5E6B7A" }}>No hay KPIs. Usa + Nuevo KPI para añadir el primero.</Card>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
           {indicators.map(ind => {
             const color = ind.status === "ON_TRACK" ? "#2E8B57" : ind.status === "AT_RISK" ? "#D68A1A" : "#C93C37";
             const pct = Math.min((ind.value / ind.target) * 100, 100);
@@ -201,7 +201,7 @@ export default function IndicatorsModule() {
               style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Meta
               <input
@@ -220,7 +220,7 @@ export default function IndicatorsModule() {
               />
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Frecuencia
               <select

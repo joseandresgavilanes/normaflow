@@ -30,11 +30,11 @@ export default function DemoPage() {
 
   return (
     <MarketingLayout>
-      <section style={{ padding: "64px 0 80px", background: "#F7F9FC" }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: "0 24px" }}>
-          <h1 style={{ fontSize: 34, fontWeight: 800, color: "#142033", margin: "0 0 10px" }}>Demo y contacto</h1>
+      <section style={{ padding: "clamp(40px, 8vw, 64px) 0 clamp(48px, 10vw, 80px)", background: "#F7F9FC" }}>
+        <div className="nf-mkt-container" style={{ maxWidth: 560 }}>
+          <h1 style={{ fontSize: "clamp(26px, 6vw, 34px)", fontWeight: 800, color: "#142033", margin: "0 0 10px", lineHeight: 1.15 }}>Demo y contacto</h1>
           <p style={{ color: "#5E6B7A", marginBottom: 28, lineHeight: 1.6 }}>Te respondemos en menos de un día laborable. Sin compromiso.</p>
-          <div style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: 28 }}>
+          <div style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: "clamp(18px, 4vw, 28px)" }}>
             {isSubmitSuccessful ? (
               <p style={{ color: "#2E8B57", fontWeight: 600, margin: 0 }}>Mensaje enviado. Gracias por contactar con NormaFlow.</p>
             ) : (

@@ -107,7 +107,7 @@ function ProcessDetailBody({
         {detail.code} · {detail.type} · Responsable: <strong style={{ color: "#142033" }}>{detail.owner}</strong>
       </p>
       {detail.description && <p style={{ lineHeight: 1.55 }}>{detail.description}</p>}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+      <div className="nf-grid-2" style={{ gap: 16, marginTop: 16 }}>
         <div>
           <div style={{ fontWeight: 700, color: "#5E6B7A", fontSize: 11, marginBottom: 6 }}>ENTRADAS</div>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
@@ -314,7 +314,7 @@ export default function ProcessesModule() {
                   <p style={{ fontSize: 12, color: "#5E6B7A", marginTop: 8 }}>Responsable: {p.owner}</p>
                 </div>
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+              <div className="nf-grid-2" style={{ gap: 16, marginTop: 16 }}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#5E6B7A", textTransform: "uppercase", marginBottom: 6 }}>Entradas</div>
                   <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "#142033" }}>
@@ -361,7 +361,7 @@ export default function ProcessesModule() {
               style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Código
               <input

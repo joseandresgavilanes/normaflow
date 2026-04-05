@@ -27,7 +27,15 @@ const BREADCRUMBS: Record<string, string[]> = {
   "/app/settings": ["Cuenta"],
 };
 
-export default function AppTopbar({ userName, roleLabel }: { userName: string; roleLabel: string }) {
+export default function AppTopbar({
+  userName,
+  roleLabel,
+  onMenuClick,
+}: {
+  userName: string;
+  roleLabel: string;
+  onMenuClick?: () => void;
+}) {
   const pathname = usePathname();
   const ws = useWorkspaceOptional();
   const displayName = ws?.state.session.name ?? userName;
@@ -35,15 +43,31 @@ export default function AppTopbar({ userName, roleLabel }: { userName: string; r
   const unread = ws?.state.notifications.filter(n => !n.read).length ?? 0;
   const crumbs = BREADCRUMBS[pathname] ?? ["Aplicación"];
   return (
-    <header style={{ height: 58, background: "#fff", borderBottom: "1px solid #E5EAF2", display: "flex", alignItems: "center", padding: "0 28px", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-        <Link href="/app/dashboard" style={{ fontSize: 13, color: "#5E6B7A", textDecoration: "none" }}>
+    <header className="nf-topbar">
+      {onMenuClick && (
+        <button type="button" className="nf-topbar-menu" onClick={onMenuClick} aria-label="Abrir menú de navegación">
+          ☰
+        </button>
+      )}
+      <div className="nf-topbar-crumbs">
+        <Link href="/app/dashboard" style={{ fontSize: 13, color: "#5E6B7A", textDecoration: "none", flexShrink: 0 }}>
           NormaFlow
         </Link>
         {crumbs.map((c, i) => (
-          <span key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#5E6B7A", fontSize: 12 }}>/</span>
-            <span style={{ fontSize: 13, color: i === crumbs.length - 1 ? "#142033" : "#5E6B7A", fontWeight: i === crumbs.length - 1 ? 600 : 400 }}>{c}</span>
+          <span key={i} style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+            <span style={{ color: "#5E6B7A", fontSize: 12, flexShrink: 0 }}>/</span>
+            <span
+              style={{
+                fontSize: 13,
+                color: i === crumbs.length - 1 ? "#142033" : "#5E6B7A",
+                fontWeight: i === crumbs.length - 1 ? 600 : 400,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {c}
+            </span>
           </span>
         ))}
       </div>
@@ -70,9 +94,9 @@ export default function AppTopbar({ userName, roleLabel }: { userName: string; r
           <span style={{ fontSize: 11, color: "#9aa5b1" }}>0</span>
         )}
       </Link>
-      <Link href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "inherit" }} title="Cuenta y perfil">
+      <Link href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", color: "inherit", flexShrink: 0 }} title="Cuenta y perfil">
         <Avatar name={displayName} size={30} />
-        <div>
+        <div className="nf-topbar-profile-text">
           <div style={{ fontSize: 13, fontWeight: 600, color: "#142033", lineHeight: 1.2 }}>{displayName}</div>
           <div style={{ fontSize: 11, color: "#5E6B7A" }}>{displayRole}</div>
         </div>

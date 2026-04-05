@@ -139,7 +139,7 @@ export default function NonconformitiesModule() {
     <div>
       <SectionTitle title="No Conformidades y CAPA" sub="Hallazgos, análisis de causa raíz y acciones correctivas" action="+ Registrar NC" onAction={openCreate} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 16 }}>
         {[
           { label: "Total", value: nonconformities.length, color: "#123C66" },
           { label: "Abiertas", value: nonconformities.filter(n => n.status === "OPEN").length, color: "#C93C37" },
@@ -217,7 +217,7 @@ export default function NonconformitiesModule() {
             Descripción
             <textarea value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} rows={3} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Origen
               <select
@@ -243,7 +243,7 @@ export default function NonconformitiesModule() {
               </select>
             </label>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div className="nf-grid-2" style={{ gap: 10 }}>
             <label style={{ fontSize: 13, fontWeight: 500 }}>
               Responsable
               <input

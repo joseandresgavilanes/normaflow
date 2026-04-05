@@ -1,5 +1,8 @@
 "use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 const NAV_LINKS = [
   { href: "/home", label: "Inicio" },
@@ -14,7 +17,7 @@ const NAV_LINKS = [
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: "#F7F9FC", minHeight: "100vh" }}>
+    <div style={{ background: "#F7F9FC", minHeight: "100dvh" }}>
       <MarketingHeader />
       {children}
       <MarketingFooter />
@@ -23,32 +26,102 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 }
 
 function MarketingHeader() {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerH, setHeaderH] = useState(64);
+
+  useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1025px)");
+    const close = () => {
+      if (mq.matches) setOpen(false);
+    };
+    mq.addEventListener("change", close);
+    return () => mq.removeEventListener("change", close);
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+    return undefined;
+  }, [open]);
+
   return (
-    <header style={{ background: "#fff", borderBottom: "1px solid #E5EAF2", position: "sticky", top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: 1140, margin: "0 auto", padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
-          <div style={{ width: 32, height: 32, background: "#123C66", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>N</span>
-          </div>
-          <span style={{ fontWeight: 800, fontSize: 18, color: "#142033", letterSpacing: "-0.5px" }}>NormaFlow</span>
-        </Link>
-        <nav style={{ display: "flex", gap: 2, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {NAV_LINKS.map(l => (
-            <Link key={l.href} href={l.href} style={{ padding: "6px 10px", fontSize: 13, color: "#5E6B7A", textDecoration: "none", borderRadius: 6, fontWeight: 400 }}>
-              {l.label}
+    <>
+      <header ref={headerRef} className="nf-mkt-header">
+        <div className="nf-mkt-header-inner">
+          <Link href="/home" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0, minWidth: 0 }}>
+            <div style={{ width: 32, height: 32, background: "#123C66", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ color: "#fff", fontWeight: 800, fontSize: 16 }}>N</span>
+            </div>
+            <span style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 18px)", color: "#142033", letterSpacing: "-0.5px" }}>NormaFlow</span>
+          </Link>
+          <nav className="nf-mkt-nav-desktop" aria-label="Principal">
+            {NAV_LINKS.map(l => (
+              <Link key={l.href} href={l.href} style={{ padding: "6px 10px", fontSize: 13, color: "#5E6B7A", textDecoration: "none", borderRadius: 6, fontWeight: 400 }}>
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="nf-mkt-header-cta">
+            <Link href="/login" style={{ padding: "8px 14px", background: "none", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 14, color: "#5E6B7A", textDecoration: "none", display: "inline-block", whiteSpace: "nowrap" }}>
+              Entrar
             </Link>
-          ))}
-        </nav>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <Link href="/login" style={{ padding: "8px 14px", background: "none", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 14, color: "#5E6B7A", textDecoration: "none", display: "inline-block" }}>
-            Entrar
-          </Link>
-          <Link href="/demo" style={{ padding: "8px 16px", background: "#123C66", border: "none", borderRadius: 8, fontSize: 14, color: "#fff", fontWeight: 600, textDecoration: "none", display: "inline-block" }}>
-            Demo / Contacto
-          </Link>
+            <Link href="/demo" style={{ padding: "8px 16px", background: "#123C66", border: "none", borderRadius: 8, fontSize: 14, color: "#fff", fontWeight: 600, textDecoration: "none", display: "inline-block", whiteSpace: "nowrap" }}>
+              Demo / Contacto
+            </Link>
+          </div>
+          <button
+            type="button"
+            className="nf-mkt-menu-btn"
+            aria-expanded={open}
+            aria-controls="mkt-nav-drawer"
+            aria-label={open ? "Cerrar menú" : "Abrir menú"}
+            onClick={() => setOpen(v => !v)}
+          >
+            {open ? "×" : "☰"}
+          </button>
         </div>
-      </div>
-    </header>
+      </header>
+      {open && (
+        <>
+          <button type="button" className="nf-mkt-backdrop" style={{ top: headerH }} aria-label="Cerrar menú" onClick={() => setOpen(false)} />
+          <div id="mkt-nav-drawer" className="nf-mkt-drawer" style={{ top: headerH }} role="dialog" aria-modal="true" aria-label="Navegación">
+            {NAV_LINKS.map(l => (
+              <Link key={l.href} href={l.href} onClick={() => setOpen(false)}>
+                {l.label}
+              </Link>
+            ))}
+            <div className="nf-mkt-drawer-actions">
+              <Link href="/login" onClick={() => setOpen(false)} style={{ padding: "12px 14px", textAlign: "center", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 15, color: "#5E6B7A", textDecoration: "none", fontWeight: 500 }}>
+                Entrar
+              </Link>
+              <Link href="/demo" onClick={() => setOpen(false)} style={{ padding: "12px 14px", textAlign: "center", background: "#123C66", borderRadius: 8, fontSize: 15, color: "#fff", textDecoration: "none", fontWeight: 600 }}>
+                Demo / Contacto
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
 
@@ -83,10 +156,10 @@ function MarketingFooter() {
   ];
 
   return (
-    <footer style={{ background: "#142033", padding: "48px 0 28px" }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40, marginBottom: 40 }}>
-          <div>
+    <footer style={{ background: "#142033", padding: "clamp(32px, 8vw, 48px) 0 28px" }}>
+      <div className="nf-mkt-container" style={{ maxWidth: 1100 }}>
+        <div className="nf-mkt-footer-grid">
+          <div className="nf-mkt-footer-brand">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <div style={{ width: 28, height: 28, background: "#2E8B57", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ color: "#fff", fontWeight: 800, fontSize: 14 }}>N</span>

@@ -221,7 +221,7 @@ export default function DocumentsModule() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10, marginBottom: 16 }}>
+      <div className="nf-grid-stats" style={{ marginBottom: 16 }}>
         {[
           { label: "Aprobados", count: documents.filter(d => d.status === "APPROVED").length, color: "#2E8B57" },
           { label: "En revisión", count: documents.filter(d => d.status === "IN_REVIEW").length, color: "#D68A1A" },
@@ -242,7 +242,7 @@ export default function DocumentsModule() {
       <Modal open={!!detail && !previewDoc && !historyDoc} onClose={() => setDetail(null)} title={detailLive?.title ?? ""} width={600}>
         {detailLive && (
           <div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+            <div className="nf-grid-2" style={{ gap: 14, marginBottom: 20 }}>
               {[
                 ["Código", detailLive.code],
                 ["Versión", `v${detailLive.version}`],
@@ -269,7 +269,7 @@ export default function DocumentsModule() {
             </div>
             <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid #E5EAF2" }}>
               <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Control documental</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#142033" }}>
+              <div className="nf-grid-2" style={{ gap: 8, fontSize: 12, color: "#142033" }}>
                 <div>
                   <span style={{ color: "#5E6B7A" }}>Próx. revisión: </span>
                   {detailLive.reviewDue ? formatDate(detailLive.reviewDue) : "—"}
