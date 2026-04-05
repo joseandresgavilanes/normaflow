@@ -1,18 +1,24 @@
 "use client";
-import { useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
+import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type AuditRow, type ChecklistItem } from "@/context/WorkspaceStore";
+import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 
 export default function AuditsModule() {
   const { state, dispatch, showToast } = useWorkspace();
-  const { audits, auditChecklists } = state;
+  const perm = useDemoPermission();
+  const { audits, auditChecklists, auditProgram, auditFindings } = state;
   const [detail, setDetail] = useState<AuditRow | null>(null);
   const [checklistAudit, setChecklistAudit] = useState<AuditRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [closeAuditAttest, setCloseAuditAttest] = useState<AuditRow | null>(null);
   const [form, setForm] = useState({
     title: "",
     type: "INTERNAL" as AuditRow["type"],
@@ -83,9 +89,21 @@ export default function AuditsModule() {
 
   const checklistItems = checklistAudit ? auditChecklists[checklistAudit.id] ?? [] : [];
 
+  const detailLive = useMemo(() => (detail ? audits.find(a => a.id === detail.id) ?? detail : null), [detail, audits]);
+
   return (
     <div>
-      <SectionTitle title="Auditorías" sub="Plan anual · Auditorías internas y externas" action="+ Nueva Auditoría" onAction={openCreate} />
+      <SectionTitle title="Auditorías" sub="Programa anual · alcance, criterios y cierre trazable" action="+ Nueva Auditoría" onAction={openCreate} />
+
+      <Card style={{ marginBottom: 20, borderLeft: "4px solid #123C66" }}>
+        <div style={{ fontSize: 11, color: "#5E6B7A", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Programa de auditoría {auditProgram.programYear}</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#142033", marginBottom: 8 }}>Responsable: {auditProgram.programOwner}</div>
+        <p style={{ fontSize: 13, color: "#5E6B7A", margin: "0 0 10px", lineHeight: 1.55 }}>{auditProgram.objectives}</p>
+        <div style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>Próxima revisión por la dirección: {auditProgram.nextManagementReview}</div>
+        <Link href="/app/reporting" style={{ fontSize: 12, color: "#2E8B57", fontWeight: 600, marginTop: 10, display: "inline-block" }}>
+          Generar informe de programa →
+        </Link>
+      </Card>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
         {[
@@ -150,18 +168,18 @@ export default function AuditsModule() {
         </div>
       )}
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.title ?? ""} width={560}>
-        {detail && (
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={detailLive?.title ?? ""} width={560}>
+        {detailLive && (
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
               {[
-                ["Tipo", detail.type === "EXTERNAL" ? "Externa" : "Interna"],
-                ["Norma", detail.standard],
-                ["Fecha", detail.date],
-                ["Auditor", detail.auditor],
-                ["Hallazgos", detail.findings],
-                ["Críticos", detail.criticals],
-                ["Progreso", `${detail.progress}%`],
+                ["Tipo", detailLive.type === "EXTERNAL" ? "Externa" : "Interna"],
+                ["Norma", detailLive.standard],
+                ["Fecha", detailLive.date],
+                ["Auditor", detailLive.auditor],
+                ["Hallazgos", detailLive.findings],
+                ["Críticos", detailLive.criticals],
+                ["Progreso", `${detailLive.progress}%`],
               ].map(([k, v]) => (
                 <div key={String(k)} style={{ background: "#F7F9FC", borderRadius: 8, padding: 12 }}>
                   <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 2 }}>{k}</div>
@@ -169,24 +187,39 @@ export default function AuditsModule() {
                 </div>
               ))}
             </div>
-            {detail.scope && (
+            {detailLive.scope && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>ALCANCE</div>
-                <div style={{ fontSize: 13, color: "#142033" }}>{detail.scope}</div>
+                <div style={{ fontSize: 13, color: "#142033" }}>{detailLive.scope}</div>
               </div>
             )}
-            {detail.objectives && (
+            {detailLive.objectives && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>OBJETIVOS</div>
-                <div style={{ fontSize: 13, color: "#142033" }}>{detail.objectives}</div>
+                <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>OBJETIVOS / CRITERIOS</div>
+                <div style={{ fontSize: 13, color: "#142033" }}>{detailLive.objectives}</div>
+              </div>
+            )}
+            {auditFindings.filter(f => f.auditId === detailLive.id).length > 0 && (
+              <div style={{ marginBottom: 16, padding: 12, background: "#fff8f0", borderRadius: 8, border: "1px solid #f5e0c8" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#142033", marginBottom: 8 }}>Hallazgos registrados</div>
+                {auditFindings
+                  .filter(f => f.auditId === detailLive.id)
+                  .map(f => (
+                    <div key={f.id} style={{ fontSize: 12, marginBottom: 6, color: "#142033" }}>
+                      <Badge status={f.severity === "CRITICAL" ? "CRITICAL" : f.severity === "MAJOR" ? "MAJOR" : "MINOR"} /> {f.title}
+                    </div>
+                  ))}
+                <Link href="/app/actions" style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>
+                  Derivar acciones →
+                </Link>
               </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {detail.status === "PLANNED" && (
+                {detailLive.status === "PLANNED" && (
                   <button
                     type="button"
-                    onClick={() => startAudit(detail)}
+                    onClick={() => startAudit(detailLive)}
                     style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
                   >
                     Iniciar auditoría
@@ -194,11 +227,31 @@ export default function AuditsModule() {
                 )}
                 <button
                   type="button"
-                  onClick={() => openChecklist(detail)}
-                  style={{ flex: 1, minWidth: 140, background: detail.status === "PLANNED" ? "#F7F9FC" : "#123C66", color: detail.status === "PLANNED" ? "#123C66" : "#fff", border: "1px solid #E5EAF2", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  onClick={() => openChecklist(detailLive)}
+                  style={{
+                    flex: 1,
+                    minWidth: 140,
+                    background: detailLive.status === "PLANNED" ? "#F7F9FC" : "#123C66",
+                    color: detailLive.status === "PLANNED" ? "#123C66" : "#fff",
+                    border: "1px solid #E5EAF2",
+                    borderRadius: 8,
+                    padding: "9px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
                 >
                   Ver Checklist
                 </button>
+                {perm.audits.manage && detailLive.status !== "COMPLETED" && detailLive.status !== "PLANNED" && (
+                  <button
+                    type="button"
+                    onClick={() => setCloseAuditAttest(detailLive)}
+                    style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Cierre formal
+                  </button>
+                )}
               </div>
               <button
                 type="button"
@@ -317,6 +370,46 @@ export default function AuditsModule() {
           </div>
         </div>
       </Modal>
+
+      <AttestationModal
+        open={!!closeAuditAttest}
+        onClose={() => setCloseAuditAttest(null)}
+        title="Cierre formal de auditoría"
+        statement="Certifica que la auditoría ha sido ejecutada según el plan aprobado, que los hallazgos están registrados y que las acciones derivadas han sido comunicadas a los responsables."
+        sessionEmail={state.session.email}
+        onConfirm={({ reason, attestationAt }) => {
+          const a = closeAuditAttest;
+          if (!a) return;
+          dispatch({
+            type: "updateAudit",
+            id: a.id,
+            patch: { status: "COMPLETED", progress: 100 },
+          });
+          dispatch({
+            type: "appendAudit",
+            event: createAuditEvent({
+              ts: attestationAt,
+              actorName: state.session.name,
+              actorEmail: state.session.email,
+              action: AUDIT_ACTIONS.AUDIT_CLOSED,
+              entityType: "AUDIT",
+              entityId: a.id,
+              entityLabel: a.title,
+              oldValue: a.status,
+              newValue: "COMPLETED",
+              reason,
+              attestation: {
+                method: "E_SIGN_SIMULATED",
+                statement: "Cierre de auditoría con reconfirmación de identidad",
+                confirmedAt: attestationAt,
+              },
+            }),
+          });
+          setCloseAuditAttest(null);
+          setDetail(null);
+          showToast("Auditoría cerrada · registro auditado");
+        }}
+      />
     </div>
   );
 }

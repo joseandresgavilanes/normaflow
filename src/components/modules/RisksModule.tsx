@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -41,13 +42,24 @@ const emptyForm = (owner: string): RiskForm => ({
 
 export default function RisksModule() {
   const { state, dispatch, nextRiskCode, showToast } = useWorkspace();
-  const { risks } = state;
+  const { risks, changeRequests, suppliers, processes, actions } = state;
   const [detail, setDetail] = useState<RiskRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<RiskForm>(() => emptyForm(state.session.name));
 
   const sortedRisks = useMemo(() => [...risks].sort((a, b) => b.score - a.score), [risks]);
+
+  const riskLinks = useMemo(() => {
+    if (!detail) return null;
+    const code = detail.code;
+    return {
+      changes: changeRequests.filter(c => c.riskCodes?.includes(code)),
+      suppliers: suppliers.filter(s => s.riskCodes?.includes(code)),
+      processes: processes.filter(p => p.linkedRiskCodes?.includes(code)),
+      actions: actions.filter(a => a.source === code),
+    };
+  }, [detail, changeRequests, suppliers, processes, actions]);
 
   const columns: Column<RiskRow>[] = [
     { key: "code", label: "#", render: v => <span style={{ color: "#5E6B7A", fontSize: 12, fontWeight: 600 }}>{v}</span> },
@@ -245,7 +257,7 @@ export default function RisksModule() {
         <DataTable columns={columns} rows={sortedRisks} onRow={setDetail} emptyText="No hay riesgos. Crea uno con + Nuevo Riesgo." />
       </Card>
 
-      <Modal open={!!detail && !editOpen} onClose={() => setDetail(null)} title={`${detail?.code} — ${detail?.title}`} width={560}>
+      <Modal open={!!detail && !editOpen} onClose={() => setDetail(null)} title={`${detail?.code} — ${detail?.title}`} width={600}>
         {detail && (
           <div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
@@ -265,13 +277,114 @@ export default function RisksModule() {
               ["Tratamiento", detail.treatment],
               ["Control actual", detail.control],
               ["Responsable", detail.owner],
-              ["Vencimiento", detail.due],
+              ["Vencimiento revisión", detail.due],
             ].map(([k, v]) => (
               <div key={String(k)} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #E5EAF2", fontSize: 13 }}>
                 <span style={{ color: "#5E6B7A" }}>{k}</span>
                 <span style={{ color: "#142033", fontWeight: 500, maxWidth: "60%", textAlign: "right" }}>{v}</span>
               </div>
             ))}
+            <div
+              style={{
+                marginTop: 14,
+                padding: "12px 14px",
+                background: "#F7F9FC",
+                borderRadius: 8,
+                fontSize: 12,
+                color: "#5E6B7A",
+                lineHeight: 1.5,
+              }}
+            >
+              <strong style={{ color: "#142033" }}>Riesgo residual (estimación demo):</strong> inherente {detail.score} pts · tras controles documentados se asume reducción operativa ~{" "}
+              {Math.max(1, Math.round(detail.score * 0.55))} pts (validar en tratamiento real y evidencias).
+            </div>
+
+            {riskLinks && (
+              <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid #E5EAF2" }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: "#123C66", marginBottom: 10 }}>Trazabilidad operativa</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, fontSize: 13 }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ color: "#5E6B7A", fontWeight: 600 }}>Acciones</span>
+                      <Link href="/app/actions" style={{ fontSize: 11, color: "#123C66", fontWeight: 600 }}>
+                        Abrir →
+                      </Link>
+                    </div>
+                    {riskLinks.actions.length ? (
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {riskLinks.actions.map(a => (
+                          <li key={a.id}>
+                            <span style={{ fontWeight: 600 }}>{a.code}</span> — {a.title}{" "}
+                            <Badge status={a.status} />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: "#9aa5b1", fontSize: 12 }}>Sin acciones con origen {detail.code}.</span>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ color: "#5E6B7A", fontWeight: 600 }}>Control de cambios</span>
+                      <Link href="/app/changes" style={{ fontSize: 11, color: "#123C66", fontWeight: 600 }}>
+                        Abrir →
+                      </Link>
+                    </div>
+                    {riskLinks.changes.length ? (
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {riskLinks.changes.map(c => (
+                          <li key={c.id}>
+                            <span style={{ fontWeight: 600 }}>{c.code}</span> — {c.title}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: "#9aa5b1", fontSize: 12 }}>Sin CR vinculadas a este código.</span>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ color: "#5E6B7A", fontWeight: 600 }}>Proveedores</span>
+                      <Link href="/app/suppliers" style={{ fontSize: 11, color: "#123C66", fontWeight: 600 }}>
+                        Abrir →
+                      </Link>
+                    </div>
+                    {riskLinks.suppliers.length ? (
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {riskLinks.suppliers.map(s => (
+                          <li key={s.id}>
+                            <span style={{ fontWeight: 600 }}>{s.code}</span> — {s.name}{" "}
+                            <span style={{ color: "#9aa5b1" }}>({s.criticality})</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: "#9aa5b1", fontSize: 12 }}>Sin proveedores catalogados con este riesgo.</span>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                      <span style={{ color: "#5E6B7A", fontWeight: 600 }}>Procesos</span>
+                      <Link href="/app/processes" style={{ fontSize: 11, color: "#123C66", fontWeight: 600 }}>
+                        Abrir →
+                      </Link>
+                    </div>
+                    {riskLinks.processes.length ? (
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {riskLinks.processes.map(p => (
+                          <li key={p.id}>
+                            <span style={{ fontWeight: 600 }}>{p.code}</span> — {p.name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <span style={{ color: "#9aa5b1", fontSize: 12 }}>Sin proceso con mapa de riesgos para este código.</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
               <button
                 type="button"

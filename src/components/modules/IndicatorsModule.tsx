@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import Link from "next/link";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -26,10 +27,11 @@ function MiniChart({ data, color }: { data: number[]; color: string }) {
 
 export default function IndicatorsModule() {
   const { state, dispatch, showToast } = useWorkspace();
-  const { indicators } = state;
+  const { indicators, processes } = state;
   const [detail, setDetail] = useState<IndicatorRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [commentDraft, setCommentDraft] = useState("");
   const [newForm, setNewForm] = useState({
     name: "",
     target: 80,
@@ -38,6 +40,11 @@ export default function IndicatorsModule() {
     clause: "",
     period: "Jun 2026",
   });
+
+  const indicatorProcesses = useMemo(() => {
+    if (!detail) return [];
+    return processes.filter(p => p.linkedIndicatorNames?.includes(detail.name));
+  }, [detail, processes]);
 
   function openCreate() {
     setNewForm({ name: "", target: 80, unit: "%", frequency: "monthly", clause: "", period: "Jun 2026" });
@@ -52,6 +59,8 @@ export default function IndicatorsModule() {
     const target = Number(newForm.target) || 1;
     const value = Math.round(target * 0.92 * 10) / 10;
     const history = Array.from({ length: 6 }, (_, i) => Math.round(value * (0.85 + i * 0.03)));
+    const nextRev = new Date();
+    nextRev.setDate(nextRev.getDate() + 30);
     const ind: IndicatorRow = {
       id: `i-${Date.now()}`,
       name: newForm.name.trim(),
@@ -64,6 +73,11 @@ export default function IndicatorsModule() {
       frequency: newForm.frequency,
       history,
       clause: newForm.clause.trim() || "—",
+      owner: state.session.name,
+      objective: `Seguimiento del indicador para revisión por la dirección y evidencia de cláusula ${newForm.clause.trim() || "—"}.`,
+      nextReviewDue: nextRev.toISOString().slice(0, 10),
+      managementComment: "",
+      alertThresholdPct: 90,
     };
     dispatch({ type: "addIndicator", ind });
     setCreateOpen(false);
@@ -73,6 +87,7 @@ export default function IndicatorsModule() {
   function openDetail(ind: IndicatorRow) {
     setDetail(ind);
     setEditValue(String(ind.value));
+    setCommentDraft(ind.managementComment ?? "");
   }
 
   function saveDetailValue() {
@@ -89,10 +104,10 @@ export default function IndicatorsModule() {
     dispatch({
       type: "updateIndicator",
       id: detail.id,
-      patch: { value: v, status, trend, history: nextHistory },
+      patch: { value: v, status, trend, history: nextHistory, managementComment: commentDraft.trim() },
     });
     setDetail(null);
-    showToast("KPI actualizado (sesión demo)");
+    showToast("KPI y notas de dirección guardados (sesión demo)");
   }
 
   return (
@@ -126,6 +141,12 @@ export default function IndicatorsModule() {
                     <div style={{ fontSize: 13, fontWeight: 600, color: "#142033", marginBottom: 2, lineHeight: 1.3 }}>{ind.name}</div>
                     <div style={{ fontSize: 11, color: "#5E6B7A" }}>
                       {ind.period} · {ind.frequency === "monthly" ? "Mensual" : "Trimestral"}
+                      {ind.owner && (
+                        <>
+                          {" · "}
+                          <span style={{ color: "#123C66", fontWeight: 600 }}>{ind.owner}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <Badge status={ind.status} />
@@ -239,11 +260,28 @@ export default function IndicatorsModule() {
         </div>
       </Modal>
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={480}>
+      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={520}>
         {detail && (
           <div>
-            <p style={{ fontSize: 13, color: "#5E6B7A", marginTop: 0 }}>Meta: {detail.target}</p>
-            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: "#5E6B7A", marginTop: 0, lineHeight: 1.5 }}>
+              Meta: <strong style={{ color: "#142033" }}>{detail.target}</strong>
+              {detail.unit} · Responsable datos: <strong style={{ color: "#142033" }}>{detail.owner ?? "—"}</strong>
+              {detail.nextReviewDue && (
+                <>
+                  {" "}
+                  · Próx. revisión: <strong style={{ color: "#142033" }}>{detail.nextReviewDue}</strong>
+                </>
+              )}
+            </p>
+            {detail.objective && (
+              <p style={{ fontSize: 12, color: "#5E6B7A", background: "#F7F9FC", padding: "10px 12px", borderRadius: 8, lineHeight: 1.5 }}>
+                <strong style={{ color: "#123C66" }}>Objetivo / marco:</strong> {detail.objective}
+              </p>
+            )}
+            <p style={{ fontSize: 12, color: "#5E6B7A" }}>
+              Umbral de alerta para revisión: &lt; {detail.alertThresholdPct ?? 90}% de la meta (configurable en implementación).
+            </p>
+            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 12 }}>
               Valor actual
               <input
                 value={editValue}
@@ -253,9 +291,62 @@ export default function IndicatorsModule() {
                 style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
               />
             </label>
-            <button type="button" onClick={saveDetailValue} style={{ width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Guardar valor
-            </button>
+            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 12 }}>
+              Comentario para revisión por la dirección
+              <textarea
+                value={commentDraft}
+                onChange={e => setCommentDraft(e.target.value)}
+                rows={3}
+                placeholder="Decisiones, causas, acuerdos del comité…"
+                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }}
+              />
+            </label>
+            <div style={{ marginBottom: 14, paddingTop: 12, borderTop: "1px solid #E5EAF2" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#123C66" }}>Procesos enlazados</span>
+                <Link href="/app/processes" style={{ fontSize: 11, color: "#123C66", fontWeight: 600 }}>
+                  Mapa de procesos →
+                </Link>
+              </div>
+              {indicatorProcesses.length ? (
+                <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "#142033" }}>
+                  {indicatorProcesses.map(p => (
+                    <li key={p.id}>
+                      <span style={{ fontWeight: 600 }}>{p.code}</span> — {p.name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <span style={{ fontSize: 12, color: "#9aa5b1" }}>Ningún proceso del mapa demo referencia este KPI por nombre.</span>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                type="button"
+                onClick={saveDetailValue}
+                style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+              >
+                Guardar valor y comentario
+              </button>
+              <Link
+                href="/app/reporting"
+                style={{
+                  flex: 0,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "0 14px",
+                  border: "1px solid #E5EAF2",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#123C66",
+                  textDecoration: "none",
+                }}
+              >
+                Informes
+              </Link>
+            </div>
           </div>
         )}
       </Modal>

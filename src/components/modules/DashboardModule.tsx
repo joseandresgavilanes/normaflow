@@ -102,6 +102,16 @@ export default function DashboardModule({
     .sort((a, b) => a.due.localeCompare(b.due))
     .slice(0, 4);
 
+  const trainTotal = state.trainingAssignments.length;
+  const trainDone = state.trainingAssignments.filter(a => a.status === "COMPLETED").length;
+  const trainPct = trainTotal ? Math.round((trainDone / trainTotal) * 100) : 100;
+  const trainOverdue = state.trainingAssignments.filter(a => a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED").length;
+  const changesOpen = state.changeRequests.filter(c => !["CLOSED", "REJECTED"].includes(c.status)).length;
+  const supCritical = state.suppliers.filter(s => s.criticality === "CRITICAL" || s.criticality === "HIGH").length;
+  const ob = state.onboardingChecklist;
+  const readinessPct = ob.length ? Math.round((ob.filter(x => x.done).reduce((s, x) => s + x.weight, 0) / ob.reduce((s, x) => s + x.weight, 0)) * 100) : 0;
+  const docsReviewDueSoon = state.documents.filter(d => d.reviewDue && d.reviewDue <= horizon && d.status === "APPROVED").length;
+
   const orgName = live ? orgNameProp : state.session.orgName;
 
   return (
@@ -181,12 +191,34 @@ export default function DashboardModule({
         ))}
       </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 20 }}>
+        {[
+          { href: "/app/setup", label: "Readiness", value: `${readinessPct}%`, sub: "Implementación", color: "#123C66" },
+          { href: "/app/training", label: "Formación", value: `${trainPct}%`, sub: `${trainOverdue} alertas`, color: trainOverdue ? "#C93C37" : "#2E8B57" },
+          { href: "/app/changes", label: "Cambios activos", value: changesOpen, sub: "Pipeline", color: "#D68A1A" },
+          { href: "/app/suppliers", label: "Proveedores crít.", value: supCritical, sub: "Alta / crítica", color: "#C93C37" },
+          { href: "/app/documents", label: "Revisiones próx.", value: docsReviewDueSoon, sub: `≤60 días`, color: "#123C66" },
+          { href: "/app/activity", label: "Eventos audit trail", value: state.auditEvents.length, sub: "Sesión actual", color: "#5E6B7A" },
+        ].map(w => (
+          <Link key={w.href} href={w.href} style={{ textDecoration: "none" }}>
+            <Card style={{ padding: "14px 16px", height: "100%" }}>
+              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>{w.label}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: w.color }}>{w.value}</div>
+              <div style={{ fontSize: 11, color: "#9aa5b1", marginTop: 2 }}>{w.sub}</div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
       <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
         {[
+          { href: "/app/setup", label: "Implementación" },
           { href: "/app/gap", label: "Continuar GAP" },
           { href: "/app/documents", label: "Revisar documentos" },
+          { href: "/app/changes", label: "Control de cambios" },
           { href: "/app/actions", label: "Ver acciones" },
           { href: "/app/audits", label: "Auditorías" },
+          { href: "/app/reporting", label: "Informes" },
         ].map(q => (
           <Link
             key={q.href}

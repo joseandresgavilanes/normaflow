@@ -47,3 +47,35 @@ export function canManageGap(roleKey: string): boolean {
 export function canAccessBilling(roleKey: string): boolean {
   return roleKey === "ORG_ADMIN" || roleKey === "SUPER_ADMIN";
 }
+
+export function canManageTraining(roleKey: string): boolean {
+  return canDemo(roleKey, "training:*");
+}
+
+export function canManageChanges(roleKey: string): boolean {
+  return canDemo(roleKey, "changes:*");
+}
+
+export function canManageSuppliers(roleKey: string): boolean {
+  return canDemo(roleKey, "suppliers:*");
+}
+
+export function canReadActivity(roleKey: string): boolean {
+  return canDemo(roleKey, "activity:read") || canDemo(roleKey, "activity:*");
+}
+
+export function canUseReporting(roleKey: string): boolean {
+  return canDemo(roleKey, "reporting:*") || canDemo(roleKey, "reporting:read");
+}
+
+export function canManageIntegrations(roleKey: string): boolean {
+  return canDemo(roleKey, "integrations:manage") || canDemo(roleKey, "org:*");
+}
+
+export function canCloseAudit(roleKey: string): boolean {
+  return canManageAudits(roleKey);
+}
+
+export function canApproveChange(roleKey: string): boolean {
+  return canManageChanges(roleKey);
+}

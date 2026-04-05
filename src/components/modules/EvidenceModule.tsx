@@ -40,6 +40,9 @@ export default function EvidenceModule() {
   const { evidence } = state;
   const [preview, setPreview] = useState<EvidenceItem | null>(null);
   const [busy, setBusy] = useState(false);
+  const [originFilter, setOriginFilter] = useState<"ALL" | "MANUAL" | "AUTOMATED" | "INTEGRATION">("ALL");
+
+  const filtered = evidence.filter(ev => originFilter === "ALL" || (ev.origin ?? "MANUAL") === originFilter);
 
   function onUpload(files: FileList | null) {
     const file = files?.[0];
@@ -56,6 +59,10 @@ export default function EvidenceModule() {
         fileSize: file.size,
         createdAt: new Date().toISOString(),
         blobUrl,
+        origin: "MANUAL",
+        relatedEntityType: null,
+        relatedEntityId: null,
+        framework: null,
       };
       dispatch({ type: "addEvidence", ev });
       showToast("Evidencia añadida (solo en esta sesión)");
@@ -77,14 +84,36 @@ export default function EvidenceModule() {
 
       {busy && <p style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 12 }}>Procesando…</p>}
 
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+        {(["ALL", "MANUAL", "AUTOMATED", "INTEGRATION"] as const).map(o => (
+          <button
+            key={o}
+            type="button"
+            onClick={() => setOriginFilter(o)}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: `1px solid ${originFilter === o ? "#123C66" : "#E5EAF2"}`,
+              background: originFilter === o ? "#123C6615" : "#fff",
+              fontSize: 12,
+              cursor: "pointer",
+              color: originFilter === o ? "#123C66" : "#5E6B7A",
+              fontWeight: originFilter === o ? 600 : 400,
+            }}
+          >
+            {o === "ALL" ? "Todos los orígenes" : o === "MANUAL" ? "Manual" : o === "AUTOMATED" ? "Automatizada" : "Integración"}
+          </button>
+        ))}
+      </div>
+
       <Card style={{ padding: 0, overflow: "hidden" }}>
-        {evidence.length === 0 ? (
+        {filtered.length === 0 ? (
           <div style={{ padding: 48, textAlign: "center", color: "#5E6B7A", fontSize: 14 }}>No hay evidencias. Sube un archivo o recarga para ver datos demo.</div>
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr style={{ background: "#F7F9FC", borderBottom: "1px solid #E5EAF2" }}>
-                {["Título", "Módulo", "Tipo", "Fecha", ""].map(h => (
+                {["Título", "Origen", "Vínculo", "Marco", "Fecha", ""].map(h => (
                   <th key={h} style={{ textAlign: "left", padding: "12px 16px", color: "#5E6B7A", fontWeight: 600 }}>
                     {h}
                   </th>
@@ -92,7 +121,7 @@ export default function EvidenceModule() {
               </tr>
             </thead>
             <tbody>
-              {evidence.map(ev => (
+              {filtered.map(ev => (
                 <tr
                   key={ev.id}
                   onClick={() => setPreview(ev)}
@@ -105,8 +134,11 @@ export default function EvidenceModule() {
                   }}
                 >
                   <td style={{ padding: "12px 16px", color: "#142033", fontWeight: 500 }}>{ev.title}</td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A" }}>{ev.module || "—"}</td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>{ev.mimeType || "—"}</td>
+                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>{ev.origin ?? "MANUAL"}</td>
+                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>
+                    {ev.relatedEntityType && ev.relatedEntityId ? `${ev.relatedEntityType} ${ev.relatedEntityId}` : ev.module || "—"}
+                  </td>
+                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>{ev.framework ?? "—"}</td>
                   <td style={{ padding: "12px 16px", color: "#5E6B7A" }}>{formatDate(ev.createdAt)}</td>
                   <td style={{ padding: "12px 16px" }}>
                     <span style={{ color: "#123C66", fontWeight: 600 }}>Vista previa →</span>

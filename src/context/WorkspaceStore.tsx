@@ -10,6 +10,31 @@ import {
   DEMO_NONCONFORMITIES,
 } from "@/lib/demo-data";
 import { DEMO_ORGANIZATIONS, getDemoOrg } from "@/lib/demo/organizations";
+import type { AuditEventRow } from "@/lib/domain/audit-event";
+import {
+  type AuditProgramSummary,
+  type ChangeRequestRow,
+  type DemoPerson,
+  type IntegrationInstanceRow,
+  type IntegrationKey,
+  type OnboardingChecklistRow,
+  type SupplierRow,
+  type TeamRow,
+  type TrainingAssignmentRow,
+  type TrainingCourseRow,
+  buildAuditProgram,
+  buildChangeRequests,
+  buildDemoPeople,
+  buildInitialAuditLog,
+  buildIntegrations,
+  buildOnboardingChecklist,
+  buildSuppliers,
+  buildTeams,
+  buildTrainingAssignments,
+  buildTrainingCourses,
+  enrichDocumentsEnterprise,
+  enrichEvidenceEnterprise,
+} from "@/lib/demo/enterprise-seed";
 import {
   type AuditFindingRow,
   type GapClauseState,
@@ -28,15 +53,45 @@ import {
 } from "@/lib/demo/seed-entities";
 
 export type RiskRow = ReturnType<typeof risksForOrg>[number];
-export type IndicatorRow = ReturnType<typeof indicatorsForOrg>[number];
+export type IndicatorRow = ReturnType<typeof indicatorsForOrg>[number] & {
+  owner?: string;
+  objective?: string;
+  nextReviewDue?: string;
+  managementComment?: string;
+  /** % de la meta por debajo del cual dispara alerta en revisión de dirección */
+  alertThresholdPct?: number;
+};
 export type AuditRow = (typeof DEMO_AUDITS)[number];
 export type NcRow = (typeof DEMO_NONCONFORMITIES)[number] & {
   preventiveAction?: string;
   effectivenessCheck?: string;
 };
 export type ActionRow = (typeof DEMO_ACTIONS)[number];
-export type DocumentRow = ReturnType<typeof documentsWithMeta>[number] & { previewUrl?: string };
+export type DocumentRow = ReturnType<typeof documentsWithMeta>[number] & {
+  previewUrl?: string;
+  reviewDue?: string;
+  reviewCycleMonths?: number;
+  reviewers?: string[];
+  approvers?: string[];
+  trainingImpact?: boolean;
+  linkedChangeIds?: string[];
+  lastAcknowledgedAt?: string;
+};
 export type ProcessRow = ReturnType<typeof processesWithLinks>[number];
+
+export type {
+  AuditEventRow,
+  TrainingCourseRow,
+  TrainingAssignmentRow,
+  ChangeRequestRow,
+  SupplierRow,
+  IntegrationInstanceRow,
+  OnboardingChecklistRow,
+  AuditProgramSummary,
+  DemoPerson,
+  TeamRow,
+  IntegrationKey,
+};
 
 export type ChecklistItem = { id: string; clause: string; requirement: string; done: boolean; notes?: string };
 
@@ -49,6 +104,10 @@ export type EvidenceItem = {
   fileSize: number | null;
   createdAt: string;
   blobUrl?: string;
+  origin?: "MANUAL" | "AUTOMATED" | "INTEGRATION";
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
+  framework?: string | null;
 };
 
 export type DocVersion = { version: string; date: string; author: string; note: string };
@@ -95,6 +154,16 @@ export type WorkspaceState = {
   sites: SiteRow[];
   activityFeed: ActivityFeedRow[];
   demoOrganizations: typeof DEMO_ORGANIZATIONS;
+  auditEvents: AuditEventRow[];
+  trainingCourses: TrainingCourseRow[];
+  trainingAssignments: TrainingAssignmentRow[];
+  changeRequests: ChangeRequestRow[];
+  suppliers: SupplierRow[];
+  integrations: IntegrationInstanceRow[];
+  onboardingChecklist: OnboardingChecklistRow[];
+  auditProgram: AuditProgramSummary;
+  demoPeople: DemoPerson[];
+  teams: TeamRow[];
 };
 
 function deepClone<T>(x: T): T {
@@ -109,6 +178,15 @@ function nextSequentialCode(prefix: string, rows: { code: string }[]): string {
     if (m) max = Math.max(max, parseInt(m[1], 10));
   }
   return `${prefix}-${String(max + 1).padStart(3, "0")}`;
+}
+
+function nextChangeRequestCode(rows: ChangeRequestRow[]): string {
+  let max = 0;
+  for (const r of rows) {
+    const m = /^CR-(\d+)$/.exec(r.code);
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }
+  return `CR-${String(max + 1).padStart(3, "0")}`;
 }
 
 function defaultChecklistForAudit(auditId: string, standard: string): ChecklistItem[] {
@@ -143,7 +221,8 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     ? { ...session, orgName: org.name, activeOrgId: org.id }
     : { ...session };
   const docsRaw = documentsWithMeta(orgId);
-  const docs: DocumentRow[] = docsRaw.map(d => ({
+  const docsEnriched = enrichDocumentsEnterprise(docsRaw, orgId);
+  const docs: DocumentRow[] = docsEnriched.map(d => ({
     ...d,
     previewUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
   }));
@@ -160,36 +239,39 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     ];
   });
 
-  const evidenceSeeds: EvidenceItem[] = [
-    {
-      id: `${orgId}-e1`,
-      title: DEMO_EVIDENCE[0]?.title ?? "Evidencia 1",
-      module: DEMO_EVIDENCE[0]?.module ?? "audit",
-      fileUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png",
-      mimeType: "image/png",
-      fileSize: 45000,
-      createdAt: `${DEMO_EVIDENCE[0]?.date ?? "2025-05-22"}T12:00:00.000Z`,
-    },
-    {
-      id: `${orgId}-e2`,
-      title: DEMO_EVIDENCE[1]?.title ?? "Evidencia PDF",
-      module: DEMO_EVIDENCE[1]?.module ?? "risk",
-      fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-      mimeType: "application/pdf",
-      fileSize: 13264,
-      createdAt: `${DEMO_EVIDENCE[1]?.date ?? "2025-06-01"}T12:00:00.000Z`,
-    },
-    {
-      id: `${orgId}-e3`,
-      title: DEMO_EVIDENCE[2]?.title ?? "Evidencia Office",
-      module: DEMO_EVIDENCE[2]?.module ?? "document",
-      fileUrl: "https://example.com/documento-ejemplo.docx",
-      mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      fileSize: 184320,
-      createdAt: `${DEMO_EVIDENCE[2]?.date ?? "2025-06-10"}T12:00:00.000Z`,
-    },
-  ];
+  const evidenceSeeds: EvidenceItem[] = enrichEvidenceEnterprise(
+    [
+      {
+        id: `${orgId}-e1`,
+        title: DEMO_EVIDENCE[0]?.title ?? "Evidencia 1",
+        module: DEMO_EVIDENCE[0]?.module ?? "audit",
+        fileUrl:
+          "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png",
+        mimeType: "image/png",
+        fileSize: 45000,
+        createdAt: `${DEMO_EVIDENCE[0]?.date ?? "2025-05-22"}T12:00:00.000Z`,
+      },
+      {
+        id: `${orgId}-e2`,
+        title: DEMO_EVIDENCE[1]?.title ?? "Evidencia PDF",
+        module: DEMO_EVIDENCE[1]?.module ?? "risk",
+        fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+        mimeType: "application/pdf",
+        fileSize: 13264,
+        createdAt: `${DEMO_EVIDENCE[1]?.date ?? "2025-06-01"}T12:00:00.000Z`,
+      },
+      {
+        id: `${orgId}-e3`,
+        title: DEMO_EVIDENCE[2]?.title ?? "Evidencia Office",
+        module: DEMO_EVIDENCE[2]?.module ?? "document",
+        fileUrl: "https://example.com/documento-ejemplo.docx",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        fileSize: 184320,
+        createdAt: `${DEMO_EVIDENCE[2]?.date ?? "2025-06-10"}T12:00:00.000Z`,
+      },
+    ],
+    orgId
+  );
 
   const audits = deepClone(DEMO_AUDITS);
   const checklists: Record<string, ChecklistItem[]> = {};
@@ -212,9 +294,39 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     effectivenessCheck: n.status === "CLOSED" ? "Verificado en seguimiento Q1 — eficaz" : undefined,
   }));
 
+  const demoPeople = buildDemoPeople(orgId, org);
+  const teams = buildTeams(orgId, org);
+  const trainingCourses = buildTrainingCourses();
+  const trainingAssignments = buildTrainingAssignments(orgId, demoPeople);
+  const changeRequests = buildChangeRequests(orgId);
+  const suppliers = buildSuppliers(orgId);
+  const integrations = buildIntegrations();
+  const onboardingChecklist = buildOnboardingChecklist();
+  const auditProgram = buildAuditProgram(org);
+  const auditEvents = buildInitialAuditLog(sessionResolved, org);
+
+  const indicatorOwners = ["Carlos Méndez", "Ana García", "Pedro Ruiz", "Laura Vega", "Carlos Méndez", "Laura Vega"];
+  const indicatorsEnriched: IndicatorRow[] = indicatorsForOrg(orgId).map((ind, i) => {
+    const due = new Date();
+    due.setDate(due.getDate() + 18 + i * 7);
+    return {
+      ...ind,
+      owner: indicatorOwners[i % indicatorOwners.length],
+      objective: `Mantener "${ind.name}" alineado con cláusula ${ind.clause} y entradas de revisión por la dirección.`,
+      nextReviewDue: due.toISOString().slice(0, 10),
+      managementComment:
+        i === 0
+          ? "Comité Q2: acción comercial con proveedor clave para recuperar NPS."
+          : i === 3
+            ? "Operaciones: plantear umbral de escalado si supera 4h en dos semanas consecutivas."
+            : "",
+      alertThresholdPct: 90,
+    };
+  });
+
   return {
     risks: risksForOrg(orgId),
-    indicators: indicatorsForOrg(orgId),
+    indicators: indicatorsEnriched,
     audits,
     auditChecklists: checklists,
     auditFindings: buildAuditFindings(),
@@ -222,7 +334,7 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     actions: deepClone(DEMO_ACTIONS),
     documents: docs,
     documentVersions: versions,
-    evidence: evidenceSeeds,
+    evidence: evidenceSeeds as EvidenceItem[],
     processes: processesWithLinks(orgId),
     billing: {
       plan: org.plan === "Starter" ? "STARTER" : "GROWTH",
@@ -239,6 +351,16 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     sites: buildSites(org),
     activityFeed: activityForOrg(org),
     demoOrganizations: DEMO_ORGANIZATIONS,
+    auditEvents,
+    trainingCourses,
+    trainingAssignments,
+    changeRequests,
+    suppliers,
+    integrations,
+    onboardingChecklist,
+    auditProgram,
+    demoPeople,
+    teams,
   };
 }
 
@@ -267,7 +389,15 @@ type Action =
   | { type: "markAllNotificationsRead" }
   | { type: "updateGapQuestion"; standard: "iso9001" | "iso27001"; clause: string; questionId: string; answer: "YES" | "NO" | "NA" }
   | { type: "updateGapComment"; standard: "iso9001" | "iso27001"; clause: string; comment: string }
-  | { type: "addAuditFinding"; finding: AuditFindingRow };
+  | { type: "addAuditFinding"; finding: AuditFindingRow }
+  | { type: "appendAudit"; event: AuditEventRow }
+  | { type: "addTrainingAssignment"; row: TrainingAssignmentRow }
+  | { type: "updateTrainingAssignment"; id: string; patch: Partial<TrainingAssignmentRow> }
+  | { type: "addChangeRequest"; row: ChangeRequestRow }
+  | { type: "updateChangeRequest"; id: string; patch: Partial<ChangeRequestRow> }
+  | { type: "updateSupplier"; id: string; patch: Partial<SupplierRow> }
+  | { type: "updateIntegration"; key: IntegrationKey; patch: Partial<IntegrationInstanceRow> }
+  | { type: "toggleOnboarding"; id: string; done?: boolean };
 
 function patchGapList(list: GapClauseState[], a: Extract<Action, { type: "updateGapQuestion" }>): GapClauseState[] {
   return list.map(row => {
@@ -393,6 +523,41 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
         : { ...state, gapIso27001: patchGapComment(state.gapIso27001, a) };
     case "addAuditFinding":
       return { ...state, auditFindings: [a.finding, ...state.auditFindings] };
+    case "appendAudit":
+      return { ...state, auditEvents: [a.event, ...state.auditEvents] };
+    case "addTrainingAssignment":
+      return { ...state, trainingAssignments: [a.row, ...state.trainingAssignments] };
+    case "updateTrainingAssignment":
+      return {
+        ...state,
+        trainingAssignments: state.trainingAssignments.map(t => (t.id === a.id ? { ...t, ...a.patch } : t)),
+      };
+    case "addChangeRequest":
+      return { ...state, changeRequests: [a.row, ...state.changeRequests] };
+    case "updateChangeRequest":
+      return {
+        ...state,
+        changeRequests: state.changeRequests.map(c =>
+          c.id === a.id ? { ...c, ...a.patch, updatedAt: new Date().toISOString().slice(0, 10) } : c
+        ),
+      };
+    case "updateSupplier":
+      return {
+        ...state,
+        suppliers: state.suppliers.map(s => (s.id === a.id ? { ...s, ...a.patch } : s)),
+      };
+    case "updateIntegration":
+      return {
+        ...state,
+        integrations: state.integrations.map(i => (i.key === a.key ? { ...i, ...a.patch } : i)),
+      };
+    case "toggleOnboarding":
+      return {
+        ...state,
+        onboardingChecklist: state.onboardingChecklist.map(o =>
+          o.id === a.id ? { ...o, done: a.done ?? !o.done } : o
+        ),
+      };
     default:
       return state;
   }
@@ -404,6 +569,7 @@ type Ctx = {
   nextRiskCode: () => string;
   nextNcCode: () => string;
   nextActionCode: () => string;
+  nextChangeCode: () => string;
   showToast: (m: string) => void;
   switchDemoOrg: (orgId: string) => void;
 };
@@ -423,6 +589,7 @@ export function WorkspaceProvider({
   const nextRiskCode = useCallback(() => nextSequentialCode("R", state.risks), [state.risks]);
   const nextNcCode = useCallback(() => nextSequentialCode("NC", state.nonconformities), [state.nonconformities]);
   const nextActionCode = useCallback(() => nextSequentialCode("AC", state.actions), [state.actions]);
+  const nextChangeCode = useCallback(() => nextChangeRequestCode(state.changeRequests), [state.changeRequests]);
 
   const showToast = useCallback((message: string) => {
     dispatch({ type: "toast", message });
@@ -434,8 +601,8 @@ export function WorkspaceProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ state, dispatch, nextRiskCode, nextNcCode, nextActionCode, showToast, switchDemoOrg }),
-    [state, dispatch, nextRiskCode, nextNcCode, nextActionCode, showToast, switchDemoOrg]
+    () => ({ state, dispatch, nextRiskCode, nextNcCode, nextActionCode, nextChangeCode, showToast, switchDemoOrg }),
+    [state, dispatch, nextRiskCode, nextNcCode, nextActionCode, nextChangeCode, showToast, switchDemoOrg]
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

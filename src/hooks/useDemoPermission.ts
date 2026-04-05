@@ -24,6 +24,12 @@ export function useDemoPermission() {
       actions: { manage: P.canManageActions(roleKey) },
       gap: { manage: P.canManageGap(roleKey) },
       billing: { manage: P.canAccessBilling(roleKey) },
+      training: { manage: P.canManageTraining(roleKey) },
+      changes: { manage: P.canManageChanges(roleKey) },
+      suppliers: { manage: P.canManageSuppliers(roleKey) },
+      reporting: { use: P.canUseReporting(roleKey) },
+      activity: { read: P.canReadActivity(roleKey) },
+      integrations: { manage: P.canManageIntegrations(roleKey) },
     }),
     [roleKey]
   );

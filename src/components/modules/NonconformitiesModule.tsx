@@ -1,20 +1,25 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
+import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type ActionRow, type NcRow } from "@/context/WorkspaceStore";
+import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import type { Column } from "@/components/ui/Table";
 
 const SEV_COLORS: Record<string, string> = { CRITICAL: "#C93C37", MAJOR: "#D68A1A", MINOR: "#5E6B7A" };
 
 export default function NonconformitiesModule() {
   const { state, dispatch, nextNcCode, nextActionCode, showToast } = useWorkspace();
+  const perm = useDemoPermission();
   const { nonconformities } = state;
   const [detail, setDetail] = useState<NcRow | null>(null);
+  const [closeNcAttest, setCloseNcAttest] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [actionOpen, setActionOpen] = useState(false);
   const [actionTitle, setActionTitle] = useState("");
@@ -128,6 +133,8 @@ export default function NonconformitiesModule() {
     showToast(`Acción ${code} creada y vinculada a ${detail.code} (demo)`);
   }
 
+  const detailLive = useMemo(() => (detail ? nonconformities.find(n => n.id === detail.id) ?? detail : null), [detail, nonconformities]);
+
   return (
     <div>
       <SectionTitle title="No Conformidades y CAPA" sub="Hallazgos, análisis de causa raíz y acciones correctivas" action="+ Registrar NC" onAction={openCreate} />
@@ -150,16 +157,16 @@ export default function NonconformitiesModule() {
         <DataTable columns={columns} rows={nonconformities} onRow={setDetail} emptyText="No hay NC. Registra una con + Registrar NC." />
       </Card>
 
-      <Modal open={!!detail && !actionOpen} onClose={() => setDetail(null)} title={`${detail?.code} — No Conformidad`} width={580}>
-        {detail && (
+      <Modal open={!!detailLive && !actionOpen} onClose={() => setDetail(null)} title={`${detailLive?.code} — No Conformidad`} width={580}>
+        {detailLive && (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 16 }}>{detail.title}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 16 }}>{detailLive.title}</div>
             {[
-              ["Origen", detail.source.replace(/_/g, " ")],
-              ["Severidad", detail.severity],
-              ["Estado", <Badge key="st" status={detail.status} />],
-              ["Responsable", detail.owner],
-              ["Fecha límite", detail.due],
+              ["Origen", detailLive.source.replace(/_/g, " ")],
+              ["Severidad", detailLive.severity],
+              ["Estado", <Badge key="st" status={detailLive.status} />],
+              ["Responsable", detailLive.owner],
+              ["Fecha límite", detailLive.due],
             ].map(([k, v]) => (
               <div key={String(k)} style={{ padding: "9px 0", borderBottom: "1px solid #E5EAF2", display: "flex", justifyContent: "space-between", fontSize: 13 }}>
                 <span style={{ color: "#5E6B7A" }}>{k}</span>
@@ -168,16 +175,30 @@ export default function NonconformitiesModule() {
             ))}
             <div style={{ marginTop: 14, padding: "12px 14px", background: "#F7F9FC", borderRadius: 8, marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
-              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detail.rootCause}</div>
+              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
             </div>
             <div style={{ padding: "12px 14px", background: "#e8f5ee40", border: "1px solid #2E8B5730", borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: "#2E8B57", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Acción Correctiva</div>
-              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detail.correctiveAction}</div>
+              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detailLive.correctiveAction}</div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button type="button" onClick={openActionModal} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            {detailLive.effectivenessCheck && (
+              <div style={{ padding: "12px 14px", background: "#f0f4ff", borderRadius: 8, marginBottom: 16, fontSize: 13, color: "#142033" }}>
+                <strong>Verificación de eficacia:</strong> {detailLive.effectivenessCheck}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <button type="button" onClick={openActionModal} style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Crear Acción Correctiva
               </button>
+              {perm.nc.manage && detailLive.status !== "CLOSED" && (
+                <button
+                  type="button"
+                  onClick={() => setCloseNcAttest(true)}
+                  style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                >
+                  Cerrar NC (firma simulada)
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => showToast("Análisis 5 Porqués (demo): documenta cada nivel en el registro de la NC.")}
@@ -283,6 +304,49 @@ export default function NonconformitiesModule() {
           </button>
         </div>
       </Modal>
+
+      <AttestationModal
+        open={closeNcAttest && !!detailLive}
+        onClose={() => setCloseNcAttest(false)}
+        title="Cierre de no conformidad (CAPA)"
+        statement="Certifica que las acciones correctivas han sido implementadas, que la eficacia ha sido evaluada y que es apropiado cerrar formalmente esta NC."
+        sessionEmail={state.session.email}
+        onConfirm={({ reason, attestationAt }) => {
+          const n = detailLive ?? (detail ? nonconformities.find(x => x.id === detail.id) : null);
+          if (!n) return;
+          dispatch({
+            type: "updateNc",
+            id: n.id,
+            patch: {
+              status: "CLOSED",
+              effectivenessCheck: reason,
+            },
+          });
+          dispatch({
+            type: "appendAudit",
+            event: createAuditEvent({
+              ts: attestationAt,
+              actorName: state.session.name,
+              actorEmail: state.session.email,
+              action: AUDIT_ACTIONS.NC_CLOSED,
+              entityType: "NONCONFORMITY",
+              entityId: n.id,
+              entityLabel: n.code,
+              oldValue: n.status,
+              newValue: "CLOSED",
+              reason,
+              attestation: {
+                method: "E_SIGN_SIMULATED",
+                statement: "Cierre NC con verificación de eficacia",
+                confirmedAt: attestationAt,
+              },
+            }),
+          });
+          setCloseNcAttest(false);
+          setDetail(null);
+          showToast("NC cerrada · trazabilidad y eficacia registradas");
+        }}
+      />
     </div>
   );
 }

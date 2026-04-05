@@ -7,8 +7,11 @@ import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
+import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import { formatDate } from "@/lib/utils";
 import type { Column } from "@/components/ui/Table";
 
 function isPdfUrl(url: string) {
@@ -52,6 +55,7 @@ export default function DocumentsModule() {
   const [newForm, setNewForm] = useState({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE" as DocumentRow["type"] });
   const [versionNote, setVersionNote] = useState("");
   const [nextVersion, setNextVersion] = useState("");
+  const [approveAttestOpen, setApproveAttestOpen] = useState(false);
 
   const folderOptions = useMemo(() => {
     const u = new Set(documents.map(d => d.folder));
@@ -97,6 +101,11 @@ export default function DocumentsModule() {
       ),
     },
     { key: "updated", label: "Actualizado" },
+    {
+      key: "reviewDue",
+      label: "Rev.",
+      render: v => <span style={{ fontSize: 11, color: "#5E6B7A" }}>{v ? formatDate(String(v)) : "—"}</span>,
+    },
   ];
 
   function submitNewDoc() {
@@ -110,6 +119,8 @@ export default function DocumentsModule() {
     }
     const sizeLabel = newFile ? `${(newFile.size / 1024).toFixed(0)} KB` : "—";
     const procCode = state.processes[0]?.code ?? "P-01";
+    const rd = new Date();
+    rd.setMonth(rd.getMonth() + 12);
     const doc: DocumentRow = {
       id: `d-${Date.now()}`,
       code: newForm.code.trim(),
@@ -128,6 +139,12 @@ export default function DocumentsModule() {
       siteId: `${state.session.activeOrgId}-s1`,
       linkedClause: newForm.clause.trim() || "8.5",
       linkedProcessCode: procCode,
+      reviewDue: rd.toISOString().slice(0, 10),
+      reviewCycleMonths: newForm.type === "POLICY" || newForm.type === "MANUAL" ? 12 : 24,
+      reviewers: [state.session.name, "Carlos Méndez"],
+      approvers: ["Ana García"],
+      trainingImpact: newForm.type === "POLICY",
+      linkedChangeIds: [],
     };
     dispatch({ type: "addDocument", doc });
     setShowNew(false);
@@ -250,6 +267,43 @@ export default function DocumentsModule() {
                 </div>
               ))}
             </div>
+            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid #E5EAF2" }}>
+              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Control documental</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#142033" }}>
+                <div>
+                  <span style={{ color: "#5E6B7A" }}>Próx. revisión: </span>
+                  {detailLive.reviewDue ? formatDate(detailLive.reviewDue) : "—"}
+                </div>
+                <div>
+                  <span style={{ color: "#5E6B7A" }}>Periodicidad: </span>
+                  {detailLive.reviewCycleMonths ?? "—"} meses
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <span style={{ color: "#5E6B7A" }}>Revisores: </span>
+                  {(detailLive.reviewers ?? []).join(", ") || "—"}
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <span style={{ color: "#5E6B7A" }}>Aprobadores: </span>
+                  {(detailLive.approvers ?? []).join(", ") || "—"}
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <span style={{ color: "#5E6B7A" }}>Impacto formación: </span>
+                  {detailLive.trainingImpact ? "Sí — puede disparar asignaciones" : "No prioritario"}
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <span style={{ color: "#5E6B7A" }}>Cambios vinculados: </span>
+                  {(detailLive.linkedChangeIds ?? []).length ? (
+                    (detailLive.linkedChangeIds ?? []).map(cid => (
+                      <Link key={cid} href="/app/changes" style={{ color: "#123C66", fontWeight: 600, marginRight: 8 }}>
+                        {cid.split("-").pop()}
+                      </Link>
+                    ))
+                  ) : (
+                    "—"
+                  )}
+                </div>
+              </div>
+            </div>
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -270,7 +324,21 @@ export default function DocumentsModule() {
                     title={!perm.documents.edit ? "Sin permiso para editar documentos" : undefined}
                     onClick={() => {
                       dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "IN_REVIEW" } });
-                      showToast("Enviado a revisión");
+                      dispatch({
+                        type: "appendAudit",
+                        event: createAuditEvent({
+                          ts: new Date().toISOString(),
+                          actorName: state.session.name,
+                          actorEmail: state.session.email,
+                          action: AUDIT_ACTIONS.DOCUMENT_SENT_REVIEW,
+                          entityType: "DOCUMENT",
+                          entityId: detailLive.id,
+                          entityLabel: detailLive.code,
+                          oldValue: detailLive.status,
+                          newValue: "IN_REVIEW",
+                        }),
+                      });
+                      showToast("Enviado a revisión · trazabilidad registrada");
                       setDetail(null);
                     }}
                     style={{
@@ -292,11 +360,7 @@ export default function DocumentsModule() {
                     type="button"
                     disabled={!perm.documents.approve}
                     title={!perm.documents.approve ? "Solo administración o compliance puede aprobar" : undefined}
-                    onClick={() => {
-                      dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "APPROVED" } });
-                      showToast("Documento aprobado");
-                      setDetail(null);
-                    }}
+                    onClick={() => setApproveAttestOpen(true)}
                     style={{
                       padding: "8px 12px",
                       borderRadius: 8,
@@ -308,7 +372,7 @@ export default function DocumentsModule() {
                       cursor: perm.documents.approve ? "pointer" : "not-allowed",
                     }}
                   >
-                    Aprobar
+                    Aprobar (firma simulada)
                   </button>
                 )}
                 {detailLive.status !== "OBSOLETE" && (
@@ -316,9 +380,23 @@ export default function DocumentsModule() {
                     type="button"
                     disabled={!perm.documents.edit}
                     onClick={() => {
-                      if (!window.confirm("¿Marcar este documento como obsoleto? (demo)")) return;
+                      if (!window.confirm("¿Marcar este documento como obsoleto? Esta acción quedará en el registro de actividad del sistema.")) return;
                       dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "OBSOLETE" } });
-                      showToast("Marcado como obsoleto");
+                      dispatch({
+                        type: "appendAudit",
+                        event: createAuditEvent({
+                          ts: new Date().toISOString(),
+                          actorName: state.session.name,
+                          actorEmail: state.session.email,
+                          action: AUDIT_ACTIONS.DOCUMENT_OBSOLETE,
+                          entityType: "DOCUMENT",
+                          entityId: detailLive.id,
+                          entityLabel: detailLive.code,
+                          oldValue: detailLive.status,
+                          newValue: "OBSOLETE",
+                        }),
+                      });
+                      showToast("Marcado como obsoleto · evento auditado");
                       setDetail(null);
                     }}
                     style={{
@@ -469,6 +547,42 @@ export default function DocumentsModule() {
           </div>
         </div>
       </Modal>
+
+      <AttestationModal
+        open={approveAttestOpen}
+        onClose={() => setApproveAttestOpen(false)}
+        title="Aprobación formal de documento"
+        statement="Como aprobador documental certifica que ha revisado el contenido, la versión y la trazabilidad requerida para este documento controlado antes de liberarlo como «Aprobado»."
+        sessionEmail={state.session.email}
+        onConfirm={({ reason, attestationAt }) => {
+          const d = detailLive ?? (detail ? documents.find(x => x.id === detail.id) : null);
+          if (!d) return;
+          dispatch({ type: "updateDocument", id: d.id, patch: { status: "APPROVED" } });
+          dispatch({
+            type: "appendAudit",
+            event: createAuditEvent({
+              ts: attestationAt,
+              actorName: state.session.name,
+              actorEmail: state.session.email,
+              action: AUDIT_ACTIONS.DOCUMENT_APPROVED,
+              entityType: "DOCUMENT",
+              entityId: d.id,
+              entityLabel: d.code,
+              oldValue: d.status,
+              newValue: "APPROVED",
+              reason,
+              attestation: {
+                method: "E_SIGN_SIMULATED",
+                statement: "Aprobación documental con reconfirmación de identidad",
+                confirmedAt: attestationAt,
+              },
+            }),
+          });
+          setApproveAttestOpen(false);
+          setDetail(null);
+          showToast("Documento aprobado · firma simulada y audit trail actualizado");
+        }}
+      />
     </div>
   );
 }
