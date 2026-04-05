@@ -16,7 +16,7 @@ export default function DataTable<T extends Record<string, any>>({ columns, rows
         </thead>
         <tbody>
           {rows.map((row, ri) => (
-            <tr key={ri} onClick={() => onRow?.(row)}
+            <tr key={row.id != null ? String(row.id) : ri} onClick={() => onRow?.(row)}
               style={{ borderBottom: "1px solid #E5EAF2", cursor: onRow ? "pointer" : "default", transition: "background 0.1s" }}
               onMouseEnter={e => { if (onRow) (e.currentTarget as HTMLElement).style.background = "#F7F9FC"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}>

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
+import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 
 const NAV = [
   { href: "/app/dashboard", icon: "⊞", label: "Dashboard" },
@@ -16,6 +17,7 @@ const NAV = [
   { href: "/app/evidence", icon: "📎", label: "Evidencias" },
   { href: "/app/notifications", icon: "🔔", label: "Notificaciones" },
   { href: "/app/billing", icon: "💳", label: "Billing" },
+  { href: "/app/settings", icon: "👤", label: "Cuenta" },
 ];
 
 type Membership = { organizationId: string; organizationName: string; role: string };
@@ -38,6 +40,9 @@ export default function AppSidebar({
   onOrgChange?: (organizationId: string) => void;
 }) {
   const pathname = usePathname();
+  const ws = useWorkspaceOptional();
+  const sidebarName = ws?.state.session.name ?? userName;
+  const sidebarRole = ws?.state.session.roleLabel ?? roleLabel;
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -136,17 +141,17 @@ export default function AppSidebar({
           </button>
         </div>
       </nav>
-      <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-          <Avatar name={userName} size={28} />
+      <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 9 }}>
+        <Link href="/app/settings" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flex: 1, minWidth: 0, color: "inherit" }}>
+          <Avatar name={sidebarName} size={28} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{roleLabel}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sidebarName}</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{sidebarRole}</div>
           </div>
-          <button type="button" onClick={() => logout()} style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "pointer" }} title="Salir">
-            ↩
-          </button>
-        </div>
+        </Link>
+        <button type="button" onClick={() => logout()} style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }} title="Salir">
+          ↩
+        </button>
       </div>
     </aside>
   );

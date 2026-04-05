@@ -1,11 +1,12 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { AppContext } from "@/lib/app-context";
+import { useEffect, useMemo, useState } from "react";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppTopbar from "@/components/layout/AppTopbar";
 import AIPanel from "@/components/modules/AIPanel";
+import WorkspaceToast from "@/components/workspace/WorkspaceToast";
+import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { ROLES } from "@/lib/constants";
 
 type SerializedCtx =
@@ -64,29 +65,42 @@ export default function AppRoot({
     : pathname.includes("/nonconformities") ? "nc"
     : "gap";
 
+  const profile = useMemo(
+    () => ({
+      name: userName,
+      email: initial.mode === "live" ? initial.user.email : "demo@normaflow.io",
+      orgName,
+      roleLabel,
+    }),
+    [userName, initial, orgName, roleLabel]
+  );
+
   return (
-    <div style={{ display: "flex", background: "#F7F9FC", minHeight: "100vh", fontFamily: "Inter, -apple-system, sans-serif" }}>
-      <AppSidebar
-        onAI={() => setAiOpen(true)}
-        orgName={orgName}
-        userName={userName}
-        roleLabel={roleLabel}
-        memberships={memberships}
-        currentOrgId={initial.mode === "live" ? initial.organization.id : undefined}
-        onOrgChange={async orgId => {
-          await fetch("/api/auth/set-org", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ organizationId: orgId }),
-          });
-          router.refresh();
-        }}
-      />
-      <div style={{ flex: 1, marginLeft: 224, minWidth: 0 }}>
-        <AppTopbar userName={userName} roleLabel={roleLabel} />
-        <main style={{ padding: "28px 32px", maxWidth: 1280 }}>{children}</main>
+    <WorkspaceProvider key={profile.email + orgName} profile={profile}>
+      <div style={{ display: "flex", background: "#F7F9FC", minHeight: "100vh", fontFamily: "Inter, -apple-system, sans-serif" }}>
+        <AppSidebar
+          onAI={() => setAiOpen(true)}
+          orgName={orgName}
+          userName={userName}
+          roleLabel={roleLabel}
+          memberships={memberships}
+          currentOrgId={initial.mode === "live" ? initial.organization.id : undefined}
+          onOrgChange={async orgId => {
+            await fetch("/api/auth/set-org", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ organizationId: orgId }),
+            });
+            router.refresh();
+          }}
+        />
+        <div style={{ flex: 1, marginLeft: 224, minWidth: 0 }}>
+          <AppTopbar userName={userName} roleLabel={roleLabel} />
+          <main style={{ padding: "28px 32px", maxWidth: 1280 }}>{children}</main>
+        </div>
+        <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
+        <WorkspaceToast />
       </div>
-      <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
-    </div>
+    </WorkspaceProvider>
   );
 }
