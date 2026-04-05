@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #123C66;
+    --primary-dark: #0D2E4E;
+    --accent: #2E8B57;
+    --bg: #F7F9FC;
+    --surface: #FFFFFF;
+    --border: #E5EAF2;
+    --text-main: #142033;
+    --text-muted: #5E6B7A;
+    --danger: #C93C37;
+    --warning: #D68A1A;
+    --success: #2E8B57;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-inter, Inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  a { color: inherit; }
+  button { font-family: inherit; }
+  input, textarea, select { font-family: inherit; }
+}

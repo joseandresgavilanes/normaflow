@@ -1,0 +1,702 @@
+// NormaFlow Database Schema
+// Proveedor: Supabase Postgres
+// ORM: Prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── ORGANIZATIONS & USERS ───────────────────────────
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  industry     String?
+  country      String   @default("ES")
+  logoUrl      String?
+  plan         Plan     @default(STARTER)
+  trialEndsAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships       Membership[]
+  standards         OrganizationStandard[]
+  assessments       Assessment[]
+  documents         Document[]
+  processes         Process[]
+  risks             Risk[]
+  audits            Audit[]
+  nonconformities   Nonconformity[]
+  actions           Action[]
+  indicators        Indicator[]
+  evidenceFiles     EvidenceFile[]
+  notifications     Notification[]
+  subscription      Subscription?
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String
+  avatarUrl   String?
+  authUserId  String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   Membership[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Membership {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           Role     @default(CONTRIBUTOR)
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("memberships")
+}
+
+// ─── STANDARDS & CLAUSES ─────────────────────────────
+
+model Standard {
+  id          String   @id @default(cuid())
+  code        String   @unique  // ISO_9001, ISO_27001
+  name        String
+  version     String
+  description String?
+  isActive    Boolean  @default(true)
+
+  clauses     Clause[]
+  assessments Assessment[]
+  orgStandards OrganizationStandard[]
+
+  @@map("standards")
+}
+
+model Clause {
+  id          String  @id @default(cuid())
+  standardId  String
+  code        String  // e.g. "4.1", "6.1.2"
+  title       String
+  description String?
+  parentId    String?
+  order       Int     @default(0)
+
+  standard          Standard           @relation(fields: [standardId], references: [id])
+  parent            Clause?            @relation("ClauseParent", fields: [parentId], references: [id])
+  children          Clause[]           @relation("ClauseParent")
+  assessmentAnswers AssessmentAnswer[]
+  documents         Document[]
+
+  @@map("clauses")
+}
+
+model OrganizationStandard {
+  id             String   @id @default(cuid())
+  organizationId String
+  standardId     String
+  startedAt      DateTime @default(now())
+  targetDate     DateTime?
+  score          Float?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  standard     Standard     @relation(fields: [standardId], references: [id])
+
+  @@unique([organizationId, standardId])
+  @@map("organization_standards")
+}
+
+// ─── GAP ASSESSMENT ──────────────────────────────────
+
+model Assessment {
+  id             String           @id @default(cuid())
+  organizationId String
+  standardId     String
+  title          String
+  type           AssessmentType   @default(INTERNAL)
+  status         AssessmentStatus @default(IN_PROGRESS)
+  globalScore    Float?
+  assessorId     String?
+  startedAt      DateTime         @default(now())
+  completedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  standard     Standard           @relation(fields: [standardId], references: [id])
+  answers      AssessmentAnswer[]
+
+  @@map("assessments")
+}
+
+model AssessmentAnswer {
+  id           String         @id @default(cuid())
+  assessmentId String
+  clauseId     String
+  score        Int            @default(0)  // 0-100
+  status       ClauseStatus   @default(NOT_EVALUATED)
+  comment      String?
+  evidence     String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  clause     Clause     @relation(fields: [clauseId], references: [id])
+
+  @@unique([assessmentId, clauseId])
+  @@map("assessment_answers")
+}
+
+// ─── DOCUMENT CONTROL ────────────────────────────────
+
+model Document {
+  id             String         @id @default(cuid())
+  organizationId String
+  code           String
+  title          String
+  type           DocumentType
+  status         DocumentStatus @default(DRAFT)
+  clauseId       String?
+  processId      String?
+  standardCode   String?
+  currentVersion String         @default("1.0")
+  ownerId        String?
+  reviewDate     DateTime?
+  tags           String[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clause       Clause?           @relation(fields: [clauseId], references: [id])
+  versions     DocumentVersion[]
+  approvals    Approval[]
+
+  @@unique([organizationId, code])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  version     String
+  fileUrl     String?
+  fileSize    Int?
+  mimeType    String?
+  changeLog   String?
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("document_versions")
+}
+
+model Approval {
+  id         String         @id @default(cuid())
+  documentId String
+  approverId String
+  status     ApprovalStatus @default(PENDING)
+  comment    String?
+  decidedAt  DateTime?
+  createdAt  DateTime       @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@map("approvals")
+}
+
+// ─── PROCESSES ───────────────────────────────────────
+
+model Process {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  code           String?
+  type           String?  // core, support, strategic
+  description    String?
+  ownerId        String?
+  inputs         String[]
+  outputs        String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risks        Risk[]
+
+  @@map("processes")
+}
+
+// ─── RISK MANAGEMENT ─────────────────────────────────
+
+model Risk {
+  id              String          @id @default(cuid())
+  organizationId  String
+  processId       String?
+  title           String
+  description     String?
+  category        String
+  probability     Int             // 1-5
+  impact          Int             // 1-5
+  score           Int             // probability * impact
+  status          RiskStatus      @default(IDENTIFIED)
+  treatment       RiskTreatment   @default(MITIGATE)
+  ownerId         String?
+  dueDate         DateTime?
+  residualScore   Int?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process      Process?     @relation(fields: [processId], references: [id])
+  controls     Control[]
+  actions      Action[]
+
+  @@map("risks")
+}
+
+model Control {
+  id          String        @id @default(cuid())
+  riskId      String
+  title       String
+  description String?
+  type        ControlType   @default(PREVENTIVE)
+  status      ControlStatus @default(PLANNED)
+  ownerId     String?
+  createdAt   DateTime      @default(now())
+
+  risk Risk @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@map("controls")
+}
+
+// ─── AUDITS ──────────────────────────────────────────
+
+model Audit {
+  id             String      @id @default(cuid())
+  organizationId String
+  title          String
+  type           AuditType   @default(INTERNAL)
+  standardCode   String?
+  status         AuditStatus @default(PLANNED)
+  auditorId      String?
+  auditorExternal String?
+  scheduledDate  DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  scope          String?
+  objectives     String?
+  reportUrl      String?
+  progress       Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  findings        AuditFinding[]
+  nonconformities Nonconformity[]
+
+  @@map("audits")
+}
+
+model AuditFinding {
+  id          String          @id @default(cuid())
+  auditId     String
+  title       String
+  description String?
+  type        FindingType     @default(OBSERVATION)
+  severity    FindingSeverity @default(MINOR)
+  clauseCode  String?
+  status      FindingStatus   @default(OPEN)
+  evidenceUrl String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  audit         Audit          @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  nonconformity Nonconformity?
+
+  @@map("audit_findings")
+}
+
+// ─── NONCONFORMITIES / CAPA ──────────────────────────
+
+model Nonconformity {
+  id             String               @id @default(cuid())
+  organizationId String
+  auditId        String?
+  findingId      String?              @unique
+  title          String
+  description    String?
+  source         NCSource             @default(INTERNAL_AUDIT)
+  severity       NCSeverity           @default(MINOR)
+  status         NCStatus             @default(OPEN)
+  ownerId        String?
+  rootCause      String?
+  dueDate        DateTime?
+  closedAt       DateTime?
+  effectivenessValidated Boolean      @default(false)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  audit        Audit?        @relation(fields: [auditId], references: [id])
+  finding      AuditFinding? @relation(fields: [findingId], references: [id])
+  actions      Action[]
+
+  @@map("nonconformities")
+}
+
+// ─── ACTIONS ─────────────────────────────────────────
+
+model Action {
+  id               String        @id @default(cuid())
+  organizationId   String
+  title            String
+  description      String?
+  type             ActionType    @default(CORRECTIVE)
+  priority         Priority      @default(MEDIUM)
+  status           ActionStatus  @default(PENDING)
+  ownerId          String?
+  dueDate          DateTime?
+  completedAt      DateTime?
+  progress         Int           @default(0)
+  riskId           String?
+  nonconformityId  String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risk            Risk?          @relation(fields: [riskId], references: [id])
+  nonconformity   Nonconformity? @relation(fields: [nonconformityId], references: [id])
+  comments        ActionComment[]
+
+  @@map("actions")
+}
+
+model ActionComment {
+  id        String   @id @default(cuid())
+  actionId  String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  action Action @relation(fields: [actionId], references: [id], onDelete: Cascade)
+
+  @@map("action_comments")
+}
+
+// ─── INDICATORS ──────────────────────────────────────
+
+model Indicator {
+  id             String          @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  unit           String
+  target         Float
+  frequency      String          @default("monthly")
+  ownerId        String?
+  status         IndicatorStatus @default(ON_TRACK)
+  clauseCode     String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  values       IndicatorValue[]
+
+  @@map("indicators")
+}
+
+model IndicatorValue {
+  id          String   @id @default(cuid())
+  indicatorId String
+  value       Float
+  period      String   // "2025-06"
+  note        String?
+  createdAt   DateTime @default(now())
+
+  indicator Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  @@map("indicator_values")
+}
+
+// ─── EVIDENCE ────────────────────────────────────────
+
+model EvidenceFile {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  fileUrl        String
+  fileSize       Int?
+  mimeType       String?
+  module         String?  // risk, audit, document, nc
+  moduleId       String?
+  uploadedById   String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("evidence_files")
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────
+
+model Notification {
+  id             String             @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String
+  body           String
+  type           NotificationType   @default(INFO)
+  read           Boolean            @default(false)
+  link           String?
+  createdAt      DateTime           @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─── BILLING ─────────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  plan                 Plan               @default(STARTER)
+  status               SubscriptionStatus @default(TRIALING)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// ─── AUDIT LOGS ──────────────────────────────────────
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String
+  module         String
+  recordId       String?
+  metadata       Json?
+  ip             String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// ─── ENUMS ───────────────────────────────────────────
+
+enum Plan {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum Role {
+  SUPER_ADMIN
+  ORG_ADMIN
+  COMPLIANCE_MANAGER
+  AUDITOR
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum AssessmentType {
+  INTERNAL
+  EXTERNAL
+  PRE_CERTIFICATION
+}
+
+enum AssessmentStatus {
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum ClauseStatus {
+  NOT_EVALUATED
+  COMPLIANT
+  PARTIALLY_COMPLIANT
+  NON_COMPLIANT
+  NOT_APPLICABLE
+}
+
+enum DocumentType {
+  MANUAL
+  PROCEDURE
+  POLICY
+  INSTRUCTION
+  FORM
+  RECORD
+  PLAN
+  OTHER
+}
+
+enum DocumentStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  OBSOLETE
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RiskStatus {
+  IDENTIFIED
+  UNDER_TREATMENT
+  MONITORED
+  MITIGATED
+  ACCEPTED
+  CLOSED
+}
+
+enum RiskTreatment {
+  MITIGATE
+  ACCEPT
+  TRANSFER
+  AVOID
+}
+
+enum ControlType {
+  PREVENTIVE
+  DETECTIVE
+  CORRECTIVE
+}
+
+enum ControlStatus {
+  PLANNED
+  IMPLEMENTED
+  EFFECTIVE
+  INEFFECTIVE
+}
+
+enum AuditType {
+  INTERNAL
+  EXTERNAL
+  CERTIFICATION
+  SURVEILLANCE
+}
+
+enum AuditStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum FindingType {
+  NONCONFORMITY
+  OBSERVATION
+  OPPORTUNITY
+  STRENGTH
+}
+
+enum FindingSeverity {
+  CRITICAL
+  MAJOR
+  MINOR
+}
+
+enum FindingStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum NCSource {
+  INTERNAL_AUDIT
+  EXTERNAL_AUDIT
+  CUSTOMER_COMPLAINT
+  MANAGEMENT_REVIEW
+  SELF_DETECTION
+  REGULATORY
+}
+
+enum NCSeverity {
+  CRITICAL
+  MAJOR
+  MINOR
+}
+
+enum NCStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_VALIDATION
+  CLOSED
+}
+
+enum ActionType {
+  CORRECTIVE
+  PREVENTIVE
+  IMPROVEMENT
+}
+
+enum Priority {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ActionStatus {
+  PENDING
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum IndicatorStatus {
+  ON_TRACK
+  AT_RISK
+  OFF_TRACK
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  ALERT
+  SUCCESS
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAUSED
+}
