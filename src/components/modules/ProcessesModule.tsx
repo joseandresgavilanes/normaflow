@@ -40,7 +40,6 @@ export default function ProcessesModule() {
     };
     dispatch({ type: "addProcess", p });
     setCreateOpen(false);
-    setDetail(p);
     showToast("Proceso añadido (sesión demo)");
   }
 

@@ -58,7 +58,6 @@ export default function AuditsModule() {
     };
     dispatch({ type: "addAudit", audit });
     setCreateOpen(false);
-    setDetail(audit);
     showToast("Auditoría creada (sesión demo)");
   }
 

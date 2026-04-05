@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -11,13 +11,28 @@ import { useWorkspace, type ActionRow } from "@/context/WorkspaceStore";
 const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#C93C37", HIGH: "#D68A1A", MEDIUM: "#123C66", LOW: "#5E6B7A" };
 const PRIORITY_LABEL: Record<string, string> = { CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja" };
 
+function clampProgress(n: number): number {
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(100, Math.max(0, Math.round(n)));
+}
+
+/** Derive status after a progress save without clobbering explicit workflow states. */
+function statusAfterProgressSave(current: ActionRow["status"], progress: number): ActionRow["status"] {
+  if (progress >= 100) return "COMPLETED";
+  if (current === "COMPLETED" && progress < 100) return "IN_PROGRESS";
+  if (progress > 0 && current === "PENDING") return "IN_PROGRESS";
+  return current;
+}
+
 export default function ActionsModule() {
   const { state, dispatch, nextActionCode, showToast } = useWorkspace();
   const { actions } = state;
   const [filter, setFilter] = useState("ALL");
-  const [detail, setDetail] = useState<ActionRow | null>(null);
+  /** Detail modal: track id only so list + modal always read the same store row. */
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = useMemo(() => (selectedId ? actions.find(a => a.id === selectedId) ?? null : null), [actions, selectedId]);
   const [createOpen, setCreateOpen] = useState(false);
-  const [editProgress, setEditProgress] = useState(0);
+  const [progressDraft, setProgressDraft] = useState(0);
   const [newForm, setNewForm] = useState({
     title: "",
     priority: "MEDIUM" as ActionRow["priority"],
@@ -28,6 +43,16 @@ export default function ActionsModule() {
   });
 
   const filtered = filter === "ALL" ? actions : actions.filter(a => a.status === filter);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const row = actions.find(a => a.id === selectedId);
+    if (row) setProgressDraft(row.progress);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (selectedId && !actions.some(a => a.id === selectedId)) setSelectedId(null);
+  }, [actions, selectedId]);
 
   function openCreate() {
     setNewForm({
@@ -61,26 +86,38 @@ export default function ActionsModule() {
     };
     dispatch({ type: "addAction", action });
     setCreateOpen(false);
-    setDetail(action);
     showToast(`Acción ${code} añadida al plan global (demo)`);
   }
 
   function openDetail(a: ActionRow) {
-    setDetail(a);
-    setEditProgress(a.progress);
+    setSelectedId(a.id);
+  }
+
+  function closeDetail() {
+    setSelectedId(null);
   }
 
   function saveDetail() {
-    if (!detail) return;
-    const progress = Math.min(100, Math.max(0, editProgress));
-    const status = progress >= 100 ? "COMPLETED" : progress > 0 ? "IN_PROGRESS" : detail.status === "COMPLETED" ? "COMPLETED" : "PENDING";
+    if (!selected) return;
+    const progress = clampProgress(progressDraft);
+    const status = statusAfterProgressSave(selected.status, progress);
     dispatch({
       type: "updateAction",
-      id: detail.id,
-      patch: { progress, status: status as ActionRow["status"] },
+      id: selected.id,
+      patch: { progress, status },
     });
-    setDetail({ ...detail, progress, status: status as ActionRow["status"] });
+    closeDetail();
     showToast("Acción actualizada (sesión demo)");
+  }
+
+  function applyStatusChange(st: ActionRow["status"]) {
+    if (!selected) return;
+    const patch: Partial<ActionRow> = { status: st };
+    if (st === "COMPLETED") {
+      patch.progress = 100;
+      setProgressDraft(100);
+    }
+    dispatch({ type: "updateAction", id: selected.id, patch });
   }
 
   return (
@@ -170,12 +207,12 @@ export default function ActionsModule() {
         </div>
       )}
 
-      <Modal open={!!detail} onClose={() => setDetail(null)} title={detail ? `${detail.code} — Detalle` : ""} width={520}>
-        {detail && (
+      <Modal open={!!selected} onClose={closeDetail} title={selected ? `${selected.code} — Detalle` : ""} width={520}>
+        {selected && (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 12 }}>{detail.title}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 12 }}>{selected.title}</div>
             <div style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 16 }}>
-              Origen: <strong style={{ color: "#142033" }}>{detail.source}</strong> · Responsable: {detail.owner}
+              Origen: <strong style={{ color: "#142033" }}>{selected.source}</strong> · Responsable: {selected.owner}
             </div>
             <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>
               Progreso (%)
@@ -183,20 +220,19 @@ export default function ActionsModule() {
                 type="number"
                 min={0}
                 max={100}
-                value={editProgress}
-                onChange={e => setEditProgress(Number(e.target.value))}
+                value={Number.isFinite(progressDraft) ? progressDraft : 0}
+                onChange={e => {
+                  const v = parseFloat(e.target.value);
+                  setProgressDraft(Number.isFinite(v) ? v : 0);
+                }}
                 style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
               />
             </label>
             <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 16 }}>
               Estado
               <select
-                value={detail.status}
-                onChange={e => {
-                  const st = e.target.value as ActionRow["status"];
-                  setDetail({ ...detail, status: st });
-                  dispatch({ type: "updateAction", id: detail.id, patch: { status: st } });
-                }}
+                value={selected.status}
+                onChange={e => applyStatusChange(e.target.value as ActionRow["status"])}
                 style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
               >
                 <option value="PENDING">Pendiente</option>

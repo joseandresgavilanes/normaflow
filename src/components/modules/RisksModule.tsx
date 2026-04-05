@@ -115,7 +115,6 @@ export default function RisksModule() {
     };
     dispatch({ type: "addRisk", risk });
     setCreateOpen(false);
-    setDetail(risk);
     showToast(`Riesgo ${code} creado (sesión demo)`);
   }
 

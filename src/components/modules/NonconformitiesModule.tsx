@@ -95,7 +95,6 @@ export default function NonconformitiesModule() {
     };
     dispatch({ type: "addNc", nc });
     setCreateOpen(false);
-    setDetail(nc);
     showToast(`NC ${code} registrada (sesión demo)`);
   }
 

@@ -106,7 +106,6 @@ export default function DocumentsModule() {
     setShowNew(false);
     setNewFile(null);
     setNewForm({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE" });
-    setDetail(doc);
     showToast("Documento creado en el espacio de trabajo (demo)");
   }
 
@@ -124,8 +123,9 @@ export default function DocumentsModule() {
       note: versionNote.trim(),
     };
     dispatch({ type: "addDocVersion", docId: historyDoc.id, v: entry });
-    setHistoryDoc({ ...historyDoc, version: v, updated: entry.date });
-    setDetail(prev => (prev?.id === historyDoc.id ? { ...prev, version: v, updated: entry.date } : prev));
+    const docId = historyDoc.id;
+    setHistoryDoc(null);
+    setDetail(prev => (prev?.id === docId ? { ...prev, version: v, updated: entry.date } : prev));
     setVersionNote("");
     setNextVersion("");
     showToast("Nueva versión registrada (demo)");

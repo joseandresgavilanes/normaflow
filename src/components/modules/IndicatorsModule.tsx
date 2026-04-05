@@ -67,7 +67,6 @@ export default function IndicatorsModule() {
     };
     dispatch({ type: "addIndicator", ind });
     setCreateOpen(false);
-    setDetail(ind);
     showToast("KPI creado (sesión demo)");
   }
 
@@ -92,7 +91,7 @@ export default function IndicatorsModule() {
       id: detail.id,
       patch: { value: v, status, trend, history: nextHistory },
     });
-    setDetail({ ...detail, value: v, status, trend, history: nextHistory });
+    setDetail(null);
     showToast("KPI actualizado (sesión demo)");
   }
 
