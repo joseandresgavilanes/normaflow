@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { BLOG_POSTS } from "@/lib/blog-posts";
+import { Ic } from "@/components/marketing/nf/Icons";
 
 export function generateStaticParams() {
   return BLOG_POSTS.map(p => ({ slug: p.slug }));
@@ -33,26 +34,28 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
   return (
     <MarketingLayout>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <article style={{ background: "#fff", padding: "clamp(32px, 6vw, 48px) 0 clamp(48px, 10vw, 72px)" }}>
-        <div className="nf-mkt-container" style={{ maxWidth: 720 }}>
-          <Link href="/blog" style={{ fontSize: 14, color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
+      <article className="nf-section">
+        <div className="nf-container" style={{ maxWidth: 760 }}>
+          <Link href="/blog" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-ink-3)" }}>
             ← Blog
           </Link>
-          <div style={{ fontSize: 13, color: "#123C66", fontWeight: 600, marginTop: 20 }}>{post.category}</div>
-          <h1 style={{ fontSize: "clamp(22px, 5.5vw, 34px)", fontWeight: 800, color: "#142033", margin: "10px 0 12px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>{post.title}</h1>
-          <p style={{ fontSize: 14, color: "#5E6B7A", marginBottom: 32 }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 24 }}>{post.category}</div>
+          <h1 className="nf-h-section" style={{ marginTop: 14 }}>{post.title}</h1>
+          <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 14, marginBottom: 36, fontFamily: "var(--font-mono)" }}>
             {post.date} · {post.readTime}
           </p>
-          <div style={{ fontSize: 17, color: "#142033", lineHeight: 1.8 }}>
+
+          <div className="nf-prose">
             {post.body.map((para, i) => (
-              <p key={i} style={{ margin: "0 0 18px" }}>
-                {para}
-              </p>
+              <p key={i}>{para}</p>
             ))}
           </div>
-          <Link href="/demo" style={{ display: "inline-block", marginTop: 24, background: "#123C66", color: "#fff", padding: "12px 20px", borderRadius: 10, fontWeight: 600, textDecoration: "none" }}>
-            Hablar con el equipo
-          </Link>
+
+          <div style={{ marginTop: 36, paddingTop: 28, borderTop: "1px solid var(--nf-line)" }}>
+            <Link href="/demo" className="nf-btn nf-btn--primary">
+              Hablar con el equipo <Ic.arrow className="nf-arrow"/>
+            </Link>
+          </div>
         </div>
       </article>
     </MarketingLayout>

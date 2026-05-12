@@ -1,37 +1,67 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
-import Link from "next/link";
-export const metadata = { title: "ISO 27001:2022 — NormaFlow" };
+import { Ic } from "@/components/marketing/nf/Icons";
+
+export const metadata = {
+  title: "ISO 27001:2022 — NormaFlow",
+  description: "Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con ISO 27001:2022.",
+};
+
+const ITEMS: { icon: keyof typeof Ic; title: string; desc: string; control: string }[] = [
+  { icon: "lock",   title: "Gestión de riesgos de SI",    desc: "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.",  control: "6.1.2" },
+  { icon: "shield", title: "Controles Anexo A",           desc: "Los 93 controles ISO 27001:2022 organizados por dominio, con estado y evidencia adjunta.", control: "Anexo A" },
+  { icon: "audit",  title: "Auditorías de seguridad",     desc: "Auditorías técnicas y de gestión con hallazgos trazables y acciones correctivas vinculadas.", control: "9.2" },
+  { icon: "evid",   title: "Gestión de evidencias",       desc: "Repositorio centralizado con vinculación a controles, auditorías y no conformidades.",     control: "7.5" },
+  { icon: "warn",   title: "Gestión de incidentes",       desc: "Registro, análisis y cierre de incidentes de seguridad con notificación automática.",      control: "A.5.24" },
+  { icon: "capa",   title: "Continuidad del negocio",     desc: "Plan BCP/DRP documentado, probado y vinculado al SGSI.",                                    control: "A.5.29" },
+];
+
 export default function ISO27001Page() {
   return (
     <MarketingLayout>
-      <section style={{ background: "linear-gradient(135deg, #0D2E4E, #123C66)", padding: "clamp(48px, 10vw, 80px) 0 clamp(40px, 8vw, 60px)" }}>
-        <div className="nf-mkt-container" style={{ maxWidth: 720, textAlign: "center" }}>
-          <div style={{ display: "inline-block", background: "rgba(46,139,87,0.25)", border: "1px solid rgba(46,139,87,0.4)", borderRadius: 8, padding: "4px 14px", fontSize: 13, fontWeight: 700, color: "#4ade80", marginBottom: 20 }}>ISO 27001:2022</div>
-          <h1 style={{ fontSize: "clamp(22px, 5.5vw, 44px)", fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: "-0.03em", lineHeight: 1.12 }}>Sistema de Gestión de Seguridad de la Información</h1>
-          <p style={{ fontSize: "clamp(15px, 3.5vw, 18px)", color: "rgba(255,255,255,0.72)", lineHeight: 1.65, marginBottom: 28 }}>Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con la versión 2022 y los 93 controles del Anexo A.</p>
-          <Link href="/signup" style={{ display: "inline-block", padding: "12px 28px", background: "#2E8B57", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Solicitar demo gratuita →</Link>
+      <section className="nf-hero" id="top">
+        <div className="nf-container" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>
+          <div className="nf-iso-badge" style={{ position: "relative", left: 0, top: 0, width: 84, height: 84, margin: "0 auto 22px" }}>
+            <div>
+              <div className="top">ISO</div>
+              <div className="num" style={{ color: "var(--nf-accent-2)", fontSize: 14 }}>27001</div>
+              <div className="yr">2022</div>
+            </div>
+          </div>
+          <span className="nf-eyebrow"><span className="dot"/> ISO 27001:2022</span>
+          <h1 className="nf-h-display" style={{ fontSize: "clamp(34px, 5.8vw, 60px)", marginTop: 22 }}>
+            Seguridad de la<br/>
+            <span className="nf-grad-text-cool">Información.</span>
+          </h1>
+          <p className="nf-lede" style={{ marginTop: 22, marginInline: "auto" }}>
+            Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con la versión 2022 y los 93 controles del Anexo A.
+          </p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28, flexWrap: "wrap" }}>
+            <a className="nf-btn nf-btn--primary" href="/demo">Solicitar demo <Ic.arrow className="nf-arrow"/></a>
+            <a className="nf-btn nf-btn--ghost" href="/signup">Crear cuenta · 14 días gratis</a>
+          </div>
         </div>
       </section>
-      <section style={{ background: "#fff", padding: "clamp(40px, 8vw, 72px) 0" }}>
-        <div className="nf-mkt-container">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 20 }}>
-            {[
-              { icon: "🔒", title: "Gestión de riesgos de SI", desc: "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.", control: "6.1.2" },
-              { icon: "📋", title: "Controles Anexo A", desc: "Los 93 controles ISO 27001:2022 organizados por dominio, con estado y evidencia adjunta.", control: "Anexo A" },
-              { icon: "🔍", title: "Auditorías de seguridad", desc: "Auditorías técnicas y de gestión con hallazgos trazables y acciones correctivas vinculadas.", control: "9.2" },
-              { icon: "📁", title: "Gestión de evidencias", desc: "Repositorio centralizado con vinculación a controles, auditorías y no conformidades.", control: "7.5" },
-              { icon: "🚨", title: "Gestión de incidentes", desc: "Registro, análisis y cierre de incidentes de seguridad con notificación automática.", control: "A.5.24" },
-              { icon: "🔁", title: "Continuidad del negocio", desc: "Plan BCP/DRP documentado, probado y vinculado al SGSI.", control: "A.5.29" },
-            ].map(item => (
-              <div key={item.title} style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", borderRadius: 12, padding: "22px" }}>
-                <div style={{ fontSize: 28, marginBottom: 10 }}>{item.icon}</div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: "#142033" }}>{item.title}</span>
-                  <span style={{ background: "#2E8B5718", color: "#2E8B57", fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 4 }}>{item.control}</span>
-                </div>
-                <div style={{ fontSize: 13, color: "#5E6B7A", lineHeight: 1.6 }}>{item.desc}</div>
-              </div>
-            ))}
+
+      <section className="nf-section nf-section--tight">
+        <div className="nf-container">
+          <div className="nf-grid-3">
+            {ITEMS.map((it) => {
+              const Icon = Ic[it.icon];
+              return (
+                <article key={it.title} className="nf-tile">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", color: "var(--nf-accent-2)" }}>
+                      <Icon/>
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "oklch(0.78 0.13 195 / 0.14)", color: "var(--nf-accent-2)", border: "1px solid oklch(0.78 0.13 195 / 0.3)", letterSpacing: "0.06em" }}>
+                      {it.control}
+                    </span>
+                  </div>
+                  <div className="nf-h-4">{it.title}</div>
+                  <div style={{ marginTop: 8, color: "var(--nf-ink-2)", fontSize: 14, lineHeight: 1.6 }}>{it.desc}</div>
+                </article>
+              );
+            })}
           </div>
         </div>
       </section>

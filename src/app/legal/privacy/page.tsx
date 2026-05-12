@@ -8,16 +8,21 @@ export const metadata = {
 export default function PrivacyPage() {
   return (
     <MarketingLayout>
-      <div className="nf-mkt-container" style={{ maxWidth: 800, paddingTop: "clamp(40px, 8vw, 56px)", paddingBottom: "clamp(48px, 10vw, 80px)" }}>
-        <h1 style={{ fontSize: "clamp(24px, 5vw, 32px)", fontWeight: 800, color: "#142033", marginBottom: 12, lineHeight: 1.15 }}>Política de privacidad</h1>
-        <p style={{ color: "#5E6B7A", marginBottom: 28 }}>Última actualización: abril de 2026</p>
-        <div style={{ fontSize: 16, color: "#142033", lineHeight: 1.75 }}>
-          <p>NormaFlow trata los datos de contacto y cuenta de clientes B2B para prestar el servicio SaaS, facturación y soporte.</p>
-          <p>Los datos de tu organización (documentos, auditorías, riesgos, etc.) se almacenan de forma aislada por tenant. No utilizamos tu contenido para entrenar modelos de terceros.</p>
-          <p>Puedes ejercer derechos de acceso, rectificación, supresión y oposición escribiendo a privacidad@normaflow.io.</p>
-          <p>Utilizamos proveedores de infraestructura (hosting, base de datos, email transaccional) con acuerdos de tratamiento conforme al RGPD.</p>
+      <section className="nf-section">
+        <div className="nf-container" style={{ maxWidth: 820 }}>
+          <span className="nf-eyebrow"><span className="dot"/> Legal</span>
+          <h1 className="nf-h-section" style={{ marginTop: 22 }}>Política de privacidad</h1>
+          <p style={{ color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", fontSize: 12, marginTop: 14, marginBottom: 36 }}>
+            Última actualización: abril de 2026
+          </p>
+          <div className="nf-prose">
+            <p>NormaFlow trata los datos de contacto y cuenta de clientes B2B para prestar el servicio SaaS, facturación y soporte.</p>
+            <p>Los datos de tu organización (documentos, auditorías, riesgos, etc.) se almacenan de forma aislada por tenant. <strong>No utilizamos tu contenido para entrenar modelos de terceros.</strong></p>
+            <p>Puedes ejercer derechos de acceso, rectificación, supresión y oposición escribiendo a <a href="mailto:privacidad@normaflow.io">privacidad@normaflow.io</a>.</p>
+            <p>Utilizamos proveedores de infraestructura (hosting, base de datos, email transaccional) con acuerdos de tratamiento conforme al RGPD.</p>
+          </div>
         </div>
-      </div>
+      </section>
     </MarketingLayout>
   );
 }

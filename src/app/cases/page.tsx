@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { MARKETING_CASES } from "@/lib/marketing-cases";
+import { Ic } from "@/components/marketing/nf/Icons";
 
 export const metadata = { title: "Casos de éxito — NormaFlow" };
 
@@ -8,82 +9,67 @@ export default function CasesPage() {
   const cases = MARKETING_CASES;
   return (
     <MarketingLayout>
-      <section style={{ background: "#F7F9FC", padding: "clamp(48px, 10vw, 80px) 0" }}>
-        <div className="nf-mkt-container">
-          <div style={{ textAlign: "center", marginBottom: "clamp(32px, 8vw, 48px)" }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#123C66", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 10 }}>Casos de éxito</div>
-            <h1 style={{ fontSize: "clamp(24px, 5.5vw, 40px)", fontWeight: 800, color: "#142033", margin: "0 0 14px", letterSpacing: "-0.5px", lineHeight: 1.15 }}>
-              Empresas que ya gestionan su cumplimiento con NormaFlow
+      <section className="nf-section">
+        <div className="nf-container">
+          <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>
+            <span className="nf-eyebrow"><span className="dot"/> Casos de éxito</span>
+            <h1 className="nf-h-section" style={{ marginTop: 22 }}>
+              Empresas que ya gestionan su cumplimiento <span className="nf-grad-text">con NormaFlow.</span>
             </h1>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-            {cases.map(c => (
-              <div
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 24, marginTop: 56 }}>
+            {cases.map((c) => (
+              <article
                 key={c.company}
+                className="nf-card"
                 style={{
-                  background: "#fff",
-                  border: "1px solid #E5EAF2",
-                  borderRadius: 16,
-                  padding: "clamp(20px, 5vw, 32px)",
+                  padding: "clamp(24px, 4vw, 40px)",
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-                  gap: "clamp(24px, 5vw, 48px)",
+                  gridTemplateColumns: "1.1fr 1fr",
+                  gap: "clamp(28px, 5vw, 56px)",
                   alignItems: "center",
                 }}
               >
                 <div>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                    <span style={{ background: c.color + "18", color: c.color, padding: "3px 10px", borderRadius: 99, fontSize: 12, fontWeight: 600 }}>{c.industry}</span>
-                    <span style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", color: "#5E6B7A", padding: "3px 10px", borderRadius: 99, fontSize: 12 }}>{c.normas}</span>
-                    <span style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", color: "#5E6B7A", padding: "3px 10px", borderRadius: 99, fontSize: 12 }}>{c.employees}</span>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "oklch(0.72 0.14 158 / 0.12)", color: "var(--nf-accent)", border: "1px solid oklch(0.72 0.14 158 / 0.3)", letterSpacing: "0.06em" }}>{c.industry}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.employees}</span>
                   </div>
-                  <h3 style={{ fontSize: 22, fontWeight: 800, color: "#142033", margin: "0 0 10px" }}>{c.company}</h3>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#2E8B57", marginBottom: 12 }}>↑ {c.result}</div>
-                  <p style={{ fontSize: 15, color: "#5E6B7A", fontStyle: "italic", lineHeight: 1.7, margin: "0 0 16px" }}>&ldquo;{c.quote}&rdquo;</p>
-                  <Link href={`/cases/${c.slug}`} style={{ fontSize: 14, fontWeight: 600, color: "#123C66", textDecoration: "none" }}>
-                    Ver caso completo →
+                  <h3 className="nf-h-3">{c.company}</h3>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-accent)", marginTop: 8, marginBottom: 14 }}>↑ {c.result}</div>
+                  <p style={{ fontSize: 15, color: "var(--nf-ink-2)", fontStyle: "italic", lineHeight: 1.7, margin: "0 0 18px" }}>&ldquo;{c.quote}&rdquo;</p>
+                  <Link href={`/cases/${c.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-accent)" }}>
+                    Ver caso completo <Ic.arrow/>
                   </Link>
                 </div>
-                <div style={{ background: c.color + "08", borderRadius: 14, padding: "28px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 20 }}>
-                    <div
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: "50%",
-                        background: c.color,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: 16,
-                      }}
-                    >
+
+                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)", borderRadius: 16, padding: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.04 30))", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
                       {c.initials}
                     </div>
                     <div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#142033" }}>{c.person}</div>
-                      <div style={{ fontSize: 12, color: "#5E6B7A" }}>
-                        {c.role} · {c.company}
-                      </div>
+                      <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--nf-ink)" }}>{c.person}</div>
+                      <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{c.role} · {c.company}</div>
                     </div>
                   </div>
-                  <div className="nf-grid-stats" style={{ gap: 12 }}>
-                    {[
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {([
                       ["ISO certificadas", String(c.normas.split(" + ").length)],
                       ["Empleados", c.employees.split(" ")[0]],
-                      ["Implementación", "< 6 meses"],
+                      ["Implementación", "< 6 m"],
                       ["Auditorías/año", "4+"],
-                    ].map(([k, v]) => (
-                      <div key={String(k)} style={{ background: "#fff", borderRadius: 8, padding: "10px 12px", border: "1px solid #E5EAF2" }}>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: c.color }}>{v}</div>
-                        <div style={{ fontSize: 11, color: "#5E6B7A", marginTop: 2 }}>{k}</div>
+                    ] as [string, string][]).map(([k, v]) => (
+                      <div key={k} className="nf-case-metric" style={{ padding: 12 }}>
+                        <div className="v" style={{ fontSize: 22 }}>{v}</div>
+                        <div className="l">{k}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>

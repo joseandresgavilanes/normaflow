@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import MarketingLayout from "@/components/layout/MarketingLayout";
+import { Ic } from "@/components/marketing/nf/Icons";
 
 const schema = z.object({
   name: z.string().min(2, "Indica tu nombre"),
@@ -20,7 +21,7 @@ export default function DemoPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitSuccessful },
+    formState: { errors, isSubmitSuccessful, isSubmitting },
     reset,
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { employees: "50-250" } });
 
@@ -30,57 +31,83 @@ export default function DemoPage() {
 
   return (
     <MarketingLayout>
-      <section style={{ padding: "clamp(40px, 8vw, 64px) 0 clamp(48px, 10vw, 80px)", background: "#F7F9FC" }}>
-        <div className="nf-mkt-container" style={{ maxWidth: 560 }}>
-          <h1 style={{ fontSize: "clamp(26px, 6vw, 34px)", fontWeight: 800, color: "#142033", margin: "0 0 10px", lineHeight: 1.15 }}>Demo y contacto</h1>
-          <p style={{ color: "#5E6B7A", marginBottom: 28, lineHeight: 1.6 }}>Te respondemos en menos de un día laborable. Sin compromiso.</p>
-          <div style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: "clamp(18px, 4vw, 28px)" }}>
+      <section className="nf-section">
+        <div className="nf-container" style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 56, alignItems: "start", maxWidth: 1100, margin: "0 auto" }}>
+          <div>
+            <span className="nf-eyebrow"><span className="dot"/> Demo · 30 min</span>
+            <h1 className="nf-h-section" style={{ marginTop: 22 }}>
+              Vemos tu sistema. <span className="nf-grad-text">Te enseñamos el nuestro.</span>
+            </h1>
+            <p className="nf-lede" style={{ marginTop: 18 }}>
+              Una llamada con un especialista en cumplimiento. Sin guion comercial — analizamos cómo gestionas tu SGC hoy y te mostramos en qué cambia con NormaFlow.
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: "28px 0 0", display: "flex", flexDirection: "column", gap: 12 }}>
+              {[
+                "Te respondemos en menos de un día laborable.",
+                "Sin compromiso, sin tarjeta.",
+                "Adaptamos la demo a tu sector y norma.",
+              ].map((t) => (
+                <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
+                  <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                </li>
+              ))}
+            </ul>
+            <p style={{ marginTop: 32, fontSize: 14, color: "var(--nf-ink-3)" }}>
+              ¿Prefieres probar solo? <Link href="/signup" style={{ color: "var(--nf-accent)" }}>Crear cuenta · 14 días gratis</Link>
+            </p>
+          </div>
+
+          <div className="nf-card" style={{ padding: "clamp(24px, 3.5vw, 36px)" }}>
             {isSubmitSuccessful ? (
-              <p style={{ color: "#2E8B57", fontWeight: 600, margin: 0 }}>Mensaje enviado. Gracias por contactar con NormaFlow.</p>
+              <div style={{ padding: 20, borderRadius: 12, background: "oklch(0.72 0.14 158 / 0.08)", border: "1px solid oklch(0.72 0.14 158 / 0.3)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
+                <p style={{ color: "var(--nf-ink)", margin: 0, fontSize: 15 }}>Gracias por contactar con NormaFlow. Te respondemos en breve.</p>
+              </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Nombre</label>
-                  <input {...register("name")} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2", boxSizing: "border-box" }} />
-                  {errors.name && <span style={{ color: "#C93C37", fontSize: 12 }}>{errors.name.message}</span>}
+                  <label className="nf-label">Nombre</label>
+                  <input {...register("name")} className="nf-input" placeholder="María Torres" />
+                  {errors.name && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Email</label>
-                  <input type="email" {...register("email")} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2", boxSizing: "border-box" }} />
-                  {errors.email && <span style={{ color: "#C93C37", fontSize: 12 }}>{errors.email.message}</span>}
+                  <label className="nf-label">Email corporativo</label>
+                  <input type="email" {...register("email")} className="nf-input" placeholder="maria@empresa.com" />
+                  {errors.email && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Empresa</label>
-                  <input {...register("company")} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2", boxSizing: "border-box" }} />
-                  {errors.company && <span style={{ color: "#C93C37", fontSize: 12 }}>{errors.company.message}</span>}
+                  <label className="nf-label">Empresa</label>
+                  <input {...register("company")} className="nf-input" placeholder="Tecnoserv Industrial" />
+                  {errors.company && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div>
+                    <label className="nf-label">Teléfono (opcional)</label>
+                    <input {...register("phone")} className="nf-input" placeholder="+34 600 000 000" />
+                  </div>
+                  <div>
+                    <label className="nf-label">Tamaño</label>
+                    <select {...register("employees")} className="nf-select">
+                      <option value="1-49">1 – 49</option>
+                      <option value="50-250">50 – 250</option>
+                      <option value="250+">Más de 250</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Teléfono (opcional)</label>
-                  <input {...register("phone")} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2", boxSizing: "border-box" }} />
+                  <label className="nf-label">Mensaje</label>
+                  <textarea {...register("message")} rows={4} className="nf-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
+                  {errors.message && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
                 </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Tamaño aproximado</label>
-                  <select {...register("employees")} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2" }}>
-                    <option value="1-49">1 – 49</option>
-                    <option value="50-250">50 – 250</option>
-                    <option value="250+">Más de 250</option>
-                  </select>
-                  {errors.employees && <span style={{ color: "#C93C37", fontSize: 12 }}>{errors.employees.message}</span>}
-                </div>
-                <div>
-                  <label style={{ fontSize: 13, fontWeight: 600, color: "#142033" }}>Mensaje</label>
-                  <textarea {...register("message")} rows={4} style={{ width: "100%", marginTop: 6, padding: "10px 12px", borderRadius: 8, border: "1px solid #E5EAF2", boxSizing: "border-box", resize: "vertical" }} />
-                  {errors.message && <span style={{ color: "#C93C37", fontSize: 12 }}>{errors.message.message}</span>}
-                </div>
-                <button type="submit" style={{ background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontWeight: 700, cursor: "pointer" }}>
-                  Enviar
+                <button type="submit" disabled={isSubmitting} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
+                  Enviar solicitud <Ic.arrow className="nf-arrow"/>
                 </button>
+                <p style={{ fontSize: 11, color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em", textAlign: "center", marginTop: 4 }}>
+                  Tus datos solo se usan para contactarte. <Link href="/legal/privacy" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Política de privacidad</Link>
+                </p>
               </form>
             )}
           </div>
-          <p style={{ textAlign: "center", marginTop: 24, fontSize: 14, color: "#5E6B7A" }}>
-            ¿Prefieres probar solo? <Link href="/signup" style={{ color: "#123C66", fontWeight: 600 }}>Crear cuenta</Link>
-          </p>
         </div>
       </section>
     </MarketingLayout>

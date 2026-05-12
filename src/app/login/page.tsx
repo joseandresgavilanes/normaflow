@@ -3,6 +3,8 @@ import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DEMO_CREDENTIALS } from "@/lib/constants";
+import "@/components/marketing/nf/nf.css";
+import { Ic } from "@/components/marketing/nf/Icons";
 
 function LoginForm() {
   const router = useRouter();
@@ -43,85 +45,83 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#F7F9FC", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 420 }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <Link href="/home" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", marginBottom: 20 }}>
-            <div style={{ width: 36, height: 36, background: "#123C66", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ color: "#fff", fontWeight: 900, fontSize: 18 }}>N</span>
+    <>
+      <div className="nf-bg" aria-hidden="true"></div>
+      <div className="nf-app">
+        <div className="nf-auth-shell">
+          <div style={{ width: "100%", maxWidth: 440 }}>
+            <div style={{ textAlign: "center", marginBottom: 28 }}>
+              <Link href="/home" className="nf-logo" style={{ marginBottom: 22 }}>
+                <span className="nf-logo-mark"></span>
+                NormaFlow
+              </Link>
+              <h1 className="nf-h-3" style={{ marginTop: 18 }}>Bienvenido de nuevo</h1>
+              <p style={{ fontSize: 14, color: "var(--nf-ink-3)", marginTop: 6 }}>Accede a tu panel de cumplimiento</p>
             </div>
-            <span style={{ fontWeight: 800, fontSize: 20, color: "#142033" }}>NormaFlow</span>
-          </Link>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#142033", margin: "0 0 8px" }}>Bienvenido de nuevo</h1>
-          <p style={{ fontSize: 14, color: "#5E6B7A" }}>Accede a tu panel de cumplimiento</p>
-        </div>
 
-        <div style={{ background: "#fff", border: "1px solid #E5EAF2", borderRadius: 16, padding: 32 }}>
-          <div style={{ background: "#f0f4ff", border: "1px solid #123C6630", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#123C66" }}>
-            <strong>Acceso demo:</strong> {DEMO_CREDENTIALS.email} / {DEMO_CREDENTIALS.password}
-            <div style={{ marginTop: 6, fontSize: 12, color: "#5E6B7A" }}>En desarrollo local, define AUTH_DEMO_MODE=true si aún no usas Supabase.</div>
+            <div className="nf-auth-card">
+              <div style={{ padding: 12, borderRadius: 10, background: "oklch(0.78 0.13 195 / 0.08)", border: "1px solid oklch(0.78 0.13 195 / 0.3)", marginBottom: 20, fontSize: 12, color: "var(--nf-ink-2)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nf-accent-2)", marginBottom: 4 }}>● Acceso demo</div>
+                <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.email}</code> · <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.password}</code>
+                <div style={{ marginTop: 6, fontSize: 11, color: "var(--nf-ink-3)" }}>En desarrollo local, define <code>AUTH_DEMO_MODE=true</code> si aún no usas Supabase.</div>
+              </div>
+
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <label className="nf-label">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={DEMO_CREDENTIALS.email}
+                    autoComplete="email"
+                    className="nf-input"
+                  />
+                </div>
+                <div>
+                  <label className="nf-label">Contraseña</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="nf-input"
+                  />
+                </div>
+                {error ? (
+                  <div style={{ padding: "10px 12px", borderRadius: 8, background: "oklch(0.70 0.18 25 / 0.08)", border: "1px solid oklch(0.70 0.18 25 / 0.35)", fontSize: 13, color: "oklch(0.85 0.14 30)" }}>{error}</div>
+                ) : null}
+                <button type="submit" disabled={loading} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4, opacity: loading ? 0.7 : 1 }}>
+                  {loading ? "Iniciando sesión…" : <>Entrar <Ic.arrow className="nf-arrow"/></>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail(DEMO_CREDENTIALS.email); setPassword(DEMO_CREDENTIALS.password); }}
+                  className="nf-btn nf-btn--ghost"
+                  style={{ justifyContent: "center" }}
+                >
+                  Usar credenciales demo
+                </button>
+              </form>
+            </div>
+
+            <p style={{ textAlign: "center", marginTop: 22, fontSize: 13, color: "var(--nf-ink-3)" }}>
+              ¿No tienes cuenta?{" "}
+              <Link href="/signup" style={{ color: "var(--nf-accent)", fontWeight: 600 }}>
+                Regístrate gratis
+              </Link>
+            </p>
           </div>
-
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 500, color: "#142033", display: "block", marginBottom: 6 }}>Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder={DEMO_CREDENTIALS.email}
-                autoComplete="email"
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box" }}
-              />
-            </div>
-            <div>
-              <label style={{ fontSize: 13, fontWeight: 500, color: "#142033", display: "block", marginBottom: 6 }}>Contraseña</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
-                style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 14, outline: "none", boxSizing: "border-box" }}
-              />
-            </div>
-            {error ? (
-              <div style={{ background: "#fff0f0", border: "1px solid #f5c2c2", borderRadius: 8, padding: "10px 12px", fontSize: 13, color: "#C93C37" }}>{error}</div>
-            ) : null}
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "12px", fontSize: 15, fontWeight: 700, cursor: "pointer", opacity: loading ? 0.7 : 1 }}
-            >
-              {loading ? "Iniciando sesión..." : "Entrar"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail(DEMO_CREDENTIALS.email);
-                setPassword(DEMO_CREDENTIALS.password);
-              }}
-              style={{ background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, color: "#5E6B7A", cursor: "pointer" }}
-            >
-              Usar credenciales demo
-            </button>
-          </form>
         </div>
-
-        <p style={{ textAlign: "center", marginTop: 20, fontSize: 13, color: "#5E6B7A" }}>
-          ¿No tienes cuenta?{" "}
-          <Link href="/signup" style={{ color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
-            Regístrate gratis
-          </Link>
-        </p>
       </div>
-    </div>
+    </>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", background: "#F7F9FC" }} />}>
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--nf-bg-0)" }} />}>
       <LoginForm />
     </Suspense>
   );

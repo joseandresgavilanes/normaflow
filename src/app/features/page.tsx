@@ -1,70 +1,99 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
-import Link from "next/link";
+import { Ic } from "@/components/marketing/nf/Icons";
+
 export const metadata = { title: "Funcionalidades — NormaFlow" };
+
+const FEATURES: { icon: keyof typeof Ic; title: string; desc: string; bullets: string[] }[] = [
+  { icon: "kpi",    title: "GAP Assessment", desc: "Evalúa el nivel de cumplimiento de tu organización frente a los requisitos de cada norma. Diagnóstico por cláusula, scoring automatizado y plan de acción sugerido por IA.", bullets: ["Plantillas por norma (ISO 9001, 27001, 14001, 45001)", "Scoring por cláusula y puntuación global", "Plan de acción sugerido automáticamente", "Exportación a PDF con portada y resumen ejecutivo", "Versión resumida gratuita para captación de leads"] },
+  { icon: "doc",    title: "Control de Documentos", desc: "Centraliza todos tus documentos del sistema de gestión con control de versiones, flujos de aprobación configurables y trazabilidad total. Sin correos, sin versiones desactualizadas circulando.", bullets: ["Versionado automático con historial completo", "Flujo de aprobación configurable por tipo de documento", "Relación con cláusulas ISO, procesos y auditorías", "Vista previa y descarga segura de archivos", "Alertas de revisión periódica"] },
+  { icon: "risk",   title: "Gestión de Riesgos", desc: "Registra, evalúa y trata los riesgos de tu organización con matriz probabilidad × impacto, heatmap visual e historial de controles. Compatible con ISO 27001 Anexo A y metodologías MAGERIT.", bullets: ["Heatmap 5×5 interactivo con drill-down", "Tratamiento: mitigar, aceptar, transferir, evitar", "Controles preventivos, detectivos y correctivos", "Vencimientos y alertas de revisión", "Sugerencias de controles mediante IA"] },
+  { icon: "audit",  title: "Auditorías", desc: "Planifica y ejecuta auditorías internas y externas con checklists por cláusula, registro de hallazgos con evidencias y generación automática del informe final.", bullets: ["Plan anual de auditorías con calendario", "Checklists editables por norma y alcance", "Registro de hallazgos: NC mayor, menor, observación", "Vinculación de evidencias y documentos", "Informe final en PDF con firma digital"] },
+  { icon: "capa",   title: "No Conformidades y CAPA", desc: "Gestiona el ciclo completo de no conformidades: alta manual o desde auditoría, análisis de causa raíz, acción correctiva, seguimiento y validación de eficacia.", bullets: ["Alta desde auditoría o de forma manual", "Análisis de causa raíz (5 porqués, Ishikawa)", "Acción correctiva y preventiva vinculada", "Validación de eficacia con fecha límite", "Cierre con evidencia adjunta"] },
+  { icon: "ai",     title: "Asistente IA", desc: "Integración real con IA para acelerar el trabajo de cumplimiento. Genera borradores, analiza gaps y sugiere tratamientos. Toda sugerencia requiere confirmación humana antes de guardarse.", bullets: ["Generación de borradores de políticas y procedimientos", "Resumen de evaluaciones GAP", "Sugerencia de acciones correctivas", "Análisis de tratamiento de riesgos", "Resumen de hallazgos de auditoría"] },
+  { icon: "kpi",    title: "Indicadores", desc: "Define KPIs con metas, frecuencia y semáforo. Historial de valores para la revisión por la dirección y las auditorías.", bullets: ["Metas y umbrales configurables", "Histórico por periodo", "Alertas cuando se sale de objetivo", "Vínculo a cláusulas y procesos"] },
+  { icon: "evid",   title: "Evidencias", desc: "Un solo sitio para pruebas de cumplimiento: subidas seguras, filtros por módulo y trazabilidad hasta auditorías, riesgos o NC.", bullets: ["Almacenamiento centralizado", "Vínculo a auditoría, riesgo, documento o NC", "Vista previa y descarga controlada"] },
+];
+
 export default function FeaturesPage() {
   return (
     <MarketingLayout>
-      <section style={{ background: "#0D2E4E", padding: "clamp(48px, 10vw, 80px) 0 clamp(40px, 8vw, 60px)" }}>
-        <div className="nf-mkt-container" style={{ maxWidth: 760, textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "#2E8B57", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 12 }}>Funcionalidades</div>
-          <h1 style={{ fontSize: "clamp(26px, 6vw, 48px)", fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: "-0.03em", lineHeight: 1.12 }}>Cada módulo, diseñado para tu SGC</h1>
-          <p style={{ fontSize: "clamp(15px, 3.5vw, 18px)", color: "rgba(255,255,255,0.65)", lineHeight: 1.65 }}>De la evaluación inicial a la mejora continua, NormaFlow cubre todo el ciclo de vida.</p>
+      <section className="nf-section" id="top">
+        <div className="nf-container" style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>
+          <span className="nf-eyebrow"><span className="dot"/> Funcionalidades</span>
+          <h1 className="nf-h-section" style={{ marginTop: 22 }}>
+            Cada módulo, <span className="nf-grad-text">diseñado para tu SGC.</span>
+          </h1>
+          <p className="nf-lede" style={{ marginTop: 18, marginInline: "auto" }}>
+            De la evaluación inicial a la mejora continua, NormaFlow cubre todo el ciclo de vida del cumplimiento.
+          </p>
         </div>
       </section>
-      <section style={{ background: "#fff", padding: "clamp(48px, 10vw, 80px) 0" }}>
-        <div className="nf-mkt-container">
-          {[
-            { icon: "◎", title: "GAP Assessment", color: "#123C66", desc: "Evalúa el nivel de cumplimiento de tu organización frente a los requisitos de cada norma. Obtén un diagnóstico detallado por cláusula, con scoring automatizado y plan de acción sugerido por IA.", features: ["Plantillas por norma (ISO 9001, 27001, 14001, 45001)", "Scoring por cláusula y puntuación global", "Plan de acción sugerido automáticamente", "Exportación a PDF con portada y resumen ejecutivo", "Versión resumida gratuita para captación de leads"] },
-            { icon: "📄", title: "Control de Documentos", color: "#2E8B57", desc: "Centraliza todos tus documentos del sistema de gestión con control de versiones, flujos de aprobación configurables y trazabilidad total. Sin correos, sin versiones desactualizadas circulando.", features: ["Versionado automático con historial completo", "Flujo de aprobación configurable por tipo de documento", "Relación con cláusulas ISO, procesos y auditorías", "Vista previa y descarga segura de archivos", "Alertas de revisión periódica"] },
-            { icon: "⚠", title: "Gestión de Riesgos", color: "#D68A1A", desc: "Registra, evalúa y trata los riesgos de tu organización con matriz probabilidad × impacto, heatmap visual e historial de controles. Compatible con ISO 27001 Anexo A y metodologías MAGERIT.", features: ["Heatmap 5×5 interactivo con drill-down", "Tratamiento: mitigar, aceptar, transferir, evitar", "Controles preventivos, detectivos y correctivos", "Vencimientos y alertas de revisión", "Sugerencias de controles mediante IA"] },
-            { icon: "✓", title: "Auditorías", color: "#2E8B57", desc: "Planifica y ejecuta auditorías internas y externas con checklists por cláusula, registro de hallazgos con evidencias y generación automática del informe final.", features: ["Plan anual de auditorías con calendario", "Checklists editables por norma y alcance", "Registro de hallazgos: NC mayor, menor, observación", "Vinculación de evidencias y documentos", "Informe final en PDF con firma digital"] },
-            { icon: "⊘", title: "No Conformidades y CAPA", color: "#C93C37", desc: "Gestiona el ciclo completo de no conformidades: alta manual o desde auditoría, análisis de causa raíz, acción correctiva, seguimiento y validación de eficacia.", features: ["Alta desde auditoría o de forma manual", "Análisis de causa raíz (5 porqués, Ishikawa)", "Acción correctiva y preventiva vinculada", "Validación de eficacia con fecha límite", "Cierre con evidencia adjunta"] },
-            { icon: "✦", title: "Asistente IA", color: "#6B3FB5", desc: "Integración real con IA para acelerar el trabajo de cumplimiento. Genera borradores, analiza gaps y sugiere tratamientos. Toda sugerencia requiere confirmación humana antes de guardarse.", features: ["Generación de borradores de políticas y procedimientos", "Resumen de evaluaciones GAP", "Sugerencia de acciones correctivas", "Análisis de tratamiento de riesgos", "Resumen de hallazgos de auditoría"] },
-            { icon: "📊", title: "Indicadores", color: "#123C66", desc: "Define KPIs con metas, frecuencia y semáforo. Historial de valores para la revisión por la dirección y las auditorías.", features: ["Metas y umbrales configurables", "Histórico por periodo", "Alertas cuando se sale de objetivo", "Vínculo a cláusulas y procesos"] },
-            { icon: "📎", title: "Evidencias", color: "#2E8B57", desc: "Un solo sitio para pruebas de cumplimiento: subidas seguras, filtros por módulo y trazabilidad hasta auditorías, riesgos o NC.", features: ["Almacenamiento centralizado", "Vínculo a auditoría, riesgo, documento o NC", "Vista previa y descarga controlada"] },
-          ].map((feat, i) => (
-            <div
-              key={feat.title}
-              className="nf-mkt-feature-row"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
-                gap: "clamp(24px, 5vw, 60px)",
-                alignItems: "center",
-                marginBottom: "clamp(48px, 10vw, 80px)",
-                direction: i % 2 !== 0 ? "rtl" : "ltr",
-              }}
-            >
-              <div style={{ direction: "ltr" }}>
-                <div style={{ width: 52, height: 52, background: feat.color + "18", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18, color: feat.color }}>
-                  {feat.icon}
-                </div>
-                <h3 style={{ fontSize: "clamp(20px, 4.5vw, 28px)", fontWeight: 800, color: "#142033", margin: "0 0 12px", letterSpacing: "-0.5px", lineHeight: 1.2 }}>{feat.title}</h3>
-                <p style={{ fontSize: 16, color: "#5E6B7A", lineHeight: 1.7, marginBottom: 20 }}>{feat.desc}</p>
-                {feat.features.map(f => (
-                  <div key={f} style={{ display: "flex", gap: 10, alignItems: "center", padding: "6px 0" }}>
-                    <span style={{ color: feat.color, fontWeight: 700, fontSize: 15 }}>✓</span>
-                    <span style={{ fontSize: 14, color: "#142033" }}>{f}</span>
-                  </div>
-                ))}
-              </div>
-              <div
+
+      <section className="nf-section nf-section--tight">
+        <div className="nf-container" style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+          {FEATURES.map((feat, i) => {
+            const Icon = Ic[feat.icon];
+            return (
+              <article
+                key={feat.title}
+                className="nf-card"
                 style={{
-                  direction: "ltr",
-                  background: feat.color + "08",
-                  border: `1px solid ${feat.color}25`,
-                  borderRadius: 16,
-                  padding: "clamp(20px, 5vw, 36px)",
-                  minHeight: "min(200px, 40vw)",
-                  display: "flex",
+                  display: "grid",
+                  gridTemplateColumns: i % 2 === 0 ? "1.1fr 1fr" : "1fr 1.1fr",
+                  gap: 36,
                   alignItems: "center",
-                  justifyContent: "center",
+                  padding: "clamp(24px, 4vw, 40px)",
                 }}
               >
-                <div style={{ fontSize: "clamp(40px, 12vw, 72px)", opacity: 0.15, color: feat.color }}>{feat.icon}</div>
-              </div>
+                <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line-2)", color: "var(--nf-accent)", marginBottom: 18 }}>
+                    <Icon />
+                  </div>
+                  <h3 className="nf-h-3">{feat.title}</h3>
+                  <p style={{ color: "var(--nf-ink-2)", fontSize: 15, lineHeight: 1.65, margin: "10px 0 18px" }}>{feat.desc}</p>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
+                    {feat.bullets.map((b) => (
+                      <li key={b} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: "var(--nf-ink-2)" }}>
+                        <span style={{ color: "var(--nf-accent)", marginTop: 3 }}><Ic.check/></span>{b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div style={{
+                  order: i % 2 === 0 ? 2 : 1,
+                  background: "radial-gradient(circle at 30% 30%, oklch(0.72 0.14 158 / 0.18), transparent 60%), rgba(255,255,255,0.02)",
+                  border: "1px solid var(--nf-line)",
+                  borderRadius: 18,
+                  minHeight: 220,
+                  display: "grid",
+                  placeItems: "center",
+                  position: "relative",
+                  overflow: "hidden",
+                }}>
+                  <div style={{ color: "var(--nf-accent)", transform: "scale(4)", opacity: 0.35 }}>
+                    <Icon />
+                  </div>
+                  <div style={{ position: "absolute", bottom: 14, left: 16, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                    módulo · {String(i + 1).padStart(2, "0")}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="nf-section nf-section--tight">
+        <div className="nf-container">
+          <div className="nf-cta-final">
+            <h2 className="nf-h-display" style={{ fontSize: "clamp(28px, 4vw, 44px)", maxWidth: "22ch", marginInline: "auto" }}>
+              ¿Listo para verlo en tu sistema?
+            </h2>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 28, flexWrap: "wrap" }}>
+              <a className="nf-btn nf-btn--primary" href="/demo">Solicitar demo <Ic.arrow className="nf-arrow"/></a>
+              <a className="nf-btn nf-btn--ghost" href="/pricing">Ver precios</a>
             </div>
-          ))}
+          </div>
         </div>
       </section>
     </MarketingLayout>
