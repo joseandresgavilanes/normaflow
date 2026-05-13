@@ -12,75 +12,9 @@ export const ROLES = {
   VIEWER: "Visor",
 } as const;
 
-export const PERMISSIONS = {
-  SUPER_ADMIN: ["*"],
-  ORG_ADMIN: [
-    "org:*",
-    "members:*",
-    "documents:*",
-    "risks:*",
-    "audits:*",
-    "nc:*",
-    "actions:*",
-    "indicators:*",
-    "gap:*",
-    "training:*",
-    "changes:*",
-    "suppliers:*",
-    "integrations:*",
-    "reporting:*",
-    "activity:*",
-  ],
-  COMPLIANCE_MANAGER: [
-    "documents:*",
-    "risks:*",
-    "audits:*",
-    "nc:*",
-    "actions:*",
-    "indicators:*",
-    "gap:*",
-    "training:*",
-    "changes:*",
-    "suppliers:*",
-    "integrations:read",
-    "integrations:manage",
-    "reporting:*",
-    "activity:read",
-  ],
-  AUDITOR: [
-    "audits:*",
-    "nc:create",
-    "nc:read",
-    "documents:read",
-    "risks:read",
-    "training:read",
-    "changes:read",
-    "suppliers:read",
-    "reporting:read",
-    "activity:read",
-  ],
-  CONTRIBUTOR: [
-    "documents:read",
-    "documents:create",
-    "actions:read",
-    "actions:update",
-    "nc:read",
-    "training:read",
-    "changes:read",
-    "suppliers:read",
-  ],
-  VIEWER: [
-    "documents:read",
-    "risks:read",
-    "audits:read",
-    "indicators:read",
-    "training:read",
-    "changes:read",
-    "suppliers:read",
-    "reporting:read",
-    "activity:read",
-  ],
-} as const;
+// Re-export the canonical permission matrix. Kept here as `PERMISSIONS`
+// for backward compatibility with existing client-side imports.
+export { ROLE_PERMISSIONS as PERMISSIONS } from "@/lib/permissions/matrix";
 
 export const STANDARDS = {
   ISO_9001: { code: "ISO_9001", name: "ISO 9001", version: "2015", color: "#123C66" },

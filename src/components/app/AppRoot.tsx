@@ -8,6 +8,7 @@ import AppTopbar from "@/components/layout/AppTopbar";
 import AIPanel from "@/components/modules/AIPanel";
 import WorkspaceToast from "@/components/workspace/WorkspaceToast";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
+import { AdminMockProvider } from "@/context/AdminMockStore";
 import { ROLES } from "@/lib/constants";
 import type { AppRoleKey } from "@/lib/permissions/frontend";
 
@@ -109,6 +110,7 @@ export default function AppRoot({
 
   return (
     <WorkspaceProvider key={profile.email + activeOrgId} profile={profile}>
+      <AdminMockProvider>
       <div className="nf-app-shell">
         {isCompactNav && navOpen && (
           <button type="button" className="nf-sidebar-backdrop" aria-label="Cerrar menú de navegación" onClick={() => setNavOpen(false)} />
@@ -143,6 +145,7 @@ export default function AppRoot({
         <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
         <WorkspaceToast />
       </div>
+      </AdminMockProvider>
     </WorkspaceProvider>
   );
 }

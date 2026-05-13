@@ -450,11 +450,153 @@ async function main() {
     },
   });
 
+  // ─── ISOTech manual alignment seed ──────────────────────────────
+  // Catalogs, positions, personnel, locations, records, mgmt review.
+  // Idempotent via upserts on (organizationId, name|code|year).
+
+  const calidad = await prisma.position.upsert({
+    where: { organizationId_name: { organizationId: org.id, name: "Director de Calidad" } },
+    update: {},
+    create: { organizationId: org.id, name: "Director de Calidad", description: "Responsable del SGC" },
+  });
+  await prisma.position.upsert({
+    where: { organizationId_name: { organizationId: org.id, name: "Auditor Interno" } },
+    update: {},
+    create: { organizationId: org.id, name: "Auditor Interno" },
+  });
+  await prisma.position.upsert({
+    where: { organizationId_name: { organizationId: org.id, name: "Coordinador SGSI" } },
+    update: {},
+    create: { organizationId: org.id, name: "Coordinador SGSI" },
+  });
+
+  await prisma.personnel.deleteMany({ where: { organizationId: org.id } });
+  await prisma.personnel.createMany({
+    data: [
+      { organizationId: org.id, firstName: "María",  lastName: "Torres",  email: "maria.torres@tecnoserv.example",  positionId: calidad.id },
+      { organizationId: org.id, firstName: "Luis",   lastName: "Castro",  email: "luis.castro@tecnoserv.example" },
+      { organizationId: org.id, firstName: "Ana",    lastName: "Ríos",    email: "ana.rios@tecnoserv.example" },
+      { organizationId: org.id, firstName: "Pedro",  lastName: "Gómez",   email: "pedro.gomez@tecnoserv.example" },
+    ],
+  });
+
+  for (const name of ["Sede Madrid", "Sede Barcelona", "Planta Valencia", "Servidor Corporativo"]) {
+    await prisma.location.upsert({
+      where: { organizationId_name: { organizationId: org.id, name } },
+      update: {},
+      create: { organizationId: org.id, name },
+    });
+  }
+
+  for (const r of [
+    { name: "6 meses",  months: 6 },
+    { name: "1 año",    months: 12 },
+    { name: "3 años",   months: 36 },
+    { name: "5 años",   months: 60 },
+    { name: "10 años",  months: 120 },
+  ]) {
+    await prisma.retentionTime.upsert({
+      where: { organizationId_name: { organizationId: org.id, name: r.name } },
+      update: { months: r.months },
+      create: { organizationId: org.id, ...r },
+    });
+  }
+
+  for (const name of ["RECICLAR", "ELIMINAR", "ARCHIVAR HISTÓRICO"]) {
+    await prisma.disposition.upsert({
+      where: { organizationId_name: { organizationId: org.id, name } },
+      update: {},
+      create: { organizationId: org.id, name },
+    });
+  }
+
+  for (const name of ["Archivador físico", "Carpeta compartida", "Repositorio cifrado", "Almacén en frío"]) {
+    await prisma.archiveMethod.upsert({
+      where: { organizationId_name: { organizationId: org.id, name } },
+      update: {},
+      create: { organizationId: org.id, name },
+    });
+  }
+
+  for (const name of ["FÍSICO", "ELECTRÓNICO", "FÍSICO Y ELECTRÓNICO"]) {
+    await prisma.recordType.upsert({
+      where: { organizationId_name: { organizationId: org.id, name } },
+      update: {},
+      create: { organizationId: org.id, name },
+    });
+  }
+
+  // Sample record
+  const electronico = await prisma.recordType.findUnique({
+    where: { organizationId_name: { organizationId: org.id, name: "ELECTRÓNICO" } },
+  });
+  const ret3 = await prisma.retentionTime.findUnique({
+    where: { organizationId_name: { organizationId: org.id, name: "3 años" } },
+  });
+  const reciclar = await prisma.disposition.findUnique({
+    where: { organizationId_name: { organizationId: org.id, name: "RECICLAR" } },
+  });
+  const archivoCarpeta = await prisma.archiveMethod.findUnique({
+    where: { organizationId_name: { organizationId: org.id, name: "Carpeta compartida" } },
+  });
+
+  await prisma.record.upsert({
+    where: { organizationId_code: { organizationId: org.id, code: "REG-CAL-001" } },
+    update: {},
+    create: {
+      organizationId: org.id,
+      code: "REG-CAL-001",
+      name: "Registro de inspección de producto terminado",
+      recordTypeId: electronico?.id,
+      retentionTimeId: ret3?.id,
+      dispositionId: reciclar?.id,
+      archiveMethodId: archivoCarpeta?.id,
+      digitalLocation: "/calidad/inspeccion-producto",
+      observations: "Aplica a todo lote despachado a cliente.",
+    },
+  });
+
+  // Annual audit program
+  const currentYear = new Date().getFullYear();
+  await prisma.auditProgram.upsert({
+    where: { organizationId_year_title: { organizationId: org.id, year: currentYear, title: `Programa Anual ${currentYear}` } },
+    update: {},
+    create: {
+      organizationId: org.id,
+      year: currentYear,
+      title: `Programa Anual ${currentYear}`,
+      objectives: "Cubrir todos los procesos certificados ISO 9001 e ISO 27001 al menos una vez en el año.",
+      scope: "Todos los procesos en alcance del SGC y SGSI.",
+      status: "APPROVED",
+    },
+  });
+
+  // Sample management review for the current quarter
+  const review = await prisma.managementReview.create({
+    data: {
+      organizationId: org.id,
+      title: `Revisión por la Dirección Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${currentYear}`,
+      status: "PLANNED",
+      scheduledDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      attendees: ["María Torres", "Luis Castro", "Ana Ríos"],
+    },
+  });
+  await prisma.managementReviewInput.createMany({
+    data: [
+      { reviewId: review.id, topic: "AUDIT_RESULTS",          content: "Hallazgos auditoría interna Q3 — 4 NC menores, 0 mayores." },
+      { reviewId: review.id, topic: "CUSTOMER_FEEDBACK",      content: "NPS sostenido en 64; 3 reclamos resueltos en plazo." },
+      { reviewId: review.id, topic: "NONCONFORMITIES_ACTIONS", content: "12 ACPM cerradas con verificación de eficacia." },
+    ],
+  });
+
   console.log("✅ Seed completado:");
   console.log("   📧 Email de acceso: demo@normaflow.io");
   console.log("   🔑 Contraseña: NormaFlow2025!");
   console.log("   🏢 Organización: Tecnoserv Industrial S.A.");
   console.log("   📋 Normas: ISO 9001:2015 + ISO 27001:2022");
+  console.log("   📚 Catálogos ISOTech: cargos, personal, ubicaciones, retención, disposición, archivo, tipos de registro");
+  console.log("   📁 Registro de ejemplo: REG-CAL-001");
+  console.log("   🗓  Programa anual de auditoría y revisión por la dirección semilla creada");
 }
 
 main()

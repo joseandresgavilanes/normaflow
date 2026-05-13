@@ -28,6 +28,34 @@ const NAV = [
   { href: "/app/settings", icon: "👤", label: "Cuenta" },
 ];
 
+const ADMIN_GROUPS: { label: string; items: { href: string; icon: string; label: string }[] }[] = [
+  {
+    label: "Información general",
+    items: [
+      { href: "/app/info/positions", icon: "👔", label: "Cargos" },
+      { href: "/app/info/personnel", icon: "🧑‍💼", label: "Personal" },
+    ],
+  },
+  {
+    label: "Catálogos",
+    items: [
+      { href: "/app/catalogs/locations",      icon: "📍", label: "Lugares" },
+      { href: "/app/catalogs/retention",      icon: "⏳", label: "Retención" },
+      { href: "/app/catalogs/disposition",    icon: "♻", label: "Disposición" },
+      { href: "/app/catalogs/archive-method", icon: "🗂", label: "Método archivo" },
+      { href: "/app/catalogs/record-type",    icon: "📁", label: "Tipo registro" },
+    ],
+  },
+  {
+    label: "Administración",
+    items: [
+      { href: "/app/settings/organization", icon: "🏢", label: "Organización" },
+      { href: "/app/settings/users",        icon: "👥", label: "Usuarios y roles" },
+      { href: "/app/settings/groups",       icon: "🔐", label: "Grupos y permisos" },
+    ],
+  },
+];
+
 type Membership = { organizationId: string; organizationName: string; role: string };
 
 export default function AppSidebar({
@@ -203,6 +231,51 @@ export default function AppSidebar({
             <span style={{ fontSize: 14 }}>✦</span> Asistente IA
           </button>
         </div>
+
+        {ADMIN_GROUPS.map((group) => {
+          const groupActive = group.items.some((it) => pathname === it.href || pathname?.startsWith(it.href + "/"));
+          return (
+            <div key={group.label} style={{ marginTop: 12 }}>
+              <div style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: groupActive ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.32)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                padding: "8px 10px 4px",
+              }}>
+                {group.label}
+              </div>
+              {group.items.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => onNavigate?.()}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 9,
+                      padding: "7px 10px",
+                      borderRadius: 8,
+                      marginBottom: 1,
+                      textDecoration: "none",
+                      background: active ? "rgba(255,255,255,0.11)" : "transparent",
+                      color: active ? "#fff" : "rgba(255,255,255,0.55)",
+                      fontSize: 12.5,
+                      fontWeight: active ? 600 : 400,
+                      transition: "all 0.12s",
+                    }}
+                  >
+                    <span style={{ fontSize: 13, width: 18, textAlign: "center" }}>{item.icon}</span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
       <div style={{ padding: "10px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 9 }}>
         <Link href="/app/settings" onClick={() => onNavigate?.()} style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flex: 1, minWidth: 0, color: "inherit" }}>

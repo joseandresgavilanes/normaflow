@@ -41,6 +41,19 @@ model Organization {
   subscription      Subscription?
   auditLogs         AuditLog[]
 
+  // ISOTech manual alignment
+  groups            Group[]
+  positions         Position[]
+  personnel         Personnel[]
+  locations         Location[]
+  retentionTimes    RetentionTime[]
+  dispositions      Disposition[]
+  archiveMethods    ArchiveMethod[]
+  recordTypes       RecordType[]
+  records           Record[]
+  auditPrograms     AuditProgram[]
+  managementReviews ManagementReview[]
+
   @@map("organizations")
 }
 
@@ -184,8 +197,20 @@ model Document {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
+  // ISOTech manual § 12
+  isExternal                Boolean  @default(false)
+  externalLink              String?
+  custodianId               String?
+  responsibleElaborationId  String?
+  responsibleApprovalId     String?
+  locationId                String?
+  physicalLocation          String?
+  distributionList          String[]
+  observations              String?
+
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   clause       Clause?           @relation(fields: [clauseId], references: [id])
+  location     Location?         @relation(fields: [locationId], references: [id])
   versions     DocumentVersion[]
   approvals    Approval[]
 
@@ -194,15 +219,17 @@ model Document {
 }
 
 model DocumentVersion {
-  id          String   @id @default(cuid())
-  documentId  String
-  version     String
-  fileUrl     String?
-  fileSize    Int?
-  mimeType    String?
-  changeLog   String?
-  createdById String?
-  createdAt   DateTime @default(now())
+  id                String   @id @default(cuid())
+  documentId        String
+  version           String
+  fileUrl           String?
+  fileSize          Int?
+  mimeType          String?
+  changeLog         String?
+  changeDescription String?
+  previousVersion   String?
+  createdById       String?
+  createdAt         DateTime @default(now())
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
@@ -292,6 +319,7 @@ model Control {
 model Audit {
   id             String      @id @default(cuid())
   organizationId String
+  programId      String?
   title          String
   type           AuditType   @default(INTERNAL)
   standardCode   String?
@@ -303,14 +331,17 @@ model Audit {
   completedAt    DateTime?
   scope          String?
   objectives     String?
+  criteria       String?
   reportUrl      String?
   progress       Int         @default(0)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
-  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program         AuditProgram?     @relation(fields: [programId], references: [id])
   findings        AuditFinding[]
   nonconformities Nonconformity[]
+  checklistItems  AuditChecklistItem[]
 
   @@map("audits")
 }
@@ -372,18 +403,29 @@ model Action {
   type             ActionType    @default(CORRECTIVE)
   priority         Priority      @default(MEDIUM)
   status           ActionStatus  @default(PENDING)
+  stage            ACPMStage     @default(REQUEST)
+  source           String?
+  rootCause        String?
+  proposedSolution String?
+  effectivenessCheck String?
+  effectivenessAt  DateTime?
   ownerId          String?
+  requestedById    String?
+  requestApproverId String?
+  solutionApproverId String?
   dueDate          DateTime?
   completedAt      DateTime?
   progress         Int           @default(0)
   riskId           String?
   nonconformityId  String?
+  managementReviewId String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
-  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  risk            Risk?          @relation(fields: [riskId], references: [id])
-  nonconformity   Nonconformity? @relation(fields: [nonconformityId], references: [id])
+  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risk            Risk?            @relation(fields: [riskId], references: [id])
+  nonconformity   Nonconformity?   @relation(fields: [nonconformityId], references: [id])
+  managementReview ManagementReview? @relation(fields: [managementReviewId], references: [id])
   comments        ActionComment[]
 
   @@map("actions")
@@ -512,6 +554,299 @@ model AuditLog {
   user         User?        @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+// ─── ISOTECH MANUAL ALIGNMENT ───────────────────────
+// Models that extend the SaaS to cover the ISOTech functional reference.
+// All entities are tenant-scoped via organizationId.
+
+// § 10.2 Grupos / § 10.3 Permiso a Grupo / § 10.4 Usuarios de Grupo
+model Group {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      GroupMembership[]
+  permissions  GroupPermission[]
+
+  @@unique([organizationId, name])
+  @@map("groups")
+}
+
+model GroupMembership {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_memberships")
+}
+
+model GroupPermission {
+  id         String @id @default(cuid())
+  groupId    String
+  permission String // e.g. "documents:create", "records:*"
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, permission])
+  @@map("group_permissions")
+}
+
+// § 11.1 Cargo
+model Position {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  personnel    Personnel[]
+
+  @@unique([organizationId, name])
+  @@map("positions")
+}
+
+// § 11.3 Datos Personal
+model Personnel {
+  id             String   @id @default(cuid())
+  organizationId String
+  firstName      String
+  lastName       String
+  email          String?
+  identification String?
+  positionId     String?
+  active         Boolean  @default(true)
+  hiredAt        DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  position     Position?    @relation(fields: [positionId], references: [id])
+
+  @@map("personnel")
+}
+
+// § 12.1.1 Lugar
+model Location {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents    Document[]
+
+  @@unique([organizationId, name])
+  @@map("locations")
+}
+
+// § 13.1.1 Tiempo de Retención
+model RetentionTime {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  months         Int
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  records      Record[]
+
+  @@unique([organizationId, name])
+  @@map("retention_times")
+}
+
+// § 13.1.2 Disposición
+model Disposition {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  records      Record[]
+
+  @@unique([organizationId, name])
+  @@map("dispositions")
+}
+
+// § 13.1.3 Método de Archivo
+model ArchiveMethod {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  records      Record[]
+
+  @@unique([organizationId, name])
+  @@map("archive_methods")
+}
+
+// § 13.1.4 Tipo de Registro
+model RecordType {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String   // FISICO, ELECTRONICO, FISICO_Y_ELECTRONICO, ...
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  records      Record[]
+
+  @@unique([organizationId, name])
+  @@map("record_types")
+}
+
+// § 13.2 Control de Registros
+model Record {
+  id                String   @id @default(cuid())
+  organizationId    String
+  code              String
+  name              String
+  processId         String?
+  recordTypeId      String?
+  retentionTimeId   String?
+  dispositionId     String?
+  archiveMethodId   String?
+  custodianId       String?
+  physicalLocation  String?
+  digitalLocation   String?
+  observations      String?
+  active            Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recordType    RecordType?    @relation(fields: [recordTypeId], references: [id])
+  retentionTime RetentionTime? @relation(fields: [retentionTimeId], references: [id])
+  disposition   Disposition?   @relation(fields: [dispositionId], references: [id])
+  archiveMethod ArchiveMethod? @relation(fields: [archiveMethodId], references: [id])
+  entries       RecordEntry[]
+
+  @@unique([organizationId, code])
+  @@map("records")
+}
+
+model RecordEntry {
+  id          String   @id @default(cuid())
+  recordId    String
+  reference   String?  // e.g. registry number, batch
+  description String?
+  fileUrl     String?
+  fileSize    Int?
+  mimeType    String?
+  enteredById String?
+  enteredAt   DateTime @default(now())
+
+  record Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  @@map("record_entries")
+}
+
+// § 15 Programa de Auditoría (annual program grouping audits)
+model AuditProgram {
+  id             String   @id @default(cuid())
+  organizationId String
+  year           Int
+  title          String
+  objectives     String?
+  scope          String?
+  status         AuditProgramStatus @default(DRAFT)
+  approvedById   String?
+  approvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  audits       Audit[]
+
+  @@unique([organizationId, year, title])
+  @@map("audit_programs")
+}
+
+model AuditChecklistItem {
+  id          String   @id @default(cuid())
+  auditId     String
+  clauseCode  String?
+  question    String
+  expected    String?
+  response    String?
+  status      ChecklistItemStatus @default(PENDING)
+  evidenceUrl String?
+  notes       String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@map("audit_checklist_items")
+}
+
+// § 16 Revisión por la Dirección
+model ManagementReview {
+  id             String   @id @default(cuid())
+  organizationId String
+  title          String
+  scheduledDate  DateTime?
+  heldAt         DateTime?
+  status         ManagementReviewStatus @default(PLANNED)
+  chairId        String?
+  attendees      String[] // free-text names or user IDs
+  summary        String?
+  reportUrl      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inputs       ManagementReviewInput[]
+  decisions    ManagementReviewDecision[]
+  actions      Action[]
+
+  @@map("management_reviews")
+}
+
+model ManagementReviewInput {
+  id        String   @id @default(cuid())
+  reviewId  String
+  topic     ManagementReviewTopic
+  content   String
+  createdAt DateTime @default(now())
+
+  review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("management_review_inputs")
+}
+
+model ManagementReviewDecision {
+  id          String   @id @default(cuid())
+  reviewId    String
+  topic       String
+  decision    String
+  ownerId     String?
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+
+  review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("management_review_decisions")
 }
 
 // ─── ENUMS ───────────────────────────────────────────
@@ -699,4 +1034,53 @@ enum SubscriptionStatus {
   PAST_DUE
   CANCELLED
   PAUSED
+}
+
+// ISOTech alignment enums
+enum ACPMStage {
+  REQUEST
+  REQUEST_APPROVAL
+  ANALYSIS
+  SOLUTION_APPROVAL
+  IMPLEMENTATION
+  VERIFICATION
+  CLOSED
+}
+
+enum AuditProgramStatus {
+  DRAFT
+  APPROVED
+  IN_EXECUTION
+  COMPLETED
+  CANCELLED
+}
+
+enum ChecklistItemStatus {
+  PENDING
+  COMPLIANT
+  NONCOMPLIANT
+  NOT_APPLICABLE
+}
+
+enum ManagementReviewStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ManagementReviewTopic {
+  PREVIOUS_REVIEW_FOLLOWUP
+  AUDIT_RESULTS
+  CUSTOMER_FEEDBACK
+  PROCESS_PERFORMANCE
+  PRODUCT_CONFORMITY
+  NONCONFORMITIES_ACTIONS
+  MONITORING_MEASUREMENT
+  EXTERNAL_PROVIDERS
+  ADEQUACY_RESOURCES
+  EFFECTIVENESS_RISK_ACTIONS
+  IMPROVEMENT_OPPORTUNITIES
+  CHANGES_INTERNAL_EXTERNAL
+  OTHER
 }
