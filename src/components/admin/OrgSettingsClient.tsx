@@ -60,10 +60,10 @@ export default function OrgSettingsClient() {
             <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} disabled={!canEdit} style={inputStyle} placeholder="https://…" />
           </Field>
           <Field label="Plan">
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "#F7F9FC", border: "1px solid #E5EAF2", fontSize: 13, fontWeight: 600, color: "#142033" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E8B57" }} /> {org.plan}
             </div>
-            <p style={{ fontSize: 12, color: "#9aa5b1", margin: "6px 0 0" }}>Cambia tu plan desde <a href="/app/billing" style={{ color: "#123C66" }}>Billing</a>.</p>
+            <p style={{ fontSize: 12, color: "var(--nf-ink-4)", margin: "6px 0 0" }}>Cambia tu plan desde <a href="/app/billing" style={{ color: "#123C66" }}>Billing</a>.</p>
           </Field>
 
           {error && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{error}</div>}
@@ -85,11 +85,11 @@ export default function OrgSettingsClient() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #E5EAF2", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
+const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { padding: "10px 22px", fontSize: 14, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };

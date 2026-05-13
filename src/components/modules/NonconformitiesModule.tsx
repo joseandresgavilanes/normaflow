@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { AlertTriangle, CheckCircle2, ClipboardList, Plus, Sparkles, Timer } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -12,7 +13,7 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import type { Column } from "@/components/ui/Table";
 
-const SEV_COLORS: Record<string, string> = { CRITICAL: "#C93C37", MAJOR: "#D68A1A", MINOR: "#5E6B7A" };
+const SEV_COLORS: Record<string, string> = { CRITICAL: "#C93C37", MAJOR: "#D68A1A", MINOR: "var(--nf-ink-3)" };
 
 export default function NonconformitiesModule() {
   const { state, dispatch, nextNcCode, nextActionCode, showToast } = useWorkspace();
@@ -35,13 +36,13 @@ export default function NonconformitiesModule() {
   });
 
   const columns: Column<NcRow>[] = [
-    { key: "code", label: "#", render: v => <span style={{ color: "#5E6B7A", fontSize: 12, fontWeight: 600 }}>{v}</span> },
+    { key: "code", label: "#", render: v => <span style={{ color: "var(--nf-ink-3)", fontSize: 12, fontWeight: 600 }}>{v}</span> },
     {
       key: "title",
       label: "No Conformidad",
       render: v => <span style={{ fontWeight: 500, maxWidth: 260, display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v}</span>,
     },
-    { key: "source", label: "Origen", render: v => <span style={{ fontSize: 12, color: "#5E6B7A" }}>{v.replace(/_/g, " ")}</span> },
+    { key: "source", label: "Origen", render: v => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{v.replace(/_/g, " ")}</span> },
     {
       key: "severity",
       label: "Severidad",
@@ -137,20 +138,105 @@ export default function NonconformitiesModule() {
 
   return (
     <div>
-      <SectionTitle title="No Conformidades y CAPA" sub="Hallazgos, análisis de causa raíz y acciones correctivas" action="+ Registrar NC" onAction={openCreate} />
+      <SectionTitle
+        title="No Conformidades y CAPA"
+        sub="Hallazgos, análisis de causa raíz y acciones correctivas"
+        action={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <Plus size={17} strokeWidth={2.25} aria-hidden />
+            Registrar NC
+          </span>
+        }
+        onAction={openCreate}
+      />
 
-      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 16 }}>
-        {[
-          { label: "Total", value: nonconformities.length, color: "#123C66" },
-          { label: "Abiertas", value: nonconformities.filter(n => n.status === "OPEN").length, color: "#C93C37" },
-          { label: "En Curso", value: nonconformities.filter(n => n.status === "IN_PROGRESS").length, color: "#D68A1A" },
-          { label: "Cerradas", value: nonconformities.filter(n => n.status === "CLOSED").length, color: "#2E8B57" },
-        ].map(s => (
-          <Card key={s.label} style={{ textAlign: "center", padding: "16px 12px" }}>
-            <div style={{ fontSize: 30, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A", marginTop: 2 }}>{s.label}</div>
-          </Card>
-        ))}
+      <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{nonconformities.length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total NC</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.18) 0%, rgba(201, 60, 55, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#C93C37",
+            }}
+          >
+            <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>
+              {nonconformities.filter(n => n.status === "OPEN").length}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Abiertas</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9a6510",
+            }}
+          >
+            <Timer size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>
+              {nonconformities.filter(n => n.status === "IN_PROGRESS").length}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#1f6f45",
+            }}
+          >
+            <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>
+              {nonconformities.filter(n => n.status === "CLOSED").length}
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cerradas</div>
+          </div>
+        </div>
       </div>
 
       <Card style={{ padding: 0 }}>
@@ -160,7 +246,7 @@ export default function NonconformitiesModule() {
       <Modal open={!!detailLive && !actionOpen} onClose={() => setDetail(null)} title={`${detailLive?.code} — No Conformidad`} width={580}>
         {detailLive && (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 16 }}>{detailLive.title}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 16, letterSpacing: "-0.02em", lineHeight: 1.35 }}>{detailLive.title}</div>
             {[
               ["Origen", detailLive.source.replace(/_/g, " ")],
               ["Severidad", detailLive.severity],
@@ -168,33 +254,33 @@ export default function NonconformitiesModule() {
               ["Responsable", detailLive.owner],
               ["Fecha límite", detailLive.due],
             ].map(([k, v]) => (
-              <div key={String(k)} style={{ padding: "9px 0", borderBottom: "1px solid #E5EAF2", display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                <span style={{ color: "#5E6B7A" }}>{k}</span>
-                <span style={{ color: "#142033", fontWeight: 500 }}>{v}</span>
+              <div key={String(k)} style={{ padding: "9px 0", borderBottom: "1px solid var(--nf-line)", display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                <span style={{ color: "var(--nf-ink-3)" }}>{k}</span>
+                <span style={{ color: "var(--nf-ink)", fontWeight: 500 }}>{v}</span>
               </div>
             ))}
-            <div style={{ marginTop: 14, padding: "12px 14px", background: "#F7F9FC", borderRadius: 8, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
-              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--nf-app-surface-2)", borderRadius: 8, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
+              <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
             </div>
             <div style={{ padding: "12px 14px", background: "#e8f5ee40", border: "1px solid #2E8B5730", borderRadius: 8, marginBottom: 16 }}>
               <div style={{ fontSize: 11, color: "#2E8B57", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Acción Correctiva</div>
-              <div style={{ fontSize: 13, color: "#142033", lineHeight: 1.6 }}>{detailLive.correctiveAction}</div>
+              <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.correctiveAction}</div>
             </div>
             {detailLive.effectivenessCheck && (
-              <div style={{ padding: "12px 14px", background: "#f0f4ff", borderRadius: 8, marginBottom: 16, fontSize: 13, color: "#142033" }}>
+              <div style={{ padding: "12px 14px", background: "#f0f4ff", borderRadius: 8, marginBottom: 16, fontSize: 13, color: "var(--nf-ink)" }}>
                 <strong>Verificación de eficacia:</strong> {detailLive.effectivenessCheck}
               </div>
             )}
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" onClick={openActionModal} style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button type="button" onClick={openActionModal} style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Crear Acción Correctiva
               </button>
               {perm.nc.manage && detailLive.status !== "CLOSED" && (
                 <button
                   type="button"
                   onClick={() => setCloseNcAttest(true)}
-                  style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                 >
                   Cerrar NC (firma simulada)
                 </button>
@@ -202,9 +288,24 @@ export default function NonconformitiesModule() {
               <button
                 type="button"
                 onClick={() => showToast("Análisis 5 Porqués (demo): documenta cada nivel en el registro de la NC.")}
-                style={{ flex: 1, background: "#2E8B5718", color: "#2E8B57", border: "1px solid #2E8B5740", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  background: "#2E8B5718",
+                  color: "#2E8B57",
+                  border: "1px solid #2E8B5740",
+                  borderRadius: 10,
+                  padding: "10px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
               >
-                ✦ IA: Análisis 5 Porqués
+                <Sparkles size={15} strokeWidth={2} aria-hidden />
+                IA: Análisis 5 Porqués
               </button>
             </div>
           </div>
@@ -212,30 +313,38 @@ export default function NonconformitiesModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Registrar no conformidad" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Descripción
-            <textarea value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} rows={3} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              rows={3}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Origen
               <select
+                className="nf-app-input"
                 value={form.source}
                 onChange={e => setForm({ ...form, source: e.target.value as NcRow["source"] })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="INTERNAL_AUDIT">Auditoría interna</option>
                 <option value="CUSTOMER_COMPLAINT">Reclamación cliente</option>
                 <option value="MANAGEMENT_REVIEW">Revisión dirección</option>
               </select>
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Severidad
               <select
+                className="nf-app-input"
                 value={form.severity}
                 onChange={e => setForm({ ...form, severity: e.target.value as NcRow["severity"] })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="MINOR">Menor</option>
                 <option value="MAJOR">Mayor</option>
@@ -243,42 +352,62 @@ export default function NonconformitiesModule() {
               </select>
             </label>
           </div>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Responsable
               <input
+                className="nf-app-input"
                 value={form.owner}
                 onChange={e => setForm({ ...form, owner: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Fecha límite
               <input
+                className="nf-app-input"
                 type="date"
                 value={form.due}
                 onChange={e => setForm({ ...form, due: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
           </div>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Causa raíz (borrador)
-            <textarea value={form.rootCause} onChange={e => setForm({ ...form, rootCause: e.target.value })} rows={2} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.rootCause}
+              onChange={e => setForm({ ...form, rootCause: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Corrección inmediata
-            <textarea value={form.correction} onChange={e => setForm({ ...form, correction: e.target.value })} rows={2} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.correction}
+              onChange={e => setForm({ ...form, correction: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Acción correctiva propuesta
-            <textarea value={form.correctiveAction} onChange={e => setForm({ ...form, correctiveAction: e.target.value })} rows={2} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.correctiveAction}
+              onChange={e => setForm({ ...form, correctiveAction: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button type="button" onClick={submitNc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button type="button" onClick={submitNc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Registrar
             </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
               Cancelar
             </button>
           </div>
@@ -286,20 +415,21 @@ export default function NonconformitiesModule() {
       </Modal>
 
       <Modal open={actionOpen} onClose={() => setActionOpen(false)} title="Nueva acción correctiva" width={480}>
-        <label style={{ fontSize: 13, fontWeight: 500, display: "block" }}>
+        <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", display: "block" }}>
           Título de la acción
           <input
+            className="nf-app-input"
             value={actionTitle}
             onChange={e => setActionTitle(e.target.value)}
-            style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+            style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
           />
         </label>
-        <p style={{ fontSize: 12, color: "#5E6B7A" }}>Se vinculará al Plan de Acción con origen {detail?.code}.</p>
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <button type="button" onClick={submitAction} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+        <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 10 }}>Se vinculará al Plan de Acción con origen {detail?.code}.</p>
+        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+          <button type="button" onClick={submitAction} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
             Crear acción
           </button>
-          <button type="button" onClick={() => setActionOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+          <button type="button" onClick={() => setActionOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
             Cancelar
           </button>
         </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
+import FileImportArea from "@/components/ui/FileImportArea";
 import { formatDate } from "@/lib/utils";
 import { useWorkspace, type EvidenceItem } from "@/context/WorkspaceStore";
 
@@ -15,19 +16,19 @@ function EvidencePreview({ ev }: { ev: EvidenceItem }) {
   const mime = ev.mimeType ?? "";
 
   if (mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg)($|\?)/i.test(url)) {
-    return <img src={url} alt={ev.title} style={{ maxWidth: "100%", maxHeight: 520, objectFit: "contain", borderRadius: 8, border: "1px solid #E5EAF2" }} />;
+    return <img src={url} alt={ev.title} style={{ maxWidth: "100%", maxHeight: 520, objectFit: "contain", borderRadius: 8, border: "1px solid var(--nf-line)" }} />;
   }
 
   if (mime === "application/pdf" || /\.pdf($|\?)/i.test(url)) {
-    return <iframe title="PDF" src={url} style={{ width: "100%", height: 480, border: "1px solid #E5EAF2", borderRadius: 8 }} />;
+    return <iframe title="PDF" src={url} style={{ width: "100%", height: 480, border: "1px solid var(--nf-line)", borderRadius: 8 }} />;
   }
 
   return (
-    <div style={{ padding: 20, background: "#F7F9FC", borderRadius: 8, fontSize: 14 }}>
-      <p style={{ marginTop: 0, color: "#142033", fontWeight: 600 }}>Vista previa no disponible en el navegador</p>
-      <p style={{ color: "#5E6B7A", fontSize: 13 }}>Tipo MIME: {mime || "desconocido"}</p>
-      {ev.fileSize != null && <p style={{ color: "#5E6B7A", fontSize: 13 }}>Tamaño: {(ev.fileSize / 1024).toFixed(1)} KB</p>}
-      <p style={{ color: "#5E6B7A", fontSize: 13 }}>En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace local o de demostración.</p>
+    <div style={{ padding: 20, background: "var(--nf-app-surface-2)", borderRadius: 8, fontSize: 14 }}>
+      <p className="nf-app-help" style={{ marginTop: 0, fontWeight: 700, color: "var(--nf-ink)" }}>Vista previa no disponible en el navegador</p>
+      <p className="nf-app-help">Tipo MIME: {mime || "desconocido"}</p>
+      {ev.fileSize != null && <p className="nf-app-help">Tamaño: {(ev.fileSize / 1024).toFixed(1)} KB</p>}
+      <p className="nf-app-help">En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace local o de demostración.</p>
       <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "#123C66", fontWeight: 600 }}>
         Abrir o descargar
       </a>
@@ -44,8 +45,7 @@ export default function EvidenceModule() {
 
   const filtered = evidence.filter(ev => originFilter === "ALL" || (ev.origin ?? "MANUAL") === originFilter);
 
-  function onUpload(files: FileList | null) {
-    const file = files?.[0];
+  function handleEvidencePick(file: File | null) {
     if (!file) return;
     setBusy(true);
     try {
@@ -78,75 +78,74 @@ export default function EvidenceModule() {
         title="Repositorio de evidencias"
         sub="Pruebas vinculadas a auditorías, riesgos y documentos · Vista previa según tipo de archivo"
         action="+ Subir evidencia"
-        onAction={() => document.getElementById("evidence-file-input")?.click()}
+        onAction={() => document.getElementById("evidence-import-input")?.click()}
       />
-      <input id="evidence-file-input" type="file" hidden onChange={e => onUpload(e.target.files)} />
 
-      {busy && <p style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 12 }}>Procesando…</p>}
+      <div style={{ marginBottom: 16 }}>
+        <FileImportArea
+          baseId="evidence-import"
+          file={null}
+          onFileChange={handleEvidencePick}
+          label="Zona de carga"
+          hint="Los archivos se procesan en el navegador; no se suben a servidor en esta demo."
+          compact
+          disabled={busy}
+        />
+      </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+      {busy && <p className="nf-app-help" style={{ marginBottom: 12 }}>Procesando…</p>}
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="nf-filter-label">Origen</span>
         {(["ALL", "MANUAL", "AUTOMATED", "INTEGRATION"] as const).map(o => (
           <button
             key={o}
             type="button"
+            className={originFilter === o ? "nf-chip nf-chip--on" : "nf-chip"}
             onClick={() => setOriginFilter(o)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: `1px solid ${originFilter === o ? "#123C66" : "#E5EAF2"}`,
-              background: originFilter === o ? "#123C6615" : "#fff",
-              fontSize: 12,
-              cursor: "pointer",
-              color: originFilter === o ? "#123C66" : "#5E6B7A",
-              fontWeight: originFilter === o ? 600 : 400,
-            }}
           >
-            {o === "ALL" ? "Todos los orígenes" : o === "MANUAL" ? "Manual" : o === "AUTOMATED" ? "Automatizada" : "Integración"}
+            {o === "ALL" ? "Todos" : o === "MANUAL" ? "Manual" : o === "AUTOMATED" ? "Automatizada" : "Integración"}
           </button>
         ))}
       </div>
 
-      <Card style={{ padding: 0, overflow: "hidden" }}>
+      <Card style={{ padding: 0 }}>
         {filtered.length === 0 ? (
-          <div style={{ padding: 48, textAlign: "center", color: "#5E6B7A", fontSize: 14 }}>No hay evidencias. Sube un archivo o recarga para ver datos demo.</div>
+          <div className="nf-data-table-wrap">
+            <div className="nf-data-table-empty">No hay evidencias. Sube un archivo o recarga para ver datos demo.</div>
+          </div>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-            <thead>
-              <tr style={{ background: "#F7F9FC", borderBottom: "1px solid #E5EAF2" }}>
-                {["Título", "Origen", "Vínculo", "Marco", "Fecha", ""].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "12px 16px", color: "#5E6B7A", fontWeight: 600 }}>
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(ev => (
-                <tr
-                  key={ev.id}
-                  onClick={() => setPreview(ev)}
-                  style={{ borderBottom: "1px solid #E5EAF2", cursor: "pointer" }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLTableRowElement).style.background = "#F7F9FC";
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLTableRowElement).style.background = "transparent";
-                  }}
-                >
-                  <td style={{ padding: "12px 16px", color: "#142033", fontWeight: 500 }}>{ev.title}</td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>{ev.origin ?? "MANUAL"}</td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>
-                    {ev.relatedEntityType && ev.relatedEntityId ? `${ev.relatedEntityType} ${ev.relatedEntityId}` : ev.module || "—"}
-                  </td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A", fontSize: 12 }}>{ev.framework ?? "—"}</td>
-                  <td style={{ padding: "12px 16px", color: "#5E6B7A" }}>{formatDate(ev.createdAt)}</td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <span style={{ color: "#123C66", fontWeight: 600 }}>Vista previa →</span>
-                  </td>
+          <div className="nf-data-table-wrap">
+            <table className="nf-data-table" style={{ minWidth: 560 }}>
+              <thead>
+                <tr>
+                  {["Título", "Origen", "Vínculo", "Marco", "Fecha", ""].map(h => (
+                    <th key={h}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map(ev => (
+                  <tr
+                    key={ev.id}
+                    onClick={() => setPreview(ev)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td style={{ fontWeight: 600 }}>{ev.title}</td>
+                    <td style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>{ev.origin ?? "MANUAL"}</td>
+                    <td style={{ fontSize: 13, fontWeight: 500, color: "var(--nf-ink-2)" }}>
+                      {ev.relatedEntityType && ev.relatedEntityId ? `${ev.relatedEntityType} ${ev.relatedEntityId}` : ev.module || "—"}
+                    </td>
+                    <td style={{ fontSize: 13, fontWeight: 500, color: "var(--nf-ink-2)" }}>{ev.framework ?? "—"}</td>
+                    <td style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>{formatDate(ev.createdAt)}</td>
+                    <td>
+                      <span style={{ color: "#123C66", fontWeight: 700 }}>Vista previa →</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
 

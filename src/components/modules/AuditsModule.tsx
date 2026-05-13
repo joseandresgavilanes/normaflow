@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { CalendarDays, ClipboardCheck, Plus, Sparkles, Target, TrendingUp, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -93,78 +94,212 @@ export default function AuditsModule() {
 
   return (
     <div>
-      <SectionTitle title="Auditorías" sub="Programa anual · alcance, criterios y cierre trazable" action="+ Nueva Auditoría" onAction={openCreate} />
+      <SectionTitle
+        title="Auditorías"
+        sub="Programa anual · alcance, criterios y cierre trazable"
+        action={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <Plus size={17} strokeWidth={2.25} aria-hidden />
+            Nueva auditoría
+          </span>
+        }
+        onAction={openCreate}
+      />
 
-      <Card style={{ marginBottom: 20, borderLeft: "4px solid #123C66" }}>
-        <div style={{ fontSize: 11, color: "#5E6B7A", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Programa de auditoría {auditProgram.programYear}</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#142033", marginBottom: 8 }}>Responsable: {auditProgram.programOwner}</div>
-        <p style={{ fontSize: 13, color: "#5E6B7A", margin: "0 0 10px", lineHeight: 1.55 }}>{auditProgram.objectives}</p>
-        <div style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>Próxima revisión por la dirección: {auditProgram.nextManagementReview}</div>
-        <Link href="/app/reporting" style={{ fontSize: 12, color: "#2E8B57", fontWeight: 600, marginTop: 10, display: "inline-block" }}>
-          Generar informe de programa →
-        </Link>
+      <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", border: "1px solid var(--nf-line)", borderRadius: 16 }}>
+        <div style={{ height: 4, background: "linear-gradient(90deg, #123C66, #2E8B57)" }} />
+        <div style={{ padding: "20px 22px 22px", background: "linear-gradient(125deg, rgba(18, 60, 102, 0.08) 0%, rgba(46, 139, 87, 0.05) 55%, #fff 100%)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 11,
+                background: "rgba(18, 60, 102, 0.12)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#123C66",
+              }}
+            >
+              <Target size={22} strokeWidth={2.25} aria-hidden />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Programa {auditProgram.programYear}</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginTop: 2, letterSpacing: "-0.02em" }}>Plan de auditoría</div>
+            </div>
+          </div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 600, marginBottom: 10 }}>
+            <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#123C66" }} />
+            {auditProgram.programOwner}
+          </div>
+          <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: "0 0 12px", lineHeight: 1.55, fontWeight: 500 }}>{auditProgram.objectives}</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#123C66", marginBottom: 12 }}>
+            <CalendarDays size={15} strokeWidth={2.25} aria-hidden />
+            Próxima revisión dirección: {auditProgram.nextManagementReview}
+          </div>
+          <div>
+            <Link href="/app/reporting" style={{ fontSize: 13, color: "#2E8B57", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+              Generar informe de programa →
+            </Link>
+          </div>
+        </div>
       </Card>
 
-      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 20 }}>
-        {[
-          { label: "Total planificadas", value: audits.length, color: "#123C66" },
-          { label: "En curso", value: audits.filter(a => a.status === "IN_PROGRESS").length, color: "#D68A1A" },
-          { label: "Completadas", value: audits.filter(a => a.status === "COMPLETED").length, color: "#2E8B57" },
-          { label: "Hallazgos totales", value: audits.reduce((s, a) => s + a.findings, 0), color: "#C93C37" },
-        ].map(s => (
-          <Card key={s.label} style={{ textAlign: "center", padding: "18px 12px" }}>
-            <div style={{ fontSize: 32, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A", marginTop: 2 }}>{s.label}</div>
-          </Card>
-        ))}
+      <div className="nf-kpi-summary" style={{ marginBottom: 20 }}>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total planificadas</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9a6510",
+            }}
+          >
+            <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "IN_PROGRESS").length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#1f6f45",
+            }}
+          >
+            <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "COMPLETED").length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.18) 0%, rgba(201, 60, 55, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#C93C37",
+            }}
+          >
+            <Target size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.reduce((s, a) => s + a.findings, 0)}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Hallazgos totales</div>
+          </div>
+        </div>
       </div>
 
       {audits.length === 0 ? (
-        <Card style={{ padding: 40, textAlign: "center", color: "#5E6B7A" }}>No hay auditorías. Crea una con + Nueva Auditoría.</Card>
+        <Card style={{ padding: 44, textAlign: "center" }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              margin: "0 auto 14px",
+              borderRadius: 16,
+              background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <ClipboardCheck size={28} strokeWidth={2} aria-hidden />
+          </div>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--nf-ink)" }}>Sin auditorías todavía</p>
+          <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--nf-ink-3)" }}>Crea la primera con «Nueva auditoría».</p>
+        </Card>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {audits.map(audit => (
-            <Card key={audit.id} onClick={() => setDetail(audit)} style={{ cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: audit.status !== "PLANNED" ? 14 : 0, flexWrap: "wrap", gap: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4, flexWrap: "wrap" }}>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        background: audit.type === "EXTERNAL" ? "#fff8e6" : "#f0f4ff",
-                        color: audit.type === "EXTERNAL" ? "#D68A1A" : "#123C66",
-                        padding: "2px 8px",
-                        borderRadius: 99,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {audit.type === "EXTERNAL" ? "Externa" : "Interna"}
-                    </span>
-                    <span style={{ fontSize: 11, background: "#F7F9FC", color: "#5E6B7A", padding: "2px 8px", borderRadius: 99, border: "1px solid #E5EAF2" }}>{audit.standard}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {audits.map(audit => {
+            const accent = audit.type === "EXTERNAL" ? "#D68A1A" : "#123C66";
+            return (
+              <div key={audit.id} className="nf-kpi-card" onClick={() => setDetail(audit)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && setDetail(audit)}>
+                <div style={{ height: 4, background: `linear-gradient(90deg, ${accent}, ${accent}88)` }} />
+                <div style={{ padding: "16px 18px 18px" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: audit.status !== "PLANNED" ? 14 : 0, flexWrap: "wrap", gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 800,
+                            background: audit.type === "EXTERNAL" ? "#fff4e0" : "#e8f0fa",
+                            color: audit.type === "EXTERNAL" ? "#9a6510" : "#123C66",
+                            padding: "4px 10px",
+                            borderRadius: 99,
+                            letterSpacing: "0.02em",
+                          }}
+                        >
+                          {audit.type === "EXTERNAL" ? "Externa" : "Interna"}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: "#f3f6fa", color: "var(--nf-ink-2)", padding: "4px 10px", borderRadius: 99, border: "1px solid rgba(18, 60, 102, 0.1)" }}>{audit.standard}</span>
+                      </div>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.3 }}>{audit.title}</div>
+                      <div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>
+                        Auditor: {audit.auditor} · Fecha: {audit.date}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
+                      {audit.findings > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 800, background: "#fdecec", color: "#C93C37", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
+                      )}
+                      <Badge status={audit.status} />
+                    </div>
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 3 }}>{audit.title}</div>
-                  <div style={{ fontSize: 12, color: "#5E6B7A" }}>
-                    Auditor: {audit.auditor} · Fecha: {audit.date}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                  {audit.findings > 0 && (
-                    <span style={{ fontSize: 12, background: "#fff0f0", color: "#C93C37", padding: "3px 9px", borderRadius: 99, fontWeight: 600 }}>{audit.findings} hallazgos</span>
+                  {audit.status !== "PLANNED" && (
+                    <div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6, fontWeight: 600 }}>
+                        <span>Progreso de ejecución</span>
+                        <span style={{ fontWeight: 800, color: accent }}>{audit.progress}%</span>
+                      </div>
+                      <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "#2E8B57" : accent} height={7} railColor="#eef2f9" />
+                    </div>
                   )}
-                  <Badge status={audit.status} />
                 </div>
               </div>
-              {audit.status !== "PLANNED" && (
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#5E6B7A", marginBottom: 6 }}>
-                    <span>Progreso de ejecución</span>
-                    <span style={{ fontWeight: 600 }}>{audit.progress}%</span>
-                  </div>
-                  <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "#2E8B57" : "#123C66"} height={6} />
-                </div>
-              )}
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -181,31 +316,31 @@ export default function AuditsModule() {
                 ["Críticos", detailLive.criticals],
                 ["Progreso", `${detailLive.progress}%`],
               ].map(([k, v]) => (
-                <div key={String(k)} style={{ background: "#F7F9FC", borderRadius: 8, padding: 12 }}>
-                  <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 2 }}>{k}</div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "#142033" }}>{v}</div>
+                <div key={String(k)} style={{ background: "var(--nf-app-surface-2)", borderRadius: 8, padding: 12 }}>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 2 }}>{k}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink)" }}>{v}</div>
                 </div>
               ))}
             </div>
             {detailLive.scope && (
               <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>ALCANCE</div>
-                <div style={{ fontSize: 13, color: "#142033" }}>{detailLive.scope}</div>
+                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>ALCANCE</div>
+                <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{detailLive.scope}</div>
               </div>
             )}
             {detailLive.objectives && (
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 4 }}>OBJETIVOS / CRITERIOS</div>
-                <div style={{ fontSize: 13, color: "#142033" }}>{detailLive.objectives}</div>
+                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>OBJETIVOS / CRITERIOS</div>
+                <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{detailLive.objectives}</div>
               </div>
             )}
             {auditFindings.filter(f => f.auditId === detailLive.id).length > 0 && (
               <div style={{ marginBottom: 16, padding: 12, background: "#fff8f0", borderRadius: 8, border: "1px solid #f5e0c8" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#142033", marginBottom: 8 }}>Hallazgos registrados</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 8 }}>Hallazgos registrados</div>
                 {auditFindings
                   .filter(f => f.auditId === detailLive.id)
                   .map(f => (
-                    <div key={f.id} style={{ fontSize: 12, marginBottom: 6, color: "#142033" }}>
+                    <div key={f.id} style={{ fontSize: 12, marginBottom: 6, color: "var(--nf-ink)" }}>
                       <Badge status={f.severity === "CRITICAL" ? "CRITICAL" : f.severity === "MAJOR" ? "MAJOR" : "MINOR"} /> {f.title}
                     </div>
                   ))}
@@ -220,7 +355,7 @@ export default function AuditsModule() {
                   <button
                     type="button"
                     onClick={() => startAudit(detailLive)}
-                    style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                    style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                   >
                     Iniciar auditoría
                   </button>
@@ -231,13 +366,13 @@ export default function AuditsModule() {
                   style={{
                     flex: 1,
                     minWidth: 140,
-                    background: detailLive.status === "PLANNED" ? "#F7F9FC" : "#123C66",
+                    background: detailLive.status === "PLANNED" ? "var(--nf-app-surface-2)" : "#123C66",
                     color: detailLive.status === "PLANNED" ? "#123C66" : "#fff",
-                    border: "1px solid #E5EAF2",
-                    borderRadius: 8,
-                    padding: "9px",
+                    border: "1px solid var(--nf-line)",
+                    borderRadius: 10,
+                    padding: "10px",
                     fontSize: 13,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: "pointer",
                   }}
                 >
@@ -247,7 +382,7 @@ export default function AuditsModule() {
                   <button
                     type="button"
                     onClick={() => setCloseAuditAttest(detailLive)}
-                    style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                    style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                   >
                     Cierre formal
                   </button>
@@ -256,9 +391,24 @@ export default function AuditsModule() {
               <button
                 type="button"
                 onClick={() => showToast("Resumen de hallazgos (demo): revisa NC vinculadas y el plan de acción.")}
-                style={{ width: "100%", background: "#2E8B5718", color: "#2E8B57", border: "1px solid #2E8B5740", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  background: "#2E8B5718",
+                  color: "#2E8B57",
+                  border: "1px solid #2E8B5740",
+                  borderRadius: 10,
+                  padding: "10px",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
               >
-                ✦ IA: Resumir hallazgos
+                <Sparkles size={15} strokeWidth={2} aria-hidden />
+                IA: Resumir hallazgos
               </button>
             </div>
           </div>
@@ -268,10 +418,10 @@ export default function AuditsModule() {
       <Modal open={!!checklistAudit} onClose={() => setChecklistAudit(null)} title={checklistAudit ? `Checklist — ${checklistAudit.title}` : ""} width={640}>
         {checklistAudit && (
           <div>
-            <p style={{ fontSize: 13, color: "#5E6B7A", marginTop: 0 }}>Marca ítems completados. Los cambios se guardan en la sesión actual (demo).</p>
-            <div style={{ maxHeight: 400, overflow: "auto", border: "1px solid #E5EAF2", borderRadius: 8 }}>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 0 }}>Marca ítems completados. Los cambios se guardan en la sesión actual (demo).</p>
+            <div style={{ maxHeight: 400, overflow: "auto", border: "1px solid var(--nf-line)", borderRadius: 12 }}>
               {checklistItems.length === 0 ? (
-                <div style={{ padding: 24, textAlign: "center", color: "#5E6B7A" }}>Sin ítems de checklist.</div>
+                <div style={{ padding: 24, textAlign: "center", color: "var(--nf-ink-3)" }}>Sin ítems de checklist.</div>
               ) : (
                 checklistItems.map(item => (
                   <label
@@ -281,7 +431,7 @@ export default function AuditsModule() {
                       gap: 12,
                       alignItems: "flex-start",
                       padding: "12px 14px",
-                      borderBottom: "1px solid #E5EAF2",
+                      borderBottom: "1px solid var(--nf-line)",
                       cursor: "pointer",
                       background: item.done ? "#f0fdf4" : "transparent",
                     }}
@@ -289,13 +439,13 @@ export default function AuditsModule() {
                     <input type="checkbox" checked={item.done} onChange={e => toggleItem(item, e.target.checked)} style={{ marginTop: 3 }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>Cláusula {item.clause}</div>
-                      <div style={{ fontSize: 13, color: "#142033" }}>{item.requirement}</div>
+                      <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{item.requirement}</div>
                     </div>
                   </label>
                 ))
               )}
             </div>
-            <button type="button" onClick={() => setChecklistAudit(null)} style={{ marginTop: 14, width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            <button type="button" onClick={() => setChecklistAudit(null)} style={{ marginTop: 14, width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Cerrar
             </button>
           </div>
@@ -303,68 +453,85 @@ export default function AuditsModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva auditoría" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Título
             <input
+              className="nf-app-input"
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
             />
           </label>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Tipo
               <select
+                className="nf-app-input"
                 value={form.type}
                 onChange={e => setForm({ ...form, type: e.target.value as AuditRow["type"] })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="INTERNAL">Interna</option>
                 <option value="EXTERNAL">Externa</option>
               </select>
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Norma
               <input
+                className="nf-app-input"
                 value={form.standard}
                 onChange={e => setForm({ ...form, standard: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
           </div>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Fecha
               <input
+                className="nf-app-input"
                 type="date"
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Auditor
               <input
+                className="nf-app-input"
                 value={form.auditor}
                 onChange={e => setForm({ ...form, auditor: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
           </div>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Alcance
-            <textarea value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} rows={2} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.scope}
+              onChange={e => setForm({ ...form, scope: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Objetivos
-            <textarea value={form.objectives} onChange={e => setForm({ ...form, objectives: e.target.value })} rows={2} style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }} />
+            <textarea
+              className="nf-app-input"
+              value={form.objectives}
+              onChange={e => setForm({ ...form, objectives: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
           </label>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Crear
             </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
               Cancelar
             </button>
           </div>

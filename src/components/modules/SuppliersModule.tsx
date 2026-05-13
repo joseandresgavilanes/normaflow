@@ -34,22 +34,16 @@ export default function SuppliersModule() {
     <div>
       <SectionTitle title="Proveedores y contratistas" sub="Criticidad, revisiones, riesgos, documentos y evidencias" />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="nf-filter-label" style={{ marginRight: 4 }}>
+          Filtro
+        </span>
         {["ALL", "CRITICAL", "HIGH", "MEDIUM", "LOW"].map(f => (
           <button
             key={f}
             type="button"
+            className={filter === f ? "nf-chip nf-chip--on" : "nf-chip"}
             onClick={() => setFilter(f)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: `1px solid ${filter === f ? "#123C66" : "#E5EAF2"}`,
-              background: filter === f ? "#123C6615" : "#fff",
-              fontSize: 12,
-              cursor: "pointer",
-              color: filter === f ? "#123C66" : "#5E6B7A",
-              fontWeight: filter === f ? 600 : 400,
-            }}
           >
             {f === "ALL" ? "Todos" : f}
           </button>
@@ -57,47 +51,49 @@ export default function SuppliersModule() {
       </div>
 
       <Card style={{ padding: 0, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "#F7F9FC", textAlign: "left", color: "#5E6B7A", fontSize: 12 }}>
-              <th style={{ padding: 12 }}>Código</th>
-              <th style={{ padding: 12 }}>Proveedor</th>
-              <th style={{ padding: 12 }}>Criticidad</th>
-              <th style={{ padding: 12 }}>Estado</th>
-              <th style={{ padding: 12 }}>Dueño</th>
-              <th style={{ padding: 12 }}>Próx. revisión</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(s => (
-              <tr key={s.id} style={{ borderTop: "1px solid #E5EAF2", cursor: "pointer" }} onClick={() => setDetail(s)}>
-                <td style={{ padding: 12, fontWeight: 700, color: "#123C66" }}>{s.code}</td>
-                <td style={{ padding: 12 }}>{s.name}</td>
-                <td style={{ padding: 12 }}>
-                  <Badge status={s.criticality === "CRITICAL" ? "OFF_TRACK" : s.criticality === "HIGH" ? "AT_RISK" : "ON_TRACK"} label={s.criticality} />
-                </td>
-                <td style={{ padding: 12 }}>
-                  <Badge status={s.status === "APPROVED" ? "ON_TRACK" : "AT_RISK"} label={s.status} />
-                </td>
-                <td style={{ padding: 12, color: "#5E6B7A" }}>{s.owner}</td>
-                <td style={{ padding: 12 }}>{formatDate(s.nextReviewDue)}</td>
+        <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+          <table className="nf-data-table" style={{ fontSize: 13 }}>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Proveedor</th>
+                <th>Criticidad</th>
+                <th>Estado</th>
+                <th>Dueño</th>
+                <th>Próx. revisión</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map(s => (
+                <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => setDetail(s)}>
+                  <td style={{ fontWeight: 700, color: "#123C66" }}>{s.code}</td>
+                  <td>{s.name}</td>
+                  <td>
+                    <Badge status={s.criticality === "CRITICAL" ? "OFF_TRACK" : s.criticality === "HIGH" ? "AT_RISK" : "ON_TRACK"} label={s.criticality} />
+                  </td>
+                  <td>
+                    <Badge status={s.status === "APPROVED" ? "ON_TRACK" : "AT_RISK"} label={s.status} />
+                  </td>
+                  <td style={{ color: "var(--nf-ink-3)" }}>{s.owner}</td>
+                  <td>{formatDate(s.nextReviewDue)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Modal open={!!detailLive} onClose={() => setDetail(null)} title={detailLive?.name ?? ""} width={600}>
         {detailLive && (
           <div>
-            <p style={{ fontSize: 13, color: "#5E6B7A" }}>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>
               Categoría: {detailLive.category} · Código {detailLive.code}
             </p>
             <div style={{ margin: "16px 0" }}>
               <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Riesgos vinculados</div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {detailLive.riskCodes.length === 0 ? (
-                  <span style={{ color: "#5E6B7A", fontSize: 12 }}>—</span>
+                  <span style={{ color: "var(--nf-ink-3)", fontSize: 12 }}>—</span>
                 ) : (
                   detailLive.riskCodes.map(code => {
                     const r = risks.find(x => x.code === code);
@@ -120,7 +116,7 @@ export default function SuppliersModule() {
                   </Link>
                 );
               })}
-              {detailLive.documentCodes.length === 0 && <span style={{ fontSize: 12, color: "#5E6B7A" }}>—</span>}
+              {detailLive.documentCodes.length === 0 && <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>—</span>}
             </div>
             {perm.suppliers.manage && (
               <button type="button" onClick={() => bumpReview(detailLive)} style={{ padding: "10px 16px", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>

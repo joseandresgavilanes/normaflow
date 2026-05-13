@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { getAppContext } from "@/lib/app-context";
 import AppRoot from "@/components/app/AppRoot";
 
-function serializeContext(ctx: NonNullable<Awaited<ReturnType<typeof getAppContext>>>) {
+function serializeContext(
+  ctx: NonNullable<Awaited<ReturnType<typeof getAppContext>>>,
+) {
   if (ctx.mode === "live") {
     return {
       mode: "live" as const,
@@ -25,7 +27,11 @@ function serializeContext(ctx: NonNullable<Awaited<ReturnType<typeof getAppConte
   return { mode: "demo" as const, email: ctx.email };
 }
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const ctx = await getAppContext();
   if (!ctx) redirect("/login");
 

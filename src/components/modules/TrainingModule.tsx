@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -159,11 +160,104 @@ export default function TrainingModule() {
       <SectionTitle
         title="Gestión de capacitación"
         sub="Catálogo, asignaciones por sede/equipo/persona, vencimientos y vínculo con documentos controlados"
-        action={perm.training.manage ? "+ Nueva asignación" : undefined}
+        action={
+          perm.training.manage ? (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <Plus size={17} strokeWidth={2.25} aria-hidden />
+              Nueva asignación
+            </span>
+          ) : undefined
+        }
         onAction={perm.training.manage ? openAssign : undefined}
       />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+      <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#1f6f45",
+            }}
+          >
+            <PieChart size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.pct}%</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cumplimiento global</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <BookOpen size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.done}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.18) 0%, rgba(201, 60, 55, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#C93C37",
+            }}
+          >
+            <GraduationCap size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.overdue}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Vencidas / riesgo</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9a6510",
+            }}
+          >
+            <ScrollText size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.retr}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Reacreditación</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="nf-filter-label" style={{ marginRight: 4 }}>
+          Vista
+        </span>
         {(
           [
             ["catalog", "Catálogo"],
@@ -173,156 +267,160 @@ export default function TrainingModule() {
             ["trail", "Trazabilidad"],
           ] as const
         ).map(([k, l]) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setTab(k)}
-            style={{
-              padding: "7px 16px",
-              borderRadius: 8,
-              border: `1px solid ${tab === k ? "#123C66" : "#E5EAF2"}`,
-              background: tab === k ? "#123C66" : "#fff",
-              color: tab === k ? "#fff" : "#5E6B7A",
-              fontSize: 13,
-              fontWeight: tab === k ? 600 : 400,
-              cursor: "pointer",
-            }}
-          >
+          <button key={k} type="button" className={tab === k ? "nf-chip nf-chip--on" : "nf-chip"} onClick={() => setTab(k)}>
             {l}
           </button>
         ))}
       </div>
 
-      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 20 }}>
-        {[
-          { label: "Cumplimiento global", value: `${compliance.pct}%`, color: "#2E8B57" },
-          { label: "Completadas", value: compliance.done, color: "#123C66" },
-          { label: "Vencidas / riesgo", value: compliance.overdue, color: "#C93C37" },
-          { label: "Reacreditación", value: compliance.retr, color: "#D68A1A" },
-        ].map(x => (
-          <Card key={x.label} style={{ textAlign: "center", padding: "16px 12px" }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: x.color }}>{x.value}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A" }}>{x.label}</div>
-          </Card>
-        ))}
-      </div>
-
       {tab === "catalog" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          {trainingCourses.map(c => (
-            <Card key={c.id}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-                <div>
-                  <div style={{ fontSize: 11, color: "#123C66", fontWeight: 700 }}>{c.code}</div>
-                  <h3 style={{ margin: "4px 0 8px", fontSize: 16, color: "#142033" }}>{c.title}</h3>
-                  <p style={{ fontSize: 13, color: "#5E6B7A", margin: 0, lineHeight: 1.5 }}>{c.description}</p>
-                  <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {c.standardTags.map(t => (
-                      <span key={t} style={{ fontSize: 11, background: "#f0f4ff", color: "#123C66", padding: "2px 8px", borderRadius: 99 }}>
-                        {t}
-                      </span>
-                    ))}
-                    {c.mandatory && <Badge status="OFF_TRACK" label="Obligatorio" />}
-                  </div>
-                  <p style={{ fontSize: 12, color: "#5E6B7A", marginTop: 10 }}>
-                    Documentos:{" "}
-                    {c.linkedDocumentCodes.map(code => (
-                      <Link key={code} href="/app/documents" style={{ color: "#123C66", fontWeight: 600, marginRight: 8 }}>
-                        {code}
+          {trainingCourses.map((c, idx) => {
+            const accent = ["#123C66", "#2E8B57", "#D68A1A", "#6B3FB5"][idx % 4];
+            return (
+              <Card key={c.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--nf-line)", boxShadow: "0 12px 36px -24px rgba(18, 60, 102, 0.18)" }}>
+                <div style={{ height: 4, background: `linear-gradient(90deg, ${accent}, ${accent}99)` }} />
+                <div style={{ padding: "18px 20px 20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+                    <div style={{ minWidth: 0, flex: "1 1 240px" }}>
+                      <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 800, color: accent, marginBottom: 6 }}>{c.code}</div>
+                      <h3 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{c.title}</h3>
+                      <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{c.description}</p>
+                      <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {c.standardTags.map(t => (
+                          <span key={t} style={{ fontSize: 11, fontWeight: 700, background: "#f0f4ff", color: "#123C66", padding: "4px 10px", borderRadius: 99 }}>
+                            {t}
+                          </span>
+                        ))}
+                        {c.mandatory && <Badge status="OFF_TRACK" label="Obligatorio" />}
+                      </div>
+                      <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 12, fontWeight: 500 }}>
+                        Documentos:{" "}
+                        {c.linkedDocumentCodes.map(code => (
+                          <Link key={code} href="/app/documents" style={{ color: "#123C66", fontWeight: 700, marginRight: 8 }}>
+                            {code}
+                          </Link>
+                        ))}
+                        · Vigencia sugerida: {c.defaultValidityMonths} meses
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 200 }}>
+                      {c.linkedDocumentCodes[0] && perm.training.manage && (
+                        <button
+                          type="button"
+                          onClick={() => triggerFromDocument(c.linkedDocumentCodes[0], "simulada")}
+                          style={{
+                            padding: "10px 12px",
+                            borderRadius: 10,
+                            border: "1px solid #2E8B57",
+                            background: "#2E8B5712",
+                            color: "#1f6f45",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Simular asignación por cambio doc.
+                        </button>
+                      )}
+                      <Link href="/app/changes" style={{ fontSize: 12, color: "var(--nf-ink-3)", textDecoration: "none", fontWeight: 600 }}>
+                        Ver cambios que requieren training →
                       </Link>
-                    ))}
-                    · Vigencia sugerida: {c.defaultValidityMonths} meses
-                  </p>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 200 }}>
-                  {c.linkedDocumentCodes[0] && perm.training.manage && (
-                    <button
-                      type="button"
-                      onClick={() => triggerFromDocument(c.linkedDocumentCodes[0], "simulada")}
-                      style={{
-                        padding: "8px 12px",
-                        borderRadius: 8,
-                        border: "1px solid #2E8B57",
-                        background: "#2E8B5712",
-                        color: "#2E8B57",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                      }}
-                    >
-                      Simular asignación por cambio doc.
-                    </button>
-                  )}
-                  <Link href="/app/changes" style={{ fontSize: 12, color: "#5E6B7A", textDecoration: "none" }}>
-                    Ver cambios que requieren training →
-                  </Link>
-                </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {tab === "assignments" && (
         <Card style={{ padding: 0, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: "#F7F9FC", textAlign: "left", color: "#5E6B7A", fontSize: 12 }}>
-                <th style={{ padding: 12 }}>Persona</th>
-                <th style={{ padding: 12 }}>Curso</th>
-                <th style={{ padding: 12 }}>Estado</th>
-                <th style={{ padding: 12 }}>Vence</th>
-                <th style={{ padding: 12 }}>Origen</th>
-                <th style={{ padding: 12 }} />
-              </tr>
-            </thead>
-            <tbody>
-              {trainingAssignments.map(a => {
-                const course = trainingCourses.find(c => c.id === a.courseId);
-                return (
-                  <tr key={a.id} style={{ borderTop: "1px solid #E5EAF2" }}>
-                    <td style={{ padding: 12 }}>
-                      <div style={{ fontWeight: 600, color: "#142033" }}>{a.assigneeName}</div>
-                      <div style={{ fontSize: 11, color: "#5E6B7A" }}>{a.assigneeEmail}</div>
-                    </td>
-                    <td style={{ padding: 12 }}>{course?.code ?? a.courseId}</td>
-                    <td style={{ padding: 12 }}>
-                      <Badge
-                        status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"}
-                        label={STATUS_LABEL[a.status] ?? a.status}
-                      />
-                    </td>
-                    <td style={{ padding: 12 }}>{formatDate(a.dueAt)}</td>
-                    <td style={{ padding: 12, fontSize: 12, color: "#5E6B7A" }}>
-                      {a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}
-                    </td>
-                    <td style={{ padding: 12 }}>
-                      {a.status !== "COMPLETED" && perm.training.manage && (
-                        <button type="button" onClick={() => markComplete(a)} style={{ fontSize: 12, color: "#123C66", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>
-                          Completar
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+            <table className="nf-data-table" style={{ fontSize: 13 }}>
+              <thead>
+                <tr>
+                  <th>Persona</th>
+                  <th>Curso</th>
+                  <th>Estado</th>
+                  <th>Vence</th>
+                  <th>Origen</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {trainingAssignments.map(a => {
+                  const course = trainingCourses.find(c => c.id === a.courseId);
+                  return (
+                    <tr key={a.id}>
+                      <td>
+                        <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{a.assigneeName}</div>
+                        <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeEmail}</div>
+                      </td>
+                      <td>{course?.code ?? a.courseId}</td>
+                      <td>
+                        <Badge
+                          status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"}
+                          label={STATUS_LABEL[a.status] ?? a.status}
+                        />
+                      </td>
+                      <td>{formatDate(a.dueAt)}</td>
+                      <td style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
+                        {a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}
+                      </td>
+                      <td>
+                        {a.status !== "COMPLETED" && perm.training.manage && (
+                          <button type="button" onClick={() => markComplete(a)} style={{ fontSize: 12, color: "#123C66", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>
+                            Completar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Card>
       )}
 
       {tab === "people" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 12 }}>
-          {demoPeople.map(p => {
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 14 }}>
+          {demoPeople.map((p, i) => {
             const mine = trainingAssignments.filter(a => a.assigneeEmail === p.email);
+            const accent = ["#123C66", "#2E8B57", "#D68A1A"][i % 3];
             return (
-              <Card key={p.id}>
-                <div style={{ fontWeight: 700, color: "#142033" }}>{p.name}</div>
-                <div style={{ fontSize: 12, color: "#5E6B7A", marginBottom: 8 }}>{p.roleLabel}</div>
-                <div style={{ fontSize: 12, color: "#5E6B7A" }}>{mine.filter(m => m.status === "COMPLETED").length}/{mine.length} completadas</div>
-                <Link href="/app/activity" style={{ fontSize: 12, color: "#123C66", marginTop: 8, display: "inline-block" }}>
-                  Historial →
-                </Link>
+              <Card key={p.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14 }}>
+                <div style={{ height: 3, background: `linear-gradient(90deg, ${accent}, transparent)` }} />
+                <div style={{ padding: "16px 18px 18px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 10,
+                        background: `${accent}18`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: accent,
+                      }}
+                    >
+                      <Users size={20} strokeWidth={2.25} aria-hidden />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800, color: "var(--nf-ink)", fontSize: 15, letterSpacing: "-0.02em" }}>{p.name}</div>
+                      <div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600, marginTop: 2 }}>{p.roleLabel}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink-2)", marginBottom: 10 }}>
+                    {mine.filter(m => m.status === "COMPLETED").length}/{mine.length} completadas
+                  </div>
+                  <Link href="/app/activity" style={{ fontSize: 12, color: "#123C66", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
+                    Historial →
+                  </Link>
+                </div>
               </Card>
             );
           })}
@@ -330,34 +428,55 @@ export default function TrainingModule() {
       )}
 
       {tab === "compliance" && (
-        <Card>
-          <h3 style={{ marginTop: 0, fontSize: 15, color: "#142033" }}>Resumen para dirección</h3>
-          <p style={{ fontSize: 13, color: "#5E6B7A", lineHeight: 1.6 }}>
-            El cumplimiento de formación está ligado a versiones aprobadas de políticas y procedimientos. Cuando un documento crítico cambia, NormaFlow puede generar asignaciones de relectura o reacreditación (simulado aquí).
-          </p>
-          <ul style={{ fontSize: 13, color: "#142033", lineHeight: 1.7 }}>
-            <li>Documentos con impacto formativo: {documents.filter(d => d.trainingImpact).length}</li>
-            <li>Asignaciones activas: {trainingAssignments.filter(a => a.status !== "COMPLETED").length}</li>
-            <li>Recordatorios pendientes (demo): {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
-          </ul>
-          <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 600, color: "#123C66" }}>
-            Incluir en pack de auditoría →
-          </Link>
+        <Card style={{ padding: 0, overflow: "hidden", borderRadius: 14 }}>
+          <div style={{ height: 4, background: "linear-gradient(90deg, #123C66, #2E8B57)" }} />
+          <div style={{ padding: "20px 22px 22px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 11,
+                  background: "rgba(18, 60, 102, 0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#123C66",
+                }}
+              >
+                <PieChart size={22} strokeWidth={2.25} aria-hidden />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
+            </div>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.6, fontWeight: 500, margin: "0 0 14px" }}>
+              El cumplimiento de formación está ligado a versiones aprobadas de políticas y procedimientos. Cuando un documento crítico cambia, NormaFlow puede generar asignaciones de relectura o reacreditación (simulado aquí).
+            </p>
+            <ul style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.75, margin: "0 0 16px", paddingLeft: 20, fontWeight: 500 }}>
+              <li>Documentos con impacto formativo: {documents.filter(d => d.trainingImpact).length}</li>
+              <li>Asignaciones activas: {trainingAssignments.filter(a => a.status !== "COMPLETED").length}</li>
+              <li>Recordatorios pendientes (demo): {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
+            </ul>
+            <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "#123C66", textDecoration: "none" }}>
+              Incluir en pack de auditoría →
+            </Link>
+          </div>
         </Card>
       )}
 
       {tab === "trail" && (
-        <Card>
+        <Card style={{ padding: "18px 20px" }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: "var(--nf-ink-3)", marginBottom: 14, letterSpacing: "0.04em" }}>EVENTOS DE CAPACITACIÓN</div>
           <AuditTimeline events={trainingEvents} emptyText="Aún no hay eventos de capacitación en el registro." />
         </Card>
       )}
 
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Nueva asignación" width={480}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Curso</label>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Curso</label>
         <select
+          className="nf-app-input"
           value={form.courseId}
           onChange={e => setForm({ ...form, courseId: e.target.value })}
-          style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #E5EAF2", marginBottom: 14 }}
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
         >
           {trainingCourses.map(c => (
             <option key={c.id} value={c.id}>
@@ -365,11 +484,12 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Persona</label>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Persona</label>
         <select
+          className="nf-app-input"
           value={form.personId}
           onChange={e => setForm({ ...form, personId: e.target.value })}
-          style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #E5EAF2", marginBottom: 14 }}
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
         >
           {demoPeople.map(p => (
             <option key={p.id} value={p.id}>
@@ -377,16 +497,17 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 600, marginBottom: 6 }}>Días hasta vencimiento</label>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Días hasta vencimiento</label>
         <input
+          className="nf-app-input"
           type="number"
           min={1}
           max={365}
           value={form.dueDays}
           onChange={e => setForm({ ...form, dueDays: parseInt(e.target.value, 10) || 30 })}
-          style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #E5EAF2", marginBottom: 18 }}
+          style={{ width: "100%", marginBottom: 18, boxSizing: "border-box" }}
         />
-        <button type="button" onClick={submitAssign} style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>
+        <button type="button" onClick={submitAssign} style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Crear asignación
         </button>
       </Modal>

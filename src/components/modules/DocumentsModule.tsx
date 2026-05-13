@@ -1,12 +1,14 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Download, Eye, FileText, Plus, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
+import FileImportArea from "@/components/ui/FileImportArea";
 import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
@@ -18,21 +20,52 @@ function isPdfUrl(url: string) {
   return /\.pdf($|\?)/i.test(url) || url.includes("application/pdf");
 }
 
+/** Descarga con nombre sugerido; si CORS falla, abre el recurso en una pestaña nueva. */
+async function downloadArchivedFile(fileUrl: string, fileName: string) {
+  const safeName = fileName.replace(/[^\w.\-()+ ]/g, "_") || "documento.pdf";
+  if (fileUrl.startsWith("blob:") || fileUrl.startsWith("data:")) {
+    const a = document.createElement("a");
+    a.href = fileUrl;
+    a.download = safeName;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    return;
+  }
+  try {
+    const res = await fetch(fileUrl, { mode: "cors" });
+    if (!res.ok) throw new Error("fetch");
+    const blob = await res.blob();
+    const u = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = u;
+    a.download = safeName;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(u);
+  } catch {
+    window.open(fileUrl, "_blank", "noopener,noreferrer");
+  }
+}
+
 function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }) {
   const u = url ?? doc.previewUrl ?? "";
   if (!u) {
-    return <p style={{ color: "#5E6B7A", fontSize: 14 }}>No hay archivo asociado en esta sesión demo. Sube un archivo al crear el documento para previsualizarlo.</p>;
+    return <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>No hay archivo asociado en esta sesión demo. Sube un archivo al crear el documento para previsualizarlo.</p>;
   }
   if (u.startsWith("data:image/") || /\.(png|jpe?g|gif|webp|svg)($|\?)/i.test(u)) {
-    return <img src={u} alt={doc.title} style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid #E5EAF2" }} />;
+    return <img src={u} alt={doc.title} style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid var(--nf-line)" }} />;
   }
   if (isPdfUrl(u)) {
-    return <iframe title="Vista PDF" src={u} style={{ width: "100%", height: 480, border: "1px solid #E5EAF2", borderRadius: 8 }} />;
+    return <iframe title="Vista PDF" src={u} style={{ width: "100%", height: 480, border: "1px solid var(--nf-line)", borderRadius: 8 }} />;
   }
   return (
-    <div style={{ padding: 16, background: "#F7F9FC", borderRadius: 8, fontSize: 14, color: "#142033" }}>
+    <div style={{ padding: 16, background: "var(--nf-app-surface-2)", borderRadius: 8, fontSize: 14, color: "var(--nf-ink)" }}>
       <p style={{ marginTop: 0 }}>Vista previa no disponible para este tipo de archivo en el navegador.</p>
-      <p style={{ color: "#5E6B7A", fontSize: 13 }}>Puedes abrir o descargar el recurso en una nueva pestaña.</p>
+      <p style={{ color: "var(--nf-ink-3)", fontSize: 13 }}>Puedes abrir o descargar el recurso en una nueva pestaña.</p>
       <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: "#123C66", fontWeight: 600 }}>
         Abrir / descargar
       </a>
@@ -56,6 +89,8 @@ export default function DocumentsModule() {
   const [versionNote, setVersionNote] = useState("");
   const [nextVersion, setNextVersion] = useState("");
   const [approveAttestOpen, setApproveAttestOpen] = useState(false);
+  const [historyViewingIndex, setHistoryViewingIndex] = useState<number | null>(null);
+  const [historyVersionFile, setHistoryVersionFile] = useState<File | null>(null);
 
   const folderOptions = useMemo(() => {
     const u = new Set(documents.map(d => d.folder));
@@ -85,10 +120,10 @@ export default function DocumentsModule() {
     {
       key: "folder",
       label: "Carpeta",
-      render: v => <span style={{ fontSize: 11, color: "#5E6B7A", fontWeight: 600 }}>{v}</span>,
+      render: v => <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600 }}>{v}</span>,
     },
     { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "#f0f4ff", color: "#123C66", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
-    { key: "version", label: "Ver.", render: v => <span style={{ fontSize: 12, color: "#5E6B7A" }}>v{v}</span> },
+    { key: "version", label: "Ver.", render: v => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>v{v}</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
     {
       key: "owner",
@@ -104,7 +139,7 @@ export default function DocumentsModule() {
     {
       key: "reviewDue",
       label: "Rev.",
-      render: v => <span style={{ fontSize: 11, color: "#5E6B7A" }}>{v ? formatDate(String(v)) : "—"}</span>,
+      render: v => <span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{v ? formatDate(String(v)) : "—"}</span>,
     },
   ];
 
@@ -160,15 +195,25 @@ export default function DocumentsModule() {
       showToast("Añade una nota de versión");
       return;
     }
+    const fileUrl = historyVersionFile ? URL.createObjectURL(historyVersionFile) : historyDoc.previewUrl;
     const entry: DocVersion = {
       version: v,
       date: new Date().toISOString().slice(0, 10),
       author: state.session.name,
       note: versionNote.trim(),
+      fileUrl: fileUrl || undefined,
+      fileName: historyVersionFile
+        ? `${historyDoc.code}-v${v}-${historyVersionFile.name}`.replace(/\s+/g, "_")
+        : `${historyDoc.code}-v${v}.pdf`,
     };
     dispatch({ type: "addDocVersion", docId: historyDoc.id, v: entry });
+    if (historyVersionFile && fileUrl) {
+      dispatch({ type: "updateDocument", id: historyDoc.id, patch: { previewUrl: fileUrl } });
+    }
     const docId = historyDoc.id;
     setHistoryDoc(null);
+    setHistoryViewingIndex(null);
+    setHistoryVersionFile(null);
     setDetail(prev => (prev?.id === docId ? { ...prev, version: v, updated: entry.date } : prev));
     setVersionNote("");
     setNextVersion("");
@@ -179,61 +224,140 @@ export default function DocumentsModule() {
 
   return (
     <div>
-      <SectionTitle title="Control de Documentos" sub={`${documents.length} documentos en el espacio de trabajo`} action="+ Nuevo Documento" onAction={() => setShowNew(true)} />
+      <SectionTitle
+        title="Control de Documentos"
+        sub={`${documents.length} documentos en el espacio de trabajo`}
+        action={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <Plus size={17} strokeWidth={2.25} aria-hidden />
+            Nuevo documento
+          </span>
+        }
+        onAction={() => setShowNew(true)}
+      />
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por título o código..."
-          style={{ flex: 1, minWidth: 220, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none" }}
-        />
-        <select
-          value={folderFilter}
-          onChange={e => setFolderFilter(e.target.value)}
-          style={{ padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, background: "#fff" }}
-        >
-          <option value="ALL">Todas las carpetas</option>
-          {folderOptions.map(f => (
-            <option key={f} value={f}>
-              {f}
-            </option>
-          ))}
-        </select>
-        {["ALL", "APPROVED", "IN_REVIEW", "DRAFT", "OBSOLETE"].map(s => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setFilter(s)}
+      <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
+        <div className="nf-kpi-summary-cell">
+          <div
             style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: `1px solid ${filter === s ? "#123C66" : "#E5EAF2"}`,
-              background: filter === s ? "#123C6612" : "transparent",
-              color: filter === s ? "#123C66" : "#5E6B7A",
-              fontSize: 13,
-              cursor: "pointer",
-              fontWeight: filter === s ? 600 : 400,
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#1f6f45",
             }}
           >
-            {s === "ALL" ? "Todos" : s === "APPROVED" ? "Aprobados" : s === "IN_REVIEW" ? "En revisión" : s === "DRAFT" ? "Borrador" : "Obsoletos"}
-          </button>
-        ))}
+            <FileText size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "APPROVED").length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Aprobados</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9a6510",
+            }}
+          >
+            <FileText size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "IN_REVIEW").length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En revisión</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <FileText size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "DRAFT").length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Borrador</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.1) 0%, rgba(18, 60, 102, 0.04) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#314456",
+            }}
+          >
+            <FileText size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total</div>
+          </div>
+        </div>
       </div>
 
-      <div className="nf-grid-stats" style={{ marginBottom: 16 }}>
-        {[
-          { label: "Aprobados", count: documents.filter(d => d.status === "APPROVED").length, color: "#2E8B57" },
-          { label: "En revisión", count: documents.filter(d => d.status === "IN_REVIEW").length, color: "#D68A1A" },
-          { label: "Borrador", count: documents.filter(d => d.status === "DRAFT").length, color: "#123C66" },
-          { label: "Total", count: documents.length, color: "#5E6B7A" },
-        ].map(s => (
-          <Card key={s.label} style={{ padding: "14px 18px", textAlign: "center" }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.count}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A" }}>{s.label}</div>
-          </Card>
-        ))}
-      </div>
+      <Card style={{ marginBottom: 18, padding: "14px 16px" }}>
+        <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
+          <input
+            className="nf-app-input"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar por título o código..."
+            style={{ flex: "1 1 200px", minWidth: 160, maxWidth: 440, boxSizing: "border-box" }}
+          />
+          <select
+            className="nf-app-input"
+            value={folderFilter}
+            onChange={e => setFolderFilter(e.target.value)}
+            style={{ flex: "0 0 auto", minWidth: 170, cursor: "pointer" }}
+          >
+            <option value="ALL">Todas las carpetas</option>
+            {folderOptions.map(f => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span className="nf-filter-label" style={{ marginRight: 4 }}>
+            Estado
+          </span>
+          {["ALL", "APPROVED", "IN_REVIEW", "DRAFT", "OBSOLETE"].map(s => (
+            <button
+              key={s}
+              type="button"
+              className={filter === s ? "nf-chip nf-chip--on" : "nf-chip"}
+              onClick={() => setFilter(s)}
+            >
+              {s === "ALL" ? "Todos" : s === "APPROVED" ? "Aprobados" : s === "IN_REVIEW" ? "En revisión" : s === "DRAFT" ? "Borrador" : "Obsoletos"}
+            </button>
+          ))}
+        </div>
+      </Card>
 
       <Card style={{ padding: 0 }}>
         <DataTable columns={columns} rows={filtered} onRow={setDetail} emptyText="No se encontraron documentos con ese filtro" />
@@ -262,36 +386,36 @@ export default function DocumentsModule() {
                 ["Tamaño", detailLive.size],
               ].map(([k, v]) => (
                 <div key={String(k)}>
-                  <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{k}</div>
-                  <div style={{ fontSize: 13, color: "#142033", fontWeight: 500 }}>{v}</div>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{k}</div>
+                  <div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{v}</div>
                 </div>
               ))}
             </div>
-            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid #E5EAF2" }}>
-              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Control documental</div>
-              <div className="nf-grid-2" style={{ gap: 8, fontSize: 12, color: "#142033" }}>
+            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Control documental</div>
+              <div className="nf-grid-2" style={{ gap: 8, fontSize: 12, color: "var(--nf-ink)" }}>
                 <div>
-                  <span style={{ color: "#5E6B7A" }}>Próx. revisión: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Próx. revisión: </span>
                   {detailLive.reviewDue ? formatDate(detailLive.reviewDue) : "—"}
                 </div>
                 <div>
-                  <span style={{ color: "#5E6B7A" }}>Periodicidad: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Periodicidad: </span>
                   {detailLive.reviewCycleMonths ?? "—"} meses
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <span style={{ color: "#5E6B7A" }}>Revisores: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Revisores: </span>
                   {(detailLive.reviewers ?? []).join(", ") || "—"}
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <span style={{ color: "#5E6B7A" }}>Aprobadores: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Aprobadores: </span>
                   {(detailLive.approvers ?? []).join(", ") || "—"}
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <span style={{ color: "#5E6B7A" }}>Impacto formación: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Impacto formación: </span>
                   {detailLive.trainingImpact ? "Sí — puede disparar asignaciones" : "No prioritario"}
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
-                  <span style={{ color: "#5E6B7A" }}>Cambios vinculados: </span>
+                  <span style={{ color: "var(--nf-ink-3)" }}>Cambios vinculados: </span>
                   {(detailLive.linkedChangeIds ?? []).length ? (
                     (detailLive.linkedChangeIds ?? []).map(cid => (
                       <Link key={cid} href="/app/changes" style={{ color: "#123C66", fontWeight: 600, marginRight: 8 }}>
@@ -305,17 +429,17 @@ export default function DocumentsModule() {
               </div>
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {detailLive.tags.map(t => (
-                  <span key={t} style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", borderRadius: 99, padding: "2px 10px", fontSize: 12, color: "#5E6B7A" }}>
+                  <span key={t} style={{ background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", borderRadius: 99, padding: "2px 10px", fontSize: 12, color: "var(--nf-ink-3)" }}>
                     {t}
                   </span>
                 ))}
               </div>
             </div>
-            <div style={{ borderTop: "1px solid #E5EAF2", paddingTop: 14, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "#5E6B7A", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental (demo)</div>
+            <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14, marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental (demo)</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {detailLive.status === "DRAFT" && (
                   <button
@@ -345,8 +469,8 @@ export default function DocumentsModule() {
                       padding: "8px 12px",
                       borderRadius: 8,
                       border: "none",
-                      background: perm.documents.edit ? "#D68A1A" : "#e5eaf2",
-                      color: perm.documents.edit ? "#fff" : "#9aa5b1",
+                      background: perm.documents.edit ? "#D68A1A" : "var(--nf-line)",
+                      color: perm.documents.edit ? "#fff" : "var(--nf-ink-4)",
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: perm.documents.edit ? "pointer" : "not-allowed",
@@ -365,8 +489,8 @@ export default function DocumentsModule() {
                       padding: "8px 12px",
                       borderRadius: 8,
                       border: "none",
-                      background: perm.documents.approve ? "#2E8B57" : "#e5eaf2",
-                      color: perm.documents.approve ? "#fff" : "#9aa5b1",
+                      background: perm.documents.approve ? "#2E8B57" : "var(--nf-line)",
+                      color: perm.documents.approve ? "#fff" : "var(--nf-ink-4)",
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: perm.documents.approve ? "pointer" : "not-allowed",
@@ -402,9 +526,9 @@ export default function DocumentsModule() {
                     style={{
                       padding: "8px 12px",
                       borderRadius: 8,
-                      border: "1px solid #E5EAF2",
-                      background: "#fff",
-                      color: perm.documents.edit ? "#5E6B7A" : "#9aa5b1",
+                      border: "1px solid var(--nf-line)",
+                      background: "var(--nf-app-surface-1)",
+                      color: perm.documents.edit ? "var(--nf-ink-3)" : "var(--nf-ink-4)",
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: perm.documents.edit ? "pointer" : "not-allowed",
@@ -415,15 +539,43 @@ export default function DocumentsModule() {
                 )}
               </div>
             </div>
-            <div style={{ borderTop: "1px solid #E5EAF2", paddingTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button type="button" onClick={() => setPreviewDoc(detailLive)} style={{ flex: 1, minWidth: 120, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Ver Documento
               </button>
-              <button type="button" onClick={() => setHistoryDoc(detailLive)} style={{ flex: 1, minWidth: 120, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setHistoryViewingIndex(null);
+                  setHistoryVersionFile(null);
+                  setHistoryDoc(detailLive);
+                }}
+                style={{ flex: 1, minWidth: 120, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", color: "var(--nf-ink-3)" }}
+              >
                 Historial de versiones
               </button>
-              <button type="button" onClick={() => showToast("Borrador IA (demo): usa el asistente en la barra lateral.")} style={{ flex: 1, minWidth: 120, background: "#2E8B5718", color: "#2E8B57", border: "1px solid #2E8B5740", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                ✦ IA: Generar borrador
+              <button
+                type="button"
+                onClick={() => showToast("Borrador IA (demo): usa el asistente en la barra lateral.")}
+                style={{
+                  flex: 1,
+                  minWidth: 120,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  background: "#2E8B5718",
+                  color: "#2E8B57",
+                  border: "1px solid #2E8B5740",
+                  borderRadius: 8,
+                  padding: "9px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                <Sparkles size={15} strokeWidth={2} aria-hidden />
+                IA: Generar borrador
               </button>
             </div>
           </div>
@@ -433,45 +585,169 @@ export default function DocumentsModule() {
       <Modal open={!!previewDoc} onClose={() => setPreviewDoc(null)} title={previewDoc ? `Vista — ${previewDoc.code}` : ""} width={720}>
         {previewDoc && (
           <div>
-            <p style={{ fontSize: 13, color: "#5E6B7A", marginTop: 0 }}>{previewDoc.title}</p>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 0 }}>{previewDoc.title}</p>
             <PreviewBody doc={previewDoc} url={previewDoc.previewUrl} />
           </div>
         )}
       </Modal>
 
-      <Modal open={!!historyDoc} onClose={() => setHistoryDoc(null)} title={historyDoc ? `Historial — ${historyDoc.code}` : ""} width={560}>
+      <Modal
+        open={!!historyDoc}
+        onClose={() => {
+          setHistoryDoc(null);
+          setHistoryViewingIndex(null);
+          setHistoryVersionFile(null);
+        }}
+        title={historyDoc ? `Historial — ${historyDoc.code}` : ""}
+        width={720}
+      >
         {historyDoc && (
           <div>
-            <div style={{ maxHeight: 280, overflow: "auto", marginBottom: 16 }}>
-              {versions.length === 0 ? (
-                <p style={{ color: "#5E6B7A" }}>Sin versiones registradas.</p>
-              ) : (
-                versions.map((v, i) => (
-                  <div key={`${v.version}-${i}`} style={{ padding: "10px 0", borderBottom: "1px solid #E5EAF2", fontSize: 13 }}>
-                    <div style={{ fontWeight: 700, color: "#123C66" }}>v{v.version}</div>
-                    <div style={{ color: "#5E6B7A" }}>
-                      {v.date} · {v.author}
-                    </div>
-                    <div style={{ color: "#142033" }}>{v.note}</div>
+            {historyViewingIndex !== null && versions[historyViewingIndex] && (
+              <div
+                style={{
+                  marginBottom: 18,
+                  padding: 14,
+                  borderRadius: 12,
+                  border: "1px solid var(--nf-line)",
+                  background: "var(--nf-app-surface-2)",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)" }}>
+                    Vista · v{versions[historyViewingIndex].version}
+                    <span style={{ fontWeight: 500, color: "var(--nf-ink-3)", marginLeft: 8 }}>{versions[historyViewingIndex].date}</span>
                   </div>
-                ))
+                  <button
+                    type="button"
+                    onClick={() => setHistoryViewingIndex(null)}
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      border: "1px solid var(--nf-line)",
+                      background: "#fff",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      color: "var(--nf-ink-3)",
+                    }}
+                  >
+                    Cerrar vista
+                  </button>
+                </div>
+                <PreviewBody
+                  doc={historyDoc}
+                  url={versions[historyViewingIndex].fileUrl ?? historyDoc.previewUrl}
+                />
+              </div>
+            )}
+            <div style={{ maxHeight: historyViewingIndex !== null ? 200 : 280, overflow: "auto", marginBottom: 16 }}>
+              {versions.length === 0 ? (
+                <p style={{ color: "var(--nf-ink-3)" }}>Sin versiones registradas.</p>
+              ) : (
+                versions.map((v, i) => {
+                  const name = v.fileName ?? `${historyDoc.code}-v${v.version}.pdf`;
+                  const viewing = historyViewingIndex === i;
+                  return (
+                    <div
+                      key={`${v.version}-${v.date}-${i}`}
+                      style={{
+                        padding: "12px 0",
+                        borderBottom: "1px solid var(--nf-line)",
+                        fontSize: 13,
+                        display: "flex",
+                        gap: 12,
+                        alignItems: "flex-start",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <div style={{ flex: "1 1 200px", minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: "#123C66" }}>v{v.version}</div>
+                        <div style={{ color: "var(--nf-ink-3)", marginTop: 2 }}>
+                          {v.date} · {v.author}
+                        </div>
+                        <div style={{ color: "var(--nf-ink)", marginTop: 4 }}>{v.note}</div>
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => setHistoryViewingIndex(viewing ? null : i)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "7px 11px",
+                            borderRadius: 8,
+                            border: viewing ? "1px solid #123C66" : "1px solid var(--nf-line)",
+                            background: viewing ? "#f0f4ff" : "#fff",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            color: "#123C66",
+                          }}
+                        >
+                          <Eye size={15} strokeWidth={2} aria-hidden />
+                          {viewing ? "Ocultar" : "Ver"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const u = v.fileUrl ?? historyDoc.previewUrl;
+                            if (!u) {
+                              showToast("No hay archivo para esta versión");
+                              return;
+                            }
+                            void downloadArchivedFile(u, name);
+                          }}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            padding: "7px 11px",
+                            borderRadius: 8,
+                            border: "1px solid var(--nf-line)",
+                            background: "#fff",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            color: "var(--nf-ink-2)",
+                          }}
+                        >
+                          <Download size={15} strokeWidth={2} aria-hidden />
+                          Descargar
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
               )}
             </div>
-            <div style={{ background: "#F7F9FC", padding: 14, borderRadius: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#142033", marginBottom: 8 }}>Registrar versión (demo)</div>
+            <div style={{ background: "var(--nf-app-surface-2)", padding: 14, borderRadius: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 8 }}>Registrar versión (demo)</div>
               <input
                 placeholder="Número de versión (ej. 3.3)"
                 value={nextVersion}
                 onChange={e => setNextVersion(e.target.value)}
-                style={{ width: "100%", marginBottom: 8, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginBottom: 8, padding: "8px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
               />
               <textarea
                 placeholder="Nota de cambio"
                 value={versionNote}
                 onChange={e => setVersionNote(e.target.value)}
                 rows={2}
-                style={{ width: "100%", padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }}
+                style={{ width: "100%", padding: "8px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box", resize: "vertical" }}
               />
+              <div style={{ marginTop: 10 }}>
+                <FileImportArea
+                  baseId="doc-history-version-file"
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                  file={historyVersionFile}
+                  onFileChange={setHistoryVersionFile}
+                  label="Archivo de esta revisión (opcional)"
+                  hint="PDF, Word e imágenes (PNG, JPG, WebP). Si no adjuntas archivo, se reutiliza la vista previa actual del documento."
+                  compact
+                />
+              </div>
               <button type="button" onClick={addVersion} style={{ marginTop: 8, width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Añadir versión
               </button>
@@ -487,7 +763,7 @@ export default function DocumentsModule() {
             <input
               value={newForm.title}
               onChange={e => setNewForm({ ...newForm, title: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
           </label>
           <label style={{ fontSize: 13, fontWeight: 500 }}>
@@ -495,7 +771,7 @@ export default function DocumentsModule() {
             <input
               value={newForm.code}
               onChange={e => setNewForm({ ...newForm, code: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
           </label>
           <label style={{ fontSize: 13, fontWeight: 500 }}>
@@ -503,7 +779,7 @@ export default function DocumentsModule() {
             <select
               value={newForm.type}
               onChange={e => setNewForm({ ...newForm, type: e.target.value as DocumentRow["type"] })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
             >
               <option value="MANUAL">Manual</option>
               <option value="PROCEDURE">Procedimiento</option>
@@ -518,7 +794,7 @@ export default function DocumentsModule() {
             <input
               value={newForm.standard}
               onChange={e => setNewForm({ ...newForm, standard: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
           </label>
           <label style={{ fontSize: 13, fontWeight: 500 }}>
@@ -526,22 +802,21 @@ export default function DocumentsModule() {
             <input
               value={newForm.clause}
               onChange={e => setNewForm({ ...newForm, clause: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Archivo opcional (previsualización local)
-            <input
-              type="file"
-              onChange={e => setNewFile(e.target.files?.[0] ?? null)}
-              style={{ display: "block", marginTop: 6, fontSize: 13 }}
-            />
-          </label>
+          <FileImportArea
+            baseId="doc-new-file"
+            file={newFile}
+            onFileChange={setNewFile}
+            label="Archivo opcional"
+            hint="Adjunta PDF, imágenes u Office para vista previa en el navegador. Los datos no se envían a ningún servidor en esta demo."
+          />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             <button type="button" onClick={submitNewDoc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               Crear Documento
             </button>
-            <button type="button" onClick={() => setShowNew(false)} style={{ flex: 1, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+            <button type="button" onClick={() => setShowNew(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "var(--nf-ink-3)" }}>
               Cancelar
             </button>
           </div>

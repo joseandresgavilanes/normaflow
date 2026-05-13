@@ -36,35 +36,41 @@ export default function AttestationModal({ open, onClose, title, statement, sess
 
   return (
     <Modal open={open} onClose={onClose} title={title} width={520}>
-      <p style={{ fontSize: 13, color: "#142033", lineHeight: 1.55, marginTop: 0 }}>{statement}</p>
-      <div style={{ background: "#F7F9FC", border: "1px solid #E5EAF2", borderRadius: 10, padding: 12, marginBottom: 16, fontSize: 12, color: "#5E6B7A" }}>
+      <p style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", lineHeight: 1.55, marginTop: 0 }}>{statement}</p>
+      <div className="nf-app-help" style={{ background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", borderRadius: 10, padding: 14, marginBottom: 18, fontWeight: 500 }}>
         Esta acción genera un registro de trazabilidad con sello de tiempo. En producción se vincularía a política de firma y conservación de evidencias.
       </div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#142033", marginBottom: 6 }}>Confirme su email corporativo</label>
+      <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+        Confirme su email corporativo
+      </label>
       <input
         value={emailConfirm}
         onChange={e => setEmailConfirm(e.target.value)}
         placeholder={sessionEmail}
         autoComplete="off"
-        style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, marginBottom: 14, boxSizing: "border-box" }}
+        className="nf-app-input"
+        style={{ width: "100%", marginBottom: 16, boxSizing: "border-box" }}
       />
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#142033", marginBottom: 6 }}>Motivo / comentario de la decisión</label>
+      <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+        Motivo / comentario de la decisión
+      </label>
       <textarea
         value={reason}
         onChange={e => setReason(e.target.value)}
         rows={3}
         placeholder="Ej. Revisión documental completada; sin observaciones bloqueantes."
-        style={{ width: "100%", padding: "10px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, resize: "vertical", boxSizing: "border-box" }}
+        className="nf-app-input"
+        style={{ width: "100%", resize: "vertical", boxSizing: "border-box", marginBottom: 4 }}
       />
-      {err && <p style={{ color: "#C93C37", fontSize: 13, margin: "8px 0 0" }}>{err}</p>}
-      <div style={{ display: "flex", gap: 10, marginTop: 18, justifyContent: "flex-end" }}>
-        <button type="button" onClick={onClose} style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid #E5EAF2", background: "#fff", cursor: "pointer", fontSize: 13 }}>
+      {err && <p style={{ color: "#C93C37", fontSize: 13, fontWeight: 600, margin: "10px 0 0" }}>{err}</p>}
+      <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
+        <button type="button" className="nf-app-btn-outline" onClick={onClose}>
           Cancelar
         </button>
         <button
           type="button"
           onClick={submit}
-          style={{ padding: "9px 16px", borderRadius: 8, border: "none", background: "#123C66", color: "#fff", fontWeight: 600, cursor: "pointer", fontSize: 13 }}
+          style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: "#123C66", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 13 }}
         >
           Confirmar y registrar
         </button>

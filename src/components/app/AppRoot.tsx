@@ -24,10 +24,17 @@ type SerializedCtx =
       user: { id: string; name: string; email: string };
       organization: { id: string; name: string; plan: string };
       role: string;
-      memberships: { organizationId: string; organizationName: string; role: string }[];
+      memberships: {
+        organizationId: string;
+        organizationName: string;
+        role: string;
+      }[];
     }
   | { mode: "demo"; email: string }
-  | { mode: "needs_organization"; user: { id: string; name: string; email: string } };
+  | {
+      mode: "needs_organization";
+      user: { id: string; name: string; email: string };
+    };
 
 export default function AppRoot({
   initial,
@@ -61,10 +68,16 @@ export default function AppRoot({
   }, [isCompactNav, navOpen]);
 
   useEffect(() => {
-    if (initial.mode === "needs_organization" && pathname !== "/app/onboarding") {
+    if (
+      initial.mode === "needs_organization" &&
+      pathname !== "/app/onboarding"
+    ) {
       router.replace("/app/onboarding");
     }
-    if (initial.mode !== "needs_organization" && pathname === "/app/onboarding") {
+    if (
+      initial.mode !== "needs_organization" &&
+      pathname === "/app/onboarding"
+    ) {
       router.replace("/app/dashboard");
     }
   }, [initial.mode, pathname, router]);
@@ -72,7 +85,15 @@ export default function AppRoot({
   if (initial.mode === "needs_organization") {
     if (pathname !== "/app/onboarding") {
       return (
-        <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F9FC" }}>
+        <div
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#F7F9FC",
+          }}
+        >
           <p style={{ color: "#5E6B7A" }}>Preparando tu espacio…</p>
         </div>
       );
@@ -80,21 +101,30 @@ export default function AppRoot({
     return <>{children}</>;
   }
 
-  const orgName = initial.mode === "live" ? initial.organization.name : "Tecnoserv Industrial S.A.";
+  const orgName =
+    initial.mode === "live"
+      ? initial.organization.name
+      : "Tecnoserv Industrial S.A.";
   const userName = initial.mode === "live" ? initial.user.name : "Ana García";
-  const roleKey = normalizeRoleKey(initial.mode === "live" ? initial.role : "COMPLIANCE_MANAGER");
+  const roleKey = normalizeRoleKey(
+    initial.mode === "live" ? initial.role : "COMPLIANCE_MANAGER",
+  );
   const roleLabel = ROLES[roleKey];
   const memberships = initial.mode === "live" ? initial.memberships : [];
   const activeOrgId =
     initial.mode === "live" ? initial.organization.id : "org_tecnoserv";
 
-  const aiContext =
-    pathname.includes("/gap") ? "gap"
-    : pathname.includes("/risks") ? "risk"
-    : pathname.includes("/documents") ? "document"
-    : pathname.includes("/audits") ? "audit"
-    : pathname.includes("/nonconformities") ? "nc"
-    : "gap";
+  const aiContext = pathname.includes("/gap")
+    ? "gap"
+    : pathname.includes("/risks")
+      ? "risk"
+      : pathname.includes("/documents")
+        ? "document"
+        : pathname.includes("/audits")
+          ? "audit"
+          : pathname.includes("/nonconformities")
+            ? "nc"
+            : "gap";
 
   const profile = useMemo(
     () => ({
@@ -105,46 +135,61 @@ export default function AppRoot({
       roleKey,
       activeOrgId,
     }),
-    [userName, initial.mode, initial, orgName, roleLabel, roleKey, activeOrgId]
+    [userName, initial.mode, initial, orgName, roleLabel, roleKey, activeOrgId],
   );
 
   return (
     <WorkspaceProvider key={profile.email + activeOrgId} profile={profile}>
       <AdminMockProvider>
-      <div className="nf-app-shell">
-        {isCompactNav && navOpen && (
-          <button type="button" className="nf-sidebar-backdrop" aria-label="Cerrar menú de navegación" onClick={() => setNavOpen(false)} />
-        )}
-        <AppSidebar
-          onAI={() => {
-            setNavOpen(false);
-            setAiOpen(true);
-          }}
-          orgName={orgName}
-          userName={userName}
-          roleLabel={roleLabel}
-          memberships={memberships}
-          demoSession={initial.mode === "demo"}
-          currentOrgId={initial.mode === "live" ? initial.organization.id : undefined}
-          onOrgChange={async orgId => {
-            await fetch("/api/auth/set-org", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ organizationId: orgId }),
-            });
-            router.refresh();
-          }}
-          compact={isCompactNav}
-          drawerOpen={navOpen}
-          onNavigate={() => setNavOpen(false)}
-        />
-        <div className="nf-app-main">
-          <AppTopbar userName={userName} roleLabel={roleLabel} onMenuClick={isCompactNav ? () => setNavOpen(true) : undefined} />
-          <main className="nf-app-main-inner">{children}</main>
+        <div className="nf-app-shell">
+          {isCompactNav && navOpen && (
+            <button
+              type="button"
+              className="nf-sidebar-backdrop"
+              aria-label="Cerrar menú de navegación"
+              onClick={() => setNavOpen(false)}
+            />
+          )}
+          <AppSidebar
+            onAI={() => {
+              setNavOpen(false);
+              setAiOpen(true);
+            }}
+            orgName={orgName}
+            userName={userName}
+            roleLabel={roleLabel}
+            memberships={memberships}
+            demoSession={initial.mode === "demo"}
+            currentOrgId={
+              initial.mode === "live" ? initial.organization.id : undefined
+            }
+            onOrgChange={async (orgId) => {
+              await fetch("/api/auth/set-org", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ organizationId: orgId }),
+              });
+              router.refresh();
+            }}
+            compact={isCompactNav}
+            drawerOpen={navOpen}
+            onNavigate={() => setNavOpen(false)}
+          />
+          <div className="nf-app-main">
+            <AppTopbar
+              userName={userName}
+              roleLabel={roleLabel}
+              onMenuClick={isCompactNav ? () => setNavOpen(true) : undefined}
+            />
+            <main className="nf-app-main-inner">{children}</main>
+          </div>
+          <AIPanel
+            open={aiOpen}
+            onClose={() => setAiOpen(false)}
+            context={aiContext}
+          />
+          <WorkspaceToast />
         </div>
-        <AIPanel open={aiOpen} onClose={() => setAiOpen(false)} context={aiContext} />
-        <WorkspaceToast />
-      </div>
       </AdminMockProvider>
     </WorkspaceProvider>
   );

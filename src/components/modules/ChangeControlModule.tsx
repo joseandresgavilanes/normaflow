@@ -187,99 +187,102 @@ export default function ChangeControlModule() {
         onAction={perm.changes.manage ? () => setCreateOpen(true) : undefined}
       />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="nf-filter-label" style={{ marginRight: 4 }}>
+          Estado
+        </span>
         {["ALL", "DRAFT", "UNDER_REVIEW", "APPROVED", "IMPLEMENTED", "CLOSED", "REJECTED"].map(s => (
           <button
             key={s}
             type="button"
+            className={filter === s ? "nf-chip nf-chip--on" : "nf-chip"}
             onClick={() => setFilter(s)}
-            style={{
-              padding: "6px 12px",
-              borderRadius: 8,
-              border: `1px solid ${filter === s ? "#123C66" : "#E5EAF2"}`,
-              background: filter === s ? "#123C6615" : "#fff",
-              fontSize: 12,
-              cursor: "pointer",
-              color: filter === s ? "#123C66" : "#5E6B7A",
-              fontWeight: filter === s ? 600 : 400,
-            }}
           >
             {s === "ALL" ? "Todos" : statusLabel(s as ChangeRequestRow["status"])}
           </button>
         ))}
       </div>
 
-      <Card style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "#F7F9FC", textAlign: "left", color: "#5E6B7A", fontSize: 12 }}>
-              <th style={{ padding: 12 }}>Código</th>
-              <th style={{ padding: 12 }}>Título</th>
-              <th style={{ padding: 12 }}>Impacto</th>
-              <th style={{ padding: 12 }}>Estado</th>
-              <th style={{ padding: 12 }}>Solicitante</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(c => (
-              <tr key={c.id} style={{ borderTop: "1px solid #E5EAF2", cursor: "pointer" }} onClick={() => setDetail(c)}>
-                <td style={{ padding: 12, fontFamily: "monospace", fontWeight: 700, color: "#123C66" }}>{c.code}</td>
-                <td style={{ padding: 12, fontWeight: 500 }}>{c.title}</td>
-                <td style={{ padding: 12 }}>{c.impact}</td>
-                <td style={{ padding: 12 }}>
-                  <Badge
-                    status={c.status === "CLOSED" || c.status === "VERIFIED" ? "ON_TRACK" : c.status === "REJECTED" ? "OFF_TRACK" : "AT_RISK"}
-                    label={statusLabel(c.status)}
-                  />
-                </td>
-                <td style={{ padding: 12, color: "#5E6B7A" }}>{c.requesterName}</td>
+      <Card style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
+        <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
+          <table className="nf-data-table" style={{ fontSize: 14 }}>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Título</th>
+                <th>Impacto</th>
+                <th>Estado</th>
+                <th>Solicitante</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map(c => (
+                <tr
+                  key={c.id}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setDetail(c)}
+                >
+                  <td style={{ fontFamily: "ui-monospace, monospace", fontWeight: 800, color: "#123C66" }}>{c.code}</td>
+                  <td style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{c.title}</td>
+                  <td style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.impact}</td>
+                  <td>
+                    <Badge
+                      status={c.status === "CLOSED" || c.status === "VERIFIED" ? "ON_TRACK" : c.status === "REJECTED" ? "OFF_TRACK" : "AT_RISK"}
+                      label={statusLabel(c.status)}
+                    />
+                  </td>
+                  <td style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.requesterName}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <Card>
-        <h3 style={{ marginTop: 0, fontSize: 15, color: "#142033" }}>Flujo de estados (referencia)</h3>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "#5E6B7A" }}>
+        <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Flujo de estados (referencia)</h3>
+        <div className="nf-app-help" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", fontWeight: 600 }}>
           {FLOW.map((s, i) => (
             <span key={s}>
               {statusLabel(s)}
               {i < FLOW.length - 1 ? " → " : ""}
             </span>
           ))}
-          <span> · Rechazo desde revisión</span>
+          <span style={{ color: "var(--nf-ink)" }}>· Rechazo desde revisión</span>
         </div>
       </Card>
 
       <Modal open={!!detailLive} onClose={() => setDetail(null)} title={detailLive ? `${detailLive.code} · ${detailLive.title}` : ""} width={640}>
         {detailLive && (
           <div>
-            <p style={{ fontSize: 13, color: "#5E6B7A", lineHeight: 1.6 }}>{detailLive.reason}</p>
-            <div className="nf-grid-2" style={{ gap: 10, marginBottom: 16, fontSize: 12 }}>
+            <p className="nf-app-help" style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.65, color: "var(--nf-ink)" }}>{detailLive.reason}</p>
+            <div className="nf-grid-2" style={{ gap: 12, marginBottom: 18, fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>
               <div>
-                <strong>Categoría</strong> {detailLive.category}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Categoría</span> {detailLive.category}
               </div>
               <div>
-                <strong>Tipo</strong> {detailLive.changeType}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Tipo</span> {detailLive.changeType}
               </div>
               <div>
-                <strong>Aprobadores</strong> {detailLive.approvers.join(", ")}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Aprobadores</span> {detailLive.approvers.join(", ")}
               </div>
               <div>
-                <strong>NC vinculada</strong> {detailLive.ncId ? <Link href="/app/nonconformities">{detailLive.ncId}</Link> : "—"}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>NC vinculada</span>{" "}
+                {detailLive.ncId ? <Link href="/app/nonconformities">{detailLive.ncId}</Link> : "—"}
               </div>
             </div>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, color: "#142033" }}>Documentos afectados</div>
+            <div style={{ marginBottom: 16 }}>
+              <div className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+                Documentos afectados
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {detailLive.documentIds.length === 0 ? (
-                  <span style={{ color: "#5E6B7A", fontSize: 12 }}>Ninguno enlazado</span>
+                  <span className="nf-app-help" style={{ fontWeight: 600 }}>Ninguno enlazado</span>
                 ) : (
                   detailLive.documentIds.map(did => {
                     const d = documents.find(x => x.id === did);
                     return (
-                      <Link key={did} href="/app/documents" style={{ fontSize: 12, color: "#123C66" }}>
+                      <Link key={did} href="/app/documents" style={{ fontSize: 13, fontWeight: 700, color: "#123C66" }}>
                         {d?.code ?? did}
                       </Link>
                     );
@@ -287,17 +290,21 @@ export default function ChangeControlModule() {
                 )}
               </div>
             </div>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6 }}>Procesos / riesgos / formación</div>
-              <p style={{ fontSize: 12, color: "#5E6B7A", margin: 0 }}>
+            <div style={{ marginBottom: 16 }}>
+              <div className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+                Procesos / riesgos / formación
+              </div>
+              <p className="nf-app-help" style={{ margin: 0, fontWeight: 600 }}>
                 Procesos: {detailLive.processCodes.join(", ") || "—"} · Riesgos: {detailLive.riskCodes.join(", ") || "—"} · Cursos:{" "}
                 {detailLive.trainingCourseIds.map(id => trainingCourses.find(t => t.id === id)?.code ?? id).join(", ") || "—"}
               </p>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Tareas derivadas</div>
+              <div className="nf-filter-label" style={{ display: "block", marginBottom: 10 }}>
+                Tareas derivadas
+              </div>
               {detailLive.tasks.map(t => (
-                <label key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 6 }}>
+                <label key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 8 }}>
                   <input
                     type="checkbox"
                     checked={t.done}
@@ -313,7 +320,7 @@ export default function ChangeControlModule() {
               ))}
             </div>
             {perm.changes.manage && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderTop: "1px solid #E5EAF2", paddingTop: 16 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderTop: "1px solid var(--nf-line)", paddingTop: 16 }}>
                 {detailLive.status === "DRAFT" && (
                   <button type="button" onClick={() => transition(detailLive, "SUBMITTED")} style={btnPrimary}>
                     Enviar a revisión
@@ -352,7 +359,9 @@ export default function ChangeControlModule() {
               </div>
             )}
             <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, color: "#142033" }}>Historial en registro</div>
+              <div className="nf-filter-label" style={{ display: "block", marginBottom: 10 }}>
+                Historial en registro
+              </div>
               <AuditTimeline events={changeEvents.filter(e => e.entityId === detailLive.id)} max={20} emptyText="Sin eventos para este cambio." />
             </div>
           </div>
@@ -375,18 +384,40 @@ export default function ChangeControlModule() {
       />
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva solicitud de cambio" width={520}>
-        <label style={lbl}>Título</label>
-        <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} style={inp} />
-        <label style={lbl}>Motivo / justificación</label>
-        <textarea value={form.reason} onChange={e => setForm({ ...form, reason: e.target.value })} rows={3} style={inp} />
-        <label style={lbl}>Impacto</label>
-        <select value={form.impact} onChange={e => setForm({ ...form, impact: e.target.value as ChangeRequestRow["impact"] })} style={inp}>
+        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+          Título
+        </label>
+        <input
+          value={form.title}
+          onChange={e => setForm({ ...form, title: e.target.value })}
+          className="nf-app-input"
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box" }}
+        />
+        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+          Motivo / justificación
+        </label>
+        <textarea
+          value={form.reason}
+          onChange={e => setForm({ ...form, reason: e.target.value })}
+          rows={3}
+          className="nf-app-input"
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", resize: "vertical" }}
+        />
+        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+          Impacto
+        </label>
+        <select
+          value={form.impact}
+          onChange={e => setForm({ ...form, impact: e.target.value as ChangeRequestRow["impact"] })}
+          className="nf-app-input"
+          style={{ width: "100%", marginBottom: 16, boxSizing: "border-box" }}
+        >
           <option value="LOW">Bajo</option>
           <option value="MEDIUM">Medio</option>
           <option value="HIGH">Alto</option>
           <option value="CRITICAL">Crítico</option>
         </select>
-        <button type="button" onClick={submitCreate} style={{ ...btnPrimary, width: "100%", marginTop: 16 }}>
+        <button type="button" onClick={submitCreate} style={{ ...btnPrimary, width: "100%", marginTop: 4 }}>
           Guardar borrador
         </button>
       </Modal>
@@ -406,13 +437,3 @@ const btnPrimary: CSSProperties = {
 };
 const btnOk: CSSProperties = { ...btnPrimary, background: "#2E8B57" };
 const btnDanger: CSSProperties = { ...btnPrimary, background: "#C93C37" };
-const lbl: CSSProperties = { display: "block", fontSize: 12, fontWeight: 600, marginBottom: 6, color: "#142033" };
-const inp: CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  borderRadius: 8,
-  border: "1px solid #E5EAF2",
-  marginBottom: 12,
-  fontSize: 13,
-  boxSizing: "border-box",
-};

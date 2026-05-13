@@ -59,8 +59,8 @@ export default function PersonnelClient() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Avatar name={`${r.firstName} ${r.lastName}`} size={28} />
           <div>
-            <div style={{ fontWeight: 600, color: "#142033" }}>{r.firstName} {r.lastName}</div>
-            {r.email && <div style={{ fontSize: 12, color: "#5E6B7A" }}>{r.email}</div>}
+            <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{r.firstName} {r.lastName}</div>
+            {r.email && <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.email}</div>}
           </div>
         </div>
       ),
@@ -68,10 +68,10 @@ export default function PersonnelClient() {
     {
       key: "positionId",
       label: "Cargo",
-      render: (_, r) => r.positionId ? positionNameById.get(r.positionId) ?? "—" : <span style={{ color: "#9aa5b1" }}>—</span>,
+      render: (_, r) => r.positionId ? positionNameById.get(r.positionId) ?? "—" : <span style={{ color: "var(--nf-ink-4)" }}>—</span>,
     },
-    { key: "identification", label: "Identificación", render: (_, r) => r.identification ?? <span style={{ color: "#9aa5b1" }}>—</span> },
-    { key: "hiredAt", label: "Alta", render: (_, r) => r.hiredAt ? <span style={{ fontSize: 12 }}>{formatDate(r.hiredAt)}</span> : <span style={{ color: "#9aa5b1" }}>—</span> },
+    { key: "identification", label: "Identificación", render: (_, r) => r.identification ?? <span style={{ color: "var(--nf-ink-4)" }}>—</span> },
+    { key: "hiredAt", label: "Alta", render: (_, r) => r.hiredAt ? <span style={{ fontSize: 12 }}>{formatDate(r.hiredAt)}</span> : <span style={{ color: "var(--nf-ink-4)" }}>—</span> },
     { key: "active", label: "Estado", render: (_, r) => <Badge status={r.active ? "ACTIVE" : "OBSOLETE"} label={r.active ? "Activo" : "Inactivo"} /> },
   ];
   if (canEdit) {
@@ -130,13 +130,13 @@ export default function PersonnelClient() {
             placeholder="Buscar nombre, email, cargo…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid #E5EAF2", borderRadius: 8, outline: "none" }}
+            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none" }}
           />
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#5E6B7A" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--nf-ink-3)" }}>
             <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
             Ver inactivos
           </label>
-          <span style={{ fontSize: 12, color: "#5E6B7A" }}>{filtered.length} de {rows.length}</span>
+          <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {rows.length}</span>
         </div>
 
         <DataTable columns={columns} rows={filtered} emptyText="Sin personal registrado todavía." />
@@ -192,7 +192,7 @@ export default function PersonnelClient() {
         title="Desactivar persona"
         width={420}
       >
-        <p style={{ margin: "0 0 14px", color: "#142033" }}>¿Seguro que quieres marcar como inactivo a <strong>{confirmDeactivate?.firstName} {confirmDeactivate?.lastName}</strong>?</p>
+        <p style={{ margin: "0 0 14px", color: "var(--nf-ink)" }}>¿Seguro que quieres marcar como inactivo a <strong>{confirmDeactivate?.firstName} {confirmDeactivate?.lastName}</strong>?</p>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
           <button type="button" onClick={() => setConfirmDeactivate(null)} disabled={isPending} style={ghostBtn}>Cancelar</button>
           <button
@@ -216,13 +216,13 @@ export default function PersonnelClient() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #E5EAF2", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
+const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { padding: "9px 18px", fontSize: 13, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "#5E6B7A", background: "#fff", border: "1px solid #E5EAF2", borderRadius: 8, cursor: "pointer" };
+const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "var(--nf-ink-3)", background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)", borderRadius: 8, cursor: "pointer" };
 const dangerBtn: React.CSSProperties = { ...ghostBtn, color: "#C93C37", border: "1px solid #fde0e0" };

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { CalendarDays, ClipboardList, Plus, Tag, Target, Timer, TrendingUp, Zap } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -8,7 +9,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type ActionRow } from "@/context/WorkspaceStore";
 
-const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#C93C37", HIGH: "#D68A1A", MEDIUM: "#123C66", LOW: "#5E6B7A" };
+const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#C93C37", HIGH: "#D68A1A", MEDIUM: "#123C66", LOW: "var(--nf-ink-3)" };
 const PRIORITY_LABEL: Record<string, string> = { CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja" };
 
 function clampProgress(n: number): number {
@@ -16,7 +17,6 @@ function clampProgress(n: number): number {
   return Math.min(100, Math.max(0, Math.round(n)));
 }
 
-/** Derive status after a progress save without clobbering explicit workflow states. */
 function statusAfterProgressSave(current: ActionRow["status"], progress: number): ActionRow["status"] {
   if (progress >= 100) return "COMPLETED";
   if (current === "COMPLETED" && progress < 100) return "IN_PROGRESS";
@@ -24,11 +24,18 @@ function statusAfterProgressSave(current: ActionRow["status"], progress: number)
   return current;
 }
 
+const FILTER_KEYS = [
+  ["ALL", "Todas"],
+  ["PENDING", "Pendiente"],
+  ["IN_PROGRESS", "En curso"],
+  ["IN_REVIEW", "En revisión"],
+  ["COMPLETED", "Completadas"],
+] as const;
+
 export default function ActionsModule() {
   const { state, dispatch, nextActionCode, showToast } = useWorkspace();
   const { actions } = state;
   const [filter, setFilter] = useState("ALL");
-  /** Detail modal: track id only so list + modal always read the same store row. */
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = useMemo(() => (selectedId ? actions.find(a => a.id === selectedId) ?? null : null), [actions, selectedId]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -48,7 +55,7 @@ export default function ActionsModule() {
     if (!selectedId) return;
     const row = actions.find(a => a.id === selectedId);
     if (row) setProgressDraft(row.progress);
-  }, [selectedId]);
+  }, [selectedId, actions]);
 
   useEffect(() => {
     if (selectedId && !actions.some(a => a.id === selectedId)) setSelectedId(null);
@@ -120,103 +127,262 @@ export default function ActionsModule() {
     dispatch({ type: "updateAction", id: selected.id, patch });
   }
 
+  const inProgress = actions.filter(a => a.status === "IN_PROGRESS").length;
+  const pending = actions.filter(a => a.status === "PENDING").length;
+  const completed = actions.filter(a => a.status === "COMPLETED").length;
+
   return (
     <div>
       <SectionTitle
         title="Plan de Acción Global"
-        sub="Vista consolidada: filtra por estado, abre el detalle y actualiza el progreso. Las acciones enlazan con NC, riesgos y auditorías."
-        action="+ Nueva Acción"
+        sub="Correctivas, preventivas y mejoras — filtra por estado, abre el detalle y actualiza el progreso."
+        action={
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <Plus size={17} strokeWidth={2.25} aria-hidden />
+            Nueva acción
+          </span>
+        }
         onAction={openCreate}
       />
 
-      <div className="nf-grid-stats" style={{ gap: 12, marginBottom: 16 }}>
-        {[
-          { label: "Total acciones", value: actions.length, color: "#123C66" },
-          { label: "En curso", value: actions.filter(a => a.status === "IN_PROGRESS").length, color: "#D68A1A" },
-          { label: "Pendientes", value: actions.filter(a => a.status === "PENDING").length, color: "#5E6B7A" },
-          { label: "Completadas", value: actions.filter(a => a.status === "COMPLETED").length, color: "#2E8B57" },
-        ].map(s => (
-          <Card key={s.label} style={{ textAlign: "center", padding: "16px 12px" }}>
-            <div style={{ fontSize: 30, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A", marginTop: 2 }}>{s.label}</div>
-          </Card>
-        ))}
-      </div>
-
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        {[
-          ["ALL", "Todas"],
-          ["PENDING", "Pendiente"],
-          ["IN_PROGRESS", "En curso"],
-          ["IN_REVIEW", "En revisión"],
-          ["COMPLETED", "Completadas"],
-        ].map(([s, l]) => (
-          <button
-            key={s}
-            type="button"
-            onClick={() => setFilter(s)}
+      <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
+        <div className="nf-kpi-summary-cell">
+          <div
             style={{
-              padding: "6px 14px",
-              borderRadius: 8,
-              border: `1px solid ${filter === s ? "#123C66" : "#E5EAF2"}`,
-              background: filter === s ? "#123C6612" : "transparent",
-              color: filter === s ? "#123C66" : "#5E6B7A",
-              fontSize: 13,
-              cursor: "pointer",
-              fontWeight: filter === s ? 600 : 400,
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.14) 0%, rgba(18, 60, 102, 0.05) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
             }}
           >
+            <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{actions.length}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Acciones totales</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#9a6510",
+            }}
+          >
+            <Timer size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.1) 0%, rgba(18, 60, 102, 0.04) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#314456",
+            }}
+          >
+            <Target size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink-2)", letterSpacing: "-0.03em", lineHeight: 1 }}>{pending}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Pendientes</div>
+          </div>
+        </div>
+        <div className="nf-kpi-summary-cell">
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#1f6f45",
+            }}
+          >
+            <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
+          </div>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", alignItems: "center" }}>
+        <span className="nf-filter-label" style={{ marginRight: 4 }}>
+          Estado
+        </span>
+        {FILTER_KEYS.map(([s, l]) => (
+          <button key={s} type="button" className={filter === s ? "nf-chip nf-chip--on" : "nf-chip"} onClick={() => setFilter(s)}>
             {l}
           </button>
         ))}
       </div>
 
       {filtered.length === 0 ? (
-        <Card style={{ padding: 40, textAlign: "center", color: "#5E6B7A" }}>No hay acciones con este filtro. Crea una con + Nueva Acción.</Card>
+        <Card style={{ padding: 44, textAlign: "center" }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              margin: "0 auto 14px",
+              borderRadius: 16,
+              background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#123C66",
+            }}
+          >
+            <Zap size={26} strokeWidth={2} aria-hidden />
+          </div>
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--nf-ink)" }}>Sin acciones en este filtro</p>
+          <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--nf-ink-3)" }}>Crea una acción nueva o cambia el filtro de estado.</p>
+        </Card>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {filtered.map(action => (
-            <Card key={action.id} onClick={() => openDetail(action)} style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", padding: "16px 20px", cursor: "pointer" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 5 }}>
-                  <span style={{ background: PRIORITY_COLOR[action.priority] + "18", color: PRIORITY_COLOR[action.priority], padding: "2px 8px", borderRadius: 99, fontSize: 11, fontWeight: 600 }}>{PRIORITY_LABEL[action.priority]}</span>
-                  <Badge status={action.status} />
-                  <span style={{ fontSize: 11, color: "#5E6B7A", background: "#F7F9FC", padding: "2px 8px", borderRadius: 99, border: "1px solid #E5EAF2" }}>
-                    {action.type === "CORRECTIVE" ? "Correctiva" : action.type === "PREVENTIVE" ? "Preventiva" : "Mejora"}
-                  </span>
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: "#142033", marginBottom: 4 }}>{action.title}</div>
-                <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, color: "#5E6B7A" }}>📌 {action.source}</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                    <Avatar name={action.owner} size={16} />
-                    <span style={{ fontSize: 12, color: "#5E6B7A" }}>{action.owner.split(" ")[0]}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {filtered.map(action => {
+            const pc = PRIORITY_COLOR[action.priority] || "#123C66";
+            const overdue = action.status !== "COMPLETED" && new Date(action.due) < new Date();
+            return (
+              <div key={action.id} className="nf-kpi-card" onClick={() => openDetail(action)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && openDetail(action)}>
+                <div style={{ height: 4, background: `linear-gradient(90deg, ${pc}, ${pc}88)` }} />
+                <div style={{ padding: "16px 18px 18px", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
+                      <span
+                        style={{
+                          background: `${pc}22`,
+                          color: pc,
+                          padding: "4px 10px",
+                          borderRadius: 99,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          letterSpacing: "0.02em",
+                        }}
+                      >
+                        {PRIORITY_LABEL[action.priority]}
+                      </span>
+                      <Badge status={action.status} />
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--nf-ink-2)",
+                          background: "#f3f6fa",
+                          padding: "4px 10px",
+                          borderRadius: 99,
+                          border: "1px solid rgba(18, 60, 102, 0.1)",
+                        }}
+                      >
+                        {action.type === "CORRECTIVE" ? "Correctiva" : action.type === "PREVENTIVE" ? "Preventiva" : "Mejora"}
+                      </span>
+                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 800, color: "#123C66" }}>{action.code}</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 800,
+                        color: "var(--nf-ink)",
+                        marginBottom: 8,
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.3,
+                        fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                      }}
+                    >
+                      {action.title}
+                    </div>
+                    <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "center", fontSize: 12, color: "var(--nf-ink-3)" }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Tag size={14} strokeWidth={2.25} aria-hidden />
+                        <span style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{action.source}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+                        <Avatar name={action.owner} size={18} />
+                        <span style={{ fontWeight: 600 }}>{action.owner.split(" ")[0]}</span>
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "#C93C37" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
+                        <CalendarDays size={14} strokeWidth={2.25} aria-hidden />
+                        {action.due}
+                      </span>
+                    </div>
                   </div>
-                  <span style={{ fontSize: 12, color: action.status !== "COMPLETED" && new Date(action.due) < new Date() ? "#C93C37" : "#5E6B7A" }}>📅 {action.due}</span>
+                  <div style={{ width: 140, flexShrink: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6, fontWeight: 600 }}>
+                      <span>Progreso</span>
+                      <span style={{ color: pc }}>{action.progress}%</span>
+                    </div>
+                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "#2E8B57" : pc} height={7} railColor="#eef2f9" />
+                  </div>
                 </div>
               </div>
-              <div style={{ width: 130, flexShrink: 0 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#5E6B7A", marginBottom: 5 }}>
-                  <span>Progreso</span>
-                  <span style={{ fontWeight: 600 }}>{action.progress}%</span>
-                </div>
-                <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "#2E8B57" : PRIORITY_COLOR[action.priority] || "#123C66"} height={6} />
-              </div>
-            </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      <Modal open={!!selected} onClose={closeDetail} title={selected ? `${selected.code} — Detalle` : ""} width={520}>
+      <Modal open={!!selected} onClose={closeDetail} title={selected ? `${selected.code} — Detalle` : ""} width={540}>
         {selected && (
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "#142033", marginBottom: 12 }}>{selected.title}</div>
-            <div style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 16 }}>
-              Origen: <strong style={{ color: "#142033" }}>{selected.source}</strong> · Responsable: {selected.owner}
+            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 10, letterSpacing: "-0.02em" }}>{selected.title}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  borderRadius: 99,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "rgba(18, 60, 102, 0.08)",
+                  color: "var(--nf-ink-2)",
+                  border: "1px solid rgba(18, 60, 102, 0.1)",
+                }}
+              >
+                Origen: <strong style={{ color: "var(--nf-ink)" }}>{selected.source}</strong>
+              </span>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "6px 12px",
+                  borderRadius: 99,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: "#f3f6fa",
+                  border: "1px solid var(--nf-line)",
+                  color: "var(--nf-ink-2)",
+                }}
+              >
+                {selected.owner}
+              </span>
             </div>
-            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 8 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 10, color: "var(--nf-ink)" }}>
               Progreso (%)
               <input
+                className="nf-app-input"
                 type="number"
                 min={0}
                 max={100}
@@ -225,15 +391,16 @@ export default function ActionsModule() {
                   const v = parseFloat(e.target.value);
                   setProgressDraft(Number.isFinite(v) ? v : 0);
                 }}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500, display: "block", marginBottom: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 16, color: "var(--nf-ink)" }}>
               Estado
               <select
+                className="nf-app-input"
                 value={selected.status}
                 onChange={e => applyStatusChange(e.target.value as ActionRow["status"])}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="PENDING">Pendiente</option>
                 <option value="IN_PROGRESS">En curso</option>
@@ -242,30 +409,36 @@ export default function ActionsModule() {
                 <option value="CANCELLED">Cancelada</option>
               </select>
             </label>
-            <button type="button" onClick={saveDetail} style={{ width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            <button
+              type="button"
+              onClick={saveDetail}
+              style={{ width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+            >
               Guardar progreso
             </button>
           </div>
         )}
       </Modal>
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva acción" width={480}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva acción" width={500}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Título
             <input
+              className="nf-app-input"
               value={newForm.title}
               onChange={e => setNewForm({ ...newForm, title: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
             />
           </label>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Prioridad
               <select
+                className="nf-app-input"
                 value={newForm.priority}
                 onChange={e => setNewForm({ ...newForm, priority: e.target.value as ActionRow["priority"] })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="LOW">Baja</option>
                 <option value="MEDIUM">Media</option>
@@ -273,12 +446,13 @@ export default function ActionsModule() {
                 <option value="CRITICAL">Crítica</option>
               </select>
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Tipo
               <select
+                className="nf-app-input"
                 value={newForm.type}
                 onChange={e => setNewForm({ ...newForm, type: e.target.value as ActionRow["type"] })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
@@ -286,38 +460,41 @@ export default function ActionsModule() {
               </select>
             </label>
           </div>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Origen / referencia
             <input
+              className="nf-app-input"
               value={newForm.source}
               onChange={e => setNewForm({ ...newForm, source: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
             />
           </label>
-          <div className="nf-grid-2" style={{ gap: 10 }}>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Vencimiento
               <input
+                className="nf-app-input"
                 type="date"
                 value={newForm.due}
                 onChange={e => setNewForm({ ...newForm, due: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
-            <label style={{ fontSize: 13, fontWeight: 500 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Responsable
               <input
+                className="nf-app-input"
                 value={newForm.owner}
                 onChange={e => setNewForm({ ...newForm, owner: e.target.value })}
-                style={{ width: "100%", marginTop: 4, padding: "8px 12px", border: "1px solid #E5EAF2", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Crear
             </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid #E5EAF2", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "#5E6B7A" }}>
+            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "#fff", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
               Cancelar
             </button>
           </div>

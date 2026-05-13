@@ -56,13 +56,13 @@ export default function IntegrationsModule() {
           <Card key={int.key} style={{ cursor: "pointer" }} onClick={() => setDetail(int)}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
               <div>
-                <div style={{ fontSize: 11, color: "#5E6B7A", textTransform: "uppercase", letterSpacing: 0.5 }}>{int.category}</div>
-                <h3 style={{ margin: "4px 0 8px", fontSize: 16, color: "#142033" }}>{int.name}</h3>
-                <p style={{ fontSize: 13, color: "#5E6B7A", margin: 0, lineHeight: 1.45 }}>{int.description}</p>
+                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: 0.5 }}>{int.category}</div>
+                <h3 style={{ margin: "4px 0 8px", fontSize: 16, color: "var(--nf-ink)" }}>{int.name}</h3>
+                <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.45 }}>{int.description}</p>
               </div>
               {statusBadge(int.status)}
             </div>
-            {int.lastSyncAt && <div style={{ fontSize: 11, color: "#9aa5b1", marginTop: 10 }}>Última sync: {new Date(int.lastSyncAt).toLocaleString("es-ES")}</div>}
+            {int.lastSyncAt && <div style={{ fontSize: 11, color: "var(--nf-ink-4)", marginTop: 10 }}>Última sync: {new Date(int.lastSyncAt).toLocaleString("es-ES")}</div>}
           </Card>
         ))}
       </div>
@@ -70,12 +70,12 @@ export default function IntegrationsModule() {
       <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={560}>
         {detail && (
           <div>
-            <p style={{ fontSize: 14, color: "#142033", lineHeight: 1.55 }}>{detail.valueProposition}</p>
+            <p style={{ fontSize: 14, color: "var(--nf-ink)", lineHeight: 1.55 }}>{detail.valueProposition}</p>
             <div style={{ marginTop: 12, marginBottom: 16 }}>{statusBadge(detail.status)}</div>
             {detail.detailNote && (
               <div style={{ background: "#fff8e6", border: "1px solid #f5e0a8", borderRadius: 8, padding: 12, fontSize: 13, color: "#7a5c1a", marginBottom: 16 }}>{detail.detailNote}</div>
             )}
-            <p style={{ fontSize: 12, color: "#5E6B7A" }}>
+            <p style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               La ingesta de evidencias desde este conector quedaría mapeada a controles, documentos y auditorías. Desde{" "}
               <a href="/app/evidence" style={{ color: "#123C66", fontWeight: 600 }}>
                 Evidencias

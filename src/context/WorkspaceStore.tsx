@@ -110,7 +110,16 @@ export type EvidenceItem = {
   framework?: string | null;
 };
 
-export type DocVersion = { version: string; date: string; author: string; note: string };
+export type DocVersion = {
+  version: string;
+  date: string;
+  author: string;
+  note: string;
+  /** Archivo archivado de esta revisión (URL absoluta o blob en demo). */
+  fileUrl?: string;
+  /** Nombre sugerido al descargar (p. ej. SGC-MAN-001-v3.1.pdf). */
+  fileName?: string;
+};
 
 export type InvoiceRow = { id: string; period: string; amount: string; paid: boolean; pdfUrl?: string };
 
@@ -228,13 +237,26 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
   }));
   const versions: Record<string, DocVersion[]> = {};
   docs.forEach(d => {
+    const fileUrl = d.previewUrl;
+    const cur = parseFloat(String(d.version)) || 1;
+    const prevNum = Math.max(1, Math.round((cur - 0.1) * 10) / 10);
+    const prevStr = prevNum % 1 === 0 ? String(prevNum) : prevNum.toFixed(1);
     versions[d.id] = [
-      { version: d.version, date: d.updated, author: d.owner, note: "Versión vigente" },
       {
-        version: String(Math.max(1, parseFloat(String(d.version)) - 0.1)),
+        version: d.version,
+        date: d.updated,
+        author: d.owner,
+        note: "Versión vigente",
+        fileUrl,
+        fileName: `${d.code}-v${d.version}.pdf`,
+      },
+      {
+        version: prevStr,
         date: "2024-11-01",
         author: d.owner,
         note: "Revisión intermedia",
+        fileUrl,
+        fileName: `${d.code}-v${prevStr}.pdf`,
       },
     ];
   });
@@ -469,7 +491,16 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
         documents: [a.doc, ...state.documents],
         documentVersions: {
           ...state.documentVersions,
-          [a.doc.id]: [{ version: a.doc.version, date: a.doc.updated, author: a.doc.owner, note: "Versión inicial" }],
+          [a.doc.id]: [
+            {
+              version: a.doc.version,
+              date: a.doc.updated,
+              author: a.doc.owner,
+              note: "Versión inicial",
+              fileUrl: a.doc.previewUrl,
+              fileName: `${a.doc.code}-v${a.doc.version}.pdf`,
+            },
+          ],
         },
       };
     case "updateDocument":

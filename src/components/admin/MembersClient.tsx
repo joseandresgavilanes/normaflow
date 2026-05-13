@@ -63,11 +63,11 @@ export default function MembersClient() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Avatar name={r.name} size={32} />
           <div>
-            <div style={{ fontWeight: 600, color: "#142033" }}>
+            <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>
               {r.name}
-              {r.isSelf && <span style={{ marginLeft: 6, fontSize: 11, color: "#9aa5b1" }}>(tú)</span>}
+              {r.isSelf && <span style={{ marginLeft: 6, fontSize: 11, color: "var(--nf-ink-4)" }}>(tú)</span>}
             </div>
-            <div style={{ fontSize: 12, color: "#5E6B7A" }}>{r.email}</div>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.email}</div>
           </div>
         </div>
       ),
@@ -81,7 +81,7 @@ export default function MembersClient() {
             value={r.role}
             disabled={isPending}
             onChange={(e) => changeRole(r, e.target.value as Role)}
-            style={{ padding: "6px 8px", fontSize: 12, border: "1px solid #E5EAF2", borderRadius: 6, background: "#fff" }}
+            style={{ padding: "6px 8px", fontSize: 12, border: "1px solid var(--nf-line)", borderRadius: 6, background: "var(--nf-app-surface-1)" }}
           >
             {ASSIGNABLE_ROLES.map((rl) => <option key={rl} value={rl}>{ROLE_LABELS[rl]}</option>)}
           </select>
@@ -90,7 +90,7 @@ export default function MembersClient() {
         )
       ),
     },
-    { key: "createdAt", label: "Miembro desde", render: (_, r) => <span style={{ fontSize: 12, color: "#5E6B7A" }}>{formatDate(r.createdAt)}</span> },
+    { key: "createdAt", label: "Miembro desde", render: (_, r) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{formatDate(r.createdAt)}</span> },
   ];
   if (canEdit) {
     columns.push({
@@ -139,9 +139,9 @@ export default function MembersClient() {
             placeholder="Buscar por nombre, email o rol…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid #E5EAF2", borderRadius: 8, outline: "none" }}
+            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none" }}
           />
-          <span style={{ fontSize: 12, color: "#5E6B7A" }}>{filtered.length} de {rows.length}</span>
+          <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {rows.length}</span>
         </div>
         {error && (
           <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13, marginBottom: 12 }}>{error}</div>
@@ -162,7 +162,7 @@ export default function MembersClient() {
               {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           </Field>
-          <p style={{ margin: 0, fontSize: 12, color: "#9aa5b1" }}>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)" }}>
             En esta versión demo la invitación es inmediata. El envío de email se conectará al integrar Resend.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -173,7 +173,7 @@ export default function MembersClient() {
       </Modal>
 
       <Modal open={confirmRemove != null} onClose={() => !isPending && setConfirmRemove(null)} title="Quitar miembro" width={420}>
-        <p style={{ margin: "0 0 14px", color: "#142033" }}>
+        <p style={{ margin: "0 0 14px", color: "var(--nf-ink)" }}>
           ¿Quitar a <strong>{confirmRemove?.name}</strong> de la organización? Perderá el acceso pero la cuenta se mantiene.
         </p>
         <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
@@ -199,13 +199,13 @@ export default function MembersClient() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid #E5EAF2", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
+const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
 const primaryBtn: React.CSSProperties = { padding: "9px 18px", fontSize: 13, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "#5E6B7A", background: "#fff", border: "1px solid #E5EAF2", borderRadius: 8, cursor: "pointer" };
+const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "var(--nf-ink-3)", background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)", borderRadius: 8, cursor: "pointer" };
 const dangerBtn: React.CSSProperties = { ...ghostBtn, color: "#C93C37", border: "1px solid #fde0e0" };

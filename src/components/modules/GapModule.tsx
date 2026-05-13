@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { FileDown, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import ProgressBar from "@/components/ui/ProgressBar";
@@ -104,7 +105,12 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
       <SectionTitle
         title="GAP Assessment"
         sub={readOnlyLive ? "Datos desde tu organización (solo lectura)" : "Evaluación de brechas — respuestas editables en sesión demo"}
-        action="📄 Exportar PDF"
+        action={
+          <>
+            <FileDown size={15} strokeWidth={2} aria-hidden />
+            Exportar PDF
+          </>
+        }
         onAction={exportPdf}
       />
 
@@ -123,9 +129,9 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             style={{
               padding: "7px 18px",
               borderRadius: 8,
-              border: `1px solid ${standard === s.key ? "#123C66" : "#E5EAF2"}`,
+              border: `1px solid ${standard === s.key ? "#123C66" : "var(--nf-line)"}`,
               background: standard === s.key ? "#123C66" : "transparent",
-              color: standard === s.key ? "#fff" : "#5E6B7A",
+              color: standard === s.key ? "#fff" : "var(--nf-ink-3)",
               fontSize: 13,
               fontWeight: standard === s.key ? 600 : 400,
               cursor: "pointer",
@@ -136,11 +142,11 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20 }}>
+      <div className="nf-app-split-2">
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
             <div>
-              <div style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 4 }}>Cumplimiento Global</div>
+              <div style={{ fontSize: 13, color: "var(--nf-ink-3)", marginBottom: 4 }}>Cumplimiento Global</div>
               <div
                 style={{
                   fontSize: 44,
@@ -160,7 +166,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               ].map(s => (
                 <div key={s.label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</div>
-                  <div style={{ fontSize: 11, color: "#5E6B7A" }}>{s.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -175,8 +181,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 disabled={readOnlyLive}
                 style={{
                   textAlign: "left",
-                  background: readOnlyLive ? "transparent" : "#fafbfd",
-                  border: "1px solid #E5EAF2",
+                  background: readOnlyLive ? "transparent" : "#f3f6fa",
+                  border: "1px solid rgba(18, 60, 102, 0.08)",
                   borderRadius: 10,
                   padding: "12px 14px",
                   cursor: readOnlyLive ? "default" : "pointer",
@@ -185,7 +191,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#123C66", marginRight: 8 }}>{g.clause}.</span>
-                    <span style={{ fontSize: 13, color: "#142033", fontWeight: 500 }}>{g.title}</span>
+                    <span style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{g.title}</span>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <span
@@ -203,8 +209,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                     />
                   </div>
                 </div>
-                <ProgressBar value={g.score} color={g.score >= 80 ? "#2E8B57" : g.score >= 60 ? "#D68A1A" : "#C93C37"} height={7} />
-                <div style={{ fontSize: 11, color: "#5E6B7A", marginTop: 3 }}>
+                <ProgressBar value={g.score} color={g.score >= 80 ? "#2E8B57" : g.score >= 60 ? "#D68A1A" : "#C93C37"} height={7} railColor="#eef2f9" />
+                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>
                   {g.answered}/{g.questions} respuestas · {!readOnlyLive && canEdit ? "Pulse para editar" : "Detalle"}
                 </div>
               </button>
@@ -214,10 +220,10 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <Card>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#142033", marginBottom: 14 }}>Resumen ejecutivo</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 14 }}>Resumen ejecutivo</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <ProgressBar value={avg} color={avg >= 80 ? "#2E8B57" : avg >= 60 ? "#D68A1A" : "#C93C37"} height={10} />
-              <div style={{ fontSize: 13, color: "#5E6B7A", lineHeight: 1.5 }}>
+              <ProgressBar value={avg} color={avg >= 80 ? "#2E8B57" : avg >= 60 ? "#D68A1A" : "#C93C37"} height={10} railColor="#eef2f9" />
+              <div style={{ fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
                 {avg < 60
                   ? "Se requieren acciones urgentes antes de una auditoría de certificación."
                   : avg < 80
@@ -228,9 +234,9 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           </Card>
 
           <Card>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#142033", marginBottom: 12 }}>Recomendaciones</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 12 }}>Recomendaciones</div>
             {weakClauses.length === 0 ? (
-              <p style={{ fontSize: 12, color: "#5E6B7A", margin: 0 }}>No hay cláusulas críticas por debajo del umbral del 70%.</p>
+              <p style={{ fontSize: 12, color: "var(--nf-ink-3)", margin: 0 }}>No hay cláusulas críticas por debajo del umbral del 70%.</p>
             ) : (
               weakClauses.map((g, i) => (
                 <div
@@ -239,12 +245,12 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                     display: "flex",
                     gap: 10,
                     padding: "7px 0",
-                    borderBottom: i < weakClauses.length - 1 ? "1px solid #E5EAF2" : "none",
+                    borderBottom: i < weakClauses.length - 1 ? "1px solid var(--nf-line)" : "none",
                     alignItems: "flex-start",
                   }}
                 >
                   <Badge status="AT_RISK" label={g.clause} />
-                  <span style={{ fontSize: 12, color: "#142033" }}>
+                  <span style={{ fontSize: 12, color: "var(--nf-ink)" }}>
                     Reforzar evidencias en «{g.title}» (score {g.score}%).
                   </span>
                 </div>
@@ -255,16 +261,46 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <button
             type="button"
             onClick={exportPdf}
-            style={{ background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "#123C66",
+              color: "#fff",
+              border: "none",
+              borderRadius: 10,
+              padding: "12px",
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+              width: "100%",
+            }}
           >
-            📄 Exportar informe completo
+            <FileDown size={17} strokeWidth={2} aria-hidden />
+            Exportar informe completo
           </button>
           <button
             type="button"
             onClick={aiSuggest}
-            style={{ background: "transparent", color: "#2E8B57", border: "1px solid #2E8B5750", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              background: "transparent",
+              color: "#2E8B57",
+              border: "1px solid #2E8B5750",
+              borderRadius: 10,
+              padding: "11px",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              width: "100%",
+            }}
           >
-            ✦ Sugerencia IA para plan de acción
+            <Sparkles size={16} strokeWidth={2} aria-hidden />
+            Sugerencia IA para plan de acción
           </button>
         </div>
       </div>
@@ -279,15 +315,15 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           }}
         >
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 12, color: "#5E6B7A", marginBottom: 6 }}>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6 }}>
               Puntuación {fullClause.score}% · {fullClause.answered}/{fullClause.questions} respuestas
             </div>
-            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "#2E8B57" : fullClause.score >= 60 ? "#D68A1A" : "#C93C37"} height={8} />
+            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "#2E8B57" : fullClause.score >= 60 ? "#D68A1A" : "#C93C37"} height={8} railColor="#eef2f9" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {fullClause.questionsDetail.map(q => (
-              <div key={q.id} style={{ paddingBottom: 12, borderBottom: "1px solid #E5EAF2" }}>
-                <p style={{ fontSize: 13, color: "#142033", margin: "0 0 8px", lineHeight: 1.45 }}>{q.text}</p>
+              <div key={q.id} style={{ paddingBottom: 12, borderBottom: "1px solid var(--nf-line)" }}>
+                <p style={{ fontSize: 13, color: "var(--nf-ink)", margin: "0 0 8px", lineHeight: 1.45 }}>{q.text}</p>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {(["YES", "NO", "NA"] as const).map(a => (
                     <button
@@ -298,9 +334,9 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                       style={{
                         padding: "6px 12px",
                         borderRadius: 6,
-                        border: `1px solid ${q.answer === a ? "#123C66" : "#E5EAF2"}`,
-                        background: q.answer === a ? "#123C66" : "#fff",
-                        color: q.answer === a ? "#fff" : "#142033",
+                        border: `1px solid ${q.answer === a ? "#123C66" : "var(--nf-line)"}`,
+                        background: q.answer === a ? "#123C66" : "#f3f6fa",
+                        color: q.answer === a ? "#fff" : "var(--nf-ink)",
                         fontSize: 12,
                         fontWeight: 600,
                         cursor: canEdit ? "pointer" : "not-allowed",
@@ -314,13 +350,13 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               </div>
             ))}
           </div>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#142033", marginBottom: 6 }}>Comentarios / evidencia</label>
+          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 6 }}>Comentarios / evidencia</label>
           <textarea
             value={commentDraft}
             onChange={e => setCommentDraft(e.target.value)}
             disabled={!canEdit}
             rows={3}
-            style={{ width: "100%", borderRadius: 8, border: "1px solid #E5EAF2", padding: 10, fontSize: 13, resize: "vertical" }}
+            style={{ width: "100%", borderRadius: 8, border: "1px solid var(--nf-line)", padding: 10, fontSize: 13, resize: "vertical" }}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
             <button
@@ -329,7 +365,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 setClauseModal(null);
                 setCommentDraft("");
               }}
-              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid #E5EAF2", background: "#fff", cursor: "pointer" }}
+              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(18, 60, 102, 0.12)", background: "#f3f6fa", cursor: "pointer" }}
             >
               Cerrar
             </button>

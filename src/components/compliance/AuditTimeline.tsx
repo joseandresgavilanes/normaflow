@@ -1,75 +1,189 @@
 "use client";
+
+import { format, isToday, isYesterday } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  CheckCircle2,
+  Eye,
+  FileOutput,
+  Link2,
+  PenLine,
+  Pencil,
+  ScrollText,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 import type { AuditEventRow } from "@/lib/domain/audit-event";
-import { formatDate } from "@/lib/utils";
+import { auditEntityTypeLabel } from "@/lib/audit-entity-labels";
+import { cn, formatDate, timeAgo } from "@/lib/utils";
+
+function formatAction(action: string) {
+  return action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function dayHeading(ts: string) {
+  const d = new Date(ts);
+  if (isToday(d)) return "Hoy";
+  if (isYesterday(d)) return "Ayer";
+  return format(d, "EEEE, d MMM yyyy", { locale: es });
+}
+
+function actionFlair(action: string): { Icon: LucideIcon; nodeClass: string } {
+  const a = action.toUpperCase();
+  if (a.includes("VIEW") || a.includes("OPEN")) {
+    return { Icon: Eye, nodeClass: "nf-audit-slot-node--view" };
+  }
+  if (a.includes("APPROVED") || a.includes("CLOSED") || a.includes("COMPLETED") || a.includes("EFFECTIVENESS")) {
+    return { Icon: CheckCircle2, nodeClass: "nf-audit-slot-node--done" };
+  }
+  if (a.includes("EXPORT")) {
+    return { Icon: FileOutput, nodeClass: "nf-audit-slot-node--export" };
+  }
+  if (a.includes("INTEGRATION") || a.includes("CONNECTED") || a.includes("INGEST")) {
+    return { Icon: Link2, nodeClass: "nf-audit-slot-node--integration" };
+  }
+  if (a.includes("UPDATE") || a.includes("CREATED") || a.includes("STATUS") || a.includes("ASSIGNED")) {
+    return { Icon: Pencil, nodeClass: "nf-audit-slot-node--write" };
+  }
+  return { Icon: ShieldCheck, nodeClass: "nf-audit-slot-node--default" };
+}
+
+function buildDayGroups(events: AuditEventRow[]) {
+  const sorted = [...events].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+  const groups: { key: string; heading: string; events: AuditEventRow[] }[] = [];
+  for (const ev of sorted) {
+    const key = format(new Date(ev.ts), "yyyy-MM-dd", { locale: es });
+    const last = groups[groups.length - 1];
+    if (last?.key === key) last.events.push(ev);
+    else groups.push({ key, heading: dayHeading(ev.ts), events: [ev] });
+  }
+  return groups;
+}
 
 export default function AuditTimeline({
   events,
   max = 50,
   emptyText = "Sin eventos registrados.",
+  groupByDay = false,
+  showRelativeTime = false,
 }: {
   events: AuditEventRow[];
   max?: number;
   emptyText?: string;
+  /** Agrupa por día con cabeceras y carril vertical (ideal para Actividad global). */
+  groupByDay?: boolean;
+  /** Muestra “hace X min” junto a la hora absoluta. */
+  showRelativeTime?: boolean;
 }) {
   const list = events.slice(0, max);
+
   if (list.length === 0) {
-    return <p style={{ fontSize: 13, color: "#5E6B7A", margin: 0 }}>{emptyText}</p>;
+    return (
+      <div className="nf-audit-empty">
+        <div className="nf-audit-empty-icon nf-audit-empty-icon--glow" aria-hidden>
+          <ScrollText size={22} strokeWidth={2.25} />
+        </div>
+        <p className="nf-app-help nf-audit-empty-text">{emptyText}</p>
+      </div>
+    );
   }
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-      {list.map((ev, i) => (
-        <div
-          key={ev.id}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "14px 1fr",
-            gap: 12,
-            paddingBottom: i < list.length - 1 ? 16 : 0,
-            borderLeft: i < list.length - 1 ? "2px solid #E5EAF2" : "none",
-            marginLeft: 6,
-            paddingLeft: 14,
-          }}
-        >
-          <div
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 99,
-              background: ev.attestation ? "#2E8B57" : "#123C66",
-              marginTop: 4,
-              marginLeft: -21,
-              flexShrink: 0,
-            }}
-          />
-          <div>
-            <div style={{ fontSize: 12, color: "#5E6B7A", marginBottom: 4 }}>
-              {formatDate(ev.ts, "dd/MM/yyyy HH:mm")} · <strong style={{ color: "#142033" }}>{ev.actorName}</strong>
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#142033", marginBottom: 4 }}>{ev.action.replace(/_/g, " ")}</div>
-            <div style={{ fontSize: 12, color: "#5E6B7A", lineHeight: 1.5 }}>
-              {ev.entityType} {ev.entityLabel ? `· ${ev.entityLabel}` : ev.entityId ? `· ${ev.entityId}` : ""}
-              {ev.field && (
-                <>
-                  <br />
-                  Campo: {ev.field}
-                  {ev.oldValue != null && ` · de «${ev.oldValue}»`}
-                  {ev.newValue != null && ` a «${ev.newValue}»`}
-                </>
-              )}
-              {ev.reason && (
-                <>
-                  <br />
-                  <span style={{ fontStyle: "italic" }}>Motivo: {ev.reason}</span>
-                </>
-              )}
-              {ev.attestation && (
-                <div style={{ marginTop: 6, padding: 8, background: "#e8f5ee", borderRadius: 8, fontSize: 11, color: "#1a5c38" }}>
-                  <strong>Firma electrónica simulada</strong> · {ev.attestation.statement} · {formatDate(ev.attestation.confirmedAt)}
-                </div>
-              )}
+
+  function renderCard(ev: AuditEventRow) {
+    const { Icon, nodeClass } = actionFlair(ev.action);
+    const cardInner = (
+      <>
+        <div className="nf-audit-meta-row">
+          <span className="nf-audit-action-ico" aria-hidden>
+            <Icon size={15} strokeWidth={2.4} />
+          </span>
+          <time dateTime={ev.ts} className="nf-audit-pill nf-audit-pill--date">
+            {formatDate(ev.ts, "dd/MM/yyyy HH:mm")}
+            {showRelativeTime ? (
+              <span className="nf-audit-pill-relative"> · {timeAgo(ev.ts)}</span>
+            ) : null}
+          </time>
+          <span className="nf-audit-pill nf-audit-pill--type">{auditEntityTypeLabel(ev.entityType)}</span>
+          <span className="nf-audit-actor-name">{ev.actorName}</span>
+          <span className="nf-audit-actor-email">{ev.actorEmail}</span>
+        </div>
+
+        <h4 className="nf-audit-action-title">{formatAction(ev.action)}</h4>
+
+        <div className="nf-app-help nf-audit-body">
+          {ev.entityLabel ? (
+            <>
+              <strong style={{ color: "var(--nf-ink)" }}>{ev.entityLabel}</strong>
+              <span style={{ color: "var(--nf-ink-3)" }}> · {ev.entityId}</span>
+            </>
+          ) : ev.entityId ? (
+            <span style={{ color: "var(--nf-ink)" }}>{ev.entityId}</span>
+          ) : null}
+          {ev.field && (
+            <>
+              <br />
+              <span style={{ color: "var(--nf-ink-3)", fontWeight: 600 }}>Campo:</span> {ev.field}
+              {ev.oldValue != null && <span> · de «{ev.oldValue}»</span>}
+              {ev.newValue != null && <span> a «{ev.newValue}»</span>}
+            </>
+          )}
+          {ev.reason && (
+            <>
+              <br />
+              <span style={{ fontStyle: "italic", color: "var(--nf-ink-3)" }}>Motivo: {ev.reason}</span>
+            </>
+          )}
+        </div>
+
+        {ev.attestation && (
+          <div className="nf-audit-sign">
+            <span className="nf-audit-sign-icon" aria-hidden>
+              <PenLine size={18} strokeWidth={2.25} />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div className="nf-audit-sign-title">Firma electrónica simulada</div>
+              <div className="nf-audit-sign-text">{ev.attestation.statement}</div>
+              <div className="nf-audit-sign-meta">Confirmado {formatDate(ev.attestation.confirmedAt, "dd/MM/yyyy HH:mm")}</div>
             </div>
           </div>
+        )}
+      </>
+    );
+
+    if (!groupByDay) {
+      return (
+        <article key={ev.id} className={cn("nf-audit-card", ev.attestation && "nf-audit-card--attested")}>
+          {cardInner}
+        </article>
+      );
+    }
+
+    return (
+      <div key={ev.id} className="nf-audit-slot">
+        <div className="nf-audit-slot-gutter" aria-hidden>
+          <span className={cn("nf-audit-slot-node", nodeClass, ev.attestation && "nf-audit-slot-node--signed")} />
         </div>
+        <article className={cn("nf-audit-card nf-audit-card--in-rail", ev.attestation && "nf-audit-card--attested")}>{cardInner}</article>
+      </div>
+    );
+  }
+
+  if (!groupByDay) {
+    return <div className="nf-audit-stack">{list.map((ev) => renderCard(ev))}</div>;
+  }
+
+  const groups = buildDayGroups(list);
+
+  return (
+    <div className="nf-audit-timeline">
+      {groups.map((g) => (
+        <section key={g.key} className="nf-audit-day-group">
+          <header className="nf-audit-day-head">
+            <span className="nf-audit-day-head-marker" aria-hidden />
+            <h4 className="nf-audit-day-title">{g.heading}</h4>
+            <span className="nf-audit-day-count">{g.events.length}</span>
+          </header>
+          <div className="nf-audit-day-rail">{g.events.map((ev) => renderCard(ev))}</div>
+        </section>
       ))}
     </div>
   );

@@ -1,11 +1,26 @@
-interface SectionTitleProps { title: string; sub?: string; action?: string; onAction?: () => void; }
-export default function SectionTitle({ title, sub, action, onAction }: SectionTitleProps) {
+import type { ReactNode } from "react";
+
+interface SectionTitleProps {
+  title: string;
+  sub?: string;
+  action?: ReactNode;
+  onAction?: () => void;
+  /** Por defecto `nf-app-btn-ghost`; usa `nf-app-btn-primary` para CTAs destacadas. */
+  actionButtonClass?: string;
+}
+export default function SectionTitle({
+  title,
+  sub,
+  action,
+  onAction,
+  actionButtonClass,
+}: SectionTitleProps) {
   const dead = Boolean(action) && !onAction;
   return (
     <div className="nf-section-title">
       <div>
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: "#142033", margin: 0 }}>{title}</h2>
-        {sub && <p style={{ fontSize: 14, color: "#5E6B7A", margin: "4px 0 0" }}>{sub}</p>}
+        <h2 className="nf-app-page-title">{title}</h2>
+        {sub && <p className="nf-app-page-sub">{sub}</p>}
       </div>
       {action && (
         <button
@@ -13,17 +28,7 @@ export default function SectionTitle({ title, sub, action, onAction }: SectionTi
           onClick={onAction}
           disabled={dead}
           title={dead ? "Acción no disponible en este contexto" : undefined}
-          style={{
-            fontSize: 13,
-            color: dead ? "#9aa5b1" : "#123C66",
-            background: "transparent",
-            border: "1px solid #E5EAF2",
-            borderRadius: 8,
-            padding: "6px 14px",
-            cursor: dead ? "not-allowed" : "pointer",
-            fontWeight: 500,
-            whiteSpace: "nowrap",
-          }}
+          className={actionButtonClass ?? "nf-app-btn-ghost"}
         >
           {action}
         </button>

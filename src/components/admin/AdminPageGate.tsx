@@ -30,10 +30,10 @@ function NoPermissionNotice() {
         <span style={{ fontSize: 12, fontWeight: 600, color: "#C93C37", textTransform: "uppercase", letterSpacing: "0.1em" }}>
           Acceso restringido
         </span>
-        <h2 style={{ margin: 0, fontSize: 18, color: "#142033" }}>
+        <h2 style={{ margin: 0, fontSize: 18, color: "var(--nf-ink)" }}>
           No tienes permisos para ver esta sección
         </h2>
-        <p style={{ margin: 0, fontSize: 14, color: "#5E6B7A", lineHeight: 1.6 }}>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--nf-ink-3)", lineHeight: 1.6 }}>
           Pídele al administrador de tu organización que te asigne un rol con acceso al módulo
           correspondiente.
         </p>

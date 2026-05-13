@@ -72,9 +72,9 @@ export default function CatalogManager({
       label: "Nombre",
       render: (_, r) => (
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontWeight: 600, color: "#142033" }}>{r.name}</span>
+          <span style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{r.name}</span>
           {r.description && (
-            <span style={{ fontSize: 12, color: "#5E6B7A" }}>{r.description}</span>
+            <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.description}</span>
           )}
         </div>
       ),
@@ -96,7 +96,7 @@ export default function CatalogManager({
     {
       key: "createdAt",
       label: "Creado",
-      render: (_, r) => <span style={{ fontSize: 12, color: "#5E6B7A" }}>{formatDate(r.createdAt)}</span>,
+      render: (_, r) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{formatDate(r.createdAt)}</span>,
     }
   );
   if (canEdit) {
@@ -112,7 +112,7 @@ export default function CatalogManager({
               setEditing(r);
               setFormError("");
             }}
-            style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #E5EAF2", background: "#fff", color: "#142033", cursor: "pointer" }}
+            style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--nf-line)", background: "var(--nf-app-surface-1)", color: "var(--nf-ink)", cursor: "pointer" }}
           >
             Editar
           </button>
@@ -123,7 +123,7 @@ export default function CatalogManager({
                 e.stopPropagation();
                 setConfirmDelete(r);
               }}
-              style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #fde0e0", background: "#fff", color: "#C93C37", cursor: "pointer" }}
+              style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #fde0e0", background: "var(--nf-app-surface-1)", color: "#C93C37", cursor: "pointer" }}
             >
               Desactivar
             </button>
@@ -182,16 +182,16 @@ export default function CatalogManager({
               minWidth: 200,
               padding: "8px 12px",
               fontSize: 13,
-              border: "1px solid #E5EAF2",
+              border: "1px solid var(--nf-line)",
               borderRadius: 8,
               outline: "none",
             }}
           />
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#5E6B7A" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--nf-ink-3)" }}>
             <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
             Ver inactivos
           </label>
-          <span style={{ fontSize: 12, color: "#5E6B7A" }}>{filtered.length} de {rows.length}</span>
+          <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {rows.length}</span>
         </div>
 
         <DataTable columns={columns} rows={filtered} emptyText={emptyText ?? "Sin registros"} />
@@ -211,7 +211,7 @@ export default function CatalogManager({
         <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {fields.map((f) => (
             <div key={f.key}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5E6B7A", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                 {f.label}{f.required ? " *" : ""}
               </label>
               {f.type === "textarea" ? (
@@ -240,7 +240,7 @@ export default function CatalogManager({
                   style={inputStyle}
                 />
               )}
-              {f.helper && <div style={{ fontSize: 11, color: "#9aa5b1", marginTop: 4 }}>{f.helper}</div>}
+              {f.helper && <div style={{ fontSize: 11, color: "var(--nf-ink-4)", marginTop: 4 }}>{f.helper}</div>}
             </div>
           ))}
           {formError && (
@@ -275,7 +275,7 @@ export default function CatalogManager({
         title="Desactivar registro"
         width={440}
       >
-        <p style={{ margin: "0 0 16px", color: "#142033" }}>
+        <p style={{ margin: "0 0 16px", color: "var(--nf-ink)" }}>
           ¿Seguro que quieres desactivar <strong>{confirmDelete?.name}</strong>?
           Los registros relacionados se conservan; el catálogo dejará de aparecer en nuevos formularios.
         </p>
@@ -316,7 +316,7 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "10px 12px",
   fontSize: 14,
-  border: "1px solid #E5EAF2",
+  border: "1px solid var(--nf-line)",
   borderRadius: 8,
   outline: "none",
   fontFamily: "inherit",
@@ -338,9 +338,9 @@ const ghostButtonStyle: React.CSSProperties = {
   padding: "9px 16px",
   fontSize: 13,
   fontWeight: 500,
-  color: "#5E6B7A",
-  background: "#fff",
-  border: "1px solid #E5EAF2",
+  color: "var(--nf-ink-3)",
+  background: "var(--nf-app-surface-1)",
+  border: "1px solid var(--nf-line)",
   borderRadius: 8,
   cursor: "pointer",
 };
