@@ -53,7 +53,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXTAUTH_SECRET=genera-un-secreto-largo-para-firmar-sesiones-demo
 ```
 
-**Sin Supabase (solo local / e2e):** define `AUTH_DEMO_MODE=true` y `NEXT_PUBLIC_AUTH_DEMO_MODE=true` además de `NEXTAUTH_SECRET`. El login demo (`demo@normaflow.io` / `NormaFlow2025!`) usará una cookie firmada; la firma completa se valida en el servidor al cargar `/app/*`.
+**Sin Supabase (solo local / e2e):** define `AUTH_DEMO_MODE=true` y `NEXT_PUBLIC_AUTH_DEMO_MODE=true` además de `NEXTAUTH_SECRET`. Hay dos logins locales con cookie firmada: la demo (`demo@normaflow.io` / `NormaFlow2025!`) mantiene datos de ejemplo, y la cuenta cliente nuevo (`cliente@normaflow.io` / `NormaFlow2025!`) entra como `ORG_ADMIN` con workspace limpio. Puedes cambiar roles con `DEMO_ROLE` o `CUSTOMER_ROLE` (`COMPLIANCE_MANAGER`, `AUDITOR`, `CONTRIBUTOR`, `VIEWER`) y los datos de la organización cliente con `CUSTOMER_ORG_NAME` / `CUSTOMER_PLAN`.
 
 ### 3. Base de datos
 
@@ -246,7 +246,7 @@ npx playwright install chromium
 npm run test
 ```
 
-El `playwright.config` arranca `npm run dev` con `AUTH_DEMO_MODE` y `NEXT_PUBLIC_AUTH_DEMO_MODE` para el login demo sin Supabase.
+El `playwright.config` arranca `npm run dev` con `AUTH_DEMO_MODE` y `NEXT_PUBLIC_AUTH_DEMO_MODE` para los logins locales sin Supabase.
 
 ## 📞 Soporte
 

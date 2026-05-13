@@ -18,7 +18,7 @@ const SEV_COLORS: Record<string, string> = { CRITICAL: "#C93C37", MAJOR: "#D68A1
 export default function NonconformitiesModule() {
   const { state, dispatch, nextNcCode, nextActionCode, showToast } = useWorkspace();
   const perm = useDemoPermission();
-  const { nonconformities } = state;
+  const { nonconformities, audits } = state;
   const [detail, setDetail] = useState<NcRow | null>(null);
   const [closeNcAttest, setCloseNcAttest] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -30,6 +30,8 @@ export default function NonconformitiesModule() {
     severity: "MAJOR" as NcRow["severity"],
     owner: "",
     due: new Date().toISOString().slice(0, 10),
+    auditId: "",
+    clause: "",
     rootCause: "",
     correction: "",
     correctiveAction: "",
@@ -67,12 +69,15 @@ export default function NonconformitiesModule() {
   ];
 
   function openCreate() {
+    const defaultAuditId = audits.find(a => a.type === "INTERNAL")?.id ?? audits[0]?.id ?? "";
     setForm({
       title: "",
       source: "INTERNAL_AUDIT",
       severity: "MAJOR",
       owner: state.session.name,
       due: new Date().toISOString().slice(0, 10),
+      auditId: defaultAuditId,
+      clause: "",
       rootCause: "",
       correction: "",
       correctiveAction: "",
@@ -86,6 +91,7 @@ export default function NonconformitiesModule() {
       return;
     }
     const code = nextNcCode();
+    const linkedAudit = form.source === "INTERNAL_AUDIT" ? audits.find(a => a.id === form.auditId) : undefined;
     const nc: NcRow = {
       id: `nc-${Date.now()}`,
       code,
@@ -95,13 +101,16 @@ export default function NonconformitiesModule() {
       status: "OPEN",
       owner: form.owner.trim() || state.session.name,
       due: form.due,
+      auditId: linkedAudit?.id,
+      auditTitle: linkedAudit?.title,
+      clause: form.clause.trim() || undefined,
       rootCause: form.rootCause.trim() || "Pendiente de análisis",
       correction: form.correction.trim() || "Pendiente de corrección inmediata",
       correctiveAction: form.correctiveAction.trim() || "Pendiente de definir",
     };
     dispatch({ type: "addNc", nc });
     setCreateOpen(false);
-    showToast(`NC ${code} registrada (sesión demo)`);
+    showToast(`NC ${code} registrada (sesión local)`);
   }
 
   function openActionModal() {
@@ -131,10 +140,11 @@ export default function NonconformitiesModule() {
     };
     dispatch({ type: "addAction", action });
     setActionOpen(false);
-    showToast(`Acción ${code} creada y vinculada a ${detail.code} (demo)`);
+    showToast(`Acción ${code} creada y vinculada a ${detail.code} (sesión local)`);
   }
 
   const detailLive = useMemo(() => (detail ? nonconformities.find(n => n.id === detail.id) ?? detail : null), [detail, nonconformities]);
+  const detailAudit = useMemo(() => (detailLive?.auditId ? audits.find(a => a.id === detailLive.auditId) ?? null : null), [detailLive?.auditId, audits]);
 
   return (
     <div>
@@ -259,6 +269,20 @@ export default function NonconformitiesModule() {
                 <span style={{ color: "var(--nf-ink)", fontWeight: 500 }}>{v}</span>
               </div>
             ))}
+            {(detailAudit || detailLive.clause) && (
+              <div style={{ marginTop: 12, padding: "10px 12px", background: "#fff8f0", border: "1px solid #f5e0c8", borderRadius: 8, fontSize: 12, color: "var(--nf-ink)" }}>
+                {detailAudit && (
+                  <div>
+                    <strong>Auditoría vinculada:</strong> {detailAudit.title}
+                  </div>
+                )}
+                {detailLive.clause && (
+                  <div style={{ marginTop: detailAudit ? 4 : 0 }}>
+                    <strong>Cláusula:</strong> {detailLive.clause}
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--nf-app-surface-2)", borderRadius: 8, marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
@@ -287,7 +311,7 @@ export default function NonconformitiesModule() {
               )}
               <button
                 type="button"
-                onClick={() => showToast("Análisis 5 Porqués (demo): documenta cada nivel en el registro de la NC.")}
+                onClick={() => showToast("Análisis 5 Porqués: documenta cada nivel en el registro de la NC.")}
                 style={{
                   flex: 1,
                   display: "flex",
@@ -330,7 +354,15 @@ export default function NonconformitiesModule() {
               <select
                 className="nf-app-input"
                 value={form.source}
-                onChange={e => setForm({ ...form, source: e.target.value as NcRow["source"] })}
+                onChange={e => {
+                  const source = e.target.value as NcRow["source"];
+                  setForm({
+                    ...form,
+                    source,
+                    auditId: source === "INTERNAL_AUDIT" ? form.auditId || audits.find(a => a.type === "INTERNAL")?.id || audits[0]?.id || "" : "",
+                    clause: source === "INTERNAL_AUDIT" ? form.clause : "",
+                  });
+                }}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
                 <option value="INTERNAL_AUDIT">Auditoría interna</option>
@@ -352,6 +384,35 @@ export default function NonconformitiesModule() {
               </select>
             </label>
           </div>
+          {form.source === "INTERNAL_AUDIT" && (
+            <div className="nf-grid-2" style={{ gap: 12 }}>
+              <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+                Auditoría relacionada
+                <select
+                  className="nf-app-input"
+                  value={form.auditId}
+                  onChange={e => setForm({ ...form, auditId: e.target.value })}
+                  style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+                >
+                  {audits.map(audit => (
+                    <option key={audit.id} value={audit.id}>
+                      {audit.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+                Cláusula
+                <input
+                  className="nf-app-input"
+                  value={form.clause}
+                  onChange={e => setForm({ ...form, clause: e.target.value })}
+                  placeholder="Ej. 8.5"
+                  style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
+                />
+              </label>
+            </div>
+          )}
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Responsable

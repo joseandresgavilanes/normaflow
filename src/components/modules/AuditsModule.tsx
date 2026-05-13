@@ -8,17 +8,18 @@ import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import AttestationModal from "@/components/compliance/AttestationModal";
-import { useWorkspace, type AuditRow, type ChecklistItem } from "@/context/WorkspaceStore";
+import { useWorkspace, type AuditRow, type ChecklistItem, type NcRow } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 
 export default function AuditsModule() {
-  const { state, dispatch, showToast } = useWorkspace();
+  const { state, dispatch, nextNcCode, showToast } = useWorkspace();
   const perm = useDemoPermission();
-  const { audits, auditChecklists, auditProgram, auditFindings } = state;
+  const { audits, auditChecklists, auditProgram, nonconformities, actions } = state;
   const [detail, setDetail] = useState<AuditRow | null>(null);
   const [checklistAudit, setChecklistAudit] = useState<AuditRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [findingAudit, setFindingAudit] = useState<AuditRow | null>(null);
   const [closeAuditAttest, setCloseAuditAttest] = useState<AuditRow | null>(null);
   const [form, setForm] = useState({
     title: "",
@@ -29,6 +30,22 @@ export default function AuditsModule() {
     scope: "",
     objectives: "",
   });
+  const [findingForm, setFindingForm] = useState({
+    title: "",
+    severity: "MAJOR" as NcRow["severity"],
+    owner: "",
+    due: new Date().toISOString().slice(0, 10),
+    clause: "",
+    rootCause: "",
+    correction: "",
+    correctiveAction: "",
+  });
+
+  function dateInDays(days: number) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
 
   function openCreate() {
     setForm({
@@ -65,11 +82,54 @@ export default function AuditsModule() {
     };
     dispatch({ type: "addAudit", audit });
     setCreateOpen(false);
-    showToast("Auditoría creada (sesión demo)");
+    showToast("Auditoría creada (sesión local)");
   }
 
   function openChecklist(a: AuditRow) {
     setChecklistAudit(a);
+  }
+
+  function openFinding(a: AuditRow) {
+    setFindingForm({
+      title: "",
+      severity: "MAJOR",
+      owner: state.session.name,
+      due: dateInDays(30),
+      clause: "",
+      rootCause: "",
+      correction: "",
+      correctiveAction: "",
+    });
+    setFindingAudit(a);
+    setDetail(null);
+  }
+
+  function submitFinding() {
+    if (!findingAudit) return;
+    if (!findingForm.title.trim()) {
+      showToast("Describe el hallazgo / no conformidad");
+      return;
+    }
+    const code = nextNcCode();
+    const nc: NcRow = {
+      id: `nc-${Date.now()}`,
+      code,
+      title: findingForm.title.trim(),
+      source: "INTERNAL_AUDIT",
+      severity: findingForm.severity,
+      status: "OPEN",
+      owner: findingForm.owner.trim() || state.session.name,
+      due: findingForm.due,
+      auditId: findingAudit.id,
+      auditTitle: findingAudit.title,
+      clause: findingForm.clause.trim() || undefined,
+      rootCause: findingForm.rootCause.trim() || "Pendiente de análisis",
+      correction: findingForm.correction.trim() || "Pendiente de corrección inmediata",
+      correctiveAction: findingForm.correctiveAction.trim() || "Pendiente de definir",
+    };
+    dispatch({ type: "addNc", nc });
+    setFindingAudit(null);
+    showToast(`Hallazgo ${code} registrado como NC vinculada a la auditoría`);
   }
 
   function startAudit(a: AuditRow) {
@@ -78,7 +138,7 @@ export default function AuditsModule() {
       id: a.id,
       patch: { status: "IN_PROGRESS", progress: Math.max(a.progress, 5) },
     });
-    showToast("Auditoría iniciada (demo)");
+    showToast("Auditoría iniciada (sesión local)");
     setDetail(prev => (prev?.id === a.id ? { ...prev, status: "IN_PROGRESS", progress: Math.max(prev.progress, 5) } : prev));
     setChecklistAudit(prev => (prev?.id === a.id ? { ...prev, status: "IN_PROGRESS", progress: Math.max(prev.progress, 5) } : prev));
   }
@@ -91,6 +151,12 @@ export default function AuditsModule() {
   const checklistItems = checklistAudit ? auditChecklists[checklistAudit.id] ?? [] : [];
 
   const detailLive = useMemo(() => (detail ? audits.find(a => a.id === detail.id) ?? detail : null), [detail, audits]);
+  const detailFindings = useMemo(
+    () => (detailLive ? nonconformities.filter(n => n.auditId === detailLive.id) : []),
+    [detailLive, nonconformities]
+  );
+  const detailFindingCodes = useMemo(() => new Set(detailFindings.map(n => n.code)), [detailFindings]);
+  const detailActions = useMemo(() => actions.filter(a => detailFindingCodes.has(a.source)), [actions, detailFindingCodes]);
 
   return (
     <div>
@@ -312,8 +378,8 @@ export default function AuditsModule() {
                 ["Norma", detailLive.standard],
                 ["Fecha", detailLive.date],
                 ["Auditor", detailLive.auditor],
-                ["Hallazgos", detailLive.findings],
-                ["Críticos", detailLive.criticals],
+                ["Hallazgos / NC", detailFindings.length],
+                ["Críticos", detailFindings.filter(n => n.severity === "CRITICAL").length],
                 ["Progreso", `${detailLive.progress}%`],
               ].map(([k, v]) => (
                 <div key={String(k)} style={{ background: "var(--nf-app-surface-2)", borderRadius: 8, padding: 12 }}>
@@ -334,21 +400,51 @@ export default function AuditsModule() {
                 <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{detailLive.objectives}</div>
               </div>
             )}
-            {auditFindings.filter(f => f.auditId === detailLive.id).length > 0 && (
-              <div style={{ marginBottom: 16, padding: 12, background: "#fff8f0", borderRadius: 8, border: "1px solid #f5e0c8" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 8 }}>Hallazgos registrados</div>
-                {auditFindings
-                  .filter(f => f.auditId === detailLive.id)
-                  .map(f => (
-                    <div key={f.id} style={{ fontSize: 12, marginBottom: 6, color: "var(--nf-ink)" }}>
-                      <Badge status={f.severity === "CRITICAL" ? "CRITICAL" : f.severity === "MAJOR" ? "MAJOR" : "MINOR"} /> {f.title}
+            <div style={{ marginBottom: 16, padding: 12, background: "#fff8f0", borderRadius: 8, border: "1px solid #f5e0c8" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>Hallazgos / NC vinculadas</div>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 2 }}>
+                    {detailActions.length} acciones derivadas en el plan global
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openFinding(detailLive)}
+                  style={{ background: "#123C66", color: "#fff", border: "none", borderRadius: 9, padding: "8px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                >
+                  Registrar hallazgo
+                </button>
+              </div>
+              {detailFindings.length === 0 ? (
+                <div style={{ fontSize: 12, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
+                  Todavía no hay NC vinculadas a esta auditoría.
+                </div>
+              ) : (
+                detailFindings.map(nc => {
+                  const actionCount = actions.filter(a => a.source === nc.code).length;
+                  return (
+                    <div key={nc.id} style={{ fontSize: 12, marginBottom: 8, color: "var(--nf-ink)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+                      <Badge status={nc.severity === "CRITICAL" ? "CRITICAL" : nc.severity === "MAJOR" ? "MAJOR" : "MINOR"} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700 }}>{nc.code} · {nc.title}</div>
+                        <div style={{ color: "var(--nf-ink-3)", marginTop: 2 }}>
+                          {nc.clause ? `Cláusula ${nc.clause} · ` : ""}{actionCount} acciones vinculadas
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                <Link href="/app/actions" style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>
-                  Derivar acciones →
+                  );
+                })
+              )}
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+                <Link href="/app/nonconformities" style={{ fontSize: 12, color: "#123C66", fontWeight: 700, textDecoration: "none" }}>
+                  Gestionar en No conformidades →
+                </Link>
+                <Link href="/app/actions" style={{ fontSize: 12, color: "#2E8B57", fontWeight: 700, textDecoration: "none" }}>
+                  Ver plan de acción →
                 </Link>
               </div>
-            )}
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {detailLive.status === "PLANNED" && (
@@ -390,7 +486,7 @@ export default function AuditsModule() {
               </div>
               <button
                 type="button"
-                onClick={() => showToast("Resumen de hallazgos (demo): revisa NC vinculadas y el plan de acción.")}
+                onClick={() => showToast("Resumen de hallazgos: revisa NC vinculadas y acciones derivadas.")}
                 style={{
                   width: "100%",
                   display: "flex",
@@ -418,7 +514,7 @@ export default function AuditsModule() {
       <Modal open={!!checklistAudit} onClose={() => setChecklistAudit(null)} title={checklistAudit ? `Checklist — ${checklistAudit.title}` : ""} width={640}>
         {checklistAudit && (
           <div>
-            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 0 }}>Marca ítems completados. Los cambios se guardan en la sesión actual (demo).</p>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 0 }}>Marca ítems completados. Los cambios se guardan en la sesión actual.</p>
             <div style={{ maxHeight: 400, overflow: "auto", border: "1px solid var(--nf-line)", borderRadius: 12 }}>
               {checklistItems.length === 0 ? (
                 <div style={{ padding: 24, textAlign: "center", color: "var(--nf-ink-3)" }}>Sin ítems de checklist.</div>
@@ -450,6 +546,95 @@ export default function AuditsModule() {
             </button>
           </div>
         )}
+      </Modal>
+
+      <Modal open={!!findingAudit} onClose={() => setFindingAudit(null)} title={findingAudit ? `Registrar hallazgo — ${findingAudit.title}` : "Registrar hallazgo"} width={560}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+            Descripción del hallazgo / NC
+            <textarea
+              className="nf-app-input"
+              value={findingForm.title}
+              onChange={e => setFindingForm({ ...findingForm, title: e.target.value })}
+              rows={3}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
+          </label>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+              Severidad
+              <select
+                className="nf-app-input"
+                value={findingForm.severity}
+                onChange={e => setFindingForm({ ...findingForm, severity: e.target.value as NcRow["severity"] })}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+              >
+                <option value="MINOR">Menor</option>
+                <option value="MAJOR">Mayor</option>
+                <option value="CRITICAL">Crítica</option>
+              </select>
+            </label>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+              Cláusula
+              <input
+                className="nf-app-input"
+                value={findingForm.clause}
+                onChange={e => setFindingForm({ ...findingForm, clause: e.target.value })}
+                placeholder="Ej. 8.5"
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
+              />
+            </label>
+          </div>
+          <div className="nf-grid-2" style={{ gap: 12 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+              Responsable
+              <input
+                className="nf-app-input"
+                value={findingForm.owner}
+                onChange={e => setFindingForm({ ...findingForm, owner: e.target.value })}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
+              />
+            </label>
+            <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+              Fecha límite
+              <input
+                className="nf-app-input"
+                type="date"
+                value={findingForm.due}
+                onChange={e => setFindingForm({ ...findingForm, due: e.target.value })}
+                style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
+              />
+            </label>
+          </div>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+            Causa raíz (borrador)
+            <textarea
+              className="nf-app-input"
+              value={findingForm.rootCause}
+              onChange={e => setFindingForm({ ...findingForm, rootCause: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
+          </label>
+          <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+            Acción correctiva propuesta
+            <textarea
+              className="nf-app-input"
+              value={findingForm.correctiveAction}
+              onChange={e => setFindingForm({ ...findingForm, correctiveAction: e.target.value })}
+              rows={2}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
+            />
+          </label>
+          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
+            <button type="button" onClick={submitFinding} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+              Registrar como NC
+            </button>
+            <button type="button" onClick={() => setFindingAudit(null)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
+              Cancelar
+            </button>
+          </div>
+        </div>
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva auditoría" width={520}>

@@ -24,7 +24,14 @@ function serializeContext(
       user: { id: ctx.user.id, name: ctx.user.name, email: ctx.user.email },
     };
   }
-  return { mode: "demo" as const, email: ctx.email };
+  return {
+    mode: "demo" as const,
+    workspaceKind: ctx.workspaceKind,
+    user: ctx.user,
+    organization: ctx.organization,
+    role: ctx.role,
+    memberships: ctx.memberships,
+  };
 }
 
 export default async function AppLayout({

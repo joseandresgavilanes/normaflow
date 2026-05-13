@@ -30,7 +30,18 @@ type SerializedCtx =
         role: string;
       }[];
     }
-  | { mode: "demo"; email: string }
+  | {
+      mode: "demo";
+      workspaceKind: "demo" | "blank";
+      user: { id: string; name: string; email: string };
+      organization: { id: string; name: string; plan: string };
+      role: string;
+      memberships: {
+        organizationId: string;
+        organizationName: string;
+        role: string;
+      }[];
+    }
   | {
       mode: "needs_organization";
       user: { id: string; name: string; email: string };
@@ -101,18 +112,13 @@ export default function AppRoot({
     return <>{children}</>;
   }
 
-  const orgName =
-    initial.mode === "live"
-      ? initial.organization.name
-      : "Tecnoserv Industrial S.A.";
-  const userName = initial.mode === "live" ? initial.user.name : "Ana García";
-  const roleKey = normalizeRoleKey(
-    initial.mode === "live" ? initial.role : "COMPLIANCE_MANAGER",
-  );
+  const orgName = initial.organization.name;
+  const userName = initial.user.name;
+  const roleKey = normalizeRoleKey(initial.role);
   const roleLabel = ROLES[roleKey];
-  const memberships = initial.mode === "live" ? initial.memberships : [];
-  const activeOrgId =
-    initial.mode === "live" ? initial.organization.id : "org_tecnoserv";
+  const memberships = initial.memberships;
+  const activeOrgId = initial.organization.id;
+  const workspaceKind = initial.mode === "demo" ? initial.workspaceKind : "blank";
 
   const aiContext = pathname.includes("/gap")
     ? "gap"
@@ -129,18 +135,20 @@ export default function AppRoot({
   const profile = useMemo(
     () => ({
       name: userName,
-      email: initial.mode === "live" ? initial.user.email : "demo@normaflow.io",
+      email: initial.user.email,
       orgName,
       roleLabel,
       roleKey,
       activeOrgId,
+      workspaceKind,
+      plan: initial.organization.plan,
     }),
-    [userName, initial.mode, initial, orgName, roleLabel, roleKey, activeOrgId],
+    [userName, initial.user.email, orgName, roleLabel, roleKey, activeOrgId, workspaceKind, initial.organization.plan],
   );
 
   return (
-    <WorkspaceProvider key={profile.email + activeOrgId} profile={profile}>
-      <AdminMockProvider>
+    <WorkspaceProvider key={`${profile.email}:${activeOrgId}:${workspaceKind}`} profile={profile}>
+      <AdminMockProvider seedMode={workspaceKind} profile={profile}>
         <div className="nf-app-shell">
           {isCompactNav && navOpen && (
             <button
@@ -159,7 +167,7 @@ export default function AppRoot({
             userName={userName}
             roleLabel={roleLabel}
             memberships={memberships}
-            demoSession={initial.mode === "demo"}
+            demoSession={initial.mode === "demo" && workspaceKind === "demo"}
             currentOrgId={
               initial.mode === "live" ? initial.organization.id : undefined
             }

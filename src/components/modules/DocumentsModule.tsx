@@ -54,7 +54,7 @@ async function downloadArchivedFile(fileUrl: string, fileName: string) {
 function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }) {
   const u = url ?? doc.previewUrl ?? "";
   if (!u) {
-    return <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>No hay archivo asociado en esta sesión demo. Sube un archivo al crear el documento para previsualizarlo.</p>;
+    return <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>No hay archivo asociado en esta sesión. Sube un archivo al crear el documento para previsualizarlo.</p>;
   }
   if (u.startsWith("data:image/") || /\.(png|jpe?g|gif|webp|svg)($|\?)/i.test(u)) {
     return <img src={u} alt={doc.title} style={{ maxWidth: "100%", borderRadius: 8, border: "1px solid var(--nf-line)" }} />;
@@ -168,7 +168,7 @@ export default function DocumentsModule() {
       owner: state.session.name,
       updated: new Date().toISOString().slice(0, 10),
       size: sizeLabel,
-      tags: ["nuevo", "demo"],
+      tags: ["nuevo"],
       previewUrl,
       folder: "SGC",
       siteId: `${state.session.activeOrgId}-s1`,
@@ -185,7 +185,7 @@ export default function DocumentsModule() {
     setShowNew(false);
     setNewFile(null);
     setNewForm({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE" });
-    showToast("Documento creado en el espacio de trabajo (demo)");
+    showToast("Documento creado en el espacio de trabajo");
   }
 
   function addVersion() {
@@ -217,7 +217,7 @@ export default function DocumentsModule() {
     setDetail(prev => (prev?.id === docId ? { ...prev, version: v, updated: entry.date } : prev));
     setVersionNote("");
     setNextVersion("");
-    showToast("Nueva versión registrada (demo)");
+    showToast("Nueva versión registrada");
   }
 
   const versions = historyDoc ? documentVersions[historyDoc.id] ?? [] : [];
@@ -439,7 +439,7 @@ export default function DocumentsModule() {
               </div>
             </div>
             <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental (demo)</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {detailLive.status === "DRAFT" && (
                   <button
@@ -556,7 +556,7 @@ export default function DocumentsModule() {
               </button>
               <button
                 type="button"
-                onClick={() => showToast("Borrador IA (demo): usa el asistente en la barra lateral.")}
+                onClick={() => showToast("Borrador IA: usa el asistente en la barra lateral.")}
                 style={{
                   flex: 1,
                   minWidth: 120,
@@ -723,7 +723,7 @@ export default function DocumentsModule() {
               )}
             </div>
             <div style={{ background: "var(--nf-app-surface-2)", padding: 14, borderRadius: 8 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 8 }}>Registrar versión (demo)</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 8 }}>Registrar versión</div>
               <input
                 placeholder="Número de versión (ej. 3.3)"
                 value={nextVersion}
@@ -810,7 +810,7 @@ export default function DocumentsModule() {
             file={newFile}
             onFileChange={setNewFile}
             label="Archivo opcional"
-            hint="Adjunta PDF, imágenes u Office para vista previa en el navegador. Los datos no se envían a ningún servidor en esta demo."
+            hint="Adjunta PDF, imágenes u Office para vista previa en el navegador. Los datos no se envían a ningún servidor en esta sesión local."
           />
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
             <button type="button" onClick={submitNewDoc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>

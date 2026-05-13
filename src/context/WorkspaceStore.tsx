@@ -36,12 +36,10 @@ import {
   enrichEvidenceEnterprise,
 } from "@/lib/demo/enterprise-seed";
 import {
-  type AuditFindingRow,
   type GapClauseState,
   type NotificationItem,
   type SiteRow,
   activityForOrg,
-  buildAuditFindings,
   buildGapState,
   buildNotifications,
   buildSites,
@@ -62,7 +60,21 @@ export type IndicatorRow = ReturnType<typeof indicatorsForOrg>[number] & {
   alertThresholdPct?: number;
 };
 export type AuditRow = (typeof DEMO_AUDITS)[number];
-export type NcRow = (typeof DEMO_NONCONFORMITIES)[number] & {
+export type NcRow = {
+  id: string;
+  code: string;
+  title: string;
+  source: string;
+  severity: string;
+  status: string;
+  owner: string;
+  due: string;
+  rootCause: string;
+  correction: string;
+  correctiveAction: string;
+  auditId?: string;
+  auditTitle?: string;
+  clause?: string;
   preventiveAction?: string;
   effectivenessCheck?: string;
 };
@@ -134,6 +146,8 @@ export type SessionProfile = {
   roleLabel: string;
   roleKey: string;
   activeOrgId: string;
+  workspaceKind?: "demo" | "blank";
+  plan?: string;
 };
 
 export type WorkspaceState = {
@@ -141,7 +155,6 @@ export type WorkspaceState = {
   indicators: IndicatorRow[];
   audits: AuditRow[];
   auditChecklists: Record<string, ChecklistItem[]>;
-  auditFindings: AuditFindingRow[];
   nonconformities: NcRow[];
   actions: ActionRow[];
   documents: DocumentRow[];
@@ -217,12 +230,88 @@ function defaultChecklistForAudit(auditId: string, standard: string): ChecklistI
   }));
 }
 
+function syncAuditFindingCounts(audits: AuditRow[], nonconformities: NcRow[]): AuditRow[] {
+  return audits.map(audit => {
+    const linked = nonconformities.filter(n => n.auditId === audit.id);
+    return {
+      ...audit,
+      findings: linked.length,
+      criticals: linked.filter(n => n.severity === "CRITICAL").length,
+    };
+  });
+}
+
 function resolveSeedOrgId(activeOrgId: string): string {
   if (DEMO_ORGANIZATIONS.some(o => o.id === activeOrgId)) return activeOrgId;
   return "org_tecnoserv";
 }
 
+function normalizePlan(plan: string | undefined): PlanKey {
+  const key = plan?.trim().toUpperCase();
+  if (key === "STARTER") return "STARTER";
+  if (key === "ENTERPRISE") return "ENTERPRISE";
+  return "GROWTH";
+}
+
+function createBlankWorkspaceState(session: SessionProfile): WorkspaceState {
+  const now = new Date();
+  const nextBilling = new Date(now);
+  nextBilling.setMonth(nextBilling.getMonth() + 1);
+  const plan = normalizePlan(session.plan);
+  const sessionResolved: SessionProfile = { ...session, workspaceKind: "blank" };
+  const integrations = buildIntegrations().map(i => ({
+    ...i,
+    status: "NOT_CONNECTED" as const,
+    lastSyncAt: undefined,
+    detailNote: undefined,
+  }));
+
+  return {
+    risks: [],
+    indicators: [],
+    audits: [],
+    auditChecklists: {},
+    nonconformities: [],
+    actions: [],
+    documents: [],
+    documentVersions: {},
+    evidence: [],
+    processes: [],
+    billing: {
+      plan,
+      nextBilling: nextBilling.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" }),
+      invoices: [],
+      trialActive: false,
+    },
+    session: sessionResolved,
+    toast: null,
+    notifications: [],
+    gapIso9001: buildGapState("iso9001", { preset: false }),
+    gapIso27001: buildGapState("iso27001", { preset: false }),
+    sites: [],
+    activityFeed: [],
+    demoOrganizations: DEMO_ORGANIZATIONS,
+    auditEvents: [],
+    trainingCourses: [],
+    trainingAssignments: [],
+    changeRequests: [],
+    suppliers: [],
+    integrations,
+    onboardingChecklist: buildOnboardingChecklist(),
+    auditProgram: {
+      programYear: now.getFullYear(),
+      programOwner: session.name,
+      nextManagementReview: "Sin programar",
+      objectives: "Define el programa anual de auditorías cuando completes el alcance y los procesos.",
+    },
+    demoPeople: [],
+    teams: [],
+  };
+}
+
 export function createWorkspaceState(session: SessionProfile): WorkspaceState {
+  if (session.workspaceKind === "blank") return createBlankWorkspaceState(session);
+
   const orgId = resolveSeedOrgId(session.activeOrgId);
   const org = getDemoOrg(orgId) ?? DEMO_ORGANIZATIONS[0];
   const demoTenant = DEMO_ORGANIZATIONS.some(o => o.id === session.activeOrgId);
@@ -295,7 +384,13 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     orgId
   );
 
-  const audits = deepClone(DEMO_AUDITS);
+  const ncs: NcRow[] = deepClone(DEMO_NONCONFORMITIES).map((n, i) => ({
+    ...n,
+    preventiveAction: i === 0 ? "Revisión trimestral automatizada del calendario documental" : undefined,
+    effectivenessCheck: n.status === "CLOSED" ? "Verificado en seguimiento Q1 — eficaz" : undefined,
+  }));
+
+  const audits = syncAuditFindingCounts(deepClone(DEMO_AUDITS), ncs);
   const checklists: Record<string, ChecklistItem[]> = {};
   audits.forEach(a => {
     checklists[a.id] = defaultChecklistForAudit(a.id, a.standard);
@@ -309,12 +404,6 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     { id: "inv-5", period: "Feb 2026", amount: "€299", paid: true },
     { id: "inv-6", period: "Jan 2026", amount: "€299", paid: true },
   ];
-
-  const ncs: NcRow[] = deepClone(DEMO_NONCONFORMITIES).map((n, i) => ({
-    ...n,
-    preventiveAction: i === 0 ? "Revisión trimestral automatizada del calendario documental" : undefined,
-    effectivenessCheck: n.status === "CLOSED" ? "Verificado en seguimiento Q1 — eficaz" : undefined,
-  }));
 
   const demoPeople = buildDemoPeople(orgId, org);
   const teams = buildTeams(orgId, org);
@@ -351,7 +440,6 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     indicators: indicatorsEnriched,
     audits,
     auditChecklists: checklists,
-    auditFindings: buildAuditFindings(),
     nonconformities: ncs,
     actions: deepClone(DEMO_ACTIONS),
     documents: docs,
@@ -411,7 +499,6 @@ type Action =
   | { type: "markAllNotificationsRead" }
   | { type: "updateGapQuestion"; standard: "iso9001" | "iso27001"; clause: string; questionId: string; answer: "YES" | "NO" | "NA" }
   | { type: "updateGapComment"; standard: "iso9001" | "iso27001"; clause: string; comment: string }
-  | { type: "addAuditFinding"; finding: AuditFindingRow }
   | { type: "appendAudit"; event: AuditEventRow }
   | { type: "addTrainingAssignment"; row: TrainingAssignmentRow }
   | { type: "updateTrainingAssignment"; id: string; patch: Partial<TrainingAssignmentRow> }
@@ -475,12 +562,19 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
         },
       };
     case "addNc":
-      return { ...state, nonconformities: [a.nc, ...state.nonconformities] };
+      {
+        const nonconformities = [a.nc, ...state.nonconformities];
+        return { ...state, nonconformities, audits: syncAuditFindingCounts(state.audits, nonconformities) };
+      }
     case "updateNc":
-      return {
-        ...state,
-        nonconformities: state.nonconformities.map(n => (n.id === a.id ? { ...n, ...a.patch } : n)),
-      };
+      {
+        const nonconformities = state.nonconformities.map(n => (n.id === a.id ? { ...n, ...a.patch } : n));
+        return {
+          ...state,
+          nonconformities,
+          audits: syncAuditFindingCounts(state.audits, nonconformities),
+        };
+      }
     case "addAction":
       return { ...state, actions: [a.action, ...state.actions] };
     case "updateAction":
@@ -552,8 +646,6 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
       return a.standard === "iso9001"
         ? { ...state, gapIso9001: patchGapComment(state.gapIso9001, a) }
         : { ...state, gapIso27001: patchGapComment(state.gapIso27001, a) };
-    case "addAuditFinding":
-      return { ...state, auditFindings: [a.finding, ...state.auditFindings] };
     case "appendAudit":
       return { ...state, auditEvents: [a.event, ...state.auditEvents] };
     case "addTrainingAssignment":

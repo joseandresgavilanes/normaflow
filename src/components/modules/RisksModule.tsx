@@ -161,7 +161,7 @@ export default function RisksModule() {
     };
     dispatch({ type: "addRisk", risk });
     setCreateOpen(false);
-    showToast(`Riesgo ${code} creado (sesión demo)`);
+    showToast(`Riesgo ${code} creado (sesión local)`);
   }
 
   function submitEdit() {
@@ -190,7 +190,7 @@ export default function RisksModule() {
     const updated = { ...detail, ...form, probability: p, impact: i, score: p * i };
     setDetail(updated);
     setEditOpen(false);
-    showToast("Riesgo actualizado (sesión demo)");
+    showToast("Riesgo actualizado (sesión local)");
   }
 
   return (
@@ -378,7 +378,7 @@ export default function RisksModule() {
                 fontWeight: 500,
               }}
             >
-              <strong style={{ color: "var(--nf-ink)" }}>Riesgo residual (estimación demo):</strong> inherente {detail.score} pts · tras controles documentados se asume reducción operativa ~{" "}
+              <strong style={{ color: "var(--nf-ink)" }}>Riesgo residual (estimación):</strong> inherente {detail.score} pts · tras controles documentados se asume reducción operativa ~{" "}
               {Math.max(1, Math.round(detail.score * 0.55))} pts (validar en tratamiento real y evidencias).
             </div>
 

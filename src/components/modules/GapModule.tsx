@@ -97,14 +97,14 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   }
 
   function aiSuggest() {
-    showToast("Borrador IA (demo): priorizar cláusulas con score bajo 70% y vincular acciones correctivas en el Plan de Acción.");
+    showToast("Borrador IA: priorizar cláusulas con score bajo 70% y vincular acciones correctivas en el Plan de Acción.");
   }
 
   return (
     <div>
       <SectionTitle
         title="GAP Assessment"
-        sub={readOnlyLive ? "Datos desde tu organización (solo lectura)" : "Evaluación de brechas — respuestas editables en sesión demo"}
+        sub={readOnlyLive ? "Datos desde tu organización (solo lectura)" : "Evaluación de brechas — respuestas editables en el workspace"}
         action={
           <>
             <FileDown size={15} strokeWidth={2} aria-hidden />

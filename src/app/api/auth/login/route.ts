@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
 import { signDemoSession, demoCookieName } from "@/lib/demo-auth";
 import { isAuthDemoMode, isSupabaseConfigured, sessionSecret } from "@/lib/env";
 
@@ -17,6 +18,56 @@ async function syncAuthUser(authUser: { id: string; email?: string | null; user_
   });
 }
 
+type LocalAuthAccount = {
+  kind: "demo" | "customer";
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+};
+
+function localAuthAccounts(): LocalAuthAccount[] {
+  return [
+    {
+      kind: "demo",
+      id: "demo-local",
+      email: process.env.DEMO_EMAIL || DEMO_CREDENTIALS.email,
+      password: process.env.DEMO_PASSWORD || DEMO_CREDENTIALS.password,
+      name: process.env.DEMO_NAME || "Ana García",
+    },
+    {
+      kind: "customer",
+      id: "customer-local",
+      email: process.env.CUSTOMER_EMAIL || CUSTOMER_CREDENTIALS.email,
+      password: process.env.CUSTOMER_PASSWORD || CUSTOMER_CREDENTIALS.password,
+      name: process.env.CUSTOMER_NAME || "Admin Cliente",
+    },
+  ];
+}
+
+function matchLocalAuthAccount(email: string, password: string): LocalAuthAccount | null {
+  return localAuthAccounts().find(account => account.email === email && account.password === password) ?? null;
+}
+
+function shouldUseSecureCookie(request: NextRequest): boolean {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const protocol = forwardedProto || request.nextUrl.protocol.replace(":", "");
+  return process.env.NODE_ENV === "production" && protocol === "https";
+}
+
+async function signLocalResponse(account: LocalAuthAccount, request: NextRequest) {
+  const token = signDemoSession(account.email, sessionSecret());
+  const response = NextResponse.json({ ok: true, demo: account.kind === "demo", local: true, account: account.kind });
+  response.cookies.set(demoCookieName, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 7 * 24 * 3600,
+    secure: shouldUseSecureCookie(request),
+  });
+  return response;
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
   const email = typeof body.email === "string" ? body.email.trim() : "";
@@ -25,6 +76,9 @@ export async function POST(request: NextRequest) {
   if (!email || !password) {
     return NextResponse.json({ error: "Email y contraseña son obligatorios" }, { status: 400 });
   }
+
+  const localAccount = isAuthDemoMode() ? matchLocalAuthAccount(email, password) : null;
+  if (localAccount) return signLocalResponse(localAccount, request);
 
   if (isSupabaseConfigured()) {
     let response = NextResponse.json({ ok: true });
@@ -47,27 +101,6 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {
-      if (isAuthDemoMode()) {
-        const demoEmail = process.env.DEMO_EMAIL || "demo@normaflow.io";
-        const demoPass = process.env.DEMO_PASSWORD || "NormaFlow2025!";
-        if (email === demoEmail && password === demoPass) {
-          try {
-            await syncAuthUser({ id: "demo-local", email, user_metadata: { full_name: "Demo" } });
-          } catch {
-            /* prisma optional in strict demo */
-          }
-          const token = signDemoSession(email, sessionSecret());
-          response = NextResponse.json({ ok: true, demo: true });
-          response.cookies.set(demoCookieName, token, {
-            httpOnly: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 7 * 24 * 3600,
-            secure: process.env.NODE_ENV === "production",
-          });
-          return response;
-        }
-      }
       return NextResponse.json({ error: error?.message || "Credenciales incorrectas" }, { status: 401 });
     }
 
@@ -85,26 +118,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (isAuthDemoMode()) {
-    const demoEmail = process.env.DEMO_EMAIL || "demo@normaflow.io";
-    const demoPass = process.env.DEMO_PASSWORD || "NormaFlow2025!";
-    if (email !== demoEmail || password !== demoPass) {
-      return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
-    }
-    try {
-      await syncAuthUser({ id: "demo-local", email, user_metadata: { full_name: "Usuario demo" } });
-    } catch {
-      /* allow UI without DB in edge cases */
-    }
-    const token = signDemoSession(email, sessionSecret());
-    const res = NextResponse.json({ ok: true, demo: true });
-    res.cookies.set(demoCookieName, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 7 * 24 * 3600,
-      secure: process.env.NODE_ENV === "production",
-    });
-    return res;
+    return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }
 
   return NextResponse.json(

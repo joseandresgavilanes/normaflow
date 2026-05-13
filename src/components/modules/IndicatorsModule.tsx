@@ -139,7 +139,7 @@ export default function IndicatorsModule() {
     };
     dispatch({ type: "addIndicator", ind });
     setCreateOpen(false);
-    showToast("KPI creado (sesión demo)");
+    showToast("KPI creado (sesión local)");
   }
 
   function openDetail(ind: IndicatorRow) {
@@ -165,7 +165,7 @@ export default function IndicatorsModule() {
       patch: { value: v, status, trend, history: nextHistory, managementComment: commentDraft.trim() },
     });
     setDetail(null);
-    showToast("KPI y notas de dirección guardados (sesión demo)");
+    showToast("KPI y notas de dirección guardados (sesión local)");
   }
 
   return (
@@ -623,7 +623,7 @@ export default function IndicatorsModule() {
                   ))}
                 </ul>
               ) : (
-                <span style={{ fontSize: 13, color: "var(--nf-ink-4)" }}>Ningún proceso del mapa demo referencia este KPI por nombre.</span>
+                <span style={{ fontSize: 13, color: "var(--nf-ink-4)" }}>Ningún proceso del mapa actual referencia este KPI por nombre.</span>
               )}
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

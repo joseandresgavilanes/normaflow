@@ -173,6 +173,16 @@ type AdminMockState = {
   auditTrail: AuditTrailEntry[];
 };
 
+type AdminSeedMode = "demo" | "blank";
+
+type AdminMockProfile = {
+  name: string;
+  email: string;
+  orgName: string;
+  roleKey: string;
+  plan?: string;
+};
+
 // ─── Seed ────────────────────────────────────────────────────────────
 
 const NOW = new Date().toISOString();
@@ -180,6 +190,78 @@ const past = (days: number) => new Date(Date.now() - days * 86400000).toISOStrin
 
 function id(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function normalizeAdminRole(role: string | undefined): OrgMemberMockRow["role"] {
+  const key = role?.trim().toUpperCase().replace(/\s+/g, "_");
+  if (
+    key === "SUPER_ADMIN" ||
+    key === "ORG_ADMIN" ||
+    key === "COMPLIANCE_MANAGER" ||
+    key === "AUDITOR" ||
+    key === "CONTRIBUTOR" ||
+    key === "VIEWER"
+  ) {
+    return key;
+  }
+  return "ORG_ADMIN";
+}
+
+function normalizeAdminPlan(plan: string | undefined): OrgSettingsMock["plan"] {
+  const key = plan?.trim().toUpperCase();
+  if (key === "STARTER" || key === "ENTERPRISE") return key;
+  return "GROWTH";
+}
+
+function blankState(profile?: AdminMockProfile): AdminMockState {
+  const adminUserId = "u-self";
+  const memberName = profile?.name || "Admin Cliente";
+  const memberEmail = profile?.email || "cliente@normaflow.io";
+  return {
+    organization: {
+      name: profile?.orgName || "Mi Organización",
+      industry: null,
+      country: "ES",
+      logoUrl: null,
+      plan: normalizeAdminPlan(profile?.plan),
+    },
+    members: [
+      {
+        membershipId: "m-self",
+        userId: adminUserId,
+        name: memberName,
+        email: memberEmail,
+        role: normalizeAdminRole(profile?.roleKey),
+        createdAt: NOW,
+        isSelf: true,
+      },
+    ],
+    groups: [],
+    positions: [],
+    personnel: [],
+    locations: [],
+    retentionTimes: [],
+    dispositions: [],
+    archiveMethods: [],
+    recordTypes: [],
+    records: [],
+    recordEntries: [],
+    acpms: [],
+    acpmHistory: [],
+    auditTrail: [
+      {
+        id: "at-local-login",
+        at: NOW,
+        action: "login",
+        module: "auth",
+        recordId: adminUserId,
+        recordLabel: memberName,
+        actorId: adminUserId,
+        actorName: memberName,
+        summary: "Inicio de sesión correcto",
+      },
+    ],
+  };
 }
 
 function initialState(): AdminMockState {
@@ -875,8 +957,20 @@ type AdminMockContextValue = {
 
 const Ctx = createContext<AdminMockContextValue | null>(null);
 
-export function AdminMockProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, initialState);
+export function AdminMockProvider({
+  children,
+  seedMode = "demo",
+  profile,
+}: {
+  children: React.ReactNode;
+  seedMode?: AdminSeedMode;
+  profile?: AdminMockProfile;
+}) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    { seedMode, profile },
+    ({ seedMode: mode, profile: p }) => (mode === "blank" ? blankState(p) : initialState())
+  );
 
   const emit = useCallback(
     (partial: Omit<AuditTrailEntry, "id" | "at" | "actorId" | "actorName">) => {

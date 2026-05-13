@@ -30,7 +30,7 @@ export default function SignupPage() {
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setError("Supabase no está configurado. Usa AUTH_DEMO_MODE y el login demo, o añade las variables NEXT_PUBLIC_SUPABASE_*.");
+      setError("Supabase no está configurado. Usa AUTH_DEMO_MODE y los logins locales, o añade las variables NEXT_PUBLIC_SUPABASE_*.");
       setLoading(false);
       return;
     }

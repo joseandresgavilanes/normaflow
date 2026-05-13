@@ -163,7 +163,7 @@ export default function MembersClient() {
             </select>
           </Field>
           <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)" }}>
-            En esta versión demo la invitación es inmediata. El envío de email se conectará al integrar Resend.
+            En esta versión local la invitación es inmediata. El envío de email se conectará al integrar Resend.
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button type="button" onClick={() => setInviting(false)} disabled={isPending} style={ghostBtn}>Cancelar</button>

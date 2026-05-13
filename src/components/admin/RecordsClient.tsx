@@ -535,7 +535,7 @@ function RecordFormModal({
         <p style={{ margin: "0 0 20px", fontSize: 13, color: "var(--nf-ink-3)", fontWeight: 500, lineHeight: 1.55 }}>
           {mode === "create"
             ? "Alta en el catálogo maestro. Los campos marcados con * son obligatorios."
-            : `Modificando ${editing?.code ?? "—"}. Los cambios quedan reflejados en esta sesión demo.`}
+            : `Modificando ${editing?.code ?? "—"}. Los cambios quedan reflejados en esta sesión local.`}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -686,7 +686,7 @@ function RecordFormModal({
 // ─── Detail modal (entries) ─────────────────────────────────────────
 
 function openRecordEntryDemoFile(entry: RecordEntryMockRow) {
-  const text = `NormaFlow (demo)\nReferencia: ${entry.reference}\nArchivo: ${entry.fileName ?? "—"}\n\nEn producción aquí se abriría el documento del repositorio seguro.`;
+  const text = `NormaFlow\nReferencia: ${entry.reference}\nArchivo: ${entry.fileName ?? "—"}\n\nEn producción aquí se abriría el documento del repositorio seguro.`;
   window.open(`data:text/plain;charset=utf-8,${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
 }
 
@@ -898,7 +898,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                   file={entryFile}
                   onFileChange={setEntryFile}
                   label="Archivo adjunto (opcional)"
-                  hint="El archivo se guarda solo en esta sesión del navegador (demo), no se sube a ningún servidor."
+                  hint="El archivo se guarda solo en esta sesión del navegador, no se sube a ningún servidor."
                   compact
                   disabled={isPending}
                 />

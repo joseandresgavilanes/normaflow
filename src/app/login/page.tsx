@@ -2,7 +2,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { DEMO_CREDENTIALS } from "@/lib/constants";
+import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
 
@@ -60,10 +60,17 @@ function LoginForm() {
             </div>
 
             <div className="nf-auth-card">
-              <div style={{ padding: 12, borderRadius: 10, background: "oklch(0.78 0.13 195 / 0.08)", border: "1px solid oklch(0.78 0.13 195 / 0.3)", marginBottom: 20, fontSize: 12, color: "var(--nf-ink-2)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nf-accent-2)", marginBottom: 4 }}>● Acceso demo</div>
-                <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.email}</code> · <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.password}</code>
-                <div style={{ marginTop: 6, fontSize: 11, color: "var(--nf-ink-3)" }}>En desarrollo local, define <code>AUTH_DEMO_MODE=true</code> si aún no usas Supabase.</div>
+              <div style={{ display: "grid", gap: 10, marginBottom: 20 }}>
+                <div style={{ padding: 12, borderRadius: 10, background: "oklch(0.78 0.13 195 / 0.08)", border: "1px solid oklch(0.78 0.13 195 / 0.3)", fontSize: 12, color: "var(--nf-ink-2)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nf-accent-2)", marginBottom: 4 }}>● Acceso demo</div>
+                  <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.email}</code> · <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{DEMO_CREDENTIALS.password}</code>
+                  <div style={{ marginTop: 6, fontSize: 11, color: "var(--nf-ink-3)" }}>Incluye datos de ejemplo para enseñar el flujo completo.</div>
+                </div>
+                <div style={{ padding: 12, borderRadius: 10, background: "oklch(0.72 0.11 145 / 0.08)", border: "1px solid oklch(0.72 0.11 145 / 0.3)", fontSize: 12, color: "var(--nf-ink-2)" }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--nf-accent)", marginBottom: 4 }}>● Cuenta cliente nuevo</div>
+                  <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{CUSTOMER_CREDENTIALS.email}</code> · <code style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink)" }}>{CUSTOMER_CREDENTIALS.password}</code>
+                  <div style={{ marginTop: 6, fontSize: 11, color: "var(--nf-ink-3)" }}>Entra como admin con workspace limpio, sin depender de Supabase.</div>
+                </div>
               </div>
 
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -102,6 +109,14 @@ function LoginForm() {
                   style={{ justifyContent: "center" }}
                 >
                   Usar credenciales demo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmail(CUSTOMER_CREDENTIALS.email); setPassword(CUSTOMER_CREDENTIALS.password); }}
+                  className="nf-btn nf-btn--ghost"
+                  style={{ justifyContent: "center" }}
+                >
+                  Usar cuenta cliente nuevo
                 </button>
               </form>
             </div>

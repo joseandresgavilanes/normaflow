@@ -9,6 +9,10 @@ export default async function DashboardPage() {
   let live = null as Awaited<ReturnType<typeof getDashboardPayload>> | null;
   let orgName = "Tecnoserv Industrial S.A.";
 
+  if (ctx?.mode === "demo") {
+    orgName = ctx.organization.name;
+  }
+
   if (ctx?.mode === "live") {
     orgName = ctx.organization.name;
     try {

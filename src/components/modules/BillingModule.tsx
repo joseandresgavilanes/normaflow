@@ -70,7 +70,7 @@ export default function BillingModule() {
   function simulateEnterprise() {
     dispatch({ type: "setBillingPlan", plan: "ENTERPRISE" });
     setEnterpriseOpen(false);
-    showToast("Plan actualizado a Enterprise (simulación en sesión demo — sin Stripe)");
+    showToast("Plan actualizado a Enterprise (simulación local — sin Stripe)");
   }
 
   function copyStripeDemo() {
@@ -105,7 +105,7 @@ export default function BillingModule() {
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4 }}>
               {currentPlan.price}
               {currentPlan.period}
-              <span style={{ marginLeft: 8, opacity: 0.85 }}>· Plan actual (demo)</span>
+              <span style={{ marginLeft: 8, opacity: 0.85 }}>· Plan actual</span>
             </div>
           </div>
         </div>
@@ -190,7 +190,7 @@ export default function BillingModule() {
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <button
             type="button"
-            onClick={() => (isEnterprise ? showToast("Ya estás en Enterprise en esta sesión demo.") : setEnterpriseOpen(true))}
+            onClick={() => (isEnterprise ? showToast("Ya estás en Enterprise en esta sesión local.") : setEnterpriseOpen(true))}
             style={{
               flex: "1 1 180px",
               background: "#123C66",
@@ -358,7 +358,7 @@ export default function BillingModule() {
                     if (plan.key === "ENTERPRISE") setEnterpriseOpen(true);
                     else {
                       dispatch({ type: "setBillingPlan", plan: plan.key });
-                      showToast(`Plan cambiado a ${plan.name} (demo)`);
+                      showToast(`Plan cambiado a ${plan.name} (sesión local)`);
                     }
                   }}
                   disabled={isCurrent}
@@ -375,7 +375,7 @@ export default function BillingModule() {
                     cursor: isCurrent ? "default" : "pointer",
                   }}
                 >
-                  {isCurrent ? "Plan actual" : plan.key === "ENTERPRISE" ? "Contactar / simular Enterprise" : "Seleccionar plan (demo)"}
+                  {isCurrent ? "Plan actual" : plan.key === "ENTERPRISE" ? "Contactar / simular Enterprise" : "Seleccionar plan"}
                 </button>
               </div>
             </Card>
@@ -389,7 +389,7 @@ export default function BillingModule() {
         </p>
         <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
           <button type="button" onClick={simulateEnterprise} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            Confirmar upgrade demo
+            Confirmar upgrade
           </button>
           <button type="button" onClick={() => setEnterpriseOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
             Cancelar
@@ -406,10 +406,10 @@ export default function BillingModule() {
         </button>
       </Modal>
 
-      <Modal open={invoicesOpen} onClose={() => setInvoicesOpen(false)} title="Todas las facturas (demo)" width={640}>
+      <Modal open={invoicesOpen} onClose={() => setInvoicesOpen(false)} title="Todas las facturas" width={640}>
         <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 0 }}>Listado generado en el estado de la aplicación; no se obtiene de Stripe.</p>
         <Card style={{ padding: 0 }}>
-          <DataTable columns={invoiceColumns} rows={billing.invoices} emptyText="Sin facturas en el estado demo" />
+          <DataTable columns={invoiceColumns} rows={billing.invoices} emptyText="Sin facturas todavía" />
         </Card>
       </Modal>
     </div>

@@ -23,7 +23,6 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { DEMO_INDICATORS, DEMO_ACTIVITY, DEMO_ACTIONS, DEMO_RISKS } from "@/lib/demo-data";
 import type { DashboardPayload } from "@/lib/server-queries";
 import { useWorkspace } from "@/context/WorkspaceStore";
 
@@ -46,14 +45,10 @@ export default function DashboardModule({
   in60.setDate(in60.getDate() + 60);
   const horizon = in60.toISOString().slice(0, 10);
 
-  const overdueDemo = DEMO_ACTIONS.filter(
-    a => a.status !== "COMPLETED" && a.priority === "CRITICAL" && a.due < today
-  ).length;
   const overdueWs = state.actions.filter(
     a => a.status !== "COMPLETED" && a.priority === "CRITICAL" && a.due < today
   ).length;
 
-  const criticalDemo = DEMO_RISKS.filter(r => r.score >= 15).length;
   const criticalWs = state.risks.filter(r => r.score >= 15).length;
 
   const docsReviewWs = state.documents.filter(d => d.status === "IN_REVIEW" || d.status === "DRAFT").length;
@@ -68,10 +63,10 @@ export default function DashboardModule({
 
   const unreadWs = state.notifications.filter(n => !n.read).length;
 
-  const overdue = live ? live.overdueCritical : overdueWs || overdueDemo || 1;
-  const criticalRisks = live ? live.criticalRisks : criticalWs || criticalDemo;
+  const overdue = live ? live.overdueCritical : overdueWs;
+  const criticalRisks = live ? live.criticalRisks : criticalWs;
   const docsPending = live?.documentsInReview ?? docsReviewWs;
-  const auditsSoon = live?.auditsUpcoming ?? Math.max(auditsSoonWs, 1);
+  const auditsSoon = live?.auditsUpcoming ?? auditsSoonWs;
   const openNcs = live?.openNcs ?? openNcsWs;
 
   const globalPct = live?.globalPct ?? globalWs;
@@ -97,25 +92,15 @@ export default function DashboardModule({
             unit: d.unit,
             status: d.status,
           }))
-        : DEMO_INDICATORS.map(d => ({
-            id: d.id,
-            name: d.name,
-            value: d.value,
-            target: d.target,
-            unit: d.unit,
-            status: d.status,
-          }));
+        : [];
 
   const npsRow = indicators.find(i => i.name.toLowerCase().includes("nps")) ?? indicators[0];
-  const npsDisplay = npsRow ? `${Math.round(npsRow.value)}${npsRow.unit}` : "72 pts";
+  const npsDisplay = npsRow ? `${Math.round(npsRow.value)}${npsRow.unit}` : "Sin datos";
 
   const gapPct = globalPct;
   const pendingActions = live?.pendingActions ?? state.actions.filter(a => a.status !== "COMPLETED").length;
 
-  const activityRows =
-    state.activityFeed.length > 0
-      ? state.activityFeed
-      : DEMO_ACTIVITY.map(a => ({ ...a, user: a.user, action: a.action, object: a.object, time: a.time }));
+  const activityRows = state.activityFeed;
 
   const upcomingActions = [...state.actions]
     .filter(a => a.status !== "COMPLETED")
@@ -389,12 +374,16 @@ export default function DashboardModule({
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Resumen por sede</div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--nf-ink-3)", marginTop: 2 }}>Demo · enlaces a procesos</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--nf-ink-3)", marginTop: 2 }}>Sedes registradas</div>
               </div>
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {state.sites.map((s, i) => (
+            {state.sites.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, fontWeight: 500 }}>
+                Aún no hay sedes configuradas en este workspace.
+              </p>
+            ) : state.sites.map((s, i) => (
               <div
                 key={s.id}
                 style={{
@@ -499,7 +488,11 @@ export default function DashboardModule({
             </Link>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {indicators.map(ind => (
+            {indicators.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, fontWeight: 500 }}>
+                Aún no hay indicadores definidos.
+              </p>
+            ) : indicators.map(ind => (
               <div key={ind.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, gap: 8, flexWrap: "wrap" }}>
@@ -549,7 +542,11 @@ export default function DashboardModule({
             </Link>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {activityRows.slice(0, 8).map((a, i) => (
+            {activityRows.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, fontWeight: 500 }}>
+                La actividad aparecerá cuando el equipo empiece a registrar cambios.
+              </p>
+            ) : activityRows.slice(0, 8).map((a, i) => (
               <div key={i} style={{ display: "flex", gap: 11, alignItems: "flex-start" }}>
                 <Avatar name={a.user} size={28} />
                 <div style={{ flex: 1, minWidth: 0 }}>

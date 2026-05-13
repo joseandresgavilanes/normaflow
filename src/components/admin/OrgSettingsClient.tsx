@@ -1,10 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import Card from "@/components/ui/Card";
+import { useEffect, useState, useTransition } from "react";
+import { Building2, Globe, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useAdminMock } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+
+function isLikelyImageUrl(url: string) {
+  const u = url.trim().toLowerCase();
+  if (!u.startsWith("http://") && !u.startsWith("https://")) return false;
+  return /\.(png|jpe?g|gif|webp|svg)(\?|$)/i.test(u) || u.includes("/logo") || u.includes("avatar");
+}
 
 export default function OrgSettingsClient() {
   const admin = useAdminMock();
@@ -19,6 +25,11 @@ export default function OrgSettingsClient() {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [logoFailed, setLogoFailed] = useState(false);
+
+  useEffect(() => {
+    setLogoFailed(false);
+  }, [logoUrl]);
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +37,12 @@ export default function OrgSettingsClient() {
     startTransition(() => {
       try {
         if (!name.trim()) throw new Error("El nombre de la organización es obligatorio.");
-        admin.updateOrganization({ name: name.trim(), industry: industry.trim() || null, country: country.trim() || "ES", logoUrl: logoUrl.trim() || null });
+        admin.updateOrganization({
+          name: name.trim(),
+          industry: industry.trim() || null,
+          country: country.trim() || "ES",
+          logoUrl: logoUrl.trim() || null,
+        });
         setSavedAt(new Date().toLocaleTimeString());
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "Error.");
@@ -34,50 +50,135 @@ export default function OrgSettingsClient() {
     });
   }
 
+  const showLogoPreview = logoUrl.trim() && isLikelyImageUrl(logoUrl) && !logoFailed;
+
   return (
-    <div>
-      <SectionTitle title="Organización" sub="Datos generales y plan de tu organización." />
-      <Card>
-        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }}>
-          <Field label="Nombre">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={!canEdit}
-              required
-              style={inputStyle}
-            />
-          </Field>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 160px", gap: 12 }}>
-            <Field label="Sector / industria">
-              <input value={industry} onChange={(e) => setIndustry(e.target.value)} disabled={!canEdit} style={inputStyle} placeholder="p.ej. Manufactura, Servicios IT, Salud…" />
-            </Field>
-            <Field label="País (ISO)">
-              <input value={country} onChange={(e) => setCountry(e.target.value)} disabled={!canEdit} maxLength={3} style={{ ...inputStyle, fontFamily: "monospace", textTransform: "uppercase" }} />
-            </Field>
-          </div>
-          <Field label="Logo (URL)">
-            <input value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} disabled={!canEdit} style={inputStyle} placeholder="https://…" />
-          </Field>
-          <Field label="Plan">
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2E8B57" }} /> {org.plan}
-            </div>
-            <p style={{ fontSize: 12, color: "var(--nf-ink-4)", margin: "6px 0 0" }}>Cambia tu plan desde <a href="/app/billing" style={{ color: "#123C66" }}>Billing</a>.</p>
-          </Field>
+    <div className="nf-org-page">
+      <div className="nf-activity-hero" style={{ marginBottom: 4 }}>
+        <SectionTitle
+          title="Organización"
+          sub="Nombre, sector, país y marca. Los cambios se guardan en la sesión local del navegador."
+        />
+        <div className="nf-activity-hero-badges" aria-hidden>
+          <span className="nf-activity-hero-pill">
+            <Building2 size={14} strokeWidth={2.25} />
+            Perfil org.
+          </span>
+          <span className="nf-activity-hero-pill nf-activity-hero-pill--green">
+            <Sparkles size={14} strokeWidth={2.25} />
+            Workspace local
+          </span>
+        </div>
+      </div>
 
-          {error && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{error}</div>}
-          {savedAt && !error && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#e8f5ee", color: "#2E8B57", fontSize: 13 }}>Guardado a las {savedAt}</div>}
+      <div className="nf-org-panel">
+        <div className="nf-org-panel-head">
+          <h2 className="nf-org-panel-title">Datos generales</h2>
+          <p className="nf-org-panel-sub">Identidad mostrada en informes y pantallas internas. El plan activo se gestiona desde Billing.</p>
+        </div>
 
-          {canEdit && (
-            <div>
-              <button type="submit" disabled={isPending} style={primaryBtn}>
-                {isPending ? "Guardando…" : "Guardar cambios"}
-              </button>
+        <div className="nf-org-panel-body">
+          <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <Field label="Nombre de la organización">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={!canEdit}
+                required
+                className="nf-app-input"
+                style={{ width: "100%", boxSizing: "border-box" }}
+              />
+            </Field>
+
+            <div className="nf-org-grid-2">
+              <Field label="Sector / industria">
+                <input
+                  value={industry}
+                  onChange={(e) => setIndustry(e.target.value)}
+                  disabled={!canEdit}
+                  className="nf-app-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="p.ej. Manufactura, Servicios IT, Salud…"
+                />
+              </Field>
+              <Field label="País (ISO)">
+                <input
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  disabled={!canEdit}
+                  maxLength={3}
+                  className="nf-app-input"
+                  style={{ width: "100%", boxSizing: "border-box", fontFamily: "ui-monospace, monospace", textTransform: "uppercase" }}
+                />
+              </Field>
             </div>
-          )}
-        </form>
-      </Card>
+
+            <Field label="Logo (URL)">
+              <div className="nf-org-logo-row">
+                <input
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  disabled={!canEdit}
+                  className="nf-app-input"
+                  style={{ width: "100%", boxSizing: "border-box" }}
+                  placeholder="https://…"
+                />
+                <div className="nf-org-logo-preview" aria-hidden>
+                  {showLogoPreview ? (
+                    <img
+                      src={logoUrl.trim()}
+                      alt=""
+                      loading="lazy"
+                      onError={() => setLogoFailed(true)}
+                    />
+                  ) : null}
+                  {!showLogoPreview && (
+                    <span className="nf-org-logo-placeholder">
+                      <ImageIcon size={28} strokeWidth={1.75} />
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Field>
+
+            <Field label="Plan actual">
+              <div className="nf-org-plan-card">
+                <span className="nf-org-plan-dot" aria-hidden />
+                <div style={{ minWidth: 0 }}>
+                  <div className="nf-org-plan-name">{org.plan}</div>
+                  <p className="nf-org-hint" style={{ marginTop: 4 }}>
+                    Para cambiar de plan o facturación, abre{" "}
+                    <a href="/app/billing">Billing y suscripción</a>.
+                  </p>
+                </div>
+                <Globe size={22} strokeWidth={2} style={{ color: "#123c66", opacity: 0.35, marginLeft: "auto", flexShrink: 0 }} aria-hidden />
+              </div>
+            </Field>
+
+            {error ? <div className="nf-org-msg-error">{error}</div> : null}
+            {savedAt && !error ? <div className="nf-org-msg-ok">Guardado a las {savedAt}</div> : null}
+
+            {canEdit ? (
+              <div>
+                <button type="submit" disabled={isPending} className="nf-app-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {isPending ? (
+                    <>
+                      <Loader2 size={17} strokeWidth={2.5} className="nf-icon-spin" aria-hidden />
+                      Guardando…
+                    </>
+                  ) : (
+                    "Guardar cambios"
+                  )}
+                </button>
+              </div>
+            ) : (
+              <p className="nf-app-help" style={{ margin: 0, fontWeight: 600 }}>
+                Solo lectura: tu rol no incluye permisos de edición de organización.
+              </p>
+            )}
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
@@ -85,11 +186,8 @@ export default function OrgSettingsClient() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+      <label className="nf-org-field-label">{label}</label>
       {children}
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "10px 22px", fontSize: 14, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };

@@ -3,6 +3,11 @@ export const DEMO_CREDENTIALS = {
   password: "NormaFlow2025!",
 };
 
+export const CUSTOMER_CREDENTIALS = {
+  email: "cliente@normaflow.io",
+  password: "NormaFlow2025!",
+};
+
 export const ROLES = {
   SUPER_ADMIN: "Super Admin",
   ORG_ADMIN: "Admin de Organización",

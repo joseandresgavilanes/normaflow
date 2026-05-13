@@ -28,7 +28,7 @@ function EvidencePreview({ ev }: { ev: EvidenceItem }) {
       <p className="nf-app-help" style={{ marginTop: 0, fontWeight: 700, color: "var(--nf-ink)" }}>Vista previa no disponible en el navegador</p>
       <p className="nf-app-help">Tipo MIME: {mime || "desconocido"}</p>
       {ev.fileSize != null && <p className="nf-app-help">Tamaño: {(ev.fileSize / 1024).toFixed(1)} KB</p>}
-      <p className="nf-app-help">En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace local o de demostración.</p>
+      <p className="nf-app-help">En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace disponible en el workspace.</p>
       <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "#123C66", fontWeight: 600 }}>
         Abrir o descargar
       </a>
@@ -87,7 +87,7 @@ export default function EvidenceModule() {
           file={null}
           onFileChange={handleEvidencePick}
           label="Zona de carga"
-          hint="Los archivos se procesan en el navegador; no se suben a servidor en esta demo."
+          hint="Los archivos se procesan en el navegador; no se suben a servidor en esta sesión local."
           compact
           disabled={busy}
         />
@@ -112,7 +112,7 @@ export default function EvidenceModule() {
       <Card style={{ padding: 0 }}>
         {filtered.length === 0 ? (
           <div className="nf-data-table-wrap">
-            <div className="nf-data-table-empty">No hay evidencias. Sube un archivo o recarga para ver datos demo.</div>
+            <div className="nf-data-table-empty">No hay evidencias. Sube un archivo para empezar a registrar soporte.</div>
           </div>
         ) : (
           <div className="nf-data-table-wrap">

@@ -34,7 +34,7 @@ const FILTER_KEYS = [
 
 export default function ActionsModule() {
   const { state, dispatch, nextActionCode, showToast } = useWorkspace();
-  const { actions } = state;
+  const { actions, nonconformities, audits } = state;
   const [filter, setFilter] = useState("ALL");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = useMemo(() => (selectedId ? actions.find(a => a.id === selectedId) ?? null : null), [actions, selectedId]);
@@ -50,6 +50,8 @@ export default function ActionsModule() {
   });
 
   const filtered = filter === "ALL" ? actions : actions.filter(a => a.status === filter);
+  const selectedNc = useMemo(() => (selected ? nonconformities.find(n => n.code === selected.source) ?? null : null), [selected, nonconformities]);
+  const selectedAudit = useMemo(() => (selectedNc?.auditId ? audits.find(a => a.id === selectedNc.auditId) ?? null : null), [selectedNc?.auditId, audits]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -93,7 +95,7 @@ export default function ActionsModule() {
     };
     dispatch({ type: "addAction", action });
     setCreateOpen(false);
-    showToast(`Acción ${code} añadida al plan global (demo)`);
+    showToast(`Acción ${code} añadida al plan global (sesión local)`);
   }
 
   function openDetail(a: ActionRow) {
@@ -114,7 +116,7 @@ export default function ActionsModule() {
       patch: { progress, status },
     });
     closeDetail();
-    showToast("Acción actualizada (sesión demo)");
+    showToast("Acción actualizada (sesión local)");
   }
 
   function applyStatusChange(st: ActionRow["status"]) {
@@ -362,6 +364,42 @@ export default function ActionsModule() {
               >
                 Origen: <strong style={{ color: "var(--nf-ink)" }}>{selected.source}</strong>
               </span>
+              {selectedNc && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 99,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: "#fff8f0",
+                    color: "var(--nf-ink-2)",
+                    border: "1px solid #f5e0c8",
+                  }}
+                >
+                  NC: <strong style={{ color: "var(--nf-ink)" }}>{selectedNc.title}</strong>
+                </span>
+              )}
+              {selectedAudit && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 12px",
+                    borderRadius: 99,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: "rgba(46, 139, 87, 0.08)",
+                    color: "var(--nf-ink-2)",
+                    border: "1px solid rgba(46, 139, 87, 0.18)",
+                  }}
+                >
+                  Auditoría: <strong style={{ color: "var(--nf-ink)" }}>{selectedAudit.title}</strong>
+                </span>
+              )}
               <span
                 style={{
                   display: "inline-flex",

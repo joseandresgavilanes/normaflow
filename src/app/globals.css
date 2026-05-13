@@ -844,6 +844,199 @@
   color: var(--nf-ink-3, #314456);
 }
 
+/* Organización — datos generales (evita grises planos) */
+.nf-org-page {
+  position: relative;
+}
+
+.nf-org-page::before {
+  content: "";
+  position: absolute;
+  inset: -8px -12px auto -12px;
+  height: 150px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 90% 75% at 10% 0%, rgba(18, 60, 102, 0.1), transparent 52%),
+    radial-gradient(ellipse 55% 50% at 95% 5%, rgba(46, 139, 87, 0.07), transparent 48%);
+}
+
+.nf-org-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nf-org-panel {
+  min-width: 0;
+  max-width: 720px;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(18, 60, 102, 0.12);
+  box-shadow: 0 14px 40px -28px rgba(18, 60, 102, 0.32), 0 1px 0 rgba(18, 60, 102, 0.05);
+  background: #fff;
+}
+
+.nf-org-panel-head {
+  padding: 18px 24px 20px;
+  border-bottom: 1px solid rgba(18, 60, 102, 0.1);
+  background:
+    radial-gradient(ellipse 100% 160% at 0% 0%, rgba(18, 60, 102, 0.09), transparent 52%),
+    linear-gradient(180deg, #f7fafd 0%, #fff 88%);
+}
+
+.nf-org-panel-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--nf-ink, #0f1b2d);
+  font-family: var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.nf-org-panel-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--nf-ink-2, #223648);
+  line-height: 1.45;
+}
+
+.nf-org-panel-body {
+  padding: 24px 26px 30px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, #fafbfd 100%);
+}
+
+.nf-org-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--nf-ink-2, #223648);
+  margin-bottom: 8px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nf-org-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, 160px);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .nf-org-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nf-org-logo-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .nf-org-logo-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nf-org-logo-preview {
+  width: 112px;
+  height: 72px;
+  border-radius: 12px;
+  border: 1px solid rgba(18, 60, 102, 0.12);
+  background: linear-gradient(145deg, #fff 0%, #f0f5fa 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.nf-org-logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.nf-org-logo-placeholder {
+  color: var(--nf-ink-3, #314456);
+  opacity: 0.75;
+}
+
+.nf-org-plan-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(18, 60, 102, 0.12);
+  border-left-width: 4px;
+  border-left-color: #2e8b57;
+  background: linear-gradient(125deg, rgba(46, 139, 87, 0.08) 0%, #fff 48%, rgba(18, 60, 102, 0.03) 100%);
+  box-shadow: 0 1px 0 rgba(18, 60, 102, 0.04);
+}
+
+.nf-org-plan-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--nf-ink, #0f1b2d);
+  letter-spacing: -0.02em;
+}
+
+.nf-org-plan-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3cb371 0%, #1f6f45 100%);
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.22);
+  flex-shrink: 0;
+}
+
+.nf-org-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nf-ink-3, #314456);
+  line-height: 1.45;
+}
+
+.nf-org-hint a {
+  color: #123c66;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nf-org-hint a:hover {
+  text-decoration: underline;
+}
+
+.nf-org-msg-error {
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: linear-gradient(125deg, #fff5f5 0%, #fff 70%);
+  border: 1px solid rgba(201, 60, 55, 0.25);
+  color: #c93c37;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nf-org-msg-ok {
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: linear-gradient(125deg, #ecfdf5 0%, #fff 70%);
+  border: 1px solid rgba(46, 139, 87, 0.28);
+  color: #1f6f45;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* Actividad: panel de filtros + KPIs secundarios */
 .nf-activity-panel {
   min-width: 0;

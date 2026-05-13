@@ -324,7 +324,7 @@ function ProcessDetailBody({
             ))}
           </ul>
         ) : (
-          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin riesgos vinculados en el mapa demo.</span>
+          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin riesgos vinculados en el mapa de procesos.</span>
         )
       )}
 
@@ -465,7 +465,7 @@ export default function ProcessesModule() {
     };
     dispatch({ type: "addProcess", p });
     setCreateOpen(false);
-    showToast("Proceso añadido (sesión demo)");
+    showToast("Proceso añadido (sesión local)");
   }
 
   return (

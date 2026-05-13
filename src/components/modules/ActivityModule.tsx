@@ -225,7 +225,7 @@ export default function ActivityModule() {
               <div className="nf-activity-section-title-row">
                 <h3 className="nf-activity-section-title">Línea de tiempo</h3>
                 <span className="nf-activity-live-dot" aria-hidden />
-                <span className="nf-activity-live-label">Sesión demo</span>
+                <span className="nf-activity-live-label">Sesión local</span>
               </div>
               <span className="nf-activity-section-sub">
                 Hasta 300 eventos más recientes según filtros

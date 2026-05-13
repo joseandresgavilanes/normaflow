@@ -168,7 +168,7 @@ export default function FileImportArea({
               {dragOver ? "Suelta para adjuntar" : "Arrastra aquí o elige archivo"}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4, lineHeight: 1.45 }}>
-              Un solo archivo · vista previa local en esta demo
+              Un solo archivo · vista previa local en esta sesión
             </div>
           </div>
         </button>

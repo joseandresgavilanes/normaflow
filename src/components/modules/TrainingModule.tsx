@@ -97,7 +97,7 @@ export default function TrainingModule() {
     dispatch({
       type: "updateTrainingAssignment",
       id: a.id,
-      patch: { status: "COMPLETED", completedAt: new Date().toISOString(), evidenceNote: "Finalización registrada (demo)" },
+      patch: { status: "COMPLETED", completedAt: new Date().toISOString(), evidenceNote: "Finalización registrada" },
     });
     dispatch({
       type: "appendAudit",
@@ -119,7 +119,7 @@ export default function TrainingModule() {
     if (!perm.training.manage) return;
     const course = trainingCourses.find(c => c.linkedDocumentCodes.includes(docCode));
     if (!course) {
-      showToast("No hay curso vinculado a ese código en el catálogo demo");
+      showToast("No hay curso vinculado a ese código en el catálogo");
       return;
     }
     const person = demoPeople[0];
@@ -152,7 +152,7 @@ export default function TrainingModule() {
         reason: "Política/documento controlado actualizado — asignación automática simulada",
       }),
     });
-    showToast("Asignaciones generadas por cambio documental (demo)");
+    showToast("Asignaciones generadas por cambio documental");
   }
 
   return (
@@ -454,7 +454,7 @@ export default function TrainingModule() {
             <ul style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.75, margin: "0 0 16px", paddingLeft: 20, fontWeight: 500 }}>
               <li>Documentos con impacto formativo: {documents.filter(d => d.trainingImpact).length}</li>
               <li>Asignaciones activas: {trainingAssignments.filter(a => a.status !== "COMPLETED").length}</li>
-              <li>Recordatorios pendientes (demo): {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
+              <li>Recordatorios pendientes: {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
             </ul>
             <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "#123C66", textDecoration: "none" }}>
               Incluir en pack de auditoría →

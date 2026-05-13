@@ -26,7 +26,7 @@ export default function ProfileSettingsModule() {
 
   return (
     <div>
-      <SectionTitle title="Cuenta y perfil" sub="Datos mostrados en la aplicación. En modo demo se guardan solo en memoria del navegador." />
+      <SectionTitle title="Cuenta y perfil" sub="Datos mostrados en la aplicación. En esta sesión se guardan solo en memoria del navegador." />
 
       <Card style={{ padding: 0, overflow: "hidden", maxWidth: 640, marginBottom: 20 }}>
         <div

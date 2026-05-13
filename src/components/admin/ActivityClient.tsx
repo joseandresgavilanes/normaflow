@@ -376,7 +376,7 @@ export default function ActivityClient() {
               <div className="nf-activity-section-title-row">
                 <h3 className="nf-activity-section-title">Línea de tiempo</h3>
                 <span className="nf-activity-live-dot" aria-hidden />
-                <span className="nf-activity-live-label">Demo</span>
+                <span className="nf-activity-live-label">Local</span>
               </div>
               <span className="nf-activity-section-sub">
                 Eventos agrupados por día · clic para ver diff y metadatos

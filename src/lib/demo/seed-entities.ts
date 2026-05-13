@@ -38,15 +38,6 @@ export type NotificationItem = {
 
 export type SiteRow = { id: string; name: string; code: string; city: string };
 
-export type AuditFindingRow = {
-  id: string;
-  auditId: string;
-  title: string;
-  severity: "CRITICAL" | "MAJOR" | "MINOR" | "OBSERVATION";
-  status: "OPEN" | "CLOSED";
-  clause?: string;
-};
-
 function deep<T>(x: T): T {
   return JSON.parse(JSON.stringify(x)) as T;
 }
@@ -101,14 +92,17 @@ function presetAnswersForDemoScore(score: number): GapQuestion["answer"][] {
   return ["NO", "NO", "YES"];
 }
 
-export function buildGapState(standard: "iso9001" | "iso27001"): GapClauseState[] {
+export function buildGapState(standard: "iso9001" | "iso27001", options: { preset?: boolean } = {}): GapClauseState[] {
   const base = DEMO_GAP[standard];
+  const usePreset = options.preset !== false;
   return base.map(row => {
     const questionsDetail = gapQuestionsForClause(row.clause, row.title);
-    const preset = presetAnswersForDemoScore(row.score);
-    questionsDetail.forEach((q, i) => {
-      q.answer = preset[i] ?? null;
-    });
+    if (usePreset) {
+      const preset = presetAnswersForDemoScore(row.score);
+      questionsDetail.forEach((q, i) => {
+        q.answer = preset[i] ?? null;
+      });
+    }
     const { score, answered } = scoreFromGapQuestions(questionsDetail);
     return {
       clause: row.clause,
@@ -190,43 +184,6 @@ export function buildSites(org: DemoOrganization): SiteRow[] {
     { id: `${org.id}-s1`, name: "Sede principal", code: "HQ-01", city },
     { id: `${org.id}-s2`, name: "Planta operaciones", code: "OP-02", city: org.id === "org_tecnoserv" ? "Toledo" : "Zaragoza" },
     { id: `${org.id}-s3`, name: "Oficina técnica", code: "TEC-03", city: org.id === "org_tecnoserv" ? "Madrid" : city },
-  ];
-}
-
-export function buildAuditFindings(): AuditFindingRow[] {
-  return [
-    {
-      id: "af-a1-1",
-      auditId: "a1",
-      title: "Documentación de proceso de producción desactualizada (>6 meses)",
-      severity: "MAJOR",
-      status: "OPEN",
-      clause: "8.5",
-    },
-    {
-      id: "af-a1-2",
-      auditId: "a1",
-      title: "Registro de auditorías internas incompleto en 2 áreas",
-      severity: "MINOR",
-      status: "CLOSED",
-      clause: "9.2",
-    },
-    {
-      id: "af-a1-3",
-      auditId: "a1",
-      title: "Observación: mejora oportuna en etiquetado de producto",
-      severity: "OBSERVATION",
-      status: "CLOSED",
-      clause: "8.5",
-    },
-    {
-      id: "af-a2-1",
-      auditId: "a2",
-      title: "Control de acceso físico a sala de servidores — revisión trimestral vencida",
-      severity: "MINOR",
-      status: "OPEN",
-      clause: "A.11.1",
-    },
   ];
 }
 
