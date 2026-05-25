@@ -8,7 +8,8 @@ import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
-import { useWorkspace, type RiskRow } from "@/context/WorkspaceStore";
+import { useWorkspace, type ProcessRow, type RiskRow } from "@/context/WorkspaceStore";
+import { processesLinkedToRisk } from "@/lib/process-linking";
 import type { Column } from "@/components/ui/Table";
 
 function RiskScore({ score }: { score: number }) {
@@ -60,9 +61,10 @@ type RiskForm = {
   due: string;
   control: string;
   treatment: RiskRow["treatment"];
+  linkedProcessCode: string;
 };
 
-const emptyForm = (owner: string): RiskForm => ({
+const emptyForm = (owner: string, defaultProcessCode = ""): RiskForm => ({
   title: "",
   category: "Operacional",
   probability: 3,
@@ -72,6 +74,7 @@ const emptyForm = (owner: string): RiskForm => ({
   due: new Date().toISOString().slice(0, 10),
   control: "",
   treatment: "MITIGATE",
+  linkedProcessCode: defaultProcessCode,
 });
 
 export default function RisksModule() {
@@ -90,7 +93,7 @@ export default function RisksModule() {
     return {
       changes: changeRequests.filter(c => c.riskCodes?.includes(code)),
       suppliers: suppliers.filter(s => s.riskCodes?.includes(code)),
-      processes: processes.filter(p => p.linkedRiskCodes?.includes(code)),
+      processes: processesLinkedToRisk(detail, processes),
       actions: actions.filter(a => a.source === code),
     };
   }, [detail, changeRequests, suppliers, processes, actions]);
@@ -117,7 +120,7 @@ export default function RisksModule() {
   ];
 
   function openCreate() {
-    setForm(emptyForm(state.session.name));
+    setForm(emptyForm(state.session.name, processes[0]?.code ?? ""));
     setCreateOpen(true);
   }
 
@@ -133,6 +136,7 @@ export default function RisksModule() {
       due: detail.due,
       control: detail.control,
       treatment: detail.treatment,
+      linkedProcessCode: detail.linkedProcessCode ?? "",
     });
     setEditOpen(true);
   }
@@ -158,6 +162,7 @@ export default function RisksModule() {
       due: form.due,
       control: form.control.trim() || "Por definir",
       treatment: form.treatment,
+      linkedProcessCode: form.linkedProcessCode.trim(),
     };
     dispatch({ type: "addRisk", risk });
     setCreateOpen(false);
@@ -185,9 +190,17 @@ export default function RisksModule() {
         due: form.due,
         control: form.control.trim() || "Por definir",
         treatment: form.treatment,
+        linkedProcessCode: form.linkedProcessCode.trim(),
       },
     });
-    const updated = { ...detail, ...form, probability: p, impact: i, score: p * i };
+    const updated = {
+      ...detail,
+      ...form,
+      probability: p,
+      impact: i,
+      score: p * i,
+      linkedProcessCode: form.linkedProcessCode.trim(),
+    };
     setDetail(updated);
     setEditOpen(false);
     showToast("Riesgo actualizado (sesión local)");
@@ -343,6 +356,7 @@ export default function RisksModule() {
               {[
                 ["Categoría", detail.category],
                 ["Tratamiento", detail.treatment],
+                ["Proceso", detail.linkedProcessCode ? `${detail.linkedProcessCode}` : "—"],
                 ["Control actual", detail.control],
                 ["Responsable", detail.owner],
                 ["Vencimiento revisión", detail.due],
@@ -449,7 +463,7 @@ export default function RisksModule() {
                       ))}
                     </ul>
                   ) : (
-                    <span style={{ color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin proceso con mapa de riesgos para este código.</span>
+                    <span style={{ color: "var(--nf-ink-3)", fontStyle: "italic" }}>Ninguno enlazado por código o proceso.</span>
                   )
                 )}
               </div>
@@ -508,7 +522,7 @@ export default function RisksModule() {
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo riesgo" width={600}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <RiskFormFields form={form} setForm={setForm} />
+          <RiskFormFields form={form} setForm={setForm} processes={processes} />
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Guardar
@@ -522,7 +536,7 @@ export default function RisksModule() {
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Editar riesgo" width={600}>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <RiskFormFields form={form} setForm={setForm} />
+          <RiskFormFields form={form} setForm={setForm} processes={processes} />
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button type="button" onClick={submitEdit} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Guardar cambios
@@ -537,7 +551,15 @@ export default function RisksModule() {
   );
 }
 
-function RiskFormFields({ form, setForm }: { form: RiskForm; setForm: (f: RiskForm) => void }) {
+function RiskFormFields({
+  form,
+  setForm,
+  processes,
+}: {
+  form: RiskForm;
+  setForm: (f: RiskForm) => void;
+  processes: ProcessRow[];
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
@@ -569,6 +591,22 @@ function RiskFormFields({ form, setForm }: { form: RiskForm; setForm: (f: RiskFo
           />
         </label>
       </div>
+      <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+        Proceso asociado
+        <select
+          className="nf-app-input"
+          value={form.linkedProcessCode}
+          onChange={e => setForm({ ...form, linkedProcessCode: e.target.value })}
+          style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+        >
+          <option value="">Sin proceso</option>
+          {processes.map(p => (
+            <option key={p.id} value={p.code}>
+              {p.code} — {p.name}
+            </option>
+          ))}
+        </select>
+      </label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 12 }}>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Prob. (1–5)

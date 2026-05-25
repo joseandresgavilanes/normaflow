@@ -2,7 +2,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { ArrowDownToLine, ArrowUpFromLine, BarChart3, ChevronRight, FileText, GitBranch, GitPullRequest, GraduationCap, Layers, Plus, Shield } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, BarChart3, ChevronRight, FileText, GitBranch, GitPullRequest, GraduationCap, Layers, Plus, Shield, Target } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
@@ -18,6 +18,23 @@ import {
   type TrainingAssignmentRow,
   type TrainingCourseRow,
 } from "@/context/WorkspaceStore";
+import {
+  changesLinkedToProcess,
+  documentsLinkedToProcess,
+  indicatorsLinkedToProcess,
+  risksLinkedToProcess,
+  trainingLinkedToProcess,
+} from "@/lib/process-linking";
+
+function processTypeMeta(type: ProcessRow["type"]) {
+  if (type === "support") {
+    return { label: "Soporte", color: "#D68A1A", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
+  }
+  if (type === "strategic") {
+    return { label: "Estratégico", color: "#5B3FA6", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
+  }
+  return { label: "Core", color: "#123C66", soft: "rgba(18, 60, 102, 0.08)", gradientEnd: "#2E8B57" };
+}
 
 function getProcessLinkStats(
   p: ProcessRow,
@@ -27,16 +44,12 @@ function getProcessLinkStats(
   changeRequests: ChangeRequestRow[],
   trainingAssignments: TrainingAssignmentRow[],
 ) {
-  const byCode = documents.filter(d => p.linkedDocCodes?.includes(d.code));
-  const byProcess = documents.filter(d => d.linkedProcessCode === p.code);
-  const docMap = new Map<string, DocumentRow>();
-  for (const d of [...byCode, ...byProcess]) docMap.set(d.id, d);
   return {
-    docs: docMap.size,
-    risks: risks.filter(r => p.linkedRiskCodes?.includes(r.code)).length,
-    indicators: indicators.filter(i => p.linkedIndicatorNames?.includes(i.name)).length,
-    changes: changeRequests.filter(c => c.processCodes?.includes(p.code)).length,
-    training: trainingAssignments.filter(t => t.processCode === p.code).length,
+    docs: documentsLinkedToProcess(p, documents).length,
+    risks: risksLinkedToProcess(p, risks).length,
+    indicators: indicatorsLinkedToProcess(p, indicators).length,
+    changes: changesLinkedToProcess(p, changeRequests).length,
+    training: trainingLinkedToProcess(p, trainingAssignments).length,
   };
 }
 
@@ -102,30 +115,12 @@ function ProcessDetailBody({
   trainingAssignments: TrainingAssignmentRow[];
   trainingCourses: TrainingCourseRow[];
 }) {
-  const linkedDocs = useMemo(() => {
-    const byCode = documents.filter(d => detail.linkedDocCodes?.includes(d.code));
-    const byProcess = documents.filter(d => d.linkedProcessCode === detail.code);
-    const m = new Map<string, DocumentRow>();
-    for (const d of [...byCode, ...byProcess]) m.set(d.id, d);
-    return [...m.values()];
-  }, [detail.code, detail.linkedDocCodes, documents]);
+  const linkedDocs = useMemo(() => documentsLinkedToProcess(detail, documents), [detail, documents]);
 
-  const linkedRisks = useMemo(
-    () => risks.filter(r => detail.linkedRiskCodes?.includes(r.code)),
-    [detail.linkedRiskCodes, risks]
-  );
-  const linkedIndicators = useMemo(
-    () => indicators.filter(i => detail.linkedIndicatorNames?.includes(i.name)),
-    [detail.linkedIndicatorNames, indicators]
-  );
-  const linkedChanges = useMemo(
-    () => changeRequests.filter(c => c.processCodes?.includes(detail.code)),
-    [changeRequests, detail.code]
-  );
-  const processTraining = useMemo(
-    () => trainingAssignments.filter(t => t.processCode === detail.code),
-    [detail.code, trainingAssignments]
-  );
+  const linkedRisks = useMemo(() => risksLinkedToProcess(detail, risks), [detail, risks]);
+  const linkedIndicators = useMemo(() => indicatorsLinkedToProcess(detail, indicators), [detail, indicators]);
+  const linkedChanges = useMemo(() => changesLinkedToProcess(detail, changeRequests), [detail, changeRequests]);
+  const processTraining = useMemo(() => trainingLinkedToProcess(detail, trainingAssignments), [detail, trainingAssignments]);
 
   function courseTitle(id: string) {
     return trainingCourses.find(c => c.id === id)?.title ?? id;
@@ -156,8 +151,7 @@ function ProcessDetailBody({
     return map[s] ?? s;
   }
 
-  const typeLabel = detail.type === "support" ? "Soporte" : "Core";
-  const typeColor = detail.type === "support" ? "#D68A1A" : "#123C66";
+  const { label: typeLabel, color: typeColor } = processTypeMeta(detail.type);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -324,7 +318,7 @@ function ProcessDetailBody({
             ))}
           </ul>
         ) : (
-          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin riesgos vinculados en el mapa de procesos.</span>
+          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Ninguno enlazado por código o proceso.</span>
         )
       )}
 
@@ -340,7 +334,7 @@ function ProcessDetailBody({
             ))}
           </ul>
         ) : (
-          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin KPI enlazados.</span>
+          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Ninguno enlazado por nombre o proceso.</span>
         )
       )}
 
@@ -378,7 +372,7 @@ function ProcessDetailBody({
             ))}
           </ul>
         ) : (
-          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>No hay solicitudes de cambio con este proceso.</span>
+          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Ninguno enlazado por código o proceso.</span>
         )
       )}
 
@@ -419,7 +413,7 @@ function ProcessDetailBody({
             ))}
           </ul>
         ) : (
-          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Sin asignaciones con código de proceso {detail.code}.</span>
+          <span style={{ fontSize: 13, color: "var(--nf-ink-3)", fontStyle: "italic" }}>Ninguna enlazada por código o proceso.</span>
         )
       )}
     </div>
@@ -462,6 +456,8 @@ export default function ProcessesModule() {
       linkedRiskCodes: [],
       linkedDocCodes: [],
       linkedIndicatorNames: [],
+      linkedChangeCodes: [],
+      linkedTrainingAssignmentIds: [],
     };
     dispatch({ type: "addProcess", p });
     setCreateOpen(false);
@@ -544,6 +540,26 @@ export default function ProcessesModule() {
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Soporte</div>
             </div>
           </div>
+          <div className="nf-kpi-summary-cell">
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                background: "linear-gradient(135deg, rgba(91, 63, 166, 0.2) 0%, rgba(91, 63, 166, 0.07) 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#5B3FA6",
+              }}
+            >
+              <Target size={22} strokeWidth={2.25} aria-hidden />
+            </div>
+            <div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: "#5B3FA6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "strategic").length}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Estratégico</div>
+            </div>
+          </div>
         </div>
       )}
       {processes.length === 0 ? (
@@ -569,9 +585,7 @@ export default function ProcessesModule() {
       ) : (
         <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))" }}>
           {processes.map(p => {
-            const accent = p.type === "support" ? "#D68A1A" : "#123C66";
-            const accentSoft = p.type === "support" ? "rgba(214, 138, 26, 0.09)" : "rgba(18, 60, 102, 0.08)";
-            const typeLabel = p.type === "support" ? "Soporte" : "Core";
+            const { label: typeLabel, color: accent, soft: accentSoft, gradientEnd } = processTypeMeta(p.type);
             const stats = getProcessLinkStats(p, documents, risks, indicators, changeRequests, trainingAssignments);
             const maxIo = 4;
             const inShown = p.inputs.slice(0, maxIo);
@@ -607,7 +621,7 @@ export default function ProcessesModule() {
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && setDetail(p)}
                 style={{ overflow: "hidden", borderRadius: 16 }}
               >
-                <div style={{ height: 5, background: `linear-gradient(90deg, ${accent} 0%, ${accent}aa 45%, ${p.type === "support" ? "#f4a020" : "#2E8B57"} 100%)` }} />
+                <div style={{ height: 5, background: `linear-gradient(90deg, ${accent} 0%, ${accent}aa 45%, ${gradientEnd} 100%)` }} />
                 <div style={{ padding: 0 }}>
                   <div
                     style={{
@@ -904,6 +918,7 @@ export default function ProcessesModule() {
               >
                 <option value="core">Core</option>
                 <option value="support">Soporte</option>
+                <option value="strategic">Estratégico</option>
               </select>
             </label>
           </div>

@@ -12,6 +12,7 @@
  */
 
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
+import { planMaxUsers } from "@/lib/constants";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -1126,6 +1127,11 @@ export function AdminMockProvider({
         if (!email || !data.name.trim()) throw new Error("Nombre y email son obligatorios.");
         if (state.members.some((m) => m.email.toLowerCase() === email)) {
           throw new Error("Esa persona ya pertenece a la organización.");
+        }
+        // Plan quota enforcement
+        const limit = planMaxUsers(state.organization.plan);
+        if (limit !== null && state.members.length >= limit) {
+          throw new Error(`Has alcanzado el límite de ${limit} usuarios del plan ${state.organization.plan}. Actualiza tu plan para añadir más personas.`);
         }
         const userId = id("u");
         const name = data.name.trim();

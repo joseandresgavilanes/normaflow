@@ -5,6 +5,7 @@ import { Building2, Globe, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useAdminMock } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
 
 function isLikelyImageUrl(url: string) {
   const u = url.trim().toLowerCase();
@@ -142,17 +143,7 @@ export default function OrgSettingsClient() {
             </Field>
 
             <Field label="Plan actual">
-              <div className="nf-org-plan-card">
-                <span className="nf-org-plan-dot" aria-hidden />
-                <div style={{ minWidth: 0 }}>
-                  <div className="nf-org-plan-name">{org.plan}</div>
-                  <p className="nf-org-hint" style={{ marginTop: 4 }}>
-                    Para cambiar de plan o facturación, abre{" "}
-                    <a href="/app/billing">Billing y suscripción</a>.
-                  </p>
-                </div>
-                <Globe size={22} strokeWidth={2} style={{ color: "#123c66", opacity: 0.35, marginLeft: "auto", flexShrink: 0 }} aria-hidden />
-              </div>
+              <PlanUsageCard plan={org.plan} usedUsers={admin.state.members.length} />
             </Field>
 
             {error ? <div className="nf-org-msg-error">{error}</div> : null}
@@ -188,6 +179,48 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="nf-org-field-label">{label}</label>
       {children}
+    </div>
+  );
+}
+
+function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number }) {
+  const info = PLAN_LIMITS[plan as PlanKey];
+  const max = info?.maxUsers ?? null;
+  const pct = max === null ? 0 : Math.min(100, (usedUsers / max) * 100);
+  const atLimit = max !== null && usedUsers >= max;
+  const nearLimit = max !== null && !atLimit && pct >= 80;
+  const barColor = atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-accent)";
+
+  return (
+    <div className="nf-org-plan-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span className="nf-org-plan-dot" aria-hidden />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div className="nf-org-plan-name">{info?.label ?? plan}</div>
+          <p className="nf-org-hint" style={{ marginTop: 4 }}>
+            {info?.lifetimeUsd
+              ? `Licencia lifetime · $${info.lifetimeUsd.toLocaleString("en-US")} USD · hasta ${max} usuarios.`
+              : "Plan personalizado · usuarios ilimitados."}
+          </p>
+        </div>
+        <Globe size={22} strokeWidth={2} style={{ color: "#123c66", opacity: 0.35, flexShrink: 0 }} aria-hidden />
+      </div>
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6 }}>
+          <span>Usuarios activos</span>
+          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#C93C37" : "var(--nf-ink-2)", fontWeight: 700 }}>
+            {usedUsers} / {max === null ? "∞" : max}
+          </span>
+        </div>
+        {max !== null && (
+          <div style={{ height: 6, background: "var(--nf-line)", borderRadius: 99, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: barColor, transition: "width 0.2s" }} />
+          </div>
+        )}
+      </div>
+      <p className="nf-org-hint" style={{ margin: 0 }}>
+        Para cambiar de plan o ver facturación, abre <a href="/app/billing">Billing y suscripción</a>.
+      </p>
     </div>
   );
 }

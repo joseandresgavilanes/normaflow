@@ -1276,9 +1276,9 @@ function NfCase() {
 /* ============ Pricing ============ */
 function NfPricing() {
   const plans = [
-    { name: "Starter",    price: "€179",   tag: "Para implantar ISO sin caos",            features: ["10 usuarios", "ISO 9001 + ISO 27001", "Módulos esenciales", "10 GB almacenamiento", "Soporte por email"], cta: "Empezar 14 días gratis", popular: false },
-    { name: "Growth",     price: "€549",   tag: "Para equipos en mantenimiento activo",   features: ["50 usuarios", "Todos los módulos", "Asistente IA incluido", "50 GB almacenamiento", "Soporte prioritario", "Onboarding guiado"], cta: "Probar 14 días", popular: true },
-    { name: "Enterprise", price: "Custom", tag: "Para multi-organización y SLA",          features: ["Usuarios ilimitados", "Multi-organización", "Almacenamiento ilimitado", "SLA 99.9% garantizado", "Soporte dedicado · CSM", "API + integraciones · SSO"], cta: "Hablar con ventas", popular: false },
+    { name: "Starter",    price: "$149",     tag: "Para implementar ISO sin caos",          features: ["Hasta 5 usuarios", "ISO 9001 + ISO 27001", "Módulos esenciales", "10 GB de almacenamiento", "Soporte por correo"], cta: "Empezar 14 días gratis", popular: false },
+    { name: "Growth",     price: "$449",     tag: "Para equipos en mantenimiento activo",   features: ["Hasta 20 usuarios", "Todos los módulos", "Asistente IA incluido", "50 GB de almacenamiento", "Soporte prioritario", "Onboarding guiado"], cta: "Probar 14 días", popular: true },
+    { name: "Enterprise", price: "A medida", tag: "Para multi-organización y SLA",          features: ["Usuarios ilimitados", "Multi-organización", "Almacenamiento ilimitado", "SLA 99.9% garantizado", "Soporte dedicado · CSM", "API + integraciones · SSO"], cta: "Hablar con ventas", popular: false },
   ];
   return (
     <section className="nf-section" id="precios">
@@ -1300,7 +1300,7 @@ function NfPricing() {
               <div className="name">{p.name}</div>
               <div className="price">
                 {p.price}
-                {p.price.startsWith("€") && <span className="unit"> / mes</span>}
+                {p.price.startsWith("$") && <span className="unit"> USD / mes</span>}
               </div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>{p.tag}</div>
               <ul>

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Download, Eye, FileText, Plus, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -76,7 +76,7 @@ function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }
 export default function DocumentsModule() {
   const { state, dispatch, showToast } = useWorkspace();
   const perm = useDemoPermission();
-  const { documents, documentVersions } = state;
+  const { documents, documentVersions, processes } = state;
   const [filter, setFilter] = useState("ALL");
   const [folderFilter, setFolderFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
@@ -85,7 +85,15 @@ export default function DocumentsModule() {
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
   const [historyDoc, setHistoryDoc] = useState<DocumentRow | null>(null);
   const [newFile, setNewFile] = useState<File | null>(null);
-  const [newForm, setNewForm] = useState({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE" as DocumentRow["type"] });
+  const [newForm, setNewForm] = useState({
+    title: "",
+    code: "",
+    standard: "",
+    clause: "",
+    type: "PROCEDURE" as DocumentRow["type"],
+    linkedProcessCode: "",
+  });
+  const [processLinkDraft, setProcessLinkDraft] = useState("");
   const [versionNote, setVersionNote] = useState("");
   const [nextVersion, setNextVersion] = useState("");
   const [approveAttestOpen, setApproveAttestOpen] = useState(false);
@@ -108,6 +116,17 @@ export default function DocumentsModule() {
     if (!detail) return null;
     return documents.find(d => d.id === detail.id) ?? detail;
   }, [detail, documents]);
+
+  useEffect(() => {
+    if (detailLive) setProcessLinkDraft(detailLive.linkedProcessCode ?? "");
+  }, [detailLive?.id, detailLive?.linkedProcessCode]);
+
+  function saveDocumentProcessLink() {
+    if (!detailLive) return;
+    const code = processLinkDraft.trim();
+    dispatch({ type: "updateDocument", id: detailLive.id, patch: { linkedProcessCode: code } });
+    showToast(code ? `Documento enlazado al proceso ${code}` : "Enlace de proceso quitado");
+  }
 
   const columns: Column<DocumentRow>[] = [
     { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#123C66", fontWeight: 600 }}>{v}</span> },
@@ -153,7 +172,7 @@ export default function DocumentsModule() {
       previewUrl = URL.createObjectURL(newFile);
     }
     const sizeLabel = newFile ? `${(newFile.size / 1024).toFixed(0)} KB` : "—";
-    const procCode = state.processes[0]?.code ?? "P-01";
+    const procCode = newForm.linkedProcessCode.trim() || processes[0]?.code || "P-01";
     const rd = new Date();
     rd.setMonth(rd.getMonth() + 12);
     const doc: DocumentRow = {
@@ -184,7 +203,7 @@ export default function DocumentsModule() {
     dispatch({ type: "addDocument", doc });
     setShowNew(false);
     setNewFile(null);
-    setNewForm({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE" });
+    setNewForm({ title: "", code: "", standard: "", clause: "", type: "PROCEDURE", linkedProcessCode: processes[0]?.code ?? "" });
     showToast("Documento creado en el espacio de trabajo");
   }
 
@@ -233,7 +252,17 @@ export default function DocumentsModule() {
             Nuevo documento
           </span>
         }
-        onAction={() => setShowNew(true)}
+        onAction={() => {
+          setNewForm({
+            title: "",
+            code: "",
+            standard: "",
+            clause: "",
+            type: "PROCEDURE",
+            linkedProcessCode: processes[0]?.code ?? "",
+          });
+          setShowNew(true);
+        }}
       />
 
       <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
@@ -377,9 +406,13 @@ export default function DocumentsModule() {
                 ["Cláusula", detailLive.linkedClause || detailLive.clause],
                 [
                   "Proceso",
-                  <Link key="proc" href="/app/processes" style={{ color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
-                    {detailLive.linkedProcessCode}
-                  </Link>,
+                  detailLive.linkedProcessCode ? (
+                    <Link key="proc" href="/app/processes" style={{ color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
+                      {detailLive.linkedProcessCode}
+                    </Link>
+                  ) : (
+                    "—"
+                  ),
                 ],
                 ["Propietario", detailLive.owner],
                 ["Actualizado", detailLive.updated],
@@ -427,6 +460,41 @@ export default function DocumentsModule() {
                   )}
                 </div>
               </div>
+            </div>
+            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Proceso asociado</div>
+              <select
+                className="nf-app-input"
+                value={processLinkDraft}
+                onChange={e => setProcessLinkDraft(e.target.value)}
+                disabled={!perm.documents.edit}
+                style={{ width: "100%", marginBottom: 8, boxSizing: "border-box", cursor: perm.documents.edit ? "pointer" : "not-allowed" }}
+              >
+                <option value="">Sin proceso</option>
+                {processes.map(p => (
+                  <option key={p.id} value={p.code}>
+                    {p.code} — {p.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={!perm.documents.edit}
+                onClick={saveDocumentProcessLink}
+                style={{
+                  background: "#123C66",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: perm.documents.edit ? "pointer" : "not-allowed",
+                  opacity: perm.documents.edit ? 1 : 0.5,
+                }}
+              >
+                Guardar enlace de proceso
+              </button>
             </div>
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
@@ -804,6 +872,21 @@ export default function DocumentsModule() {
               onChange={e => setNewForm({ ...newForm, clause: e.target.value })}
               style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
             />
+          </label>
+          <label style={{ fontSize: 13, fontWeight: 500 }}>
+            Proceso asociado
+            <select
+              value={newForm.linkedProcessCode}
+              onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })}
+              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box", cursor: "pointer" }}
+            >
+              <option value="">Sin proceso</option>
+              {processes.map(p => (
+                <option key={p.id} value={p.code}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </select>
           </label>
           <FileImportArea
             baseId="doc-new-file"

@@ -144,3 +144,89 @@ export async function getGapPayload(organizationId: string) {
 
 export type DashboardPayload = Awaited<ReturnType<typeof getDashboardPayload>>;
 export type GapPayload = Awaited<ReturnType<typeof getGapPayload>>;
+
+// ─── Documents ─────────────────────────────────────────────────────────
+
+export async function getDocumentsPayload(organizationId: string) {
+  const [documents, locations, personnel, members] = await Promise.all([
+    prisma.document.findMany({
+      where: { organizationId },
+      include: {
+        versions: { orderBy: { createdAt: "desc" } },
+        approvals: { orderBy: { createdAt: "asc" } },
+        location: true,
+      },
+      orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+    }),
+    prisma.location.findMany({
+      where: { organizationId, active: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.personnel.findMany({
+      where: { organizationId, active: true },
+      orderBy: { lastName: "asc" },
+      select: { id: true, firstName: true, lastName: true, email: true },
+    }),
+    prisma.membership.findMany({
+      where: { organizationId },
+      include: { user: true },
+    }),
+  ]);
+
+  return {
+    documents: documents.map((d) => ({
+      id: d.id,
+      code: d.code,
+      title: d.title,
+      type: d.type,
+      status: d.status,
+      currentVersion: d.currentVersion,
+      isExternal: d.isExternal,
+      externalLink: d.externalLink,
+      ownerId: d.ownerId,
+      processId: d.processId,
+      standardCode: d.standardCode,
+      observations: d.observations,
+      distributionList: d.distributionList,
+      locationId: d.locationId,
+      locationName: d.location?.name ?? null,
+      physicalLocation: d.physicalLocation,
+      responsibleElaborationId: d.responsibleElaborationId,
+      responsibleApprovalId: d.responsibleApprovalId,
+      custodianId: d.custodianId,
+      createdAt: d.createdAt.toISOString(),
+      updatedAt: d.updatedAt.toISOString(),
+      versions: d.versions.map((v) => ({
+        id: v.id,
+        version: v.version,
+        previousVersion: v.previousVersion,
+        changeDescription: v.changeDescription ?? v.changeLog,
+        fileUrl: v.fileUrl,
+        fileSize: v.fileSize,
+        mimeType: v.mimeType,
+        createdAt: v.createdAt.toISOString(),
+        createdById: v.createdById,
+      })),
+      approvals: d.approvals.map((a) => ({
+        id: a.id,
+        approverId: a.approverId,
+        status: a.status,
+        comment: a.comment,
+        decidedAt: a.decidedAt?.toISOString() ?? null,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    })),
+    locations,
+    personnel,
+    members: members.map((m) => ({
+      userId: m.userId,
+      name: m.user.name,
+      email: m.user.email,
+      role: m.role,
+    })),
+  };
+}
+
+export type DocumentsPayload = Awaited<ReturnType<typeof getDocumentsPayload>>;
+export type DocumentRowLive = DocumentsPayload["documents"][number];

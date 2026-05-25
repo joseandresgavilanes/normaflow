@@ -22,12 +22,12 @@ export const DEMO_USERS = [
 ];
 
 export const DEMO_RISKS = [
-  { id: "r1", code: "R-001", title: "Fuga de datos de clientes", probability: 4, impact: 5, score: 20, status: "UNDER_TREATMENT", owner: "Ana García", category: "Información", due: "2025-08-15", control: "Cifrado AES-256 + DLP", treatment: "MITIGATE" },
-  { id: "r2", code: "R-002", title: "Fallo de proveedor crítico de componentes", probability: 3, impact: 4, score: 12, status: "MONITORED", owner: "Carlos Méndez", category: "Operacional", due: "2025-09-01", control: "Plan de contingencia activo + 2 proveedores alternativos", treatment: "MITIGATE" },
-  { id: "r3", code: "R-003", title: "Incumplimiento normativa RGPD", probability: 2, impact: 5, score: 10, status: "MITIGATED", owner: "Laura Vega", category: "Legal y Regulatorio", due: "2025-07-30", control: "DPO designado + auditoría externa anual", treatment: "MITIGATE" },
-  { id: "r4", code: "R-004", title: "Acceso no autorizado a sistemas de producción", probability: 3, impact: 3, score: 9, status: "UNDER_TREATMENT", owner: "Pedro Ruiz", category: "Seguridad TI", due: "2025-08-20", control: "MFA obligatorio en todos los sistemas", treatment: "MITIGATE" },
-  { id: "r5", code: "R-005", title: "Error crítico en proceso de fabricación", probability: 2, impact: 4, score: 8, status: "ACCEPTED", owner: "María Torres", category: "Operacional", due: "2025-10-01", control: "QA automatizado + revisión en línea", treatment: "ACCEPT" },
-  { id: "r6", code: "R-006", title: "Pérdida de certificación ISO por falta de mantenimiento", probability: 1, impact: 5, score: 5, status: "MITIGATED", owner: "José López", category: "Cumplimiento", due: "2025-12-01", control: "Auditorías internas trimestrales + NormaFlow", treatment: "MITIGATE" },
+  { id: "r1", code: "R-001", title: "Fuga de datos de clientes", probability: 4, impact: 5, score: 20, status: "UNDER_TREATMENT", owner: "Ana García", category: "Información", due: "2025-08-15", control: "Cifrado AES-256 + DLP", treatment: "MITIGATE", linkedProcessCode: "P-01" },
+  { id: "r2", code: "R-002", title: "Fallo de proveedor crítico de componentes", probability: 3, impact: 4, score: 12, status: "MONITORED", owner: "Carlos Méndez", category: "Operacional", due: "2025-09-01", control: "Plan de contingencia activo + 2 proveedores alternativos", treatment: "MITIGATE", linkedProcessCode: "P-01" },
+  { id: "r3", code: "R-003", title: "Incumplimiento normativa RGPD", probability: 2, impact: 5, score: 10, status: "MITIGATED", owner: "Laura Vega", category: "Legal y Regulatorio", due: "2025-07-30", control: "DPO designado + auditoría externa anual", treatment: "MITIGATE", linkedProcessCode: "P-03" },
+  { id: "r4", code: "R-004", title: "Acceso no autorizado a sistemas de producción", probability: 3, impact: 3, score: 9, status: "UNDER_TREATMENT", owner: "Pedro Ruiz", category: "Seguridad TI", due: "2025-08-20", control: "MFA obligatorio en todos los sistemas", treatment: "MITIGATE", linkedProcessCode: "P-08" },
+  { id: "r5", code: "R-005", title: "Error crítico en proceso de fabricación", probability: 2, impact: 4, score: 8, status: "ACCEPTED", owner: "María Torres", category: "Operacional", due: "2025-10-01", control: "QA automatizado + revisión en línea", treatment: "ACCEPT", linkedProcessCode: "P-01" },
+  { id: "r6", code: "R-006", title: "Pérdida de certificación ISO por falta de mantenimiento", probability: 1, impact: 5, score: 5, status: "MITIGATED", owner: "José López", category: "Cumplimiento", due: "2025-12-01", control: "Auditorías internas trimestrales + NormaFlow", treatment: "MITIGATE", linkedProcessCode: "P-00" },
 ];
 
 export const DEMO_DOCUMENTS = [
@@ -66,12 +66,12 @@ export const DEMO_ACTIONS = [
 ];
 
 export const DEMO_INDICATORS = [
-  { id: "i1", name: "Satisfacción del Cliente (NPS)", value: 72, target: 75, unit: "pts", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "monthly", history: [65, 68, 70, 69, 71, 72], clause: "9.1.2" },
-  { id: "i2", name: "Tasa de No Conformidades Internas", value: 2.1, target: 3.0, unit: "%", trend: "down", status: "ON_TRACK", period: "Jun 2025", frequency: "monthly", history: [4.2, 3.8, 3.1, 2.9, 2.4, 2.1], clause: "10.2" },
-  { id: "i3", name: "Disponibilidad de Sistemas Críticos", value: 99.2, target: 99.5, unit: "%", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "monthly", history: [98.5, 98.9, 99.0, 99.1, 99.2, 99.2], clause: "A.12.1" },
-  { id: "i4", name: "Tiempo Medio de Resolución de Incidentes", value: 4.2, target: 4.0, unit: "h", trend: "down", status: "OFF_TRACK", period: "Jun 2025", frequency: "monthly", history: [6.5, 5.8, 5.2, 4.8, 4.5, 4.2], clause: "A.16.1" },
-  { id: "i5", name: "Cobertura de Auditorías Planificadas", value: 85, target: 90, unit: "%", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "quarterly", history: [60, 65, 70, 75, 80, 85], clause: "9.2" },
-  { id: "i6", name: "Documentos Aprobados vs Planificados", value: 94, target: 95, unit: "%", trend: "up", status: "ON_TRACK", period: "Jun 2025", frequency: "monthly", history: [88, 89, 91, 92, 93, 94], clause: "7.5" },
+  { id: "i1", name: "Satisfacción del Cliente (NPS)", value: 72, target: 75, unit: "pts", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "monthly", history: [65, 68, 70, 69, 71, 72], clause: "9.1.2", linkedProcessCode: "P-01" },
+  { id: "i2", name: "Tasa de No Conformidades Internas", value: 2.1, target: 3.0, unit: "%", trend: "down", status: "ON_TRACK", period: "Jun 2025", frequency: "monthly", history: [4.2, 3.8, 3.1, 2.9, 2.4, 2.1], clause: "10.2", linkedProcessCode: "P-01" },
+  { id: "i3", name: "Disponibilidad de Sistemas Críticos", value: 99.2, target: 99.5, unit: "%", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "monthly", history: [98.5, 98.9, 99.0, 99.1, 99.2, 99.2], clause: "A.12.1", linkedProcessCode: "P-08" },
+  { id: "i4", name: "Tiempo Medio de Resolución de Incidentes", value: 4.2, target: 4.0, unit: "h", trend: "down", status: "OFF_TRACK", period: "Jun 2025", frequency: "monthly", history: [6.5, 5.8, 5.2, 4.8, 4.5, 4.2], clause: "A.16.1", linkedProcessCode: "P-08" },
+  { id: "i5", name: "Cobertura de Auditorías Planificadas", value: 85, target: 90, unit: "%", trend: "up", status: "AT_RISK", period: "Jun 2025", frequency: "quarterly", history: [60, 65, 70, 75, 80, 85], clause: "9.2", linkedProcessCode: "P-00" },
+  { id: "i6", name: "Documentos Aprobados vs Planificados", value: 94, target: 95, unit: "%", trend: "up", status: "ON_TRACK", period: "Jun 2025", frequency: "monthly", history: [88, 89, 91, 92, 93, 94], clause: "7.5", linkedProcessCode: "P-03" },
 ];
 
 export const DEMO_GAP = {
@@ -99,6 +99,7 @@ export const DEMO_PROCESSES = [
   { id: "p1", name: "Producción y entrega", code: "P-01", type: "core", description: "Fabricación, control de calidad en línea y expedición.", owner: "Laura Vega", inputs: ["Pedido", "Materias primas"], outputs: ["Producto terminado", "Trazabilidad"] },
   { id: "p2", name: "Soporte TI y seguridad", code: "P-08", type: "support", description: "Operación de sistemas, accesos, copias de seguridad e incidentes.", owner: "Pedro Ruiz", inputs: ["Tickets", "Cambios"], outputs: ["SLA", "Registros SGSI"] },
   { id: "p3", name: "Gestión de compras", code: "P-03", type: "support", description: "Evaluación y homologación de proveedores críticos.", owner: "Carlos Méndez", inputs: ["Necesidad", "Especificación"], outputs: ["OC", "Evaluación proveedor"] },
+  { id: "p4", name: "Dirección y revisión por la dirección", code: "P-00", type: "strategic", description: "Planificación estratégica, objetivos del SGC y revisión por la dirección.", owner: "Ana García", inputs: ["Contexto organizacional", "Resultados de auditorías"], outputs: ["Objetivos", "Planes de mejora"] },
 ];
 
 export const DEMO_EVIDENCE = [

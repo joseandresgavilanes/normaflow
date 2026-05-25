@@ -1,6 +1,20 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+  loadPersistedWorkspace,
+  mergePersistedWithSeed,
+  savePersistedWorkspace,
+} from "@/lib/workspace-persistence";
+import {
+  normalizeWorkspaceLinks,
+  syncProcessDocCodes,
+  syncChangeRequestProcessCodes,
+  syncProcessChangeCodes,
+  syncProcessIndicatorNames,
+  syncProcessRiskCodes,
+  syncProcessTrainingId,
+} from "@/lib/workspace-sync";
 import {
   DEMO_ACTIONS,
   DEMO_ACTIVITY,
@@ -435,17 +449,26 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     };
   });
 
-  return {
+  const linked = normalizeWorkspaceLinks({
     risks: risksForOrg(orgId),
     indicators: indicatorsEnriched,
+    documents: docs,
+    processes: processesWithLinks(orgId),
+    changeRequests,
+    trainingAssignments,
+  });
+
+  return {
+    risks: linked.risks,
+    indicators: linked.indicators,
     audits,
     auditChecklists: checklists,
     nonconformities: ncs,
     actions: deepClone(DEMO_ACTIONS),
-    documents: docs,
+    documents: linked.documents,
     documentVersions: versions,
     evidence: evidenceSeeds as EvidenceItem[],
-    processes: processesWithLinks(orgId),
+    processes: linked.processes,
     billing: {
       plan: org.plan === "Starter" ? "STARTER" : "GROWTH",
       nextBilling: "15 Jul 2026",
@@ -463,8 +486,8 @@ export function createWorkspaceState(session: SessionProfile): WorkspaceState {
     demoOrganizations: DEMO_ORGANIZATIONS,
     auditEvents,
     trainingCourses,
-    trainingAssignments,
-    changeRequests,
+    trainingAssignments: linked.trainingAssignments,
+    changeRequests: linked.changeRequests,
     suppliers,
     integrations,
     onboardingChecklist,
@@ -506,7 +529,8 @@ type Action =
   | { type: "updateChangeRequest"; id: string; patch: Partial<ChangeRequestRow> }
   | { type: "updateSupplier"; id: string; patch: Partial<SupplierRow> }
   | { type: "updateIntegration"; key: IntegrationKey; patch: Partial<IntegrationInstanceRow> }
-  | { type: "toggleOnboarding"; id: string; done?: boolean };
+  | { type: "toggleOnboarding"; id: string; done?: boolean }
+  | { type: "replaceWorkspace"; state: WorkspaceState };
 
 function patchGapList(list: GapClauseState[], a: Extract<Action, { type: "updateGapQuestion" }>): GapClauseState[] {
   return list.map(row => {
@@ -524,22 +548,50 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
   switch (a.type) {
     case "toast":
       return { ...state, toast: a.message };
-    case "addRisk":
-      return { ...state, risks: [a.risk, ...state.risks] };
-    case "updateRisk":
-      return {
-        ...state,
-        risks: state.risks.map(r => {
-          if (r.id !== a.id) return r;
-          const next = { ...r, ...a.patch };
-          next.score = next.probability * next.impact;
-          return next;
-        }),
-      };
-    case "addIndicator":
-      return { ...state, indicators: [...state.indicators, a.ind] };
-    case "updateIndicator":
-      return { ...state, indicators: state.indicators.map(i => (i.id === a.id ? { ...i, ...a.patch } : i)) };
+    case "addRisk": {
+      const risks = [a.risk, ...state.risks];
+      const processes = a.risk.linkedProcessCode
+        ? syncProcessRiskCodes(state.processes, a.risk.code, a.risk.linkedProcessCode)
+        : state.processes;
+      return { ...state, risks, processes };
+    }
+    case "updateRisk": {
+      const prev = state.risks.find(r => r.id === a.id);
+      const risks = state.risks.map(r => {
+        if (r.id !== a.id) return r;
+        const next = { ...r, ...a.patch };
+        next.score = next.probability * next.impact;
+        return next;
+      });
+      const nextRisk = risks.find(r => r.id === a.id);
+      const processes =
+        prev && nextRisk && a.patch.linkedProcessCode !== undefined
+          ? syncProcessRiskCodes(state.processes, prev.code, nextRisk.linkedProcessCode ?? "", prev.linkedProcessCode)
+          : state.processes;
+      return { ...state, risks, processes };
+    }
+    case "addIndicator": {
+      const indicators = [...state.indicators, a.ind];
+      const processes = a.ind.linkedProcessCode
+        ? syncProcessIndicatorNames(state.processes, a.ind.name, a.ind.linkedProcessCode)
+        : state.processes;
+      return { ...state, indicators, processes };
+    }
+    case "updateIndicator": {
+      const prev = state.indicators.find(i => i.id === a.id);
+      const indicators = state.indicators.map(i => (i.id === a.id ? { ...i, ...a.patch } : i));
+      const nextInd = indicators.find(i => i.id === a.id);
+      const processes =
+        prev && nextInd && a.patch.linkedProcessCode !== undefined
+          ? syncProcessIndicatorNames(
+              state.processes,
+              prev.name,
+              nextInd.linkedProcessCode ?? "",
+              prev.linkedProcessCode,
+            )
+          : state.processes;
+      return { ...state, indicators, processes };
+    }
     case "addAudit":
       return {
         ...state,
@@ -579,10 +631,14 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
       return { ...state, actions: [a.action, ...state.actions] };
     case "updateAction":
       return { ...state, actions: state.actions.map(x => (x.id === a.id ? { ...x, ...a.patch } : x)) };
-    case "addDocument":
+    case "addDocument": {
+      const processes = a.doc.linkedProcessCode
+        ? syncProcessDocCodes(state.processes, a.doc.code, a.doc.linkedProcessCode)
+        : state.processes;
       return {
         ...state,
         documents: [a.doc, ...state.documents],
+        processes,
         documentVersions: {
           ...state.documentVersions,
           [a.doc.id]: [
@@ -597,11 +653,17 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
           ],
         },
       };
-    case "updateDocument":
-      return {
-        ...state,
-        documents: state.documents.map(d => (d.id === a.id ? { ...d, ...a.patch } : d)),
-      };
+    }
+    case "updateDocument": {
+      const prev = state.documents.find(d => d.id === a.id);
+      const documents = state.documents.map(d => (d.id === a.id ? { ...d, ...a.patch } : d));
+      const nextDoc = documents.find(d => d.id === a.id);
+      const processes =
+        prev && nextDoc && a.patch.linkedProcessCode !== undefined
+          ? syncProcessDocCodes(state.processes, prev.code, nextDoc.linkedProcessCode ?? "", prev.linkedProcessCode)
+          : state.processes;
+      return { ...state, documents, processes };
+    }
     case "addDocVersion":
       return {
         ...state,
@@ -629,7 +691,15 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
         activeOrgId: org.id,
         orgName: org.name,
       };
-      return { ...createWorkspaceState(nextSession), session: { ...nextSession, roleKey: state.session.roleKey, roleLabel: state.session.roleLabel } };
+      const profile: SessionProfile = {
+        ...nextSession,
+        roleKey: state.session.roleKey,
+        roleLabel: state.session.roleLabel,
+      };
+      const seeded = createWorkspaceState(profile);
+      if (typeof window === "undefined") return seeded;
+      const persisted = loadPersistedWorkspace(profile);
+      return persisted ? mergeHydratedState(seeded, persisted, profile) : seeded;
     }
     case "markNotificationRead":
       return {
@@ -648,22 +718,43 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
         : { ...state, gapIso27001: patchGapComment(state.gapIso27001, a) };
     case "appendAudit":
       return { ...state, auditEvents: [a.event, ...state.auditEvents] };
-    case "addTrainingAssignment":
-      return { ...state, trainingAssignments: [a.row, ...state.trainingAssignments] };
-    case "updateTrainingAssignment":
-      return {
-        ...state,
-        trainingAssignments: state.trainingAssignments.map(t => (t.id === a.id ? { ...t, ...a.patch } : t)),
-      };
-    case "addChangeRequest":
-      return { ...state, changeRequests: [a.row, ...state.changeRequests] };
-    case "updateChangeRequest":
-      return {
-        ...state,
-        changeRequests: state.changeRequests.map(c =>
-          c.id === a.id ? { ...c, ...a.patch, updatedAt: new Date().toISOString().slice(0, 10) } : c
-        ),
-      };
+    case "addTrainingAssignment": {
+      const trainingAssignments = [a.row, ...state.trainingAssignments];
+      const processes = a.row.processCode
+        ? syncProcessTrainingId(state.processes, a.row.id, a.row.processCode)
+        : state.processes;
+      return { ...state, trainingAssignments, processes };
+    }
+    case "updateTrainingAssignment": {
+      const prev = state.trainingAssignments.find(t => t.id === a.id);
+      const trainingAssignments = state.trainingAssignments.map(t => (t.id === a.id ? { ...t, ...a.patch } : t));
+      const next = trainingAssignments.find(t => t.id === a.id);
+      const processes =
+        prev && next && a.patch.processCode !== undefined
+          ? syncProcessTrainingId(state.processes, a.id, next.processCode ?? "", prev.processCode)
+          : state.processes;
+      return { ...state, trainingAssignments, processes };
+    }
+    case "addChangeRequest": {
+      const changeRequests = [a.row, ...state.changeRequests];
+      let processes = state.processes;
+      for (const code of a.row.processCodes ?? []) {
+        processes = syncProcessChangeCodes(processes, a.row.code, code);
+      }
+      return { ...state, changeRequests, processes };
+    }
+    case "updateChangeRequest": {
+      const prev = state.changeRequests.find(c => c.id === a.id);
+      const changeRequests = state.changeRequests.map(c =>
+        c.id === a.id ? { ...c, ...a.patch, updatedAt: new Date().toISOString().slice(0, 10) } : c
+      );
+      const next = changeRequests.find(c => c.id === a.id);
+      const processes =
+        prev && next && a.patch.processCodes
+          ? syncChangeRequestProcessCodes(state.processes, prev.code, next.processCodes, prev.processCodes)
+          : state.processes;
+      return { ...state, changeRequests, processes };
+    }
     case "updateSupplier":
       return {
         ...state,
@@ -681,6 +772,8 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
           o.id === a.id ? { ...o, done: a.done ?? !o.done } : o
         ),
       };
+    case "replaceWorkspace":
+      return a.state;
     default:
       return state;
   }
@@ -699,6 +792,19 @@ type Ctx = {
 
 const WorkspaceContext = createContext<Ctx | null>(null);
 
+function mergeHydratedState(seeded: WorkspaceState, persisted: WorkspaceState, profile: SessionProfile): WorkspaceState {
+  const merged = mergePersistedWithSeed(seeded, persisted, profile);
+  const linked = normalizeWorkspaceLinks({
+    documents: merged.documents,
+    risks: merged.risks,
+    indicators: merged.indicators,
+    processes: merged.processes,
+    changeRequests: merged.changeRequests,
+    trainingAssignments: merged.trainingAssignments,
+  });
+  return { ...merged, ...linked };
+}
+
 export function WorkspaceProvider({
   children,
   profile,
@@ -706,8 +812,23 @@ export function WorkspaceProvider({
   children: React.ReactNode;
   profile: SessionProfile;
 }) {
-  const initial = useMemo(() => createWorkspaceState(profile), [profile]);
-  const [state, dispatch] = useReducer(reducer, initial);
+  const seeded = useMemo(() => createWorkspaceState(profile), [profile]);
+  const [state, dispatch] = useReducer(reducer, seeded);
+  const persistReady = useRef(false);
+
+  useEffect(() => {
+    const persisted = loadPersistedWorkspace(profile);
+    if (persisted) {
+      dispatch({ type: "replaceWorkspace", state: mergeHydratedState(seeded, persisted, profile) });
+    }
+    persistReady.current = true;
+  }, [profile, seeded]);
+
+  useEffect(() => {
+    if (!persistReady.current) return;
+    const t = window.setTimeout(() => savePersistedWorkspace(profile, state), 350);
+    return () => window.clearTimeout(t);
+  }, [state, profile]);
 
   const nextRiskCode = useCallback(() => nextSequentialCode("R", state.risks), [state.risks]);
   const nextNcCode = useCallback(() => nextSequentialCode("NC", state.nonconformities), [state.nonconformities]);

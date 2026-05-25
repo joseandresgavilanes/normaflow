@@ -203,9 +203,31 @@ export function processesWithLinks(orgId: string) {
   return deep(DEMO_PROCESSES).map((p, i) => ({
     ...p,
     siteId: `${orgId}-s1`,
-    linkedRiskCodes: i === 0 ? ["R-001", "R-002"] : i === 1 ? ["R-004"] : ["R-003"],
-    linkedDocCodes: i === 0 ? ["SGC-MAN-001", "SGC-PRO-001"] : ["SGSI-POL-001"],
-    linkedIndicatorNames: i === 0 ? ["Satisfacción del Cliente (NPS)"] : ["Disponibilidad de Sistemas Críticos"],
+    linkedRiskCodes:
+      i === 0 ? ["R-001", "R-002", "R-005"] : i === 1 ? ["R-004"] : i === 2 ? ["R-003"] : i === 3 ? ["R-006"] : [],
+    linkedDocCodes: i === 0 ? ["SGC-MAN-001", "SGC-PRO-001"] : i === 1 ? ["SGSI-POL-001"] : i === 2 ? ["SGC-PRO-008"] : [],
+    linkedIndicatorNames:
+      i === 0
+        ? ["Satisfacción del Cliente (NPS)", "Tasa de No Conformidades Internas"]
+        : i === 1
+          ? ["Disponibilidad de Sistemas Críticos", "Tiempo Medio de Resolución de Incidentes"]
+          : i === 2
+            ? ["Documentos Aprobados vs Planificados"]
+            : i === 3
+              ? ["Cobertura de Auditorías Planificadas"]
+              : [],
+    linkedChangeCodes:
+      i === 0 ? ["CR-002"] : i === 1 ? ["CR-001", "CR-003"] : i === 2 ? [] : i === 3 ? [] : [],
+    linkedTrainingAssignmentIds:
+      i === 0
+        ? [`${orgId}-ta2`, `${orgId}-ta3`]
+        : i === 1
+          ? [`${orgId}-ta1`, `${orgId}-ta4`]
+          : i === 2
+            ? []
+            : i === 3
+              ? []
+              : [],
   }));
 }
 

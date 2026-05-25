@@ -17,6 +17,7 @@ import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type IndicatorRow } from "@/context/WorkspaceStore";
+import { processesLinkedToIndicator } from "@/lib/process-linking";
 
 type StatusFilter = "ALL" | IndicatorRow["status"];
 
@@ -88,7 +89,9 @@ export default function IndicatorsModule() {
     frequency: "monthly" as IndicatorRow["frequency"],
     clause: "",
     period: "Jun 2026",
+    linkedProcessCode: "",
   });
+  const [processLinkDraft, setProcessLinkDraft] = useState("");
 
   const visibleIndicators = useMemo(() => {
     if (statusTab === "ALL") return indicators;
@@ -97,7 +100,7 @@ export default function IndicatorsModule() {
 
   const indicatorProcesses = useMemo(() => {
     if (!detail) return [];
-    return processes.filter(p => p.linkedIndicatorNames?.includes(detail.name));
+    return processesLinkedToIndicator(detail, processes);
   }, [detail, processes]);
 
   const onTrack = indicators.filter(i => i.status === "ON_TRACK").length;
@@ -105,7 +108,7 @@ export default function IndicatorsModule() {
   const offTrack = indicators.filter(i => i.status === "OFF_TRACK").length;
 
   function openCreate() {
-    setNewForm({ name: "", target: 80, unit: "%", frequency: "monthly", clause: "", period: "Jun 2026" });
+    setNewForm({ name: "", target: 80, unit: "%", frequency: "monthly", clause: "", period: "Jun 2026", linkedProcessCode: processes[0]?.code ?? "" });
     setCreateOpen(true);
   }
 
@@ -136,6 +139,7 @@ export default function IndicatorsModule() {
       nextReviewDue: nextRev.toISOString().slice(0, 10),
       managementComment: "",
       alertThresholdPct: 90,
+      linkedProcessCode: newForm.linkedProcessCode.trim(),
     };
     dispatch({ type: "addIndicator", ind });
     setCreateOpen(false);
@@ -146,6 +150,15 @@ export default function IndicatorsModule() {
     setDetail(ind);
     setEditValue(String(ind.value));
     setCommentDraft(ind.managementComment ?? "");
+    setProcessLinkDraft(ind.linkedProcessCode ?? "");
+  }
+
+  function saveProcessLink() {
+    if (!detail) return;
+    const code = processLinkDraft.trim();
+    dispatch({ type: "updateIndicator", id: detail.id, patch: { linkedProcessCode: code } });
+    setDetail({ ...detail, linkedProcessCode: code });
+    showToast(code ? `KPI enlazado al proceso ${code}` : "Enlace de proceso quitado");
   }
 
   function saveDetailValue() {
@@ -502,6 +515,22 @@ export default function IndicatorsModule() {
               style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
             />
           </label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
+            Proceso asociado
+            <select
+              className="nf-app-input"
+              value={newForm.linkedProcessCode}
+              onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })}
+              style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+            >
+              <option value="">Sin proceso</option>
+              {processes.map(p => (
+                <option key={p.id} value={p.code}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
             <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
               Crear KPI
@@ -614,6 +643,39 @@ export default function IndicatorsModule() {
                   Mapa de procesos →
                 </Link>
               </div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", display: "block", marginBottom: 8 }}>
+                Proceso principal
+                <select
+                  className="nf-app-input"
+                  value={processLinkDraft}
+                  onChange={e => setProcessLinkDraft(e.target.value)}
+                  style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+                >
+                  <option value="">Sin proceso</option>
+                  {processes.map(p => (
+                    <option key={p.id} value={p.code}>
+                      {p.code} — {p.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                onClick={saveProcessLink}
+                style={{
+                  marginBottom: 12,
+                  background: "#f0f4fa",
+                  color: "#123C66",
+                  border: "1px solid rgba(18, 60, 102, 0.15)",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                Guardar enlace de proceso
+              </button>
               {indicatorProcesses.length ? (
                 <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.65 }}>
                   {indicatorProcesses.map(p => (
@@ -623,7 +685,7 @@ export default function IndicatorsModule() {
                   ))}
                 </ul>
               ) : (
-                <span style={{ fontSize: 13, color: "var(--nf-ink-4)" }}>Ningún proceso del mapa actual referencia este KPI por nombre.</span>
+                <span style={{ fontSize: 13, color: "var(--nf-ink-4)" }}>Ninguno enlazado por nombre o proceso.</span>
               )}
             </div>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

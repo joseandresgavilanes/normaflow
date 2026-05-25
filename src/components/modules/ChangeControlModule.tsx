@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import type { CSSProperties } from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -9,6 +9,7 @@ import Modal from "@/components/ui/Modal";
 import AttestationModal from "@/components/compliance/AttestationModal";
 import AuditTimeline from "@/components/compliance/AuditTimeline";
 import { useWorkspace, type ChangeRequestRow } from "@/context/WorkspaceStore";
+import { processesLinkedToChange } from "@/lib/process-linking";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 
@@ -39,7 +40,7 @@ function statusLabel(s: ChangeRequestRow["status"]) {
 export default function ChangeControlModule() {
   const { state, dispatch, showToast, nextChangeCode } = useWorkspace();
   const perm = useDemoPermission();
-  const { changeRequests, auditEvents, documents, trainingCourses } = state;
+  const { changeRequests, auditEvents, documents, trainingCourses, processes } = state;
   const [detail, setDetail] = useState<ChangeRequestRow | null>(null);
   const [filter, setFilter] = useState<string>("ALL");
   const [createOpen, setCreateOpen] = useState(false);
@@ -50,11 +51,32 @@ export default function ChangeControlModule() {
     changeType: "Mejora",
     reason: "",
     impact: "MEDIUM" as ChangeRequestRow["impact"],
+    processCodes: [] as string[],
   });
+  const [processCodesDraft, setProcessCodesDraft] = useState<string[]>([]);
 
   const filtered = filter === "ALL" ? changeRequests : changeRequests.filter(c => c.status === filter);
   const detailLive = detail ? changeRequests.find(c => c.id === detail.id) ?? detail : null;
   const changeEvents = useMemo(() => auditEvents.filter(e => e.entityType === "CHANGE_REQUEST" || e.action === "CHANGE_STATUS"), [auditEvents]);
+  const linkedProcesses = useMemo(
+    () => (detailLive ? processesLinkedToChange(detailLive, processes) : []),
+    [detailLive, processes],
+  );
+
+  useEffect(() => {
+    if (detailLive) setProcessCodesDraft([...detailLive.processCodes]);
+  }, [detailLive?.id, detailLive?.processCodes]);
+
+  function toggleProcessCode(code: string) {
+    setProcessCodesDraft(prev => (prev.includes(code) ? prev.filter(c => c !== code) : [...prev, code]));
+  }
+
+  function saveProcessLinks() {
+    if (!detailLive) return;
+    dispatch({ type: "updateChangeRequest", id: detailLive.id, patch: { processCodes: processCodesDraft } });
+    setDetail({ ...detailLive, processCodes: processCodesDraft });
+    showToast("Procesos vinculados actualizados");
+  }
 
   function logChange(id: string, label: string, oldS: string, newS: string, reason?: string) {
     dispatch({
@@ -100,7 +122,7 @@ export default function ChangeControlModule() {
       impact: form.impact,
       affectedAreas: [],
       documentIds: [],
-      processCodes: [],
+      processCodes: form.processCodes,
       riskCodes: [],
       trainingCourseIds: [],
       approvers: ["Ana García"],
@@ -125,7 +147,7 @@ export default function ChangeControlModule() {
       }),
     });
     setCreateOpen(false);
-    setForm({ title: "", category: "Proceso", changeType: "Mejora", reason: "", impact: "MEDIUM" });
+    setForm({ title: "", category: "Proceso", changeType: "Mejora", reason: "", impact: "MEDIUM", processCodes: [] });
     showToast("Solicitud de cambio creada");
   }
 
@@ -292,10 +314,38 @@ export default function ChangeControlModule() {
             </div>
             <div style={{ marginBottom: 16 }}>
               <div className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
-                Procesos / riesgos / formación
+                Procesos asociados
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                {processes.map(p => (
+                  <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
+                    <input
+                      type="checkbox"
+                      checked={processCodesDraft.includes(p.code)}
+                      disabled={!perm.changes.manage}
+                      onChange={() => toggleProcessCode(p.code)}
+                    />
+                    <span style={{ fontWeight: 800, color: "#123C66" }}>{p.code}</span> — {p.name}
+                  </label>
+                ))}
+              </div>
+              {perm.changes.manage && (
+                <button type="button" onClick={saveProcessLinks} style={{ ...btnPrimary, fontSize: 12, padding: "8px 12px" }}>
+                  Guardar procesos vinculados
+                </button>
+              )}
+              {linkedProcesses.length > 0 && (
+                <p className="nf-app-help" style={{ margin: "10px 0 0", fontWeight: 600 }}>
+                  En mapa: {linkedProcesses.map(p => p.code).join(", ")}
+                </p>
+              )}
+            </div>
+            <div style={{ marginBottom: 16 }}>
+              <div className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+                Riesgos / formación
               </div>
               <p className="nf-app-help" style={{ margin: 0, fontWeight: 600 }}>
-                Procesos: {detailLive.processCodes.join(", ") || "—"} · Riesgos: {detailLive.riskCodes.join(", ") || "—"} · Cursos:{" "}
+                Riesgos: {detailLive.riskCodes.join(", ") || "—"} · Cursos:{" "}
                 {detailLive.trainingCourseIds.map(id => trainingCourses.find(t => t.id === id)?.code ?? id).join(", ") || "—"}
               </p>
             </div>
@@ -410,13 +460,35 @@ export default function ChangeControlModule() {
           value={form.impact}
           onChange={e => setForm({ ...form, impact: e.target.value as ChangeRequestRow["impact"] })}
           className="nf-app-input"
-          style={{ width: "100%", marginBottom: 16, boxSizing: "border-box" }}
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box" }}
         >
           <option value="LOW">Bajo</option>
           <option value="MEDIUM">Medio</option>
           <option value="HIGH">Alto</option>
           <option value="CRITICAL">Crítico</option>
         </select>
+        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+          Procesos afectados
+        </label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+          {processes.map(p => (
+            <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
+              <input
+                type="checkbox"
+                checked={form.processCodes.includes(p.code)}
+                onChange={() =>
+                  setForm({
+                    ...form,
+                    processCodes: form.processCodes.includes(p.code)
+                      ? form.processCodes.filter(c => c !== p.code)
+                      : [...form.processCodes, p.code],
+                  })
+                }
+              />
+              {p.code} — {p.name}
+            </label>
+          ))}
+        </div>
         <button type="button" onClick={submitCreate} style={{ ...btnPrimary, width: "100%", marginTop: 4 }}>
           Guardar borrador
         </button>

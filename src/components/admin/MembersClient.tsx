@@ -9,6 +9,7 @@ import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import { useAdminMock, type OrgMemberMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 
 type Role = OrgMemberMockRow["role"];
@@ -29,6 +30,13 @@ export default function MembersClient() {
   const perm = useDemoPermission();
   const canEdit = perm.can("members:*");
   const rows = admin.state.members;
+
+  const plan = admin.state.organization.plan as PlanKey;
+  const planInfo = PLAN_LIMITS[plan];
+  const maxUsers = planInfo?.maxUsers ?? null;
+  const usedUsers = rows.length;
+  const atLimit = maxUsers !== null && usedUsers >= maxUsers;
+  const nearLimit = maxUsers !== null && !atLimit && usedUsers / maxUsers >= 0.8;
 
   const [search, setSearch] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -128,9 +136,54 @@ export default function MembersClient() {
       <SectionTitle
         title="Usuarios y roles"
         sub="Personas con acceso a esta organización en NormaFlow."
-        action={canEdit ? "+ Invitar persona" : undefined}
-        onAction={canEdit ? () => { setInviting(true); setError(""); } : undefined}
+        action={canEdit ? (atLimit ? "Límite alcanzado" : "+ Invitar persona") : undefined}
+        onAction={canEdit && !atLimit ? () => { setInviting(true); setError(""); } : undefined}
       />
+
+      {/* Plan / usage banner */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 16,
+        padding: "12px 16px", marginBottom: 14,
+        borderRadius: 10,
+        background: atLimit ? "rgba(201, 60, 55, 0.06)" : nearLimit ? "rgba(214, 138, 26, 0.06)" : "var(--nf-app-surface-2)",
+        border: `1px solid ${atLimit ? "rgba(201, 60, 55, 0.35)" : nearLimit ? "rgba(214, 138, 26, 0.35)" : "var(--nf-line)"}`,
+        flexWrap: "wrap",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Plan
+          </span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
+            {planInfo?.label ?? plan}
+          </span>
+        </div>
+        <div style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 4 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)" }}>
+            <span>Usuarios</span>
+            <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-ink-2)", fontWeight: 700 }}>
+              {usedUsers} / {maxUsers === null ? "∞" : maxUsers}
+            </span>
+          </div>
+          {maxUsers !== null && (
+            <div style={{ height: 4, background: "var(--nf-line)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${Math.min(100, (usedUsers / maxUsers) * 100)}%`,
+                background: atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-accent)",
+                transition: "width 0.2s",
+              }} />
+            </div>
+          )}
+        </div>
+        {(atLimit || nearLimit) && (
+          <div style={{ fontSize: 12, color: atLimit ? "#C93C37" : "#D68A1A", fontWeight: 600 }}>
+            {atLimit
+              ? "Has alcanzado el límite del plan. "
+              : `Te quedan ${maxUsers! - usedUsers} usuarios. `}
+            <a href="/pricing" style={{ color: "inherit", textDecoration: "underline" }}>Actualizar plan →</a>
+          </div>
+        )}
+      </div>
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>

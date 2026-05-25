@@ -23,10 +23,17 @@ const STATUS_LABEL: Record<string, string> = {
 export default function TrainingModule() {
   const { state, dispatch, showToast } = useWorkspace();
   const perm = useDemoPermission();
-  const { trainingCourses, trainingAssignments, auditEvents, documents, demoPeople } = state;
+  const { trainingCourses, trainingAssignments, auditEvents, documents, demoPeople, processes } = state;
   const [tab, setTab] = useState<"catalog" | "assignments" | "people" | "compliance" | "trail">("catalog");
   const [assignOpen, setAssignOpen] = useState(false);
-  const [form, setForm] = useState({ courseId: trainingCourses[0]?.id ?? "", personId: demoPeople[0]?.id ?? "", dueDays: 30 });
+  const [editAssign, setEditAssign] = useState<TrainingAssignmentRow | null>(null);
+  const [processLinkDraft, setProcessLinkDraft] = useState("");
+  const [form, setForm] = useState({
+    courseId: trainingCourses[0]?.id ?? "",
+    personId: demoPeople[0]?.id ?? "",
+    dueDays: 30,
+    processCode: processes[0]?.code ?? "",
+  });
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -45,8 +52,22 @@ export default function TrainingModule() {
       courseId: trainingCourses[0]?.id ?? "",
       personId: demoPeople[0]?.id ?? "",
       dueDays: 30,
+      processCode: processes[0]?.code ?? "",
     });
     setAssignOpen(true);
+  }
+
+  function openEditProcess(a: TrainingAssignmentRow) {
+    setEditAssign(a);
+    setProcessLinkDraft(a.processCode ?? "");
+  }
+
+  function saveAssignmentProcessLink() {
+    if (!editAssign) return;
+    const code = processLinkDraft.trim();
+    dispatch({ type: "updateTrainingAssignment", id: editAssign.id, patch: { processCode: code } });
+    showToast(code ? `Asignación enlazada a ${code}` : "Enlace de proceso quitado");
+    setEditAssign(null);
   }
 
   function submitAssign() {
@@ -70,6 +91,7 @@ export default function TrainingModule() {
       assigneeRole: person.roleLabel,
       siteId: person.siteId,
       teamId: person.teamId,
+      processCode: form.processCode.trim() || undefined,
       status: "ASSIGNED",
       assignedAt: new Date().toISOString(),
       dueAt: due.toISOString().slice(0, 10),
@@ -124,6 +146,7 @@ export default function TrainingModule() {
     }
     const person = demoPeople[0];
     if (!person) return;
+    const doc = documents.find(d => d.code === docCode);
     const due = new Date();
     due.setDate(due.getDate() + 14);
     const row: TrainingAssignmentRow = {
@@ -132,6 +155,7 @@ export default function TrainingModule() {
       assigneeName: person.name,
       assigneeEmail: person.email,
       siteId: person.siteId,
+      processCode: doc?.linkedProcessCode,
       status: "ASSIGNED",
       assignedAt: new Date().toISOString(),
       dueAt: due.toISOString().slice(0, 10),
@@ -345,6 +369,7 @@ export default function TrainingModule() {
                   <th>Curso</th>
                   <th>Estado</th>
                   <th>Vence</th>
+                  <th>Proceso</th>
                   <th>Origen</th>
                   <th />
                 </tr>
@@ -366,10 +391,28 @@ export default function TrainingModule() {
                         />
                       </td>
                       <td>{formatDate(a.dueAt)}</td>
+                      <td>
+                        {a.processCode ? (
+                          <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "#123C66", textDecoration: "none" }}>
+                            {a.processCode}
+                          </Link>
+                        ) : (
+                          <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span>
+                        )}
+                      </td>
                       <td style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
                         {a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}
                       </td>
-                      <td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {perm.training.manage && (
+                          <button
+                            type="button"
+                            onClick={() => openEditProcess(a)}
+                            style={{ fontSize: 12, color: "#123C66", fontWeight: 600, background: "none", border: "none", cursor: "pointer", marginRight: 10 }}
+                          >
+                            Proceso
+                          </button>
+                        )}
                         {a.status !== "COMPLETED" && perm.training.manage && (
                           <button type="button" onClick={() => markComplete(a)} style={{ fontSize: 12, color: "#123C66", fontWeight: 600, background: "none", border: "none", cursor: "pointer" }}>
                             Completar
@@ -497,6 +540,20 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Proceso asociado</label>
+        <select
+          className="nf-app-input"
+          value={form.processCode}
+          onChange={e => setForm({ ...form, processCode: e.target.value })}
+          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+        >
+          <option value="">Sin proceso</option>
+          {processes.map(p => (
+            <option key={p.id} value={p.code}>
+              {p.code} — {p.name}
+            </option>
+          ))}
+        </select>
         <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Días hasta vencimiento</label>
         <input
           className="nf-app-input"
@@ -510,6 +567,36 @@ export default function TrainingModule() {
         <button type="button" onClick={submitAssign} style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
           Crear asignación
         </button>
+      </Modal>
+
+      <Modal open={!!editAssign} onClose={() => setEditAssign(null)} title="Enlace con proceso" width={420}>
+        {editAssign && (
+          <div>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: "0 0 12px" }}>
+              {editAssign.assigneeName} · {trainingCourses.find(c => c.id === editAssign.courseId)?.code}
+            </p>
+            <select
+              className="nf-app-input"
+              value={processLinkDraft}
+              onChange={e => setProcessLinkDraft(e.target.value)}
+              style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+            >
+              <option value="">Sin proceso</option>
+              {processes.map(p => (
+                <option key={p.id} value={p.code}>
+                  {p.code} — {p.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={saveAssignmentProcessLink}
+              style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+            >
+              Guardar enlace
+            </button>
+          </div>
+        )}
       </Modal>
     </div>
   );
