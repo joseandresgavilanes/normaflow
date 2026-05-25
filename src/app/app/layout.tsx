@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAppContext } from "@/lib/app-context";
+import { isSupabaseConfigured } from "@/lib/env";
+import { getAdminPayload, type AdminPayload } from "@/lib/server-queries";
 import AppRoot from "@/components/app/AppRoot";
 
 function serializeContext(
@@ -42,5 +44,24 @@ export default async function AppLayout({
   const ctx = await getAppContext();
   if (!ctx) redirect("/login");
 
-  return <AppRoot initial={serializeContext(ctx)}>{children}</AppRoot>;
+  // Hidratamos los datos admin (usuarios, grupos, cargos, personal,
+  // catálogos, registros, ACPM) cuando estamos en modo live + Supabase.
+  // En modo demo o si Prisma falla, pasamos null y el provider mock se hace cargo.
+  let adminPayload: AdminPayload | null = null;
+  if (ctx.mode === "live" && isSupabaseConfigured()) {
+    try {
+      adminPayload = await getAdminPayload(ctx.organization.id, ctx.user.id);
+    } catch (err) {
+      console.warn("[app-layout] getAdminPayload failed, falling back to mock:", err);
+    }
+  }
+
+  return (
+    <AppRoot
+      initial={serializeContext(ctx)}
+      adminPayload={adminPayload}
+    >
+      {children}
+    </AppRoot>
+  );
 }

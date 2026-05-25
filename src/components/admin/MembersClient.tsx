@@ -42,7 +42,10 @@ export default function MembersClient() {
   const [inviting, setInviting] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState<OrgMemberMockRow | null>(null);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
+  const isDemoMode = process.env.NEXT_PUBLIC_AUTH_DEMO_MODE === "true";
+  const orgName = admin.state.organization.name;
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -117,14 +120,20 @@ export default function MembersClient() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setError("");
-    startTransition(() => {
+    setSuccess("");
+    startTransition(async () => {
       try {
-        admin.inviteMember({
+        await admin.inviteMember({
           email: String(fd.get("email") || ""),
           name: String(fd.get("name") || ""),
           role: String(fd.get("role") || "CONTRIBUTOR") as Role,
         });
         setInviting(false);
+        setSuccess(
+          isDemoMode
+            ? "Invitación simulada: la persona se añadió al listado (sin correo real)."
+            : "Invitación enviada. La persona recibirá un correo de Supabase para establecer su contraseña."
+        );
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "No se pudo invitar.");
       }
@@ -137,7 +146,7 @@ export default function MembersClient() {
         title="Usuarios y roles"
         sub="Personas con acceso a esta organización en NormaFlow."
         action={canEdit ? (atLimit ? "Límite alcanzado" : "+ Invitar persona") : undefined}
-        onAction={canEdit && !atLimit ? () => { setInviting(true); setError(""); } : undefined}
+        onAction={canEdit && !atLimit ? () => { setInviting(true); setError(""); setSuccess(""); } : undefined}
       />
 
       {/* Plan / usage banner */}
@@ -196,6 +205,9 @@ export default function MembersClient() {
           />
           <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {rows.length}</span>
         </div>
+        {success && (
+          <div style={{ padding: "8px 12px", borderRadius: 6, background: "rgba(46, 139, 87, 0.08)", color: "#2E8B57", fontSize: 13, marginBottom: 12 }}>{success}</div>
+        )}
         {error && (
           <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13, marginBottom: 12 }}>{error}</div>
         )}
@@ -216,7 +228,9 @@ export default function MembersClient() {
             </select>
           </Field>
           <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)" }}>
-            En esta versión local la invitación es inmediata. El envío de email se conectará al integrar Resend.
+            {isDemoMode
+              ? "Modo demo: se añade al listado sin enviar correo real."
+              : `Se enviará un correo de Supabase para establecer contraseña y acceder a ${orgName}.`}
           </p>
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
             <button type="button" onClick={() => setInviting(false)} disabled={isPending} style={ghostBtn}>Cancelar</button>

@@ -911,7 +911,7 @@ type AdminMockContextValue = {
   updatePersonnel: (id: string, data: { firstName?: string; lastName?: string; email?: string; identification?: string; positionId?: string; hiredAt?: string }) => void;
   deactivatePersonnel: (id: string) => void;
   // members
-  inviteMember: (data: { name: string; email: string; role: OrgMemberMockRow["role"] }) => void;
+  inviteMember: (data: { name: string; email: string; role: OrgMemberMockRow["role"] }) => void | Promise<void>;
   updateMemberRole: (membershipId: string, role: OrgMemberMockRow["role"]) => void;
   removeMember: (membershipId: string) => void;
   // groups
@@ -956,7 +956,9 @@ type AdminMockContextValue = {
   commentACPM: (id: string, message: string) => void;
 };
 
-const Ctx = createContext<AdminMockContextValue | null>(null);
+export const AdminCtx = createContext<AdminMockContextValue | null>(null);
+const Ctx = AdminCtx;
+export type { AdminMockContextValue };
 
 export function AdminMockProvider({
   children,

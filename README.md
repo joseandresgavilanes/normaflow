@@ -75,6 +75,19 @@ npm run dev
 # → http://localhost:3000
 ```
 
+### Invitar usuarios (producción / staging)
+
+Con `AUTH_DEMO_MODE=false` y Supabase configurado, un admin puede invitar desde **Ajustes → Usuarios**. El flujo usa **Supabase Auth** (no Resend) para el correo de invitación / contraseña:
+
+1. En Supabase: **Authentication → URL Configuration** → `Site URL` = valor de `NEXT_PUBLIC_APP_URL`
+2. Añadir redirect: `{APP_URL}/login`
+3. **Email Templates → Invite user** (personalizar en español si quieres)
+4. Definir `SUPABASE_SERVICE_ROLE_KEY` y `NEXT_PUBLIC_APP_URL` en `.env.local`
+
+Tras invitar, el usuario recibe el email de Supabase, establece contraseña y entra en `/login`. La membership en Prisma ya existe; `syncAuthUser` enlaza `authUserId` al primer login.
+
+`RESEND_API_KEY` es opcional: envía un email de bienvenida con branding NormaFlow después de la invitación.
+
 ---
 
 ## 📁 Estructura del proyecto

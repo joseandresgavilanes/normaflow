@@ -111,9 +111,15 @@ function trailNodeClass(action: string): string {
   return "nf-audit-slot-node--default";
 }
 
-export default function ActivityClient() {
+export default function ActivityClient({
+  liveEntries,
+}: {
+  /** Cuando se pasa, los datos vienen de la tabla audit_logs (modo live).
+   *  Cuando es undefined, se lee el mock del AdminMockProvider (modo demo). */
+  liveEntries?: AuditTrailEntry[];
+} = {}) {
   const admin = useAdminMock();
-  const events = admin.state.auditTrail;
+  const events = liveEntries ?? admin.state.auditTrail;
 
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState<string>("ALL");

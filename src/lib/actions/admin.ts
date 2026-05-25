@@ -5,6 +5,9 @@ import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { planMaxUsers } from "@/lib/constants";
+import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
+import { sendWelcomeEmail } from "@/lib/resend";
 
 // ─── Organization settings ──────────────────────────────────────────
 
@@ -43,6 +46,24 @@ export async function inviteMember(input: { email: string; name: string; role: R
   if (!name) throw new Error("El nombre es obligatorio.");
   if (!ROLES_VALUES.includes(input.role)) throw new Error("Rol no válido.");
 
+  if (!isSupabaseInviteConfigured()) {
+    throw new Error(
+      "Configura SUPABASE_SERVICE_ROLE_KEY y NEXT_PUBLIC_APP_URL para enviar invitaciones por correo."
+    );
+  }
+
+  const maxUsers = planMaxUsers(ctx.organization.plan);
+  if (maxUsers !== null) {
+    const memberCount = await prisma.membership.count({
+      where: { organizationId: ctx.organization.id },
+    });
+    if (memberCount >= maxUsers) {
+      throw new Error(
+        `Has alcanzado el límite de ${maxUsers} usuarios del plan ${ctx.organization.plan}. Actualiza tu plan para añadir más personas.`
+      );
+    }
+  }
+
   // Find-or-create the user, then attach a membership for this org.
   const user = await prisma.user.upsert({
     where: { email },
@@ -57,18 +78,36 @@ export async function inviteMember(input: { email: string; name: string; role: R
     throw new Error("Esta persona ya pertenece a la organización.");
   }
 
-  await prisma.membership.create({
+  const membership = await prisma.membership.create({
     data: { userId: user.id, organizationId: ctx.organization.id, role: input.role },
   });
+
+  const inviteResult = await sendSupabaseMemberInvite({
+    email,
+    name,
+    organizationName: ctx.organization.name,
+  });
+
+  if (!inviteResult.ok) {
+    await prisma.membership.delete({ where: { id: membership.id } });
+    throw new Error(`No se pudo enviar la invitación por correo: ${inviteResult.error}`);
+  }
 
   await logAuditEvent({
     ctx,
     action: "invite",
     module: "member",
     recordId: user.id,
-    after: { email, name, role: input.role },
+    after: {
+      email,
+      name,
+      role: input.role,
+      inviteMethod: inviteResult.method,
+    },
   });
-  // NOTE: email send via Resend is wired in Phase 2.
+
+  void sendWelcomeEmail(email, name, ctx.organization.name).catch(() => {});
+
   revalidatePath("/app/settings/users");
 }
 

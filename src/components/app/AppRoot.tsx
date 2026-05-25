@@ -9,6 +9,8 @@ import AIPanel from "@/components/modules/AIPanel";
 import WorkspaceToast from "@/components/workspace/WorkspaceToast";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { AdminMockProvider } from "@/context/AdminMockStore";
+import { AdminLiveProvider } from "@/context/AdminLiveProvider";
+import type { AdminPayload } from "@/lib/server-queries";
 import { ROLES } from "@/lib/constants";
 import type { AppRoleKey } from "@/lib/permissions/frontend";
 
@@ -49,9 +51,11 @@ type SerializedCtx =
 
 export default function AppRoot({
   initial,
+  adminPayload,
   children,
 }: {
   initial: SerializedCtx;
+  adminPayload?: AdminPayload | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -146,9 +150,25 @@ export default function AppRoot({
     [userName, initial.user.email, orgName, roleLabel, roleKey, activeOrgId, workspaceKind, initial.organization.plan],
   );
 
+  const liveAdmin = initial.mode === "live" && adminPayload != null;
+
+  // Wrapper que decide entre live provider (Prisma + server actions) y mock provider.
+  // Ambos comparten exactamente el mismo contexto (AdminCtx), así que los componentes
+  // que usan useAdminMock() funcionan sin cambios en cualquiera de los dos modos.
+  const adminShell = (children: React.ReactNode) =>
+    liveAdmin && adminPayload ? (
+      <AdminLiveProvider initialData={adminPayload} currentUserId={initial.user.id}>
+        {children}
+      </AdminLiveProvider>
+    ) : (
+      <AdminMockProvider seedMode={workspaceKind} profile={profile}>
+        {children}
+      </AdminMockProvider>
+    );
+
   return (
     <WorkspaceProvider key={`${profile.email}:${activeOrgId}:${workspaceKind}`} profile={profile}>
-      <AdminMockProvider seedMode={workspaceKind} profile={profile}>
+      {adminShell(
         <div className="nf-app-shell">
           {isCompactNav && navOpen && (
             <button
@@ -198,7 +218,7 @@ export default function AppRoot({
           />
           <WorkspaceToast />
         </div>
-      </AdminMockProvider>
+      )}
     </WorkspaceProvider>
   );
 }
