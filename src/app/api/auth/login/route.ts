@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
 import { signDemoSession, demoCookieName } from "@/lib/demo-auth";
 import { syncAuthUser } from "@/lib/auth/sync-auth-user";
+import { appendClearAuthCookies } from "@/lib/auth/session-cookies";
 import { isAuthDemoMode, isSupabaseConfigured, sessionSecret } from "@/lib/env";
 
 type LocalAuthAccount = {
@@ -85,6 +86,10 @@ export async function POST(request: NextRequest) {
         },
       }
     );
+
+    // Cerrar sesión previa (demo u otro usuario Supabase) antes del login explícito.
+    await supabase.auth.signOut();
+    appendClearAuthCookies(response);
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error || !data.user) {

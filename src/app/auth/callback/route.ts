@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { syncAuthUser } from "@/lib/auth/sync-auth-user";
+import { appendClearAuthCookies } from "@/lib/auth/session-cookies";
 import { isSupabaseConfigured } from "@/lib/env";
 
 function safeNextPath(raw: string | null): string {
@@ -43,6 +44,10 @@ export async function GET(request: NextRequest) {
       },
     }
   );
+
+  // Evitar mezclar la invitación con una sesión demo o Supabase previa.
+  await supabase.auth.signOut();
+  appendClearAuthCookies(response);
 
   const { data, error } = await supabase.auth.exchangeCodeForSession(code);
   if (error || !data.user) {

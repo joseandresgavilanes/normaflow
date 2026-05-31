@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { demoCookieName } from "@/lib/demo-auth";
+import { appendClearAuthCookies } from "@/lib/auth/session-cookies";
 import { isSupabaseConfigured } from "@/lib/env";
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
     await supabase.auth.signOut();
   }
 
-  response.cookies.set(demoCookieName, "", { maxAge: 0, path: "/" });
-  response.cookies.set("nf_org", "", { maxAge: 0, path: "/" });
+  appendClearAuthCookies(response);
   return response;
 }

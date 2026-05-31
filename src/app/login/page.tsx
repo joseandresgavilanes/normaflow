@@ -1,8 +1,9 @@
 "use client";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
+import { clearSupabaseLegacyStorage } from "@/lib/auth/clear-client-auth";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
 
@@ -11,13 +12,22 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/app/dashboard";
   const authError = searchParams.get("error");
+  const emailParam = searchParams.get("email") ?? "";
+  const invited = searchParams.get("invited") === "1";
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(emailParam);
   const [password, setPassword] = useState("");
   const [error, setError] = useState(
     authError ? decodeURIComponent(authError.replace(/\+/g, " ")) : ""
   );
+  const [success, setSuccess] = useState(
+    invited ? "Contraseña establecida. Inicia sesión con tu email y la contraseña que acabas de crear." : ""
+  );
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (emailParam) setEmail(emailParam);
+  }, [emailParam]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,6 +38,7 @@ function LoginForm() {
     }
     setLoading(true);
     try {
+      clearSupabaseLegacyStorage();
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -99,6 +110,9 @@ function LoginForm() {
                     className="nf-input"
                   />
                 </div>
+                {success ? (
+                  <div style={{ padding: "10px 12px", borderRadius: 8, background: "oklch(0.72 0.11 145 / 0.08)", border: "1px solid oklch(0.72 0.11 145 / 0.3)", fontSize: 13, color: "oklch(0.78 0.12 150)" }}>{success}</div>
+                ) : null}
                 {error ? (
                   <div style={{ padding: "10px 12px", borderRadius: 8, background: "oklch(0.70 0.18 25 / 0.08)", border: "1px solid oklch(0.70 0.18 25 / 0.35)", fontSize: 13, color: "oklch(0.85 0.14 30)" }}>{error}</div>
                 ) : null}

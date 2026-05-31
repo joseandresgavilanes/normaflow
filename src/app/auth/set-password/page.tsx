@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { clearSupabaseLegacyStorage } from "@/lib/auth/clear-client-auth";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
 
@@ -14,19 +15,25 @@ export default function SetPasswordPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState("");
 
   useEffect(() => {
+    clearSupabaseLegacyStorage();
+
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
       setChecking(false);
       setError("Supabase no está configurado.");
       return;
     }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setChecking(false);
-      if (!session) {
+      if (!session?.user?.email) {
         setError("Sesión no válida. Abre de nuevo el enlace del correo de invitación.");
+        return;
       }
+      setInviteEmail(session.user.email);
     });
   }, []);
 
@@ -56,9 +63,23 @@ export default function SetPasswordPage() {
       return;
     }
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const email = user?.email ?? inviteEmail;
+
     await fetch("/api/auth/sync-user", { method: "POST" }).catch(() => {});
-    router.push("/app/dashboard");
-    router.refresh();
+
+    // Cerrar todo y forzar login explícito con el email invitado (evita sesiones cruzadas).
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    clearSupabaseLegacyStorage();
+
+    const params = new URLSearchParams({
+      email,
+      invited: "1",
+      next: "/app/dashboard",
+    });
+    router.replace(`/login?${params.toString()}`);
   }
 
   if (checking) {
@@ -80,7 +101,9 @@ export default function SetPasswordPage() {
                 Establece tu contraseña
               </h1>
               <p style={{ fontSize: 14, color: "var(--nf-ink-3)", marginTop: 6 }}>
-                Último paso para acceder a tu organización
+                {inviteEmail
+                  ? `Cuenta: ${inviteEmail}`
+                  : "Último paso para acceder a tu organización"}
               </p>
             </div>
 
@@ -130,8 +153,11 @@ export default function SetPasswordPage() {
                   className="nf-btn nf-btn--primary"
                   style={{ justifyContent: "center", marginTop: 4, opacity: loading ? 0.7 : 1 }}
                 >
-                  {loading ? "Guardando…" : <>Entrar a NormaFlow <Ic.arrow className="nf-arrow" /></>}
+                  {loading ? "Guardando…" : <>Guardar contraseña <Ic.arrow className="nf-arrow" /></>}
                 </button>
+                <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)", textAlign: "center" }}>
+                  Después irás a iniciar sesión con este email y tu nueva contraseña.
+                </p>
               </form>
             </div>
           </div>

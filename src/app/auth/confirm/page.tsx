@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
+import { clearSupabaseLegacyStorage } from "@/lib/auth/clear-client-auth";
 import "@/components/marketing/nf/nf.css";
 
 function parseHashParams(hash: string): URLSearchParams {
@@ -42,6 +43,9 @@ function AuthConfirmInner() {
         const accessToken = params.get("access_token");
         const refreshToken = params.get("refresh_token");
         if (accessToken && refreshToken) {
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+          clearSupabaseLegacyStorage();
+
           const { error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
