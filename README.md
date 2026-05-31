@@ -77,16 +77,26 @@ npm run dev
 
 ### Invitar usuarios (producción / staging)
 
-Con `AUTH_DEMO_MODE=false` y Supabase configurado, un admin puede invitar desde **Ajustes → Usuarios**. El flujo usa **Supabase Auth** (no Resend) para el correo de invitación / contraseña:
+Con `AUTH_DEMO_MODE=false` y Supabase configurado, un admin puede invitar desde **Ajustes → Usuarios**. El flujo usa **Supabase Auth** para el correo de invitación:
 
-1. En Supabase: **Authentication → URL Configuration** → `Site URL` = valor de `NEXT_PUBLIC_APP_URL`
-2. Añadir redirect: `{APP_URL}/login`
-3. **Email Templates → Invite user** (personalizar en español si quieres)
-4. Definir `SUPABASE_SERVICE_ROLE_KEY` y `NEXT_PUBLIC_APP_URL` en `.env.local`
+1. En Supabase → **Authentication → URL Configuration**:
+   - **Site URL**: `https://normaflow-pi.vercel.app` (raíz del dominio, **no** `/home`)
+   - **Redirect URLs** (añadir todas las que uses):
+     ```
+     https://normaflow-pi.vercel.app/auth/callback
+     https://normaflow-pi.vercel.app/auth/callback/**
+     https://normaflow-pi.vercel.app/auth/confirm
+     http://localhost:3000/auth/callback
+     ```
+2. **Email Templates → Invite user** (personalizar en español)
+3. En Vercel: `NEXT_PUBLIC_APP_URL=https://normaflow-pi.vercel.app` (sin barra final)
+4. `SUPABASE_SERVICE_ROLE_KEY` configurado
 
-Tras invitar, el usuario recibe el email de Supabase, establece contraseña y entra en `/login`. La membership en Prisma ya existe; `syncAuthUser` enlaza `authUserId` al primer login.
+Flujo tras invitar: email → clic → `/auth/callback` → `/auth/set-password` → dashboard.
 
-`RESEND_API_KEY` es opcional: envía un email de bienvenida con branding NormaFlow después de la invitación.
+Si el enlace cae en `/home#error=otp_expired`, el **Site URL** en Supabase está mal o falta `/auth/callback` en Redirect URLs. Los enlaces caducan (~24 h): reinvita si expiró.
+
+`RESEND_API_KEY` es opcional (email de bienvenida con branding).
 
 ---
 

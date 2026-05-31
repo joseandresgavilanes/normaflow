@@ -15,7 +15,8 @@ export function isSupabaseInviteConfigured(): boolean {
 export function getInviteRedirectUrl(): string | null {
   const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
   if (!base) return null;
-  return `${base}/login`;
+  const next = encodeURIComponent("/auth/set-password");
+  return `${base}/auth/callback?next=${next}`;
 }
 
 function isAlreadyRegisteredError(message: string): boolean {
