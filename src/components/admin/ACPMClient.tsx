@@ -116,9 +116,9 @@ export default function ACPMClient() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setCreateError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
-        admin.createACPM({
+        await admin.createACPM({
           title: String(fd.get("title") || ""),
           description: String(fd.get("description") || "") || undefined,
           type: String(fd.get("type") || "CORRECTIVE") as ACPMType,
@@ -496,9 +496,9 @@ function ACPMDetailModal({
   function patch(field: keyof ACPMRow, value: unknown) {
     if (!acpm || !canEdit) return;
     setActionError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
-        admin.updateACPMFields(acpm.id, { [field]: value } as Parameters<typeof admin.updateACPMFields>[1]);
+        await admin.updateACPMFields(acpm.id, { [field]: value } as Parameters<typeof admin.updateACPMFields>[1]);
       } catch (err: unknown) {
         setActionError(err instanceof Error ? err.message : "Error.");
       }
@@ -508,27 +508,40 @@ function ACPMDetailModal({
   function advance(to: ACPMStage) {
     if (!acpm) return;
     setActionError("");
-    startTransition(() => {
-      try { admin.transitionACPM(acpm.id, to); }
-      catch (err: unknown) { setActionError(err instanceof Error ? err.message : "Error."); }
+    startTransition(async () => {
+      try {
+        await admin.transitionACPM(acpm.id, to);
+        onClose();
+      } catch (err: unknown) {
+        setActionError(err instanceof Error ? err.message : "Error.");
+      }
     });
   }
 
   function handleReject(comment: string) {
     if (!acpm) return;
     setActionError("");
-    startTransition(() => {
-      try { admin.rejectACPM(acpm.id, comment); setRejectOpen(false); }
-      catch (err: unknown) { setActionError(err instanceof Error ? err.message : "Error."); }
+    startTransition(async () => {
+      try {
+        await admin.rejectACPM(acpm.id, comment);
+        setRejectOpen(false);
+        onClose();
+      } catch (err: unknown) {
+        setActionError(err instanceof Error ? err.message : "Error.");
+      }
     });
   }
 
   function handleComment() {
     if (!acpm || !commentText.trim()) return;
     setActionError("");
-    startTransition(() => {
-      try { admin.commentACPM(acpm.id, commentText); setCommentText(""); }
-      catch (err: unknown) { setActionError(err instanceof Error ? err.message : "Error."); }
+    startTransition(async () => {
+      try {
+        await admin.commentACPM(acpm.id, commentText);
+        setCommentText("");
+      } catch (err: unknown) {
+        setActionError(err instanceof Error ? err.message : "Error.");
+      }
     });
   }
 

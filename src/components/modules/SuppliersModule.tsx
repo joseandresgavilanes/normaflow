@@ -27,7 +27,7 @@ export default function SuppliersModule() {
     d.setMonth(d.getMonth() + 6);
     dispatch({ type: "updateSupplier", id: s.id, patch: { nextReviewDue: d.toISOString().slice(0, 10), lastEvaluationAt: new Date().toISOString().slice(0, 10) } });
     showToast("Próxima revisión reprogramada (+6 meses)");
-    setDetail(prev => (prev?.id === s.id ? { ...prev, nextReviewDue: d.toISOString().slice(0, 10) } : prev));
+    setDetail(null);
   }
 
   return (

@@ -127,6 +127,8 @@ export default function ActionsModule() {
       setProgressDraft(100);
     }
     dispatch({ type: "updateAction", id: selected.id, patch });
+    closeDetail();
+    showToast(`Estado actualizado: ${st}`);
   }
 
   const inProgress = actions.filter(a => a.status === "IN_PROGRESS").length;

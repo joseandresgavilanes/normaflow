@@ -13,6 +13,7 @@ import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
 import { formatDate } from "@/lib/utils";
 import type { Column } from "@/components/ui/Table";
 
@@ -80,6 +81,7 @@ export default function DocumentsModule() {
   const [filter, setFilter] = useState("ALL");
   const [folderFilter, setFolderFilter] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<DocumentSortKey>("activity_desc");
   const [detail, setDetail] = useState<DocumentRow | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<DocumentRow | null>(null);
@@ -105,12 +107,16 @@ export default function DocumentsModule() {
     return Array.from(u).sort();
   }, [documents]);
 
-  const filtered = documents.filter(
-    d =>
-      (filter === "ALL" || d.status === filter) &&
-      (folderFilter === "ALL" || d.folder === folderFilter) &&
-      (d.title.toLowerCase().includes(search.toLowerCase()) || d.code.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    const rows = documents.filter(
+      (d) =>
+        (filter === "ALL" || d.status === filter) &&
+        (folderFilter === "ALL" || d.folder === folderFilter) &&
+        (d.title.toLowerCase().includes(q) || d.code.toLowerCase().includes(q)),
+    );
+    return sortDocuments(rows, sortBy, (d) => new Date(d.updated).getTime());
+  }, [documents, filter, folderFilter, search, sortBy]);
 
   const detailLive = useMemo(() => {
     if (!detail) return null;
@@ -126,6 +132,7 @@ export default function DocumentsModule() {
     const code = processLinkDraft.trim();
     dispatch({ type: "updateDocument", id: detailLive.id, patch: { linkedProcessCode: code } });
     showToast(code ? `Documento enlazado al proceso ${code}` : "Enlace de proceso quitado");
+    setDetail(null);
   }
 
   const columns: Column<DocumentRow>[] = [
@@ -368,6 +375,17 @@ export default function DocumentsModule() {
               <option key={f} value={f}>
                 {f}
               </option>
+            ))}
+          </select>
+          <select
+            className="nf-app-input"
+            value={sortBy}
+            onChange={e => setSortBy(e.target.value as DocumentSortKey)}
+            style={{ flex: "0 0 auto", minWidth: 160, cursor: "pointer" }}
+            aria-label="Ordenar documentos"
+          >
+            {DOCUMENT_SORT_OPTIONS.map(o => (
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
         </div>

@@ -99,13 +99,13 @@ export default function PersonnelClient() {
       hiredAt: String(fd.get("hiredAt") || "") || undefined,
     };
     setFormError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
         if (mode === "create") {
-          admin.createPersonnel(payload);
+          await admin.createPersonnel(payload);
           setCreating(false);
         } else if (editing) {
-          admin.updatePersonnel(editing.id, payload);
+          await admin.updatePersonnel(editing.id, payload);
           setEditing(null);
         }
       } catch (err: unknown) {
@@ -198,10 +198,14 @@ export default function PersonnelClient() {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => startTransition(() => {
+            onClick={() => startTransition(async () => {
               if (!confirmDeactivate) return;
-              try { admin.deactivatePersonnel(confirmDeactivate.id); setConfirmDeactivate(null); }
-              catch (err: unknown) { setFormError(err instanceof Error ? err.message : "Error."); }
+              try {
+                await admin.deactivatePersonnel(confirmDeactivate.id);
+                setConfirmDeactivate(null);
+              } catch (err: unknown) {
+                setFormError(err instanceof Error ? err.message : "Error.");
+              }
             })}
             style={{ ...primaryBtn, background: "#C93C37" }}
           >

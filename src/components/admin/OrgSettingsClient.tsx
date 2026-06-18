@@ -35,10 +35,10 @@ export default function OrgSettingsClient() {
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
         if (!name.trim()) throw new Error("El nombre de la organización es obligatorio.");
-        admin.updateOrganization({
+        await admin.updateOrganization({
           name: name.trim(),
           industry: industry.trim() || null,
           country: country.trim() || "ES",

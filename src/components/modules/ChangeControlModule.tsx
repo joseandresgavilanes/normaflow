@@ -74,8 +74,8 @@ export default function ChangeControlModule() {
   function saveProcessLinks() {
     if (!detailLive) return;
     dispatch({ type: "updateChangeRequest", id: detailLive.id, patch: { processCodes: processCodesDraft } });
-    setDetail({ ...detailLive, processCodes: processCodesDraft });
     showToast("Procesos vinculados actualizados");
+    setDetail(null);
   }
 
   function logChange(id: string, label: string, oldS: string, newS: string, reason?: string) {
@@ -96,12 +96,18 @@ export default function ChangeControlModule() {
     });
   }
 
-  function transition(c: ChangeRequestRow, next: ChangeRequestRow["status"], reason?: string) {
+  function transition(
+    c: ChangeRequestRow,
+    next: ChangeRequestRow["status"],
+    reason?: string,
+    options?: { closeDetail?: boolean },
+  ) {
     const prev = c.status;
     dispatch({ type: "updateChangeRequest", id: c.id, patch: { status: next } });
     logChange(c.id, c.code, prev, next, reason);
     setDetail(d => (d?.id === c.id ? { ...d, status: next } : d));
     showToast(`Estado: ${statusLabel(next)}`);
+    if (options?.closeDetail) setDetail(null);
   }
 
   function submitCreate() {
@@ -198,6 +204,7 @@ export default function ChangeControlModule() {
       });
     }
     setAttest(null);
+    setDetail(null);
   }
 
   return (
@@ -372,12 +379,12 @@ export default function ChangeControlModule() {
             {perm.changes.manage && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderTop: "1px solid var(--nf-line)", paddingTop: 16 }}>
                 {detailLive.status === "DRAFT" && (
-                  <button type="button" onClick={() => transition(detailLive, "SUBMITTED")} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "SUBMITTED", undefined, { closeDetail: true })} style={btnPrimary}>
                     Enviar a revisión
                   </button>
                 )}
                 {detailLive.status === "SUBMITTED" && (
-                  <button type="button" onClick={() => transition(detailLive, "UNDER_REVIEW")} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "UNDER_REVIEW", undefined, { closeDetail: true })} style={btnPrimary}>
                     Marcar en revisión
                   </button>
                 )}
@@ -392,12 +399,12 @@ export default function ChangeControlModule() {
                   </>
                 )}
                 {detailLive.status === "APPROVED" && (
-                  <button type="button" onClick={() => transition(detailLive, "IMPLEMENTED")} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "IMPLEMENTED", undefined, { closeDetail: true })} style={btnPrimary}>
                     Marcar implementado
                   </button>
                 )}
                 {detailLive.status === "IMPLEMENTED" && (
-                  <button type="button" onClick={() => transition(detailLive, "VERIFIED")} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "VERIFIED", undefined, { closeDetail: true })} style={btnPrimary}>
                     Verificar efectividad
                   </button>
                 )}

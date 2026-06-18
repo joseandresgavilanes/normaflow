@@ -149,13 +149,13 @@ export default function GroupsClient() {
     const fd = new FormData(e.currentTarget);
     const data = { name: String(fd.get("name") || ""), description: String(fd.get("description") || "") };
     setError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
         if (mode === "create") {
-          admin.createGroup(data);
+          await admin.createGroup(data);
           setCreating(false);
         } else if (editing) {
-          admin.updateGroup(editing.id, data);
+          await admin.updateGroup(editing.id, data);
           setEditing(null);
         }
       } catch (err: unknown) {
@@ -440,7 +440,15 @@ export default function GroupsClient() {
                             type="checkbox"
                             checked={checked}
                             disabled={!canEdit || isPending}
-                            onChange={() => startTransition(() => admin.toggleGroupMember(current.id, u.id))}
+                            onChange={() =>
+                              startTransition(async () => {
+                                try {
+                                  await admin.toggleGroupMember(current.id, u.id);
+                                } catch {
+                                  /* toggles are best-effort in UI */
+                                }
+                              })
+                            }
                           />
                           <div
                             style={{
@@ -536,7 +544,15 @@ export default function GroupsClient() {
                                 type="checkbox"
                                 checked={granted}
                                 disabled={!canEdit || isPending}
-                                onChange={() => startTransition(() => admin.toggleGroupPermission(current.id, p.key))}
+                                onChange={() =>
+                                  startTransition(async () => {
+                                    try {
+                                      await admin.toggleGroupPermission(current.id, p.key);
+                                    } catch {
+                                      /* toggles are best-effort in UI */
+                                    }
+                                  })
+                                }
                                 style={{ marginTop: 3 }}
                               />
                               <div style={{ flex: 1, minWidth: 0 }}>
@@ -633,10 +649,10 @@ export default function GroupsClient() {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => startTransition(() => {
+            onClick={() => startTransition(async () => {
               if (!confirmDelete) return;
               try {
-                admin.deleteGroup(confirmDelete.id);
+                await admin.deleteGroup(confirmDelete.id);
                 if (selected === confirmDelete.id) setSelected(null);
                 setConfirmDelete(null);
               } catch (err: unknown) {

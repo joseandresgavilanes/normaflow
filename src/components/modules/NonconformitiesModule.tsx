@@ -140,6 +140,7 @@ export default function NonconformitiesModule() {
     };
     dispatch({ type: "addAction", action });
     setActionOpen(false);
+    setDetail(null);
     showToast(`Acción ${code} creada y vinculada a ${detail.code} (sesión local)`);
   }
 

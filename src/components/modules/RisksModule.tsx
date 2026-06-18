@@ -193,15 +193,7 @@ export default function RisksModule() {
         linkedProcessCode: form.linkedProcessCode.trim(),
       },
     });
-    const updated = {
-      ...detail,
-      ...form,
-      probability: p,
-      impact: i,
-      score: p * i,
-      linkedProcessCode: form.linkedProcessCode.trim(),
-    };
-    setDetail(updated);
+    setDetail(null);
     setEditOpen(false);
     showToast("Riesgo actualizado (sesión local)");
   }

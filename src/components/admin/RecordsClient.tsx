@@ -260,13 +260,13 @@ export default function RecordsClient() {
       observations: String(fd.get("observations") || ""),
     };
     setFormError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
         if (mode === "create") {
-          admin.createRecord(payload);
+          await admin.createRecord(payload);
           setCreating(false);
         } else if (editing) {
-          admin.updateRecord(editing.id, payload);
+          await admin.updateRecord(editing.id, payload);
           setEditing(null);
         }
       } catch (err: unknown) {
@@ -463,10 +463,15 @@ export default function RecordsClient() {
             className="nf-app-btn-danger"
             disabled={isPending}
             onClick={() =>
-              startTransition(() => {
+              startTransition(async () => {
                 if (!confirmDeactivate) return;
-                admin.deactivateRecord(confirmDeactivate.id);
-                setConfirmDeactivate(null);
+                try {
+                  await admin.deactivateRecord(confirmDeactivate.id);
+                  setConfirmDeactivate(null);
+                  setDetail((d) => (d?.id === confirmDeactivate.id ? null : d));
+                } catch (err: unknown) {
+                  setFormError(err instanceof Error ? err.message : "No se pudo desactivar.");
+                }
               })
             }
           >
@@ -768,9 +773,9 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setEntryError("");
-    startTransition(() => {
+    startTransition(async () => {
       try {
-        admin.addRecordEntry(recordId, {
+        await admin.addRecordEntry(recordId, {
           reference: String(fd.get("reference") || ""),
           description: String(fd.get("description") || "") || undefined,
           fileName: entryFile ? entryFile.name : undefined,
@@ -1028,7 +1033,15 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                           boxSizing: "border-box",
                           fontFamily: "inherit",
                         }}
-                        onClick={() => startTransition(() => admin.deleteRecordEntry(e.id))}
+                        onClick={() =>
+                          startTransition(async () => {
+                            try {
+                              await admin.deleteRecordEntry(e.id);
+                            } catch (err: unknown) {
+                              setEntryError(err instanceof Error ? err.message : "No se pudo eliminar la entrada.");
+                            }
+                          })
+                        }
                         title="Eliminar entrada"
                         aria-label="Eliminar entrada"
                       >

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { DocumentType } from "@prisma/client";
 import {
   CheckCircle2,
@@ -32,6 +32,8 @@ import {
   type CreateDocumentInput,
 } from "@/lib/actions/documents";
 import type { DocumentsPayload, DocumentRowLive } from "@/lib/server-queries";
+import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
+import { useServerAction } from "@/hooks/useServerAction";
 import { formatDate, timeAgo } from "@/lib/utils";
 
 type Status = "ALL" | "DRAFT" | "IN_REVIEW" | "APPROVED" | "OBSOLETE";
@@ -68,6 +70,7 @@ export default function DocumentsLiveClient({
   canApprove: boolean;
   currentUserId: string;
 }) {
+  const { run, isPending, error, setError, success } = useServerAction();
   const { documents, locations, personnel, members } = initial;
   const personnelLookup = useMemo(
     () => new Map(personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`])),
@@ -78,6 +81,7 @@ export default function DocumentsLiveClient({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("ALL");
   const [typeFilter, setTypeFilter] = useState<"ALL" | DocumentType>("ALL");
+  const [sortBy, setSortBy] = useState<DocumentSortKey>("activity_desc");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<DocumentRowLive | null>(null);
   const [detail, setDetail] = useState<DocumentRowLive | null>(null);
@@ -86,12 +90,16 @@ export default function DocumentsLiveClient({
   const [rejectingFor, setRejectingFor] = useState<DocumentRowLive | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<DocumentRowLive | null>(null);
   const [confirmObsolete, setConfirmObsolete] = useState<DocumentRowLive | null>(null);
-  const [error, setError] = useState("");
-  const [isPending, startTransition] = useTransition();
+
+  /** Evita modal con estado obsoleto tras aprobar/rechazar (p. ej. segundo clic en Aprobar). */
+  const detailDoc = useMemo(
+    () => (detail ? documents.find((d) => d.id === detail.id) ?? detail : null),
+    [detail, documents],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return documents.filter((d) => {
+    const rows = documents.filter((d) => {
       if (statusFilter !== "ALL" && d.status !== statusFilter) return false;
       if (typeFilter !== "ALL" && d.type !== typeFilter) return false;
       if (!q) return true;
@@ -101,7 +109,8 @@ export default function DocumentsLiveClient({
         (d.observations ?? "").toLowerCase().includes(q)
       );
     });
-  }, [documents, search, statusFilter, typeFilter]);
+    return sortDocuments(rows, sortBy, (d) => new Date(d.updatedAt).getTime());
+  }, [documents, search, statusFilter, typeFilter, sortBy]);
 
   const stats = useMemo(
     () => ({
@@ -166,17 +175,7 @@ export default function DocumentsLiveClient({
     },
   ];
 
-  function runAction(fn: () => Promise<unknown>, onSuccess?: () => void) {
-    setError("");
-    startTransition(async () => {
-      try {
-        await fn();
-        onSuccess?.();
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Error en la operación.");
-      }
-    });
-  }
+  const closeDetail = () => setDetail(null);
 
   return (
     <div>
@@ -199,6 +198,11 @@ export default function DocumentsLiveClient({
           {error}
         </div>
       )}
+      {success && (
+        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(46, 139, 87, 0.08)", border: "1px solid rgba(46, 139, 87, 0.35)", color: "#2E8B57", fontSize: 13, marginBottom: 14 }}>
+          {success}
+        </div>
+      )}
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
@@ -217,6 +221,11 @@ export default function DocumentsLiveClient({
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as "ALL" | DocumentType)} style={selectStyle}>
             <option value="ALL">Todos los tipos</option>
             {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+          </select>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} style={selectStyle} aria-label="Ordenar documentos">
+            {DOCUMENT_SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
           <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {documents.length}</span>
         </div>
@@ -239,9 +248,15 @@ export default function DocumentsLiveClient({
         onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }}
         onSubmit={(form) => {
           if (editing) {
-            runAction(() => updateDocumentMetadata(editing.id, form), () => setEditing(null));
+            run(() => updateDocumentMetadata(editing.id, form), {
+              onSuccess: () => setEditing(null),
+              successMessage: "Documento actualizado.",
+            });
           } else {
-            runAction(() => createDocument(form), () => setCreating(false));
+            run(() => createDocument(form), {
+              onSuccess: () => setCreating(false),
+              successMessage: "Documento creado.",
+            });
           }
         }}
       />
@@ -253,9 +268,15 @@ export default function DocumentsLiveClient({
         onClose={() => !isPending && setUploadingFor(null)}
         onSubmit={(file, note, bump) => {
           if (!uploadingFor) return;
-          runAction(
+          run(
             () => uploadDocumentVersion(uploadingFor.id, { file, changeDescription: note, bump }),
-            () => setUploadingFor(null),
+            {
+              onSuccess: () => {
+                setUploadingFor(null);
+                if (detail?.id === uploadingFor.id) closeDetail();
+              },
+              successMessage: "Nueva versión subida.",
+            },
           );
         }}
       />
@@ -268,9 +289,15 @@ export default function DocumentsLiveClient({
         onClose={() => !isPending && setSubmittingFor(null)}
         onSubmit={(approverIds) => {
           if (!submittingFor) return;
-          runAction(
+          run(
             () => submitForReview(submittingFor.id, { approverIds }),
-            () => setSubmittingFor(null),
+            {
+              onSuccess: () => {
+                setSubmittingFor(null);
+                closeDetail();
+              },
+              successMessage: "Documento enviado a revisión.",
+            },
           );
         }}
       />
@@ -282,9 +309,15 @@ export default function DocumentsLiveClient({
         onClose={() => !isPending && setRejectingFor(null)}
         onSubmit={(comment) => {
           if (!rejectingFor) return;
-          runAction(
+          run(
             () => rejectDocument(rejectingFor.id, { comment }),
-            () => setRejectingFor(null),
+            {
+              onSuccess: () => {
+                setRejectingFor(null);
+                closeDetail();
+              },
+              successMessage: "Documento rechazado y devuelto a borrador.",
+            },
           );
         }}
       />
@@ -300,9 +333,15 @@ export default function DocumentsLiveClient({
           <button
             type="button"
             disabled={isPending}
-            onClick={() => runAction(
+            onClick={() => run(
               () => deleteDraftDocument(confirmDelete!.id),
-              () => { setConfirmDelete(null); if (detail?.id === confirmDelete?.id) setDetail(null); },
+              {
+                onSuccess: () => {
+                  setConfirmDelete(null);
+                  if (detail?.id === confirmDelete?.id) closeDetail();
+                },
+                successMessage: "Borrador eliminado.",
+              },
             )}
             style={{ ...primaryBtn, background: "#C93C37" }}
           >
@@ -320,29 +359,42 @@ export default function DocumentsLiveClient({
         <ObsoleteForm
           isPending={isPending}
           onCancel={() => setConfirmObsolete(null)}
-          onConfirm={(reason) => runAction(
+          onConfirm={(reason) => run(
             () => markDocumentObsolete(confirmObsolete!.id, { reason }),
-            () => setConfirmObsolete(null),
+            {
+              onSuccess: () => {
+                setConfirmObsolete(null);
+                closeDetail();
+              },
+              successMessage: "Documento marcado como obsoleto.",
+            },
           )}
         />
       </Modal>
 
       {/* Detail */}
       <DocumentDetailModal
-        document={detail}
+        document={detailDoc}
         personnelLookup={personnelLookup}
         memberLookup={memberLookup}
         canCreate={canCreate}
         canApprove={canApprove}
         currentUserId={currentUserId}
-        onClose={() => setDetail(null)}
-        onEdit={() => detail && (setEditing(detail), setDetail(null))}
-        onUpload={() => detail && setUploadingFor(detail)}
-        onSubmitReview={() => detail && setSubmittingFor(detail)}
-        onApprove={(comment) => detail && runAction(() => approveDocument(detail.id, { comment }))}
-        onReject={() => detail && setRejectingFor(detail)}
-        onDelete={() => detail && setConfirmDelete(detail)}
-        onObsolete={() => detail && setConfirmObsolete(detail)}
+        isPending={isPending}
+        onClose={closeDetail}
+        onEdit={() => detailDoc && (setEditing(detailDoc), closeDetail())}
+        onUpload={() => detailDoc && setUploadingFor(detailDoc)}
+        onSubmitReview={() => detailDoc && setSubmittingFor(detailDoc)}
+        onApprove={(comment) =>
+          detailDoc &&
+          run(() => approveDocument(detailDoc.id, { comment }), {
+            onSuccess: closeDetail,
+            successMessage: "Documento aprobado.",
+          })
+        }
+        onReject={() => detailDoc && setRejectingFor(detailDoc)}
+        onDelete={() => detailDoc && setConfirmDelete(detailDoc)}
+        onObsolete={() => detailDoc && setConfirmObsolete(detailDoc)}
       />
     </div>
   );
@@ -674,6 +726,7 @@ function DocumentDetailModal({
   canCreate,
   canApprove,
   currentUserId,
+  isPending,
   onClose,
   onEdit,
   onUpload,
@@ -689,6 +742,7 @@ function DocumentDetailModal({
   canCreate: boolean;
   canApprove: boolean;
   currentUserId: string;
+  isPending: boolean;
   onClose: () => void;
   onEdit: () => void;
   onUpload: () => void;
@@ -751,8 +805,9 @@ function DocumentDetailModal({
               />
               <button
                 type="button"
+                disabled={isPending}
                 onClick={() => { onApprove(approveComment); setApproveComment(""); }}
-                style={{ ...primaryBtn, background: "#2E8B57" }}
+                style={{ ...primaryBtn, background: "#2E8B57", opacity: isPending ? 0.7 : 1 }}
               >
                 <CheckCircle2 size={14} style={{ marginRight: 6 }} />
                 {myPending ? "Aprobar mi parte" : "Aprobar"}

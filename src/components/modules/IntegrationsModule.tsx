@@ -43,7 +43,7 @@ export default function IntegrationsModule() {
       });
       showToast("Integración conectada (simulado) · evento auditado");
       setConnecting(null);
-      setDetail(prev => (prev?.key === key ? { ...prev, status: "CONNECTED", lastSyncAt: new Date().toISOString() } : prev));
+      setDetail(null);
     }, 1200);
   }
 

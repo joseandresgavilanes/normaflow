@@ -317,6 +317,9 @@ export async function approveDocument(
   const ctx = await requirePermission("documents:*");
   const existing = await loadDocument(documentId, ctx.organization.id);
 
+  if (existing.status === DocumentStatus.APPROVED) {
+    return;
+  }
   if (existing.status !== DocumentStatus.IN_REVIEW) {
     throw new Error("Solo se pueden aprobar documentos en revisión.");
   }

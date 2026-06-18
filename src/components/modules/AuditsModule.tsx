@@ -139,7 +139,7 @@ export default function AuditsModule() {
       patch: { status: "IN_PROGRESS", progress: Math.max(a.progress, 5) },
     });
     showToast("Auditoría iniciada (sesión local)");
-    setDetail(prev => (prev?.id === a.id ? { ...prev, status: "IN_PROGRESS", progress: Math.max(prev.progress, 5) } : prev));
+    setDetail(null);
     setChecklistAudit(prev => (prev?.id === a.id ? { ...prev, status: "IN_PROGRESS", progress: Math.max(prev.progress, 5) } : prev));
   }
 

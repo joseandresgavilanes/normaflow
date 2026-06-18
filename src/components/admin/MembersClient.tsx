@@ -60,9 +60,12 @@ export default function MembersClient() {
   function changeRole(row: OrgMemberMockRow, newRole: Role) {
     if (newRole === row.role) return;
     setError("");
-    startTransition(() => {
-      try { admin.updateMemberRole(row.membershipId, newRole); }
-      catch (err: unknown) { setError(err instanceof Error ? err.message : "Error."); }
+    startTransition(async () => {
+      try {
+        await admin.updateMemberRole(row.membershipId, newRole);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Error.");
+      }
     });
   }
 
@@ -248,10 +251,14 @@ export default function MembersClient() {
           <button
             type="button"
             disabled={isPending}
-            onClick={() => startTransition(() => {
+            onClick={() => startTransition(async () => {
               if (!confirmRemove) return;
-              try { admin.removeMember(confirmRemove.membershipId); setConfirmRemove(null); }
-              catch (err: unknown) { setError(err instanceof Error ? err.message : "Error."); }
+              try {
+                await admin.removeMember(confirmRemove.membershipId);
+                setConfirmRemove(null);
+              } catch (err: unknown) {
+                setError(err instanceof Error ? err.message : "Error.");
+              }
             })}
             style={{ ...primaryBtn, background: "#C93C37" }}
           >

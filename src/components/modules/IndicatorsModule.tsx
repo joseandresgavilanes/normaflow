@@ -157,7 +157,7 @@ export default function IndicatorsModule() {
     if (!detail) return;
     const code = processLinkDraft.trim();
     dispatch({ type: "updateIndicator", id: detail.id, patch: { linkedProcessCode: code } });
-    setDetail({ ...detail, linkedProcessCode: code });
+    setDetail(null);
     showToast(code ? `KPI enlazado al proceso ${code}` : "Enlace de proceso quitado");
   }
 
