@@ -7,7 +7,6 @@ import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { planMaxUsers } from "@/lib/constants";
 import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
-import { sendWelcomeEmail } from "@/lib/resend";
 
 // ─── Organization settings ──────────────────────────────────────────
 
@@ -105,8 +104,6 @@ export async function inviteMember(input: { email: string; name: string; role: R
       inviteMethod: inviteResult.method,
     },
   });
-
-  void sendWelcomeEmail(email, name, ctx.organization.name).catch(() => {});
 
   revalidatePath("/app/settings/users");
 }
