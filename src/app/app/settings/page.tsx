@@ -1,7 +1,22 @@
 import ProfileSettingsModule from "@/components/modules/ProfileSettingsModule";
+import AccessDenied from "@/components/app/AccessDenied";
+import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
+import { getAppContext } from "@/lib/app-context";
+import { isAuthorizationError } from "@/lib/permissions/server";
+import { getAccountPayload } from "@/lib/server-queries";
 
 export const metadata = { title: "Cuenta | NormaFlow" };
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const ctx = await getAppContext();
+  if (ctx?.mode === "live") {
+    try {
+      return <ProfileSettingsModule serverProfile={await getAccountPayload()} />;
+    } catch (error) {
+      if (isAuthorizationError(error)) return <AccessDenied />;
+      console.error("[account] live payload failed:", error);
+      return <LiveDataUnavailable section="la cuenta" />;
+    }
+  }
   return <ProfileSettingsModule />;
 }

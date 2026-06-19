@@ -1,0 +1,35 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/permissions/server";
+
+const PATH = "/app/notifications";
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  const ctx = await requirePermission("notifications:read");
+  const notification = await prisma.notification.findFirst({
+    where: { id: notificationId, organizationId: ctx.organization.id, userId: ctx.user.id },
+    select: { id: true, read: true },
+  });
+  if (!notification) throw new Error("Notificación no encontrada.");
+  if (!notification.read) {
+    await prisma.notification.update({
+      where: { id: notification.id },
+      data: { read: true, readAt: new Date() },
+    });
+  }
+  revalidatePath(PATH);
+  revalidatePath("/app");
+}
+
+export async function markAllNotificationsRead(): Promise<number> {
+  const ctx = await requirePermission("notifications:read");
+  const result = await prisma.notification.updateMany({
+    where: { organizationId: ctx.organization.id, userId: ctx.user.id, read: false },
+    data: { read: true, readAt: new Date() },
+  });
+  revalidatePath(PATH);
+  revalidatePath("/app");
+  return result.count;
+}

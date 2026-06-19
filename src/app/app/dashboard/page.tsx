@@ -1,6 +1,9 @@
 import DashboardModule from "@/components/modules/DashboardModule";
+import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import { getAppContext } from "@/lib/app-context";
 import { getDashboardPayload } from "@/lib/server-queries";
+import AccessDenied from "@/components/app/AccessDenied";
+import { isAuthorizationError } from "@/lib/permissions/server";
 
 export const metadata = { title: "Dashboard | NormaFlow" };
 
@@ -16,9 +19,11 @@ export default async function DashboardPage() {
   if (ctx?.mode === "live") {
     orgName = ctx.organization.name;
     try {
-      live = await getDashboardPayload(ctx.organization.id);
-    } catch {
-      live = null;
+      live = await getDashboardPayload();
+    } catch (err) {
+      if (isAuthorizationError(err)) return <AccessDenied />;
+      console.error("[dashboard] live payload failed:", err);
+      return <LiveDataUnavailable section="el Dashboard" />;
     }
   }
 

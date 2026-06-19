@@ -1,9 +1,25 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-04-10",
-  typescript: true,
-});
+let stripeClient: Stripe | null = null;
+
+function configured(value: string | undefined) {
+  return Boolean(value && !value.includes("...") && !value.endsWith("_"));
+}
+
+export function isStripeConfigured() {
+  return configured(process.env.STRIPE_SECRET_KEY) && configured(process.env.STRIPE_WEBHOOK_SECRET);
+}
+
+export function getStripe() {
+  if (!configured(process.env.STRIPE_SECRET_KEY)) {
+    throw new Error("Stripe no está configurado en este entorno.");
+  }
+  stripeClient ??= new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: "2024-04-10",
+    typescript: true,
+  });
+  return stripeClient;
+}
 
 export const PLANS = {
   STARTER: {
@@ -28,3 +44,7 @@ export const PLANS = {
     limits: { users: -1, storage: 100 },
   },
 } as const;
+
+export function isPlanCheckoutConfigured(plan: keyof typeof PLANS) {
+  return plan !== "ENTERPRISE" && configured(PLANS[plan].priceId);
+}

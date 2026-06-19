@@ -30,7 +30,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   const perm = useDemoPermission();
   const canEdit = perm.gap.manage;
 
-  const readOnlyLive = Boolean(live && (live.iso9001?.length || live.iso27001?.length));
+  const readOnlyLive = live != null;
 
   const [standard, setStandard] = useState<"iso9001" | "iso27001">("iso9001");
   const [clauseModal, setClauseModal] = useState<GapClauseState | null>(null);
@@ -39,8 +39,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   const fromDb = standard === "iso9001" ? live?.iso9001 : live?.iso27001;
 
   const data: GapRow[] = useMemo(() => {
-    if (readOnlyLive && fromDb && fromDb.length > 0) {
-      return fromDb.map(r => ({
+    if (readOnlyLive) {
+      return (fromDb ?? []).map(r => ({
         clause: r.clause,
         title: r.title,
         score: r.score,
@@ -350,37 +350,20 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               </div>
             ))}
           </div>
-          <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 6 }}>Comentarios / evidencia</label>
+          <label>Comentarios / evidencia
           <textarea
             value={commentDraft}
             onChange={e => setCommentDraft(e.target.value)}
             disabled={!canEdit}
             rows={3}
-            style={{ width: "100%", borderRadius: 8, border: "1px solid var(--nf-line)", padding: 10, fontSize: 13, resize: "vertical" }}
+            className="nf-app-input"
+            style={{ resize: "vertical" }}
           />
-          <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "flex-end" }}>
-            <button
-              type="button"
-              onClick={() => {
-                setClauseModal(null);
-                setCommentDraft("");
-              }}
-              style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(18, 60, 102, 0.12)", background: "#f3f6fa", cursor: "pointer" }}
-            >
-              Cerrar
-            </button>
+          </label>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => { setClauseModal(null); setCommentDraft(""); }}>Cerrar</button>
             {canEdit && (
-              <button
-                type="button"
-                onClick={() => {
-                  saveComment();
-                  setClauseModal(null);
-                  setCommentDraft("");
-                }}
-                style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#123C66", color: "#fff", fontWeight: 600, cursor: "pointer" }}
-              >
-                Guardar y cerrar
-              </button>
+              <button type="button" className="nf-app-btn-primary" onClick={() => { saveComment(); setClauseModal(null); setCommentDraft(""); }}>Guardar y cerrar</button>
             )}
           </div>
         </Modal>

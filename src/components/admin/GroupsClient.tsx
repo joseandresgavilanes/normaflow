@@ -627,11 +627,11 @@ export default function GroupsClient() {
             <textarea name="description" rows={3} defaultValue={editing?.description ?? ""} style={inputStyle} />
           </Field>
           {error && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{error}</div>}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => { setCreating(false); setEditing(null); }} disabled={isPending} style={ghostBtn}>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={() => { setCreating(false); setEditing(null); }} disabled={isPending} className="nf-app-btn-ghost">
               Cancelar
             </button>
-            <button type="submit" disabled={isPending} style={primaryBtn}>
+            <button type="submit" disabled={isPending} className="nf-app-btn-primary">
               {isPending ? "Guardando…" : "Guardar"}
             </button>
           </div>
@@ -642,13 +642,14 @@ export default function GroupsClient() {
         <p style={{ margin: "0 0 14px", color: "var(--nf-ink)" }}>
           ¿Eliminar el grupo <strong>{confirmDelete?.name}</strong>? Sus miembros conservarán los permisos de su rol.
         </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button type="button" onClick={() => setConfirmDelete(null)} disabled={isPending} style={ghostBtn}>
+        <div className="nf-modal-actions">
+          <button type="button" onClick={() => setConfirmDelete(null)} disabled={isPending} className="nf-app-btn-ghost">
             Cancelar
           </button>
           <button
             type="button"
             disabled={isPending}
+            className="nf-app-btn-danger"
             onClick={() => startTransition(async () => {
               if (!confirmDelete) return;
               try {
@@ -659,7 +660,6 @@ export default function GroupsClient() {
                 setError(err instanceof Error ? err.message : "Error.");
               }
             })}
-            style={{ ...primaryBtn, background: "#C93C37" }}
           >
             {isPending ? "…" : "Eliminar"}
           </button>

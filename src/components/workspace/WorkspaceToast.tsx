@@ -1,6 +1,8 @@
 "use client";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 
+import { Z_INDEX } from "@/lib/z-index";
+
 export default function WorkspaceToast() {
   const ws = useWorkspaceOptional();
   if (!ws?.state.toast) return null;
@@ -10,7 +12,7 @@ export default function WorkspaceToast() {
         position: "fixed",
         bottom: 24,
         right: 24,
-        zIndex: 2000,
+        zIndex: Z_INDEX.toast,
         background: "#142033",
         color: "#fff",
         padding: "12px 18px",

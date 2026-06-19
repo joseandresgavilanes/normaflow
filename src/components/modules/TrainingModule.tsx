@@ -514,12 +514,13 @@ export default function TrainingModule() {
       )}
 
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Nueva asignación" width={480}>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Curso</label>
+        <div className="nf-modal-form">
+        <label>Curso
         <select
           className="nf-app-input"
           value={form.courseId}
           onChange={e => setForm({ ...form, courseId: e.target.value })}
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
         >
           {trainingCourses.map(c => (
             <option key={c.id} value={c.id}>
@@ -527,12 +528,13 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Persona</label>
+        </label>
+        <label>Persona
         <select
           className="nf-app-input"
           value={form.personId}
           onChange={e => setForm({ ...form, personId: e.target.value })}
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
         >
           {demoPeople.map(p => (
             <option key={p.id} value={p.id}>
@@ -540,12 +542,13 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Proceso asociado</label>
+        </label>
+        <label>Proceso asociado
         <select
           className="nf-app-input"
           value={form.processCode}
           onChange={e => setForm({ ...form, processCode: e.target.value })}
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
         >
           <option value="">Sin proceso</option>
           {processes.map(p => (
@@ -554,7 +557,8 @@ export default function TrainingModule() {
             </option>
           ))}
         </select>
-        <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Días hasta vencimiento</label>
+        </label>
+        <label>Días hasta vencimiento
         <input
           className="nf-app-input"
           type="number"
@@ -562,24 +566,27 @@ export default function TrainingModule() {
           max={365}
           value={form.dueDays}
           onChange={e => setForm({ ...form, dueDays: parseInt(e.target.value, 10) || 30 })}
-          style={{ width: "100%", marginBottom: 18, boxSizing: "border-box" }}
         />
-        <button type="button" onClick={submitAssign} style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-          Crear asignación
-        </button>
+        </label>
+        <div className="nf-modal-actions">
+          <button type="button" className="nf-app-btn-ghost" onClick={() => setAssignOpen(false)}>Cancelar</button>
+          <button type="button" className="nf-app-btn-primary" onClick={submitAssign}>Crear asignación</button>
+        </div>
+        </div>
       </Modal>
 
       <Modal open={!!editAssign} onClose={() => setEditAssign(null)} title="Enlace con proceso" width={420}>
         {editAssign && (
-          <div>
-            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: "0 0 12px" }}>
+          <div className="nf-modal-form">
+            <p style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", margin: 0 }}>
               {editAssign.assigneeName} · {trainingCourses.find(c => c.id === editAssign.courseId)?.code}
             </p>
+            <label>Proceso
             <select
               className="nf-app-input"
               value={processLinkDraft}
               onChange={e => setProcessLinkDraft(e.target.value)}
-              style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", cursor: "pointer" }}
+              style={{ cursor: "pointer" }}
             >
               <option value="">Sin proceso</option>
               {processes.map(p => (
@@ -588,13 +595,11 @@ export default function TrainingModule() {
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              onClick={saveAssignmentProcessLink}
-              style={{ width: "100%", padding: 12, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: "pointer" }}
-            >
-              Guardar enlace
-            </button>
+            </label>
+            <div className="nf-modal-actions">
+              <button type="button" className="nf-app-btn-ghost" onClick={() => setEditAssign(null)}>Cancelar</button>
+              <button type="button" className="nf-app-btn-primary" onClick={saveAssignmentProcessLink}>Guardar enlace</button>
+            </div>
           </div>
         )}
       </Modal>

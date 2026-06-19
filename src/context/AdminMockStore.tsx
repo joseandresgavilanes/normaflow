@@ -24,11 +24,13 @@ export type DispositionRow = CatalogBase;
 export type ArchiveMethodRow = CatalogBase;
 export type RecordTypeRow = CatalogBase;
 export type RetentionTimeRow = CatalogBase & { months: number };
+export type ProcessOptionRow = { id: string; code: string | null; name: string };
 
 export type RecordMockRow = {
   id: string;
   code: string;
   name: string;
+  processId: string | null;
   processName: string | null;
   recordTypeId: string | null;
   retentionTimeId: string | null;
@@ -49,6 +51,7 @@ export type RecordEntryMockRow = {
   reference: string;
   description: string | null;
   fileName: string | null;
+  hasFile?: boolean;
   /** URL de objeto en navegador (demo); revocar al eliminar entrada. */
   blobUrl?: string | null;
   mimeType?: string | null;
@@ -167,6 +170,7 @@ type AdminMockState = {
   dispositions: DispositionRow[];
   archiveMethods: ArchiveMethodRow[];
   recordTypes: RecordTypeRow[];
+  processes: ProcessOptionRow[];
   records: RecordMockRow[];
   recordEntries: RecordEntryMockRow[];
   acpms: ACPMRow[];
@@ -245,6 +249,7 @@ function blankState(profile?: AdminMockProfile): AdminMockState {
     dispositions: [],
     archiveMethods: [],
     recordTypes: [],
+    processes: [],
     records: [],
     recordEntries: [],
     acpms: [],
@@ -347,11 +352,20 @@ function initialState(): AdminMockState {
       { id: "rt-2", name: "ELECTRÓNICO",            active: true, createdAt: past(900) },
       { id: "rt-3", name: "FÍSICO Y ELECTRÓNICO",   active: true, createdAt: past(900) },
     ],
+    processes: [
+      { id: "proc-production", code: "P-01", name: "Producción" },
+      { id: "proc-governance", code: "P-02", name: "Gobierno SGC" },
+      { id: "proc-sgsi", code: "P-08", name: "SGSI" },
+      { id: "proc-hr", code: "P-06", name: "Recursos Humanos" },
+      { id: "proc-maintenance", code: "P-07", name: "Mantenimiento" },
+      { id: "proc-legal", code: "P-09", name: "Legal" },
+    ],
     records: [
       {
         id: "rec-1",
         code: "REG-CAL-001",
         name: "Registro de inspección de producto terminado",
+        processId: "proc-production",
         processName: "Producción",
         recordTypeId: "rt-2",
         retentionTimeId: "ret-3",
@@ -369,6 +383,7 @@ function initialState(): AdminMockState {
         id: "rec-2",
         code: "REG-CAL-002",
         name: "Acta de revisión por la dirección",
+        processId: "proc-governance",
         processName: "Gobierno SGC",
         recordTypeId: "rt-3",
         retentionTimeId: "ret-5",
@@ -386,6 +401,7 @@ function initialState(): AdminMockState {
         id: "rec-3",
         code: "REG-SGSI-001",
         name: "Registro de incidentes de seguridad",
+        processId: "proc-sgsi",
         processName: "SGSI",
         recordTypeId: "rt-2",
         retentionTimeId: "ret-4",
@@ -403,6 +419,7 @@ function initialState(): AdminMockState {
         id: "rec-4",
         code: "REG-RRHH-001",
         name: "Registro de formación y competencias",
+        processId: "proc-hr",
         processName: "Recursos Humanos",
         recordTypeId: "rt-3",
         retentionTimeId: "ret-4",
@@ -420,6 +437,7 @@ function initialState(): AdminMockState {
         id: "rec-5",
         code: "REG-CAL-003",
         name: "Hoja de calibración de equipos",
+        processId: "proc-maintenance",
         processName: "Mantenimiento",
         recordTypeId: "rt-1",
         retentionTimeId: "ret-3",
@@ -437,6 +455,7 @@ function initialState(): AdminMockState {
         id: "rec-6",
         code: "REG-LEG-001",
         name: "Registro histórico de contratos firmados",
+        processId: "proc-legal",
         processName: "Legal",
         recordTypeId: "rt-1",
         retentionTimeId: "ret-5",
@@ -883,6 +902,7 @@ function reducer(state: AdminMockState, action: Action): AdminMockState {
 // ─── Context ─────────────────────────────────────────────────────────
 
 type AdminMockContextValue = {
+  mode: "demo" | "live";
   state: AdminMockState;
   // organization
   updateOrganization: (patch: Partial<OrgSettingsMock>) => void;
@@ -924,7 +944,7 @@ type AdminMockContextValue = {
   createRecord: (data: {
     code: string;
     name: string;
-    processName?: string;
+    processId?: string;
     recordTypeId?: string;
     retentionTimeId?: string;
     dispositionId?: string;
@@ -942,11 +962,13 @@ type AdminMockContextValue = {
       reference: string;
       description?: string;
       fileName?: string;
+      file?: File;
       blobUrl?: string | null;
       mimeType?: string | null;
       fileSize?: number | null;
     }
   ) => void;
+  getRecordEntryUrl: (id: string) => Promise<string>;
   deleteRecordEntry: (id: string) => void;
   // ACPMs
   createACPM: (data: { title: string; description?: string; type: ACPMType; priority: ACPMPriority; source?: string; dueDate?: string }) => void;
@@ -1021,6 +1043,7 @@ export function AdminMockProvider({
 
   const value = useMemo<AdminMockContextValue>(
     () => ({
+      mode: "demo",
       state,
       updateOrganization: (patch) => {
         const before = { name: state.organization.name, industry: state.organization.industry, country: state.organization.country };
@@ -1206,11 +1229,14 @@ export function AdminMockProvider({
         if (state.records.some((r) => r.code.toLowerCase() === code.toLowerCase())) {
           throw new Error("Ya existe un registro con ese código.");
         }
-        const row = {
+        const process = data.processId ? state.processes.find((item) => item.id === data.processId) : null;
+        if (data.processId && !process) throw new Error("El proceso seleccionado no existe.");
+        const row: RecordMockRow = {
           id: id("rec"),
           code,
           name,
-          processName: data.processName?.trim() || null,
+          processId: process?.id ?? null,
+          processName: process?.name ?? null,
           recordTypeId: data.recordTypeId || null,
           retentionTimeId: data.retentionTimeId || null,
           dispositionId: data.dispositionId || null,
@@ -1230,7 +1256,12 @@ export function AdminMockProvider({
         const patch: Partial<RecordMockRow> = {};
         if (data.code !== undefined) patch.code = data.code.trim();
         if (data.name !== undefined) patch.name = data.name.trim();
-        if (data.processName !== undefined) patch.processName = data.processName?.trim() || null;
+        if (data.processId !== undefined) {
+          const process = data.processId ? state.processes.find((item) => item.id === data.processId) : null;
+          if (data.processId && !process) throw new Error("El proceso seleccionado no existe.");
+          patch.processId = process?.id ?? null;
+          patch.processName = process?.name ?? null;
+        }
         if (data.recordTypeId !== undefined) patch.recordTypeId = data.recordTypeId || null;
         if (data.retentionTimeId !== undefined) patch.retentionTimeId = data.retentionTimeId || null;
         if (data.dispositionId !== undefined) patch.dispositionId = data.dispositionId || null;
@@ -1248,9 +1279,8 @@ export function AdminMockProvider({
         if (!reference) throw new Error("La referencia es obligatoria.");
         const record = state.records.find((r) => r.id === recordId);
         if (!record) throw new Error("Registro no encontrado.");
-        const fileName =
-          data.fileName?.trim() ||
-          (data.blobUrl ? `adjunto-${reference.replace(/[^\w.-]+/g, "_")}` : null);
+        const browserUrl = data.file ? URL.createObjectURL(data.file) : data.blobUrl ?? null;
+        const fileName = data.file?.name || data.fileName?.trim() || (browserUrl ? `adjunto-${reference.replace(/[^\w.-]+/g, "_")}` : null);
         dispatch({
           type: "addRecordEntry",
           row: {
@@ -1259,14 +1289,23 @@ export function AdminMockProvider({
             reference,
             description: data.description?.trim() || null,
             fileName,
-            blobUrl: data.blobUrl ?? null,
-            mimeType: data.mimeType ?? null,
-            fileSize: data.fileSize ?? null,
+            hasFile: Boolean(browserUrl),
+            blobUrl: browserUrl,
+            mimeType: data.file?.type || data.mimeType || null,
+            fileSize: data.file?.size ?? data.fileSize ?? null,
             enteredById: state.members.find((m) => m.isSelf)?.userId ?? null,
             enteredAt: new Date().toISOString(),
           },
         });
         emit({ action: "add_entry", module: "record_entry", recordId: recordId, recordLabel: reference, summary: `Nueva entrada en ${record.code}: ${reference}` });
+      },
+      getRecordEntryUrl: async (entryId) => {
+        const entry = state.recordEntries.find((item) => item.id === entryId);
+        if (!entry) throw new Error("Entrada no encontrada.");
+        if (entry.blobUrl) return entry.blobUrl;
+        if (!entry.fileName) throw new Error("Esta entrada no tiene un archivo adjunto.");
+        const text = `NormaFlow demo\nReferencia: ${entry.reference}\nArchivo: ${entry.fileName}`;
+        return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
       },
       deleteRecordEntry: (entryId) => {
         const entry = state.recordEntries.find((e) => e.id === entryId);

@@ -843,30 +843,15 @@ export default function DocumentsModule() {
       </Modal>
 
       <Modal open={showNew} onClose={() => setShowNew(false)} title="Nuevo Documento" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Título
-            <input
-              value={newForm.title}
-              onChange={e => setNewForm({ ...newForm, title: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
-            />
+        <div className="nf-modal-form">
+          <label>Título
+            <input className="nf-app-input" value={newForm.title} onChange={e => setNewForm({ ...newForm, title: e.target.value })} />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Código
-            <input
-              value={newForm.code}
-              onChange={e => setNewForm({ ...newForm, code: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
-            />
+          <label>Código
+            <input className="nf-app-input" value={newForm.code} onChange={e => setNewForm({ ...newForm, code: e.target.value })} />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Tipo
-            <select
-              value={newForm.type}
-              onChange={e => setNewForm({ ...newForm, type: e.target.value as DocumentRow["type"] })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
-            >
+          <label>Tipo
+            <select className="nf-app-input" value={newForm.type} onChange={e => setNewForm({ ...newForm, type: e.target.value as DocumentRow["type"] })}>
               <option value="MANUAL">Manual</option>
               <option value="PROCEDURE">Procedimiento</option>
               <option value="POLICY">Política</option>
@@ -875,29 +860,14 @@ export default function DocumentsModule() {
               <option value="FORM">Formulario</option>
             </select>
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Norma de referencia
-            <input
-              value={newForm.standard}
-              onChange={e => setNewForm({ ...newForm, standard: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
-            />
+          <label>Norma de referencia
+            <input className="nf-app-input" value={newForm.standard} onChange={e => setNewForm({ ...newForm, standard: e.target.value })} />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Cláusula
-            <input
-              value={newForm.clause}
-              onChange={e => setNewForm({ ...newForm, clause: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, outline: "none", boxSizing: "border-box" }}
-            />
+          <label>Cláusula
+            <input className="nf-app-input" value={newForm.clause} onChange={e => setNewForm({ ...newForm, clause: e.target.value })} />
           </label>
-          <label style={{ fontSize: 13, fontWeight: 500 }}>
-            Proceso asociado
-            <select
-              value={newForm.linkedProcessCode}
-              onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })}
-              style={{ width: "100%", marginTop: 4, padding: "9px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box", cursor: "pointer" }}
-            >
+          <label>Proceso asociado
+            <select className="nf-app-input" value={newForm.linkedProcessCode} onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })} style={{ cursor: "pointer" }}>
               <option value="">Sin proceso</option>
               {processes.map(p => (
                 <option key={p.id} value={p.code}>
@@ -913,13 +883,9 @@ export default function DocumentsModule() {
             label="Archivo opcional"
             hint="Adjunta PDF, imágenes u Office para vista previa en el navegador. Los datos no se envían a ningún servidor en esta sesión local."
           />
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button type="button" onClick={submitNewDoc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "10px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Crear Documento
-            </button>
-            <button type="button" onClick={() => setShowNew(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 8, padding: "10px", fontSize: 13, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setShowNew(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitNewDoc}>Crear Documento</button>
           </div>
         </div>
       </Modal>

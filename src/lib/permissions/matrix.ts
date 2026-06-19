@@ -2,10 +2,11 @@
  * Single source of truth for role → permissions mapping.
  *
  * Permission shape: "<resource>:<action>"
- *   - resource: documents, records, audits, nc, actions, indicators,
- *               gap, training, changes, suppliers, integrations,
- *               reporting, activity, positions, personnel, locations,
- *               catalogs, groups, mgmt-review, audit-program, org, members
+ *   - resource: dashboard, notifications, documents, processes, evidence,
+ *               records, audits, nc, actions, indicators, gap, training,
+ *               changes, suppliers, integrations, reporting, activity,
+ *               positions, personnel, locations, catalogs, groups,
+ *               mgmt-review, audit-program, org, members, billing
  *   - action:   read | create | update | delete | approve | * (wildcard)
  *
  * Used by both `src/lib/permissions/frontend.ts` (client gating) and
@@ -15,10 +16,14 @@
 import type { Role } from "@prisma/client";
 
 const ADMIN_PERMS = [
+  "dashboard:read",
+  "notifications:read",
   "org:*",
   "members:*",
   "groups:*",
   "documents:*",
+  "processes:*",
+  "evidence:*",
   "records:*",
   "risks:*",
   "audits:*",
@@ -38,13 +43,18 @@ const ADMIN_PERMS = [
   "locations:*",
   "catalogs:*",
   "mgmt-review:*",
+  "billing:*",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
   SUPER_ADMIN: ["*"],
   ORG_ADMIN: ADMIN_PERMS,
   COMPLIANCE_MANAGER: [
+    "dashboard:read",
+    "notifications:read",
     "documents:*",
+    "processes:*",
+    "evidence:*",
     "records:*",
     "risks:*",
     "audits:*",
@@ -68,11 +78,15 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "groups:read",
   ],
   AUDITOR: [
+    "dashboard:read",
+    "notifications:read",
     "audits:*",
     "audit-program:read",
     "nc:create",
     "nc:read",
     "documents:read",
+    "processes:read",
+    "evidence:read",
     "records:read",
     "risks:read",
     "training:read",
@@ -86,8 +100,13 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "mgmt-review:read",
   ],
   CONTRIBUTOR: [
+    "dashboard:read",
+    "notifications:read",
     "documents:read",
     "documents:create",
+    "processes:read",
+    "evidence:read",
+    "evidence:create",
     "records:read",
     "records:create",
     "actions:read",
@@ -101,7 +120,11 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "catalogs:read",
   ],
   VIEWER: [
+    "dashboard:read",
+    "notifications:read",
     "documents:read",
+    "processes:read",
+    "evidence:read",
     "records:read",
     "risks:read",
     "audits:read",
@@ -117,6 +140,12 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "mgmt-review:read",
   ],
 };
+
+/** Explicit allowlist for grants stored in GroupPermission. Global `*` is a
+ * role-only capability and can never be obtained through a group. */
+export const GROUP_PERMISSION_ALLOWLIST = new Set(
+  Object.values(ROLE_PERMISSIONS).flat().filter((permission) => permission !== "*"),
+);
 
 /**
  * Check whether a role can perform a permission.
@@ -142,7 +171,6 @@ export function roleOrGroupCan(
   permission: string
 ): boolean {
   if (roleCan(role, permission)) return true;
-  if (groupPermissions.includes("*")) return true;
   if (groupPermissions.includes(permission)) return true;
   const [resource] = permission.split(":");
   return groupPermissions.includes(`${resource}:*`);

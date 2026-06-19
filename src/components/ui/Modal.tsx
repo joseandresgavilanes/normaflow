@@ -1,6 +1,13 @@
 "use client";
-import { useEffect } from "react";
+
+import { useEffect, useId, useLayoutEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { modalLayerDepth, popModalLayer, pushModalLayer } from "@/lib/modal-stack";
+
+function getModalPortalRoot(): HTMLElement {
+  return document.getElementById("nf-modal-root") ?? document.body;
+}
 
 interface ModalProps {
   open: boolean;
@@ -9,6 +16,7 @@ interface ModalProps {
   children: React.ReactNode;
   width?: number;
 }
+
 export default function Modal({
   open,
   onClose,
@@ -16,22 +24,42 @@ export default function Modal({
   children,
   width = 560,
 }: ModalProps) {
+  const titleId = useId();
+  const [mounted, setMounted] = useState(false);
+  const [zIndex, setZIndex] = useState(1);
+
   useEffect(() => {
-    if (open) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    setMounted(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    const layer = pushModalLayer();
+    setZIndex(layer);
+    document.body.style.overflow = "hidden";
+
     return () => {
-      document.body.style.overflow = "";
+      popModalLayer();
+      if (modalLayerDepth() === 0) {
+        document.body.style.overflow = "";
+      }
     };
   }, [open]);
-  if (!open) return null;
-  return (
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div
       className="nf-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
       style={{
         position: "fixed",
         inset: 0,
         background: "rgba(14,28,50,0.5)",
-        zIndex: 1000,
+        zIndex,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -48,12 +76,13 @@ export default function Modal({
           maxWidth: "min(100%, " + width + "px)",
           maxHeight: "min(88vh, 88dvh)",
           overflow: "auto",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.2)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="nf-modal-header">
-          <h3 className="nf-modal-header-title">{title}</h3>
+          <h3 id={titleId} className="nf-modal-header-title">
+            {title}
+          </h3>
           <button
             type="button"
             className="nf-modal-close"
@@ -65,6 +94,7 @@ export default function Modal({
         </div>
         <div className="nf-modal-body">{children}</div>
       </div>
-    </div>
+    </div>,
+    getModalPortalRoot(),
   );
 }

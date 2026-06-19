@@ -4,12 +4,9 @@ import Card from "@/components/ui/Card";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 
 /**
- * Client-side permission gate for the Phase 1.1 admin / info / catalog pages.
- *
- * Reads the role from the demo `WorkspaceStore.session.roleKey` and renders a
- * "no permission" notice if the role can't access the section. When the real
- * Prisma persistence lands (Phase 1.2+), this is replaced by the server-side
- * `requirePermission()` guard.
+ * Client-side UX mirror for admin / info / catalog pages. It only controls
+ * presentation; live data and mutations are independently authorized on the
+ * server before Prisma is called.
  */
 export function AdminGate({
   permission,

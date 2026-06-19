@@ -461,7 +461,7 @@ export default function ActionsModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva acción" width={500}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Título
             <input
@@ -530,13 +530,9 @@ export default function ActionsModule() {
               />
             </label>
           </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Crear
-            </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "#fff", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Crear</button>
           </div>
         </div>
       </Modal>

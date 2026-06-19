@@ -235,9 +235,9 @@ export default function MembersClient() {
               ? "Modo demo: se añade al listado sin enviar correo real."
               : `Se enviará un correo de Supabase para establecer contraseña y acceder a ${orgName}.`}
           </p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setInviting(false)} disabled={isPending} style={ghostBtn}>Cancelar</button>
-            <button type="submit" disabled={isPending} style={primaryBtn}>{isPending ? "Invitando…" : "Invitar"}</button>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={() => setInviting(false)} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+            <button type="submit" disabled={isPending} className="nf-app-btn-primary">{isPending ? "Invitando…" : "Invitar"}</button>
           </div>
         </form>
       </Modal>
@@ -246,11 +246,12 @@ export default function MembersClient() {
         <p style={{ margin: "0 0 14px", color: "var(--nf-ink)" }}>
           ¿Quitar a <strong>{confirmRemove?.name}</strong> de la organización? Perderá el acceso pero la cuenta se mantiene.
         </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button type="button" onClick={() => setConfirmRemove(null)} disabled={isPending} style={ghostBtn}>Cancelar</button>
+        <div className="nf-modal-actions">
+          <button type="button" onClick={() => setConfirmRemove(null)} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
           <button
             type="button"
             disabled={isPending}
+            className="nf-app-btn-danger"
             onClick={() => startTransition(async () => {
               if (!confirmRemove) return;
               try {
@@ -260,7 +261,6 @@ export default function MembersClient() {
                 setError(err instanceof Error ? err.message : "Error.");
               }
             })}
-            style={{ ...primaryBtn, background: "#C93C37" }}
           >
             {isPending ? "…" : "Quitar"}
           </button>

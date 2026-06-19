@@ -43,6 +43,8 @@ Variables mínimas para desarrollo:
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
+SUPABASE_DOCUMENTS_BUCKET=documents
+SUPABASE_EVIDENCE_BUCKET=evidence
 DATABASE_URL=postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres
 DIRECT_URL=postgresql://postgres:pass@db.xxx.supabase.co:5432/postgres
 ANTHROPIC_API_KEY=sk-ant-api03-...
@@ -67,6 +69,11 @@ npm run db:migrate
 # Carga datos demo
 npm run db:seed
 ```
+
+En staging/producción usa `npm run db:deploy` (nunca `db push`). Si la base ya
+existía antes del historial Prisma, sigue primero la guía de
+[`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md) para marcar la baseline sin
+recrear tablas.
 
 ### 4. Ejecutar
 
@@ -173,7 +180,7 @@ normaflow/
 - Roles granulares: SUPER_ADMIN, ORG_ADMIN, COMPLIANCE_MANAGER, AUDITOR, CONTRIBUTOR, VIEWER
 
 ### Seguridad
-- RLS activado en todas las tablas
+- RLS tenant-aware activado en todas las tablas live y sus tablas hijas
 - Validación server-side en todas las rutas API
 - Archivos servidos a través de Supabase Storage (URLs firmadas)
 - Webhook de Stripe con verificación de firma
@@ -270,6 +277,25 @@ npm run test
 ```
 
 El `playwright.config` arranca `npm run dev` con `AUTH_DEMO_MODE` y `NEXT_PUBLIC_AUTH_DEMO_MODE` para los logins locales sin Supabase.
+
+### Pruebas live contra Supabase
+
+La suite live está separada de las pruebas demo. Crea dos organizaciones y dos
+usuarios efímeros, prueba autenticación real, PostgREST, RLS y Storage, y al
+terminar elimina automáticamente todos los fixtures.
+
+Requiere las variables reales de Supabase y base de datos. Las mutaciones deben
+autorizarse explícitamente:
+
+```bash
+LIVE_TEST_ALLOW_MUTATIONS=true npm run test:live
+```
+
+Valida aislamiento de organizaciones, documentos, notificaciones, Billing e
+Informes; rechazo de escrituras cruzadas y de roles sin permiso; prefijos
+`org-{organizationId}` en Storage; y persistencia desde la interfaz live.
+
+No ejecutes esta suite contra un proyecto que no permita fixtures temporales.
 
 ## 📞 Soporte
 

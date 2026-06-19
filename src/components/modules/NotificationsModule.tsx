@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Info, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { formatDate } from "@/lib/utils";
 import { useWorkspace } from "@/context/WorkspaceStore";
+import { markAllNotificationsRead, markNotificationRead } from "@/lib/actions/notifications";
 
 export type NotificationRow = {
   id: string;
@@ -31,6 +32,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
     serverItems ? serverItems.map(n => ({ ...n })) : null
   );
   const [inboxTab, setInboxTab] = useState<"ALL" | "UNREAD">("ALL");
+  const [pending, startTransition] = useTransition();
 
   const demoItems = useMemo(() => {
     if (serverItems) return null;
@@ -53,9 +55,18 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
         dispatch({ type: "markNotificationRead", id });
         return;
       }
+      const before = liveItems;
       setLiveItems(prev => (prev ? prev.map(n => (n.id === id ? { ...n, read: true } : n)) : prev));
+      startTransition(async () => {
+        try {
+          await markNotificationRead(id);
+        } catch (error) {
+          setLiveItems(before);
+          showToast(error instanceof Error ? error.message : "No se pudo actualizar la notificación");
+        }
+      });
     },
-    [demoItems, dispatch]
+    [demoItems, dispatch, liveItems, showToast]
   );
 
   const markAll = useCallback(() => {
@@ -64,9 +75,18 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
       showToast("Todas las notificaciones marcadas como leídas");
       return;
     }
+    const before = liveItems;
     setLiveItems(prev => (prev ? prev.map(n => ({ ...n, read: true })) : prev));
-    showToast("Actualizado");
-  }, [demoItems, dispatch, showToast]);
+    startTransition(async () => {
+      try {
+        await markAllNotificationsRead();
+        showToast("Todas las notificaciones marcadas como leídas");
+      } catch (error) {
+        setLiveItems(before);
+        showToast(error instanceof Error ? error.message : "No se pudieron actualizar las notificaciones");
+      }
+    });
+  }, [demoItems, dispatch, liveItems, showToast]);
 
   return (
     <div>
@@ -284,6 +304,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                     {!n.read && (
                       <button
                         type="button"
+                        disabled={pending}
                         onClick={() => {
                           markRead(n.id);
                           if (demoItems) showToast("Marcada como leída");

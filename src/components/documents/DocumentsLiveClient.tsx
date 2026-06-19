@@ -19,6 +19,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ModalField, modalInputStyle } from "@/components/ui/ModalForm";
 import {
   approveDocument,
   createDocument,
@@ -71,7 +72,7 @@ export default function DocumentsLiveClient({
   currentUserId: string;
 }) {
   const { run, isPending, error, setError, success } = useServerAction();
-  const { documents, locations, personnel, members } = initial;
+  const { documents, locations, personnel, members, processes, clauses, standards } = initial;
   const personnelLookup = useMemo(
     () => new Map(personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`])),
     [personnel],
@@ -106,6 +107,8 @@ export default function DocumentsLiveClient({
       return (
         d.code.toLowerCase().includes(q) ||
         d.title.toLowerCase().includes(q) ||
+        (d.processName ?? "").toLowerCase().includes(q) ||
+        d.tags.some((tag) => tag.toLowerCase().includes(q)) ||
         (d.observations ?? "").toLowerCase().includes(q)
       );
     });
@@ -140,6 +143,7 @@ export default function DocumentsLiveClient({
           <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{d.title}</div>
           <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 2 }}>
             {TYPE_LABEL.get(d.type) ?? d.type}
+            {d.processCode && ` · ${d.processCode}`}
             {d.isExternal && " · Externo"}
           </div>
         </div>
@@ -244,6 +248,10 @@ export default function DocumentsLiveClient({
         editing={editing}
         locations={locations}
         personnel={personnel}
+        members={members}
+        processes={processes}
+        standards={standards}
+        clauses={clauses}
         isPending={isPending}
         onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }}
         onSubmit={(form) => {
@@ -328,8 +336,8 @@ export default function DocumentsLiveClient({
           ¿Borrar el documento <strong>{confirmDelete?.code} — {confirmDelete?.title}</strong>?
           Los archivos subidos en Supabase Storage también se eliminarán.
         </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button type="button" onClick={() => setConfirmDelete(null)} disabled={isPending} style={ghostBtn}>Cancelar</button>
+        <div className="nf-modal-actions">
+          <button type="button" onClick={() => setConfirmDelete(null)} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
           <button
             type="button"
             disabled={isPending}
@@ -407,6 +415,10 @@ function DocumentFormModal({
   editing,
   locations,
   personnel,
+  members,
+  processes,
+  standards,
+  clauses,
   isPending,
   onClose,
   onSubmit,
@@ -415,6 +427,10 @@ function DocumentFormModal({
   editing: DocumentRowLive | null;
   locations: { id: string; name: string }[];
   personnel: { id: string; firstName: string; lastName: string }[];
+  members: { userId: string; name: string }[];
+  processes: DocumentsPayload["processes"];
+  standards: DocumentsPayload["standards"];
+  clauses: DocumentsPayload["clauses"];
   isPending: boolean;
   onClose: () => void;
   onSubmit: (data: CreateDocumentInput) => void;
@@ -425,11 +441,18 @@ function DocumentFormModal({
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
+          const clauseId = String(fd.get("clauseId") || "") || undefined;
+          const selectedClause = clauses.find((clause) => clause.id === clauseId);
           const data: CreateDocumentInput = {
             code: String(fd.get("code") || ""),
             title: String(fd.get("title") || ""),
             type: String(fd.get("type") || "PROCEDURE") as DocumentType,
-            standardCode: String(fd.get("standardCode") || "") || undefined,
+            ownerId: String(fd.get("ownerId") || "") || undefined,
+            processId: String(fd.get("processId") || "") || undefined,
+            clauseId,
+            standardCode: selectedClause?.standardCode ?? (String(fd.get("standardCode") || "") || undefined),
+            reviewDate: String(fd.get("reviewDate") || "") || undefined,
+            tags: String(fd.get("tags") || "").split(/[,\n]/).map((tag) => tag.trim()).filter(Boolean),
             observations: String(fd.get("observations") || "") || undefined,
             locationId: String(fd.get("locationId") || "") || undefined,
             physicalLocation: String(fd.get("physicalLocation") || "") || undefined,
@@ -446,6 +469,7 @@ function DocumentFormModal({
           onSubmit(data);
         }}
         style={{ display: "flex", flexDirection: "column", gap: 14 }}
+        className="nf-modal-form"
       >
         <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 12 }}>
           <Field label="Código *">
@@ -464,10 +488,7 @@ function DocumentFormModal({
           <Field label="Norma">
             <select name="standardCode" defaultValue={editing?.standardCode ?? ""} style={inputStyle}>
               <option value="">— Ninguna —</option>
-              <option value="ISO_9001">ISO 9001</option>
-              <option value="ISO_27001">ISO 27001</option>
-              <option value="ISO_14001">ISO 14001</option>
-              <option value="ISO_45001">ISO 45001</option>
+              {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
             </select>
           </Field>
           <Field label="Ubicación / sede">
@@ -477,6 +498,34 @@ function DocumentFormModal({
             </select>
           </Field>
         </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Field label="Proceso relacionado">
+            <select name="processId" defaultValue={editing?.processId ?? ""} style={inputStyle}>
+              <option value="">— Sin proceso —</option>
+              {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Cláusula aplicable">
+            <select name="clauseId" defaultValue={editing?.clauseId ?? ""} style={inputStyle}>
+              <option value="">— Sin cláusula —</option>
+              {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode.replace("_", " ")} · {clause.code} — {clause.title}</option>)}
+            </select>
+          </Field>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <Field label="Responsable del documento">
+            <select name="ownerId" defaultValue={editing?.ownerId ?? ""} style={inputStyle}>
+              <option value="">— Usuario actual —</option>
+              {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Próxima revisión">
+            <input name="reviewDate" type="date" defaultValue={editing?.reviewDate?.slice(0, 10) ?? ""} style={inputStyle} />
+          </Field>
+        </div>
+        <Field label="Etiquetas (separadas por coma)">
+          <input name="tags" defaultValue={editing?.tags.join(", ") ?? ""} style={inputStyle} placeholder="calidad, seguridad, política" />
+        </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Responsable elaboración">
             <select name="responsibleElaborationId" defaultValue={editing?.responsibleElaborationId ?? ""} style={inputStyle}>
@@ -518,9 +567,9 @@ function DocumentFormModal({
           <textarea name="observations" rows={3} defaultValue={editing?.observations ?? ""} style={inputStyle} />
         </Field>
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 4 }}>
-          <button type="button" onClick={onClose} disabled={isPending} style={ghostBtn}>Cancelar</button>
-          <button type="submit" disabled={isPending} style={primaryBtn}>
+        <div className="nf-modal-actions">
+          <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+          <button type="submit" disabled={isPending} className="nf-app-btn-primary">
             {isPending && <Loader2 size={14} className="nf-icon-spin" style={{ marginRight: 6 }} />}
             {isPending ? "Guardando…" : editing ? "Guardar cambios" : "Crear documento"}
           </button>
@@ -559,6 +608,7 @@ function UploadVersionModal({
             setNote("");
           }}
           style={{ display: "flex", flexDirection: "column", gap: 14 }}
+        className="nf-modal-form"
         >
           <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink-2)" }}>
             Versión actual: <strong>v{doc.currentVersion}</strong>. Sube el archivo correspondiente a la nueva versión.
@@ -579,9 +629,9 @@ function UploadVersionModal({
           <Field label="Descripción del cambio *">
             <textarea required rows={3} value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} placeholder="Resumen de qué cambió respecto de la versión anterior." />
           </Field>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} disabled={isPending} style={ghostBtn}>Cancelar</button>
-            <button type="submit" disabled={isPending || !file} style={primaryBtn}>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+            <button type="submit" disabled={isPending || !file} className="nf-app-btn-primary">
               {isPending ? "Subiendo…" : "Subir versión"}
             </button>
           </div>
@@ -646,13 +696,13 @@ function SubmitReviewModal({
               </div>
             )}
           </div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} disabled={isPending} style={ghostBtn}>Cancelar</button>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
             <button
               type="button"
               disabled={isPending || picked.size === 0}
               onClick={() => onSubmit(Array.from(picked))}
-              style={primaryBtn}
+              className="nf-app-btn-primary"
             >
               {isPending ? "Enviando…" : `Enviar a revisión (${picked.size})`}
             </button>
@@ -685,13 +735,13 @@ function RejectModal({
             El documento <strong>{doc.code}</strong> volverá a borrador. Indica el motivo:
           </p>
           <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} style={inputStyle} />
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" onClick={onClose} disabled={isPending} style={ghostBtn}>Cancelar</button>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
             <button
               type="button"
               disabled={isPending || !comment.trim()}
               onClick={() => onSubmit(comment.trim())}
-              style={{ ...primaryBtn, background: "#C93C37" }}
+              className="nf-app-btn-danger"
             >
               {isPending ? "Rechazando…" : "Rechazar"}
             </button>
@@ -707,9 +757,9 @@ function ObsoleteForm({ isPending, onCancel, onConfirm }: { isPending: boolean; 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo (opcional)" style={inputStyle} />
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button type="button" onClick={onCancel} disabled={isPending} style={ghostBtn}>Cancelar</button>
-        <button type="button" disabled={isPending} onClick={() => onConfirm(reason)} style={{ ...primaryBtn, background: "#5E6B7A" }}>
+      <div className="nf-modal-actions">
+        <button type="button" onClick={onCancel} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+        <button type="button" disabled={isPending} onClick={() => onConfirm(reason)} className="nf-app-btn-primary" style={{ background: "#5E6B7A", borderColor: "#5E6B7A" }}>
           {isPending ? "Marcando…" : "Marcar obsoleto"}
         </button>
       </div>
@@ -771,11 +821,23 @@ function DocumentDetailModal({
           <Meta label="Versión actual" value={<span style={{ fontFamily: "ui-monospace, monospace" }}>v{doc.currentVersion}</span>} />
           <Meta label="Tipo" value={TYPE_LABEL.get(doc.type) ?? doc.type} />
           <Meta label="Norma" value={doc.standardCode ?? "—"} />
+          <Meta label="Cláusula" value={doc.clauseCode ? `${doc.clauseCode} · ${doc.clauseTitle ?? ""}` : "—"} />
+          <Meta label="Proceso" value={doc.processCode ? `${doc.processCode} · ${doc.processName ?? ""}` : doc.processName ?? "—"} />
+          <Meta label="Responsable" value={doc.ownerName ?? "—"} />
+          <Meta label="Próxima revisión" value={doc.reviewDate ? formatDate(doc.reviewDate) : "—"} />
           <Meta label="Ubicación" value={doc.locationName ?? doc.physicalLocation ?? "—"} />
           <Meta label="Custodio" value={doc.custodianId ? personnelLookup.get(doc.custodianId) ?? "—" : "—"} />
           <Meta label="Elaboración" value={doc.responsibleElaborationId ? personnelLookup.get(doc.responsibleElaborationId) ?? "—" : "—"} />
           <Meta label="Aprobación" value={doc.responsibleApprovalId ? personnelLookup.get(doc.responsibleApprovalId) ?? "—" : "—"} />
         </div>
+
+        {(doc.tags.length > 0 || doc.distributionList.length > 0 || doc.externalLink) && (
+          <div style={{ display: "grid", gap: 8, padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13 }}>
+            {doc.tags.length > 0 && <div><strong>Etiquetas:</strong> {doc.tags.join(" · ")}</div>}
+            {doc.distributionList.length > 0 && <div><strong>Distribución:</strong> {doc.distributionList.join(" · ")}</div>}
+            {doc.externalLink && <div><strong>Enlace externo:</strong> <a href={doc.externalLink} target="_blank" rel="noopener noreferrer">{doc.externalLink}</a></div>}
+          </div>
+        )}
 
         {doc.observations && (
           <div style={{ padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13, color: "var(--nf-ink-2)" }}>
@@ -926,12 +988,7 @@ function VersionRow({
 // ─── Helpers UI ──────────────────────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
-      {children}
-    </div>
-  );
+  return <ModalField label={label}>{children}</ModalField>;
 }
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {
@@ -980,12 +1037,7 @@ function radioLabel(active: boolean): React.CSSProperties {
   };
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "10px 12px", fontSize: 14,
-  border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none",
-  fontFamily: "inherit", boxSizing: "border-box",
-  background: "var(--nf-app-surface-1)", color: "var(--nf-ink)",
-};
+const inputStyle: React.CSSProperties = modalInputStyle;
 const selectStyle: React.CSSProperties = {
   padding: "8px 10px", fontSize: 12,
   border: "1px solid var(--nf-line)", borderRadius: 8,

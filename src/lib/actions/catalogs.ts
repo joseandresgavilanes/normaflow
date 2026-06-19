@@ -34,7 +34,7 @@ const CATALOG_META: Record<
 
 type GenericDelegate = {
   create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
-  findUnique: (args: { where: { id: string } }) => Promise<
+  findFirst: (args: { where: { id: string; organizationId: string } }) => Promise<
     { id: string; organizationId: string; name: string; description?: string | null; active: boolean } | null
   >;
   update: (args: { where: { id: string }; data: Record<string, unknown> }) => Promise<{ id: string }>;
@@ -91,9 +91,8 @@ export async function updateSimpleCatalog(
 
   const delegate = delegateFor(catalog);
 
-  const existing = await delegate.findUnique({ where: { id } });
+  const existing = await delegate.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Registro no encontrado.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
 
   const updatePayload: Record<string, unknown> = {};
   if (data.name !== undefined) updatePayload.name = data.name.trim();
@@ -121,9 +120,8 @@ export async function deleteSimpleCatalog(catalog: SimpleCatalog, id: string) {
 
   const delegate = delegateFor(catalog);
 
-  const existing = await delegate.findUnique({ where: { id } });
+  const existing = await delegate.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Registro no encontrado.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
 
   // Soft-delete: catalogs are referenced by other records; deactivate instead of physical delete.
   await delegate.update({ where: { id }, data: { active: false } });
@@ -158,8 +156,8 @@ export async function updateRetentionTime(
   data: { name?: string; months?: number; active?: boolean }
 ) {
   const ctx = await requirePermission("catalogs:*");
-  const existing = await prisma.retentionTime.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Registro no encontrado.");
+  const existing = await prisma.retentionTime.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Registro no encontrado.");
 
   const patch: Record<string, unknown> = {};
   if (data.name !== undefined) patch.name = data.name.trim();
@@ -183,8 +181,8 @@ export async function updateRetentionTime(
 
 export async function deleteRetentionTime(id: string) {
   const ctx = await requirePermission("catalogs:*");
-  const existing = await prisma.retentionTime.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Registro no encontrado.");
+  const existing = await prisma.retentionTime.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Registro no encontrado.");
   await prisma.retentionTime.update({ where: { id }, data: { active: false } });
   await logAuditEvent({ ctx, action: "deactivate", module: "retention_time", recordId: id, before: { name: existing.name } });
   revalidatePath("/app/catalogs/retention");

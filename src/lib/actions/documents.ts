@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { DocumentStatus, DocumentType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requirePermission, assertSameTenant } from "@/lib/permissions/server";
+import { requireAuthorization, requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent, diff } from "@/lib/audit-log";
-import { roleCan } from "@/lib/permissions/matrix";
 import {
   createSignedDownloadUrl,
   deleteDocumentFile,
   uploadDocumentFile,
 } from "@/lib/storage";
+import { assignTrainingForApprovedDocument } from "@/lib/training-automation";
 
 /**
  * Server actions para Control de Documentos (Phase 1.2).
@@ -30,12 +30,11 @@ const PATH = "/app/documents";
 // ─── Helpers internos ─────────────────────────────────────────────────
 
 async function loadDocument(documentId: string, organizationId: string) {
-  const doc = await prisma.document.findUnique({
-    where: { id: documentId },
+  const doc = await prisma.document.findFirst({
+    where: { id: documentId, organizationId },
     include: { versions: { orderBy: { createdAt: "desc" } }, approvals: true },
   });
   if (!doc) throw new Error("Documento no encontrado.");
-  if (doc.organizationId !== organizationId) throw new Error("Acceso denegado.");
   return doc;
 }
 
@@ -57,9 +56,12 @@ export type CreateDocumentInput = {
   code: string;
   title: string;
   type: DocumentType;
+  ownerId?: string;
   processId?: string;
   clauseId?: string;
   standardCode?: string;
+  reviewDate?: string;
+  tags?: string[];
   observations?: string;
   distributionList?: string[];
   locationId?: string;
@@ -71,8 +73,52 @@ export type CreateDocumentInput = {
   externalLink?: string;
 };
 
+function dateOrNull(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error("La fecha de revisión no es válida.");
+  return date;
+}
+
+function normalizedTags(tags?: string[]) {
+  return [...new Set((tags ?? []).map((tag) => tag.trim().toLowerCase()).filter(Boolean))];
+}
+
+async function assertDocumentReferences(input: Partial<CreateDocumentInput>, organizationId: string) {
+  const personnelIds = [...new Set([
+    input.responsibleElaborationId,
+    input.responsibleApprovalId,
+    input.custodianId,
+  ].filter((id): id is string => Boolean(id)))];
+  const [process, location, personnelCount, owner, clause, standard] = await Promise.all([
+    input.processId ? prisma.process.findFirst({ where: { id: input.processId, organizationId }, select: { id: true } }) : null,
+    input.locationId ? prisma.location.findFirst({ where: { id: input.locationId, organizationId }, select: { id: true } }) : null,
+    personnelIds.length ? prisma.personnel.count({ where: { id: { in: personnelIds }, organizationId } }) : 0,
+    input.ownerId ? prisma.membership.findFirst({ where: { userId: input.ownerId, organizationId }, select: { id: true } }) : null,
+    input.clauseId ? prisma.clause.findFirst({
+      where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId } } } },
+      select: { id: true, standard: { select: { code: true } } },
+    }) : null,
+    input.standardCode ? prisma.standard.findFirst({
+      where: { code: input.standardCode, orgStandards: { some: { organizationId } } },
+      select: { code: true },
+    }) : null,
+  ]);
+  if (input.processId && !process) throw new Error("El proceso no pertenece a la organización.");
+  if (input.locationId && !location) throw new Error("La ubicación no pertenece a la organización.");
+  if (personnelCount !== personnelIds.length) throw new Error("Una de las personas seleccionadas no pertenece a la organización.");
+  if (input.ownerId && !owner) throw new Error("El responsable no pertenece a la organización.");
+  if (input.clauseId && !clause) throw new Error("La cláusula no pertenece a una norma habilitada para la organización.");
+  if (input.standardCode && !standard) throw new Error("La norma no está habilitada para la organización.");
+  if (clause && input.standardCode && clause.standard.code !== input.standardCode) {
+    throw new Error("La cláusula seleccionada no corresponde a la norma indicada.");
+  }
+  dateOrNull(input.reviewDate);
+}
+
 export async function createDocument(input: CreateDocumentInput): Promise<{ id: string }> {
   const ctx = await requirePermission("documents:create");
+  await assertDocumentReferences(input, ctx.organization.id);
 
   const code = input.code.trim();
   const title = input.title.trim();
@@ -94,7 +140,9 @@ export async function createDocument(input: CreateDocumentInput): Promise<{ id: 
       processId: input.processId ?? null,
       clauseId: input.clauseId ?? null,
       standardCode: input.standardCode ?? null,
-      ownerId: ctx.user.id,
+      ownerId: input.ownerId || ctx.user.id,
+      reviewDate: dateOrNull(input.reviewDate),
+      tags: normalizedTags(input.tags),
       observations: input.observations?.trim() || null,
       distributionList: input.distributionList ?? [],
       locationId: input.locationId ?? null,
@@ -124,23 +172,39 @@ export async function updateDocumentMetadata(
   documentId: string,
   patch: Partial<CreateDocumentInput>
 ): Promise<void> {
-  const ctx = await requirePermission("documents:create");
+  const authorization = await requireAuthorization("documents:create");
+  const { ctx, can } = authorization;
   const existing = await loadDocument(documentId, ctx.organization.id);
+  await assertDocumentReferences(patch, ctx.organization.id);
 
   // Solo borrador puede editarse libremente.
   // En revisión / aprobado: bloqueamos metadata para preservar trazabilidad.
   if (existing.status === DocumentStatus.APPROVED || existing.status === DocumentStatus.OBSOLETE) {
-    if (!roleCan(ctx.role, "documents:*")) {
+    if (!can("documents:*")) {
       throw new Error("Solo administradores pueden editar documentos aprobados u obsoletos.");
     }
   }
 
   const update: Record<string, unknown> = {};
-  if (patch.title !== undefined) update.title = patch.title.trim();
+  if (patch.code !== undefined) {
+    const code = patch.code.trim();
+    if (!code) throw new Error("El código es obligatorio.");
+    const duplicate = await prisma.document.findUnique({ where: { organizationId_code: { organizationId: ctx.organization.id, code } } });
+    if (duplicate && duplicate.id !== documentId) throw new Error(`Ya existe un documento con código ${code}.`);
+    update.code = code;
+  }
+  if (patch.title !== undefined) {
+    const title = patch.title.trim();
+    if (!title) throw new Error("El título es obligatorio.");
+    update.title = title;
+  }
   if (patch.type !== undefined) update.type = patch.type;
+  if (patch.ownerId !== undefined) update.ownerId = patch.ownerId || null;
   if (patch.processId !== undefined) update.processId = patch.processId || null;
   if (patch.clauseId !== undefined) update.clauseId = patch.clauseId || null;
   if (patch.standardCode !== undefined) update.standardCode = patch.standardCode || null;
+  if (patch.reviewDate !== undefined) update.reviewDate = dateOrNull(patch.reviewDate);
+  if (patch.tags !== undefined) update.tags = normalizedTags(patch.tags);
   if (patch.observations !== undefined) update.observations = patch.observations?.trim() || null;
   if (patch.distributionList !== undefined) update.distributionList = patch.distributionList;
   if (patch.locationId !== undefined) update.locationId = patch.locationId || null;
@@ -182,7 +246,6 @@ export async function uploadDocumentVersion(
 ): Promise<{ version: string; fileUrl: string }> {
   const ctx = await requirePermission("documents:create");
   const existing = await loadDocument(documentId, ctx.organization.id);
-  assertSameTenant(ctx, existing);
 
   if (existing.status === DocumentStatus.OBSOLETE) {
     throw new Error("No se pueden subir versiones a un documento obsoleto.");
@@ -243,12 +306,11 @@ export async function uploadDocumentVersion(
  */
 export async function getDocumentVersionUrl(versionId: string): Promise<string> {
   const ctx = await requirePermission("documents:read");
-  const version = await prisma.documentVersion.findUnique({
-    where: { id: versionId },
+  const version = await prisma.documentVersion.findFirst({
+    where: { id: versionId, document: { organizationId: ctx.organization.id } },
     include: { document: true },
   });
   if (!version) throw new Error("Versión no encontrada.");
-  if (version.document.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
   if (!version.fileUrl) throw new Error("Esta versión no tiene archivo asociado.");
 
   const url = await createSignedDownloadUrl(version.fileUrl, 300);
@@ -282,6 +344,13 @@ export async function submitForReview(
   if (args.approverIds.length === 0) {
     throw new Error("Indica al menos una persona aprobadora.");
   }
+  const approverIds = [...new Set(args.approverIds)];
+  const approverCount = await prisma.membership.count({
+    where: { organizationId: ctx.organization.id, userId: { in: approverIds } },
+  });
+  if (approverCount !== approverIds.length) {
+    throw new Error("Una de las personas aprobadoras no pertenece a la organización.");
+  }
 
   await prisma.$transaction([
     prisma.document.update({
@@ -289,7 +358,7 @@ export async function submitForReview(
       data: { status: DocumentStatus.IN_REVIEW },
     }),
     prisma.approval.createMany({
-      data: args.approverIds.map((approverId) => ({
+      data: approverIds.map((approverId) => ({
         documentId,
         approverId,
         status: "PENDING" as const,
@@ -303,7 +372,7 @@ export async function submitForReview(
     module: "document",
     recordId: documentId,
     before: { status: existing.status },
-    after: { status: "IN_REVIEW", approvers: args.approverIds.length },
+    after: { status: "IN_REVIEW", approvers: approverIds.length },
   });
 
   // TODO Phase 2: notificar por email a aprobadores vía Resend
@@ -314,7 +383,8 @@ export async function approveDocument(
   documentId: string,
   args: { comment?: string }
 ): Promise<void> {
-  const ctx = await requirePermission("documents:*");
+  const authorization = await requireAuthorization("documents:*");
+  const { ctx, can } = authorization;
   const existing = await loadDocument(documentId, ctx.organization.id);
 
   if (existing.status === DocumentStatus.APPROVED) {
@@ -354,7 +424,7 @@ export async function approveDocument(
       where: { documentId, status: "PENDING" },
     });
 
-    if (remaining === 0 || roleCan(ctx.role, "documents:*")) {
+    if (remaining === 0 || can("documents:*")) {
       // Obsoleta versiones aprobadas anteriores del mismo documento (manteniéndolas en histórico)
       await tx.document.update({
         where: { id: documentId },
@@ -372,7 +442,29 @@ export async function approveDocument(
     after: { status: "APPROVED", comment: args.comment ?? null },
   });
 
+  const generatedTraining = await assignTrainingForApprovedDocument({
+    organizationId: ctx.organization.id,
+    documentId,
+    version: existing.currentVersion,
+    createdById: ctx.user.id,
+  });
+  if (generatedTraining.count > 0) {
+    await logAuditEvent({
+      ctx,
+      action: "auto_assign",
+      module: "training_assignment",
+      recordId: documentId,
+      extra: {
+        documentId,
+        version: existing.currentVersion,
+        assignmentCount: generatedTraining.count,
+        courseIds: generatedTraining.courseIds,
+      },
+    });
+  }
+
   revalidatePath(PATH);
+  revalidatePath("/app/training");
 }
 
 export async function rejectDocument(

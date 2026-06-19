@@ -29,9 +29,19 @@ function normalize(input: PersonnelInput) {
   };
 }
 
+async function assertPositionBelongsToOrganization(positionId: string | undefined, organizationId: string) {
+  if (!positionId) return;
+  const position = await prisma.position.findFirst({
+    where: { id: positionId, organizationId },
+    select: { id: true },
+  });
+  if (!position) throw new Error("El cargo no pertenece a la organización.");
+}
+
 export async function createPersonnel(input: PersonnelInput) {
   const ctx = await requirePermission("personnel:*");
   const data = normalize(input);
+  await assertPositionBelongsToOrganization(input.positionId, ctx.organization.id);
   const created = await prisma.personnel.create({
     data: { organizationId: ctx.organization.id, ...data },
   });
@@ -41,9 +51,10 @@ export async function createPersonnel(input: PersonnelInput) {
 
 export async function updatePersonnel(id: string, input: PersonnelInput & { active?: boolean }) {
   const ctx = await requirePermission("personnel:*");
-  const existing = await prisma.personnel.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Registro no encontrado.");
+  const existing = await prisma.personnel.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Registro no encontrado.");
   const data = normalize(input);
+  await assertPositionBelongsToOrganization(input.positionId, ctx.organization.id);
   const patch = { ...data, ...(input.active !== undefined ? { active: input.active } : {}) };
   await prisma.personnel.update({ where: { id }, data: patch });
   await logAuditEvent({
@@ -59,8 +70,8 @@ export async function updatePersonnel(id: string, input: PersonnelInput & { acti
 
 export async function deactivatePersonnel(id: string) {
   const ctx = await requirePermission("personnel:*");
-  const existing = await prisma.personnel.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Registro no encontrado.");
+  const existing = await prisma.personnel.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Registro no encontrado.");
   await prisma.personnel.update({ where: { id }, data: { active: false } });
   await logAuditEvent({
     ctx,

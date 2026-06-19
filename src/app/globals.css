@@ -41,6 +41,7 @@
   min-height: 100vh;
   min-height: 100dvh;
   font-family: Inter, -apple-system, sans-serif;
+  color-scheme: light;
   /* Light app: contraste fuerte + jerarquía clara */
   --nf-ink: #0f1b2d;
   --nf-ink-2: #223648;
@@ -70,6 +71,48 @@
   min-width: 0;
   width: 100%;
   box-sizing: border-box;
+  color: var(--nf-ink, #0f1b2d);
+}
+
+/* Tarjetas operativas (riesgos, procesos, cambios, proveedores…) */
+.nf-operational-card {
+  color: var(--nf-ink-2, #223648);
+}
+
+.nf-operational-card :where(h3) {
+  color: var(--nf-ink, #0f1b2d);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.nf-operational-card :where(code) {
+  color: var(--nf-ink-2, #223648);
+  font-size: 11px;
+}
+
+.nf-operational-card :where(strong) {
+  color: var(--nf-ink, #0f1b2d);
+}
+
+/* Badges de estado en filas flex de tarjetas (evita estiramiento vertical) */
+.nf-status-badge {
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.25;
+}
+
+.nf-export-history :where(strong),
+.nf-billing-invoices :where(strong),
+.nf-billing-plans :where(strong) {
+  color: var(--nf-ink, #0f1b2d);
+  font-weight: 700;
+}
+
+.nf-billing-plans :where(li) {
+  color: var(--nf-ink-2, #223648);
 }
 
 .nf-sidebar-backdrop {
@@ -557,6 +600,11 @@
   min-width: 0;
 }
 
+.nf-kpi-summary-cell :where(strong) {
+  color: var(--nf-ink, #0f1b2d);
+  font-weight: 800;
+}
+
 .nf-data-table-wrap {
   overflow: auto;
   border-radius: 12px;
@@ -618,10 +666,11 @@
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--nf-line, #b8c8d9);
-  background: #fff;
+  background: var(--nf-app-surface-1, rgba(18, 60, 102, 0.1));
   color: var(--nf-ink, #0f1b2d);
   font-size: 14px;
   font-weight: 500;
+  color-scheme: light;
 }
 
 .nf-app-input:focus {
@@ -1408,7 +1457,7 @@ button.nf-audit-card {
   appearance: none;
   -webkit-appearance: none;
   font: inherit;
-  color: inherit;
+  color: var(--nf-ink-2, #223648);
   cursor: pointer;
   width: 100%;
   box-sizing: border-box;
@@ -1458,6 +1507,12 @@ button.nf-audit-card:focus-visible {
   padding: 15px 17px 17px;
   box-shadow: 0 1px 0 rgba(18, 60, 102, 0.05);
   transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  color: var(--nf-ink-2, #223648);
+}
+
+.nf-audit-card :where(strong) {
+  color: var(--nf-ink, #0f1b2d);
+  font-weight: 700;
 }
 
 .nf-audit-card:hover {
@@ -2001,9 +2056,38 @@ button.nf-audit-card:focus-visible {
   }
 }
 
+#nf-modal-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5000; /* Z_INDEX.modalPortal — above sidebar (100), topbar (50), AI panel (900) */
+  isolation: isolate;
+}
+
+#nf-modal-root > * {
+  pointer-events: auto;
+}
+
 /* App modals (contraste + tipografía) */
+.nf-modal-overlay {
+  /* Tokens del shell — necesarios cuando el portal está fuera de .nf-app-shell */
+  --nf-ink: #0f1b2d;
+  --nf-ink-2: #223648;
+  --nf-ink-3: #314456;
+  --nf-ink-4: #3d5166;
+  --nf-line: #b8c8d9;
+  --nf-app-surface-1: rgba(18, 60, 102, 0.1);
+  --nf-app-surface-2: rgba(18, 60, 102, 0.065);
+  --nf-app-panel: #d4e0ed;
+  --nf-app-accent-glow: rgba(46, 139, 87, 0.09);
+  --nf-table-row-hover: #f5f8fc;
+  font-family: Inter, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
 .nf-modal-panel {
   border: 1px solid var(--nf-line, #b8c8d9);
+  box-shadow: 0 24px 80px rgba(14, 28, 50, 0.22), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
 }
 
 .nf-modal-header {
@@ -2077,6 +2161,102 @@ button.nf-audit-card:focus-visible {
 
 .nf-modal-body :where(.nf-app-btn-primary, .nf-app-btn-danger) {
   font-weight: 700;
+}
+
+/* Formularios en modales — estilo unificado (Documentos) */
+.nf-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nf-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nf-modal-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nf-ink-3, #314456);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.nf-modal-field-hint {
+  font-size: 12px;
+  color: var(--nf-ink-2, #223648);
+  line-height: 1.45;
+  font-weight: 500;
+}
+
+.nf-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.nf-modal-error {
+  padding: 8px 12px;
+  border-radius: 7px;
+  background: #fff0f0;
+  color: #c93c37;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nf-modal-body :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+  textarea,
+  select
+) {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid var(--nf-line, #b8c8d9);
+  border-radius: 8px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  background: var(--nf-app-surface-1, rgba(18, 60, 102, 0.1));
+  color: var(--nf-ink, #0f1b2d);
+  font-weight: 500;
+  color-scheme: light;
+}
+
+.nf-modal-body :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+  textarea,
+  select
+):focus {
+  border-color: #123c66;
+  box-shadow: 0 0 0 3px rgba(18, 60, 102, 0.14);
+}
+
+.nf-modal-body label:has(> input:not([type="checkbox"]):not([type="radio"])),
+.nf-modal-body label:has(> textarea),
+.nf-modal-body label:has(> select) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nf-ink-3, #314456);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.nf-modal-body label:has(> input:not([type="checkbox"]):not([type="radio"])) > :where(input, textarea, select),
+.nf-modal-body label:has(> textarea) > textarea,
+.nf-modal-body label:has(> select) > select {
+  margin-top: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
 }
 
 .nf-data-table :where(.nf-app-btn-outline, .nf-app-btn-ghost, .nf-app-btn-primary, .nf-app-btn-danger) {

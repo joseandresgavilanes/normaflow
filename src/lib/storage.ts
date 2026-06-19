@@ -20,6 +20,8 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 
 export const DOCUMENTS_BUCKET =
   process.env.SUPABASE_DOCUMENTS_BUCKET ?? "documents";
+export const EVIDENCE_BUCKET =
+  process.env.SUPABASE_EVIDENCE_BUCKET ?? "evidence";
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
@@ -133,6 +135,82 @@ export async function deleteDocumentFile(path: string): Promise<void> {
   if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
   const { error } = await supabase.storage.from(DOCUMENTS_BUCKET).remove([path]);
   if (error) throw new StorageError(`No se pudo borrar el archivo: ${error.message}`, error);
+}
+
+export async function uploadRecordFile(args: {
+  organizationId: string;
+  recordId: string;
+  entryId: string;
+  file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
+}): Promise<{ path: string; size: number; mime: string; fileName: string }> {
+  const { file } = args;
+  if (file.size <= 0) throw new StorageError("El archivo está vacío.");
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new StorageError(`El archivo supera el tamaño máximo permitido (${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB).`);
+  }
+  if (file.type && !isAllowedMime(file.type)) throw new StorageError(`Tipo de archivo no permitido: ${file.type}`);
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+  const fileName = safeFilename(file.name) || "registro";
+  const path = `org-${args.organizationId}/records/${args.recordId}/${args.entryId}/${Date.now()}-${fileName}`;
+  const { error } = await supabase.storage.from(DOCUMENTS_BUCKET).upload(path, Buffer.from(await file.arrayBuffer()), {
+    contentType: file.type || "application/octet-stream",
+    upsert: false,
+    cacheControl: "3600",
+  });
+  if (error) throw new StorageError(`No se pudo subir el archivo del registro: ${error.message}`, error);
+  return { path, size: file.size, mime: file.type || "application/octet-stream", fileName: file.name.slice(0, 255) };
+}
+
+export function createSignedRecordUrl(path: string, expiresInSeconds = 300) {
+  return createSignedDownloadUrl(path, expiresInSeconds);
+}
+
+export function deleteRecordFile(path: string) {
+  return deleteDocumentFile(path);
+}
+
+export async function uploadEvidenceFile(args: {
+  organizationId: string;
+  evidenceId: string;
+  file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
+}): Promise<{ path: string; size: number; mime: string }> {
+  const { file } = args;
+  if (file.size <= 0) throw new StorageError("El archivo está vacío.");
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    throw new StorageError(`El archivo supera el tamaño máximo permitido (${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB).`);
+  }
+  if (file.type && !isAllowedMime(file.type)) {
+    throw new StorageError(`Tipo de archivo no permitido: ${file.type}`);
+  }
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+  const filename = safeFilename(file.name) || "evidencia";
+  const path = `org-${args.organizationId}/evidence/${args.evidenceId}/${Date.now()}-${filename}`;
+  const { error } = await supabase.storage
+    .from(EVIDENCE_BUCKET)
+    .upload(path, Buffer.from(await file.arrayBuffer()), {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+      cacheControl: "3600",
+    });
+  if (error) throw new StorageError(`No se pudo subir la evidencia: ${error.message}`, error);
+  return { path, size: file.size, mime: file.type || "application/octet-stream" };
+}
+
+export async function createSignedEvidenceUrl(path: string, expiresInSeconds = 300): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+  const { data, error } = await supabase.storage.from(EVIDENCE_BUCKET).createSignedUrl(path, expiresInSeconds);
+  if (error || !data) throw new StorageError(`No se pudo firmar la evidencia: ${error?.message ?? "?"}`);
+  return data.signedUrl;
+}
+
+export async function deleteEvidenceFile(path: string): Promise<void> {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+  const { error } = await supabase.storage.from(EVIDENCE_BUCKET).remove([path]);
+  if (error) throw new StorageError(`No se pudo borrar la evidencia: ${error.message}`, error);
 }
 
 /**

@@ -62,16 +62,12 @@ export default function AttestationModal({ open, onClose, title, statement, sess
         className="nf-app-input"
         style={{ width: "100%", resize: "vertical", boxSizing: "border-box", marginBottom: 4 }}
       />
-      {err && <p style={{ color: "#C93C37", fontSize: 13, fontWeight: 600, margin: "10px 0 0" }}>{err}</p>}
-      <div style={{ display: "flex", gap: 10, marginTop: 20, justifyContent: "flex-end" }}>
-        <button type="button" className="nf-app-btn-outline" onClick={onClose}>
+      {err && <div className="nf-modal-error">{err}</div>}
+      <div className="nf-modal-actions">
+        <button type="button" className="nf-app-btn-ghost" onClick={onClose}>
           Cancelar
         </button>
-        <button
-          type="button"
-          onClick={submit}
-          style={{ padding: "9px 18px", borderRadius: 10, border: "none", background: "#123C66", color: "#fff", fontWeight: 700, cursor: "pointer", fontSize: 13 }}
-        >
+        <button type="button" className="nf-app-btn-primary" onClick={submit}>
           Confirmar y registrar
         </button>
       </div>

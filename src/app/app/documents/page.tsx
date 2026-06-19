@@ -1,9 +1,10 @@
 import { getAppContext } from "@/lib/app-context";
-import { roleCan } from "@/lib/permissions/matrix";
-import { isSupabaseConfigured } from "@/lib/env";
 import { getDocumentsPayload } from "@/lib/server-queries";
 import DocumentsModule from "@/components/modules/DocumentsModule";
 import DocumentsLiveClient from "@/components/documents/DocumentsLiveClient";
+import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
+import AccessDenied from "@/components/app/AccessDenied";
+import { isAuthorizationError } from "@/lib/permissions/server";
 
 export const metadata = { title: "Control de Documentos" };
 export const dynamic = "force-dynamic";
@@ -11,25 +12,24 @@ export const dynamic = "force-dynamic";
 export default async function DocumentsPage() {
   const ctx = await getAppContext();
 
-  // Cuando hay una organización real conectada y Supabase está configurado,
-  // se usa el cliente "live" con persistencia Prisma + Supabase Storage.
-  if (ctx?.mode === "live" && isSupabaseConfigured()) {
+  if (ctx?.mode === "live") {
     try {
-      const payload = await getDocumentsPayload(ctx.organization.id);
+      const payload = await getDocumentsPayload();
       return (
         <DocumentsLiveClient
           initial={payload}
-          canCreate={roleCan(ctx.role, "documents:create")}
-          canApprove={roleCan(ctx.role, "documents:*")}
+          canCreate={payload.access.canCreate}
+          canApprove={payload.access.canApprove}
           currentUserId={ctx.user.id}
         />
       );
     } catch (err) {
-      // Si Prisma falla (DB no migrada, env mal configurada, etc.) caemos al módulo demo.
-      console.warn("[documents] live payload failed, falling back to mock:", err);
+      if (isAuthorizationError(err)) return <AccessDenied />;
+      console.error("[documents] live payload failed:", err);
+      return <LiveDataUnavailable section="Control de Documentos" />;
     }
   }
 
-  // Modo demo / sin Supabase: módulo existente con WorkspaceStore en memoria.
+  // El módulo basado en WorkspaceStore queda reservado al modo demo.
   return <DocumentsModule />;
 }

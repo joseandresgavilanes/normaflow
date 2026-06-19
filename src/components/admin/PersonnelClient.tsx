@@ -179,9 +179,9 @@ export default function PersonnelClient() {
             <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{formError}</div>
           )}
 
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 4 }}>
-            <button type="button" onClick={() => { setCreating(false); setEditing(null); }} disabled={isPending} style={ghostBtn}>Cancelar</button>
-            <button type="submit" disabled={isPending} style={primaryBtn}>{isPending ? "Guardando…" : "Guardar"}</button>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={() => { setCreating(false); setEditing(null); }} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+            <button type="submit" disabled={isPending} className="nf-app-btn-primary">{isPending ? "Guardando…" : "Guardar"}</button>
           </div>
         </form>
       </Modal>
@@ -193,11 +193,12 @@ export default function PersonnelClient() {
         width={420}
       >
         <p style={{ margin: "0 0 14px", color: "var(--nf-ink)" }}>¿Seguro que quieres marcar como inactivo a <strong>{confirmDeactivate?.firstName} {confirmDeactivate?.lastName}</strong>?</p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button type="button" onClick={() => setConfirmDeactivate(null)} disabled={isPending} style={ghostBtn}>Cancelar</button>
+        <div className="nf-modal-actions">
+          <button type="button" onClick={() => setConfirmDeactivate(null)} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
           <button
             type="button"
             disabled={isPending}
+            className="nf-app-btn-danger"
             onClick={() => startTransition(async () => {
               if (!confirmDeactivate) return;
               try {
@@ -207,7 +208,6 @@ export default function PersonnelClient() {
                 setFormError(err instanceof Error ? err.message : "Error.");
               }
             })}
-            style={{ ...primaryBtn, background: "#C93C37" }}
           >
             {isPending ? "…" : "Desactivar"}
           </button>

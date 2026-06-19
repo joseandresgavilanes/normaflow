@@ -1,32 +1,62 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Building2, Mail, Shield, UserRound } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspace } from "@/context/WorkspaceStore";
+import { updateCurrentProfile } from "@/lib/actions/account";
 
-export default function ProfileSettingsModule() {
+type ServerProfile = {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string | null;
+  organizationId: string;
+  organizationName: string;
+  role: string;
+};
+
+export default function ProfileSettingsModule({ serverProfile }: { serverProfile?: ServerProfile }) {
   const { state, dispatch, showToast } = useWorkspace();
   const { session } = state;
-  const [name, setName] = useState(session.name);
+  const live = serverProfile !== undefined;
+  const profile = serverProfile ?? { name: session.name, email: session.email, organizationName: session.orgName, role: session.roleLabel };
+  const [savedName, setSavedName] = useState(profile.name);
+  const [name, setName] = useState(profile.name);
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
-    setName(session.name);
-  }, [session.name]);
+    setName(profile.name);
+    setSavedName(profile.name);
+  }, [profile.name]);
 
   function save() {
     if (!name.trim()) {
       showToast("El nombre no puede estar vacío");
       return;
     }
-    dispatch({ type: "updateSession", patch: { name: name.trim() } });
-    showToast("Perfil actualizado en esta sesión (no sincronizado con servidor)");
+    if (!live) {
+      dispatch({ type: "updateSession", patch: { name: name.trim() } });
+      setSavedName(name.trim());
+      showToast("Perfil actualizado en esta sesión demo");
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const result = await updateCurrentProfile({ name });
+        setSavedName(result.name);
+        setName(result.name);
+        showToast("Perfil actualizado");
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : "No se pudo actualizar el perfil");
+      }
+    });
   }
 
   return (
     <div>
-      <SectionTitle title="Cuenta y perfil" sub="Datos mostrados en la aplicación. En esta sesión se guardan solo en memoria del navegador." />
+      <SectionTitle title="Cuenta y perfil" sub={live ? "Perfil vinculado a tu identidad y organización en Supabase." : "Datos de la sesión demo del navegador."} />
 
       <Card style={{ padding: 0, overflow: "hidden", maxWidth: 640, marginBottom: 20 }}>
         <div
@@ -37,7 +67,7 @@ export default function ProfileSettingsModule() {
           }}
         >
           <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap" }}>
-            <Avatar name={session.name} size={72} />
+            <Avatar name={savedName} size={72} />
             <div style={{ flex: "1 1 200px", minWidth: 0 }}>
               <div
                 style={{
@@ -49,11 +79,11 @@ export default function ProfileSettingsModule() {
                   fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
                 }}
               >
-                {session.name}
+                {savedName}
               </div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 14, color: "var(--nf-ink-2)", fontWeight: 600 }}>
                 <Mail size={16} strokeWidth={2.25} aria-hidden style={{ flexShrink: 0, opacity: 0.85 }} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{session.email}</span>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile.email}</span>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
                 <span
@@ -71,7 +101,7 @@ export default function ProfileSettingsModule() {
                   }}
                 >
                   <Building2 size={14} strokeWidth={2.25} aria-hidden />
-                  {session.orgName}
+                  {profile.organizationName}
                 </span>
                 <span
                   style={{
@@ -88,7 +118,7 @@ export default function ProfileSettingsModule() {
                   }}
                 >
                   <Shield size={14} strokeWidth={2.25} aria-hidden />
-                  {session.roleLabel}
+                  {profile.role.replaceAll("_", " ")}
                 </span>
               </div>
             </div>
@@ -97,7 +127,7 @@ export default function ProfileSettingsModule() {
 
         <div style={{ padding: "22px 24px 24px" }}>
           <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.55 }}>
-            Puedes cambiar cómo te muestra la app. El correo y la organización vienen de la sesión simulada y no se sincronizan con un servidor todavía.
+            {live ? "Puedes cambiar tu nombre visible. El correo y la organización provienen de la sesión autenticada y son de solo lectura." : "Puedes cambiar cómo te muestra la app durante esta sesión demo."}
           </p>
 
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", display: "block", marginBottom: 16 }}>
@@ -118,7 +148,7 @@ export default function ProfileSettingsModule() {
             Correo (solo lectura)
             <input
               className="nf-app-input"
-              value={session.email}
+              value={profile.email}
               readOnly
               style={{
                 width: "100%",
@@ -130,13 +160,14 @@ export default function ProfileSettingsModule() {
               }}
             />
             <span style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--nf-ink-3)", marginTop: 8, lineHeight: 1.45 }}>
-              El correo proviene de la sesión actual y no se edita aquí en modo frontend-first.
+              El correo identifica tu cuenta autenticada y no se edita desde esta pantalla.
             </span>
           </label>
 
           <button
             type="button"
             onClick={save}
+            disabled={pending}
             style={{
               width: "100%",
               maxWidth: 280,
@@ -147,10 +178,10 @@ export default function ProfileSettingsModule() {
               padding: "12px 18px",
               fontSize: 14,
               fontWeight: 700,
-              cursor: "pointer",
+              cursor: pending ? "wait" : "pointer",
             }}
           >
-            Guardar nombre
+            {pending ? "Guardando…" : "Guardar nombre"}
           </button>
         </div>
       </Card>

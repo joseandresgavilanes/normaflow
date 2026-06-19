@@ -66,14 +66,15 @@ export default function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full font-semibold whitespace-nowrap",
+        "nf-status-badge inline-flex items-center self-start shrink-0 rounded-full font-semibold whitespace-nowrap leading-tight",
         className,
       )}
       style={{
         background: s.bg,
         color: s.color,
-        padding: size === "sm" ? "2px 8px" : "4px 12px",
+        padding: size === "sm" ? "3px 9px" : "4px 12px",
         fontSize: size === "sm" ? 11 : 12,
+        lineHeight: 1.25,
       }}
     >
       {displayLabel}
@@ -97,13 +98,15 @@ export function PriorityBadge({ priority }: { priority: string }) {
   };
   return (
     <span
+      className="nf-status-badge inline-flex items-center self-start shrink-0 whitespace-nowrap leading-tight"
       style={{
         background: s.bg,
         color: s.color,
-        padding: "2px 8px",
+        padding: "3px 9px",
         borderRadius: 20,
         fontSize: 11,
         fontWeight: 600,
+        lineHeight: 1.25,
       }}
     >
       {labels[priority] ?? priority}

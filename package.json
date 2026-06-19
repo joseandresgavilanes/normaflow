@@ -9,11 +9,15 @@
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "npx prisma migrate dev",
+    "db:deploy": "npx prisma migrate deploy",
+    "db:status": "npx prisma migrate status",
     "db:seed": "tsx scripts/seed.ts",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
     "test": "playwright test",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:live": "playwright test --config=playwright.live.config.ts",
+    "test:live:headed": "playwright test --config=playwright.live.config.ts --headed"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.82.0",
@@ -43,6 +47,7 @@
     "date-fns": "^3.6.0",
     "lucide-react": "^0.383.0",
     "next": "^15.5.14",
+    "prisma": "5.22.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.51.5",
@@ -51,8 +56,7 @@
     "stripe": "^15.11.0",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.23.8",
-    "prisma": "5.22.0"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@playwright/test": "^1.44.1",

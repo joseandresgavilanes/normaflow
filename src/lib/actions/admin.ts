@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/permissions/server";
+import { requireAuthorization, requirePermission } from "@/lib/permissions/server";
+import { GROUP_PERMISSION_ALLOWLIST } from "@/lib/permissions/matrix";
 import { logAuditEvent } from "@/lib/audit-log";
 import { planMaxUsers } from "@/lib/constants";
 import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
@@ -44,6 +45,9 @@ export async function inviteMember(input: { email: string; name: string; role: R
   if (!email) throw new Error("El email es obligatorio.");
   if (!name) throw new Error("El nombre es obligatorio.");
   if (!ROLES_VALUES.includes(input.role)) throw new Error("Rol no válido.");
+  if (input.role === "SUPER_ADMIN" && ctx.role !== "SUPER_ADMIN") {
+    throw new Error("Solo un Super Admin puede asignar ese rol.");
+  }
 
   if (!isSupabaseInviteConfigured()) {
     throw new Error(
@@ -66,7 +70,9 @@ export async function inviteMember(input: { email: string; name: string; role: R
   // Find-or-create the user, then attach a membership for this org.
   const user = await prisma.user.upsert({
     where: { email },
-    update: { name },
+    // Never let an administrator from one tenant overwrite the global profile
+    // of an account that may already belong to another tenant.
+    update: {},
     create: { email, name },
   });
 
@@ -110,9 +116,12 @@ export async function inviteMember(input: { email: string; name: string; role: R
 
 export async function updateMemberRole(membershipId: string, role: Role) {
   const ctx = await requirePermission("members:*");
-  const existing = await prisma.membership.findUnique({ where: { id: membershipId } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Miembro no encontrado.");
+  const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Miembro no encontrado.");
   if (!ROLES_VALUES.includes(role)) throw new Error("Rol no válido.");
+  if ((existing.role === "SUPER_ADMIN" || role === "SUPER_ADMIN") && ctx.role !== "SUPER_ADMIN") {
+    throw new Error("Solo un Super Admin puede modificar ese rol.");
+  }
 
   // Prevent demoting the last ORG_ADMIN — otherwise the org becomes orphan.
   if (existing.role === "ORG_ADMIN" && role !== "ORG_ADMIN") {
@@ -136,8 +145,11 @@ export async function updateMemberRole(membershipId: string, role: Role) {
 
 export async function removeMember(membershipId: string) {
   const ctx = await requirePermission("members:*");
-  const existing = await prisma.membership.findUnique({ where: { id: membershipId } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Miembro no encontrado.");
+  const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Miembro no encontrado.");
+  if (existing.role === "SUPER_ADMIN" && ctx.role !== "SUPER_ADMIN") {
+    throw new Error("Solo un Super Admin puede eliminar a otro Super Admin.");
+  }
   if (existing.userId === ctx.user.id) throw new Error("No puedes eliminarte a ti mismo.");
   if (existing.role === "ORG_ADMIN") {
     const remainingAdmins = await prisma.membership.count({
@@ -165,8 +177,8 @@ export async function createGroup(input: { name: string; description?: string })
 
 export async function updateGroup(id: string, input: { name?: string; description?: string }) {
   const ctx = await requirePermission("groups:*");
-  const existing = await prisma.group.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Grupo no encontrado.");
+  const existing = await prisma.group.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Grupo no encontrado.");
   const patch: Record<string, unknown> = {};
   if (input.name !== undefined) patch.name = input.name.trim();
   if (input.description !== undefined) patch.description = input.description.trim() || null;
@@ -184,21 +196,26 @@ export async function updateGroup(id: string, input: { name?: string; descriptio
 
 export async function deleteGroup(id: string) {
   const ctx = await requirePermission("groups:*");
-  const existing = await prisma.group.findUnique({ where: { id } });
-  if (!existing || existing.organizationId !== ctx.organization.id) throw new Error("Grupo no encontrado.");
+  const existing = await prisma.group.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Grupo no encontrado.");
   await prisma.group.delete({ where: { id } });
   await logAuditEvent({ ctx, action: "delete", module: "group", recordId: id, before: { name: existing.name } });
   revalidatePath("/app/settings/groups");
 }
 
 export async function setGroupPermissions(groupId: string, permissions: string[]) {
-  const ctx = await requirePermission("groups:*");
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
-  if (!group || group.organizationId !== ctx.organization.id) throw new Error("Grupo no encontrado.");
+  const authorization = await requireAuthorization("groups:*");
+  const { ctx, can } = authorization;
+  const normalizedPermissions = [...new Set(permissions)];
+  if (normalizedPermissions.some((permission) => !GROUP_PERMISSION_ALLOWLIST.has(permission) || !can(permission))) {
+    throw new Error("No puedes conceder uno o más de los permisos solicitados.");
+  }
+  const group = await prisma.group.findFirst({ where: { id: groupId, organizationId: ctx.organization.id } });
+  if (!group) throw new Error("Grupo no encontrado.");
 
   const before = await prisma.groupPermission.findMany({ where: { groupId } });
   const beforeSet = new Set(before.map((p) => p.permission));
-  const afterSet = new Set(permissions);
+  const afterSet = new Set(normalizedPermissions);
 
   const toAdd = [...afterSet].filter((p) => !beforeSet.has(p));
   const toRemove = [...beforeSet].filter((p) => !afterSet.has(p));
@@ -225,8 +242,8 @@ export async function setGroupPermissions(groupId: string, permissions: string[]
 
 export async function addGroupMember(groupId: string, userId: string) {
   const ctx = await requirePermission("groups:*");
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
-  if (!group || group.organizationId !== ctx.organization.id) throw new Error("Grupo no encontrado.");
+  const group = await prisma.group.findFirst({ where: { id: groupId, organizationId: ctx.organization.id } });
+  if (!group) throw new Error("Grupo no encontrado.");
 
   // user must be a member of the org first
   const membership = await prisma.membership.findUnique({
@@ -246,8 +263,8 @@ export async function addGroupMember(groupId: string, userId: string) {
 
 export async function removeGroupMember(groupId: string, userId: string) {
   const ctx = await requirePermission("groups:*");
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
-  if (!group || group.organizationId !== ctx.organization.id) throw new Error("Grupo no encontrado.");
+  const group = await prisma.group.findFirst({ where: { id: groupId, organizationId: ctx.organization.id } });
+  if (!group) throw new Error("Grupo no encontrado.");
   await prisma.groupMembership.deleteMany({ where: { groupId, userId } });
   await logAuditEvent({ ctx, action: "remove_member", module: "group", recordId: groupId, before: { userId } });
   revalidatePath("/app/settings/groups");

@@ -15,60 +15,72 @@ datasource db {
 // ─── ORGANIZATIONS & USERS ───────────────────────────
 
 model Organization {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  industry     String?
-  country      String   @default("ES")
-  logoUrl      String?
-  plan         Plan     @default(STARTER)
-  trialEndsAt  DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  industry    String?
+  country     String    @default("ES")
+  logoUrl     String?
+  plan        Plan      @default(STARTER)
+  trialEndsAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  memberships       Membership[]
-  standards         OrganizationStandard[]
-  assessments       Assessment[]
-  documents         Document[]
-  processes         Process[]
-  risks             Risk[]
-  audits            Audit[]
-  nonconformities   Nonconformity[]
-  actions           Action[]
-  indicators        Indicator[]
-  evidenceFiles     EvidenceFile[]
-  notifications     Notification[]
-  subscription      Subscription?
-  auditLogs         AuditLog[]
+  memberships     Membership[]
+  standards       OrganizationStandard[]
+  assessments     Assessment[]
+  documents       Document[]
+  processes       Process[]
+  risks           Risk[]
+  audits          Audit[]
+  nonconformities Nonconformity[]
+  actions         Action[]
+  indicators      Indicator[]
+  evidenceFiles   EvidenceFile[]
+  notifications   Notification[]
+  subscription    Subscription?
+  billingInvoices BillingInvoice[]
+  reportExports   ReportExport[]
+  auditLogs       AuditLog[]
 
   // ISOTech manual alignment
-  groups            Group[]
-  positions         Position[]
-  personnel         Personnel[]
-  locations         Location[]
-  retentionTimes    RetentionTime[]
-  dispositions      Disposition[]
-  archiveMethods    ArchiveMethod[]
-  recordTypes       RecordType[]
-  records           Record[]
-  auditPrograms     AuditProgram[]
-  managementReviews ManagementReview[]
+  groups              Group[]
+  positions           Position[]
+  personnel           Personnel[]
+  locations           Location[]
+  retentionTimes      RetentionTime[]
+  dispositions        Disposition[]
+  archiveMethods      ArchiveMethod[]
+  recordTypes         RecordType[]
+  records             Record[]
+  auditPrograms       AuditProgram[]
+  managementReviews   ManagementReview[]
+  trainingCourses     TrainingCourse[]
+  trainingAssignments TrainingAssignment[]
+  changeRequests      ChangeRequest[]
+  suppliers           Supplier[]
+  integrations        Integration[]
+  memberInvites       MemberInvite[]
 
   @@map("organizations")
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  avatarUrl   String?
-  authUserId  String?  @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  avatarUrl    String?
+  authUserId   String?  @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  memberships   Membership[]
-  notifications Notification[]
-  auditLogs     AuditLog[]
+  memberships    Membership[]
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+  sentInvites    MemberInvite[] @relation("InvitedBy")
+  ownedDocuments Document[]     @relation("DocumentOwner")
+  reportExports  ReportExport[] @relation("ReportGeneratedBy")
 
   @@map("users")
 }
@@ -87,18 +99,37 @@ model Membership {
   @@map("memberships")
 }
 
+model MemberInvite {
+  id             String    @id @default(cuid())
+  organizationId String
+  email          String
+  role           Role      @default(CONTRIBUTOR)
+  token          String    @unique
+  invitedById    String?
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, email])
+  @@index([expiresAt])
+  @@map("member_invites")
+}
+
 // ─── STANDARDS & CLAUSES ─────────────────────────────
 
 model Standard {
-  id          String   @id @default(cuid())
-  code        String   @unique  // ISO_9001, ISO_27001
+  id          String  @id @default(cuid())
+  code        String  @unique // ISO_9001, ISO_27001
   name        String
   version     String
   description String?
-  isActive    Boolean  @default(true)
+  isActive    Boolean @default(true)
 
-  clauses     Clause[]
-  assessments Assessment[]
+  clauses      Clause[]
+  assessments  Assessment[]
   orgStandards OrganizationStandard[]
 
   @@map("standards")
@@ -107,7 +138,7 @@ model Standard {
 model Clause {
   id          String  @id @default(cuid())
   standardId  String
-  code        String  // e.g. "4.1", "6.1.2"
+  code        String // e.g. "4.1", "6.1.2"
   title       String
   description String?
   parentId    String?
@@ -123,10 +154,10 @@ model Clause {
 }
 
 model OrganizationStandard {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   standardId     String
-  startedAt      DateTime @default(now())
+  startedAt      DateTime  @default(now())
   targetDate     DateTime?
   score          Float?
 
@@ -161,15 +192,15 @@ model Assessment {
 }
 
 model AssessmentAnswer {
-  id           String         @id @default(cuid())
+  id           String       @id @default(cuid())
   assessmentId String
   clauseId     String
-  score        Int            @default(0)  // 0-100
-  status       ClauseStatus   @default(NOT_EVALUATED)
+  score        Int          @default(0) // 0-100
+  status       ClauseStatus @default(NOT_EVALUATED)
   comment      String?
   evidence     String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
   clause     Clause     @relation(fields: [clauseId], references: [id])
@@ -198,23 +229,37 @@ model Document {
   updatedAt      DateTime       @updatedAt
 
   // ISOTech manual § 12
-  isExternal                Boolean  @default(false)
-  externalLink              String?
-  custodianId               String?
-  responsibleElaborationId  String?
-  responsibleApprovalId     String?
-  locationId                String?
-  physicalLocation          String?
-  distributionList          String[]
-  observations              String?
+  isExternal               Boolean  @default(false)
+  externalLink             String?
+  custodianId              String?
+  responsibleElaborationId String?
+  responsibleApprovalId    String?
+  locationId               String?
+  physicalLocation         String?
+  distributionList         String[]
+  observations             String?
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  clause       Clause?           @relation(fields: [clauseId], references: [id])
-  location     Location?         @relation(fields: [locationId], references: [id])
-  versions     DocumentVersion[]
-  approvals    Approval[]
+  organization                 Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clause                       Clause?                  @relation(fields: [clauseId], references: [id])
+  process                      Process?                 @relation(fields: [processId], references: [id], onDelete: SetNull)
+  location                     Location?                @relation(fields: [locationId], references: [id])
+  owner                        User?                    @relation("DocumentOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  responsibleElaboration       Personnel?               @relation("DocumentElaborationResponsible", fields: [responsibleElaborationId], references: [id], onDelete: SetNull)
+  responsibleApproval          Personnel?               @relation("DocumentApprovalResponsible", fields: [responsibleApprovalId], references: [id], onDelete: SetNull)
+  custodian                    Personnel?               @relation("DocumentCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
+  versions                     DocumentVersion[]
+  approvals                    Approval[]
+  trainingCourseLinks          TrainingCourseDocument[]
+  triggeredTrainingAssignments TrainingAssignment[]     @relation("TrainingTriggerDocument")
+  changeLinks                  ChangeDocument[]
+  supplierLinks                SupplierDocument[]
 
   @@unique([organizationId, code])
+  @@index([processId])
+  @@index([ownerId])
+  @@index([responsibleElaborationId])
+  @@index([responsibleApprovalId])
+  @@index([custodianId])
   @@map("documents")
 }
 
@@ -257,7 +302,7 @@ model Process {
   organizationId String
   name           String
   code           String?
-  type           String?  // core, support, strategic
+  type           String? // core, support, strategic
   description    String?
   ownerId        String?
   inputs         String[]
@@ -265,8 +310,13 @@ model Process {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  risks        Risk[]
+  organization        Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents           Document[]
+  risks               Risk[]
+  indicators          Indicator[]
+  trainingAssignments TrainingAssignment[]
+  changeLinks         ChangeProcess[]
+  records             Record[]
 
   @@map("processes")
 }
@@ -274,28 +324,31 @@ model Process {
 // ─── RISK MANAGEMENT ─────────────────────────────────
 
 model Risk {
-  id              String          @id @default(cuid())
-  organizationId  String
-  processId       String?
-  title           String
-  description     String?
-  category        String
-  probability     Int             // 1-5
-  impact          Int             // 1-5
-  score           Int             // probability * impact
-  status          RiskStatus      @default(IDENTIFIED)
-  treatment       RiskTreatment   @default(MITIGATE)
-  ownerId         String?
-  dueDate         DateTime?
-  residualScore   Int?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id             String        @id @default(cuid())
+  organizationId String
+  processId      String?
+  title          String
+  description    String?
+  category       String
+  probability    Int // 1-5
+  impact         Int // 1-5
+  score          Int // probability * impact
+  status         RiskStatus    @default(IDENTIFIED)
+  treatment      RiskTreatment @default(MITIGATE)
+  ownerId        String?
+  dueDate        DateTime?
+  residualScore  Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  process      Process?     @relation(fields: [processId], references: [id])
-  controls     Control[]
-  actions      Action[]
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process       Process?       @relation(fields: [processId], references: [id], onDelete: SetNull)
+  controls      Control[]
+  actions       Action[]
+  changeLinks   ChangeRisk[]
+  supplierLinks SupplierRisk[]
 
+  @@index([processId])
   @@map("risks")
 }
 
@@ -317,28 +370,28 @@ model Control {
 // ─── AUDITS ──────────────────────────────────────────
 
 model Audit {
-  id             String      @id @default(cuid())
-  organizationId String
-  programId      String?
-  title          String
-  type           AuditType   @default(INTERNAL)
-  standardCode   String?
-  status         AuditStatus @default(PLANNED)
-  auditorId      String?
+  id              String      @id @default(cuid())
+  organizationId  String
+  programId       String?
+  title           String
+  type            AuditType   @default(INTERNAL)
+  standardCode    String?
+  status          AuditStatus @default(PLANNED)
+  auditorId       String?
   auditorExternal String?
-  scheduledDate  DateTime?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  scope          String?
-  objectives     String?
-  criteria       String?
-  reportUrl      String?
-  progress       Int         @default(0)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  scheduledDate   DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  scope           String?
+  objectives      String?
+  criteria        String?
+  reportUrl       String?
+  progress        Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  program         AuditProgram?     @relation(fields: [programId], references: [id])
+  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program         AuditProgram?        @relation(fields: [programId], references: [id])
   findings        AuditFinding[]
   nonconformities Nonconformity[]
   checklistItems  AuditChecklistItem[]
@@ -368,27 +421,29 @@ model AuditFinding {
 // ─── NONCONFORMITIES / CAPA ──────────────────────────
 
 model Nonconformity {
-  id             String               @id @default(cuid())
-  organizationId String
-  auditId        String?
-  findingId      String?              @unique
-  title          String
-  description    String?
-  source         NCSource             @default(INTERNAL_AUDIT)
-  severity       NCSeverity           @default(MINOR)
-  status         NCStatus             @default(OPEN)
-  ownerId        String?
-  rootCause      String?
-  dueDate        DateTime?
-  closedAt       DateTime?
-  effectivenessValidated Boolean      @default(false)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id                     String     @id @default(cuid())
+  organizationId         String
+  auditId                String?
+  findingId              String?    @unique
+  title                  String
+  description            String?
+  source                 NCSource   @default(INTERNAL_AUDIT)
+  severity               NCSeverity @default(MINOR)
+  status                 NCStatus   @default(OPEN)
+  ownerId                String?
+  rootCause              String?
+  dueDate                DateTime?
+  closedAt               DateTime?
+  effectivenessValidated Boolean    @default(false)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 
-  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  audit        Audit?        @relation(fields: [auditId], references: [id])
-  finding      AuditFinding? @relation(fields: [findingId], references: [id])
-  actions      Action[]
+  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  audit          Audit?                  @relation(fields: [auditId], references: [id])
+  finding        AuditFinding?           @relation(fields: [findingId], references: [id])
+  actions        Action[]
+  changeRequests ChangeRequest[]
+  supplierLinks  SupplierNonconformity[]
 
   @@map("nonconformities")
 }
@@ -396,37 +451,37 @@ model Nonconformity {
 // ─── ACTIONS ─────────────────────────────────────────
 
 model Action {
-  id               String        @id @default(cuid())
-  organizationId   String
-  title            String
-  description      String?
-  type             ActionType    @default(CORRECTIVE)
-  priority         Priority      @default(MEDIUM)
-  status           ActionStatus  @default(PENDING)
-  stage            ACPMStage     @default(REQUEST)
-  source           String?
-  rootCause        String?
-  proposedSolution String?
+  id                 String       @id @default(cuid())
+  organizationId     String
+  title              String
+  description        String?
+  type               ActionType   @default(CORRECTIVE)
+  priority           Priority     @default(MEDIUM)
+  status             ActionStatus @default(PENDING)
+  stage              ACPMStage    @default(REQUEST)
+  source             String?
+  rootCause          String?
+  proposedSolution   String?
   effectivenessCheck String?
-  effectivenessAt  DateTime?
-  ownerId          String?
-  requestedById    String?
-  requestApproverId String?
+  effectivenessAt    DateTime?
+  ownerId            String?
+  requestedById      String?
+  requestApproverId  String?
   solutionApproverId String?
-  dueDate          DateTime?
-  completedAt      DateTime?
-  progress         Int           @default(0)
-  riskId           String?
-  nonconformityId  String?
+  dueDate            DateTime?
+  completedAt        DateTime?
+  progress           Int          @default(0)
+  riskId             String?
+  nonconformityId    String?
   managementReviewId String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
-  organization    Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  risk            Risk?            @relation(fields: [riskId], references: [id])
-  nonconformity   Nonconformity?   @relation(fields: [nonconformityId], references: [id])
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risk             Risk?             @relation(fields: [riskId], references: [id])
+  nonconformity    Nonconformity?    @relation(fields: [nonconformityId], references: [id])
   managementReview ManagementReview? @relation(fields: [managementReviewId], references: [id])
-  comments        ActionComment[]
+  comments         ActionComment[]
 
   @@map("actions")
 }
@@ -448,6 +503,7 @@ model ActionComment {
 model Indicator {
   id             String          @id @default(cuid())
   organizationId String
+  processId      String?
   name           String
   description    String?
   unit           String
@@ -459,9 +515,11 @@ model Indicator {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process      Process?         @relation(fields: [processId], references: [id], onDelete: SetNull)
   values       IndicatorValue[]
 
+  @@index([processId])
   @@map("indicators")
 }
 
@@ -469,7 +527,7 @@ model IndicatorValue {
   id          String   @id @default(cuid())
   indicatorId String
   value       Float
-  period      String   // "2025-06"
+  period      String // "2025-06"
   note        String?
   createdAt   DateTime @default(now())
 
@@ -487,7 +545,7 @@ model EvidenceFile {
   fileUrl        String
   fileSize       Int?
   mimeType       String?
-  module         String?  // risk, audit, document, nc
+  module         String? // process, risk, audit, nc, indicator, document, change, supplier, integration
   moduleId       String?
   uploadedById   String?
   createdAt      DateTime @default(now())
@@ -500,19 +558,21 @@ model EvidenceFile {
 // ─── NOTIFICATIONS ───────────────────────────────────
 
 model Notification {
-  id             String             @id @default(cuid())
+  id             String           @id @default(cuid())
   organizationId String
   userId         String
   title          String
   body           String
-  type           NotificationType   @default(INFO)
-  read           Boolean            @default(false)
+  type           NotificationType @default(INFO)
+  read           Boolean          @default(false)
+  readAt         DateTime?
   link           String?
-  createdAt      DateTime           @default(now())
+  createdAt      DateTime         @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, read, createdAt])
   @@map("notifications")
 }
 
@@ -531,9 +591,55 @@ model Subscription {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invoices     BillingInvoice[]
 
   @@map("subscriptions")
+}
+
+model BillingInvoice {
+  id               String    @id @default(cuid())
+  organizationId   String
+  subscriptionId   String?
+  stripeInvoiceId  String    @unique
+  number           String?
+  status           String
+  currency         String    @default("eur")
+  amountDue        Int
+  amountPaid       Int       @default(0)
+  periodStart      DateTime?
+  periodEnd        DateTime?
+  hostedInvoiceUrl String?
+  invoicePdf       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([subscriptionId])
+  @@map("billing_invoices")
+}
+
+model ReportExport {
+  id             String       @id @default(cuid())
+  organizationId String
+  generatedById  String?
+  reportType     String
+  format         ReportFormat
+  dateFrom       DateTime
+  dateTo         DateTime
+  rowCount       Int
+  fileName       String
+  createdAt      DateTime     @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  generatedBy  User?        @relation("ReportGeneratedBy", fields: [generatedById], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([generatedById])
+  @@map("report_exports")
 }
 
 // ─── AUDIT LOGS ──────────────────────────────────────
@@ -619,22 +725,360 @@ model Position {
 
 // § 11.3 Datos Personal
 model Personnel {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   firstName      String
   lastName       String
   email          String?
   identification String?
   positionId     String?
-  active         Boolean  @default(true)
+  active         Boolean   @default(true)
   hiredAt        DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  position     Position?    @relation(fields: [positionId], references: [id])
+  organization          Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  position              Position?                @relation(fields: [positionId], references: [id])
+  trainingAssignments   TrainingAssignment[]
+  trainingAudienceLinks TrainingCourseAudience[]
+  documentsElaborated   Document[]               @relation("DocumentElaborationResponsible")
+  documentsApproved     Document[]               @relation("DocumentApprovalResponsible")
+  documentsCustodied    Document[]               @relation("DocumentCustodian")
+  recordsCustodied      Record[]                 @relation("RecordCustodian")
 
   @@map("personnel")
+}
+
+// ─── TRAINING MANAGEMENT ─────────────────────────────────
+
+model TrainingCourse {
+  id                      String   @id @default(cuid())
+  organizationId          String
+  code                    String
+  title                   String
+  description             String?
+  standardTags            String[] @default([])
+  defaultValidityMonths   Int      @default(12)
+  defaultDueDays          Int      @default(30)
+  mandatory               Boolean  @default(false)
+  autoAssignOnDocApproval Boolean  @default(false)
+  active                  Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  organization  Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documentLinks TrainingCourseDocument[]
+  audienceLinks TrainingCourseAudience[]
+  assignments   TrainingAssignment[]
+  changeLinks   ChangeTrainingCourse[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, active])
+  @@map("training_courses")
+}
+
+model TrainingCourseDocument {
+  courseId   String
+  documentId String
+
+  course   TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  document Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, documentId])
+  @@index([documentId])
+  @@map("training_course_documents")
+}
+
+model TrainingCourseAudience {
+  courseId    String
+  personnelId String
+
+  course    TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  personnel Personnel      @relation(fields: [personnelId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, personnelId])
+  @@index([personnelId])
+  @@map("training_course_audience")
+}
+
+model TrainingAssignment {
+  id                    String                   @id @default(cuid())
+  organizationId        String
+  courseId              String
+  personnelId           String
+  processId             String?
+  status                TrainingAssignmentStatus @default(ASSIGNED)
+  assignedAt            DateTime                 @default(now())
+  dueAt                 DateTime
+  startedAt             DateTime?
+  completedAt           DateTime?
+  evidenceNote          String?
+  evidenceUrl           String?
+  triggeredByDocumentId String?
+  triggeredByVersion    String?
+  reminderSentAt        DateTime?
+  createdById           String?
+  createdAt             DateTime                 @default(now())
+  updatedAt             DateTime                 @updatedAt
+
+  organization        Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  course              TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  personnel           Personnel      @relation(fields: [personnelId], references: [id], onDelete: Restrict)
+  process             Process?       @relation(fields: [processId], references: [id], onDelete: SetNull)
+  triggeredByDocument Document?      @relation("TrainingTriggerDocument", fields: [triggeredByDocumentId], references: [id], onDelete: SetNull)
+
+  @@unique([courseId, personnelId, triggeredByDocumentId, triggeredByVersion])
+  @@index([organizationId, status])
+  @@index([personnelId, dueAt])
+  @@index([courseId])
+  @@map("training_assignments")
+}
+
+// ─── CHANGE CONTROL ─────────────────────────────────────
+
+model ChangeRequest {
+  id              String              @id @default(cuid())
+  organizationId  String
+  code            String
+  title           String
+  category        String
+  changeType      String
+  reason          String
+  impact          ChangeImpact        @default(MEDIUM)
+  affectedAreas   String[]            @default([])
+  status          ChangeRequestStatus @default(DRAFT)
+  requesterId     String?
+  requesterName   String?
+  nonconformityId String?
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  implementedAt   DateTime?
+  verifiedAt      DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organization    Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  nonconformity   Nonconformity?         @relation(fields: [nonconformityId], references: [id], onDelete: SetNull)
+  processes       ChangeProcess[]
+  documents       ChangeDocument[]
+  risks           ChangeRisk[]
+  trainingCourses ChangeTrainingCourse[]
+  approvers       ChangeApprover[]
+  tasks           ChangeTask[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([nonconformityId])
+  @@map("change_requests")
+}
+
+model ChangeProcess {
+  changeRequestId String
+  processId       String
+
+  changeRequest ChangeRequest @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+  process       Process       @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@id([changeRequestId, processId])
+  @@index([processId])
+  @@map("change_processes")
+}
+
+model ChangeDocument {
+  changeRequestId String
+  documentId      String
+
+  changeRequest ChangeRequest @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+  document      Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([changeRequestId, documentId])
+  @@index([documentId])
+  @@map("change_documents")
+}
+
+model ChangeRisk {
+  changeRequestId String
+  riskId          String
+
+  changeRequest ChangeRequest @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+  risk          Risk          @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@id([changeRequestId, riskId])
+  @@index([riskId])
+  @@map("change_risks")
+}
+
+model ChangeTrainingCourse {
+  changeRequestId String
+  courseId        String
+
+  changeRequest ChangeRequest  @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+  course        TrainingCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([changeRequestId, courseId])
+  @@index([courseId])
+  @@map("change_training_courses")
+}
+
+model ChangeApprover {
+  id                String         @id @default(cuid())
+  changeRequestId   String
+  userId            String
+  status            ApprovalStatus @default(PENDING)
+  comment           String?
+  decidedAt         DateTime?
+  attestationReason String?
+  createdAt         DateTime       @default(now())
+
+  changeRequest ChangeRequest @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+
+  @@unique([changeRequestId, userId])
+  @@index([userId])
+  @@map("change_approvers")
+}
+
+model ChangeTask {
+  id              String    @id @default(cuid())
+  changeRequestId String
+  title           String
+  done            Boolean   @default(false)
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  changeRequest ChangeRequest @relation(fields: [changeRequestId], references: [id], onDelete: Cascade)
+
+  @@index([changeRequestId, done])
+  @@map("change_tasks")
+}
+
+// ─── SUPPLIER MANAGEMENT ─────────────────────────────────
+
+model Supplier {
+  id               String              @id @default(cuid())
+  organizationId   String
+  code             String
+  name             String
+  category         String
+  criticality      SupplierCriticality @default(MEDIUM)
+  ownerId          String?
+  status           SupplierStatus      @default(UNDER_REVIEW)
+  contactName      String?
+  contactEmail     String?
+  notes            String?
+  nextReviewDue    DateTime?
+  lastEvaluationAt DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents       SupplierDocument[]
+  risks           SupplierRisk[]
+  nonconformities SupplierNonconformity[]
+  evaluations     SupplierEvaluation[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([nextReviewDue])
+  @@map("suppliers")
+}
+
+model SupplierDocument {
+  supplierId String
+  documentId String
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, documentId])
+  @@index([documentId])
+  @@map("supplier_documents")
+}
+
+model SupplierRisk {
+  supplierId String
+  riskId     String
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  risk     Risk     @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, riskId])
+  @@index([riskId])
+  @@map("supplier_risks")
+}
+
+model SupplierNonconformity {
+  supplierId      String
+  nonconformityId String
+
+  supplier      Supplier      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  nonconformity Nonconformity @relation(fields: [nonconformityId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, nonconformityId])
+  @@index([nonconformityId])
+  @@map("supplier_nonconformities")
+}
+
+model SupplierEvaluation {
+  id            String                    @id @default(cuid())
+  supplierId    String
+  score         Int?
+  outcome       SupplierEvaluationOutcome
+  notes         String?
+  evaluatedById String?
+  evaluatedAt   DateTime                  @default(now())
+  nextReviewDue DateTime?
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId, evaluatedAt])
+  @@map("supplier_evaluations")
+}
+
+// ─── INTEGRATIONS ────────────────────────────────────────
+
+model Integration {
+  id               String            @id @default(cuid())
+  organizationId   String
+  key              String
+  name             String
+  provider         String
+  category         String
+  description      String?
+  valueProposition String?
+  status           IntegrationStatus @default(NOT_CONNECTED)
+  externalAccount  String?
+  config           Json?
+  detailNote       String?
+  lastSyncAt       DateTime?
+  connectedAt      DateTime?
+  configuredById   String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  syncRuns     IntegrationSyncRun[]
+
+  @@unique([organizationId, key])
+  @@index([organizationId, status])
+  @@map("integrations")
+}
+
+model IntegrationSyncRun {
+  id               String                @id @default(cuid())
+  integrationId    String
+  status           IntegrationSyncStatus @default(RUNNING)
+  startedAt        DateTime              @default(now())
+  completedAt      DateTime?
+  recordsProcessed Int                   @default(0)
+  evidenceCreated  Int                   @default(0)
+  errorMessage     String?
+  metadata         Json?
+
+  integration Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+
+  @@index([integrationId, startedAt])
+  @@map("integration_sync_runs")
 }
 
 // § 12.1.1 Lugar
@@ -704,7 +1148,7 @@ model ArchiveMethod {
 model RecordType {
   id             String   @id @default(cuid())
   organizationId String
-  name           String   // FISICO, ELECTRONICO, FISICO_Y_ELECTRONICO, ...
+  name           String // FISICO, ELECTRONICO, FISICO_Y_ELECTRONICO, ...
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
 
@@ -717,39 +1161,44 @@ model RecordType {
 
 // § 13.2 Control de Registros
 model Record {
-  id                String   @id @default(cuid())
-  organizationId    String
-  code              String
-  name              String
-  processId         String?
-  recordTypeId      String?
-  retentionTimeId   String?
-  dispositionId     String?
-  archiveMethodId   String?
-  custodianId       String?
-  physicalLocation  String?
-  digitalLocation   String?
-  observations      String?
-  active            Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String   @id @default(cuid())
+  organizationId   String
+  code             String
+  name             String
+  processId        String?
+  recordTypeId     String?
+  retentionTimeId  String?
+  dispositionId    String?
+  archiveMethodId  String?
+  custodianId      String?
+  physicalLocation String?
+  digitalLocation  String?
+  observations     String?
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process       Process?       @relation(fields: [processId], references: [id], onDelete: SetNull)
   recordType    RecordType?    @relation(fields: [recordTypeId], references: [id])
   retentionTime RetentionTime? @relation(fields: [retentionTimeId], references: [id])
   disposition   Disposition?   @relation(fields: [dispositionId], references: [id])
   archiveMethod ArchiveMethod? @relation(fields: [archiveMethodId], references: [id])
+  custodian     Personnel?     @relation("RecordCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
   entries       RecordEntry[]
 
   @@unique([organizationId, code])
+  @@index([processId])
+  @@index([custodianId])
   @@map("records")
 }
 
 model RecordEntry {
   id          String   @id @default(cuid())
   recordId    String
-  reference   String?  // e.g. registry number, batch
+  reference   String? // e.g. registry number, batch
   description String?
+  fileName    String?
   fileUrl     String?
   fileSize    Int?
   mimeType    String?
@@ -763,7 +1212,7 @@ model RecordEntry {
 
 // § 15 Programa de Auditoría (annual program grouping audits)
 model AuditProgram {
-  id             String   @id @default(cuid())
+  id             String             @id @default(cuid())
   organizationId String
   year           Int
   title          String
@@ -772,8 +1221,8 @@ model AuditProgram {
   status         AuditProgramStatus @default(DRAFT)
   approvedById   String?
   approvedAt     DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   audits       Audit[]
@@ -783,7 +1232,7 @@ model AuditProgram {
 }
 
 model AuditChecklistItem {
-  id          String   @id @default(cuid())
+  id          String              @id @default(cuid())
   auditId     String
   clauseCode  String?
   question    String
@@ -792,8 +1241,8 @@ model AuditChecklistItem {
   status      ChecklistItemStatus @default(PENDING)
   evidenceUrl String?
   notes       String?
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
+  order       Int                 @default(0)
+  createdAt   DateTime            @default(now())
 
   audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
@@ -802,7 +1251,7 @@ model AuditChecklistItem {
 
 // § 16 Revisión por la Dirección
 model ManagementReview {
-  id             String   @id @default(cuid())
+  id             String                 @id @default(cuid())
   organizationId String
   title          String
   scheduledDate  DateTime?
@@ -812,10 +1261,10 @@ model ManagementReview {
   attendees      String[] // free-text names or user IDs
   summary        String?
   reportUrl      String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   inputs       ManagementReviewInput[]
   decisions    ManagementReviewDecision[]
   actions      Action[]
@@ -824,11 +1273,11 @@ model ManagementReview {
 }
 
 model ManagementReviewInput {
-  id        String   @id @default(cuid())
+  id        String                @id @default(cuid())
   reviewId  String
   topic     ManagementReviewTopic
   content   String
-  createdAt DateTime @default(now())
+  createdAt DateTime              @default(now())
 
   review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
@@ -836,13 +1285,13 @@ model ManagementReviewInput {
 }
 
 model ManagementReviewDecision {
-  id          String   @id @default(cuid())
-  reviewId    String
-  topic       String
-  decision    String
-  ownerId     String?
-  dueDate     DateTime?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  reviewId  String
+  topic     String
+  decision  String
+  ownerId   String?
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
 
   review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
@@ -908,6 +1357,67 @@ enum ApprovalStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ChangeRequestStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  IMPLEMENTED
+  VERIFIED
+  CLOSED
+}
+
+enum ChangeImpact {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SupplierCriticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SupplierStatus {
+  APPROVED
+  CONDITIONAL
+  UNDER_REVIEW
+  SUSPENDED
+}
+
+enum SupplierEvaluationOutcome {
+  APPROVED
+  CONDITIONAL
+  REJECTED
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  NOT_CONNECTED
+  NEEDS_ATTENTION
+  PENDING
+}
+
+enum IntegrationSyncStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+  PARTIAL
+}
+
+enum TrainingAssignmentStatus {
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+  RETRAINING_REQUIRED
+  CANCELLED
 }
 
 enum RiskStatus {
@@ -1034,6 +1544,12 @@ enum SubscriptionStatus {
   PAST_DUE
   CANCELLED
   PAUSED
+}
+
+enum ReportFormat {
+  PDF
+  EXCEL
+  CSV
 }
 
 // ISOTech alignment enums

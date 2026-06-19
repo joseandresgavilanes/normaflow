@@ -101,9 +101,8 @@ export type UpdateACPMFields = {
 
 export async function updateACPMFields(id: string, input: UpdateACPMFields): Promise<void> {
   const ctx = await requirePermission("actions:update");
-  const existing = await prisma.action.findUnique({ where: { id } });
+  const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
 
   const patch: Record<string, unknown> = {};
   if (input.title !== undefined) patch.title = input.title.trim();
@@ -118,6 +117,14 @@ export async function updateACPMFields(id: string, input: UpdateACPMFields): Pro
   if (input.ownerId !== undefined) patch.ownerId = input.ownerId || null;
   if (input.dueDate !== undefined) patch.dueDate = input.dueDate ? new Date(input.dueDate) : null;
   if (input.progress !== undefined) patch.progress = Math.max(0, Math.min(100, Math.round(input.progress)));
+
+  if (input.ownerId) {
+    const ownerMembership = await prisma.membership.findUnique({
+      where: { userId_organizationId: { userId: input.ownerId, organizationId: ctx.organization.id } },
+      select: { id: true },
+    });
+    if (!ownerMembership) throw new Error("La persona responsable no pertenece a la organización.");
+  }
 
   await prisma.action.update({ where: { id }, data: patch });
   await logAuditEvent({
@@ -138,9 +145,8 @@ export async function transitionACPM(
   comment?: string
 ): Promise<void> {
   const ctx = await requirePermission("actions:*");
-  const existing = await prisma.action.findUnique({ where: { id } });
+  const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
   if (existing.stage === toStage) return;
 
   if (toStage === "SOLUTION_APPROVAL") {
@@ -183,9 +189,8 @@ export async function transitionACPM(
 
 export async function rejectACPM(id: string, comment: string): Promise<void> {
   const ctx = await requirePermission("actions:*");
-  const existing = await prisma.action.findUnique({ where: { id } });
+  const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
   if (!comment.trim()) throw new Error("Indica el motivo del rechazo.");
 
   const back: ACPMStage =
@@ -212,9 +217,8 @@ export async function rejectACPM(id: string, comment: string): Promise<void> {
 
 export async function commentACPM(id: string, message: string): Promise<void> {
   const ctx = await requirePermission("actions:update");
-  const existing = await prisma.action.findUnique({ where: { id } });
+  const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
-  if (existing.organizationId !== ctx.organization.id) throw new Error("Acceso denegado.");
   if (!message.trim()) throw new Error("Escribe un comentario.");
 
   await prisma.actionComment.create({

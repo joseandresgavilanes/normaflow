@@ -112,11 +112,11 @@ export default function AuditTimeline({
         <div className="nf-app-help nf-audit-body">
           {ev.entityLabel ? (
             <>
-              <strong style={{ color: "var(--nf-ink)" }}>{ev.entityLabel}</strong>
-              <span style={{ color: "var(--nf-ink-3)" }}> · {ev.entityId}</span>
+              <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{ev.entityLabel}</strong>
+              <span style={{ color: "var(--nf-ink-3, #314456)" }}> · {ev.entityId}</span>
             </>
           ) : ev.entityId ? (
-            <span style={{ color: "var(--nf-ink)" }}>{ev.entityId}</span>
+            <span style={{ color: "var(--nf-ink, #0f1b2d)" }}>{ev.entityId}</span>
           ) : null}
           {ev.field && (
             <>

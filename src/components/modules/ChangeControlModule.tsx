@@ -12,6 +12,12 @@ import { useWorkspace, type ChangeRequestRow } from "@/context/WorkspaceStore";
 import { processesLinkedToChange } from "@/lib/process-linking";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import {
+  changeCategoryOptions,
+  changeTypeOptions,
+  DEFAULT_CHANGE_CATEGORY,
+  DEFAULT_CHANGE_TYPE,
+} from "@/lib/change-control-catalog";
 
 const FLOW: ChangeRequestRow["status"][] = [
   "DRAFT",
@@ -45,13 +51,20 @@ export default function ChangeControlModule() {
   const [filter, setFilter] = useState<string>("ALL");
   const [createOpen, setCreateOpen] = useState(false);
   const [attest, setAttest] = useState<{ mode: "APPROVE" | "REJECT" | "CLOSE"; id: string } | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: string;
+    category: string;
+    changeType: string;
+    reason: string;
+    impact: ChangeRequestRow["impact"];
+    processCodes: string[];
+  }>({
     title: "",
-    category: "Proceso",
-    changeType: "Mejora",
+    category: DEFAULT_CHANGE_CATEGORY,
+    changeType: DEFAULT_CHANGE_TYPE,
     reason: "",
-    impact: "MEDIUM" as ChangeRequestRow["impact"],
-    processCodes: [] as string[],
+    impact: "MEDIUM",
+    processCodes: [],
   });
   const [processCodesDraft, setProcessCodesDraft] = useState<string[]>([]);
 
@@ -153,7 +166,7 @@ export default function ChangeControlModule() {
       }),
     });
     setCreateOpen(false);
-    setForm({ title: "", category: "Proceso", changeType: "Mejora", reason: "", impact: "MEDIUM", processCodes: [] });
+    setForm({ title: "", category: DEFAULT_CHANGE_CATEGORY, changeType: DEFAULT_CHANGE_TYPE, reason: "", impact: "MEDIUM", processCodes: [] });
     showToast("Solicitud de cambio creada");
   }
 
@@ -441,43 +454,64 @@ export default function ChangeControlModule() {
       />
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva solicitud de cambio" width={520}>
-        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
-          Título
-        </label>
+        <div className="nf-modal-form">
+        <label>Título
         <input
           value={form.title}
           onChange={e => setForm({ ...form, title: e.target.value })}
           className="nf-app-input"
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box" }}
         />
-        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
-          Motivo / justificación
         </label>
+        <div className="nf-grid-2" style={{ gap: 12 }}>
+          <label>Categoría
+            <select
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+              className="nf-app-input"
+              style={{ cursor: "pointer" }}
+            >
+              {changeCategoryOptions().map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <label>Tipo de cambio
+            <select
+              value={form.changeType}
+              onChange={e => setForm({ ...form, changeType: e.target.value })}
+              className="nf-app-input"
+              style={{ cursor: "pointer" }}
+            >
+              {changeTypeOptions().map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <label>Motivo / justificación
         <textarea
           value={form.reason}
           onChange={e => setForm({ ...form, reason: e.target.value })}
           rows={3}
           className="nf-app-input"
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box", resize: "vertical" }}
+          style={{ resize: "vertical" }}
         />
-        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
-          Impacto
         </label>
+        <label>Impacto
         <select
           value={form.impact}
           onChange={e => setForm({ ...form, impact: e.target.value as ChangeRequestRow["impact"] })}
           className="nf-app-input"
-          style={{ width: "100%", marginBottom: 14, boxSizing: "border-box" }}
         >
           <option value="LOW">Bajo</option>
           <option value="MEDIUM">Medio</option>
           <option value="HIGH">Alto</option>
           <option value="CRITICAL">Crítico</option>
         </select>
-        <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
-          Procesos afectados
         </label>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 }}>
+        <div>
+          <div className="nf-modal-field-label" style={{ marginBottom: 8 }}>Procesos afectados</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {processes.map(p => (
             <label key={p.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 600 }}>
               <input
@@ -496,9 +530,12 @@ export default function ChangeControlModule() {
             </label>
           ))}
         </div>
-        <button type="button" onClick={submitCreate} style={{ ...btnPrimary, width: "100%", marginTop: 4 }}>
-          Guardar borrador
-        </button>
+        </div>
+        <div className="nf-modal-actions">
+          <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+          <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Guardar borrador</button>
+        </div>
+        </div>
       </Modal>
     </div>
   );

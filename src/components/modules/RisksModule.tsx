@@ -10,6 +10,7 @@ import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type ProcessRow, type RiskRow } from "@/context/WorkspaceStore";
 import { processesLinkedToRisk } from "@/lib/process-linking";
+import { DEFAULT_RISK_CATEGORY, riskCategoryOptions } from "@/lib/risk-catalog";
 import type { Column } from "@/components/ui/Table";
 
 function RiskScore({ score }: { score: number }) {
@@ -66,7 +67,7 @@ type RiskForm = {
 
 const emptyForm = (owner: string, defaultProcessCode = ""): RiskForm => ({
   title: "",
-  category: "Operacional",
+  category: DEFAULT_RISK_CATEGORY,
   probability: 3,
   impact: 3,
   status: "MONITORED",
@@ -513,29 +514,21 @@ export default function RisksModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo riesgo" width={600}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <RiskFormFields form={form} setForm={setForm} processes={processes} />
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Guardar
-            </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Guardar</button>
           </div>
         </div>
       </Modal>
 
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Editar riesgo" width={600}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <RiskFormFields form={form} setForm={setForm} processes={processes} />
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitEdit} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Guardar cambios
-            </button>
-            <button type="button" onClick={() => setEditOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setEditOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitEdit}>Guardar cambios</button>
           </div>
         </div>
       </Modal>
@@ -553,7 +546,7 @@ function RiskFormFields({
   processes: ProcessRow[];
 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+    <div className="nf-modal-form">
       <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
         Título
         <input
@@ -566,12 +559,16 @@ function RiskFormFields({
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Categoría
-          <input
+          <select
             className="nf-app-input"
             value={form.category}
             onChange={e => setForm({ ...form, category: e.target.value })}
-            style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
-          />
+            style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
+          >
+            {riskCategoryOptions(form.category).map(option => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </label>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Responsable

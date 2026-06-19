@@ -338,7 +338,7 @@ export default function NonconformitiesModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Registrar no conformidad" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Descripción
             <textarea
@@ -465,13 +465,9 @@ export default function NonconformitiesModule() {
               style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
             />
           </label>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitNc} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Registrar
-            </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitNc}>Registrar</button>
           </div>
         </div>
       </Modal>
@@ -487,13 +483,9 @@ export default function NonconformitiesModule() {
           />
         </label>
         <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 10 }}>Se vinculará al Plan de Acción con origen {detail?.code}.</p>
-        <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
-          <button type="button" onClick={submitAction} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-            Crear acción
-          </button>
-          <button type="button" onClick={() => setActionOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-            Cancelar
-          </button>
+        <div className="nf-modal-actions">
+          <button type="button" className="nf-app-btn-ghost" onClick={() => setActionOpen(false)}>Cancelar</button>
+          <button type="button" className="nf-app-btn-primary" onClick={submitAction}>Crear acción</button>
         </div>
       </Modal>
 

@@ -6,25 +6,31 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import { exportReport } from "@/lib/actions/reporting";
+import type { ReportingPayload } from "@/lib/server-queries";
 
 const REPORTS = [
   { id: "exec", title: "Ejecutivo — salud del sistema", desc: "Readiness, formación, cambios y acciones críticas.", accent: "#123C66" },
-  { id: "iso", title: "Cumplimiento por norma", desc: "ISO 9001 / 27001 — GAP, documentos y auditorías.", accent: "#2E8B57" },
-  { id: "site", title: "Por sede y área", desc: "Riesgos, proveedores y hallazgos agregados.", accent: "#6B3FB5" },
+  { id: "iso", title: "Cumplimiento por norma", desc: "Normas activas, versión y porcentaje de avance.", accent: "#2E8B57" },
+  { id: "site", title: "Por sede", desc: "Sedes activas y documentos asociados.", accent: "#6B3FB5" },
   { id: "capa", title: "CAPA y NC", desc: "Estado, eficacia y antigüedad.", accent: "#C93C37" },
   { id: "train", title: "Training compliance", desc: "Asignaciones, vencidos y reacreditaciones.", accent: "#D68A1A" },
   { id: "changes", title: "Cambios abiertos", desc: "Pipeline de control de cambios.", accent: "#123C66" },
-  { id: "auditpack", title: "Audit evidence pack", desc: "Paquete ZIP/PDF simulado para auditor externo.", accent: "#1a5490" },
+  { id: "auditpack", title: "Resumen de auditoría", desc: "Auditorías, hallazgos, NC, checklist e informe asociado.", accent: "#1a5490" },
 ];
 
-export default function ReportingModule() {
+function today() { return new Date().toISOString().slice(0, 10); }
+function yearStart() { return `${new Date().getUTCFullYear()}-01-01`; }
+
+export default function ReportingModule({ liveData }: { liveData?: ReportingPayload }) {
   const { state, dispatch, showToast } = useWorkspace();
   const perm = useDemoPermission();
-  const [from, setFrom] = useState("2026-01-01");
-  const [to, setTo] = useState("2026-04-30");
+  const [from, setFrom] = useState(yearStart);
+  const [to, setTo] = useState(today);
   const [busy, setBusy] = useState<string | null>(null);
+  const live = liveData !== undefined;
 
-  if (!perm.reporting.use) {
+  if (!live && !perm.reporting.use) {
     return (
       <Card style={{ padding: 32, textAlign: "center" }}>
         <p className="nf-app-help" style={{ margin: 0, fontWeight: 600 }}>
@@ -34,7 +40,25 @@ export default function ReportingModule() {
     );
   }
 
-  function exportMock(reportId: string, title: string) {
+  function download(base64: string, mimeType: string, fileName: string) {
+    const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function runExport(reportId: string, title: string, format: "PDF" | "EXCEL" | "CSV") {
+    if (live) {
+      setBusy(`${reportId}-${format}`);
+      void exportReport({ reportId, title, format, from, to }).then(result => {
+        download(result.base64, result.mimeType, result.fileName);
+        showToast(`Informe generado · ${result.rowCount} filas`);
+      }).catch(error => showToast(error instanceof Error ? error.message : "No se pudo generar el informe")).finally(() => setBusy(null));
+      return;
+    }
     setBusy(reportId);
     setTimeout(() => {
       dispatch({
@@ -47,10 +71,10 @@ export default function ReportingModule() {
           entityType: "REPORT",
           entityId: reportId,
           entityLabel: title,
-          reason: `Rango ${from} — ${to} · Exportación simulada (PDF/Excel/CSV)`,
+          reason: `Rango ${from} — ${to} · Exportación demo (${format})`,
         }),
       });
-      showToast(`Generado: ${title} (simulado) — registro creado en trazabilidad`);
+      showToast(`Generado: ${title} (${format}, demo)`);
       setBusy(null);
     }, 900);
   }
@@ -137,7 +161,7 @@ export default function ReportingModule() {
           </div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 800, color: "var(--nf-ink-2)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>PDF / Excel / CSV</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Formatos simulados</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>{live ? "Exportación real" : "Modo demo"}</div>
           </div>
         </div>
       </div>
@@ -158,7 +182,7 @@ export default function ReportingModule() {
           </label>
         </div>
         <p className="nf-app-help" style={{ margin: "14px 0 0", lineHeight: 1.55 }}>
-          Los formatos se simulan en esta fase; el registro de exportación es operativo para demostrar trazabilidad.
+          {live ? "Cada exportación consulta datos del tenant, descarga el archivo y registra quién la generó en la trazabilidad." : "Las descargas se simulan únicamente en el espacio demo."}
         </p>
       </Card>
 
@@ -190,7 +214,7 @@ export default function ReportingModule() {
                 <button
                   type="button"
                   disabled={!!busy}
-                  onClick={() => exportMock(r.id, r.title)}
+                  onClick={() => runExport(r.id, r.title, "PDF")}
                   style={{
                     padding: "9px 14px",
                     borderRadius: 10,
@@ -204,12 +228,12 @@ export default function ReportingModule() {
                     boxShadow: "0 1px 2px rgba(15, 50, 85, 0.2)",
                   }}
                 >
-                  {busy === r.id ? "Generando…" : "Exportar PDF"}
+                  {busy === `${r.id}-PDF` || busy === r.id ? "Generando…" : "Exportar PDF"}
                 </button>
-                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => exportMock(`${r.id}-xlsx`, `${r.title} (Excel)`)}>
+                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => runExport(r.id, r.title, "EXCEL")}>
                   Excel
                 </button>
-                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => exportMock(`${r.id}-csv`, `${r.title} (CSV)`)}>
+                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => runExport(r.id, r.title, "CSV")}>
                   CSV
                 </button>
               </div>
@@ -217,6 +241,33 @@ export default function ReportingModule() {
           </Card>
         ))}
       </div>
+
+      {live && <div style={{ marginTop: 26 }}>
+        <h3 style={{ fontSize: 16, marginBottom: 12, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Historial de exportaciones</h3>
+        <Card style={{ padding: 0, overflow: "hidden" }} className="nf-export-history">
+          {liveData.exports.length ? liveData.exports.map((item, index) => (
+            <div
+              key={item.id}
+              className="nf-export-history-row"
+              style={{
+                padding: "12px 16px",
+                borderBottom: index < liveData.exports.length - 1 ? "1px solid var(--nf-line, #b8c8d9)" : "none",
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <strong style={{ display: "block", color: "var(--nf-ink, #0f1b2d)", fontWeight: 700, fontSize: 14, wordBreak: "break-all" }}>{item.fileName}</strong>
+                <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2, #223648)" }}>{item.generatedBy} · {new Date(item.createdAt).toLocaleString("es-ES")}</div>
+              </div>
+              <span className="nf-chip nf-chip--on">{item.format} · {item.rowCount} filas</span>
+            </div>
+          )) : <p className="nf-app-help" style={{ padding: 18, margin: 0, color: "var(--nf-ink-2, #223648)" }}>Todavía no se generaron informes.</p>}
+        </Card>
+      </div>}
     </div>
   );
 }

@@ -888,7 +888,7 @@ export default function ProcessesModule() {
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo proceso" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Nombre
             <input
@@ -959,13 +959,9 @@ export default function ProcessesModule() {
               style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
             />
           </label>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Crear
-            </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Crear</button>
           </div>
         </div>
       </Modal>

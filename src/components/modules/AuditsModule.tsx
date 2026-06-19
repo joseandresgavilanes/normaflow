@@ -549,7 +549,7 @@ export default function AuditsModule() {
       </Modal>
 
       <Modal open={!!findingAudit} onClose={() => setFindingAudit(null)} title={findingAudit ? `Registrar hallazgo — ${findingAudit.title}` : "Registrar hallazgo"} width={560}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Descripción del hallazgo / NC
             <textarea
@@ -626,19 +626,15 @@ export default function AuditsModule() {
               style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
             />
           </label>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitFinding} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Registrar como NC
-            </button>
-            <button type="button" onClick={() => setFindingAudit(null)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setFindingAudit(null)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitFinding}>Registrar como NC</button>
           </div>
         </div>
       </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nueva auditoría" width={520}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Título
             <input
@@ -712,13 +708,9 @@ export default function AuditsModule() {
               style={{ width: "100%", marginTop: 6, boxSizing: "border-box", resize: "vertical" }}
             />
           </label>
-          <div style={{ display: "flex", gap: 10, marginTop: 4 }}>
-            <button type="button" onClick={submitCreate} style={{ flex: 1, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-              Crear
-            </button>
-            <button type="button" onClick={() => setCreateOpen(false)} style={{ flex: 1, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 10, padding: "11px", fontSize: 13, fontWeight: 600, cursor: "pointer", color: "var(--nf-ink-3)" }}>
-              Cancelar
-            </button>
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Crear</button>
           </div>
         </div>
       </Modal>

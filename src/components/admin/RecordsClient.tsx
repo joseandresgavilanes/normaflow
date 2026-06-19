@@ -39,7 +39,7 @@ export default function RecordsClient() {
   const canEdit = perm.can("records:*");
   const canCreate = canEdit || perm.can("records:create");
 
-  const { records, recordEntries, recordTypes, retentionTimes, dispositions, archiveMethods, personnel } = admin.state;
+  const { records, recordEntries, recordTypes, retentionTimes, dispositions, archiveMethods, personnel, processes } = admin.state;
 
   const recordTypeName = useMemo(() => new Map(recordTypes.map((r) => [r.id, r.name])), [recordTypes]);
   const retentionLabel = useMemo(() => new Map(retentionTimes.map((r) => [r.id, { name: r.name, months: r.months }])), [retentionTimes]);
@@ -249,7 +249,7 @@ export default function RecordsClient() {
     const payload = {
       code: String(fd.get("code") || ""),
       name: String(fd.get("name") || ""),
-      processName: String(fd.get("processName") || ""),
+      processId: String(fd.get("processId") || "") || undefined,
       recordTypeId: String(fd.get("recordTypeId") || "") || undefined,
       retentionTimeId: String(fd.get("retentionTimeId") || "") || undefined,
       dispositionId: String(fd.get("dispositionId") || "") || undefined,
@@ -437,6 +437,8 @@ export default function RecordsClient() {
         dispositions={dispositions}
         archiveMethods={archiveMethods}
         personnel={personnel}
+        processes={processes}
+        persistenceMode={admin.mode}
         isPending={isPending}
         formError={formError}
         onClose={() => {
@@ -510,6 +512,8 @@ function RecordFormModal({
   dispositions,
   archiveMethods,
   personnel,
+  processes,
+  persistenceMode,
   isPending,
   formError,
   onClose,
@@ -523,6 +527,8 @@ function RecordFormModal({
   dispositions: { id: string; name: string; active: boolean }[];
   archiveMethods: { id: string; name: string; active: boolean }[];
   personnel: { id: string; firstName: string; lastName: string; active: boolean }[];
+  processes: { id: string; code: string | null; name: string }[];
+  persistenceMode: "demo" | "live";
   isPending: boolean;
   formError: string;
   onClose: () => void;
@@ -540,7 +546,9 @@ function RecordFormModal({
         <p style={{ margin: "0 0 20px", fontSize: 13, color: "var(--nf-ink-3)", fontWeight: 500, lineHeight: 1.55 }}>
           {mode === "create"
             ? "Alta en el catálogo maestro. Los campos marcados con * son obligatorios."
-            : `Modificando ${editing?.code ?? "—"}. Los cambios quedan reflejados en esta sesión local.`}
+            : persistenceMode === "live"
+              ? `Modificando ${editing?.code ?? "—"}. Los cambios se guardarán en Supabase.`
+              : `Modificando ${editing?.code ?? "—"}. Los cambios quedan reflejados en esta sesión local.`}
         </p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -554,7 +562,14 @@ function RecordFormModal({
               </Field>
             </div>
             <Field label="Proceso relacionado">
-              <input name="processName" defaultValue={editing?.processName ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="p. ej. Producción, Calidad, RRHH" />
+              <select name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <option value="">— Sin proceso relacionado —</option>
+                {processes.map((process) => (
+                  <option key={process.id} value={process.id}>
+                    {process.code ? `${process.code} — ` : ""}{process.name}
+                  </option>
+                ))}
+              </select>
             </Field>
           </FormSection>
 
@@ -690,11 +705,6 @@ function RecordFormModal({
 
 // ─── Detail modal (entries) ─────────────────────────────────────────
 
-function openRecordEntryDemoFile(entry: RecordEntryMockRow) {
-  const text = `NormaFlow\nReferencia: ${entry.reference}\nArchivo: ${entry.fileName ?? "—"}\n\nEn producción aquí se abriría el documento del repositorio seguro.`;
-  window.open(`data:text/plain;charset=utf-8,${encodeURIComponent(text)}`, "_blank", "noopener,noreferrer");
-}
-
 function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) {
   const url = entry.blobUrl ?? "";
   const name = entry.fileName ?? "adjunto";
@@ -763,7 +773,10 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
     .filter((e) => e.recordId === recordId)
     .sort((a, b) => b.enteredAt.localeCompare(a.enteredAt));
 
-  const personnelName = new Map(admin.state.personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`]));
+  const actorName = new Map([
+    ...admin.state.personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`] as const),
+    ...admin.state.members.map((member) => [member.userId, member.name] as const),
+  ]);
   const retention = record.retentionTimeId ? admin.state.retentionTimes.find((r) => r.id === record.retentionTimeId) : null;
   const disposition = record.dispositionId ? admin.state.dispositions.find((d) => d.id === record.dispositionId) : null;
   const archive = record.archiveMethodId ? admin.state.archiveMethods.find((a) => a.id === record.archiveMethodId) : null;
@@ -778,10 +791,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
         await admin.addRecordEntry(recordId, {
           reference: String(fd.get("reference") || ""),
           description: String(fd.get("description") || "") || undefined,
-          fileName: entryFile ? entryFile.name : undefined,
-          blobUrl: entryFile ? URL.createObjectURL(entryFile) : undefined,
-          mimeType: entryFile ? entryFile.type || null : null,
-          fileSize: entryFile ? entryFile.size : null,
+          file: entryFile ?? undefined,
         });
         setAddingEntry(false);
         setEntryFile(null);
@@ -814,7 +824,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
             <MetaCell label="Estado" value={<Badge status={record.active ? "ACTIVE" : "OBSOLETE"} label={record.active ? "Activo" : "Inactivo"} />} />
             <MetaCell label="Tipo" value={recordType?.name ?? "—"} />
             <MetaCell label="Proceso" value={record.processName ?? "—"} />
-            <MetaCell label="Custodio" value={record.custodianId ? personnelName.get(record.custodianId) ?? "—" : "—"} />
+            <MetaCell label="Custodio" value={record.custodianId ? actorName.get(record.custodianId) ?? "—" : "—"} />
             <MetaCell label="Retención" value={retention ? `${retention.name} (${retention.months} m)` : "—"} />
             <MetaCell label="Disposición" value={disposition?.name ?? "—"} />
             <MetaCell label="Método archivo" value={archive?.name ?? "—"} />
@@ -903,7 +913,8 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                   file={entryFile}
                   onFileChange={setEntryFile}
                   label="Archivo adjunto (opcional)"
-                  hint="El archivo se guarda solo en esta sesión del navegador, no se sube a ningún servidor."
+                  zoneNote={admin.mode === "live" ? "Un solo archivo · máximo 50 MB" : undefined}
+                  hint={admin.mode === "live" ? "El archivo se subirá al repositorio privado de la organización." : "El archivo se guarda solo en esta sesión del navegador."}
                   compact
                   disabled={isPending}
                 />
@@ -977,7 +988,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                     )}
                   </div>
                   <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600, textAlign: "right", whiteSpace: "nowrap" }}>
-                    {e.enteredById ? personnelName.get(e.enteredById) ?? "—" : "—"}
+                    {e.enteredById ? actorName.get(e.enteredById) ?? "—" : "—"}
                     <br />
                     <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 500 }}>{timeAgo(e.enteredAt)}</span>
                   </span>
@@ -992,7 +1003,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                       minWidth: 0,
                     }}
                   >
-                    {(e.blobUrl || e.fileName) && (
+                    {(e.blobUrl || e.hasFile || e.fileName) && (
                       <button
                         type="button"
                         className="nf-app-btn-outline"
@@ -1009,12 +1020,22 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                           fontFamily: "inherit",
                         }}
                         onClick={() => {
-                          if (e.blobUrl) setPreviewEntry(e);
-                          else if (e.fileName) openRecordEntryDemoFile(e);
+                          if (admin.mode === "demo" && e.blobUrl) {
+                            setPreviewEntry(e);
+                            return;
+                          }
+                          startTransition(async () => {
+                            try {
+                              const url = await admin.getRecordEntryUrl(e.id);
+                              window.open(url, "_blank", "noopener,noreferrer");
+                            } catch (err: unknown) {
+                              setEntryError(err instanceof Error ? err.message : "No se pudo abrir el archivo.");
+                            }
+                          });
                         }}
                       >
                         <Eye size={14} strokeWidth={2.25} aria-hidden />
-                        {e.blobUrl ? "Ver archivo" : "Ver referencia"}
+                        {admin.mode === "live" || e.hasFile || e.blobUrl ? "Abrir archivo" : "Ver referencia"}
                       </button>
                     )}
                     {canEdit && (

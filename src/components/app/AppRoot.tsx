@@ -1,12 +1,13 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useMatchMedia } from "@/hooks/useMatchMedia";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppTopbar from "@/components/layout/AppTopbar";
 import AIPanel from "@/components/modules/AIPanel";
 import WorkspaceToast from "@/components/workspace/WorkspaceToast";
+import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { AdminMockProvider } from "@/context/AdminMockStore";
 import { AdminLiveProvider } from "@/context/AdminLiveProvider";
@@ -116,6 +117,10 @@ export default function AppRoot({
     return <>{children}</>;
   }
 
+  if (initial.mode === "live" && !adminPayload) {
+    return <LiveDataUnavailable section="los datos de tu organización" />;
+  }
+
   const orgName = initial.organization.name;
   const userName = initial.user.name;
   const roleKey = normalizeRoleKey(initial.role);
@@ -136,27 +141,20 @@ export default function AppRoot({
             ? "nc"
             : "gap";
 
-  const profile = useMemo(
-    () => ({
-      name: userName,
-      email: initial.user.email,
-      orgName,
-      roleLabel,
-      roleKey,
-      activeOrgId,
-      workspaceKind,
-      plan: initial.organization.plan,
-    }),
-    [userName, initial.user.email, orgName, roleLabel, roleKey, activeOrgId, workspaceKind, initial.organization.plan],
-  );
+  const profile = {
+    name: userName,
+    email: initial.user.email,
+    orgName,
+    roleLabel,
+    roleKey,
+    activeOrgId,
+    workspaceKind,
+    plan: initial.organization.plan,
+  };
 
-  const liveAdmin = initial.mode === "live" && adminPayload != null;
-
-  // Wrapper que decide entre live provider (Prisma + server actions) y mock provider.
-  // Ambos comparten exactamente el mismo contexto (AdminCtx), así que los componentes
-  // que usan useAdminMock() funcionan sin cambios en cualquiera de los dos modos.
+  // El provider mock queda reservado exclusivamente para sesiones demo.
   const adminShell = (children: React.ReactNode) =>
-    liveAdmin && adminPayload ? (
+    initial.mode === "live" && adminPayload ? (
       <AdminLiveProvider initialData={adminPayload} currentUserId={initial.user.id}>
         {children}
       </AdminLiveProvider>
@@ -217,6 +215,7 @@ export default function AppRoot({
             context={aiContext}
           />
           <WorkspaceToast />
+          <div id="nf-modal-root" />
         </div>
       )}
     </WorkspaceProvider>

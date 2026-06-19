@@ -57,6 +57,7 @@ export function AdminLiveProvider({
 
   const value = useMemo<AdminMockContextValue>(() => {
     return {
+      mode: "live",
       state: {
         organization: state.organization,
         members: state.members.map((m) => ({ ...m, isSelf: m.userId === currentUserId })),
@@ -68,6 +69,7 @@ export function AdminLiveProvider({
         dispositions: state.dispositions,
         archiveMethods: state.archiveMethods,
         recordTypes: state.recordTypes,
+        processes: state.processes,
         records: state.records,
         recordEntries: state.recordEntries,
         acpms: state.acpms,
@@ -249,7 +251,7 @@ export function AdminLiveProvider({
         const cleaned: Parameters<typeof recordA.updateRecord>[1] = {};
         if (data.code !== undefined) cleaned.code = data.code;
         if (data.name !== undefined) cleaned.name = data.name;
-        if (data.processName !== undefined) cleaned.processName = data.processName ?? undefined;
+        if (data.processId !== undefined) cleaned.processId = data.processId ?? undefined;
         if (data.recordTypeId !== undefined) cleaned.recordTypeId = data.recordTypeId ?? undefined;
         if (data.retentionTimeId !== undefined) cleaned.retentionTimeId = data.retentionTimeId ?? undefined;
         if (data.dispositionId !== undefined) cleaned.dispositionId = data.dispositionId ?? undefined;
@@ -269,6 +271,7 @@ export function AdminLiveProvider({
         await recordA.addRecordEntry(recordId, data);
         refresh();
       },
+      getRecordEntryUrl: recordA.getRecordEntryUrl,
       deleteRecordEntry: async (id) => {
         await recordA.deleteRecordEntry(id);
         refresh();
