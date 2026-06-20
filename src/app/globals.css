@@ -21,6 +21,12 @@
     --nf-radius-lg: 12px;
     --nf-radius-xl: 16px;
     --nf-radius-pill: 999px;
+    --nf-form-control-py: 10px;
+    --nf-form-control-px: 12px;
+    --nf-form-control-font-size: 14px;
+    --nf-form-control-line-height: 1.4;
+    --nf-form-control-min-height: 42px;
+    --nf-form-control-radius: var(--nf-radius-md);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -959,16 +965,19 @@ a.nf-app-btn-soft-success {
   min-height: 28px;
 }
 
-.nf-modal-actions :where(.nf-app-btn-ghost, .nf-app-btn-outline, .nf-app-btn-primary, .nf-app-btn-danger, .nf-app-btn-success) {
-  padding: 8px 16px;
-  min-height: 34px;
-  font-size: 12px;
-}
-
-.nf-section-title :where(.nf-app-btn-ghost, .nf-app-btn-outline, .nf-app-btn-primary) {
-  padding: 7px 13px;
-  min-height: 32px;
-  font-size: 12px;
+/* Botones de formulario/modal y CTAs «Crear» de módulo — misma altura que `.nf-app-input` */
+.nf-app-shell :is(.nf-modal-actions, .nf-modal-form, .nf-modal-body form, .nf-section-title) :is(
+  .nf-app-btn-ghost,
+  .nf-app-btn-outline,
+  .nf-app-btn-primary,
+  .nf-app-btn-danger,
+  .nf-app-btn-success
+):not(.nf-app-btn-sm) {
+  padding: var(--nf-form-control-py) var(--nf-form-control-px);
+  min-height: var(--nf-form-control-min-height);
+  font-size: var(--nf-form-control-font-size);
+  line-height: var(--nf-form-control-line-height);
+  border-radius: var(--nf-form-control-radius);
 }
 
 .nf-action-bar {
@@ -1166,14 +1175,15 @@ a.nf-app-btn-soft-success {
 
 .nf-app-input {
   width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--nf-radius-md);
+  padding: var(--nf-form-control-py) var(--nf-form-control-px);
+  min-height: var(--nf-form-control-min-height);
+  border-radius: var(--nf-form-control-radius);
   border: 1px solid var(--nf-line);
   background: #fff;
   color: var(--nf-ink);
-  font-size: 14px;
+  font-size: var(--nf-form-control-font-size);
   font-weight: 500;
-  line-height: 1.4;
+  line-height: var(--nf-form-control-line-height);
   color-scheme: light;
   box-sizing: border-box;
   outline: none;
@@ -2764,10 +2774,12 @@ button.nf-audit-card:focus-visible {
 
 .nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
   width: 100%;
-  padding: 10px 12px;
-  font-size: 14px;
+  padding: var(--nf-form-control-py) var(--nf-form-control-px);
+  min-height: var(--nf-form-control-min-height);
+  font-size: var(--nf-form-control-font-size);
+  line-height: var(--nf-form-control-line-height);
   border: 1px solid var(--nf-line);
-  border-radius: var(--nf-radius-md);
+  border-radius: var(--nf-form-control-radius);
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
@@ -2776,6 +2788,10 @@ button.nf-audit-card:focus-visible {
   font-weight: 500;
   color-scheme: light;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-modal-body textarea {
+  min-height: 88px;
 }
 
 .nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {

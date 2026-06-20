@@ -42,7 +42,7 @@ export default function QuickCreateMenu() {
         aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
       >
-        Nueva acción
+        Crear
         <ChevronDown
           size={14}
           strokeWidth={2.5}

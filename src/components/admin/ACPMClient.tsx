@@ -423,7 +423,7 @@ export default function ACPMClient() {
       />
 
       <Modal open={creating} onClose={() => !isPending && setCreating(false)} title="Nueva ACPM" width={620}>
-        <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={handleCreate} className="nf-modal-form">
           <Field label="Título *">
             <input name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
           </Field>
@@ -454,8 +454,8 @@ export default function ACPMClient() {
             <input name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
           {createError && <div className="nf-modal-error">{createError}</div>}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 4 }}>
-            <button type="button" onClick={() => setCreating(false)} disabled={isPending} className="nf-app-btn-outline">
+          <div className="nf-modal-actions">
+            <button type="button" onClick={() => setCreating(false)} disabled={isPending} className="nf-app-btn-ghost">
               Cancelar
             </button>
             <button type="submit" disabled={isPending} className="nf-app-btn-primary" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
