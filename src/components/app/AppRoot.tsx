@@ -107,10 +107,10 @@ export default function AppRoot({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#F7F9FC",
+            background: "var(--bg)",
           }}
         >
-          <p style={{ color: "#5E6B7A" }}>Preparando tu espacio…</p>
+          <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>Preparando tu espacio…</p>
         </div>
       );
     }

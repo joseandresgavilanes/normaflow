@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { TrainingAssignmentStatus } from "@prisma/client";
 import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import Card from "@/components/ui/Card";
@@ -163,6 +164,11 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
     !personnel.length ? { text: "Registra personal activo para poder crear asignaciones.", href: "/app/info/personnel" } : null,
   ].filter(Boolean) as { text: string; href: string | null }[];
 
+  useCreateFromQuery(canManage && blockers.length === 0, () => {
+    setCreatingAssignment(true);
+    setError("");
+  });
+
   return (
     <div>
       <SectionTitle
@@ -175,27 +181,27 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       />
 
       {(error || success) && (
-        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "#fff0f0" : "#edf8f1", color: error ? "#C93C37" : "#1f6f45" }}>
+        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "#fff0f0" : "#edf8f1", color: error ? "#DC2626" : "#1f6f45" }}>
           {error || success}
         </div>
       )}
 
       {blockers.length > 0 && canManage && (
         <Card style={{ marginBottom: 16, border: "1px solid #f1d29d", background: "#fffaf0" }}>
-          <div style={{ fontWeight: 800, color: "#875710", marginBottom: 6 }}>Antes de crear una asignación</div>
+          <div style={{ fontWeight: 600, color: "#875710", marginBottom: 6 }}>Antes de crear una asignación</div>
           {blockers.map((blocker) => (
             <div key={blocker.text} style={{ fontSize: 13, color: "#6f521e", marginTop: 4 }}>
-              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "#123C66", fontWeight: 700 }}>Abrir Personal →</Link>}
+              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "#5266F6", fontWeight: 700 }}>Abrir Personal →</Link>}
             </div>
           ))}
         </Card>
       )}
 
-      <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
-        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="#2E8B57" />
-        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="#123C66" />
-        <Kpi icon={<GraduationCap size={22} />} value={String(overdue)} label="Vencidas" color="#C93C37" />
-        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="#D68A1A" />
+      <div className="nf-metric-strip">
+        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="#16A34A" />
+        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="#5266F6" />
+        <Kpi icon={<GraduationCap size={22} />} value={String(overdue)} label="Vencidas" color="#DC2626" />
+        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="#D97706" />
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
@@ -220,20 +226,20 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {courses.map((course, idx) => {
                 const linkedDocs = documents.filter((document) => course.documentIds.includes(document.id));
-                const accent = ["#123C66", "#2E8B57", "#D68A1A", "#6B3FB5"][idx % 4];
+                const accent = ["#5266F6", "#16A34A", "#D97706", "#6B3FB5"][idx % 4];
                 return (
                   <Card key={course.id} style={{ padding: 0, overflow: "hidden", opacity: course.active ? 1 : 0.68 }}>
-                    <div style={{ height: 4, background: `linear-gradient(90deg, ${accent}, ${accent}99)` }} />
+                    
                     <div style={{ padding: "18px 20px 20px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 18, flexWrap: "wrap" }}>
                       <div style={{ flex: "1 1 360px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 800, color: accent }}>{course.code}</span>
+                          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: accent }}>{course.code}</span>
                           {course.mandatory && <Badge status="OFF_TRACK" label="Obligatorio" />}
                           {!course.active && <Badge status="OBSOLETE" label="Archivado" />}
                           {course.autoAssignOnDocApproval && <Badge status="ON_TRACK" label="Autoasignación" />}
                         </div>
-                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{course.title}</h3>
+                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{course.title}</h3>
                         <p style={{ margin: 0, color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{course.description || "Sin descripción."}</p>
                         <div style={{ marginTop: 10, fontSize: 12, color: "var(--nf-ink-2, #223648)", fontWeight: 500 }}>
                           Plazo: {course.defaultDueDays} días · Vigencia: {course.defaultValidityMonths} meses · Destinatarios: {course.audiencePersonnelIds.length}
@@ -278,10 +284,10 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
                       <td style={{ whiteSpace: "nowrap" }}>
                         {canManage && assignment.status !== "COMPLETED" && assignment.status !== "CANCELLED" && (
                           <>
-                            {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(assignment.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} style={linkBtn}>Iniciar</button>}
-                            <button type="button" onClick={() => setEditingAssignment(assignment)} style={linkBtn}>Editar</button>
-                            <button type="button" onClick={() => { setCompletingAssignment(assignment); setError(""); }} style={linkBtn}>Completar</button>
-                            <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} style={{ ...linkBtn, color: "#C93C37" }}>Cancelar</button>
+                            {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(assignment.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
+                            <button type="button" onClick={() => setEditingAssignment(assignment)} className="nf-text-action">Editar</button>
+                            <button type="button" onClick={() => { setCompletingAssignment(assignment); setError(""); }} className="nf-text-action">Completar</button>
+                            <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
                           </>
                         )}
                       </td>
@@ -300,7 +306,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             {personnel.map((person) => {
               const rows = assignments.filter((assignment) => assignment.personnelId === person.id);
               const done = rows.filter((assignment) => assignment.status === "COMPLETED").length;
-              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="#123C66" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
+              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="#5266F6" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
             })}
           </div>
         )
@@ -308,7 +314,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "compliance" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
           <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
           <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink, #0f1b2d)", fontWeight: 500, paddingLeft: 20 }}>
             <li>Cursos activos: {activeCourses.length}</li>
@@ -322,7 +328,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "trail" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
           {!auditEvents.length ? <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13 }}>Todavía no hay eventos.</p> : auditEvents.map((event) => (
             <div key={event.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--nf-line, #b8c8d9)", fontSize: 13, color: "var(--nf-ink-2, #223648)" }}>
               <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{event.actorName}</strong> · {event.action.replaceAll("_", " ")} · {event.module === "training_course" ? "curso" : "asignación"}
@@ -353,7 +359,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={creatingAssignment} onClose={() => !isPending && setCreatingAssignment(false)} title="Nueva asignación" width={560}>
         <ModalForm onSubmit={submitAssignment}>
-          {!activeCourses.length || !personnel.length ? <p style={{ color: "#C93C37", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
+          {!activeCourses.length || !personnel.length ? <p style={{ color: "#DC2626", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
             <ModalField label="Curso *"><select name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
             <ModalField label="Persona *"><select name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
             <ModalField label="Proceso"><select name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
@@ -409,11 +415,19 @@ function ChoiceList({ title, emptyText, items, name, selected }: { title: string
 }
 
 function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: string }) {
-  return <div className="nf-kpi-summary-cell"><div style={{ width: 44, height: 44, borderRadius: 12, background: `${color}18`, display: "flex", alignItems: "center", justifyContent: "center", color }}>{icon}</div><div><div style={{ fontSize: 26, fontWeight: 800, color, lineHeight: 1 }}>{value}</div><div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-2, #223648)", marginTop: 3 }}>{label}</div></div></div>;
+  return (
+    <div className="nf-metric-cell">
+      <div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div>
+      <div className="nf-metric-cell-body">
+        <div className="nf-metric-cell-value" style={{ color }}>{value}</div>
+        <div className="nf-metric-cell-label">{label}</div>
+      </div>
+    </div>
+  );
 }
 
 function EmptyState({ title, text, action, actionLabel, href }: { title: string; text: string; action?: () => void; actionLabel: string; href?: string }) {
-  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="#123C66" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary" style={{ display: "inline-block", textDecoration: "none" }}>{actionLabel}</Link>}</Card>;
+  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="#5266F6" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
 }
 
 function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onCancel: () => void; disabled?: boolean }) {
@@ -425,5 +439,4 @@ function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onC
   );
 }
 
-const linkBtn: React.CSSProperties = { border: "none", background: "none", color: "#123C66", fontWeight: 700, cursor: "pointer", fontSize: 12, padding: "3px 5px" };
 const checkLabel: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--nf-ink, #0f1b2d)", lineHeight: 1.4, fontWeight: 500 };

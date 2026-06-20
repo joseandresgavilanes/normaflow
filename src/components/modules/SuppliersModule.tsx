@@ -66,7 +66,7 @@ export default function SuppliersModule() {
             <tbody>
               {rows.map(s => (
                 <tr key={s.id} style={{ cursor: "pointer" }} onClick={() => setDetail(s)}>
-                  <td style={{ fontWeight: 700, color: "#123C66" }}>{s.code}</td>
+                  <td style={{ fontWeight: 700, color: "#5266F6" }}>{s.code}</td>
                   <td>{s.name}</td>
                   <td>
                     <Badge status={s.criticality === "CRITICAL" ? "OFF_TRACK" : s.criticality === "HIGH" ? "AT_RISK" : "ON_TRACK"} label={s.criticality} />
@@ -98,7 +98,7 @@ export default function SuppliersModule() {
                   detailLive.riskCodes.map(code => {
                     const r = risks.find(x => x.code === code);
                     return (
-                      <Link key={code} href="/app/risks" style={{ fontSize: 12, color: "#123C66" }}>
+                      <Link key={code} href="/app/risks" style={{ fontSize: 12, color: "#5266F6" }}>
                         {r?.title ?? code}
                       </Link>
                     );
@@ -111,7 +111,7 @@ export default function SuppliersModule() {
               {detailLive.documentCodes.map(c => {
                 const d = documents.find(x => x.code === c);
                 return (
-                  <Link key={c} href="/app/documents" style={{ fontSize: 12, color: "#123C66", marginRight: 10 }}>
+                  <Link key={c} href="/app/documents" style={{ fontSize: 12, color: "#5266F6", marginRight: 10 }}>
                     {d?.title ?? c}
                   </Link>
                 );
@@ -119,7 +119,7 @@ export default function SuppliersModule() {
               {detailLive.documentCodes.length === 0 && <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>—</span>}
             </div>
             {perm.suppliers.manage && (
-              <button type="button" onClick={() => bumpReview(detailLive)} style={{ padding: "10px 16px", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer" }}>
+              <button type="button" onClick={() => bumpReview(detailLive)} className="nf-app-btn-primary">
                 Registrar evaluación y +6 meses revisión
               </button>
             )}

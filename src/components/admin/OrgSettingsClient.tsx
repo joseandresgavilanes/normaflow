@@ -109,7 +109,7 @@ export default function OrgSettingsClient() {
                   disabled={!canEdit}
                   maxLength={3}
                   className="nf-app-input"
-                  style={{ width: "100%", boxSizing: "border-box", fontFamily: "ui-monospace, monospace", textTransform: "uppercase" }}
+                  style={{ width: "100%", boxSizing: "border-box", fontFamily: "ui-monospace, monospace", textTransform: "none" }}
                 />
               </Field>
             </div>
@@ -189,7 +189,7 @@ function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number })
   const pct = max === null ? 0 : Math.min(100, (usedUsers / max) * 100);
   const atLimit = max !== null && usedUsers >= max;
   const nearLimit = max !== null && !atLimit && pct >= 80;
-  const barColor = atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-accent)";
+  const barColor = atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--nf-accent)";
 
   return (
     <div className="nf-org-plan-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
@@ -203,12 +203,12 @@ function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number })
               : "Plan personalizado · usuarios ilimitados."}
           </p>
         </div>
-        <Globe size={22} strokeWidth={2} style={{ color: "#123c66", opacity: 0.35, flexShrink: 0 }} aria-hidden />
+        <Globe size={22} strokeWidth={2} style={{ color: "#5266F6", opacity: 0.35, flexShrink: 0 }} aria-hidden />
       </div>
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6 }}>
           <span>Usuarios activos</span>
-          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#C93C37" : "var(--nf-ink-2)", fontWeight: 700 }}>
+          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#DC2626" : "var(--nf-ink-2)", fontWeight: 700 }}>
             {usedUsers} / {max === null ? "∞" : max}
           </span>
         </div>

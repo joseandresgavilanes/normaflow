@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { DocumentType } from "@prisma/client";
 import {
   CheckCircle2,
@@ -19,7 +20,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
-import { ModalField, modalInputStyle } from "@/components/ui/ModalForm";
+import { ModalField, NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import {
   approveDocument,
   createDocument,
@@ -92,6 +93,11 @@ export default function DocumentsLiveClient({
   const [confirmDelete, setConfirmDelete] = useState<DocumentRowLive | null>(null);
   const [confirmObsolete, setConfirmObsolete] = useState<DocumentRowLive | null>(null);
 
+  useCreateFromQuery(canCreate, () => {
+    setCreating(true);
+    setError("");
+  });
+
   /** Evita modal con estado obsoleto tras aprobar/rechazar (p. ej. segundo clic en Aprobar). */
   const detailDoc = useMemo(
     () => (detail ? documents.find((d) => d.id === detail.id) ?? detail : null),
@@ -130,7 +136,7 @@ export default function DocumentsLiveClient({
       key: "code",
       label: "Código",
       render: (_, d) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#123C66", fontWeight: 700 }}>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>
           {d.code}
         </span>
       ),
@@ -171,7 +177,7 @@ export default function DocumentsLiveClient({
       label: "",
       render: (_, d) => (
         <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          <button type="button" onClick={(e) => { e.stopPropagation(); setDetail(d); }} style={ghostBtn}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); setDetail(d); }} className="nf-app-btn-ghost">
             Ver
           </button>
         </div>
@@ -190,23 +196,15 @@ export default function DocumentsLiveClient({
         onAction={canCreate ? () => { setCreating(true); setError(""); } : undefined}
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 16 }}>
+      <div className="nf-metric-strip">
         <Stat label="Borradores"   value={stats.draft}    icon={<FileText size={20} strokeWidth={2.25}/>}      />
         <Stat label="En revisión"  value={stats.inReview} icon={<Clock size={20} strokeWidth={2.25}/>}         tone="warn" />
         <Stat label="Aprobados"    value={stats.approved} icon={<CheckCircle2 size={20} strokeWidth={2.25}/>} tone="ok" />
         <Stat label="Obsoletos"    value={stats.obsolete} icon={<XCircle size={20} strokeWidth={2.25}/>}       muted />
       </div>
 
-      {error && (
-        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(201, 60, 55, 0.08)", border: "1px solid rgba(201, 60, 55, 0.35)", color: "#C93C37", fontSize: 13, marginBottom: 14 }}>
-          {error}
-        </div>
-      )}
-      {success && (
-        <div style={{ padding: "10px 14px", borderRadius: 8, background: "rgba(46, 139, 87, 0.08)", border: "1px solid rgba(46, 139, 87, 0.35)", color: "#2E8B57", fontSize: 13, marginBottom: 14 }}>
-          {success}
-        </div>
-      )}
+      {error && <div className="nf-alert nf-alert--error">{error}</div>}
+      {success && <div className="nf-alert nf-alert--success">{success}</div>}
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
@@ -215,18 +213,19 @@ export default function DocumentsLiveClient({
             placeholder="Buscar por código, título, observaciones…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", background: "var(--nf-app-surface-1)", color: "var(--nf-ink)" }}
+            className="nf-app-input nf-app-input--toolbar"
+            style={{ flex: 1, minWidth: 240 }}
           />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status)} style={selectStyle}>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
             {(["ALL", "DRAFT", "IN_REVIEW", "APPROVED", "OBSOLETE"] as Status[]).map((s) => (
               <option key={s} value={s}>{STATUS_LABEL[s]}</option>
             ))}
           </select>
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as "ALL" | DocumentType)} style={selectStyle}>
+          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as "ALL" | DocumentType)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
             <option value="ALL">Todos los tipos</option>
             {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} style={selectStyle} aria-label="Ordenar documentos">
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Ordenar documentos">
             {DOCUMENT_SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
@@ -351,7 +350,7 @@ export default function DocumentsLiveClient({
                 successMessage: "Borrador eliminado.",
               },
             )}
-            style={{ ...primaryBtn, background: "#C93C37" }}
+            className="nf-app-btn-danger"
           >
             {isPending ? "Borrando…" : "Borrar"}
           </button>
@@ -473,26 +472,26 @@ function DocumentFormModal({
       >
         <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 12 }}>
           <Field label="Código *">
-            <input name="code" required defaultValue={editing?.code ?? ""} style={inputStyle} placeholder="SGSI-POL-001" />
+            <input name="code" required defaultValue={editing?.code ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="SGSI-POL-001" />
           </Field>
           <Field label="Título *">
-            <input name="title" required defaultValue={editing?.title ?? ""} style={inputStyle} />
+            <input name="title" required defaultValue={editing?.title ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Tipo">
-            <select name="type" defaultValue={editing?.type ?? "PROCEDURE"} style={inputStyle}>
+            <select name="type" defaultValue={editing?.type ?? "PROCEDURE"} className={NF_INPUT_CLASS} style={modalInputStyle}>
               {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </Field>
           <Field label="Norma">
-            <select name="standardCode" defaultValue={editing?.standardCode ?? ""} style={inputStyle}>
+            <select name="standardCode" defaultValue={editing?.standardCode ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Ninguna —</option>
               {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
             </select>
           </Field>
           <Field label="Ubicación / sede">
-            <select name="locationId" defaultValue={editing?.locationId ?? ""} style={inputStyle}>
+            <select name="locationId" defaultValue={editing?.locationId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">—</option>
               {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
             </select>
@@ -500,13 +499,13 @@ function DocumentFormModal({
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Proceso relacionado">
-            <select name="processId" defaultValue={editing?.processId ?? ""} style={inputStyle}>
+            <select name="processId" defaultValue={editing?.processId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin proceso —</option>
               {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
             </select>
           </Field>
           <Field label="Cláusula aplicable">
-            <select name="clauseId" defaultValue={editing?.clauseId ?? ""} style={inputStyle}>
+            <select name="clauseId" defaultValue={editing?.clauseId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin cláusula —</option>
               {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode.replace("_", " ")} · {clause.code} — {clause.title}</option>)}
             </select>
@@ -514,43 +513,43 @@ function DocumentFormModal({
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable del documento">
-            <select name="ownerId" defaultValue={editing?.ownerId ?? ""} style={inputStyle}>
+            <select name="ownerId" defaultValue={editing?.ownerId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Usuario actual —</option>
               {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
             </select>
           </Field>
           <Field label="Próxima revisión">
-            <input name="reviewDate" type="date" defaultValue={editing?.reviewDate?.slice(0, 10) ?? ""} style={inputStyle} />
+            <input name="reviewDate" type="date" defaultValue={editing?.reviewDate?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
         </div>
         <Field label="Etiquetas (separadas por coma)">
-          <input name="tags" defaultValue={editing?.tags.join(", ") ?? ""} style={inputStyle} placeholder="calidad, seguridad, política" />
+          <input name="tags" defaultValue={editing?.tags.join(", ") ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="calidad, seguridad, política" />
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Responsable elaboración">
-            <select name="responsibleElaborationId" defaultValue={editing?.responsibleElaborationId ?? ""} style={inputStyle}>
+            <select name="responsibleElaborationId" defaultValue={editing?.responsibleElaborationId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">—</option>
               {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
             </select>
           </Field>
           <Field label="Responsable aprobación">
-            <select name="responsibleApprovalId" defaultValue={editing?.responsibleApprovalId ?? ""} style={inputStyle}>
+            <select name="responsibleApprovalId" defaultValue={editing?.responsibleApprovalId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">—</option>
               {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
             </select>
           </Field>
           <Field label="Custodio">
-            <select name="custodianId" defaultValue={editing?.custodianId ?? ""} style={inputStyle}>
+            <select name="custodianId" defaultValue={editing?.custodianId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">—</option>
               {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
             </select>
           </Field>
         </div>
         <Field label="Ubicación física">
-          <input name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} style={inputStyle} placeholder="Archivador A, estante 3…" />
+          <input name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Archivador A, estante 3…" />
         </Field>
         <Field label="Lista de distribución (correos separados por coma o salto de línea)">
-          <textarea name="distributionList" rows={2} defaultValue={editing?.distributionList.join(", ") ?? ""} style={inputStyle} placeholder="calidad@empresa.com, produccion@empresa.com" />
+          <textarea name="distributionList" rows={2} defaultValue={editing?.distributionList.join(", ") ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="calidad@empresa.com, produccion@empresa.com" />
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 12, alignItems: "end" }}>
           <Field label="Documento externo">
@@ -560,11 +559,11 @@ function DocumentFormModal({
             </label>
           </Field>
           <Field label="Enlace externo (si aplica)">
-            <input name="externalLink" defaultValue={editing?.externalLink ?? ""} style={inputStyle} placeholder="https://…" />
+            <input name="externalLink" defaultValue={editing?.externalLink ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="https://…" />
           </Field>
         </div>
         <Field label="Observaciones">
-          <textarea name="observations" rows={3} defaultValue={editing?.observations ?? ""} style={inputStyle} />
+          <textarea name="observations" rows={3} defaultValue={editing?.observations ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
         </Field>
 
         <div className="nf-modal-actions">
@@ -614,20 +613,20 @@ function UploadVersionModal({
             Versión actual: <strong>v{doc.currentVersion}</strong>. Sube el archivo correspondiente a la nueva versión.
           </p>
           <Field label="Archivo *">
-            <input type="file" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} style={inputStyle} />
+            <input type="file" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <Field label="Tipo de versión">
             <div style={{ display: "flex", gap: 8 }}>
-              <label style={radioLabel(bump === "minor")}>
+              <label className={radioChoiceClass(bump === "minor")}>
                 <input type="radio" name="bump" value="minor" checked={bump === "minor"} onChange={() => setBump("minor")} /> Minor (v{doc.currentVersion} → {nextMinor(doc.currentVersion)})
               </label>
-              <label style={radioLabel(bump === "major")}>
+              <label className={radioChoiceClass(bump === "major")}>
                 <input type="radio" name="bump" value="major" checked={bump === "major"} onChange={() => setBump("major")} /> Mayor (cambio sustancial)
               </label>
             </div>
           </Field>
           <Field label="Descripción del cambio *">
-            <textarea required rows={3} value={note} onChange={(e) => setNote(e.target.value)} style={inputStyle} placeholder="Resumen de qué cambió respecto de la versión anterior." />
+            <textarea required rows={3} value={note} onChange={(e) => setNote(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Resumen de qué cambió respecto de la versión anterior." />
           </Field>
           <div className="nf-modal-actions">
             <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
@@ -734,7 +733,7 @@ function RejectModal({
           <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink)" }}>
             El documento <strong>{doc.code}</strong> volverá a borrador. Indica el motivo:
           </p>
-          <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} style={inputStyle} />
+          <textarea rows={4} value={comment} onChange={(e) => setComment(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle} />
           <div className="nf-modal-actions">
             <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
             <button
@@ -756,10 +755,10 @@ function ObsoleteForm({ isPending, onCancel, onConfirm }: { isPending: boolean; 
   const [reason, setReason] = useState("");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo (opcional)" style={inputStyle} />
+      <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo (opcional)" className={NF_INPUT_CLASS} style={modalInputStyle} />
       <div className="nf-modal-actions">
         <button type="button" onClick={onCancel} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
-        <button type="button" disabled={isPending} onClick={() => onConfirm(reason)} className="nf-app-btn-primary" style={{ background: "#5E6B7A", borderColor: "#5E6B7A" }}>
+        <button type="button" disabled={isPending} onClick={() => onConfirm(reason)} className="nf-app-btn-ghost">
           {isPending ? "Marcando…" : "Marcar obsoleto"}
         </button>
       </div>
@@ -846,15 +845,15 @@ function DocumentDetailModal({
         )}
 
         {/* Acciones de workflow */}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
+        <div className="nf-action-bar" style={{ padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
           {canShowUpload && (
-            <button type="button" onClick={onUpload} style={primaryBtn}>
-              <Upload size={14} style={{ marginRight: 6 }} /> Subir versión
+            <button type="button" onClick={onUpload} className="nf-app-btn-primary">
+              <Upload size={14} aria-hidden /> Subir versión
             </button>
           )}
           {canShowSubmit && (
-            <button type="button" onClick={onSubmitReview} style={primaryBtn}>
-              <Send size={14} style={{ marginRight: 6 }} /> Enviar a revisión
+            <button type="button" onClick={onSubmitReview} className="nf-app-btn-primary">
+              <Send size={14} aria-hidden /> Enviar a revisión
             </button>
           )}
           {canShowApprove && (
@@ -863,32 +862,33 @@ function DocumentDetailModal({
                 placeholder="Comentario de aprobación (opcional)"
                 value={approveComment}
                 onChange={(e) => setApproveComment(e.target.value)}
-                style={{ ...inputStyle, maxWidth: 280, padding: "6px 10px", fontSize: 12 }}
+                className={NF_INPUT_CLASS}
+                style={{ maxWidth: 280, flex: 1, minWidth: 180 }}
               />
               <button
                 type="button"
                 disabled={isPending}
                 onClick={() => { onApprove(approveComment); setApproveComment(""); }}
-                style={{ ...primaryBtn, background: "#2E8B57", opacity: isPending ? 0.7 : 1 }}
+                className="nf-app-btn-success"
               >
-                <CheckCircle2 size={14} style={{ marginRight: 6 }} />
+                <CheckCircle2 size={14} aria-hidden />
                 {myPending ? "Aprobar mi parte" : "Aprobar"}
               </button>
-              <button type="button" onClick={onReject} style={dangerBtn}>
-                <XCircle size={14} style={{ marginRight: 6 }} /> Rechazar
+              <button type="button" onClick={onReject} className="nf-app-btn-danger">
+                <XCircle size={14} aria-hidden /> Rechazar
               </button>
             </>
           )}
           {canCreate && doc.status === "DRAFT" && (
-            <button type="button" onClick={onEdit} style={ghostBtn}>
-              <Pencil size={14} style={{ marginRight: 6 }} /> Editar metadata
+            <button type="button" onClick={onEdit} className="nf-app-btn-ghost">
+              <Pencil size={14} aria-hidden /> Editar metadata
             </button>
           )}
           {canShowDelete && (
-            <button type="button" onClick={onDelete} style={dangerBtn}>Borrar borrador</button>
+            <button type="button" onClick={onDelete} className="nf-app-btn-danger">Borrar borrador</button>
           )}
           {canShowObsolete && (
-            <button type="button" onClick={onObsolete} style={{ ...ghostBtn, color: "#5E6B7A" }}>Marcar obsoleto</button>
+            <button type="button" onClick={onObsolete} className="nf-app-btn-ghost">Marcar obsoleto</button>
           )}
         </div>
 
@@ -961,7 +961,7 @@ function VersionRow({
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
-      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#123C66" }}>v{v.version}</span>
+      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#5266F6" }}>v{v.version}</span>
       <div>
         <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>
           {v.changeDescription ?? <span style={{ color: "var(--nf-ink-4)" }}>Sin descripción</span>}
@@ -977,7 +977,7 @@ function VersionRow({
         </span>
       )}
       {v.fileUrl && (
-        <button type="button" onClick={openFile} disabled={loading} style={ghostBtn} title="Abrir archivo">
+        <button type="button" onClick={openFile} disabled={loading} className="nf-app-btn-ghost" title="Abrir archivo">
           {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Download size={14} />}
         </button>
       )}
@@ -994,7 +994,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{value}</div>
     </div>
   );
@@ -1013,46 +1013,21 @@ function Stat({
   tone?: "ok" | "warn";
   muted?: boolean;
 }) {
-  const color = tone === "ok" ? "#2E8B57" : tone === "warn" ? "#D68A1A" : muted ? "var(--nf-ink-3)" : "var(--nf-ink)";
+  const color = tone === "ok" ? "#16A34A" : tone === "warn" ? "#D97706" : muted ? "var(--nf-ink-3)" : "var(--nf-ink)";
   return (
-    <Card>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <span style={{ color }}>{icon}</span>
-        <div>
-          <div style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: "-0.02em" }}>{value}</div>
-          <div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</div>
-        </div>
+    <div className="nf-metric-cell">
+      <div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>
+        {icon}
       </div>
-    </Card>
+      <div className="nf-metric-cell-body">
+        <div className="nf-metric-cell-value" style={{ fontSize: 22, color }}>{value}</div>
+        <div className="nf-metric-cell-label">{label}</div>
+      </div>
+    </div>
   );
 }
 
-function radioLabel(active: boolean): React.CSSProperties {
-  return {
-    display: "inline-flex", alignItems: "center", gap: 6,
-    padding: "8px 12px", borderRadius: 8,
-    background: active ? "rgba(18, 60, 102, 0.1)" : "var(--nf-app-surface-1)",
-    border: `1px solid ${active ? "#123C66" : "var(--nf-line)"}`,
-    cursor: "pointer", fontSize: 12, fontWeight: 500, color: "var(--nf-ink)",
-  };
+function radioChoiceClass(active: boolean) {
+  return active ? "nf-chip-choice nf-chip-choice--active" : "nf-chip-choice";
 }
 
-const inputStyle: React.CSSProperties = modalInputStyle;
-const selectStyle: React.CSSProperties = {
-  padding: "8px 10px", fontSize: 12,
-  border: "1px solid var(--nf-line)", borderRadius: 8,
-  background: "var(--nf-app-surface-1)", color: "var(--nf-ink)",
-};
-const primaryBtn: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center",
-  padding: "8px 14px", fontSize: 13, fontWeight: 600,
-  color: "#fff", background: "#123C66", border: "none",
-  borderRadius: 8, cursor: "pointer",
-};
-const ghostBtn: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center",
-  padding: "8px 12px", fontSize: 12, fontWeight: 500,
-  color: "var(--nf-ink-3)", background: "var(--nf-app-surface-1)",
-  border: "1px solid var(--nf-line)", borderRadius: 8, cursor: "pointer",
-};
-const dangerBtn: React.CSSProperties = { ...ghostBtn, color: "#C93C37", border: "1px solid #fde0e0" };

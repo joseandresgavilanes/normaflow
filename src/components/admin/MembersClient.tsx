@@ -5,6 +5,7 @@ import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
+import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import { useAdminMock, type OrgMemberMockRow } from "@/context/AdminMockStore";
@@ -113,7 +114,7 @@ export default function MembersClient() {
       render: (_, r) =>
         r.isSelf ? null : (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setConfirmRemove(r)} style={dangerBtn}>Quitar</button>
+            <button type="button" onClick={() => setConfirmRemove(r)} className="nf-app-btn-danger">Quitar</button>
           </div>
         ),
     });
@@ -162,7 +163,7 @@ export default function MembersClient() {
         flexWrap: "wrap",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", letterSpacing: "-0.01em", textTransform: "none" }}>
             Plan
           </span>
           <span style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
@@ -172,7 +173,7 @@ export default function MembersClient() {
         <div style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)" }}>
             <span>Usuarios</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-ink-2)", fontWeight: 700 }}>
+            <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--nf-ink-2)", fontWeight: 700 }}>
               {usedUsers} / {maxUsers === null ? "∞" : maxUsers}
             </span>
           </div>
@@ -181,14 +182,14 @@ export default function MembersClient() {
               <div style={{
                 height: "100%",
                 width: `${Math.min(100, (usedUsers / maxUsers) * 100)}%`,
-                background: atLimit ? "#C93C37" : nearLimit ? "#D68A1A" : "var(--nf-accent)",
+                background: atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--nf-accent)",
                 transition: "width 0.2s",
               }} />
             </div>
           )}
         </div>
         {(atLimit || nearLimit) && (
-          <div style={{ fontSize: 12, color: atLimit ? "#C93C37" : "#D68A1A", fontWeight: 600 }}>
+          <div style={{ fontSize: 12, color: atLimit ? "#DC2626" : "#D97706", fontWeight: 600 }}>
             {atLimit
               ? "Has alcanzado el límite del plan. "
               : `Te quedan ${maxUsers! - usedUsers} usuarios. `}
@@ -204,29 +205,29 @@ export default function MembersClient() {
             placeholder="Buscar por nombre, email o rol…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none" }}
+            className="nf-app-input nf-app-input--toolbar" style={{ flex: 1, minWidth: 240 }}
           />
           <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {rows.length}</span>
         </div>
         {success && (
-          <div style={{ padding: "8px 12px", borderRadius: 6, background: "rgba(46, 139, 87, 0.08)", color: "#2E8B57", fontSize: 13, marginBottom: 12 }}>{success}</div>
+          <div className="nf-alert nf-alert--success" style={{ marginBottom: 12 }}>{success}</div>
         )}
         {error && (
-          <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13, marginBottom: 12 }}>{error}</div>
+          <div className="nf-alert nf-alert--error" style={{ marginBottom: 12 }}>{error}</div>
         )}
         <DataTable columns={columns} rows={filtered} emptyText="Sin miembros." />
       </Card>
 
       <Modal open={inviting} onClose={() => !isPending && setInviting(false)} title="Invitar persona" width={480}>
-        <form onSubmit={handleInvite} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={handleInvite} className="nf-modal-form">
           <Field label="Nombre *">
-            <input name="name" required style={inputStyle} placeholder="María Torres" />
+            <input name="name" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="María Torres" />
           </Field>
           <Field label="Email *">
-            <input name="email" type="email" required style={inputStyle} placeholder="maria@empresa.com" />
+            <input name="email" type="email" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="maria@empresa.com" />
           </Field>
           <Field label="Rol">
-            <select name="role" defaultValue="CONTRIBUTOR" style={inputStyle}>
+            <select name="role" defaultValue="CONTRIBUTOR" className={NF_INPUT_CLASS} style={modalInputStyle}>
               {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           </Field>
@@ -272,14 +273,10 @@ export default function MembersClient() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+    <div className="nf-modal-field">
+      <span className="nf-modal-field-label">{label}</span>
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "9px 18px", fontSize: 13, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "var(--nf-ink-3)", background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)", borderRadius: 8, cursor: "pointer" };
-const dangerBtn: React.CSSProperties = { ...ghostBtn, color: "#C93C37", border: "1px solid #fde0e0" };

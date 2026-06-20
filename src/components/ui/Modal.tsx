@@ -55,28 +55,12 @@ export default function Modal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(14,28,50,0.5)",
-        zIndex,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
+      style={{ zIndex }}
       onClick={onClose}
     >
       <div
         className="nf-modal-panel"
-        style={{
-          background: "#fff",
-          borderRadius: 16,
-          width: "100%",
-          maxWidth: "min(100%, " + width + "px)",
-          maxHeight: "min(88vh, 88dvh)",
-          overflow: "auto",
-        }}
+        style={{ maxWidth: `min(100%, ${width}px)` }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="nf-modal-header">
@@ -89,7 +73,7 @@ export default function Modal({
             onClick={onClose}
             aria-label="Cerrar"
           >
-            <X size={20} strokeWidth={2} aria-hidden />
+            <X size={18} strokeWidth={2} aria-hidden />
           </button>
         </div>
         <div className="nf-modal-body">{children}</div>

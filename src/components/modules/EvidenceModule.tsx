@@ -29,7 +29,7 @@ function EvidencePreview({ ev }: { ev: EvidenceItem }) {
       <p className="nf-app-help">Tipo MIME: {mime || "desconocido"}</p>
       {ev.fileSize != null && <p className="nf-app-help">Tamaño: {(ev.fileSize / 1024).toFixed(1)} KB</p>}
       <p className="nf-app-help">En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace disponible en el workspace.</p>
-      <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "#123C66", fontWeight: 600 }}>
+      <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "#5266F6", fontWeight: 600 }}>
         Abrir o descargar
       </a>
     </div>
@@ -139,7 +139,7 @@ export default function EvidenceModule() {
                     <td style={{ fontSize: 13, fontWeight: 500, color: "var(--nf-ink-2)" }}>{ev.framework ?? "—"}</td>
                     <td style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>{formatDate(ev.createdAt)}</td>
                     <td>
-                      <span style={{ color: "#123C66", fontWeight: 700 }}>Vista previa →</span>
+                      <span style={{ color: "#5266F6", fontWeight: 700 }}>Vista previa →</span>
                     </td>
                   </tr>
                 ))}

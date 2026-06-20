@@ -10,18 +10,18 @@ export default function StatCard({
   label,
   value,
   sub,
-  color = "#123C66",
+  color = "#5266F6",
   icon,
 }: StatCardProps) {
   return (
-    <Card style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+    <Card style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "18px 20px" }}>
       {icon && (
         <div
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 10,
-            background: color + "18",
+            width: 40,
+            height: 40,
+            borderRadius: 999,
+            background: `${color}14`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -33,21 +33,22 @@ export default function StatCard({
         </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, color: "#5E6B7A", marginBottom: 2 }}>
+        <div style={{ fontSize: 13, color: "var(--nf-ink-3)", marginBottom: 4, fontWeight: 500 }}>
           {label}
         </div>
         <div
           style={{
-            fontSize: 26,
-            fontWeight: 700,
-            color: "#142033",
+            fontSize: 28,
+            fontWeight: 600,
+            color: "var(--nf-ink)",
             lineHeight: 1.1,
+            letterSpacing: "-0.03em",
           }}
         >
           {value}
         </div>
         {sub && (
-          <div style={{ fontSize: 12, color: "#5E6B7A", marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4, fontWeight: 500 }}>
             {sub}
           </div>
         )}

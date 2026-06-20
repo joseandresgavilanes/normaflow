@@ -40,7 +40,7 @@ export default function AttestationModal({ open, onClose, title, statement, sess
       <div className="nf-app-help" style={{ background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", borderRadius: 10, padding: 14, marginBottom: 18, fontWeight: 500 }}>
         Esta acción genera un registro de trazabilidad con sello de tiempo. En producción se vincularía a política de firma y conservación de evidencias.
       </div>
-      <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+      <label className="nf-modal-field-label" style={{ display: "block", marginBottom: 8 }}>
         Confirme su email corporativo
       </label>
       <input
@@ -51,7 +51,7 @@ export default function AttestationModal({ open, onClose, title, statement, sess
         className="nf-app-input"
         style={{ width: "100%", marginBottom: 16, boxSizing: "border-box" }}
       />
-      <label className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
+      <label className="nf-modal-field-label" style={{ display: "block", marginBottom: 8 }}>
         Motivo / comentario de la decisión
       </label>
       <textarea

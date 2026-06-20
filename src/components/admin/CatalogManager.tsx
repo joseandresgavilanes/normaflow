@@ -6,6 +6,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import { formatDate } from "@/lib/utils";
 
 export type CatalogRow = {
@@ -112,7 +113,7 @@ export default function CatalogManager({
               setEditing(r);
               setFormError("");
             }}
-            style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid var(--nf-line)", background: "var(--nf-app-surface-1)", color: "var(--nf-ink)", cursor: "pointer" }}
+            className="nf-app-btn-ghost nf-app-btn-sm"
           >
             Editar
           </button>
@@ -123,7 +124,7 @@ export default function CatalogManager({
                 e.stopPropagation();
                 setConfirmDelete(r);
               }}
-              style={{ fontSize: 12, padding: "4px 10px", borderRadius: 6, border: "1px solid #fde0e0", background: "var(--nf-app-surface-1)", color: "#C93C37", cursor: "pointer" }}
+              className="nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger"
             >
               Desactivar
             </button>
@@ -211,7 +212,7 @@ export default function CatalogManager({
         <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {fields.map((f) => (
             <div key={f.key}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "none", letterSpacing: "-0.01em" }}>
                 {f.label}{f.required ? " *" : ""}
               </label>
               {f.type === "textarea" ? (
@@ -220,7 +221,7 @@ export default function CatalogManager({
                   required={f.required}
                   defaultValue={editing ? (f.key === "description" ? editing.description ?? "" : "") : ""}
                   rows={3}
-                  style={inputStyle}
+                  className={NF_INPUT_CLASS} style={modalInputStyle}
                 />
               ) : f.type === "number" ? (
                 <input
@@ -229,7 +230,7 @@ export default function CatalogManager({
                   required={f.required}
                   min={0}
                   defaultValue={editing ? (editing.months ?? "") : ""}
-                  style={inputStyle}
+                  className={NF_INPUT_CLASS} style={modalInputStyle}
                 />
               ) : (
                 <input
@@ -237,18 +238,18 @@ export default function CatalogManager({
                   name={f.key}
                   required={f.required}
                   defaultValue={editing ? (f.key === "name" ? editing.name : f.key === "description" ? editing.description ?? "" : "") : ""}
-                  style={inputStyle}
+                  className={NF_INPUT_CLASS} style={modalInputStyle}
                 />
               )}
               {f.helper && <div style={{ fontSize: 11, color: "var(--nf-ink-4)", marginTop: 4 }}>{f.helper}</div>}
             </div>
           ))}
           {formError && (
-            <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>
+            <div className="nf-modal-error">
               {formError}
             </div>
           )}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 4 }}>
+          <div className="nf-modal-actions">
             <button
               type="button"
               onClick={() => {
@@ -257,11 +258,11 @@ export default function CatalogManager({
                 setEditing(null);
               }}
               disabled={isPending}
-              style={ghostButtonStyle}
+              className="nf-app-btn-ghost"
             >
               Cancelar
             </button>
-            <button type="submit" disabled={isPending} style={primaryButtonStyle}>
+            <button type="submit" disabled={isPending} className="nf-app-btn-primary">
               {isPending ? "Guardando…" : "Guardar"}
             </button>
           </div>
@@ -279,12 +280,12 @@ export default function CatalogManager({
           ¿Seguro que quieres desactivar <strong>{confirmDelete?.name}</strong>?
           Los registros relacionados se conservan; el catálogo dejará de aparecer en nuevos formularios.
         </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+        <div className="nf-modal-actions">
           <button
             type="button"
             onClick={() => setConfirmDelete(null)}
             disabled={isPending}
-            style={ghostButtonStyle}
+            className="nf-app-btn-ghost"
           >
             Cancelar
           </button>
@@ -302,7 +303,7 @@ export default function CatalogManager({
                 }
               })
             }
-            style={{ ...primaryButtonStyle, background: "#C93C37" }}
+            className="nf-app-btn-danger"
           >
             {isPending ? "Desactivando…" : "Desactivar"}
           </button>
@@ -312,35 +313,4 @@ export default function CatalogManager({
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  fontSize: 14,
-  border: "1px solid var(--nf-line)",
-  borderRadius: 8,
-  outline: "none",
-  fontFamily: "inherit",
-  boxSizing: "border-box",
-};
 
-const primaryButtonStyle: React.CSSProperties = {
-  padding: "9px 18px",
-  fontSize: 13,
-  fontWeight: 600,
-  color: "#fff",
-  background: "#123C66",
-  border: "none",
-  borderRadius: 8,
-  cursor: "pointer",
-};
-
-const ghostButtonStyle: React.CSSProperties = {
-  padding: "9px 16px",
-  fontSize: 13,
-  fontWeight: 500,
-  color: "var(--nf-ink-3)",
-  background: "var(--nf-app-surface-1)",
-  border: "1px solid var(--nf-line)",
-  borderRadius: 8,
-  cursor: "pointer",
-};

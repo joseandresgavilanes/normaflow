@@ -9,7 +9,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type ActionRow } from "@/context/WorkspaceStore";
 
-const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#C93C37", HIGH: "#D68A1A", MEDIUM: "#123C66", LOW: "var(--nf-ink-3)" };
+const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#DC2626", HIGH: "#D97706", MEDIUM: "#5266F6", LOW: "var(--nf-ink-3)" };
 const PRIORITY_LABEL: Record<string, string> = { CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja" };
 
 function clampProgress(n: number): number {
@@ -156,17 +156,17 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.14) 0%, rgba(18, 60, 102, 0.05) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{actions.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{actions.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Acciones totales</div>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -186,7 +186,7 @@ export default function ActionsModule() {
             <Timer size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
           </div>
         </div>
@@ -196,7 +196,7 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.1) 0%, rgba(18, 60, 102, 0.04) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -206,7 +206,7 @@ export default function ActionsModule() {
             <Target size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink-2)", letterSpacing: "-0.03em", lineHeight: 1 }}>{pending}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-ink-2)", letterSpacing: "-0.03em", lineHeight: 1 }}>{pending}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Pendientes</div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -226,7 +226,7 @@ export default function ActionsModule() {
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -251,11 +251,11 @@ export default function ActionsModule() {
               height: 56,
               margin: "0 auto 14px",
               borderRadius: 16,
-              background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+              background: "var(--nf-app-surface-2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <Zap size={26} strokeWidth={2} aria-hidden />
@@ -266,11 +266,11 @@ export default function ActionsModule() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map(action => {
-            const pc = PRIORITY_COLOR[action.priority] || "#123C66";
+            const pc = PRIORITY_COLOR[action.priority] || "#5266F6";
             const overdue = action.status !== "COMPLETED" && new Date(action.due) < new Date();
             return (
               <div key={action.id} className="nf-kpi-card" onClick={() => openDetail(action)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && openDetail(action)}>
-                <div style={{ height: 4, background: `linear-gradient(90deg, ${pc}, ${pc}88)` }} />
+                
                 <div style={{ padding: "16px 18px 18px", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
                   <div style={{ flex: "1 1 220px", minWidth: 0 }}>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 8 }}>
@@ -281,7 +281,7 @@ export default function ActionsModule() {
                           padding: "4px 10px",
                           borderRadius: 99,
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           letterSpacing: "0.02em",
                         }}
                       >
@@ -296,22 +296,22 @@ export default function ActionsModule() {
                           background: "#f3f6fa",
                           padding: "4px 10px",
                           borderRadius: 99,
-                          border: "1px solid rgba(18, 60, 102, 0.1)",
+                          border: "1px solid rgba(82, 102, 246, 0.1)",
                         }}
                       >
                         {action.type === "CORRECTIVE" ? "Correctiva" : action.type === "PREVENTIVE" ? "Preventiva" : "Mejora"}
                       </span>
-                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 800, color: "#123C66" }}>{action.code}</span>
+                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: "#5266F6" }}>{action.code}</span>
                     </div>
                     <div
                       style={{
                         fontSize: 15,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: "var(--nf-ink)",
                         marginBottom: 8,
                         letterSpacing: "-0.02em",
                         lineHeight: 1.3,
-                        fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                        fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
                       }}
                     >
                       {action.title}
@@ -325,7 +325,7 @@ export default function ActionsModule() {
                         <Avatar name={action.owner} size={18} />
                         <span style={{ fontWeight: 600 }}>{action.owner.split(" ")[0]}</span>
                       </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "#C93C37" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "#DC2626" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
                         <CalendarDays size={14} strokeWidth={2.25} aria-hidden />
                         {action.due}
                       </span>
@@ -336,7 +336,7 @@ export default function ActionsModule() {
                       <span>Progreso</span>
                       <span style={{ color: pc }}>{action.progress}%</span>
                     </div>
-                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "#2E8B57" : pc} height={7} railColor="#eef2f9" />
+                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "#16A34A" : pc} height={7} railColor="#eef2f9" />
                   </div>
                 </div>
               </div>
@@ -348,7 +348,7 @@ export default function ActionsModule() {
       <Modal open={!!selected} onClose={closeDetail} title={selected ? `${selected.code} — Detalle` : ""} width={540}>
         {selected && (
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 10, letterSpacing: "-0.02em" }}>{selected.title}</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 10, letterSpacing: "-0.02em" }}>{selected.title}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
               <span
                 style={{
@@ -359,9 +359,9 @@ export default function ActionsModule() {
                   borderRadius: 99,
                   fontSize: 12,
                   fontWeight: 600,
-                  background: "rgba(18, 60, 102, 0.08)",
+                  background: "rgba(82, 102, 246, 0.08)",
                   color: "var(--nf-ink-2)",
-                  border: "1px solid rgba(18, 60, 102, 0.1)",
+                  border: "1px solid rgba(82, 102, 246, 0.1)",
                 }}
               >
                 Origen: <strong style={{ color: "var(--nf-ink)" }}>{selected.source}</strong>
@@ -452,7 +452,7 @@ export default function ActionsModule() {
             <button
               type="button"
               onClick={saveDetail}
-              style={{ width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+              className="nf-app-btn-primary" style={{ width: "100%" }}
             >
               Guardar progreso
             </button>

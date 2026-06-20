@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { AlertTriangle, CheckCircle2, ClipboardList, Plus, Sparkles, Timer } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -13,7 +14,7 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import type { Column } from "@/components/ui/Table";
 
-const SEV_COLORS: Record<string, string> = { CRITICAL: "#C93C37", MAJOR: "#D68A1A", MINOR: "var(--nf-ink-3)" };
+const SEV_COLORS: Record<string, string> = { CRITICAL: "#DC2626", MAJOR: "#D97706", MINOR: "var(--nf-ink-3)" };
 
 export default function NonconformitiesModule() {
   const { state, dispatch, nextNcCode, nextActionCode, showToast } = useWorkspace();
@@ -84,6 +85,8 @@ export default function NonconformitiesModule() {
     });
     setCreateOpen(true);
   }
+
+  useCreateFromQuery(true, openCreate);
 
   function submitNc() {
     if (!form.title.trim()) {
@@ -168,17 +171,17 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{nonconformities.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{nonconformities.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total NC</div>
           </div>
         </div>
@@ -188,17 +191,17 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.18) 0%, rgba(201, 60, 55, 0.06) 100%)",
+              background: "#FEF2F2",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#C93C37",
+              color: "#DC2626",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "OPEN").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Abiertas</div>
@@ -210,7 +213,7 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -220,7 +223,7 @@ export default function NonconformitiesModule() {
             <Timer size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "IN_PROGRESS").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
@@ -232,7 +235,7 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -242,7 +245,7 @@ export default function NonconformitiesModule() {
             <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "CLOSED").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cerradas</div>
@@ -257,7 +260,7 @@ export default function NonconformitiesModule() {
       <Modal open={!!detailLive && !actionOpen} onClose={() => setDetail(null)} title={`${detailLive?.code} — No Conformidad`} width={580}>
         {detailLive && (
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 16, letterSpacing: "-0.02em", lineHeight: 1.35 }}>{detailLive.title}</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 16, letterSpacing: "-0.02em", lineHeight: 1.35 }}>{detailLive.title}</div>
             {[
               ["Origen", detailLive.source.replace(/_/g, " ")],
               ["Severidad", detailLive.severity],
@@ -285,11 +288,11 @@ export default function NonconformitiesModule() {
               </div>
             )}
             <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--nf-app-surface-2)", borderRadius: 8, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4, textTransform: "none", letterSpacing: "0.5px" }}>Causa Raíz Identificada</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
             </div>
-            <div style={{ padding: "12px 14px", background: "#e8f5ee40", border: "1px solid #2E8B5730", borderRadius: 8, marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: "#2E8B57", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.5px" }}>Acción Correctiva</div>
+            <div style={{ padding: "12px 14px", background: "#e8f5ee40", border: "1px solid #16A34A30", borderRadius: 8, marginBottom: 16 }}>
+              <div style={{ fontSize: 11, color: "#16A34A", marginBottom: 4, textTransform: "none", letterSpacing: "0.5px" }}>Acción Correctiva</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.correctiveAction}</div>
             </div>
             {detailLive.effectivenessCheck && (
@@ -297,15 +300,16 @@ export default function NonconformitiesModule() {
                 <strong>Verificación de eficacia:</strong> {detailLive.effectivenessCheck}
               </div>
             )}
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" onClick={openActionModal} style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            <div className="nf-action-bar">
+              <button type="button" onClick={openActionModal} className="nf-app-btn-primary" style={{ flex: 1, minWidth: 140 }}>
                 Crear Acción Correctiva
               </button>
               {perm.nc.manage && detailLive.status !== "CLOSED" && (
                 <button
                   type="button"
                   onClick={() => setCloseNcAttest(true)}
-                  style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                  className="nf-app-btn-success"
+                  style={{ flex: 1, minWidth: 140 }}
                 >
                   Cerrar NC (firma simulada)
                 </button>
@@ -313,21 +317,8 @@ export default function NonconformitiesModule() {
               <button
                 type="button"
                 onClick={() => showToast("Análisis 5 Porqués: documenta cada nivel en el registro de la NC.")}
-                style={{
-                  flex: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  background: "#2E8B5718",
-                  color: "#2E8B57",
-                  border: "1px solid #2E8B5740",
-                  borderRadius: 10,
-                  padding: "10px",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className="nf-app-btn-soft-success"
+                style={{ flex: 1, minWidth: 140 }}
               >
                 <Sparkles size={15} strokeWidth={2} aria-hidden />
                 IA: Análisis 5 Porqués

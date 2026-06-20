@@ -66,22 +66,22 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 const ACTION_TONE: Record<string, string> = {
-  create: "#2E8B57",
-  update: "#123C66",
-  delete: "#C93C37",
-  deactivate: "#C93C37",
-  approve: "#2E8B57",
-  reject: "#C93C37",
+  create: "#16A34A",
+  update: "#5266F6",
+  delete: "#DC2626",
+  deactivate: "#DC2626",
+  approve: "#16A34A",
+  reject: "#DC2626",
   transition: "#6B3FB5",
-  submit_review: "#D68A1A",
+  submit_review: "#D97706",
   obsolete: "#5E6B7A",
-  publish: "#2E8B57",
-  invite: "#123C66",
+  publish: "#16A34A",
+  invite: "#5266F6",
   login: "#5E6B7A",
   logout: "#5E6B7A",
-  add_entry: "#2E8B57",
-  close: "#2E8B57",
-  complete: "#2E8B57",
+  add_entry: "#16A34A",
+  close: "#16A34A",
+  complete: "#16A34A",
 };
 
 function actionTone(action: string): string {
@@ -487,7 +487,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
 
         {diff.length > 0 && (
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 8 }}>
               Cambios
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -531,7 +531,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
         )}
 
         <div style={{ padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>
             Trazabilidad
           </div>
           <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
@@ -594,7 +594,7 @@ function ActionDot({ action, size = 24 }: { action: string; size?: number }) {
 function Meta({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13, color: "var(--nf-ink, #0f1b2d)" }}>{value}</div>
     </div>
   );

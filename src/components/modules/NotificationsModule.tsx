@@ -19,10 +19,10 @@ export type NotificationRow = {
 };
 
 function typeAccent(type: string): { color: string; bg: string; Icon: typeof Bell } {
-  if (type === "ALERT") return { color: "#C93C37", bg: "rgba(201, 60, 55, 0.12)", Icon: AlertTriangle };
-  if (type === "WARNING") return { color: "#D68A1A", bg: "rgba(214, 138, 26, 0.14)", Icon: AlertTriangle };
-  if (type === "SUCCESS") return { color: "#2E8B57", bg: "rgba(46, 139, 87, 0.12)", Icon: CheckCircle2 };
-  return { color: "#123C66", bg: "rgba(18, 60, 102, 0.1)", Icon: Info };
+  if (type === "ALERT") return { color: "#DC2626", bg: "rgba(201, 60, 55, 0.12)", Icon: AlertTriangle };
+  if (type === "WARNING") return { color: "#D97706", bg: "rgba(214, 138, 26, 0.14)", Icon: AlertTriangle };
+  if (type === "SUCCESS") return { color: "#16A34A", bg: "rgba(46, 139, 87, 0.12)", Icon: CheckCircle2 };
+  return { color: "#5266F6", bg: "rgba(82, 102, 246, 0.1)", Icon: Info };
 }
 
 export default function NotificationsModule({ serverItems }: { serverItems?: NotificationRow[] }) {
@@ -111,17 +111,17 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.14) 0%, rgba(18, 60, 102, 0.05) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <Bell size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{items.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{items.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En bandeja</div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -141,7 +141,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
             <Sparkles size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Sin leer</div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -161,7 +161,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
             <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Leídas</div>
           </div>
         </div>
@@ -188,11 +188,11 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                 height: 56,
                 margin: "0 auto 14px",
                 borderRadius: 16,
-                background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+                background: "var(--nf-app-surface-2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#123C66",
+                color: "#5266F6",
               }}
             >
               <Bell size={26} strokeWidth={2} aria-hidden />
@@ -216,7 +216,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                   display: "flex",
                   alignItems: "stretch",
                   borderRadius: 14,
-                  boxShadow: "0 12px 36px -24px rgba(18, 60, 102, 0.18)",
+                  boxShadow: "0 12px 36px -24px rgba(82, 102, 246, 0.18)",
                   opacity: n.read ? 0.88 : 1,
                 }}
               >
@@ -251,12 +251,12 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                   <div style={{ gridRow: 1, gridColumn: 2, minWidth: 0 }}>
                     <div
                       style={{
-                        fontWeight: 800,
+                        fontWeight: 600,
                         color: "var(--nf-ink)",
                         fontSize: 15,
                         letterSpacing: "-0.02em",
                         lineHeight: 1.25,
-                        fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                        fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
                       }}
                     >
                       {n.title}
@@ -265,9 +265,9 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                           style={{
                             marginLeft: 8,
                             fontSize: 10,
-                            fontWeight: 800,
-                            letterSpacing: "0.06em",
-                            textTransform: "uppercase",
+                            fontWeight: 600,
+                            letterSpacing: "-0.01em",
+                            textTransform: "none",
                             verticalAlign: "middle",
                             color: "#fff",
                             background: color,
@@ -292,10 +292,10 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                           color: "#fff",
                           fontWeight: 700,
                           textDecoration: "none",
-                          background: "linear-gradient(180deg, #154a7a 0%, #123c66 100%)",
+                          background: "var(--nf-app-accent)",
                           padding: "8px 14px",
                           borderRadius: 10,
-                          boxShadow: "0 2px 8px rgba(18, 60, 102, 0.2)",
+                          boxShadow: "0 2px 8px rgba(82, 102, 246, 0.2)",
                         }}
                       >
                         Ver detalle →

@@ -14,7 +14,7 @@ import { DEFAULT_RISK_CATEGORY, riskCategoryOptions } from "@/lib/risk-catalog";
 import type { Column } from "@/components/ui/Table";
 
 function RiskScore({ score }: { score: number }) {
-  const color = score >= 15 ? "#C93C37" : score >= 8 ? "#D68A1A" : "#2E8B57";
+  const color = score >= 15 ? "#DC2626" : score >= 8 ? "#D97706" : "#16A34A";
   const bg = score >= 15 ? "#fff0f0" : score >= 8 ? "#fff8e6" : "#e8f5ee";
   return <span style={{ background: bg, color, padding: "2px 9px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>{score}</span>;
 }
@@ -25,7 +25,7 @@ function riskTraceBlock(title: string, href: string, children: ReactNode) {
       style={{
         marginBottom: 14,
         borderRadius: 14,
-        border: "1px solid rgba(18, 60, 102, 0.12)",
+        border: "1px solid rgba(82, 102, 246, 0.12)",
         background: "#fbfcfe",
         overflow: "hidden",
       }}
@@ -37,12 +37,12 @@ function riskTraceBlock(title: string, href: string, children: ReactNode) {
           justifyContent: "space-between",
           gap: 12,
           padding: "12px 16px",
-          background: "linear-gradient(180deg, #f0f4fa 0%, #e8eef6 100%)",
-          borderBottom: "1px solid rgba(18, 60, 102, 0.1)",
+          background: "var(--nf-app-surface-2)",
+          borderBottom: "1px solid rgba(82, 102, 246, 0.1)",
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 800, color: "var(--nf-ink)" }}>{title}</span>
-        <Link href={href} style={{ fontSize: 12, color: "#123C66", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>{title}</span>
+        <Link href={href} style={{ fontSize: 12, color: "#5266F6", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", whiteSpace: "nowrap" }}>
           Abrir módulo
           <ChevronRight size={15} strokeWidth={2.5} aria-hidden />
         </Link>
@@ -104,8 +104,8 @@ export default function RisksModule() {
     { key: "title", label: "Riesgo", render: v => <span style={{ fontWeight: 500 }}>{v}</span> },
     { key: "category", label: "Categoría" },
     { key: "score", label: "Score", render: v => <RiskScore score={v} /> },
-    { key: "probability", label: "Prob.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "#D68A1A" }}>{v}/5</span> },
-    { key: "impact", label: "Imp.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "#D68A1A" }}>{v}/5</span> },
+    { key: "probability", label: "Prob.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "#D97706" }}>{v}/5</span> },
+    { key: "impact", label: "Imp.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "#D97706" }}>{v}/5</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
     {
       key: "owner",
@@ -278,13 +278,13 @@ export default function RisksModule() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            { label: "Riesgos Críticos (≥15)", count: risks.filter(r => r.score >= 15).length, color: "#C93C37", bg: "#fff0f0" },
-            { label: "Riesgos Altos (8-14)", count: risks.filter(r => r.score >= 8 && r.score < 15).length, color: "#D68A1A", bg: "#fff8e6" },
-            { label: "Riesgos Moderados (<8)", count: risks.filter(r => r.score < 8).length, color: "#2E8B57", bg: "#e8f5ee" },
-            { label: "Total registrados", count: risks.length, color: "#123C66", bg: "#f0f4ff" },
+            { label: "Riesgos Críticos (≥15)", count: risks.filter(r => r.score >= 15).length, color: "#DC2626", bg: "#fff0f0" },
+            { label: "Riesgos Altos (8-14)", count: risks.filter(r => r.score >= 8 && r.score < 15).length, color: "#D97706", bg: "#fff8e6" },
+            { label: "Riesgos Moderados (<8)", count: risks.filter(r => r.score < 8).length, color: "#16A34A", bg: "#e8f5ee" },
+            { label: "Total registrados", count: risks.length, color: "#5266F6", bg: "#f0f4ff" },
           ].map(s => (
             <Card key={s.label} style={{ background: s.bg, border: `1px solid ${s.color}30`, display: "flex", alignItems: "center", gap: 14, padding: "14px 18px" }}>
-              <div style={{ fontSize: 30, fontWeight: 800, color: s.color }}>{s.count}</div>
+              <div style={{ fontSize: 30, fontWeight: 600, color: s.color }}>{s.count}</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{s.label}</div>
             </Card>
           ))}
@@ -308,15 +308,15 @@ export default function RisksModule() {
                 padding: "16px 18px",
                 borderRadius: 14,
                 border: "1px solid var(--nf-line)",
-                background: "linear-gradient(145deg, rgba(18, 60, 102, 0.06) 0%, #fff 55%)",
+                background: "linear-gradient(145deg, rgba(82, 102, 246, 0.06) 0%, #fff 55%)",
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 10 }}>Evaluación inherente</div>
+              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 10 }}>Evaluación inherente</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
                 {[
-                  ["Score", detail.score, detail.score >= 15 ? "#C93C37" : detail.score >= 8 ? "#D68A1A" : "#2E8B57"],
-                  ["Probabilidad", `${detail.probability}/5`, "#D68A1A"],
-                  ["Impacto", `${detail.impact}/5`, "#D68A1A"],
+                  ["Score", detail.score, detail.score >= 15 ? "#DC2626" : detail.score >= 8 ? "#D97706" : "#16A34A"],
+                  ["Probabilidad", `${detail.probability}/5`, "#D97706"],
+                  ["Impacto", `${detail.impact}/5`, "#D97706"],
                 ].map(([k, v, c]) => (
                   <div
                     key={String(k)}
@@ -325,12 +325,12 @@ export default function RisksModule() {
                       padding: "14px 10px",
                       background: "#fff",
                       borderRadius: 12,
-                      border: "1px solid rgba(18, 60, 102, 0.1)",
-                      boxShadow: "0 1px 0 rgba(18, 60, 102, 0.04)",
+                      border: "1px solid rgba(82, 102, 246, 0.1)",
+                      boxShadow: "0 1px 0 rgba(82, 102, 246, 0.04)",
                     }}
                   >
-                    <div style={{ fontSize: 26, fontWeight: 800, color: String(c), letterSpacing: "-0.03em" }}>{v}</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--nf-ink-3)", marginTop: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>{k}</div>
+                    <div style={{ fontSize: 26, fontWeight: 600, color: String(c), letterSpacing: "-0.03em" }}>{v}</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "var(--nf-ink-3)", marginTop: 6, textTransform: "none", letterSpacing: "0.04em" }}>{k}</div>
                   </div>
                 ))}
               </div>
@@ -345,7 +345,7 @@ export default function RisksModule() {
                 background: "#fafbfd",
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 12 }}>Ficha del riesgo</div>
+              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>Ficha del riesgo</div>
               {[
                 ["Categoría", detail.category],
                 ["Tratamiento", detail.treatment],
@@ -361,7 +361,7 @@ export default function RisksModule() {
                     justifyContent: "space-between",
                     gap: 16,
                     padding: "12px 0",
-                    borderBottom: i < arr.length - 1 ? "1px solid rgba(18, 60, 102, 0.1)" : "none",
+                    borderBottom: i < arr.length - 1 ? "1px solid rgba(82, 102, 246, 0.1)" : "none",
                     fontSize: 13,
                     alignItems: "flex-start",
                   }}
@@ -391,8 +391,8 @@ export default function RisksModule() {
 
             {riskLinks && (
               <div style={{ marginBottom: 6 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 6 }}>Trazabilidad</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 14, letterSpacing: "-0.02em" }}>Vínculos operativos</div>
+                <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 6 }}>Trazabilidad</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 14, letterSpacing: "-0.02em" }}>Vínculos operativos</div>
 
                 {riskTraceBlock(
                   "Acciones",
@@ -469,7 +469,7 @@ export default function RisksModule() {
                 style={{
                   flex: 1,
                   minWidth: 160,
-                  background: "#123C66",
+                  background: "#5266F6",
                   color: "#fff",
                   border: "none",
                   borderRadius: 10,
@@ -495,9 +495,9 @@ export default function RisksModule() {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 6,
-                  background: "#2E8B5718",
-                  color: "#2E8B57",
-                  border: "1px solid #2E8B5740",
+                  background: "#16A34A18",
+                  color: "#16A34A",
+                  border: "1px solid #16A34A40",
                   borderRadius: 10,
                   padding: "11px 14px",
                   fontSize: 14,

@@ -2,46 +2,46 @@ import { cn } from "@/lib/utils";
 
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
   {
-    APPROVED: { bg: "#e8f5ee", color: "#2E8B57", label: "Aprobado" },
-    approved: { bg: "#e8f5ee", color: "#2E8B57", label: "Aprobado" },
-    DRAFT: { bg: "#f0f4ff", color: "#1a5490", label: "Borrador" },
-    draft: { bg: "#f0f4ff", color: "#1a5490", label: "Borrador" },
-    IN_REVIEW: { bg: "#fff8e6", color: "#D68A1A", label: "En revisión" },
-    in_review: { bg: "#fff8e6", color: "#D68A1A", label: "En revisión" },
-    OBSOLETE: { bg: "#e8edf4", color: "#2a3d52", label: "Obsoleto" },
-    COMPLETED: { bg: "#e8f5ee", color: "#2E8B57", label: "Completada" },
-    IN_PROGRESS: { bg: "#fff8e6", color: "#D68A1A", label: "En curso" },
-    PLANNED: { bg: "#f0f4ff", color: "#1a5490", label: "Planificada" },
-    OPEN: { bg: "#fff0f0", color: "#C93C37", label: "Abierta" },
-    CLOSED: { bg: "#e8f5ee", color: "#2E8B57", label: "Cerrada" },
-    PENDING: { bg: "#f0f4ff", color: "#1a5490", label: "Pendiente" },
+    APPROVED: { bg: "#F0FDF4", color: "#16A34A", label: "Aprobado" },
+    approved: { bg: "#F0FDF4", color: "#16A34A", label: "Aprobado" },
+    DRAFT: { bg: "#EEF2FF", color: "#5266F6", label: "Borrador" },
+    draft: { bg: "#EEF2FF", color: "#5266F6", label: "Borrador" },
+    IN_REVIEW: { bg: "#FFFBEB", color: "#D97706", label: "En revisión" },
+    in_review: { bg: "#FFFBEB", color: "#D97706", label: "En revisión" },
+    OBSOLETE: { bg: "#F5F5F5", color: "#525252", label: "Obsoleto" },
+    COMPLETED: { bg: "#F0FDF4", color: "#16A34A", label: "Completada" },
+    IN_PROGRESS: { bg: "#FFFBEB", color: "#D97706", label: "En curso" },
+    PLANNED: { bg: "#EEF2FF", color: "#5266F6", label: "Planificada" },
+    OPEN: { bg: "#FEF2F2", color: "#DC2626", label: "Abierta" },
+    CLOSED: { bg: "#F0FDF4", color: "#16A34A", label: "Cerrada" },
+    PENDING: { bg: "#EEF2FF", color: "#5266F6", label: "Pendiente" },
     PENDING_VALIDATION: {
-      bg: "#f5f0ff",
-      color: "#6B3FB5",
+      bg: "#F5F3FF",
+      color: "#7C3AED",
       label: "Pendiente validación",
     },
     UNDER_TREATMENT: {
-      bg: "#fff8e6",
-      color: "#D68A1A",
+      bg: "#FFFBEB",
+      color: "#D97706",
       label: "En tratamiento",
     },
-    MONITORED: { bg: "#f0f4ff", color: "#1a5490", label: "Monitoreo" },
-    MITIGATED: { bg: "#e8f5ee", color: "#2E8B57", label: "Mitigado" },
-    ACCEPTED: { bg: "#e8edf4", color: "#2a3d52", label: "Aceptado" },
-    IDENTIFIED: { bg: "#f0f4ff", color: "#1a5490", label: "Identificado" },
-    ON_TRACK: { bg: "#e8f5ee", color: "#2E8B57", label: "En objetivo" },
-    AT_RISK: { bg: "#fff8e6", color: "#D68A1A", label: "En riesgo" },
-    OFF_TRACK: { bg: "#fff0f0", color: "#C93C37", label: "Desviado" },
-    ACTIVE: { bg: "#e8f5ee", color: "#2E8B57", label: "Activo" },
-    TRIALING: { bg: "#f0f4ff", color: "#1a5490", label: "Trial" },
-    CANCELLED: { bg: "#e8edf4", color: "#2a3d52", label: "Cancelado" },
-    CRITICAL: { bg: "#fff0f0", color: "#C93C37", label: "Crítica" },
-    MAJOR: { bg: "#fff4e6", color: "#D68A1A", label: "Mayor" },
-    MINOR: { bg: "#e8edf4", color: "#2a3d52", label: "Menor" },
-    IN_REVIEW_STATUS: { bg: "#f5f0ff", color: "#6B3FB5", label: "En revisión" },
-    success: { bg: "#e8f5ee", color: "#2E8B57", label: "OK" },
-    warning: { bg: "#fff8e6", color: "#D68A1A", label: "Atención" },
-    danger: { bg: "#fff0f0", color: "#C93C37", label: "Alerta" },
+    MONITORED: { bg: "#EEF2FF", color: "#5266F6", label: "Monitoreo" },
+    MITIGATED: { bg: "#F0FDF4", color: "#16A34A", label: "Mitigado" },
+    ACCEPTED: { bg: "#F5F5F5", color: "#525252", label: "Aceptado" },
+    IDENTIFIED: { bg: "#EEF2FF", color: "#5266F6", label: "Identificado" },
+    ON_TRACK: { bg: "#F0FDF4", color: "#16A34A", label: "En objetivo" },
+    AT_RISK: { bg: "#FFFBEB", color: "#D97706", label: "En riesgo" },
+    OFF_TRACK: { bg: "#FEF2F2", color: "#DC2626", label: "Desviado" },
+    ACTIVE: { bg: "#F0FDF4", color: "#16A34A", label: "Activo" },
+    TRIALING: { bg: "#EEF2FF", color: "#5266F6", label: "Trial" },
+    CANCELLED: { bg: "#F5F5F5", color: "#525252", label: "Cancelado" },
+    CRITICAL: { bg: "#FEF2F2", color: "#DC2626", label: "Crítica" },
+    MAJOR: { bg: "#FFFBEB", color: "#D97706", label: "Mayor" },
+    MINOR: { bg: "#F5F5F5", color: "#525252", label: "Menor" },
+    IN_REVIEW_STATUS: { bg: "#F5F3FF", color: "#7C3AED", label: "En revisión" },
+    success: { bg: "#F0FDF4", color: "#16A34A", label: "OK" },
+    warning: { bg: "#FFFBEB", color: "#D97706", label: "Atención" },
+    danger: { bg: "#FEF2F2", color: "#DC2626", label: "Alerta" },
   };
 
 interface BadgeProps {
@@ -58,21 +58,21 @@ export default function Badge({
   className,
 }: BadgeProps) {
   const s = STATUS_MAP[status] ?? {
-    bg: "#e8edf4",
-    color: "#2a3d52",
+    bg: "#F5F5F5",
+    color: "#525252",
     label: label ?? status,
   };
   const displayLabel = label ?? s.label;
   return (
     <span
       className={cn(
-        "nf-status-badge inline-flex items-center self-start shrink-0 rounded-full font-semibold whitespace-nowrap leading-tight",
+        "nf-status-badge inline-flex items-center self-start shrink-0 rounded-full font-medium whitespace-nowrap leading-tight",
         className,
       )}
       style={{
         background: s.bg,
         color: s.color,
-        padding: size === "sm" ? "3px 9px" : "4px 12px",
+        padding: size === "sm" ? "3px 10px" : "4px 12px",
         fontSize: size === "sm" ? 11 : 12,
         lineHeight: 1.25,
       }}
@@ -84,10 +84,10 @@ export default function Badge({
 
 export function PriorityBadge({ priority }: { priority: string }) {
   const map: Record<string, { bg: string; color: string }> = {
-    CRITICAL: { bg: "#fff0f0", color: "#C93C37" },
-    HIGH: { bg: "#fff4e6", color: "#D68A1A" },
-    MEDIUM: { bg: "#f0f4ff", color: "#1a5490" },
-    LOW: { bg: "#e8edf4", color: "#2a3d52" },
+    CRITICAL: { bg: "#FEF2F2", color: "#DC2626" },
+    HIGH: { bg: "#FFFBEB", color: "#D97706" },
+    MEDIUM: { bg: "#EEF2FF", color: "#5266F6" },
+    LOW: { bg: "#F5F5F5", color: "#525252" },
   };
   const s = map[priority] ?? map.MEDIUM;
   const labels: Record<string, string> = {
@@ -102,7 +102,7 @@ export function PriorityBadge({ priority }: { priority: string }) {
       style={{
         background: s.bg,
         color: s.color,
-        padding: "3px 9px",
+        padding: "3px 10px",
         borderRadius: 20,
         fontSize: 11,
         fontWeight: 600,

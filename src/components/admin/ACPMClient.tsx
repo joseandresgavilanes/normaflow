@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import {
   AlertTriangle,
   ArrowRight,
@@ -19,6 +20,7 @@ import {
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import {
   useAdminMock,
   type ACPMRow,
@@ -48,15 +50,15 @@ const TYPE_LABEL: Record<ACPMType, string> = {
   IMPROVEMENT: "Mejora",
 };
 const TYPE_COLOR: Record<ACPMType, string> = {
-  CORRECTIVE: "#C93C37",
-  PREVENTIVE: "#D68A1A",
+  CORRECTIVE: "#DC2626",
+  PREVENTIVE: "#D97706",
   IMPROVEMENT: "var(--nf-accent)",
 };
 const PRIORITY_LABEL: Record<ACPMPriority, string> = {
   CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja",
 };
 const PRIORITY_COLOR: Record<ACPMPriority, string> = {
-  CRITICAL: "#C93C37", HIGH: "#D68A1A", MEDIUM: "#123C66", LOW: "var(--nf-ink-3)",
+  CRITICAL: "#DC2626", HIGH: "#D97706", MEDIUM: "#5266F6", LOW: "var(--nf-ink-3)",
 };
 
 export default function ACPMClient() {
@@ -111,6 +113,11 @@ export default function ACPMClient() {
   }, [acpms]);
 
   const selected = useMemo(() => acpms.find((a) => a.id === selectedId) ?? null, [acpms, selectedId]);
+
+  useCreateFromQuery(canCreate, () => {
+    setCreating(true);
+    setCreateError("");
+  });
 
   function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -317,7 +324,7 @@ export default function ACPMClient() {
                               <div className="nf-acpm-card-meta">
                                 <span style={{ color: typeC }}>{TYPE_LABEL[a.type]}</span>
                                 {a.dueDate ? (
-                                  <span style={{ color: overdueCard ? "#C93C37" : undefined }}>
+                                  <span style={{ color: overdueCard ? "#DC2626" : undefined }}>
                                     {overdueCard ? "Vence " : ""}
                                     {formatDate(a.dueDate, "dd MMM")}
                                   </span>
@@ -327,7 +334,7 @@ export default function ACPMClient() {
                               </div>
                               {a.progress > 0 && a.stage !== "CLOSED" && (
                                 <div className="nf-acpm-progress-rail" aria-hidden>
-                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, #2E8B57)" }} />
+                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, #16A34A)" }} />
                                 </div>
                               )}
                             </button>
@@ -352,9 +359,9 @@ export default function ACPMClient() {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: "linear-gradient(135deg, rgba(18, 60, 102, 0.12) 0%, rgba(18, 60, 102, 0.04) 100%)",
-                        border: "1px solid rgba(18, 60, 102, 0.12)",
-                        color: "#123c66",
+                        background: "var(--nf-app-accent-soft)",
+                        border: "1px solid rgba(82, 102, 246, 0.12)",
+                        color: "#5266F6",
                       }}
                     >
                       <Sparkles size={24} strokeWidth={2.25} />
@@ -375,7 +382,7 @@ export default function ACPMClient() {
                         width: "100%",
                       }}
                     >
-                      <code style={{ fontSize: 11, color: "#123c66", fontFamily: "ui-monospace, monospace", fontWeight: 800 }}>{a.code}</code>
+                      <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
                       <div style={{ textAlign: "left", minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{a.title}</div>
                         {a.source && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4, fontWeight: 500 }}>Origen: {a.source}</div>}
@@ -384,7 +391,7 @@ export default function ACPMClient() {
                       <span
                         style={{
                           fontSize: 11,
-                          fontWeight: 800,
+                          fontWeight: 600,
                           color: PRIORITY_COLOR[a.priority],
                           padding: "4px 10px",
                           borderRadius: 8,
@@ -418,21 +425,21 @@ export default function ACPMClient() {
       <Modal open={creating} onClose={() => !isPending && setCreating(false)} title="Nueva ACPM" width={620}>
         <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <Field label="Título *">
-            <input name="title" required style={inputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
+            <input name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} style={inputStyle} />
+            <textarea name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <Field label="Tipo">
-              <select name="type" defaultValue="CORRECTIVE" style={inputStyle}>
+              <select name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
                 <option value="IMPROVEMENT">Mejora</option>
               </select>
             </Field>
             <Field label="Prioridad">
-              <select name="priority" defaultValue="MEDIUM" style={inputStyle}>
+              <select name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CRITICAL">Crítica</option>
                 <option value="HIGH">Alta</option>
                 <option value="MEDIUM">Media</option>
@@ -440,13 +447,13 @@ export default function ACPMClient() {
               </select>
             </Field>
             <Field label="Fecha objetivo">
-              <input type="date" name="dueDate" style={inputStyle} />
+              <input type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Origen">
-            <input name="source" style={inputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
+            <input name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
-          {createError && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{createError}</div>}
+          {createError && <div className="nf-modal-error">{createError}</div>}
           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", paddingTop: 4 }}>
             <button type="button" onClick={() => setCreating(false)} disabled={isPending} className="nf-app-btn-outline">
               Cancelar
@@ -557,7 +564,7 @@ function ACPMDetailModal({
           {STAGES.map((s, i) => {
             const done = i < stageIdx;
             const active = i === stageIdx;
-            const barColor = active || done ? "var(--nf-accent, #2E8B57)" : "rgba(18, 60, 102, 0.12)";
+            const barColor = active || done ? "var(--nf-accent, #16A34A)" : "rgba(82, 102, 246, 0.12)";
             return (
               <div key={s.key} className="nf-acpm-stage-node">
                 <div className="nf-acpm-stage-bar" style={{ background: barColor }} />
@@ -580,7 +587,7 @@ function ACPMDetailModal({
             label="Fecha objetivo"
             value={
               acpm.dueDate ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "#C93C37" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "#DC2626" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
                   {formatDate(acpm.dueDate)}
                   {overdue ? <AlertTriangle size={15} strokeWidth={2.5} aria-label="Vencida" /> : null}
                 </span>
@@ -593,14 +600,14 @@ function ACPMDetailModal({
 
         {acpm.description && (
           <div style={{ padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Descripción</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>Descripción</div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink-2)", lineHeight: 1.55 }}>{acpm.description}</p>
           </div>
         )}
 
         {acpm.source && (
           <div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Origen</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em" }}>Origen</span>
             <div style={{ marginTop: 4, fontSize: 13, color: "var(--nf-ink-2)" }}>{acpm.source}</div>
           </div>
         )}
@@ -609,13 +616,13 @@ function ACPMDetailModal({
         <StageEditor acpm={acpm} canEdit={canEdit} onPatch={patch} personnel={admin.state.personnel} />
 
         {actionError && (
-          <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{actionError}</div>
+          <div className="nf-modal-error">{actionError}</div>
         )}
 
         {/* Transition controls */}
         {canEdit && acpm.stage !== "CLOSED" && (
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
-            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Acciones de etapa:</span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em" }}>Acciones de etapa:</span>
             <TransitionButtons stage={acpm.stage} disabled={isPending} onAdvance={advance} onReject={() => setRejectOpen(true)} />
           </div>
         )}
@@ -628,7 +635,7 @@ function ACPMDetailModal({
               <p style={{ fontSize: 12, color: "var(--nf-ink-4)", margin: 0 }}>Sin historial.</p>
             ) : history.map((h) => {
               const iconBg =
-                h.kind === "transition" ? "var(--nf-accent, #2E8B57)" : h.kind === "comment" ? "#123C66" : "var(--nf-ink-3)";
+                h.kind === "transition" ? "var(--nf-accent, #16A34A)" : h.kind === "comment" ? "#5266F6" : "var(--nf-ink-3)";
               return (
                 <div key={h.id} className="nf-acpm-history-row">
                   <span className="nf-acpm-history-icon" style={{ background: iconBg }}>
@@ -669,7 +676,8 @@ function ACPMDetailModal({
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Añadir comentario…"
-                style={{ flex: 1, ...inputStyle }}
+                className={`${NF_INPUT_CLASS} nf-app-input--toolbar`}
+                style={{ flex: 1, minWidth: 0 }}
               />
               <button type="button" disabled={isPending || !commentText.trim()} onClick={handleComment} className="nf-app-btn-primary">
                 Comentar
@@ -723,7 +731,7 @@ function StageEditor({
             defaultValue={acpm.rootCause ?? ""}
             onBlur={(e) => onPatch("rootCause", e.target.value)}
             rows={3}
-            style={inputStyle}
+            className={NF_INPUT_CLASS} style={modalInputStyle}
             placeholder="Análisis de causa raíz (p.ej. método 5 porqués)…"
           />
         </Field>
@@ -733,7 +741,7 @@ function StageEditor({
             defaultValue={acpm.proposedSolution ?? ""}
             onBlur={(e) => onPatch("proposedSolution", e.target.value)}
             rows={3}
-            style={inputStyle}
+            className={NF_INPUT_CLASS} style={modalInputStyle}
             placeholder="Acciones concretas, plazos, responsables…"
           />
         </Field>
@@ -743,7 +751,7 @@ function StageEditor({
               disabled={!canEdit}
               defaultValue={acpm.ownerId ?? ""}
               onChange={(e) => onPatch("ownerId", e.target.value || null)}
-              style={inputStyle}
+              className={NF_INPUT_CLASS} style={modalInputStyle}
             >
               <option value="">— Sin asignar —</option>
               {personnel.filter((p) => p.active).map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
@@ -755,7 +763,7 @@ function StageEditor({
               disabled={!canEdit}
               defaultValue={acpm.dueDate?.slice(0, 10) ?? ""}
               onBlur={(e) => onPatch("dueDate", e.target.value || null)}
-              style={inputStyle}
+              className={NF_INPUT_CLASS} style={modalInputStyle}
             />
           </Field>
         </div>
@@ -803,7 +811,7 @@ function StageEditor({
             defaultValue={acpm.effectivenessCheck ?? ""}
             onBlur={(e) => onPatch("effectivenessCheck", e.target.value)}
             rows={3}
-            style={inputStyle}
+            className={NF_INPUT_CLASS} style={modalInputStyle}
             placeholder="p.ej. 30 días sin reincidencia, indicador X dentro de objetivo…"
           />
         </Field>
@@ -813,7 +821,7 @@ function StageEditor({
             disabled={!canEdit}
             defaultValue={acpm.effectivenessAt?.slice(0, 10) ?? ""}
             onBlur={(e) => onPatch("effectivenessAt", e.target.value || null)}
-            style={inputStyle}
+            className={NF_INPUT_CLASS} style={modalInputStyle}
           />
         </Field>
       </Section>
@@ -899,7 +907,7 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Field label="Motivo del rechazo *">
-        <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} style={inputStyle} placeholder="Indica brevemente por qué se rechaza." />
+        <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Indica brevemente por qué se rechaza." />
       </Field>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" onClick={onCancel} disabled={disabled} className="nf-app-btn-outline">
@@ -917,8 +925,8 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+    <div className="nf-modal-field">
+      <span className="nf-modal-field-label">{label}</span>
       {children}
     </div>
   );
@@ -927,7 +935,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>{label}</div>
       <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{value}</div>
     </div>
   );
@@ -942,10 +950,3 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "10px 12px", fontSize: 14,
-  border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none",
-  fontFamily: "inherit", boxSizing: "border-box",
-  background: "var(--nf-app-surface-1)", color: "var(--nf-ink)",
-};

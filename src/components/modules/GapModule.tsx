@@ -115,7 +115,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
       />
 
       {!readOnlyLive && !canEdit && (
-        <p style={{ fontSize: 13, color: "#D68A1A", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: "#D97706", marginBottom: 16 }}>
           Su rol no permite editar respuestas GAP. Puede revisar puntuaciones y exportar.
         </p>
       )}
@@ -129,8 +129,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             style={{
               padding: "7px 18px",
               borderRadius: 8,
-              border: `1px solid ${standard === s.key ? "#123C66" : "var(--nf-line)"}`,
-              background: standard === s.key ? "#123C66" : "transparent",
+              border: `1px solid ${standard === s.key ? "#5266F6" : "var(--nf-line)"}`,
+              background: standard === s.key ? "#5266F6" : "transparent",
               color: standard === s.key ? "#fff" : "var(--nf-ink-3)",
               fontSize: 13,
               fontWeight: standard === s.key ? 600 : 400,
@@ -150,8 +150,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               <div
                 style={{
                   fontSize: 44,
-                  fontWeight: 800,
-                  color: avg >= 80 ? "#2E8B57" : avg >= 60 ? "#D68A1A" : "#C93C37",
+                  fontWeight: 600,
+                  color: avg >= 80 ? "#16A34A" : avg >= 60 ? "#D97706" : "#DC2626",
                   lineHeight: 1,
                 }}
               >
@@ -160,12 +160,12 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[
-                { label: "Conforme", count: compliant, color: "#2E8B57" },
-                { label: "Parcial", count: partial, color: "#D68A1A" },
-                { label: "No conforme", count: nonCompliant, color: "#C93C37" },
+                { label: "Conforme", count: compliant, color: "#16A34A" },
+                { label: "Parcial", count: partial, color: "#D97706" },
+                { label: "No conforme", count: nonCompliant, color: "#DC2626" },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: s.color }}>{s.count}</div>
+                  <div style={{ fontSize: 22, fontWeight: 600, color: s.color }}>{s.count}</div>
                   <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{s.label}</div>
                 </div>
               ))}
@@ -182,7 +182,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 style={{
                   textAlign: "left",
                   background: readOnlyLive ? "transparent" : "#f3f6fa",
-                  border: "1px solid rgba(18, 60, 102, 0.08)",
+                  border: "1px solid rgba(82, 102, 246, 0.08)",
                   borderRadius: 10,
                   padding: "12px 14px",
                   cursor: readOnlyLive ? "default" : "pointer",
@@ -190,7 +190,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#123C66", marginRight: 8 }}>{g.clause}.</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#5266F6", marginRight: 8 }}>{g.clause}.</span>
                     <span style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{g.title}</span>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -198,7 +198,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: g.score >= 80 ? "#2E8B57" : g.score >= 60 ? "#D68A1A" : "#C93C37",
+                        color: g.score >= 80 ? "#16A34A" : g.score >= 60 ? "#D97706" : "#DC2626",
                       }}
                     >
                       {g.score}%
@@ -209,7 +209,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                     />
                   </div>
                 </div>
-                <ProgressBar value={g.score} color={g.score >= 80 ? "#2E8B57" : g.score >= 60 ? "#D68A1A" : "#C93C37"} height={7} railColor="#eef2f9" />
+                <ProgressBar value={g.score} color={g.score >= 80 ? "#16A34A" : g.score >= 60 ? "#D97706" : "#DC2626"} height={7} railColor="#eef2f9" />
                 <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>
                   {g.answered}/{g.questions} respuestas · {!readOnlyLive && canEdit ? "Pulse para editar" : "Detalle"}
                 </div>
@@ -222,7 +222,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <Card>
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 14 }}>Resumen ejecutivo</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <ProgressBar value={avg} color={avg >= 80 ? "#2E8B57" : avg >= 60 ? "#D68A1A" : "#C93C37"} height={10} railColor="#eef2f9" />
+              <ProgressBar value={avg} color={avg >= 80 ? "#16A34A" : avg >= 60 ? "#D97706" : "#DC2626"} height={10} railColor="#eef2f9" />
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
                 {avg < 60
                   ? "Se requieren acciones urgentes antes de una auditoría de certificación."
@@ -261,21 +261,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <button
             type="button"
             onClick={exportPdf}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              background: "#123C66",
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "12px",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-              width: "100%",
-            }}
+            className="nf-app-btn-primary"
+            style={{ width: "100%" }}
           >
             <FileDown size={17} strokeWidth={2} aria-hidden />
             Exportar informe completo
@@ -289,8 +276,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               justifyContent: "center",
               gap: 8,
               background: "transparent",
-              color: "#2E8B57",
-              border: "1px solid #2E8B5750",
+              color: "#16A34A",
+              border: "1px solid #16A34A50",
               borderRadius: 10,
               padding: "11px",
               fontSize: 13,
@@ -318,7 +305,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6 }}>
               Puntuación {fullClause.score}% · {fullClause.answered}/{fullClause.questions} respuestas
             </div>
-            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "#2E8B57" : fullClause.score >= 60 ? "#D68A1A" : "#C93C37"} height={8} railColor="#eef2f9" />
+            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "#16A34A" : fullClause.score >= 60 ? "#D97706" : "#DC2626"} height={8} railColor="#eef2f9" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {fullClause.questionsDetail.map(q => (
@@ -334,8 +321,8 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                       style={{
                         padding: "6px 12px",
                         borderRadius: 6,
-                        border: `1px solid ${q.answer === a ? "#123C66" : "var(--nf-line)"}`,
-                        background: q.answer === a ? "#123C66" : "#f3f6fa",
+                        border: `1px solid ${q.answer === a ? "#5266F6" : "var(--nf-line)"}`,
+                        background: q.answer === a ? "#5266F6" : "#f3f6fa",
                         color: q.answer === a ? "#fff" : "var(--nf-ink)",
                         fontSize: 12,
                         fontWeight: 600,

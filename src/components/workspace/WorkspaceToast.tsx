@@ -13,7 +13,7 @@ export default function WorkspaceToast() {
         bottom: 24,
         right: 24,
         zIndex: Z_INDEX.toast,
-        background: "#142033",
+        background: "var(--nf-ink)",
         color: "#fff",
         padding: "12px 18px",
         borderRadius: 10,

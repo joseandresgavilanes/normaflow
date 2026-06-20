@@ -1,31 +1,32 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Bell, Menu } from "lucide-react";
+import { Bell, Eye, Menu, Search } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
+import QuickCreateMenu from "@/components/layout/QuickCreateMenu";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 
-const BREADCRUMBS: Record<string, string[]> = {
-  "/app/dashboard": ["Dashboard"],
-  "/app/setup": ["Implementación guiada"],
-  "/app/gap": ["GAP Assessment"],
-  "/app/documents": ["Control de Documentos"],
-  "/app/training": ["Capacitación"],
-  "/app/changes": ["Control de cambios"],
-  "/app/processes": ["Mapa de procesos"],
-  "/app/risks": ["Gestión de Riesgos"],
-  "/app/suppliers": ["Proveedores"],
-  "/app/audits": ["Auditorías"],
-  "/app/nonconformities": ["No Conformidades", "CAPA"],
-  "/app/actions": ["Plan de Acción"],
-  "/app/indicators": ["Indicadores y KPIs"],
-  "/app/evidence": ["Repositorio de evidencias"],
-  "/app/integrations": ["Integraciones"],
-  "/app/reporting": ["Informes y auditoría"],
-  "/app/activity": ["Actividad del sistema"],
-  "/app/notifications": ["Notificaciones"],
-  "/app/billing": ["Billing"],
-  "/app/settings": ["Cuenta"],
+const PAGE_TITLES: Record<string, string> = {
+  "/app/dashboard": "Home",
+  "/app/setup": "Implementación",
+  "/app/gap": "GAP Assessment",
+  "/app/documents": "Documentos",
+  "/app/training": "Capacitación",
+  "/app/changes": "Cambios",
+  "/app/processes": "Procesos",
+  "/app/risks": "Riesgos",
+  "/app/suppliers": "Proveedores",
+  "/app/audits": "Auditorías",
+  "/app/nonconformities": "No Conformidades",
+  "/app/actions": "Plan de Acción",
+  "/app/indicators": "Indicadores",
+  "/app/evidence": "Evidencias",
+  "/app/integrations": "Integraciones",
+  "/app/reporting": "Informes",
+  "/app/activity": "Actividad",
+  "/app/notifications": "Notificaciones",
+  "/app/billing": "Billing",
+  "/app/settings": "Cuenta",
 };
 
 export default function AppTopbar({
@@ -38,11 +39,12 @@ export default function AppTopbar({
   onMenuClick?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const ws = useWorkspaceOptional();
   const displayName = ws?.state.session.name ?? userName;
-  const displayRole = ws?.state.session.roleLabel ?? roleLabel;
   const unread = ws?.state.notifications.filter((n) => !n.read).length ?? 0;
-  const crumbs = BREADCRUMBS[pathname] ?? ["Aplicación"];
+  const pageTitle = PAGE_TITLES[pathname] ?? "NormaFlow";
+
   return (
     <header className="nf-topbar">
       {onMenuClick && (
@@ -55,76 +57,54 @@ export default function AppTopbar({
           <Menu size={20} strokeWidth={2} aria-hidden />
         </button>
       )}
-      <div className="nf-topbar-crumbs">
-        <Link href="/app/dashboard" className="nf-topbar-link">
-          NormaFlow
-        </Link>
-        {crumbs.map((c, i) => (
-          <span
-            key={i}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              minWidth: 0,
-            }}
-          >
-            <span className="nf-topbar-sep">/</span>
-            <span
-              className={
-                i === crumbs.length - 1
-                  ? "nf-topbar-crumb nf-topbar-crumb--current"
-                  : "nf-topbar-crumb"
-              }
-            >
-              {c}
-            </span>
-          </span>
-        ))}
+
+      <div className="nf-topbar-search">
+        <Search size={16} strokeWidth={2} className="nf-topbar-search-icon" aria-hidden />
+        <input
+          type="search"
+          className="nf-topbar-search-input"
+          placeholder={`Buscar en ${pageTitle.toLowerCase()}…`}
+          aria-label="Buscar"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              router.push("/app/activity");
+            }
+          }}
+        />
+        <span className="nf-topbar-search-kbd">⌘ K</span>
       </div>
-      <Link
-        href="/app/notifications"
-        className="nf-topbar-notify"
-        title="Notificaciones"
-      >
-        <Bell size={18} strokeWidth={1.85} color="#123C66" aria-hidden />
-        {unread > 0 ? (
-          <span
-            style={{
-              background: "#C93C37",
-              color: "#fff",
-              borderRadius: 99,
-              fontSize: 10,
-              padding: "2px 6px",
-              fontWeight: 700,
-              minWidth: 18,
-              textAlign: "center",
-            }}
-          >
-            {unread > 9 ? "9+" : unread}
-          </span>
-        ) : (
-          <span className="nf-topbar-notify-zero">0</span>
-        )}
-      </Link>
-      <Link
-        href="/app/settings"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          textDecoration: "none",
-          color: "inherit",
-          flexShrink: 0,
-        }}
-        title="Cuenta y perfil"
-      >
-        <Avatar name={displayName} size={30} />
-        <div className="nf-topbar-profile-text">
-          <div className="nf-topbar-name">{displayName}</div>
-          <div className="nf-topbar-role">{displayRole}</div>
-        </div>
-      </Link>
+
+      <div className="nf-topbar-actions">
+        <QuickCreateMenu />
+        <button type="button" className="nf-topbar-icon-btn" title="Modo privado" aria-label="Modo privado">
+          <Eye size={18} strokeWidth={1.75} aria-hidden />
+        </button>
+        <Link
+          href="/app/notifications"
+          className="nf-topbar-icon-btn"
+          title="Notificaciones"
+          style={{ position: "relative" }}
+        >
+          <Bell size={18} strokeWidth={1.75} aria-hidden />
+          {unread > 0 && (
+            <span
+              style={{
+                position: "absolute",
+                top: 4,
+                right: 4,
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#5266F6",
+                border: "2px solid var(--bg)",
+              }}
+            />
+          )}
+        </Link>
+        <Link href="/app/settings" title={displayName} aria-label="Cuenta">
+          <Avatar name={displayName} size={32} />
+        </Link>
+      </div>
     </header>
   );
 }

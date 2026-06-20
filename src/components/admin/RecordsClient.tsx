@@ -120,7 +120,7 @@ export default function RecordsClient() {
       key: "code",
       label: "Código",
       render: (_, r) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#123C66", fontWeight: 700 }}>{r.code}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code}</span>
       ),
     },
     {
@@ -150,7 +150,7 @@ export default function RecordsClient() {
         if (!r.retentionTimeId) return <span style={{ color: "var(--nf-ink-4)" }}>—</span>;
         const st = retentionStatus(r);
         const label = retentionLabel.get(r.retentionTimeId)?.name ?? "—";
-        const color = st === "overdue" ? "#C93C37" : st === "due_soon" ? "#D68A1A" : "var(--nf-ink-3)";
+        const color = st === "overdue" ? "#DC2626" : st === "due_soon" ? "#D97706" : "var(--nf-ink-3)";
         const hint =
           st === "overdue"
             ? "Disposición vencida"
@@ -230,7 +230,7 @@ export default function RecordsClient() {
                 <button
                   type="button"
                   className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "#C93C37", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
+                  style={{ fontSize: 12, padding: "6px 12px", color: "#DC2626", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
                   onClick={() => setConfirmDeactivate(r)}
                 >
                   Desactivar
@@ -298,7 +298,7 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.2) 0%, rgba(46, 139, 87, 0.07) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -308,7 +308,7 @@ export default function RecordsClient() {
             <Archive size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Registros activos</div>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.12) 0%, rgba(18, 60, 102, 0.04) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -328,7 +328,7 @@ export default function RecordsClient() {
             <ArchiveX size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink-2)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.inactive}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-ink-2)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.inactive}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Inactivos</div>
           </div>
         </div>
@@ -338,7 +338,7 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -348,7 +348,7 @@ export default function RecordsClient() {
             <Clock size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Próximos a vencer</div>
           </div>
         </div>
@@ -358,28 +358,28 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.2) 0%, rgba(201, 60, 55, 0.07) 100%)",
+              background: "#FEF2F2",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#C93C37",
+              color: "#DC2626",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Disposición vencida</div>
           </div>
         </div>
       </div>
 
-      <Card style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--nf-line)", boxShadow: "0 1px 0 rgba(18, 60, 102, 0.04)" }}>
+      <Card style={{ padding: 0, overflow: "hidden", borderRadius: 16, border: "1px solid var(--nf-line)", boxShadow: "0 1px 0 rgba(82, 102, 246, 0.04)" }}>
         <div
           style={{
             padding: "14px 18px 16px",
             borderBottom: "1px solid var(--nf-line)",
-            background: "linear-gradient(180deg, #fafbfd 0%, #fff 100%)",
+            background: "#fff",
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
@@ -497,7 +497,7 @@ export default function RecordsClient() {
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 12 }}>{title}</div>
+      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>{title}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>{children}</div>
     </div>
   );
@@ -661,7 +661,7 @@ function RecordFormModal({
               borderRadius: 12,
               background: "#fff0f0",
               border: "1px solid #f5c2c0",
-              color: "#C93C37",
+              color: "#DC2626",
               fontSize: 13,
               fontWeight: 600,
             }}
@@ -745,7 +745,7 @@ function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) 
           fontSize: 14,
           fontWeight: 700,
           color: "#fff",
-          background: "linear-gradient(180deg, #1a5d95 0%, #123c66 100%)",
+          background: "var(--nf-app-accent)",
           border: "1px solid #0f3255",
           borderRadius: 10,
           textDecoration: "none",
@@ -814,10 +814,10 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
             padding: "16px 18px",
             borderRadius: 14,
             border: "1px solid var(--nf-line)",
-            background: "linear-gradient(145deg, rgba(18, 60, 102, 0.05) 0%, #fff 55%)",
+            background: "#fff",
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>
             Ficha del registro
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))", gap: 10 }}>
@@ -843,7 +843,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
 
         {record.observations && (
           <div style={{ padding: "14px 16px", borderRadius: 14, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
-            <div style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 8 }}>
               Observaciones
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink-2)", lineHeight: 1.55, fontWeight: 500 }}>{record.observations}</p>
@@ -858,16 +858,16 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                   width: 40,
                   height: 40,
                   borderRadius: 11,
-                  background: "rgba(18, 60, 102, 0.1)",
+                  background: "rgba(82, 102, 246, 0.1)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#123C66",
+                  color: "#5266F6",
                 }}
               >
                 <ClipboardList size={20} strokeWidth={2.25} aria-hidden />
               </div>
-              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>
                 Entradas del registro
                 <span style={{ fontWeight: 700, color: "var(--nf-ink-3)", marginLeft: 8 }}>({entries.length})</span>
               </h4>
@@ -897,12 +897,12 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                 gap: 14,
                 padding: "16px 18px",
                 borderRadius: 14,
-                background: "linear-gradient(180deg, #fafbfd 0%, #fff 100%)",
+                background: "#fff",
                 border: "1px solid var(--nf-line)",
                 marginBottom: 14,
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--nf-ink-3)" }}>Nueva entrada</div>
+              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)" }}>Nueva entrada</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia *</label>
@@ -924,7 +924,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                 </div>
               </div>
               {entryError && (
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#C93C37", fontSize: 13, fontWeight: 600 }}>
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>
                   {entryError}
                 </div>
               )}
@@ -974,7 +974,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                     border: "1px solid var(--nf-line)",
                   }}
                 >
-                  <code style={{ fontSize: 11, color: "#123C66", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
+                  <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
                   <div style={{ minWidth: 0 }}>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
                     {e.fileName && (
@@ -1048,7 +1048,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "#C93C37",
+                          color: "#DC2626",
                           borderColor: "#f0c4c2",
                           flexShrink: 0,
                           boxSizing: "border-box",
@@ -1112,7 +1112,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function MetaCell({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div style={{ padding: "10px 12px", borderRadius: 12, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
-      <div style={{ fontSize: 10, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 6 }}>{label}</div>
       <div style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>{value}</div>
     </div>
   );

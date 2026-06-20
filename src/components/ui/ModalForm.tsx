@@ -1,6 +1,8 @@
 import type { FormEvent, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
+export const NF_INPUT_CLASS = "nf-app-input";
+
 export function ModalForm({
   children,
   className,
@@ -83,17 +85,8 @@ export function ModalSubmitButton({
   );
 }
 
-/** Estilos de input alineados con Documentos — para casos controlados sin clase CSS. */
+/** Solo ancho completo; el aspecto visual lo define `.nf-app-input`. */
 export const modalInputStyle: React.CSSProperties = {
   width: "100%",
-  padding: "10px 12px",
-  fontSize: 14,
-  border: "1px solid var(--nf-line, #b8c8d9)",
-  borderRadius: 8,
-  outline: "none",
-  fontFamily: "inherit",
   boxSizing: "border-box",
-  background: "var(--nf-app-surface-1, rgba(18, 60, 102, 0.1))",
-  color: "var(--nf-ink, #0f1b2d)",
-  fontWeight: 500,
 };

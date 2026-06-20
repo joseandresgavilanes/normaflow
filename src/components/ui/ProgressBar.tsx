@@ -7,9 +7,9 @@ interface ProgressBarProps {
 }
 export default function ProgressBar({
   value,
-  color = "#2E8B57",
+  color = "#5266F6",
   height = 6,
-  railColor = "#E5EAF2",
+  railColor = "#F0F0F0",
 }: ProgressBarProps) {
   return (
     <div

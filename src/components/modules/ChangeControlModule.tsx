@@ -10,6 +10,7 @@ import AttestationModal from "@/components/compliance/AttestationModal";
 import AuditTimeline from "@/components/compliance/AuditTimeline";
 import { useWorkspace, type ChangeRequestRow } from "@/context/WorkspaceStore";
 import { processesLinkedToChange } from "@/lib/process-linking";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import {
@@ -220,6 +221,8 @@ export default function ChangeControlModule() {
     setDetail(null);
   }
 
+  useCreateFromQuery(perm.changes.manage, () => setCreateOpen(true));
+
   return (
     <div>
       <SectionTitle
@@ -264,7 +267,7 @@ export default function ChangeControlModule() {
                   style={{ cursor: "pointer" }}
                   onClick={() => setDetail(c)}
                 >
-                  <td style={{ fontFamily: "ui-monospace, monospace", fontWeight: 800, color: "#123C66" }}>{c.code}</td>
+                  <td style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "#5266F6" }}>{c.code}</td>
                   <td style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{c.title}</td>
                   <td style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.impact}</td>
                   <td>
@@ -282,7 +285,7 @@ export default function ChangeControlModule() {
       </Card>
 
       <Card>
-        <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Flujo de estados (referencia)</h3>
+        <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Flujo de estados (referencia)</h3>
         <div className="nf-app-help" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", fontWeight: 600 }}>
           {FLOW.map((s, i) => (
             <span key={s}>
@@ -300,16 +303,16 @@ export default function ChangeControlModule() {
             <p className="nf-app-help" style={{ fontSize: 15, fontWeight: 500, lineHeight: 1.65, color: "var(--nf-ink)" }}>{detailLive.reason}</p>
             <div className="nf-grid-2" style={{ gap: 12, marginBottom: 18, fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>
               <div>
-                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Categoría</span> {detailLive.category}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 600 }}>Categoría</span> {detailLive.category}
               </div>
               <div>
-                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Tipo</span> {detailLive.changeType}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 600 }}>Tipo</span> {detailLive.changeType}
               </div>
               <div>
-                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>Aprobadores</span> {detailLive.approvers.join(", ")}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 600 }}>Aprobadores</span> {detailLive.approvers.join(", ")}
               </div>
               <div>
-                <span style={{ color: "var(--nf-ink)", fontWeight: 800 }}>NC vinculada</span>{" "}
+                <span style={{ color: "var(--nf-ink)", fontWeight: 600 }}>NC vinculada</span>{" "}
                 {detailLive.ncId ? <Link href="/app/nonconformities">{detailLive.ncId}</Link> : "—"}
               </div>
             </div>
@@ -324,7 +327,7 @@ export default function ChangeControlModule() {
                   detailLive.documentIds.map(did => {
                     const d = documents.find(x => x.id === did);
                     return (
-                      <Link key={did} href="/app/documents" style={{ fontSize: 13, fontWeight: 700, color: "#123C66" }}>
+                      <Link key={did} href="/app/documents" style={{ fontSize: 13, fontWeight: 700, color: "#5266F6" }}>
                         {d?.code ?? did}
                       </Link>
                     );
@@ -345,12 +348,12 @@ export default function ChangeControlModule() {
                       disabled={!perm.changes.manage}
                       onChange={() => toggleProcessCode(p.code)}
                     />
-                    <span style={{ fontWeight: 800, color: "#123C66" }}>{p.code}</span> — {p.name}
+                    <span style={{ fontWeight: 600, color: "#5266F6" }}>{p.code}</span> — {p.name}
                   </label>
                 ))}
               </div>
               {perm.changes.manage && (
-                <button type="button" onClick={saveProcessLinks} style={{ ...btnPrimary, fontSize: 12, padding: "8px 12px" }}>
+                <button type="button" onClick={saveProcessLinks} className="nf-app-btn-primary nf-app-btn-sm">
                   Guardar procesos vinculados
                 </button>
               )}
@@ -392,37 +395,37 @@ export default function ChangeControlModule() {
             {perm.changes.manage && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderTop: "1px solid var(--nf-line)", paddingTop: 16 }}>
                 {detailLive.status === "DRAFT" && (
-                  <button type="button" onClick={() => transition(detailLive, "SUBMITTED", undefined, { closeDetail: true })} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "SUBMITTED", undefined, { closeDetail: true })} className="nf-app-btn-primary">
                     Enviar a revisión
                   </button>
                 )}
                 {detailLive.status === "SUBMITTED" && (
-                  <button type="button" onClick={() => transition(detailLive, "UNDER_REVIEW", undefined, { closeDetail: true })} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "UNDER_REVIEW", undefined, { closeDetail: true })} className="nf-app-btn-primary">
                     Marcar en revisión
                   </button>
                 )}
                 {detailLive.status === "UNDER_REVIEW" && (
                   <>
-                    <button type="button" onClick={() => setAttest({ mode: "APPROVE", id: detailLive.id })} style={btnOk}>
+                    <button type="button" onClick={() => setAttest({ mode: "APPROVE", id: detailLive.id })} className="nf-app-btn-success">
                       Aprobar (con firma simulada)
                     </button>
-                    <button type="button" onClick={() => setAttest({ mode: "REJECT", id: detailLive.id })} style={btnDanger}>
+                    <button type="button" onClick={() => setAttest({ mode: "REJECT", id: detailLive.id })} className="nf-app-btn-danger">
                       Rechazar (con motivo)
                     </button>
                   </>
                 )}
                 {detailLive.status === "APPROVED" && (
-                  <button type="button" onClick={() => transition(detailLive, "IMPLEMENTED", undefined, { closeDetail: true })} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "IMPLEMENTED", undefined, { closeDetail: true })} className="nf-app-btn-primary">
                     Marcar implementado
                   </button>
                 )}
                 {detailLive.status === "IMPLEMENTED" && (
-                  <button type="button" onClick={() => transition(detailLive, "VERIFIED", undefined, { closeDetail: true })} style={btnPrimary}>
+                  <button type="button" onClick={() => transition(detailLive, "VERIFIED", undefined, { closeDetail: true })} className="nf-app-btn-primary">
                     Verificar efectividad
                   </button>
                 )}
                 {detailLive.status === "VERIFIED" && (
-                  <button type="button" onClick={() => setAttest({ mode: "CLOSE", id: detailLive.id })} style={btnOk}>
+                  <button type="button" onClick={() => setAttest({ mode: "CLOSE", id: detailLive.id })} className="nf-app-btn-success">
                     Cerrar cambio (firma simulada)
                   </button>
                 )}
@@ -541,15 +544,3 @@ export default function ChangeControlModule() {
   );
 }
 
-const btnPrimary: CSSProperties = {
-  padding: "8px 14px",
-  borderRadius: 8,
-  border: "none",
-  background: "#123C66",
-  color: "#fff",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: 13,
-};
-const btnOk: CSSProperties = { ...btnPrimary, background: "#2E8B57" };
-const btnDanger: CSSProperties = { ...btnPrimary, background: "#C93C37" };

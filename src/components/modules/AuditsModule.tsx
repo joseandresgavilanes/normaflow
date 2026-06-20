@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { CalendarDays, ClipboardCheck, Plus, Sparkles, Target, TrendingUp, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
@@ -59,6 +60,8 @@ export default function AuditsModule() {
     });
     setCreateOpen(true);
   }
+
+  useCreateFromQuery(true, openCreate);
 
   function submitCreate() {
     if (!form.title.trim()) {
@@ -173,39 +176,39 @@ export default function AuditsModule() {
       />
 
       <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", border: "1px solid var(--nf-line)", borderRadius: 16 }}>
-        <div style={{ height: 4, background: "linear-gradient(90deg, #123C66, #2E8B57)" }} />
-        <div style={{ padding: "20px 22px 22px", background: "linear-gradient(125deg, rgba(18, 60, 102, 0.08) 0%, rgba(46, 139, 87, 0.05) 55%, #fff 100%)" }}>
+        
+        <div style={{ padding: "20px 22px 22px", background: "#fff" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <div
               style={{
                 width: 42,
                 height: 42,
                 borderRadius: 11,
-                background: "rgba(18, 60, 102, 0.12)",
+                background: "rgba(82, 102, 246, 0.12)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#123C66",
+                color: "#5266F6",
               }}
             >
               <Target size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Programa {auditProgram.programYear}</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginTop: 2, letterSpacing: "-0.02em" }}>Plan de auditoría</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em" }}>Programa {auditProgram.programYear}</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", marginTop: 2, letterSpacing: "-0.02em" }}>Plan de auditoría</div>
             </div>
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 600, marginBottom: 10 }}>
-            <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#123C66" }} />
+            <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#5266F6" }} />
             {auditProgram.programOwner}
           </div>
           <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: "0 0 12px", lineHeight: 1.55, fontWeight: 500 }}>{auditProgram.objectives}</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#123C66", marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "#5266F6", marginBottom: 12 }}>
             <CalendarDays size={15} strokeWidth={2.25} aria-hidden />
             Próxima revisión dirección: {auditProgram.nextManagementReview}
           </div>
           <div>
-            <Link href="/app/reporting" style={{ fontSize: 13, color: "#2E8B57", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Link href="/app/reporting" style={{ fontSize: 13, color: "#16A34A", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
               Generar informe de programa →
             </Link>
           </div>
@@ -219,17 +222,17 @@ export default function AuditsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total planificadas</div>
           </div>
         </div>
@@ -239,7 +242,7 @@ export default function AuditsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -249,7 +252,7 @@ export default function AuditsModule() {
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "IN_PROGRESS").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "IN_PROGRESS").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
           </div>
         </div>
@@ -259,7 +262,7 @@ export default function AuditsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -269,7 +272,7 @@ export default function AuditsModule() {
             <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "COMPLETED").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "COMPLETED").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -279,17 +282,17 @@ export default function AuditsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(201, 60, 55, 0.18) 0%, rgba(201, 60, 55, 0.06) 100%)",
+              background: "#FEF2F2",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#C93C37",
+              color: "#DC2626",
             }}
           >
             <Target size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#C93C37", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.reduce((s, a) => s + a.findings, 0)}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.reduce((s, a) => s + a.findings, 0)}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Hallazgos totales</div>
           </div>
         </div>
@@ -303,11 +306,11 @@ export default function AuditsModule() {
               height: 56,
               margin: "0 auto 14px",
               borderRadius: 16,
-              background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+              background: "var(--nf-app-surface-2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <ClipboardCheck size={28} strokeWidth={2} aria-hidden />
@@ -318,10 +321,10 @@ export default function AuditsModule() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {audits.map(audit => {
-            const accent = audit.type === "EXTERNAL" ? "#D68A1A" : "#123C66";
+            const accent = audit.type === "EXTERNAL" ? "#D97706" : "#5266F6";
             return (
               <div key={audit.id} className="nf-kpi-card" onClick={() => setDetail(audit)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && setDetail(audit)}>
-                <div style={{ height: 4, background: `linear-gradient(90deg, ${accent}, ${accent}88)` }} />
+                
                 <div style={{ padding: "16px 18px 18px" }}>
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: audit.status !== "PLANNED" ? 14 : 0, flexWrap: "wrap", gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -329,9 +332,9 @@ export default function AuditsModule() {
                         <span
                           style={{
                             fontSize: 11,
-                            fontWeight: 800,
+                            fontWeight: 600,
                             background: audit.type === "EXTERNAL" ? "#fff4e0" : "#e8f0fa",
-                            color: audit.type === "EXTERNAL" ? "#9a6510" : "#123C66",
+                            color: audit.type === "EXTERNAL" ? "#9a6510" : "#5266F6",
                             padding: "4px 10px",
                             borderRadius: 99,
                             letterSpacing: "0.02em",
@@ -339,16 +342,16 @@ export default function AuditsModule() {
                         >
                           {audit.type === "EXTERNAL" ? "Externa" : "Interna"}
                         </span>
-                        <span style={{ fontSize: 11, fontWeight: 700, background: "#f3f6fa", color: "var(--nf-ink-2)", padding: "4px 10px", borderRadius: 99, border: "1px solid rgba(18, 60, 102, 0.1)" }}>{audit.standard}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: "#f3f6fa", color: "var(--nf-ink-2)", padding: "4px 10px", borderRadius: 99, border: "1px solid rgba(82, 102, 246, 0.1)" }}>{audit.standard}</span>
                       </div>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.3 }}>{audit.title}</div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.3 }}>{audit.title}</div>
                       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>
                         Auditor: {audit.auditor} · Fecha: {audit.date}
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
                       {audit.findings > 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 800, background: "#fdecec", color: "#C93C37", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: "#fdecec", color: "#DC2626", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
                       )}
                       <Badge status={audit.status} />
                     </div>
@@ -357,9 +360,9 @@ export default function AuditsModule() {
                     <div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6, fontWeight: 600 }}>
                         <span>Progreso de ejecución</span>
-                        <span style={{ fontWeight: 800, color: accent }}>{audit.progress}%</span>
+                        <span style={{ fontWeight: 600, color: accent }}>{audit.progress}%</span>
                       </div>
-                      <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "#2E8B57" : accent} height={7} railColor="#eef2f9" />
+                      <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "#16A34A" : accent} height={7} railColor="#eef2f9" />
                     </div>
                   )}
                 </div>
@@ -411,7 +414,8 @@ export default function AuditsModule() {
                 <button
                   type="button"
                   onClick={() => openFinding(detailLive)}
-                  style={{ background: "#123C66", color: "#fff", border: "none", borderRadius: 9, padding: "8px 10px", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                  className="nf-app-btn-primary"
+                  style={{ flexShrink: 0 }}
                 >
                   Registrar hallazgo
                 </button>
@@ -437,21 +441,22 @@ export default function AuditsModule() {
                 })
               )}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-                <Link href="/app/nonconformities" style={{ fontSize: 12, color: "#123C66", fontWeight: 700, textDecoration: "none" }}>
+                <Link href="/app/nonconformities" style={{ fontSize: 12, color: "#5266F6", fontWeight: 700, textDecoration: "none" }}>
                   Gestionar en No conformidades →
                 </Link>
-                <Link href="/app/actions" style={{ fontSize: 12, color: "#2E8B57", fontWeight: 700, textDecoration: "none" }}>
+                <Link href="/app/actions" style={{ fontSize: 12, color: "#16A34A", fontWeight: 700, textDecoration: "none" }}>
                   Ver plan de acción →
                 </Link>
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="nf-action-bar">
+              <div className="nf-action-bar" style={{ flex: 1, minWidth: 0 }}>
                 {detailLive.status === "PLANNED" && (
                   <button
                     type="button"
                     onClick={() => startAudit(detailLive)}
-                    style={{ flex: 1, minWidth: 140, background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                    className="nf-app-btn-primary"
+                    style={{ flex: 1, minWidth: 140 }}
                   >
                     Iniciar auditoría
                   </button>
@@ -459,18 +464,8 @@ export default function AuditsModule() {
                 <button
                   type="button"
                   onClick={() => openChecklist(detailLive)}
-                  style={{
-                    flex: 1,
-                    minWidth: 140,
-                    background: detailLive.status === "PLANNED" ? "var(--nf-app-surface-2)" : "#123C66",
-                    color: detailLive.status === "PLANNED" ? "#123C66" : "#fff",
-                    border: "1px solid var(--nf-line)",
-                    borderRadius: 10,
-                    padding: "10px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
+                  className={detailLive.status === "PLANNED" ? "nf-app-btn-ghost" : "nf-app-btn-primary"}
+                  style={{ flex: 1, minWidth: 140 }}
                 >
                   Ver Checklist
                 </button>
@@ -478,7 +473,8 @@ export default function AuditsModule() {
                   <button
                     type="button"
                     onClick={() => setCloseAuditAttest(detailLive)}
-                    style={{ flex: 1, minWidth: 140, background: "#2E8B57", color: "#fff", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                    className="nf-app-btn-success"
+                    style={{ flex: 1, minWidth: 140 }}
                   >
                     Cierre formal
                   </button>
@@ -487,21 +483,8 @@ export default function AuditsModule() {
               <button
                 type="button"
                 onClick={() => showToast("Resumen de hallazgos: revisa NC vinculadas y acciones derivadas.")}
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  background: "#2E8B5718",
-                  color: "#2E8B57",
-                  border: "1px solid #2E8B5740",
-                  borderRadius: 10,
-                  padding: "10px",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className="nf-app-btn-soft-success"
+                style={{ width: "100%" }}
               >
                 <Sparkles size={15} strokeWidth={2} aria-hidden />
                 IA: Resumir hallazgos
@@ -534,14 +517,14 @@ export default function AuditsModule() {
                   >
                     <input type="checkbox" checked={item.done} onChange={e => toggleItem(item, e.target.checked)} style={{ marginTop: 3 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: "#123C66", fontWeight: 600 }}>Cláusula {item.clause}</div>
+                      <div style={{ fontSize: 12, color: "#5266F6", fontWeight: 600 }}>Cláusula {item.clause}</div>
                       <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{item.requirement}</div>
                     </div>
                   </label>
                 ))
               )}
             </div>
-            <button type="button" onClick={() => setChecklistAudit(null)} style={{ marginTop: 14, width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+            <button type="button" onClick={() => setChecklistAudit(null)} className="nf-app-btn-primary" style={{ marginTop: 14, width: "100%" }}>
               Cerrar
             </button>
           </div>

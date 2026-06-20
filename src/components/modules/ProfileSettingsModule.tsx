@@ -62,7 +62,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
         <div
           style={{
             padding: "28px 24px 24px",
-            background: "linear-gradient(135deg, rgba(18, 60, 102, 0.12) 0%, rgba(18, 60, 102, 0.04) 50%, rgba(46, 139, 87, 0.06) 100%)",
+            background: "linear-gradient(135deg, rgba(82, 102, 246, 0.12) 0%, rgba(82, 102, 246, 0.04) 50%, rgba(46, 139, 87, 0.06) 100%)",
             borderBottom: "1px solid var(--nf-line)",
           }}
         >
@@ -72,11 +72,11 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
               <div
                 style={{
                   fontSize: 22,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: "var(--nf-ink)",
                   letterSpacing: "-0.03em",
                   lineHeight: 1.2,
-                  fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                  fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
                 }}
               >
                 {savedName}
@@ -96,8 +96,8 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     fontSize: 12,
                     fontWeight: 700,
                     background: "rgba(255,255,255,0.75)",
-                    border: "1px solid rgba(18, 60, 102, 0.12)",
-                    color: "#123C66",
+                    border: "1px solid rgba(82, 102, 246, 0.12)",
+                    color: "#5266F6",
                   }}
                 >
                   <Building2 size={14} strokeWidth={2.25} aria-hidden />
@@ -113,7 +113,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     fontSize: 12,
                     fontWeight: 700,
                     background: "rgba(255,255,255,0.75)",
-                    border: "1px solid rgba(18, 60, 102, 0.12)",
+                    border: "1px solid rgba(82, 102, 246, 0.12)",
                     color: "var(--nf-ink-2)",
                   }}
                 >
@@ -132,7 +132,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
 
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", display: "block", marginBottom: 16 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#123C66" }} />
+              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#5266F6" }} />
               Nombre visible
             </span>
             <input
@@ -171,7 +171,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
             style={{
               width: "100%",
               maxWidth: 280,
-              background: "#123C66",
+              background: "#5266F6",
               color: "#fff",
               border: "none",
               borderRadius: 10,

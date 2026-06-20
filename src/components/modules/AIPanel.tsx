@@ -68,7 +68,7 @@ export default function AIPanel({
         top: 0,
         bottom: 0,
         background: "#fff",
-        borderLeft: "1px solid #E5EAF2",
+        borderLeft: "1px solid #E8E8E8",
         zIndex: 900,
         display: "flex",
         flexDirection: "column",
@@ -78,7 +78,7 @@ export default function AIPanel({
       <div
         style={{
           padding: "18px 20px 14px",
-          borderBottom: "1px solid #E5EAF2",
+          borderBottom: "1px solid #E8E8E8",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -86,8 +86,8 @@ export default function AIPanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Sparkles size={18} strokeWidth={2} color="#2E8B57" aria-hidden />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#142033" }}>
+            <Sparkles size={18} strokeWidth={2} color="#16A34A" aria-hidden />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--nf-ink)" }}>
               Asistente IA
             </span>
           </div>
@@ -97,19 +97,8 @@ export default function AIPanel({
         </div>
         <button
           type="button"
+          className="nf-icon-btn"
           onClick={onClose}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            background: "var(--nf-app-panel)",
-            border: "1px solid #E5EAF2",
-            color: "var(--nf-ink-2, #223648)",
-            cursor: "pointer",
-          }}
           aria-label="Cerrar"
         >
           <X size={18} strokeWidth={2} aria-hidden />
@@ -134,10 +123,10 @@ export default function AIPanel({
             padding: "10px 14px",
             fontSize: 13,
             color: "var(--nf-ink-2, #223648)",
-            border: "1px solid #E5EAF2",
+            border: "1px solid #E8E8E8",
           }}
         >
-          <strong style={{ color: "#142033" }}>Contexto:</strong>{" "}
+          <strong style={{ color: "var(--nf-ink)" }}>Contexto:</strong>{" "}
           {CONTEXT_LABELS[context] ?? "General"}
         </div>
 
@@ -162,7 +151,7 @@ export default function AIPanel({
             style={{
               width: "100%",
               padding: "8px 10px",
-              border: "1px solid #E5EAF2",
+              border: "1px solid #E8E8E8",
               borderRadius: 8,
               fontSize: 13,
               outline: "none",
@@ -176,7 +165,7 @@ export default function AIPanel({
         {!result && !loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-              <Sparkles size={40} strokeWidth={1.5} color="#2E8B57" aria-hidden />
+              <Sparkles size={40} strokeWidth={1.5} color="#16A34A" aria-hidden />
             </div>
             <p
               style={{
@@ -200,7 +189,7 @@ export default function AIPanel({
             <div
               style={{
                 height: 3,
-                background: "#E5EAF2",
+                background: "#E8E8E8",
                 borderRadius: 99,
                 overflow: "hidden",
               }}
@@ -209,7 +198,7 @@ export default function AIPanel({
                 style={{
                   height: "100%",
                   width: "50%",
-                  background: "#123C66",
+                  background: "#5266F6",
                   borderRadius: 99,
                   animation: "slide 1.2s ease-in-out infinite alternate",
                 }}
@@ -224,12 +213,12 @@ export default function AIPanel({
             <div
               style={{
                 background: "var(--nf-app-panel)",
-                border: "1px solid #E5EAF2",
+                border: "1px solid #E8E8E8",
                 borderRadius: 10,
                 padding: 16,
                 fontSize: 13,
                 lineHeight: 1.75,
-                color: "#142033",
+                color: "var(--nf-ink)",
                 whiteSpace: "pre-wrap",
               }}
             >
@@ -240,21 +229,8 @@ export default function AIPanel({
                 <button
                   type="button"
                   onClick={() => setConfirmed(true)}
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 6,
-                    background: "#2E8B57",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 8,
-                    padding: "9px",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
+                  className="nf-app-btn-success"
+                  style={{ flex: 1 }}
                 >
                   <Check size={16} strokeWidth={2.5} aria-hidden />
                   Confirmar y aplicar
@@ -262,16 +238,8 @@ export default function AIPanel({
                 <button
                   type="button"
                   onClick={() => setResult("")}
-                  style={{
-                    flex: 1,
-                    background: "transparent",
-                    color: "var(--nf-ink-2, #223648)",
-                    border: "1px solid #E5EAF2",
-                    borderRadius: 8,
-                    padding: "9px",
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
+                  className="nf-app-btn-ghost"
+                  style={{ flex: 1 }}
                 >
                   Descartar
                 </button>
@@ -284,11 +252,11 @@ export default function AIPanel({
                   alignItems: "center",
                   gap: 8,
                   background: "#e8f5ee",
-                  border: "1px solid #2E8B5740",
+                  border: "1px solid #16A34A40",
                   borderRadius: 8,
                   padding: "10px 14px",
                   fontSize: 13,
-                  color: "#2E8B57",
+                  color: "#16A34A",
                   fontWeight: 500,
                 }}
               >
@@ -299,21 +267,8 @@ export default function AIPanel({
             <button
               type="button"
               onClick={() => callAI(customPrompt || undefined)}
-              style={{
-                marginTop: 10,
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                background: "transparent",
-                color: "#123C66",
-                border: "1px solid #E5EAF2",
-                borderRadius: 8,
-                padding: "7px",
-                fontSize: 13,
-                cursor: "pointer",
-              }}
+              className="nf-app-btn-ghost"
+              style={{ marginTop: 10, width: "100%" }}
             >
               <RefreshCw size={14} strokeWidth={2} aria-hidden />
               Regenerar
@@ -322,26 +277,13 @@ export default function AIPanel({
         )}
       </div>
 
-      <div style={{ padding: 16, borderTop: "1px solid #E5EAF2" }}>
+      <div style={{ padding: 16, borderTop: "1px solid #E8E8E8" }}>
         <button
           type="button"
           onClick={() => callAI(customPrompt || undefined)}
           disabled={loading}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            background: loading ? "#E5EAF2" : "#123C66",
-            color: loading ? "var(--nf-ink-2, #223648)" : "#fff",
-            border: "none",
-            borderRadius: 8,
-            padding: "11px",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
+          className="nf-app-btn-primary"
+          style={{ width: "100%" }}
         >
           {loading ? (
             "Generando…"

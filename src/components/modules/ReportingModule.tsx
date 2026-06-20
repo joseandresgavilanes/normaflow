@@ -10,13 +10,13 @@ import { exportReport } from "@/lib/actions/reporting";
 import type { ReportingPayload } from "@/lib/server-queries";
 
 const REPORTS = [
-  { id: "exec", title: "Ejecutivo — salud del sistema", desc: "Readiness, formación, cambios y acciones críticas.", accent: "#123C66" },
-  { id: "iso", title: "Cumplimiento por norma", desc: "Normas activas, versión y porcentaje de avance.", accent: "#2E8B57" },
+  { id: "exec", title: "Ejecutivo — salud del sistema", desc: "Readiness, formación, cambios y acciones críticas.", accent: "#5266F6" },
+  { id: "iso", title: "Cumplimiento por norma", desc: "Normas activas, versión y porcentaje de avance.", accent: "#16A34A" },
   { id: "site", title: "Por sede", desc: "Sedes activas y documentos asociados.", accent: "#6B3FB5" },
-  { id: "capa", title: "CAPA y NC", desc: "Estado, eficacia y antigüedad.", accent: "#C93C37" },
-  { id: "train", title: "Training compliance", desc: "Asignaciones, vencidos y reacreditaciones.", accent: "#D68A1A" },
-  { id: "changes", title: "Cambios abiertos", desc: "Pipeline de control de cambios.", accent: "#123C66" },
-  { id: "auditpack", title: "Resumen de auditoría", desc: "Auditorías, hallazgos, NC, checklist e informe asociado.", accent: "#1a5490" },
+  { id: "capa", title: "CAPA y NC", desc: "Estado, eficacia y antigüedad.", accent: "#DC2626" },
+  { id: "train", title: "Training compliance", desc: "Asignaciones, vencidos y reacreditaciones.", accent: "#D97706" },
+  { id: "changes", title: "Cambios abiertos", desc: "Pipeline de control de cambios.", accent: "#5266F6" },
+  { id: "auditpack", title: "Resumen de auditoría", desc: "Auditorías, hallazgos, NC, checklist e informe asociado.", accent: "#5266F6" },
 ];
 
 function today() { return new Date().toISOString().slice(0, 10); }
@@ -90,17 +90,17 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <FileStack size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{REPORTS.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{REPORTS.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Plantillas de informe</div>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -120,7 +120,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             <CalendarRange size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>{from}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>{from}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4 }}>Fecha desde</div>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.2) 0%, rgba(214, 138, 26, 0.07) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -140,7 +140,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             <CalendarRange size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>{to}</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>{to}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4 }}>Fecha hasta</div>
           </div>
         </div>
@@ -150,7 +150,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(107, 63, 181, 0.16) 0%, rgba(107, 63, 181, 0.06) 100%)",
+              background: "#F5F3FF",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -160,7 +160,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             <Sparkles size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: "var(--nf-ink-2)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>PDF / Excel / CSV</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink-2)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>PDF / Excel / CSV</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>{live ? "Exportación real" : "Modo demo"}</div>
           </div>
         </div>
@@ -188,8 +188,8 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 16 }}>
         {REPORTS.map(r => (
-          <Card key={r.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--nf-line)", boxShadow: "0 14px 40px -28px rgba(18, 60, 102, 0.2)" }}>
-            <div style={{ height: 4, background: `linear-gradient(90deg, ${r.accent}, ${r.accent}99)` }} />
+          <Card key={r.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--nf-line)", boxShadow: "none" }}>
+            
             <div style={{ padding: "16px 18px 18px" }}>
               <div
                 style={{
@@ -206,7 +206,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               >
                 <FileDown size={20} strokeWidth={2.25} aria-hidden />
               </div>
-              <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.25 }}>{r.title}</h3>
+              <h3 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em", lineHeight: 1.25 }}>{r.title}</h3>
               <p className="nf-app-help" style={{ margin: "0 0 16px", lineHeight: 1.5 }}>
                 {r.desc}
               </p>
@@ -219,7 +219,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
                     padding: "9px 14px",
                     borderRadius: 10,
                     border: "none",
-                    background: "linear-gradient(180deg, #154a7a 0%, #123c66 100%)",
+                    background: "var(--nf-app-accent)",
                     color: "#fff",
                     fontSize: 13,
                     fontWeight: 700,
@@ -243,7 +243,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
       </div>
 
       {live && <div style={{ marginTop: 26 }}>
-        <h3 style={{ fontSize: 16, marginBottom: 12, fontWeight: 800, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Historial de exportaciones</h3>
+        <h3 style={{ fontSize: 16, marginBottom: 12, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Historial de exportaciones</h3>
         <Card style={{ padding: 0, overflow: "hidden" }} className="nf-export-history">
           {liveData.exports.length ? liveData.exports.map((item, index) => (
             <div

@@ -69,7 +69,7 @@ export default function OnboardingPage() {
               style={{
                 width: 36,
                 height: 36,
-                background: "#123C66",
+                background: "#5266F6",
                 borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
@@ -80,14 +80,14 @@ export default function OnboardingPage() {
                 N
               </span>
             </div>
-            <span style={{ fontWeight: 800, fontSize: 20, color: "#142033" }}>
+            <span style={{ fontWeight: 600, fontSize: 20, color: "#142033" }}>
               NormaFlow
             </span>
           </Link>
           <h1
             style={{
               fontSize: 24,
-              fontWeight: 800,
+              fontWeight: 600,
               color: "#142033",
               margin: "0 0 8px",
             }}
@@ -156,7 +156,7 @@ export default function OnboardingPage() {
               type="submit"
               disabled={loading}
               style={{
-                background: "#123C66",
+                background: "#5266F6",
                 color: "#fff",
                 border: "none",
                 borderRadius: 8,

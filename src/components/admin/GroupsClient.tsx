@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
+import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import Badge from "@/components/ui/Badge";
 import { useAdminMock, type GroupMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
@@ -110,7 +111,7 @@ const railAside: React.CSSProperties = {
   top: 72,
   alignSelf: "start",
   borderRadius: 16,
-  border: "1px solid rgba(18, 60, 102, 0.1)",
+  border: "1px solid rgba(82, 102, 246, 0.1)",
   background: "linear-gradient(165deg, #f8fafc 0%, #eef3f9 52%, #e6ecf4 100%)",
   padding: 14,
   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85)",
@@ -118,9 +119,9 @@ const railAside: React.CSSProperties = {
 
 const mainShell: React.CSSProperties = {
   borderRadius: 18,
-  border: "1px solid rgba(18, 60, 102, 0.12)",
+  border: "1px solid rgba(82, 102, 246, 0.12)",
   background: "linear-gradient(180deg, #ffffff 0%, #f9fafb 100%)",
-  boxShadow: "0 22px 50px -28px rgba(18, 60, 102, 0.22)",
+  boxShadow: "none",
   overflow: "hidden",
   minWidth: 0,
 };
@@ -194,9 +195,9 @@ export default function GroupsClient() {
             <span
               style={{
                 fontSize: 11,
-                fontWeight: 800,
+                fontWeight: 600,
                 letterSpacing: "0.14em",
-                textTransform: "uppercase",
+                textTransform: "none",
                 color: "var(--nf-ink-3)",
               }}
             >
@@ -206,11 +207,11 @@ export default function GroupsClient() {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#123C66",
+                color: "#5266F6",
                 background: "rgba(255,255,255,0.75)",
                 padding: "3px 9px",
                 borderRadius: 99,
-                border: "1px solid rgba(18,60,102,0.12)",
+                border: "1px solid rgba(82, 102, 246,0.12)",
               }}
             >
               {groups.length}
@@ -238,9 +239,9 @@ export default function GroupsClient() {
                       textAlign: "left",
                       padding: "11px 12px",
                       borderRadius: 12,
-                      border: active ? "1px solid rgba(18, 60, 102, 0.32)" : "1px solid rgba(255, 255, 255, 0.55)",
+                      border: active ? "1px solid rgba(82, 102, 246, 0.32)" : "1px solid rgba(255, 255, 255, 0.55)",
                       background: active ? "#fff" : "rgba(255, 255, 255, 0.42)",
-                      boxShadow: active ? "0 12px 32px -14px rgba(18, 60, 102, 0.35)" : "none",
+                      boxShadow: active ? "0 12px 32px -14px rgba(82, 102, 246, 0.35)" : "none",
                       cursor: "pointer",
                       transition: "box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease",
                     }}
@@ -251,10 +252,10 @@ export default function GroupsClient() {
                         height: 40,
                         borderRadius: 11,
                         flexShrink: 0,
-                        background: "linear-gradient(135deg, #123C66 0%, #1a5080 55%, #2563a8 100%)",
+                        background: "linear-gradient(135deg, #5266F6 0%, #1a5080 55%, #2563a8 100%)",
                         color: "#fff",
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 600,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -293,9 +294,9 @@ export default function GroupsClient() {
             <div
               style={{
                 padding: "22px 22px 18px",
-                borderBottom: "1px solid rgba(18, 60, 102, 0.08)",
+                borderBottom: "1px solid rgba(82, 102, 246, 0.08)",
                 background:
-                  "linear-gradient(105deg, rgba(18, 60, 102, 0.07) 0%, rgba(46, 139, 87, 0.06) 42%, transparent 72%)",
+                  "linear-gradient(105deg, rgba(82, 102, 246, 0.07) 0%, rgba(46, 139, 87, 0.06) 42%, transparent 72%)",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 14, flexWrap: "wrap" }}>
@@ -304,10 +305,10 @@ export default function GroupsClient() {
                     style={{
                       margin: 0,
                       fontSize: 22,
-                      fontWeight: 800,
+                      fontWeight: 600,
                       color: "var(--nf-ink)",
                       letterSpacing: "-0.04em",
-                      fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                      fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
                     }}
                   >
                     {current.name}
@@ -331,9 +332,9 @@ export default function GroupsClient() {
                         borderRadius: 99,
                         fontSize: 12,
                         fontWeight: 600,
-                        background: "rgba(18, 60, 102, 0.09)",
+                        background: "rgba(82, 102, 246, 0.09)",
                         color: "var(--nf-ink-2)",
-                        border: "1px solid rgba(18, 60, 102, 0.1)",
+                        border: "1px solid rgba(82, 102, 246, 0.1)",
                       }}
                     >
                       <Users size={14} strokeWidth={2.25} aria-hidden />
@@ -366,12 +367,12 @@ export default function GroupsClient() {
                         setEditing(current);
                         setError("");
                       }}
-                      style={editBtn}
+                      className="nf-app-btn-outline"
                     >
                       <Pencil size={15} strokeWidth={2.25} aria-hidden />
                       Editar
                     </button>
-                    <button type="button" onClick={() => setConfirmDelete(current)} style={deleteBtn}>
+                    <button type="button" onClick={() => setConfirmDelete(current)} className="nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger">
                       <Trash2 size={15} strokeWidth={2.25} aria-hidden />
                       Eliminar
                     </button>
@@ -385,7 +386,7 @@ export default function GroupsClient() {
                     padding: "10px 14px",
                     borderRadius: 10,
                     background: "#fff0f0",
-                    color: "#C93C37",
+                    color: "#DC2626",
                     fontSize: 13,
                     border: "1px solid #ffd6d6",
                   }}
@@ -398,8 +399,8 @@ export default function GroupsClient() {
             <div className="nf-groups-detail-split" style={{ padding: 20 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <Users size={18} strokeWidth={2.25} color="#123C66" aria-hidden />
-                  <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Miembros</h4>
+                  <Users size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Miembros</h4>
                 </div>
                 <div
                   style={{
@@ -407,7 +408,7 @@ export default function GroupsClient() {
                     overflowY: "auto",
                     borderRadius: 14,
                     background: "#f3f6fa",
-                    border: "1px solid rgba(18, 60, 102, 0.07)",
+                    border: "1px solid rgba(82, 102, 246, 0.07)",
                     padding: 8,
                     display: "flex",
                     flexDirection: "column",
@@ -431,8 +432,8 @@ export default function GroupsClient() {
                             padding: "9px 10px",
                             borderRadius: 11,
                             background: checked ? "#fff" : "transparent",
-                            border: checked ? "1px solid rgba(18, 60, 102, 0.16)" : "1px solid transparent",
-                            boxShadow: checked ? "0 6px 18px -10px rgba(18, 60, 102, 0.28)" : "none",
+                            border: checked ? "1px solid rgba(82, 102, 246, 0.16)" : "1px solid transparent",
+                            boxShadow: checked ? "0 6px 18px -10px rgba(82, 102, 246, 0.28)" : "none",
                             cursor: canEdit ? "pointer" : "default",
                           }}
                         >
@@ -459,7 +460,7 @@ export default function GroupsClient() {
                               background: "linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%)",
                               color: "#334155",
                               fontSize: 11,
-                              fontWeight: 800,
+                              fontWeight: 600,
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -481,8 +482,8 @@ export default function GroupsClient() {
 
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <KeyRound size={18} strokeWidth={2.25} color="#123C66" aria-hidden />
-                  <h4 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Permisos</h4>
+                  <KeyRound size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Permisos</h4>
                 </div>
                 <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.55 }}>
                   Se suman al rol de cada miembro. La clave con <code style={{ fontSize: 12, fontFamily: "var(--font-mono, monospace)" }}>*</code> implica acceso total a ese recurso.
@@ -495,9 +496,9 @@ export default function GroupsClient() {
                       style={{
                         marginBottom: 16,
                         borderRadius: 14,
-                        background: "linear-gradient(180deg, #f5f8fc 0%, #eef3f9 100%)",
+                        background: "var(--nf-app-surface-2)",
                         padding: "12px 14px 14px",
-                        border: "1px solid rgba(18, 60, 102, 0.07)",
+                        border: "1px solid rgba(82, 102, 246, 0.07)",
                         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.65)",
                       }}
                     >
@@ -511,14 +512,14 @@ export default function GroupsClient() {
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            boxShadow: "0 4px 14px -8px rgba(18, 60, 102, 0.35)",
-                            color: "#123C66",
+                            boxShadow: "0 4px 14px -8px rgba(82, 102, 246, 0.35)",
+                            color: "#5266F6",
                           }}
                         >
                           <Icon size={18} strokeWidth={2.25} aria-hidden />
                         </div>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{bucket.label}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{bucket.label}</div>
                           <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 2 }}>{bucket.permissions.length} permisos en este bloque</div>
                         </div>
                       </div>
@@ -534,9 +535,9 @@ export default function GroupsClient() {
                                 gap: 10,
                                 padding: "10px 11px",
                                 borderRadius: 12,
-                                border: granted ? "1px solid rgba(18, 60, 102, 0.22)" : "1px solid rgba(18, 60, 102, 0.08)",
+                                border: granted ? "1px solid rgba(82, 102, 246, 0.22)" : "1px solid rgba(82, 102, 246, 0.08)",
                                 background: granted ? "#fff" : "rgba(255,255,255,0.65)",
-                                boxShadow: granted ? "0 6px 18px -12px rgba(18, 60, 102, 0.22)" : "none",
+                                boxShadow: granted ? "0 6px 18px -12px rgba(82, 102, 246, 0.22)" : "none",
                                 cursor: canEdit ? "pointer" : "default",
                               }}
                             >
@@ -563,7 +564,7 @@ export default function GroupsClient() {
                                     marginTop: 6,
                                     padding: "3px 7px",
                                     borderRadius: 6,
-                                    background: "rgba(18, 60, 102, 0.07)",
+                                    background: "rgba(82, 102, 246, 0.07)",
                                     fontSize: 10,
                                     fontFamily: "var(--font-mono, monospace)",
                                     color: "var(--nf-ink-3)",
@@ -597,11 +598,11 @@ export default function GroupsClient() {
                 height: 56,
                 margin: "0 auto 16px",
                 borderRadius: 16,
-                background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+                background: "var(--nf-app-surface-2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#123C66",
+                color: "#5266F6",
               }}
             >
               <KeyRound size={26} strokeWidth={2} aria-hidden />
@@ -619,14 +620,14 @@ export default function GroupsClient() {
       </div>
 
       <Modal open={creating || editing != null} onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }} title={creating ? "Nuevo grupo" : "Editar grupo"} width={480}>
-        <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} className="nf-modal-form">
           <Field label="Nombre *">
-            <input name="name" required defaultValue={editing?.name ?? ""} style={inputStyle} placeholder="p.ej. Auditores internos" />
+            <input name="name" required defaultValue={editing?.name ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Auditores internos" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} defaultValue={editing?.description ?? ""} style={inputStyle} />
+            <textarea name="description" rows={3} defaultValue={editing?.description ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
-          {error && <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{error}</div>}
+          {error && <div className="nf-modal-error">{error}</div>}
           <div className="nf-modal-actions">
             <button type="button" onClick={() => { setCreating(false); setEditing(null); }} disabled={isPending} className="nf-app-btn-ghost">
               Cancelar
@@ -671,69 +672,9 @@ export default function GroupsClient() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+    <div className="nf-modal-field">
+      <span className="nf-modal-field-label">{label}</span>
       {children}
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "10px 12px",
-  fontSize: 14,
-  border: "1px solid var(--nf-line)",
-  borderRadius: 8,
-  outline: "none",
-  fontFamily: "inherit",
-  boxSizing: "border-box",
-};
-const primaryBtn: React.CSSProperties = {
-  padding: "9px 18px",
-  fontSize: 13,
-  fontWeight: 600,
-  color: "#fff",
-  background: "#123C66",
-  border: "none",
-  borderRadius: 8,
-  cursor: "pointer",
-};
-const ghostBtn: React.CSSProperties = {
-  padding: "9px 16px",
-  fontSize: 13,
-  fontWeight: 500,
-  color: "var(--nf-ink-3)",
-  background: "#fff",
-  border: "1px solid var(--nf-line)",
-  borderRadius: 8,
-  cursor: "pointer",
-};
-
-const editBtn: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 7,
-  padding: "9px 14px",
-  fontSize: 13,
-  fontWeight: 600,
-  color: "#123C66",
-  background: "#fff",
-  border: "1px solid rgba(18, 60, 102, 0.22)",
-  borderRadius: 10,
-  cursor: "pointer",
-  boxShadow: "0 4px 14px -10px rgba(18, 60, 102, 0.35)",
-};
-
-const deleteBtn: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 7,
-  padding: "9px 14px",
-  fontSize: 13,
-  fontWeight: 600,
-  color: "#C93C37",
-  background: "#fff",
-  border: "1px solid #fde0e0",
-  borderRadius: 10,
-  cursor: "pointer",
-};

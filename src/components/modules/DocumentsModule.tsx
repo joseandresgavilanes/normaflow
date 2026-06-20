@@ -11,6 +11,7 @@ import Modal from "@/components/ui/Modal";
 import FileImportArea from "@/components/ui/FileImportArea";
 import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
+import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
@@ -67,7 +68,7 @@ function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }
     <div style={{ padding: 16, background: "var(--nf-app-surface-2)", borderRadius: 8, fontSize: 14, color: "var(--nf-ink)" }}>
       <p style={{ marginTop: 0 }}>Vista previa no disponible para este tipo de archivo en el navegador.</p>
       <p style={{ color: "var(--nf-ink-3)", fontSize: 13 }}>Puedes abrir o descargar el recurso en una nueva pestaña.</p>
-      <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: "#123C66", fontWeight: 600 }}>
+      <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: "#5266F6", fontWeight: 600 }}>
         Abrir / descargar
       </a>
     </div>
@@ -136,7 +137,7 @@ export default function DocumentsModule() {
   }
 
   const columns: Column<DocumentRow>[] = [
-    { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#123C66", fontWeight: 600 }}>{v}</span> },
+    { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5266F6", fontWeight: 600 }}>{v}</span> },
     {
       key: "title",
       label: "Título",
@@ -148,7 +149,7 @@ export default function DocumentsModule() {
       label: "Carpeta",
       render: v => <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600 }}>{v}</span>,
     },
-    { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "#f0f4ff", color: "#123C66", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
+    { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "#f0f4ff", color: "#5266F6", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
     { key: "version", label: "Ver.", render: v => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>v{v}</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
     {
@@ -214,6 +215,20 @@ export default function DocumentsModule() {
     showToast("Documento creado en el espacio de trabajo");
   }
 
+  function openNewDocument() {
+    setNewForm({
+      title: "",
+      code: "",
+      standard: "",
+      clause: "",
+      type: "PROCEDURE",
+      linkedProcessCode: processes[0]?.code ?? "",
+    });
+    setShowNew(true);
+  }
+
+  useCreateFromQuery(true, openNewDocument);
+
   function addVersion() {
     if (!historyDoc) return;
     const v = nextVersion.trim() || String((parseFloat(historyDoc.version) || 1) + 0.1);
@@ -259,17 +274,7 @@ export default function DocumentsModule() {
             Nuevo documento
           </span>
         }
-        onAction={() => {
-          setNewForm({
-            title: "",
-            code: "",
-            standard: "",
-            clause: "",
-            type: "PROCEDURE",
-            linkedProcessCode: processes[0]?.code ?? "",
-          });
-          setShowNew(true);
-        }}
+        onAction={openNewDocument}
       />
 
       <div className="nf-kpi-summary" style={{ marginBottom: 18 }}>
@@ -279,7 +284,7 @@ export default function DocumentsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+              background: "#F0FDF4",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -289,7 +294,7 @@ export default function DocumentsModule() {
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "APPROVED").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "APPROVED").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Aprobados</div>
           </div>
         </div>
@@ -299,7 +304,7 @@ export default function DocumentsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(214, 138, 26, 0.22) 0%, rgba(214, 138, 26, 0.08) 100%)",
+              background: "#FFFBEB",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -309,7 +314,7 @@ export default function DocumentsModule() {
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "IN_REVIEW").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "IN_REVIEW").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En revisión</div>
           </div>
         </div>
@@ -319,17 +324,17 @@ export default function DocumentsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "DRAFT").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "DRAFT").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Borrador</div>
           </div>
         </div>
@@ -339,7 +344,7 @@ export default function DocumentsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "linear-gradient(135deg, rgba(18, 60, 102, 0.1) 0%, rgba(18, 60, 102, 0.04) 100%)",
+              background: "var(--nf-app-accent-soft)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -349,7 +354,7 @@ export default function DocumentsModule() {
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total</div>
           </div>
         </div>
@@ -425,7 +430,7 @@ export default function DocumentsModule() {
                 [
                   "Proceso",
                   detailLive.linkedProcessCode ? (
-                    <Link key="proc" href="/app/processes" style={{ color: "#123C66", fontWeight: 600, textDecoration: "none" }}>
+                    <Link key="proc" href="/app/processes" style={{ color: "#5266F6", fontWeight: 600, textDecoration: "none" }}>
                       {detailLive.linkedProcessCode}
                     </Link>
                   ) : (
@@ -437,13 +442,13 @@ export default function DocumentsModule() {
                 ["Tamaño", detailLive.size],
               ].map(([k, v]) => (
                 <div key={String(k)}>
-                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.5px" }}>{k}</div>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 2, textTransform: "none", letterSpacing: "0.5px" }}>{k}</div>
                   <div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{v}</div>
                 </div>
               ))}
             </div>
             <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Control documental</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Control documental</div>
               <div className="nf-grid-2" style={{ gap: 8, fontSize: 12, color: "var(--nf-ink)" }}>
                 <div>
                   <span style={{ color: "var(--nf-ink-3)" }}>Próx. revisión: </span>
@@ -469,7 +474,7 @@ export default function DocumentsModule() {
                   <span style={{ color: "var(--nf-ink-3)" }}>Cambios vinculados: </span>
                   {(detailLive.linkedChangeIds ?? []).length ? (
                     (detailLive.linkedChangeIds ?? []).map(cid => (
-                      <Link key={cid} href="/app/changes" style={{ color: "#123C66", fontWeight: 600, marginRight: 8 }}>
+                      <Link key={cid} href="/app/changes" style={{ color: "#5266F6", fontWeight: 600, marginRight: 8 }}>
                         {cid.split("-").pop()}
                       </Link>
                     ))
@@ -480,7 +485,7 @@ export default function DocumentsModule() {
               </div>
             </div>
             <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Proceso asociado</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Proceso asociado</div>
               <select
                 className="nf-app-input"
                 value={processLinkDraft}
@@ -499,23 +504,13 @@ export default function DocumentsModule() {
                 type="button"
                 disabled={!perm.documents.edit}
                 onClick={saveDocumentProcessLink}
-                style={{
-                  background: "#123C66",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: perm.documents.edit ? "pointer" : "not-allowed",
-                  opacity: perm.documents.edit ? 1 : 0.5,
-                }}
+                className="nf-app-btn-primary nf-app-btn-sm"
               >
                 Guardar enlace de proceso
               </button>
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.5px" }}>Etiquetas</div>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "none", letterSpacing: "0.5px" }}>Etiquetas</div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {detailLive.tags.map(t => (
                   <span key={t} style={{ background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", borderRadius: 99, padding: "2px 10px", fontSize: 12, color: "var(--nf-ink-3)" }}>
@@ -525,8 +520,8 @@ export default function DocumentsModule() {
               </div>
             </div>
             <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14, marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Flujo documental</div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Flujo documental</div>
+              <div className="nf-action-bar">
                 {detailLive.status === "DRAFT" && (
                   <button
                     type="button"
@@ -551,16 +546,7 @@ export default function DocumentsModule() {
                       showToast("Enviado a revisión · trazabilidad registrada");
                       setDetail(null);
                     }}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "none",
-                      background: perm.documents.edit ? "#D68A1A" : "var(--nf-line)",
-                      color: perm.documents.edit ? "#fff" : "var(--nf-ink-4)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: perm.documents.edit ? "pointer" : "not-allowed",
-                    }}
+                    className="nf-app-btn-primary"
                   >
                     Enviar a revisión
                   </button>
@@ -571,16 +557,7 @@ export default function DocumentsModule() {
                     disabled={!perm.documents.approve}
                     title={!perm.documents.approve ? "Solo administración o compliance puede aprobar" : undefined}
                     onClick={() => setApproveAttestOpen(true)}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "none",
-                      background: perm.documents.approve ? "#2E8B57" : "var(--nf-line)",
-                      color: perm.documents.approve ? "#fff" : "var(--nf-ink-4)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: perm.documents.approve ? "pointer" : "not-allowed",
-                    }}
+                    className="nf-app-btn-success"
                   >
                     Aprobar (firma simulada)
                   </button>
@@ -609,24 +586,15 @@ export default function DocumentsModule() {
                       showToast("Marcado como obsoleto · evento auditado");
                       setDetail(null);
                     }}
-                    style={{
-                      padding: "8px 12px",
-                      borderRadius: 8,
-                      border: "1px solid var(--nf-line)",
-                      background: "var(--nf-app-surface-1)",
-                      color: perm.documents.edit ? "var(--nf-ink-3)" : "var(--nf-ink-4)",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: perm.documents.edit ? "pointer" : "not-allowed",
-                    }}
+                    className="nf-app-btn-ghost"
                   >
                     Marcar obsoleto
                   </button>
                 )}
               </div>
             </div>
-            <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 16, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <button type="button" onClick={() => setPreviewDoc(detailLive)} style={{ flex: 1, minWidth: 120, background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            <div className="nf-action-bar" style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 16 }}>
+              <button type="button" onClick={() => setPreviewDoc(detailLive)} className="nf-app-btn-primary" style={{ flex: 1, minWidth: 120 }}>
                 Ver Documento
               </button>
               <button
@@ -636,29 +604,16 @@ export default function DocumentsModule() {
                   setHistoryVersionFile(null);
                   setHistoryDoc(detailLive);
                 }}
-                style={{ flex: 1, minWidth: 120, background: "transparent", border: "1px solid var(--nf-line)", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", color: "var(--nf-ink-3)" }}
+                className="nf-app-btn-ghost"
+                style={{ flex: 1, minWidth: 120 }}
               >
                 Historial de versiones
               </button>
               <button
                 type="button"
                 onClick={() => showToast("Borrador IA: usa el asistente en la barra lateral.")}
-                style={{
-                  flex: 1,
-                  minWidth: 120,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  background: "#2E8B5718",
-                  color: "#2E8B57",
-                  border: "1px solid #2E8B5740",
-                  borderRadius: 8,
-                  padding: "9px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className="nf-app-btn-soft-success"
+                style={{ flex: 1, minWidth: 120 }}
               >
                 <Sparkles size={15} strokeWidth={2} aria-hidden />
                 IA: Generar borrador
@@ -748,7 +703,7 @@ export default function DocumentsModule() {
                       }}
                     >
                       <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, color: "#123C66" }}>v{v.version}</div>
+                        <div style={{ fontWeight: 700, color: "#5266F6" }}>v{v.version}</div>
                         <div style={{ color: "var(--nf-ink-3)", marginTop: 2 }}>
                           {v.date} · {v.author}
                         </div>
@@ -764,12 +719,12 @@ export default function DocumentsModule() {
                             gap: 6,
                             padding: "7px 11px",
                             borderRadius: 8,
-                            border: viewing ? "1px solid #123C66" : "1px solid var(--nf-line)",
+                            border: viewing ? "1px solid #5266F6" : "1px solid var(--nf-line)",
                             background: viewing ? "#f0f4ff" : "#fff",
                             fontSize: 12,
                             fontWeight: 600,
                             cursor: "pointer",
-                            color: "#123C66",
+                            color: "#5266F6",
                           }}
                         >
                           <Eye size={15} strokeWidth={2} aria-hidden />
@@ -834,7 +789,7 @@ export default function DocumentsModule() {
                   compact
                 />
               </div>
-              <button type="button" onClick={addVersion} style={{ marginTop: 8, width: "100%", background: "#123C66", color: "#fff", border: "none", borderRadius: 8, padding: "9px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              <button type="button" onClick={addVersion} className="nf-app-btn-primary" style={{ marginTop: 8, width: "100%" }}>
                 Añadir versión
               </button>
             </div>

@@ -1,4 +1,4 @@
-const COLORS = ["#123C66", "#2E8B57", "#6B3FB5", "#D68A1A", "#C93C37", "#1a5490"];
+const COLORS = ["#5266F6", "#16A34A", "#7C3AED", "#D97706", "#DC2626", "#6366F1"];
 
 interface AvatarProps { name: string; size?: number; className?: string; }
 
@@ -10,7 +10,7 @@ export default function Avatar({ name, size = 32, className }: AvatarProps) {
       className={className}
       style={{ width: size, height: size, borderRadius: "50%", background: color, color: "#fff",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: size * 0.35, fontWeight: 700, flexShrink: 0, userSelect: "none" }}
+        fontSize: size * 0.35, fontWeight: 600, flexShrink: 0, userSelect: "none" }}
     >
       {initials}
     </div>

@@ -82,7 +82,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
             <OperationalCard key={row.id} onClick={() => setDetail(row)}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "ui-monospace, monospace", color: "#123C66", fontSize: 12, fontWeight: 800 }}>{row.code ?? "SIN CÓDIGO"}</div>
+                  <div style={{ fontFamily: "ui-monospace, monospace", color: "#5266F6", fontSize: 12, fontWeight: 600 }}>{row.code ?? "SIN CÓDIGO"}</div>
                   <h3 style={{ margin: "7px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{row.name}</h3>
                   <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.type ?? "Sin tipo"} · {row.ownerName ?? "Sin responsable"}</div>
                 </div>
@@ -91,7 +91,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
               {row.description && <p style={{ fontSize: 13, color: "var(--nf-ink-2)", lineHeight: 1.5 }}>{row.description}</p>}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 7, marginTop: 13 }}>
                 {[["Docs", row.counts.documents], ["Riesgos", row.counts.risks], ["KPIs", row.counts.indicators], ["Formación", row.counts.trainingAssignments]].map(([label, value]) => (
-                  <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}><strong style={{ display: "block", color: "#123C66" }}>{value}</strong><span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "uppercase" }}>{label}</span></div>
+                  <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}><strong style={{ display: "block", color: "#5266F6" }}>{value}</strong><span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{label}</span></div>
                 ))}
               </div>
               <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
@@ -181,7 +181,7 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
     <OperationalHeader title="Gestión de riesgos" subtitle={`${initial.risks.length} riesgos persistidos`} canCreate={initial.access.canCreate} actionLabel="Nuevo riesgo" onCreate={() => { setError(""); setCreating(true); }} />
     <OperationalMessages error={error} success={success} />
     {initial.risks.length === 0 ? <EmptyOperational>No hay riesgos registrados.</EmptyOperational> : <OperationalGrid>{initial.risks.map((row) => <OperationalCard key={row.id} onClick={() => setDetail(row)}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><div style={{ minWidth: 0 }}><div style={{ fontSize: 11, color: "var(--nf-ink-2, #223648)", textTransform: "uppercase", fontWeight: 800 }}>{row.category}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{row.title}</h3><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)" }}>{row.processCode ? `${row.processCode} · ${row.processName}` : "Sin proceso"}</div></div><div style={{ width: 48, height: 48, borderRadius: 13, display: "grid", placeItems: "center", fontSize: 20, fontWeight: 900, color: row.score >= 15 ? "#a62d29" : row.score >= 8 ? "#9a6510" : "#17633b", background: row.score >= 15 ? "#fff0ef" : row.score >= 8 ? "#fff8e6" : "#edf9f2" }}>{row.score}</div></div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}><div style={{ minWidth: 0 }}><div style={{ fontSize: 11, color: "var(--nf-ink-2, #223648)", textTransform: "none", fontWeight: 600 }}>{row.category}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{row.title}</h3><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)" }}>{row.processCode ? `${row.processCode} · ${row.processName}` : "Sin proceso"}</div></div><div style={{ width: 48, height: 48, borderRadius: 13, display: "grid", placeItems: "center", fontSize: 20, fontWeight: 900, color: row.score >= 15 ? "#a62d29" : row.score >= 8 ? "#9a6510" : "#17633b", background: row.score >= 15 ? "#fff0ef" : row.score >= 8 ? "#fff8e6" : "#edf9f2" }}>{row.score}</div></div>
       <div style={{ display: "flex", gap: 7, marginTop: 12, flexWrap: "wrap" }}><Badge status={row.status} /><Badge status="ACTIVE" label={row.treatment} /><span style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{row.ownerName ?? "Sin responsable"}</span></div>
       <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
     </OperationalCard>)}</OperationalGrid>}

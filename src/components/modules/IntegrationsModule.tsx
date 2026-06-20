@@ -56,7 +56,7 @@ export default function IntegrationsModule() {
           <Card key={int.key} style={{ cursor: "pointer" }} onClick={() => setDetail(int)}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
               <div>
-                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: 0.5 }}>{int.category}</div>
+                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: 0.5 }}>{int.category}</div>
                 <h3 style={{ margin: "4px 0 8px", fontSize: 16, color: "var(--nf-ink)" }}>{int.name}</h3>
                 <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.45 }}>{int.description}</p>
               </div>
@@ -77,7 +77,7 @@ export default function IntegrationsModule() {
             )}
             <p style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               La ingesta de evidencias desde este conector quedaría mapeada a controles, documentos y auditorías. Desde{" "}
-              <a href="/app/evidence" style={{ color: "#123C66", fontWeight: 600 }}>
+              <a href="/app/evidence" style={{ color: "#5266F6", fontWeight: 600 }}>
                 Evidencias
               </a>{" "}
               puede distinguir origen manual vs. automatizado.
@@ -91,7 +91,7 @@ export default function IntegrationsModule() {
                   marginTop: 16,
                   width: "100%",
                   padding: 12,
-                  background: "#123C66",
+                  background: "#5266F6",
                   color: "#fff",
                   border: "none",
                   borderRadius: 8,

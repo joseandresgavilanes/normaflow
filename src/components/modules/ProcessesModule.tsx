@@ -28,12 +28,12 @@ import {
 
 function processTypeMeta(type: ProcessRow["type"]) {
   if (type === "support") {
-    return { label: "Soporte", color: "#D68A1A", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
+    return { label: "Soporte", color: "#D97706", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
   }
   if (type === "strategic") {
     return { label: "Estratégico", color: "#5B3FA6", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
   }
-  return { label: "Core", color: "#123C66", soft: "rgba(18, 60, 102, 0.08)", gradientEnd: "#2E8B57" };
+  return { label: "Core", color: "#5266F6", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "#16A34A" };
 }
 
 function getProcessLinkStats(
@@ -59,7 +59,7 @@ function linkBlock(title: string, href: string, children: ReactNode) {
       style={{
         marginBottom: 14,
         borderRadius: 14,
-        border: "1px solid rgba(18, 60, 102, 0.12)",
+        border: "1px solid rgba(82, 102, 246, 0.12)",
         background: "#fbfcfe",
         overflow: "hidden",
       }}
@@ -71,16 +71,16 @@ function linkBlock(title: string, href: string, children: ReactNode) {
           justifyContent: "space-between",
           gap: 12,
           padding: "12px 16px",
-          background: "linear-gradient(180deg, #f0f4fa 0%, #e8eef6 100%)",
-          borderBottom: "1px solid rgba(18, 60, 102, 0.1)",
+          background: "var(--nf-app-surface-2)",
+          borderBottom: "1px solid rgba(82, 102, 246, 0.1)",
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.01em" }}>{title}</span>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.01em" }}>{title}</span>
         <Link
           href={href}
           style={{
             fontSize: 12,
-            color: "#123C66",
+            color: "#5266F6",
             fontWeight: 700,
             whiteSpace: "nowrap",
             textDecoration: "none",
@@ -162,7 +162,7 @@ function ProcessDetailBody({
           padding: "18px 18px 18px",
           borderRadius: 14,
           border: "1px solid var(--nf-line)",
-          background: "linear-gradient(145deg, rgba(18, 60, 102, 0.06) 0%, #ffffff 55%)",
+          background: "#fff",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
@@ -172,7 +172,7 @@ function ProcessDetailBody({
                 style={{
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                   fontSize: 12,
-                  fontWeight: 800,
+                  fontWeight: 600,
                   color: typeColor,
                   background: "#fff",
                   border: `1.5px solid ${typeColor}40`,
@@ -185,9 +185,9 @@ function ProcessDetailBody({
               <span
                 style={{
                   fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
+                  fontWeight: 600,
+                  letterSpacing: "-0.01em",
+                  textTransform: "none",
                   background: `${typeColor}1a`,
                   color: typeColor,
                   padding: "5px 11px",
@@ -200,7 +200,7 @@ function ProcessDetailBody({
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <Avatar name={detail.owner} size={36} />
               <div>
-                <div style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>Responsable</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 2 }}>Responsable</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)" }}>{detail.owner}</div>
               </div>
             </div>
@@ -211,7 +211,7 @@ function ProcessDetailBody({
             style={{
               marginTop: 16,
               paddingTop: 16,
-              borderTop: "1px solid rgba(18, 60, 102, 0.1)",
+              borderTop: "1px solid rgba(82, 102, 246, 0.1)",
               fontSize: 14,
               lineHeight: 1.6,
               color: "var(--nf-ink)",
@@ -230,21 +230,21 @@ function ProcessDetailBody({
           padding: "18px 18px 20px",
           borderRadius: 14,
           border: "1px solid var(--nf-line)",
-          background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
+          background: "#fff",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 4 }}>Flujo</div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 16, letterSpacing: "-0.02em" }}>Entradas y salidas</div>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 4 }}>Flujo</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 16, letterSpacing: "-0.02em" }}>Entradas y salidas</div>
         <div className="nf-grid-2" style={{ gap: 16 }}>
           <div
             style={{
               padding: "14px 16px 16px",
               borderRadius: 12,
               background: "#fff",
-              border: "1px solid rgba(18, 60, 102, 0.12)",
+              border: "1px solid rgba(82, 102, 246, 0.12)",
             }}
           >
-            <div style={{ fontWeight: 800, color: "#123C66", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontWeight: 600, color: "#5266F6", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <ArrowDownToLine size={16} strokeWidth={2.25} aria-hidden />
               Entradas
             </div>
@@ -264,7 +264,7 @@ function ProcessDetailBody({
               border: "1px solid rgba(46, 139, 87, 0.2)",
             }}
           >
-            <div style={{ fontWeight: 800, color: "#2E8B57", fontSize: 11, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontWeight: 600, color: "#16A34A", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <ArrowUpFromLine size={16} strokeWidth={2.25} aria-hidden />
               Salidas
             </div>
@@ -281,8 +281,8 @@ function ProcessDetailBody({
 
       {/* Vínculos */}
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--nf-ink-3)", marginBottom: 4 }}>Trazabilidad</div>
-        <div style={{ fontSize: 15, fontWeight: 800, color: "var(--nf-ink)", marginBottom: 10, letterSpacing: "-0.02em" }}>Cumplimiento y vínculos</div>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 4 }}>Trazabilidad</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 10, letterSpacing: "-0.02em" }}>Cumplimiento y vínculos</div>
         <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.6, fontWeight: 500 }}>
           Documentos controlados, riesgos, indicadores, cambios y formación asociados a este código de proceso. Cada bloque es independiente.
         </p>
@@ -353,7 +353,7 @@ function ProcessDetailBody({
                   flexWrap: "wrap",
                   marginBottom: i < linkedChanges.length - 1 ? 10 : 0,
                   paddingBottom: i < linkedChanges.length - 1 ? 10 : 0,
-                  borderBottom: i < linkedChanges.length - 1 ? "1px solid rgba(18, 60, 102, 0.08)" : "none",
+                  borderBottom: i < linkedChanges.length - 1 ? "1px solid rgba(82, 102, 246, 0.08)" : "none",
                 }}
               >
                 <span style={{ fontWeight: 700 }}>{c.code}</span>
@@ -391,7 +391,7 @@ function ProcessDetailBody({
                   flexWrap: "wrap",
                   marginBottom: i < processTraining.length - 1 ? 10 : 0,
                   paddingBottom: i < processTraining.length - 1 ? 10 : 0,
-                  borderBottom: i < processTraining.length - 1 ? "1px solid rgba(18, 60, 102, 0.08)" : "none",
+                  borderBottom: i < processTraining.length - 1 ? "1px solid rgba(82, 102, 246, 0.08)" : "none",
                 }}
               >
                 <span style={{ fontWeight: 700 }}>{t.assigneeName}</span>
@@ -486,17 +486,17 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(18, 60, 102, 0.16) 0%, rgba(18, 60, 102, 0.06) 100%)",
+                background: "var(--nf-app-accent-soft)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#123C66",
+                color: "#5266F6",
               }}
             >
               <GitBranch size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#123C66", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Procesos definidos</div>
             </div>
           </div>
@@ -506,7 +506,7 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(46, 139, 87, 0.18) 0%, rgba(46, 139, 87, 0.06) 100%)",
+                background: "#F0FDF4",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -516,7 +516,7 @@ export default function ProcessesModule() {
               <Layers size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#2E8B57", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "core").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "core").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Tipo core</div>
             </div>
           </div>
@@ -526,7 +526,7 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(214, 138, 26, 0.2) 0%, rgba(214, 138, 26, 0.07) 100%)",
+                background: "#FFFBEB",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -536,7 +536,7 @@ export default function ProcessesModule() {
               <Layers size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#D68A1A", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "support").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "support").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Soporte</div>
             </div>
           </div>
@@ -546,7 +546,7 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "linear-gradient(135deg, rgba(91, 63, 166, 0.2) 0%, rgba(91, 63, 166, 0.07) 100%)",
+                background: "#F5F3FF",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -556,7 +556,7 @@ export default function ProcessesModule() {
               <Target size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#5B3FA6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "strategic").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "#5B3FA6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "strategic").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Estratégico</div>
             </div>
           </div>
@@ -570,11 +570,11 @@ export default function ProcessesModule() {
               height: 56,
               margin: "0 auto 14px",
               borderRadius: 16,
-              background: "linear-gradient(135deg, #f3f6fa, #e2e8f0)",
+              background: "var(--nf-app-surface-2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#123C66",
+              color: "#5266F6",
             }}
           >
             <GitBranch size={28} strokeWidth={2} aria-hidden />
@@ -600,14 +600,14 @@ export default function ProcessesModule() {
                   textAlign: "center",
                   padding: "10px 6px",
                   borderRadius: 12,
-                  background: "linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%)",
-                  border: "1px solid rgba(18, 60, 102, 0.08)",
+                  background: "#fff",
+                  border: "1px solid rgba(82, 102, 246, 0.08)",
                   minWidth: 0,
                 }}
               >
                 <Icon size={17} strokeWidth={2.25} aria-hidden style={{ color, display: "block", margin: "0 auto 6px" }} />
-                <div style={{ fontSize: 18, fontWeight: 800, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 9, fontWeight: 800, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 4 }}>{label}</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginTop: 4 }}>{label}</div>
               </div>
             );
 
@@ -621,13 +621,13 @@ export default function ProcessesModule() {
                 onKeyDown={e => (e.key === "Enter" || e.key === " ") && setDetail(p)}
                 style={{ overflow: "hidden", borderRadius: 16 }}
               >
-                <div style={{ height: 5, background: `linear-gradient(90deg, ${accent} 0%, ${accent}aa 45%, ${gradientEnd} 100%)` }} />
+                
                 <div style={{ padding: 0 }}>
                   <div
                     style={{
                       padding: "20px 20px 18px",
-                      background: `linear-gradient(165deg, ${accentSoft} 0%, rgba(255,255,255,0.4) 42%, #fff 100%)`,
-                      borderBottom: "1px solid rgba(18, 60, 102, 0.07)",
+                      background: "#fff",
+                      borderBottom: "1px solid rgba(82, 102, 246, 0.07)",
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
@@ -637,14 +637,14 @@ export default function ProcessesModule() {
                             style={{
                               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                               fontSize: 12,
-                              fontWeight: 800,
+                              fontWeight: 600,
                               color: accent,
                               background: "#fff",
                               border: `1.5px solid ${accent}35`,
                               padding: "5px 11px",
                               borderRadius: 10,
                               letterSpacing: "0.02em",
-                              boxShadow: "0 1px 0 rgba(18, 60, 102, 0.06)",
+                              boxShadow: "0 1px 0 rgba(82, 102, 246, 0.06)",
                             }}
                           >
                             {p.code || "—"}
@@ -652,9 +652,9 @@ export default function ProcessesModule() {
                           <span
                             style={{
                               fontSize: 11,
-                              fontWeight: 800,
-                              letterSpacing: "0.06em",
-                              textTransform: "uppercase",
+                              fontWeight: 600,
+                              letterSpacing: "-0.01em",
+                              textTransform: "none",
                               background: `${accent}22`,
                               color: accent,
                               padding: "5px 11px",
@@ -667,12 +667,12 @@ export default function ProcessesModule() {
                         <h3
                           style={{
                             fontSize: 19,
-                            fontWeight: 800,
+                            fontWeight: 600,
                             color: "var(--nf-ink)",
                             margin: "0 0 10px",
                             letterSpacing: "-0.03em",
                             lineHeight: 1.25,
-                            fontFamily: "var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif",
+                            fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
                           }}
                         >
                           {p.name}
@@ -699,8 +699,8 @@ export default function ProcessesModule() {
                       </div>
                       <div style={{ flexShrink: 0, textAlign: "center", width: 72 }}>
                         <Avatar name={p.owner} size={52} />
-                        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--nf-ink)", marginTop: 8, lineHeight: 1.2 }}>{p.owner.split(" ")[0]}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>Responsable</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginTop: 8, lineHeight: 1.2 }}>{p.owner.split(" ")[0]}</div>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginTop: 2 }}>Responsable</div>
                       </div>
                     </div>
                   </div>
@@ -711,14 +711,14 @@ export default function ProcessesModule() {
                       gridTemplateColumns: "repeat(auto-fit, minmax(64px, 1fr))",
                       gap: 8,
                       padding: "14px 16px",
-                      background: "linear-gradient(180deg, #f6f8fc 0%, #eef2f9 100%)",
-                      borderBottom: "1px solid rgba(18, 60, 102, 0.07)",
+                      background: "var(--nf-app-surface-2)",
+                      borderBottom: "1px solid rgba(82, 102, 246, 0.07)",
                     }}
                   >
-                    {metricCell(FileText, "Docs", stats.docs, "#123C66")}
-                    {metricCell(Shield, "Riesgos", stats.risks, "#C93C37")}
-                    {metricCell(BarChart3, "KPIs", stats.indicators, "#2E8B57")}
-                    {metricCell(GitPullRequest, "Cambios", stats.changes, "#D68A1A")}
+                    {metricCell(FileText, "Docs", stats.docs, "#5266F6")}
+                    {metricCell(Shield, "Riesgos", stats.risks, "#DC2626")}
+                    {metricCell(BarChart3, "KPIs", stats.indicators, "#16A34A")}
+                    {metricCell(GitPullRequest, "Cambios", stats.changes, "#D97706")}
                     {metricCell(GraduationCap, "Formación", stats.training, "#6B3FB5")}
                   </div>
 
@@ -731,10 +731,10 @@ export default function ProcessesModule() {
                           gap: 8,
                           marginBottom: 10,
                           fontSize: 11,
-                          fontWeight: 800,
-                          color: "#123C66",
-                          letterSpacing: "0.05em",
-                          textTransform: "uppercase",
+                          fontWeight: 600,
+                          color: "#5266F6",
+                          letterSpacing: "-0.01em",
+                          textTransform: "none",
                         }}
                       >
                         <span
@@ -742,7 +742,7 @@ export default function ProcessesModule() {
                             width: 28,
                             height: 28,
                             borderRadius: 8,
-                            background: "rgba(18, 60, 102, 0.1)",
+                            background: "rgba(82, 102, 246, 0.1)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -764,7 +764,7 @@ export default function ProcessesModule() {
                                 fontWeight: 600,
                                 color: "var(--nf-ink)",
                                 background: "#fff",
-                                border: "1px solid rgba(18, 60, 102, 0.12)",
+                                border: "1px solid rgba(82, 102, 246, 0.12)",
                                 padding: "5px 10px",
                                 borderRadius: 8,
                                 maxWidth: "100%",
@@ -775,7 +775,7 @@ export default function ProcessesModule() {
                             </span>
                           ))}
                           {inMore > 0 && (
-                            <span style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{inMore}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{inMore}</span>
                           )}
                         </div>
                       )}
@@ -788,10 +788,10 @@ export default function ProcessesModule() {
                           gap: 8,
                           marginBottom: 10,
                           fontSize: 11,
-                          fontWeight: 800,
-                          color: "#2E8B57",
-                          letterSpacing: "0.05em",
-                          textTransform: "uppercase",
+                          fontWeight: 600,
+                          color: "#16A34A",
+                          letterSpacing: "-0.01em",
+                          textTransform: "none",
                         }}
                       >
                         <span
@@ -832,7 +832,7 @@ export default function ProcessesModule() {
                             </span>
                           ))}
                           {outMore > 0 && (
-                            <span style={{ fontSize: 11, fontWeight: 800, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{outMore}</span>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{outMore}</span>
                           )}
                         </div>
                       )}
@@ -854,8 +854,8 @@ export default function ProcessesModule() {
                     <span
                       style={{
                         fontSize: 13,
-                        fontWeight: 800,
-                        color: "#123C66",
+                        fontWeight: 600,
+                        color: "#5266F6",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 4,

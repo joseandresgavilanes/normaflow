@@ -6,6 +6,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import Avatar from "@/components/ui/Avatar";
 import { formatDate } from "@/lib/utils";
 import { useAdminMock, type PersonnelMockRow } from "@/context/AdminMockStore";
@@ -80,8 +81,8 @@ export default function PersonnelClient() {
       label: "",
       render: (_, r) => (
         <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          <button type="button" onClick={(e) => { e.stopPropagation(); setEditing(r); setFormError(""); }} style={ghostBtn}>Editar</button>
-          {r.active && <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDeactivate(r); }} style={dangerBtn}>Desactivar</button>}
+          <button type="button" onClick={(e) => { e.stopPropagation(); setEditing(r); setFormError(""); }} className="nf-app-btn-ghost">Editar</button>
+          {r.active && <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDeactivate(r); }} className="nf-app-btn-danger">Desactivar</button>}
         </div>
       ),
     });
@@ -130,7 +131,7 @@ export default function PersonnelClient() {
             placeholder="Buscar nombre, email, cargo…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ flex: 1, minWidth: 240, padding: "8px 12px", fontSize: 13, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none" }}
+            className="nf-app-input nf-app-input--toolbar" style={{ flex: 1, minWidth: 240 }}
           />
           <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--nf-ink-3)" }}>
             <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
@@ -148,35 +149,35 @@ export default function PersonnelClient() {
         title={creating ? "Nueva persona" : "Editar persona"}
         width={560}
       >
-        <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} className="nf-modal-form">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Nombre *">
-              <input name="firstName" required defaultValue={editing?.firstName ?? ""} style={inputStyle} />
+              <input name="firstName" required defaultValue={editing?.firstName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
             <Field label="Apellido *">
-              <input name="lastName" required defaultValue={editing?.lastName ?? ""} style={inputStyle} />
+              <input name="lastName" required defaultValue={editing?.lastName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Email">
-            <input type="email" name="email" defaultValue={editing?.email ?? ""} style={inputStyle} />
+            <input type="email" name="email" defaultValue={editing?.email ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Identificación">
-              <input name="identification" defaultValue={editing?.identification ?? ""} style={inputStyle} />
+              <input name="identification" defaultValue={editing?.identification ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
             <Field label="Fecha de alta">
-              <input type="date" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} style={inputStyle} />
+              <input type="date" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Cargo">
-            <select name="positionId" defaultValue={editing?.positionId ?? ""} style={inputStyle}>
+            <select name="positionId" defaultValue={editing?.positionId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin cargo —</option>
               {positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </Field>
 
           {formError && (
-            <div style={{ padding: "8px 12px", borderRadius: 6, background: "#fff0f0", color: "#C93C37", fontSize: 13 }}>{formError}</div>
+            <div className="nf-modal-error">{formError}</div>
           )}
 
           <div className="nf-modal-actions">
@@ -219,14 +220,10 @@ export default function PersonnelClient() {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</label>
+    <div className="nf-modal-field">
+      <span className="nf-modal-field-label">{label}</span>
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = { width: "100%", padding: "10px 12px", fontSize: 14, border: "1px solid var(--nf-line)", borderRadius: 8, outline: "none", fontFamily: "inherit", boxSizing: "border-box" };
-const primaryBtn: React.CSSProperties = { padding: "9px 18px", fontSize: 13, fontWeight: 600, color: "#fff", background: "#123C66", border: "none", borderRadius: 8, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { padding: "9px 16px", fontSize: 13, fontWeight: 500, color: "var(--nf-ink-3)", background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)", borderRadius: 8, cursor: "pointer" };
-const dangerBtn: React.CSSProperties = { ...ghostBtn, color: "#C93C37", border: "1px solid #fde0e0" };

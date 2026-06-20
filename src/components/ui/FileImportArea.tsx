@@ -134,10 +134,10 @@ export default function FileImportArea({
             padding: pad,
             boxSizing: "border-box",
             borderRadius: 14,
-            border: `2px dashed ${dragOver ? "#123C66" : "rgba(18, 60, 102, 0.22)"}`,
+            border: `2px dashed ${dragOver ? "#5266F6" : "rgba(82, 102, 246, 0.22)"}`,
             background: dragOver
-              ? "linear-gradient(160deg, rgba(18, 60, 102, 0.08) 0%, #f4f7fc 55%, #fff 100%)"
-              : "linear-gradient(180deg, #fbfcfe 0%, #f5f7fb 100%)",
+              ? "var(--nf-app-accent-soft)"
+              : "var(--nf-app-surface-2)",
             cursor: disabled ? "not-allowed" : "pointer",
             opacity: disabled ? 0.55 : 1,
             display: "flex",
@@ -147,7 +147,7 @@ export default function FileImportArea({
             gap: compact ? 8 : 10,
             textAlign: "center",
             transition: "border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
-            boxShadow: dragOver ? "0 0 0 3px rgba(18, 60, 102, 0.12)" : "inset 0 1px 0 rgba(255,255,255,0.85)",
+            boxShadow: dragOver ? "0 0 0 3px var(--nf-app-accent-soft)" : "none",
             color: "inherit",
             font: "inherit",
           }}
@@ -160,8 +160,8 @@ export default function FileImportArea({
               width: compact ? 40 : 48,
               height: compact ? 40 : 48,
               borderRadius: 12,
-              background: dragOver ? "rgba(18, 60, 102, 0.12)" : "rgba(18, 60, 102, 0.07)",
-              color: "#123C66",
+              background: dragOver ? "rgba(82, 102, 246, 0.12)" : "rgba(82, 102, 246, 0.07)",
+              color: "#5266F6",
             }}
           >
             <Upload size={compact ? 20 : 24} strokeWidth={2} aria-hidden />
@@ -183,9 +183,9 @@ export default function FileImportArea({
             gap: 12,
             padding: "12px 14px",
             borderRadius: 14,
-            border: "1px solid rgba(18, 60, 102, 0.14)",
+            border: "1px solid rgba(82, 102, 246, 0.14)",
             background: "linear-gradient(135deg, #fff 0%, #f8fafc 100%)",
-            boxShadow: "0 1px 2px rgba(18, 60, 102, 0.06)",
+            boxShadow: "0 1px 2px rgba(82, 102, 246, 0.06)",
           }}
         >
           <span
@@ -197,8 +197,8 @@ export default function FileImportArea({
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "rgba(18, 60, 102, 0.08)",
-              color: "#123C66",
+              background: "rgba(82, 102, 246, 0.08)",
+              color: "#5266F6",
             }}
           >
             <FileText size={22} strokeWidth={2} aria-hidden />
@@ -227,11 +227,11 @@ export default function FileImportArea({
               style={{
                 padding: "8px 12px",
                 borderRadius: 10,
-                border: "1px solid rgba(18, 60, 102, 0.2)",
+                border: "1px solid rgba(82, 102, 246, 0.2)",
                 background: "#fff",
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#123C66",
+                color: "#5266F6",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}
             >
