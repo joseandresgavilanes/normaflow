@@ -1,5 +1,6 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { FileDown, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -8,11 +9,22 @@ import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import { DEMO_GAP } from "@/lib/demo-data";
 import type { GapPayload } from "@/lib/server-queries";
+import { updateAssessmentAnswer } from "@/lib/actions/gap";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import type { GapClauseState } from "@/lib/demo/seed-entities";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import type { ClauseStatus } from "@prisma/client";
 
 type GapRow = (typeof DEMO_GAP)["iso9001"][number];
+type LiveGapRow = NonNullable<GapPayload["iso9001"]>[number];
+
+const CLAUSE_STATUS_OPTIONS: { value: ClauseStatus; label: string }[] = [
+  { value: "COMPLIANT", label: "Conforme" },
+  { value: "PARTIALLY_COMPLIANT", label: "Parcialmente conforme" },
+  { value: "NON_COMPLIANT", label: "No conforme" },
+  { value: "NOT_EVALUATED", label: "Sin evaluar" },
+  { value: "NOT_APPLICABLE", label: "No aplica" },
+];
 
 function mapWorkspaceRow(g: GapClauseState): GapRow {
   return {
@@ -35,6 +47,16 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   const [standard, setStandard] = useState<"iso9001" | "iso27001">("iso9001");
   const [clauseModal, setClauseModal] = useState<GapClauseState | null>(null);
   const [commentDraft, setCommentDraft] = useState("");
+
+  // Live (DB-backed) clause editing
+  const router = useRouter();
+  const [liveEdit, setLiveEdit] = useState<LiveGapRow | null>(null);
+  const [editScore, setEditScore] = useState(0);
+  const [editStatus, setEditStatus] = useState<ClauseStatus>("NOT_EVALUATED");
+  const [editComment, setEditComment] = useState("");
+  const [editError, setEditError] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const liveEditable = readOnlyLive && canEdit;
 
   const fromDb = standard === "iso9001" ? live?.iso9001 : live?.iso27001;
 
@@ -71,13 +93,48 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   }
 
   function openClause(row: GapRow) {
-    if (readOnlyLive) return;
+    if (readOnlyLive) {
+      if (!liveEditable) return;
+      const liveRow = (fromDb ?? []).find(r => r.clause === row.clause);
+      if (!liveRow) return;
+      setLiveEdit(liveRow);
+      setEditScore(liveRow.score);
+      setEditStatus(liveRow.clauseStatus);
+      setEditComment(liveRow.comment ?? "");
+      setEditError("");
+      return;
+    }
     const list = standard === "iso9001" ? state.gapIso9001 : state.gapIso27001;
     const full = list.find(c => c.clause === row.clause);
     if (full) {
       setClauseModal(full);
       setCommentDraft(full.comment);
     }
+  }
+
+  function closeLiveEdit() {
+    if (isPending) return;
+    setLiveEdit(null);
+    setEditError("");
+  }
+
+  function saveLiveEdit() {
+    if (!liveEdit) return;
+    setEditError("");
+    startTransition(async () => {
+      try {
+        await updateAssessmentAnswer(liveEdit.answerId, {
+          score: editScore,
+          status: editStatus,
+          comment: editComment,
+        });
+        setLiveEdit(null);
+        showToast("Evaluación de la cláusula guardada");
+        router.refresh();
+      } catch (err) {
+        setEditError(err instanceof Error ? err.message : "No se pudo guardar la evaluación.");
+      }
+    });
   }
 
   function saveComment() {
@@ -104,7 +161,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
     <div>
       <SectionTitle
         title="GAP Assessment"
-        sub={readOnlyLive ? "Datos desde tu organización (solo lectura)" : "Evaluación de brechas — respuestas editables en el workspace"}
+        sub={readOnlyLive ? (liveEditable ? "Datos de tu organización — pulse una cláusula para evaluar" : "Datos desde tu organización (solo lectura)") : "Evaluación de brechas — respuestas editables en el workspace"}
         action={
           <>
             <FileDown size={15} strokeWidth={2} aria-hidden />
@@ -178,14 +235,14 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 key={g.clause}
                 type="button"
                 onClick={() => openClause(g)}
-                disabled={readOnlyLive}
+                disabled={readOnlyLive && !liveEditable}
                 style={{
                   textAlign: "left",
-                  background: readOnlyLive ? "transparent" : "#f3f6fa",
+                  background: readOnlyLive && !liveEditable ? "transparent" : "#f3f6fa",
                   border: "1px solid rgba(82, 102, 246, 0.08)",
                   borderRadius: 10,
                   padding: "12px 14px",
-                  cursor: readOnlyLive ? "default" : "pointer",
+                  cursor: readOnlyLive && !liveEditable ? "default" : "pointer",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -211,7 +268,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 </div>
                 <ProgressBar value={g.score} color={g.score >= 80 ? "#16A34A" : g.score >= 60 ? "#D97706" : "#DC2626"} height={7} railColor="#eef2f9" />
                 <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>
-                  {g.answered}/{g.questions} respuestas · {!readOnlyLive && canEdit ? "Pulse para editar" : "Detalle"}
+                  {g.answered}/{g.questions} respuestas · {(!readOnlyLive && canEdit) || liveEditable ? "Pulse para editar" : "Detalle"}
                 </div>
               </button>
             ))}
@@ -352,6 +409,78 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             {canEdit && (
               <button type="button" className="nf-app-btn-primary" onClick={() => { saveComment(); setClauseModal(null); setCommentDraft(""); }}>Guardar y cerrar</button>
             )}
+          </div>
+        </Modal>
+      )}
+
+      {liveEdit && (
+        <Modal
+          open={!!liveEdit}
+          title={`Cláusula ${liveEdit.clause} · ${liveEdit.title}`}
+          onClose={closeLiveEdit}
+        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div>
+              <label className="nf-modal-field-label" htmlFor="gap-score">
+                Puntuación de cumplimiento · <strong>{editScore}%</strong>
+              </label>
+              <input
+                id="gap-score"
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={editScore}
+                disabled={isPending}
+                onChange={e => setEditScore(Number(e.target.value))}
+                style={{ width: "100%", marginTop: 8, accentColor: "#5266F6" }}
+              />
+              <ProgressBar
+                value={editScore}
+                color={editScore >= 80 ? "#16A34A" : editScore >= 40 ? "#D97706" : "#DC2626"}
+                height={8}
+                railColor="#eef2f9"
+              />
+            </div>
+
+            <div>
+              <label className="nf-modal-field-label" htmlFor="gap-status">Estado</label>
+              <select
+                id="gap-status"
+                value={editStatus}
+                disabled={isPending}
+                onChange={e => setEditStatus(e.target.value as ClauseStatus)}
+                className="nf-app-input"
+                style={{ marginTop: 6 }}
+              >
+                {CLAUSE_STATUS_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="nf-modal-field-label" htmlFor="gap-comment">Comentarios / evidencia</label>
+              <textarea
+                id="gap-comment"
+                value={editComment}
+                onChange={e => setEditComment(e.target.value)}
+                disabled={isPending}
+                rows={3}
+                className="nf-app-input"
+                style={{ resize: "vertical", marginTop: 6 }}
+                placeholder="Hallazgos, evidencia revisada, brechas identificadas…"
+              />
+            </div>
+
+            {editError && <div className="nf-alert nf-alert--error">{editError}</div>}
+          </div>
+
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={closeLiveEdit} disabled={isPending}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={saveLiveEdit} disabled={isPending}>
+              {isPending ? "Guardando…" : "Guardar evaluación"}
+            </button>
           </div>
         </Modal>
       )}

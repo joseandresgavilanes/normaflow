@@ -9,6 +9,7 @@ import {
   BarChart3,
   Bell,
   Briefcase,
+  CalendarRange,
   Building2,
   ChevronDown,
   ClipboardCheck,
@@ -34,6 +35,7 @@ import {
   Workflow,
   Zap,
   CircleOff,
+  Gavel,
 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
@@ -50,7 +52,9 @@ const NAV: { href: string; Icon: LucideIcon; label: string }[] = [
   { href: "/app/processes", Icon: Workflow, label: "Procesos" },
   { href: "/app/risks", Icon: AlertTriangle, label: "Riesgos" },
   { href: "/app/suppliers", Icon: Factory, label: "Proveedores" },
+  { href: "/app/audit-program", Icon: CalendarRange, label: "Programa Auditorías" },
   { href: "/app/audits", Icon: ClipboardCheck, label: "Auditorías" },
+  { href: "/app/management-review", Icon: Gavel, label: "Revisión Dirección" },
   { href: "/app/nonconformities", Icon: CircleOff, label: "No Conformidades" },
   { href: "/app/actions", Icon: Zap, label: "Plan de Acción" },
   { href: "/app/indicators", Icon: BarChart3, label: "Indicadores" },

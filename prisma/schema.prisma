@@ -224,7 +224,7 @@ model Document {
   currentVersion String         @default("1.0")
   ownerId        String?
   reviewDate     DateTime?
-  tags           String[]
+  tags           String[]       @default([])
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -236,10 +236,15 @@ model Document {
   responsibleApprovalId    String?
   locationId               String?
   physicalLocation         String?
-  distributionList         String[]
+  distributionList         String[] @default([])
   observations             String?
 
+  // Reemplazo / supersede: el documento obsoleto (01) apunta a su reemplazo (02).
+  supersededById           String?  @unique
+
   organization                 Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supersededBy                 Document?                @relation("DocumentSupersede", fields: [supersededById], references: [id], onDelete: SetNull)
+  supersedes                   Document?                @relation("DocumentSupersede")
   clause                       Clause?                  @relation(fields: [clauseId], references: [id])
   process                      Process?                 @relation(fields: [processId], references: [id], onDelete: SetNull)
   location                     Location?                @relation(fields: [locationId], references: [id])
@@ -305,8 +310,8 @@ model Process {
   type           String? // core, support, strategic
   description    String?
   ownerId        String?
-  inputs         String[]
-  outputs        String[]
+  inputs         String[] @default([])
+  outputs        String[] @default([])
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -444,8 +449,22 @@ model Nonconformity {
   actions        Action[]
   changeRequests ChangeRequest[]
   supplierLinks  SupplierNonconformity[]
+  comments       NonconformityComment[]
 
   @@map("nonconformities")
+}
+
+model NonconformityComment {
+  id              String   @id @default(cuid())
+  nonconformityId String
+  authorId        String
+  content         String
+  createdAt       DateTime @default(now())
+
+  nonconformity Nonconformity @relation(fields: [nonconformityId], references: [id], onDelete: Cascade)
+
+  @@index([nonconformityId, createdAt])
+  @@map("nonconformity_comments")
 }
 
 // ─── ACTIONS ─────────────────────────────────────────
@@ -1258,7 +1277,7 @@ model ManagementReview {
   heldAt         DateTime?
   status         ManagementReviewStatus @default(PLANNED)
   chairId        String?
-  attendees      String[] // free-text names or user IDs
+  attendees      String[] @default([]) // free-text names or user IDs
   summary        String?
   reportUrl      String?
   createdAt      DateTime               @default(now())

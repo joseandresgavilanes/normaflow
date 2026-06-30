@@ -92,15 +92,13 @@ export default function SetPasswordPage() {
       <div className="nf-app">
         <div className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 440 }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <Link href="/home" className="nf-logo" style={{ marginBottom: 22 }}>
-                <span className="nf-logo-mark" />
+            <div className="nf-auth-header">
+              <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
+                <span className="nf-logo-mark" aria-hidden />
                 NormaFlow
               </Link>
-              <h1 className="nf-h-3" style={{ marginTop: 18 }}>
-                Establece tu contraseña
-              </h1>
-              <p style={{ fontSize: 14, color: "var(--nf-ink-3)", marginTop: 6 }}>
+              <h1 className="nf-h-3" style={{ marginTop: 20 }}>Establece tu contraseña</h1>
+              <p>
                 {inviteEmail
                   ? `Cuenta: ${inviteEmail}`
                   : "Último paso para acceder a tu organización"}
@@ -108,10 +106,11 @@ export default function SetPasswordPage() {
             </div>
 
             <div className="nf-auth-card">
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <form onSubmit={handleSubmit} className="nf-auth-form">
                 <div>
-                  <label className="nf-label">Nueva contraseña</label>
+                  <label className="nf-label" htmlFor="set-password">Nueva contraseña</label>
                   <input
+                    id="set-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -122,8 +121,9 @@ export default function SetPasswordPage() {
                   />
                 </div>
                 <div>
-                  <label className="nf-label">Confirmar contraseña</label>
+                  <label className="nf-label" htmlFor="set-password-confirm">Confirmar contraseña</label>
                   <input
+                    id="set-password-confirm"
                     type="password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
@@ -133,25 +133,12 @@ export default function SetPasswordPage() {
                     disabled={Boolean(error && error.includes("Sesión"))}
                   />
                 </div>
-                {error ? (
-                  <div
-                    style={{
-                      padding: "10px 12px",
-                      borderRadius: 8,
-                      background: "oklch(0.70 0.18 25 / 0.08)",
-                      border: "1px solid oklch(0.70 0.18 25 / 0.35)",
-                      fontSize: 13,
-                      color: "oklch(0.85 0.14 30)",
-                    }}
-                  >
-                    {error}
-                  </div>
-                ) : null}
+                {error ? <div className="nf-auth-alert nf-auth-alert--error">{error}</div> : null}
                 <button
                   type="submit"
                   disabled={loading || Boolean(error && error.includes("Sesión"))}
                   className="nf-btn nf-btn--primary"
-                  style={{ justifyContent: "center", marginTop: 4, opacity: loading ? 0.7 : 1 }}
+                  style={{ width: "100%", opacity: loading ? 0.7 : 1 }}
                 >
                   {loading ? "Guardando…" : <>Guardar contraseña <Ic.arrow className="nf-arrow" /></>}
                 </button>

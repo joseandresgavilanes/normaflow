@@ -552,6 +552,20 @@ function ACPMDetailModal({
     });
   }
 
+  function handleDelete() {
+    if (!acpm) return;
+    if (!window.confirm(`¿Eliminar la ACPM ${acpm.code} — “${acpm.title}”? Esta acción no se puede deshacer.`)) return;
+    setActionError("");
+    startTransition(async () => {
+      try {
+        await admin.deleteACPM(acpm.id);
+        onClose();
+      } catch (err: unknown) {
+        setActionError(err instanceof Error ? err.message : "Error.");
+      }
+    });
+  }
+
   const overdue = acpm.dueDate && new Date(acpm.dueDate).getTime() < Date.now() && acpm.stage !== "CLOSED";
   const requester = acpm.requestedById ? personnelLookup.get(acpm.requestedById) : null;
   const owner = acpm.ownerId ? personnelLookup.get(acpm.ownerId) : null;
@@ -624,6 +638,14 @@ function ACPMDetailModal({
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em" }}>Acciones de etapa:</span>
             <TransitionButtons stage={acpm.stage} disabled={isPending} onAdvance={advance} onReject={() => setRejectOpen(true)} />
+          </div>
+        )}
+
+        {canEdit && (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "#DC2626" }}>
+              Eliminar ACPM
+            </button>
           </div>
         )}
 

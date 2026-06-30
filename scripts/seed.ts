@@ -253,8 +253,10 @@ async function main() {
     { code: "SGC-INS-007", title: "Instrucción de Trabajo — Control de Calidad", type: "INSTRUCTION" as const, status: "APPROVED" as const, currentVersion: "4.0", ownerId: "u_demo_jose" },
   ];
 
+  const createdDocs = new Map<string, string>();
   for (const d of docs) {
-    await prisma.document.create({ data: { organizationId: org.id, ...d, tags: ["demo"] } });
+    const created = await prisma.document.create({ data: { organizationId: org.id, ...d, tags: ["demo"] } });
+    createdDocs.set(d.code, created.id);
   }
 
   const audit = await prisma.audit.create({
@@ -403,6 +405,7 @@ async function main() {
       fileSize: 12000,
       mimeType: "application/pdf",
       module: "audit",
+      moduleId: audit.id,
       uploadedById: "u_demo_carlos",
     },
   });
@@ -413,6 +416,7 @@ async function main() {
       title: "Captura — Política SGSI v1.5 en revisión",
       fileUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
       module: "document",
+      moduleId: createdDocs.get("SGSI-POL-001")!,
       uploadedById: "u_demo_ana",
     },
   });

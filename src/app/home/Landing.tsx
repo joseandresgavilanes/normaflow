@@ -11,6 +11,29 @@ import React, {
 import { Ic } from "@/components/marketing/nf/Icons";
 import { useReveal, useMouseParallax } from "@/components/marketing/nf/hooks";
 
+function riskHeatCellBg(lvl: number): string {
+  if (lvl >= 7) return "var(--nf-danger)";
+  if (lvl >= 5) return "#d97706";
+  if (lvl >= 3) return "var(--nf-success-mid)";
+  return "var(--nf-success-soft)";
+}
+
+function riskHeatMarkerStyle(lvl: number, marked: boolean): Pick<CSSProperties, "color" | "border" | "boxShadow"> {
+  if (!marked) return { color: "transparent", border: "none", boxShadow: "none" };
+  if (lvl >= 5) {
+    return {
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.5)",
+      boxShadow: "0 0 12px rgba(255,255,255,0.15)",
+    };
+  }
+  return {
+    color: "var(--nf-success-strong)",
+    border: "1px solid var(--nf-success-border)",
+    boxShadow: "none",
+  };
+}
+
 /* ============ Hero ============ */
 function HeroChaos() {
   const items = [
@@ -41,9 +64,9 @@ function HeroDashboard() {
       <svg className="nf-connectors" viewBox="0 0 620 600" preserveAspectRatio="none" aria-hidden="true">
         <defs>
           <linearGradient id="grad-line" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="oklch(0.72 0.14 158)" stopOpacity="0.0"/>
-            <stop offset="0.5" stopColor="oklch(0.72 0.14 158)" stopOpacity="0.6"/>
-            <stop offset="1" stopColor="oklch(0.78 0.13 195)" stopOpacity="0.0"/>
+            <stop offset="0" stopColor="#5266F6" stopOpacity="0"/>
+            <stop offset="0.5" stopColor="#5266F6" stopOpacity="0.45"/>
+            <stop offset="1" stopColor="#6B7AF8" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d="M-30 110 C 80 100, 140 180, 260 200" stroke="url(#grad-line)" strokeWidth="1.2"/>
@@ -64,18 +87,18 @@ function HeroDashboard() {
           <div className="nf-dash-tile nf-tile-score">
             <span className="tt">Cumplimiento</span>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span className="vv" style={{ color: "var(--nf-accent)" }}>94<span style={{ fontSize: 14, color: "var(--nf-ink-3)" }}>%</span></span>
+              <span className="vv" style={{ color: "var(--nf-success-strong)" }}>94<span style={{ fontSize: 14, color: "var(--nf-ink-3)" }}>%</span></span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
               {([
-                ["ISO 9001:2015", 96, "var(--nf-accent)"],
-                ["ISO 27001:2022", 92, "var(--nf-accent-2)"],
+                ["ISO 9001:2015", 96, "var(--nf-success)"],
+                ["ISO 27001:2022", 92, "var(--nf-success-strong)"],
               ] as [string, number, string][]).map(([n, v, c]) => (
                 <div key={n}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--nf-ink-2)", marginBottom: 3 }}>
                     <span>{n}</span><span style={{ fontFamily: "var(--font-mono)" }}>{v}%</span>
                   </div>
-                  <div style={{ height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: 4, background: "var(--nf-glass-2)", borderRadius: 2, overflow: "hidden" }}>
                     <div style={{ width: `${v}%`, height: "100%", background: c, boxShadow: `0 0 8px ${c}` }} />
                   </div>
                 </div>
@@ -93,18 +116,15 @@ function HeroDashboard() {
               {Array.from({ length: 25 }).map((_, i) => {
                 const r = Math.floor(i / 5), c = i % 5;
                 const lvl = r + c;
-                let bg = "rgba(46,139,87,0.18)";
-                if (lvl >= 7) bg = "oklch(0.7 0.18 25 / 0.7)";
-                else if (lvl >= 5) bg = "oklch(0.78 0.14 75 / 0.65)";
-                else if (lvl >= 3) bg = "rgba(46,139,87,0.45)";
+                const bg = riskHeatCellBg(lvl);
                 const has = [6,7,11,12,13,17,18].includes(i);
                 return (
-                  <span key={i} className="cell" style={{ background: bg, boxShadow: has ? "inset 0 0 0 1px rgba(255,255,255,0.4)" : "none" }} />
+                  <span key={i} className="cell" style={{ background: bg, boxShadow: has ? "inset 0 0 0 1px rgba(255,255,255,0.35)" : "none" }} />
                 );
               })}
             </div>
             <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--nf-ink-3)", letterSpacing: "0.04em" }}>
-              <span style={{ color: "var(--nf-accent)" }}>●</span> 12 bajos · <span style={{ color: "oklch(0.78 0.14 75)" }}>●</span> 7 medios · <span style={{ color: "oklch(0.7 0.18 25)" }}>●</span> 2 altos
+              <span style={{ color: "var(--nf-success)" }}>●</span> 12 bajos · <span style={{ color: "#d97706" }}>●</span> 7 medios · <span style={{ color: "var(--nf-danger)" }}>●</span> 2 altos
             </div>
           </div>
 
@@ -113,10 +133,10 @@ function HeroDashboard() {
             <span className="vv" style={{ fontSize: 16 }}>18 abiertas</span>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 10, fontFamily: "var(--font-mono)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", color: "var(--nf-ink-2)" }}>
-                <span>Causa raíz</span><span style={{ color: "var(--nf-accent)" }}>14 ✓</span>
+                <span>Causa raíz</span><span style={{ color: "var(--nf-success-strong)" }}>14 ✓</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", color: "var(--nf-ink-2)" }}>
-                <span>Eficacia</span><span style={{ color: "oklch(0.78 0.14 75)" }}>4 ⧗</span>
+                <span>Eficacia</span><span style={{ color: "#d97706" }}>4 ⧗</span>
               </div>
             </div>
           </div>
@@ -124,18 +144,18 @@ function HeroDashboard() {
           <div className="nf-dash-tile" style={{ gridColumn: "2 / 4" }}>
             <span className="tt">Aprobación — Política Seguridad v3.2</span>
             <div className="nf-flow" style={{ marginTop: 2 }}>
-              <span className="chip" style={{ background: "rgba(255,255,255,0.08)", color: "var(--nf-ink-3)" }}>Borrador</span>
+              <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Borrador</span>
               <span className="arr">→</span>
-              <span className="chip" style={{ background: "oklch(0.78 0.14 75 / 0.18)", color: "oklch(0.85 0.14 75)" }}>Pendiente</span>
+              <span className="chip" style={{ background: "#d97706", color: "#92400e" }}>Pendiente</span>
               <span className="arr">→</span>
-              <span className="chip" style={{ background: "oklch(0.72 0.14 158 / 0.18)", color: "var(--nf-accent)", boxShadow: "0 0 14px oklch(0.72 0.14 158 / 0.4)" }}>Aprobado</span>
+              <span className="chip nf-chip--ok">Aprobado</span>
               <span className="arr">→</span>
-              <span className="chip" style={{ background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-3)" }}>Activo</span>
+              <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Activo</span>
             </div>
             <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--nf-ink-3)", display: "flex", gap: 10 }}>
               <span>v3.2 · maría.torres@</span>
               <span>SHA · 9f2c…ae71</span>
-              <span style={{ color: "var(--nf-accent)" }}>● firmado</span>
+              <span style={{ color: "var(--nf-success-strong)" }}>● firmado</span>
             </div>
           </div>
         </div>
@@ -145,9 +165,9 @@ function HeroDashboard() {
         <div className="h">Audit readiness</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <svg width="40" height="40" viewBox="0 0 40 40">
-            <circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,0.08)" strokeWidth="3" fill="none"/>
-            <circle cx="20" cy="20" r="16" stroke="oklch(0.72 0.14 158)" strokeWidth="3" fill="none"
-              strokeDasharray="100.5" strokeDashoffset="9" transform="rotate(-90 20 20)" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 6px oklch(0.72 0.14 158))" }}/>
+            <circle cx="20" cy="20" r="16" stroke="var(--nf-glass-2)" strokeWidth="3" fill="none"/>
+            <circle cx="20" cy="20" r="16" stroke="var(--nf-success)" strokeWidth="3" fill="none"
+              strokeDasharray="100.5" strokeDashoffset="9" transform="rotate(-90 20 20)" strokeLinecap="round" style={{ filter: "drop-shadow(0 0 6px rgba(22, 163, 74, 0.35))" }}/>
           </svg>
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, letterSpacing: "-0.02em" }}>91<span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>%</span></div>
@@ -159,7 +179,7 @@ function HeroDashboard() {
       <div className="nf-float-tile" style={{ right: "-6%", top: "32%", minWidth: 180 }} data-parallax="1.4">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ width: 18, height: 18, borderRadius: 5, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))" }}>
-            <Ic.spark style={{ color: "#04130c" }}/>
+            <Ic.spark style={{ color: "#fff" }}/>
           </span>
           <span className="h" style={{ margin: 0 }}>Asistente IA</span>
         </div>
@@ -167,7 +187,7 @@ function HeroDashboard() {
           Sugiero CAPA para NC-118: revisar matriz de roles antes del 14 oct.
         </div>
         <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
-          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "oklch(0.78 0.14 75 / 0.18)", color: "oklch(0.85 0.14 75)", border: "1px solid oklch(0.78 0.14 75 / 0.3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
+          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "#d97706", color: "#92400e", border: "1px solid #d97706", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
         </div>
       </div>
 
@@ -177,7 +197,7 @@ function HeroDashboard() {
         <div style={{ fontSize: 11, color: "var(--nf-ink-2)", marginTop: 3 }}>ISO 9001 · Interna · M. López</div>
         <div style={{ display: "flex", gap: 4, marginTop: 8 }}>
           {Array.from({ length: 14 }).map((_, i) => (
-            <span key={i} style={{ width: 6, height: 14, borderRadius: 2, background: i < 11 ? "var(--nf-accent)" : "rgba(255,255,255,0.1)" }}/>
+            <span key={i} style={{ width: 6, height: 14, borderRadius: 2, background: i < 11 ? "var(--nf-accent)" : "var(--nf-line)" }}/>
           ))}
         </div>
       </div>
@@ -295,7 +315,7 @@ function NfProblem() {
     <section className="nf-section" id="problema">
       <div className="nf-container">
         <div data-reveal>
-          <span className="nf-eyebrow"><span className="dot" style={{ background: "oklch(0.70 0.18 25)", boxShadow: "0 0 12px oklch(0.70 0.18 25)" }}></span> El problema</span>
+          <span className="nf-eyebrow"><span className="dot" style={{ background: "var(--nf-danger)", boxShadow: "0 0 12px var(--nf-danger)" }}></span> El problema</span>
           <h2 className="nf-h-section" style={{ marginTop: 22, maxWidth: "20ch" }}>
             El cumplimiento no falla<br/>de golpe. <em style={{ color: "var(--nf-ink-3)", fontStyle: "normal" }}>Se rompe en silencio.</em>
           </h2>
@@ -307,7 +327,7 @@ function NfProblem() {
         <div className="nf-problem-grid">
           {problems.map((p, i) => (
             <div key={p.t} className="nf-problem-card" data-reveal style={{ transitionDelay: `${i * 60}ms` }}>
-              <div className="ic-wrap" style={{ color: "oklch(0.78 0.14 30)" }}>{p.ic}</div>
+              <div className="ic-wrap" style={{ color: "var(--nf-danger)" }}>{p.ic}</div>
               <div className="nf-h-4">{p.t}</div>
               <div style={{ marginTop: 8, color: "var(--nf-ink-3)", fontSize: 14, lineHeight: 1.6 }}>{p.d}</div>
             </div>
@@ -355,7 +375,7 @@ function NfTransform() {
 
         <div className="nf-transform-stage" data-reveal>
           <div className="nf-transform-side" aria-hidden="true">
-            <div style={{ position: "absolute", top: -8, left: 0, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "oklch(0.78 0.10 30)", textTransform: "uppercase" }}>antes · disperso</div>
+            <div style={{ position: "absolute", top: -8, left: 0, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "var(--nf-danger)", textTransform: "uppercase" }}>antes · disperso</div>
             {chaos.map((t, i) => (
               <span key={i} className="nf-transform-tag chaos">{t}</span>
             ))}
@@ -368,7 +388,7 @@ function NfTransform() {
                 <div className="sub">Sistema único</div>
               </div>
               <svg style={{ position: "absolute", inset: -30, pointerEvents: "none" }} viewBox="0 0 280 280">
-                <circle cx="140" cy="140" r="130" fill="none" stroke="rgba(255,255,255,0.08)" strokeDasharray="2 4"/>
+                <circle cx="140" cy="140" r="130" fill="none" stroke="var(--nf-glass-2)" strokeDasharray="2 4"/>
               </svg>
             </div>
           </div>
@@ -402,8 +422,8 @@ function MiniViz({ kind }: { kind: string }) {
         ] as [string, number][]).map(([n, v]) => (
           <div key={n} style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ width: 90, fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--nf-ink-3)" }}>{n}</span>
-            <span style={{ flex: 1, height: 5, background: "rgba(255,255,255,0.06)", borderRadius: 2, overflow: "hidden" }}>
-              <span style={{ display: "block", width: `${v}%`, height: "100%", background: "linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2))" }}/>
+            <span style={{ flex: 1, height: 5, background: "var(--nf-glass-2)", borderRadius: 2, overflow: "hidden" }}>
+              <span style={{ display: "block", width: `${v}%`, height: "100%", background: "linear-gradient(90deg, var(--nf-success), var(--nf-success-strong))" }}/>
             </span>
             <span style={{ width: 28, textAlign: "right", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-2)" }}>{v}</span>
           </div>
@@ -415,12 +435,12 @@ function MiniViz({ kind }: { kind: string }) {
     return (
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 4, fontFamily: "var(--font-mono)", fontSize: 10 }}>
         {([
-          ["v3.2", "Aprobado", "var(--nf-accent)"],
+          ["v3.2", "Aprobado", "var(--nf-success-strong)"],
           ["v3.1", "Archivado", "var(--nf-ink-3)"],
           ["v3.0", "Archivado", "var(--nf-ink-3)"],
           ["v2.8", "Archivado", "var(--nf-ink-3)"],
         ] as [string, string, string][]).map(([v, s, c], i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 8px", borderRadius: 4, background: i === 0 ? "rgba(46,139,87,0.08)" : "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)" }}>
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 8px", borderRadius: 4, background: i === 0 ? "var(--nf-success-bg)" : "#fafafa", border: "1px solid var(--nf-line)" }}>
             <span style={{ color: "var(--nf-ink-2)" }}>{v}</span>
             <span style={{ color: c }}>● {s}</span>
           </div>
@@ -434,11 +454,7 @@ function MiniViz({ kind }: { kind: string }) {
         {Array.from({ length: 25 }).map((_, i) => {
           const r = Math.floor(i / 5), c = i % 5;
           const lvl = r + c;
-          let bg = "rgba(46,139,87,0.18)";
-          if (lvl >= 7) bg = "oklch(0.7 0.18 25 / 0.7)";
-          else if (lvl >= 5) bg = "oklch(0.78 0.14 75 / 0.65)";
-          else if (lvl >= 3) bg = "rgba(46,139,87,0.45)";
-          return <span key={i} style={{ background: bg, borderRadius: 2 }}/>;
+          return <span key={i} style={{ background: riskHeatCellBg(lvl), borderRadius: 2 }}/>;
         })}
       </div>
     );
@@ -453,8 +469,8 @@ function MiniViz({ kind }: { kind: string }) {
           ["⚠", "9.2 Auditoría interna", "warn"],
           ["☑", "10.2 NC y CAPA", "ok"],
         ] as [string, string, string][]).map(([k, t, st], i) => (
-          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", color: st === "warn" ? "oklch(0.85 0.14 75)" : "var(--nf-ink-2)" }}>
-            <span style={{ color: st === "warn" ? "oklch(0.85 0.14 75)" : "var(--nf-accent)", width: 12 }}>{k}</span>
+          <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", color: st === "warn" ? "#92400e" : "var(--nf-ink-2)" }}>
+            <span style={{ color: st === "warn" ? "#92400e" : "var(--nf-success-strong)", width: 12 }}>{k}</span>
             <span style={{ fontSize: 10 }}>{t}</span>
           </div>
         ))}
@@ -479,14 +495,14 @@ function MiniViz({ kind }: { kind: string }) {
       <svg viewBox="0 0 200 80" style={{ width: "100%", height: "100%" }}>
         <defs>
           <linearGradient id="kpi-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="oklch(0.72 0.14 158)" stopOpacity="0.4"/>
-            <stop offset="1" stopColor="oklch(0.72 0.14 158)" stopOpacity="0"/>
+            <stop offset="0" stopColor="var(--nf-accent)" stopOpacity="0.4"/>
+            <stop offset="1" stopColor="var(--nf-accent)" stopOpacity="0"/>
           </linearGradient>
         </defs>
         <path d="M0 60 L25 50 L50 55 L75 40 L100 42 L125 30 L150 35 L175 18 L200 22 L200 80 L0 80 Z" fill="url(#kpi-grad)"/>
-        <path d="M0 60 L25 50 L50 55 L75 40 L100 42 L125 30 L150 35 L175 18 L200 22" fill="none" stroke="oklch(0.72 0.14 158)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 4px oklch(0.72 0.14 158))" }}/>
-        <line x1="0" y1="34" x2="200" y2="34" stroke="oklch(0.78 0.14 75)" strokeWidth="0.6" strokeDasharray="2 3"/>
-        <text x="6" y="32" fill="oklch(0.85 0.14 75)" fontSize="7" fontFamily="JetBrains Mono">objetivo</text>
+        <path d="M0 60 L25 50 L50 55 L75 40 L100 42 L125 30 L150 35 L175 18 L200 22" fill="none" stroke="var(--nf-accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 4px var(--nf-accent))" }}/>
+        <line x1="0" y1="34" x2="200" y2="34" stroke="#d97706" strokeWidth="0.6" strokeDasharray="2 3"/>
+        <text x="6" y="32" fill="#92400e" fontSize="7" fontFamily="JetBrains Mono">objetivo</text>
       </svg>
     );
   }
@@ -498,10 +514,10 @@ function MiniViz({ kind }: { kind: string }) {
           ["Implantar 8.1.4", "A.R", "vencido", "danger"],
           ["Revisar 5×5", "L.C", "12 nov", "warn"],
         ] as [string, string, string, string][]).map(([t, w, d, st], i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "center", padding: "4px 6px", borderRadius: 4, background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)" }}>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "center", padding: "4px 6px", borderRadius: 4, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
             <span style={{ color: "var(--nf-ink-2)" }}>{t}</span>
             <span style={{ color: "var(--nf-ink-3)" }}>{w}</span>
-            <span style={{ color: st === "danger" ? "oklch(0.78 0.14 30)" : st === "warn" ? "oklch(0.85 0.14 75)" : "var(--nf-accent)" }}>{d}</span>
+            <span style={{ color: st === "danger" ? "var(--nf-danger)" : st === "warn" ? "#92400e" : "var(--nf-accent)" }}>{d}</span>
           </div>
         ))}
       </div>
@@ -511,7 +527,7 @@ function MiniViz({ kind }: { kind: string }) {
     return (
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, width: "100%" }}>
         {["PDF", "PNG", "XLS", "PDF", "DOC", "PNG", "PDF", "MP4"].map((t, i) => (
-          <div key={i} style={{ aspectRatio: "1", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--nf-ink-3)" }}>{t}</div>
+          <div key={i} style={{ aspectRatio: "1", borderRadius: 6, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--nf-ink-3)" }}>{t}</div>
         ))}
       </div>
     );
@@ -519,12 +535,12 @@ function MiniViz({ kind }: { kind: string }) {
   if (kind === "ai") {
     return (
       <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 6, fontSize: 10, fontFamily: "var(--font-mono)" }}>
-        <div style={{ padding: 6, background: "rgba(255,255,255,0.03)", border: "1px solid var(--nf-line)", borderRadius: 6, color: "var(--nf-ink-2)" }}>
+        <div style={{ padding: 6, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", borderRadius: 6, color: "var(--nf-ink-2)" }}>
           <div style={{ color: "var(--nf-ink-3)", marginBottom: 2 }}>▸ borrador · política de acceso</div>
           <div>El acceso lógico se concederá según el principio de mínimo privilegio…</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ color: "oklch(0.85 0.14 75)", padding: "2px 6px", borderRadius: 99, border: "1px solid oklch(0.78 0.14 75 / 0.3)", background: "oklch(0.78 0.14 75 / 0.1)" }}>● Requiere aprobación</span>
+          <span style={{ color: "#92400e", padding: "2px 6px", borderRadius: 99, border: "1px solid #d97706", background: "#d97706" }}>● Requiere aprobación</span>
           <span style={{ color: "var(--nf-ink-3)" }}>+3 sugerencias</span>
         </div>
       </div>
@@ -578,7 +594,7 @@ function NfModules() {
             <article key={m.t} className="nf-module-card" data-reveal style={{ transitionDelay: `${(i % 3) * 60}ms` }} onMouseMove={onMove}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <span className="nf-module-num">MÓDULO {m.n}</span>
-                <span style={{ width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
                   {vizIcon[m.viz]}
                 </span>
               </div>
@@ -602,16 +618,16 @@ function ScreenDoc() {
         <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 6 }}>Política de Seguridad de la Información</div>
         <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Vinculado a ISO 27001 · A.5.1 · Proceso “Gobierno”</div>
 
-        <div style={{ marginTop: 18, padding: 14, border: "1px solid var(--nf-line)", borderRadius: 10, background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ marginTop: 18, padding: 14, border: "1px solid var(--nf-line)", borderRadius: 10, background: "#fafafa" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Flujo de aprobación</div>
           <div className="nf-flow">
-            <span className="chip" style={{ background: "rgba(255,255,255,0.06)", color: "var(--nf-ink-3)" }}>Borrador</span>
+            <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Borrador</span>
             <span className="arr">→</span>
-            <span className="chip" style={{ background: "rgba(255,255,255,0.06)", color: "var(--nf-ink-3)" }}>Revisión Calidad</span>
+            <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Revisión Calidad</span>
             <span className="arr">→</span>
-            <span className="chip" style={{ background: "oklch(0.72 0.14 158 / 0.18)", color: "var(--nf-accent)", boxShadow: "0 0 12px oklch(0.72 0.14 158 / 0.4)" }}>Aprobado · M. Torres</span>
+            <span className="chip nf-chip--ok">Aprobado · M. Torres</span>
             <span className="arr">→</span>
-            <span className="chip" style={{ background: "rgba(255,255,255,0.03)", color: "var(--nf-ink-3)" }}>Activo</span>
+            <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Activo</span>
           </div>
           <div style={{ marginTop: 10, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)" }}>
             firmado 2026-10-12 · SHA 9f2c…ae71 · próxima revisión 12-04-2027
@@ -623,14 +639,14 @@ function ScreenDoc() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Historial</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {([
-            ["v3.2", "2026-10-12", "M. Torres", "Aprobado", "var(--nf-accent)"],
+            ["v3.2", "2026-10-12", "M. Torres", "Aprobado", "var(--nf-success-strong)"],
             ["v3.1", "2026-04-08", "M. Torres", "Archivado", "var(--nf-ink-3)"],
             ["v3.0", "2025-10-02", "A. Ríos",   "Archivado", "var(--nf-ink-3)"],
             ["v2.8", "2025-04-19", "M. Torres", "Archivado", "var(--nf-ink-3)"],
             ["v2.7", "2024-11-04", "A. Ríos",   "Archivado", "var(--nf-ink-3)"],
             ["v2.6", "2024-06-10", "L. Castro", "Archivado", "var(--nf-ink-3)"],
           ] as [string, string, string, string, string][]).map(([v, d, p, s, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "8px 10px", borderRadius: 8, background: i === 0 ? "rgba(46,139,87,0.06)" : "rgba(255,255,255,0.015)", border: "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "8px 10px", borderRadius: 8, background: i === 0 ? "var(--nf-success-bg)" : "#fafafa", border: "1px solid var(--nf-line)" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: "var(--nf-ink)" }}>{v}</span>
               <span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{d} · {p}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: c }}>● {s}</span>
@@ -653,23 +669,23 @@ function ScreenAudit() {
             const isAudit = [2, 5, 9].includes(i);
             const isPlan = [1, 4, 8, 11].includes(i);
             return (
-              <div key={i} style={{ aspectRatio: "1/1.4", borderRadius: 6, border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, background: isAudit ? "oklch(0.72 0.14 158 / 0.15)" : isPlan ? "rgba(255,255,255,0.03)" : "transparent" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-2)" }}>{m}</span>
-                {isAudit && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--nf-accent)", boxShadow: "0 0 4px var(--nf-accent)" }}/>}
-                {isPlan && <span style={{ width: 4, height: 4, borderRadius: "50%", background: "oklch(0.85 0.14 75)" }}/>}
+              <div key={i} style={{ aspectRatio: "1/1.4", borderRadius: 6, border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, background: isAudit ? "var(--nf-accent)" : isPlan ? "var(--nf-glass-2)" : "transparent" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: isAudit ? "#fff" : "var(--nf-ink-2)" }}>{m}</span>
+                {isAudit && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#fff", boxShadow: "0 0 4px rgba(255,255,255,0.5)" }}/>}
+                {isPlan && <span style={{ width: 4, height: 4, borderRadius: "50%", background: "#92400e" }}/>}
               </div>
             );
           })}
         </div>
         <div style={{ marginTop: 10, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", display: "flex", gap: 12 }}>
           <span><span style={{ color: "var(--nf-accent)" }}>●</span> Auditoría</span>
-          <span><span style={{ color: "oklch(0.85 0.14 75)" }}>●</span> Planificación</span>
+          <span><span style={{ color: "#92400e" }}>●</span> Planificación</span>
         </div>
 
-        <div style={{ marginTop: 18, padding: 14, borderRadius: 10, border: "1px solid var(--nf-line)", background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ marginTop: 18, padding: 14, borderRadius: 10, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700 }}>Auditoría interna · 03 dic</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "oklch(0.72 0.14 158 / 0.15)", color: "var(--nf-accent)", border: "1px solid oklch(0.72 0.14 158 / 0.3)" }}>Programada</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>Programada</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>ISO 9001:2015 · alcance: Producción + Calidad · 12 procesos</div>
         </div>
@@ -678,8 +694,8 @@ function ScreenAudit() {
       <div>
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Hallazgos · YTD</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
-          {([["NC mayores", 0, "var(--nf-accent)"], ["NC menores", 4, "oklch(0.85 0.14 75)"], ["Observaciones", 11, "var(--nf-ink-2)"]] as [string, number, string][]).map(([l, v, c]) => (
-            <div key={l} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--nf-line)", background: "rgba(255,255,255,0.02)" }}>
+          {([["NC mayores", 0, "var(--nf-success-strong)"], ["NC menores", 4, "#92400e"], ["Observaciones", 11, "var(--nf-ink-2)"]] as [string, number, string][]).map(([l, v, c]) => (
+            <div key={l} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800, color: c, letterSpacing: "-0.02em" }}>{v}</div>
               <div style={{ fontSize: 10, color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>{l}</div>
             </div>
@@ -694,10 +710,10 @@ function ScreenAudit() {
             ["10.2",  "NC y acción correctiva", "ok"],
             ["6.1.2", "Riesgos y oportunidades", "warn"],
           ] as [string, string, string][]).map(([c, t, st], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", borderRadius: 6, background: "rgba(255,255,255,0.015)", border: "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
               <span style={{ color: "var(--nf-accent-2)" }}>{c}</span>
               <span style={{ color: "var(--nf-ink-2)" }}>{t}</span>
-              <span style={{ color: st === "warn" ? "oklch(0.85 0.14 75)" : "var(--nf-accent)" }}>● {st === "warn" ? "menor" : "ok"}</span>
+              <span style={{ color: st === "warn" ? "#92400e" : "var(--nf-success-strong)" }}>● {st === "warn" ? "menor" : "ok"}</span>
             </div>
           ))}
         </div>
@@ -719,13 +735,11 @@ function ScreenRisk() {
             {Array.from({ length: 25 }).map((_, i) => {
               const r = 4 - Math.floor(i / 5), c = i % 5;
               const lvl = r + c;
-              let bg = "rgba(46,139,87,0.18)";
-              if (lvl >= 7) bg = "oklch(0.7 0.18 25 / 0.7)";
-              else if (lvl >= 5) bg = "oklch(0.78 0.14 75 / 0.6)";
-              else if (lvl >= 3) bg = "rgba(46,139,87,0.45)";
+              const bg = riskHeatCellBg(lvl);
               const has = [{r:4,c:4},{r:3,c:3},{r:3,c:4},{r:2,c:3},{r:1,c:1},{r:1,c:2},{r:0,c:1}].find((p) => p.r === r && p.c === c);
+              const marker = riskHeatMarkerStyle(lvl, Boolean(has));
               return (
-                <div key={i} style={{ aspectRatio: "1", borderRadius: 5, background: bg, display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: has ? "#fff" : "transparent", border: has ? "1px solid rgba(255,255,255,0.5)" : "none", boxShadow: has ? "0 0 12px rgba(255,255,255,0.15)" : "none" }}>
+                <div key={i} style={{ aspectRatio: "1", borderRadius: 5, background: bg, display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, ...marker }}>
                   {has ? "•" : ""}
                 </div>
               );
@@ -739,15 +753,15 @@ function ScreenRisk() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Riesgos críticos</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {([
-            ["R-021", "Acceso no autorizado a producción", "Mitigar", 16, "oklch(0.7 0.18 25)"],
-            ["R-014", "Pérdida de evidencia digital",     "Mitigar", 12, "oklch(0.78 0.14 75)"],
-            ["R-008", "Proveedor crítico sin SLA",        "Transferir", 9, "oklch(0.78 0.14 75)"],
-            ["R-033", "Cambios en marco regulatorio",      "Aceptar",  6, "var(--nf-accent)"],
+            ["R-021", "Acceso no autorizado a producción", "Mitigar", 16, "var(--nf-danger)"],
+            ["R-014", "Pérdida de evidencia digital",     "Mitigar", 12, "#d97706"],
+            ["R-008", "Proveedor crítico sin SLA",        "Transferir", 9, "#d97706"],
+            ["R-033", "Cambios en marco regulatorio",      "Aceptar",  6, "var(--nf-success-strong)"],
           ] as [string, string, string, number, string][]).map(([id, t, tr, sc, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)", alignItems: "center" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#fafafa", border: "1px solid var(--nf-line)", alignItems: "center" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)" }}>{id}</span>
               <span style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>{t}</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-3)" }}>{tr}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>{tr}</span>
               <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 14, color: c }}>{sc}</span>
             </div>
           ))}
@@ -770,8 +784,8 @@ function ScreenCapa() {
             "El offboarding no actualizó la matriz de roles.",
             "El procedimiento no incluía revisión cruzada de alertas.",
           ].map((t, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: 10, borderRadius: 8, background: i === 4 ? "rgba(46,139,87,0.06)" : "rgba(255,255,255,0.02)", border: i === 4 ? "1px solid oklch(0.72 0.14 158 / 0.4)" : "1px solid var(--nf-line)" }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 4 ? "var(--nf-accent)" : "rgba(255,255,255,0.06)", color: i === 4 ? "#04130c" : "var(--nf-ink-2)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: 10, borderRadius: 8, background: i === 4 ? "var(--nf-success-bg)" : "#fafafa", border: i === 4 ? "1px solid var(--nf-success-border)" : "1px solid var(--nf-line)" }}>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 4 ? "var(--nf-success)" : "var(--nf-glass-2)", color: i === 4 ? "#fff" : "var(--nf-ink-2)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
               <span style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.45 }}>{t}</span>
             </div>
           ))}
@@ -784,11 +798,11 @@ function ScreenCapa() {
           {([
             ["CORR", "Reasignar regla de notificación", "L. Castro · 14 oct", "var(--nf-accent)"],
             ["CORR", "Revisión cruzada en cierre de turno", "A. Ríos · 22 oct", "var(--nf-accent-2)"],
-            ["PREV", "Procedimiento de offboarding actualizado", "M. Torres · 02 nov", "oklch(0.78 0.14 75)"],
-            ["PREV", "Validación de eficacia 30 días", "L. Castro · 02 dic", "oklch(0.78 0.14 75)"],
+            ["PREV", "Procedimiento de offboarding actualizado", "M. Torres · 02 nov", "#d97706"],
+            ["PREV", "Validación de eficacia 30 días", "L. Castro · 02 dic", "#d97706"],
           ] as [string, string, string, string][]).map(([k, t, w, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: "10px 12px", borderRadius: 8, background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 7px", borderRadius: 4, background: "rgba(255,255,255,0.04)", color: c, height: 22 }}>{k}</span>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: "10px 12px", borderRadius: 8, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 7px", borderRadius: 4, background: "var(--nf-glass-2)", color: c, height: 22 }}>{k}</span>
               <div>
                 <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{t}</div>
                 <div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)" }}>{w}</div>
@@ -796,8 +810,8 @@ function ScreenCapa() {
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 10, padding: 10, borderRadius: 8, border: "1px dashed oklch(0.72 0.14 158 / 0.4)", background: "oklch(0.72 0.14 158 / 0.04)", fontSize: 12, color: "var(--nf-ink-2)" }}>
-          <span style={{ color: "var(--nf-accent)", fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.06em" }}>EFICACIA · 02 DIC 2026</span><br/>
+        <div style={{ marginTop: 10, padding: 10, borderRadius: 8, border: "1px dashed var(--nf-success-border)", background: "var(--nf-success-bg)", fontSize: 12, color: "var(--nf-ink-2)" }}>
+          <span style={{ color: "var(--nf-success-strong)", fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.06em" }}>EFICACIA · 02 DIC 2026</span><br/>
           Cierre automático cuando se valide la ausencia de reincidencia.
         </div>
       </div>
@@ -822,14 +836,14 @@ function ScreenEvid() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Repositorio · 4 124 evidencias</div>
         <div style={{ display: "flex", gap: 6 }}>
           {["Todas", "Audit", "Riesgo", "Doc", "CAPA"].map((t, i) => (
-            <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 9px", borderRadius: 99, border: "1px solid var(--nf-line)", background: i === 0 ? "rgba(255,255,255,0.06)" : "transparent", color: i === 0 ? "var(--nf-ink)" : "var(--nf-ink-3)" }}>{t}</span>
+            <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 9px", borderRadius: 99, border: "1px solid var(--nf-line)", background: i === 0 ? "var(--nf-glass-2)" : "transparent", color: i === 0 ? "var(--nf-ink)" : "var(--nf-ink-3)" }}>{t}</span>
           ))}
         </div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {files.map((f, i) => (
-          <div key={i} style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", gap: 10 }}>
-            <div style={{ aspectRatio: "1.4", borderRadius: 6, background: "linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 14, color: f.k === "VID" ? "oklch(0.78 0.13 25)" : f.k === "PNG" ? "oklch(0.78 0.13 195)" : f.k === "XLS" ? "var(--nf-accent)" : "var(--nf-ink-2)" }}>{f.k}</div>
+          <div key={i} style={{ padding: 12, borderRadius: 10, background: "#fafafa", border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ aspectRatio: "1.4", borderRadius: 6, background: "linear-gradient(180deg, var(--nf-glass-2), transparent)", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 14, color: f.k === "VID" ? "oklch(0.78 0.13 25)" : f.k === "PNG" ? "var(--nf-accent-3)" : f.k === "XLS" ? "var(--nf-accent)" : "var(--nf-ink-2)" }}>{f.k}</div>
             <div>
               <div style={{ fontSize: 11, color: "var(--nf-ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.t}</div>
               <div style={{ fontSize: 10, color: "var(--nf-accent)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em", marginTop: 2 }}>↳ {f.l}</div>
@@ -1000,7 +1014,7 @@ function NfApproval() {
                 <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, letterSpacing: "-0.015em", margin: "6px 0 4px" }}>{s.t}</div>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)" }}>{s.s}</div>
                 {active === i && (
-                  <div style={{ position: "absolute", inset: 0, borderRadius: 12, pointerEvents: "none", boxShadow: "inset 0 0 0 1px oklch(0.72 0.14 158 / 0.4)" }}/>
+                  <div style={{ position: "absolute", inset: 0, borderRadius: 12, pointerEvents: "none", boxShadow: "inset 0 0 0 1px var(--nf-accent)" }}/>
                 )}
               </div>
             ))}
@@ -1008,15 +1022,15 @@ function NfApproval() {
           </div>
 
           <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Trazabilidad</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Cada cambio queda registrado con autor, fecha y diff exportable a PDF.</div>
             </div>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Vínculo ISO</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Cláusulas, controles del Anexo A y procesos enlazados al documento.</div>
             </div>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "rgba(255,255,255,0.02)" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Revisión periódica</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Alertas automáticas antes de que cualquier política quede desactualizada.</div>
             </div>
@@ -1051,12 +1065,14 @@ function NfPDCA() {
         <div className="nf-pdca-stage" data-reveal>
           <div className="nf-pdca-ring">
             {phases.map((p) => (
-              <div key={p.nm} className="nf-pdca-quad" style={p.a}>
-                <div className="ph">FASE {p.ph}</div>
-                <div className="nm">{p.nm}</div>
-                <ul>
-                  {p.items.map((it) => <li key={it}>{it}</li>)}
-                </ul>
+              <div key={p.nm} className="nf-pdca-quad-anchor" style={p.a}>
+                <div className="nf-pdca-quad">
+                  <div className="ph">FASE {p.ph}</div>
+                  <div className="nm">{p.nm}</div>
+                  <ul>
+                    {p.items.map((it) => <li key={it}>{it}</li>)}
+                  </ul>
+                </div>
               </div>
             ))}
             <div className="nf-pdca-center">
@@ -1161,11 +1177,11 @@ function NfAI() {
             ))}
           </ul>
 
-          <div style={{ marginTop: 28, padding: 14, borderRadius: 12, border: "1px dashed oklch(0.78 0.14 75 / 0.45)", background: "oklch(0.78 0.14 75 / 0.06)", display: "flex", gap: 12, alignItems: "center" }}>
-            <span style={{ color: "oklch(0.85 0.14 75)" }}><Ic.human/></span>
-            <span style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>
-              <strong style={{ color: "oklch(0.92 0.10 75)" }}>Human-in-the-loop por diseño.</strong> Cada sugerencia se marca como tal hasta que un responsable la aprueba y la firma.
-            </span>
+          <div className="nf-ai-human-callout">
+            <span className="icon"><Ic.human/></span>
+            <p>
+              <strong>Human-in-the-loop por diseño.</strong> Cada sugerencia se marca como tal hasta que un responsable la aprueba y la firma.
+            </p>
           </div>
         </div>
 
@@ -1173,7 +1189,7 @@ function NfAI() {
           <div className="nf-ai-card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#04130c" }}>
+                <span style={{ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
                   <Ic.spark/>
                 </span>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>NormaFlow · Asistente</span>
@@ -1184,7 +1200,7 @@ function NfAI() {
             <div style={{ marginBottom: 16, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
               Contexto · NC-2026-118 · ISO 27001 A.5.18
             </div>
-            <div style={{ padding: 16, borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid var(--nf-line)", fontSize: 14, lineHeight: 1.55, color: "var(--nf-ink-2)" }}>
+            <div style={{ padding: 16, borderRadius: 12, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", fontSize: 14, lineHeight: 1.55, color: "var(--nf-ink-2)" }}>
               He revisado el expediente. La causa raíz más probable es <strong style={{ color: "var(--nf-ink)" }}>una regla de notificación apuntando a un usuario inactivo</strong> tras un offboarding sin actualizar la matriz de roles.
               <br/><br/>
               Sugiero <strong style={{ color: "var(--nf-ink)" }}>tres acciones</strong>:
@@ -1225,7 +1241,7 @@ function NfCase() {
         </div>
 
         <div className="nf-case" data-reveal>
-          <div style={{ position: "absolute", top: -100, left: -100, width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, oklch(0.55 0.12 158 / 0.35), transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }}/>
+          <div style={{ position: "absolute", top: -100, left: -100, width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(82, 102, 246, 0.12), transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }}/>
 
           <div style={{ position: "relative" }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
@@ -1259,7 +1275,7 @@ function NfCase() {
 
             <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
               {["Manufactura", "ISO 9001 + ISO 27001", "420 empleados"].map((t) => (
-                <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 11, padding: "5px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", color: "var(--nf-ink-2)" }}>{t}</span>
+                <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 11, padding: "5px 10px", borderRadius: 99, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-ink-2)" }}>{t}</span>
               ))}
             </div>
 
@@ -1327,7 +1343,7 @@ function NfCTA() {
     <section className="nf-section nf-section--tight" id="demo">
       <div className="nf-container">
         <div className="nf-cta-final" data-reveal>
-          <span className="nf-eyebrow" style={{ background: "rgba(255,255,255,0.06)" }}>
+          <span className="nf-eyebrow" style={{ background: "var(--nf-glass-2)" }}>
             <span className="dot"/> Cumplimiento bajo control
           </span>
           <h2 className="nf-h-display" style={{ fontSize: "clamp(36px, 5.4vw, 72px)", marginTop: 22, maxWidth: "20ch", marginInline: "auto" }}>

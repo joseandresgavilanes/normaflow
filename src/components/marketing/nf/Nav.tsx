@@ -29,7 +29,7 @@ export function NfNav() {
     <header className="nf-nav">
       <div className="nf-container nf-nav-row">
         <Link href="/home" className="nf-logo">
-          <span className="nf-logo-mark"></span>
+          <span className="nf-logo-mark" aria-hidden />
           NormaFlow
         </Link>
         <nav className="nf-nav-links">

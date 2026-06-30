@@ -5,6 +5,7 @@ import { ACPMStage, ActionStatus, ActionType, Priority } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { notifyUser, notifyUsers } from "@/lib/notify";
 
 const PATH = "/app/actions";
 
@@ -135,6 +136,16 @@ export async function updateACPMFields(id: string, input: UpdateACPMFields): Pro
     before: { stage: existing.stage, progress: existing.progress },
     after: patch,
   });
+  if (input.ownerId && input.ownerId !== existing.ownerId && input.ownerId !== ctx.user.id) {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: input.ownerId,
+      title: "Se te asignó una acción correctiva (ACPM)",
+      body: `Eres responsable de «${existing.title}». Revisa el análisis y avanza su implementación.`,
+      type: "WARNING",
+      link: PATH,
+    });
+  }
   revalidatePath(PATH);
   revalidatePath("/app/activity");
 }
@@ -183,6 +194,19 @@ export async function transitionACPM(
     extra: { message: comment ?? stageTransitionMessage(toStage) },
   });
 
+  // Notify owner + requester (excluding whoever performed the transition).
+  await notifyUsers(
+    [existing.ownerId, existing.requestedById],
+    {
+      organizationId: ctx.organization.id,
+      title: `ACPM actualizada: ${stageTransitionMessage(toStage)}`,
+      body: `«${existing.title}» pasó a la etapa «${toStage}».${comment ? ` Nota: ${comment.trim()}` : ""}`,
+      type: toStage === "CLOSED" ? "SUCCESS" : "INFO",
+      link: "/app/actions",
+    },
+    { skipUserId: ctx.user.id },
+  );
+
   revalidatePath(PATH);
   revalidatePath("/app/activity");
 }
@@ -211,6 +235,19 @@ export async function rejectACPM(id: string, comment: string): Promise<void> {
     after: { stage: back },
     extra: { reason: comment.trim() },
   });
+
+  await notifyUsers(
+    [existing.ownerId, existing.requestedById],
+    {
+      organizationId: ctx.organization.id,
+      title: "ACPM rechazada",
+      body: `«${existing.title}» fue devuelta a la etapa «${back}». Motivo: ${comment.trim()}`,
+      type: "ALERT",
+      link: "/app/actions",
+    },
+    { skipUserId: ctx.user.id },
+  );
+
   revalidatePath(PATH);
   revalidatePath("/app/activity");
 }
@@ -232,6 +269,17 @@ export async function commentACPM(id: string, message: string): Promise<void> {
     recordId: id,
     extra: { message: message.trim().slice(0, 200) },
   });
+  revalidatePath(PATH);
+  revalidatePath("/app/activity");
+}
+
+export async function deleteACPM(id: string): Promise<void> {
+  const ctx = await requirePermission("actions:*");
+  const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("ACPM no encontrada.");
+  // ActionComment cascades on delete; the Action's own FKs don't block deletion.
+  await prisma.action.delete({ where: { id } });
+  await logAuditEvent({ ctx, action: "delete", module: "acpm", recordId: id, before: { title: existing.title, stage: existing.stage } });
   revalidatePath(PATH);
   revalidatePath("/app/activity");
 }

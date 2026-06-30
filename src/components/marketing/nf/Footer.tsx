@@ -13,7 +13,7 @@ export function NfFooter() {
         <div className="nf-footer-grid">
           <div>
             <Link href="/home" className="nf-logo">
-              <span className="nf-logo-mark"></span>
+              <span className="nf-logo-mark" aria-hidden />
               NormaFlow
             </Link>
             <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 14, maxWidth: 320, lineHeight: 1.6 }}>

@@ -46,7 +46,7 @@ export default function FeaturesPage() {
                 }}
               >
                 <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line-2)", color: "var(--nf-accent)", marginBottom: 18 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--nf-accent-soft)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)", marginBottom: 18 }}>
                     <Icon />
                   </div>
                   <h3 className="nf-h-3">{feat.title}</h3>
@@ -61,7 +61,7 @@ export default function FeaturesPage() {
                 </div>
                 <div style={{
                   order: i % 2 === 0 ? 2 : 1,
-                  background: "radial-gradient(circle at 30% 30%, oklch(0.72 0.14 158 / 0.18), transparent 60%), rgba(255,255,255,0.02)",
+                  background: "var(--nf-accent-soft)",
                   border: "1px solid var(--nf-line)",
                   borderRadius: 18,
                   minHeight: 220,

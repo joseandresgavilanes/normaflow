@@ -50,10 +50,10 @@ export default function ISO27001Page() {
               return (
                 <article key={it.title} className="nf-tile">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", color: "var(--nf-accent-2)" }}>
+                    <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent-2)" }}>
                       <Icon/>
                     </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "oklch(0.78 0.13 195 / 0.14)", color: "var(--nf-accent-2)", border: "1px solid oklch(0.78 0.13 195 / 0.3)", letterSpacing: "0.06em" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent-2)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>
                       {it.control}
                     </span>
                   </div>

@@ -24,7 +24,7 @@ export default function BlogPage() {
           </p>
           <div style={{ display: "flex", gap: 8, marginTop: 22, flexWrap: "wrap" }}>
             {categories.map((cat) => (
-              <span key={cat} style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)", padding: "5px 10px", borderRadius: 99, background: "rgba(255,255,255,0.03)" }}>
+              <span key={cat} style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)", padding: "5px 10px", borderRadius: 99, background: "var(--nf-glass-2)" }}>
                 {cat}
               </span>
             ))}

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { requireAuthorization } from "@/lib/permissions/server";
 import { prisma } from "@/lib/prisma";
 import { getStripe, isPlanCheckoutConfigured, PLANS } from "@/lib/stripe";
+import { logAuditEvent } from "@/lib/audit-log";
 
 type CheckoutPlan = "STARTER" | "GROWTH";
 
@@ -33,6 +34,15 @@ export async function createCheckoutSession(plan: CheckoutPlan) {
     cancel_url: `${origin}/app/billing?checkout=cancelled`,
   });
   if (!session.url) throw new Error("Stripe no devolvió una URL de Checkout.");
+
+  await logAuditEvent({
+    ctx,
+    action: "checkout_session",
+    module: "billing",
+    recordId: session.id,
+    after: { plan, planName: PLANS[plan].name, hasCustomer: Boolean(current?.stripeCustomerId) },
+  });
+
   return { url: session.url };
 }
 
@@ -44,5 +54,13 @@ export async function createBillingPortalSession() {
     customer: subscription.stripeCustomerId,
     return_url: `${await appOrigin()}/app/billing`,
   });
+
+  await logAuditEvent({
+    ctx,
+    action: "billing_portal",
+    module: "billing",
+    after: { stripeCustomerId: subscription.stripeCustomerId },
+  });
+
   return { url: session.url };
 }

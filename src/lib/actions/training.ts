@@ -5,6 +5,7 @@ import { TrainingAssignmentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { notifyEmail } from "@/lib/notify";
 
 const PATH = "/app/training";
 
@@ -227,6 +228,15 @@ export async function createTrainingAssignment(input: TrainingAssignmentInput): 
     recordId: created.id,
     after: { courseId: course.id, personnelId: personnel.id, dueAt: dueAt.toISOString(), processId: process?.id ?? null },
   });
+
+  await notifyEmail({
+    to: personnel.email,
+    name: `${personnel.firstName} ${personnel.lastName}`.trim(),
+    title: `Formación asignada: ${course.title}`,
+    body: `Se te ha asignado la formación «${course.title}». Fecha límite: ${dueAt.toLocaleDateString("es")}.`,
+    link: "/app/training",
+  });
+
   revalidatePath(PATH);
   return { id: created.id };
 }

@@ -119,8 +119,43 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
           <div className="nf-grid-2"><Meta label="Código" value={detail.code} /><Meta label="Responsable" value={detail.ownerName} /><Meta label="Tipo" value={detail.type} /><Meta label="Actualizado" value={new Date(detail.updatedAt).toLocaleDateString("es")} /></div>
           <Meta label="Descripción" value={detail.description} />
           <div className="nf-grid-2"><Meta label="Entradas" value={detail.inputs.join(" · ") || "—"} /><Meta label="Salidas" value={detail.outputs.join(" · ") || "—"} /></div>
+          <ProcessDocuments documents={detail.documents} />
         </div>}
       </Modal>
+    </div>
+  );
+}
+
+function ProcessDocuments({ documents }: { documents: ProcessRow["documents"] }) {
+  const active = documents.filter((d) => d.status !== "OBSOLETE");
+  const historical = documents.filter((d) => d.status === "OBSOLETE");
+  const Row = (d: ProcessRow["documents"][number], muted: boolean) => (
+    <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 9, opacity: muted ? 0.75 : 1 }}>
+      <div style={{ minWidth: 0 }}>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{d.code}</span>
+        <span style={{ fontSize: 13, marginLeft: 8 }}>{d.title}</span>
+        <span style={{ fontSize: 11, color: "var(--nf-ink-3)", marginLeft: 6 }}>v{d.currentVersion}</span>
+        {d.supersededByCode && <div style={{ fontSize: 11, color: "#D97706", fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>}
+      </div>
+      <Badge status={d.status} />
+    </div>
+  );
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
+      <div>
+        <strong style={{ fontSize: 13 }}>Documentos activos ({active.length})</strong>
+        <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+          {active.length ? active.map((d) => Row(d, false)) : <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0 }}>Sin documentos activos enlazados.</p>}
+        </div>
+      </div>
+      {historical.length > 0 && (
+        <div>
+          <strong style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Históricos / obsoletos ({historical.length})</strong>
+          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            {historical.map((d) => Row(d, true))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -773,6 +773,7 @@ type Action =
   | { type: "addACPM"; row: ACPMRow; history: ACPMHistoryRow }
   | { type: "updateACPM"; id: string; patch: Partial<ACPMRow>; history?: ACPMHistoryRow }
   | { type: "addACPMHistory"; row: ACPMHistoryRow }
+  | { type: "deleteACPM"; id: string }
   | { type: "appendAudit"; row: AuditTrailEntry };
 
 function reducer(state: AdminMockState, action: Action): AdminMockState {
@@ -894,6 +895,12 @@ function reducer(state: AdminMockState, action: Action): AdminMockState {
       };
     case "addACPMHistory":
       return { ...state, acpmHistory: [...state.acpmHistory, action.row] };
+    case "deleteACPM":
+      return {
+        ...state,
+        acpms: state.acpms.filter((a) => a.id !== action.id),
+        acpmHistory: state.acpmHistory.filter((h) => h.acpmId !== action.id),
+      };
     case "appendAudit":
       return { ...state, auditTrail: [action.row, ...state.auditTrail] };
   }
@@ -976,6 +983,7 @@ type AdminMockContextValue = {
   transitionACPM: (id: string, toStage: ACPMStage, comment?: string) => void;
   rejectACPM: (id: string, comment: string) => void;
   commentACPM: (id: string, message: string) => void;
+  deleteACPM: (id: string) => void;
 };
 
 export const AdminCtx = createContext<AdminMockContextValue | null>(null);
@@ -1497,6 +1505,12 @@ export function AdminMockProvider({
             at: new Date().toISOString(),
           },
         });
+      },
+
+      deleteACPM: (acpmId) => {
+        const existing = state.acpms.find((a) => a.id === acpmId);
+        dispatch({ type: "deleteACPM", id: acpmId });
+        if (existing) emit({ action: "delete", module: "acpm", recordId: acpmId, recordLabel: `${existing.code} — ${existing.title}`, summary: `ACPM eliminada: ${existing.code}` });
       },
     }),
     [state, mkPosition, mkLocation, mkSimple, emit]

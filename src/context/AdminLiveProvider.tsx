@@ -318,6 +318,10 @@ export function AdminLiveProvider({
         await acpmA.commentACPM(id, message);
         refresh();
       },
+      deleteACPM: async (id) => {
+        await acpmA.deleteACPM(id);
+        refresh();
+      },
     };
   }, [state, currentUserId, router]);
 

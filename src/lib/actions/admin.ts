@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuthorization, requirePermission } from "@/lib/permissions/server";
 import { GROUP_PERMISSION_ALLOWLIST } from "@/lib/permissions/matrix";
 import { logAuditEvent } from "@/lib/audit-log";
+import { notifyUser } from "@/lib/notify";
 import { planMaxUsers } from "@/lib/constants";
 import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
 
@@ -140,6 +141,16 @@ export async function updateMemberRole(membershipId: string, role: Role) {
     before: { role: existing.role },
     after: { role },
   });
+  if (existing.userId !== ctx.user.id) {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: existing.userId,
+      title: "Tu rol en la organización cambió",
+      body: `Tu rol ahora es ${role.replaceAll("_", " ")}. Tus permisos de acceso se actualizaron en consecuencia.`,
+      type: "INFO",
+      link: "/app/dashboard",
+    });
+  }
   revalidatePath("/app/settings/users");
 }
 

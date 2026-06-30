@@ -11,6 +11,7 @@ import {
   uploadDocumentFile,
 } from "@/lib/storage";
 import { assignTrainingForApprovedDocument } from "@/lib/training-automation";
+import { notifyUsers } from "@/lib/notify";
 
 /**
  * Server actions para Control de Documentos (Phase 1.2).
@@ -36,6 +37,13 @@ async function loadDocument(documentId: string, organizationId: string) {
   });
   if (!doc) throw new Error("Documento no encontrado.");
   return doc;
+}
+
+/** Owner user id of the process a document belongs to (the "process owner"), if any. */
+async function documentProcessOwnerId(processId: string | null): Promise<string | null> {
+  if (!processId) return null;
+  const process = await prisma.process.findUnique({ where: { id: processId }, select: { ownerId: true } });
+  return process?.ownerId ?? null;
 }
 
 function bumpVersion(current: string, mode: "minor" | "major"): string {
@@ -375,7 +383,18 @@ export async function submitForReview(
     after: { status: "IN_REVIEW", approvers: approverIds.length },
   });
 
-  // TODO Phase 2: notificar por email a aprobadores vía Resend
+  await notifyUsers(
+    approverIds,
+    {
+      organizationId: ctx.organization.id,
+      title: "Documento pendiente de tu aprobación",
+      body: `${existing.code} — «${existing.title}» fue enviado a revisión y espera tu aprobación.`,
+      type: "WARNING",
+      link: "/app/documents",
+    },
+    { skipUserId: ctx.user.id },
+  );
+
   revalidatePath(PATH);
 }
 
@@ -463,6 +482,18 @@ export async function approveDocument(
     });
   }
 
+  await notifyUsers(
+    [existing.ownerId, await documentProcessOwnerId(existing.processId)],
+    {
+      organizationId: ctx.organization.id,
+      title: "Documento aprobado",
+      body: `${existing.code} — «${existing.title}» fue aprobado y publicado.`,
+      type: "SUCCESS",
+      link: "/app/documents",
+    },
+    { skipUserId: ctx.user.id },
+  );
+
   revalidatePath(PATH);
   revalidatePath("/app/training");
 }
@@ -504,6 +535,78 @@ export async function rejectDocument(
     after: { status: "DRAFT" },
     extra: { reason: args.comment.trim() },
   });
+
+  await notifyUsers(
+    [existing.ownerId, await documentProcessOwnerId(existing.processId)],
+    {
+      organizationId: ctx.organization.id,
+      title: "Documento devuelto a borrador",
+      body: `${existing.code} — «${existing.title}» fue rechazado. Motivo: ${args.comment.trim()}`,
+      type: "ALERT",
+      link: "/app/documents",
+    },
+    { skipUserId: ctx.user.id },
+  );
+
+  revalidatePath(PATH);
+}
+
+/**
+ * Reemplaza el documento `oldId` (p. ej. el "01") por `newId` (el "02"):
+ * marca el viejo como OBSOLETE, registra el vínculo reemplaza/reemplazado-por,
+ * y transfiere el enlace de proceso al nuevo (salvo que el nuevo ya tenga uno).
+ * El documento viejo NO se borra: queda como histórico trazable.
+ */
+export async function supersedeDocument(
+  oldId: string,
+  newId: string,
+  args?: { reason?: string; transferProcess?: boolean },
+): Promise<void> {
+  const ctx = await requirePermission("documents:*");
+  if (oldId === newId) throw new Error("Un documento no puede reemplazarse a sí mismo.");
+  const [oldDoc, newDoc] = await Promise.all([
+    loadDocument(oldId, ctx.organization.id),
+    loadDocument(newId, ctx.organization.id),
+  ]);
+  if (oldDoc.supersededById) throw new Error("Ese documento ya fue reemplazado por otro.");
+  if (newDoc.status === DocumentStatus.OBSOLETE) throw new Error("El documento de reemplazo está obsoleto.");
+
+  const transferProcess = args?.transferProcess !== false;
+  const moveProcess = transferProcess && oldDoc.processId && !newDoc.processId;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.document.update({
+      where: { id: oldId },
+      data: { status: DocumentStatus.OBSOLETE, supersededById: newId },
+    });
+    if (moveProcess) {
+      await tx.document.update({ where: { id: newId }, data: { processId: oldDoc.processId } });
+    }
+  });
+
+  await logAuditEvent({
+    ctx,
+    action: "supersede",
+    module: "document",
+    recordId: oldId,
+    before: { status: oldDoc.status },
+    after: { status: "OBSOLETE", supersededBy: newDoc.code, processMoved: Boolean(moveProcess) },
+    extra: args?.reason ? { reason: args.reason } : undefined,
+  });
+
+  // Avisar al dueño del documento viejo y al dueño del proceso afectado.
+  const processId = oldDoc.processId ?? newDoc.processId;
+  await notifyUsers(
+    [oldDoc.ownerId, newDoc.ownerId, await documentProcessOwnerId(processId)],
+    {
+      organizationId: ctx.organization.id,
+      title: "Documento reemplazado",
+      body: `${oldDoc.code} «${oldDoc.title}» fue reemplazado por ${newDoc.code} «${newDoc.title}» y archivado como obsoleto (histórico).${moveProcess ? " El proceso quedó enlazado al nuevo documento." : ""}`,
+      type: "WARNING",
+      link: "/app/documents",
+    },
+    { skipUserId: ctx.user.id },
+  );
 
   revalidatePath(PATH);
 }

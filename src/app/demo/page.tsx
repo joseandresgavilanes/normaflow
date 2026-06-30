@@ -59,7 +59,7 @@ export default function DemoPage() {
 
           <div className="nf-card" style={{ padding: "clamp(24px, 3.5vw, 36px)" }}>
             {isSubmitSuccessful ? (
-              <div style={{ padding: 20, borderRadius: 12, background: "oklch(0.72 0.14 158 / 0.08)", border: "1px solid oklch(0.72 0.14 158 / 0.3)" }}>
+              <div style={{ padding: 20, borderRadius: 12, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
                 <p style={{ color: "var(--nf-ink)", margin: 0, fontSize: 15 }}>Gracias por contactar con NormaFlow. Te respondemos en breve.</p>
               </div>
@@ -68,17 +68,17 @@ export default function DemoPage() {
                 <div>
                   <label className="nf-label">Nombre</label>
                   <input {...register("name")} className="nf-input" placeholder="María Torres" />
-                  {errors.name && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
+                  {errors.name && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Email corporativo</label>
                   <input type="email" {...register("email")} className="nf-input" placeholder="maria@empresa.com" />
-                  {errors.email && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
+                  {errors.email && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Empresa</label>
                   <input {...register("company")} className="nf-input" placeholder="Tecnoserv Industrial" />
-                  {errors.company && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
+                  {errors.company && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
@@ -97,7 +97,7 @@ export default function DemoPage() {
                 <div>
                   <label className="nf-label">Mensaje</label>
                   <textarea {...register("message")} rows={4} className="nf-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
-                  {errors.message && <span style={{ color: "oklch(0.78 0.14 30)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
+                  {errors.message && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar solicitud <Ic.arrow className="nf-arrow"/>

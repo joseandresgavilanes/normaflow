@@ -80,26 +80,40 @@ function AuthConfirmInner() {
   }, [router, searchParams, next]);
 
   return (
-    <div className="nf-app" style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
-      <div style={{ maxWidth: 420, textAlign: "center" }}>
-        {status === "loading" ? (
-          <p style={{ color: "var(--nf-ink-3)" }}>{message}</p>
-        ) : (
-          <>
-            <h1 className="nf-h-3" style={{ marginBottom: 12 }}>
-              No se pudo completar el acceso
-            </h1>
-            <p style={{ color: "var(--nf-ink-3)", fontSize: 14, lineHeight: 1.6 }}>{message}</p>
-            <p style={{ color: "var(--nf-ink-4)", fontSize: 12, marginTop: 16 }}>
-              Los enlaces de invitación caducan. Si el enlace tiene más de 24 horas, solicita uno nuevo.
-            </p>
-            <Link href="/login" className="nf-btn nf-btn--primary" style={{ display: "inline-flex", marginTop: 20 }}>
-              Ir a iniciar sesión
-            </Link>
-          </>
-        )}
+    <>
+      <div className="nf-bg" aria-hidden="true" />
+      <div className="nf-app">
+        <div className="nf-auth-shell">
+          <div style={{ width: "100%", maxWidth: 440 }}>
+            <div className="nf-auth-header">
+              <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
+                <span className="nf-logo-mark" aria-hidden />
+                NormaFlow
+              </Link>
+              <h1 className="nf-h-3" style={{ marginTop: 20 }}>
+                {status === "loading" ? "Validando enlace" : "No se pudo completar el acceso"}
+              </h1>
+              {status === "error" ? (
+                <p>Los enlaces de invitación caducan. Si el enlace tiene más de 24 horas, solicita uno nuevo.</p>
+              ) : null}
+            </div>
+
+            <div className="nf-auth-card" style={{ textAlign: "center" }}>
+              {status === "loading" ? (
+                <p style={{ color: "var(--nf-ink-3)", fontSize: 14, margin: 0 }}>{message}</p>
+              ) : (
+                <>
+                  <div className="nf-auth-alert nf-auth-alert--error">{message}</div>
+                  <Link href="/login" className="nf-btn nf-btn--primary" style={{ width: "100%", marginTop: 16 }}>
+                    Ir a iniciar sesión
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

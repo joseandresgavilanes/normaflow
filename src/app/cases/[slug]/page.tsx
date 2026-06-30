@@ -27,8 +27,8 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             ← Casos de éxito
           </Link>
           <div style={{ marginTop: 24, display: "flex", gap: 8, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-            <span style={{ padding: "4px 10px", borderRadius: 99, background: "oklch(0.72 0.14 158 / 0.12)", color: "var(--nf-accent)", border: "1px solid oklch(0.72 0.14 158 / 0.3)", letterSpacing: "0.06em" }}>{c.industry}</span>
-            <span style={{ padding: "4px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
+            <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>{c.industry}</span>
+            <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
           </div>
           <h1 className="nf-h-section" style={{ marginTop: 18 }}>{c.company}</h1>
           <p style={{ fontSize: 20, color: "var(--nf-accent)", fontWeight: 600, marginTop: 14, marginBottom: 36, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
@@ -47,7 +47,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
 
           <div style={{ display: "grid", gap: 10, marginTop: 16, marginBottom: 36 }}>
             {c.metrics.map((m) => (
-              <div key={m.label} style={{ border: "1px solid var(--nf-line)", borderRadius: 12, padding: "16px 18px", display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", background: "rgba(255,255,255,0.02)" }}>
+              <div key={m.label} style={{ border: "1px solid var(--nf-line)", borderRadius: 12, padding: "16px 18px", display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", background: "var(--nf-glass-2)" }}>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--nf-ink)" }}>{m.label}</span>
                 <span style={{ color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", fontSize: 13 }}>
                   <span style={{ textDecoration: "line-through", marginRight: 10 }}>{m.before}</span>

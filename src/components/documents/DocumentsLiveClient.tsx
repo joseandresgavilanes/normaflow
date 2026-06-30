@@ -29,6 +29,7 @@ import {
   markDocumentObsolete,
   rejectDocument,
   submitForReview,
+  supersedeDocument,
   updateDocumentMetadata,
   uploadDocumentVersion,
   type CreateDocumentInput,
@@ -92,6 +93,7 @@ export default function DocumentsLiveClient({
   const [rejectingFor, setRejectingFor] = useState<DocumentRowLive | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<DocumentRowLive | null>(null);
   const [confirmObsolete, setConfirmObsolete] = useState<DocumentRowLive | null>(null);
+  const [supersedeFor, setSupersedeFor] = useState<DocumentRowLive | null>(null);
 
   useCreateFromQuery(canCreate, () => {
     setCreating(true);
@@ -152,6 +154,12 @@ export default function DocumentsLiveClient({
             {d.processCode && ` · ${d.processCode}`}
             {d.isExternal && " · Externo"}
           </div>
+          {d.supersededByCode && (
+            <div style={{ fontSize: 11, color: "#D97706", marginTop: 2, fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>
+          )}
+          {d.supersedesCode && (
+            <div style={{ fontSize: 11, color: "#16A34A", marginTop: 2, fontWeight: 600 }}>Reemplaza a {d.supersedesCode}</div>
+          )}
         </div>
       ),
     },
@@ -177,6 +185,11 @@ export default function DocumentsLiveClient({
       label: "",
       render: (_, d) => (
         <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+          {initial.access.canApprove && d.status === "APPROVED" && !d.supersededById && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); setError(""); setSupersedeFor(d); }} className="nf-app-btn-ghost">
+              Reemplazar
+            </button>
+          )}
           <button type="button" onClick={(e) => { e.stopPropagation(); setDetail(d); }} className="nf-app-btn-ghost">
             Ver
           </button>
@@ -377,6 +390,25 @@ export default function DocumentsLiveClient({
             },
           )}
         />
+      </Modal>
+
+      {/* Supersede / reemplazo */}
+      <Modal open={supersedeFor != null} onClose={() => !isPending && setSupersedeFor(null)} title={`Reemplazar ${supersedeFor?.code ?? ""}`} width={520}>
+        {supersedeFor && (
+          <SupersedeForm
+            current={supersedeFor}
+            options={documents.filter((d) => d.id !== supersedeFor.id && d.status !== "OBSOLETE" && !d.supersedesId)}
+            isPending={isPending}
+            onCancel={() => setSupersedeFor(null)}
+            onConfirm={(newId, reason) => run(
+              () => supersedeDocument(supersedeFor.id, newId, { reason }),
+              {
+                onSuccess: () => { setSupersedeFor(null); closeDetail(); },
+                successMessage: "Documento reemplazado y archivado como histórico.",
+              },
+            )}
+          />
+        )}
       </Modal>
 
       {/* Detail */}
@@ -751,6 +783,40 @@ function RejectModal({
   );
 }
 
+function SupersedeForm({ current, options, isPending, onCancel, onConfirm }: {
+  current: DocumentRowLive;
+  options: DocumentRowLive[];
+  isPending: boolean;
+  onCancel: () => void;
+  onConfirm: (newId: string, reason: string) => void;
+}) {
+  const [newId, setNewId] = useState("");
+  const [reason, setReason] = useState("");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.55 }}>
+        <strong>{current.code}</strong> quedará marcado como <strong>obsoleto</strong> y se conservará como histórico (no se borra).
+        El documento de reemplazo tomará su lugar{current.processCode ? ` y su proceso (${current.processCode})` : ""}.
+      </p>
+      <ModalField label="Documento de reemplazo">
+        <select value={newId} onChange={(e) => setNewId(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
+          <option value="">Selecciona el documento que lo reemplaza…</option>
+          {options.map((d) => (
+            <option key={d.id} value={d.id}>{d.code} — {d.title} (v{d.currentVersion})</option>
+          ))}
+        </select>
+      </ModalField>
+      <textarea rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo del reemplazo (opcional)" className={NF_INPUT_CLASS} style={modalInputStyle} />
+      <div className="nf-modal-actions">
+        <button type="button" onClick={onCancel} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+        <button type="button" disabled={isPending || !newId} onClick={() => onConfirm(newId, reason)} className="nf-app-btn-primary">
+          {isPending ? "Reemplazando…" : "Reemplazar y archivar"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ObsoleteForm({ isPending, onCancel, onConfirm }: { isPending: boolean; onCancel: () => void; onConfirm: (reason: string) => void }) {
   const [reason, setReason] = useState("");
   return (
@@ -841,6 +907,18 @@ function DocumentDetailModal({
         {doc.observations && (
           <div style={{ padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13, color: "var(--nf-ink-2)" }}>
             {doc.observations}
+          </div>
+        )}
+
+        {(doc.supersedesCode || doc.supersededByCode) && (
+          <div style={{ display: "grid", gap: 6, padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13 }}>
+            <strong style={{ fontSize: 12, color: "var(--nf-ink-3)", textTransform: "none" }}>Trazabilidad de reemplazo</strong>
+            {doc.supersedesCode && (
+              <div style={{ color: "#16A34A", fontWeight: 600 }}>Reemplaza a {doc.supersedesCode}{doc.supersedesTitle ? ` — ${doc.supersedesTitle}` : ""} (archivado como histórico)</div>
+            )}
+            {doc.supersededByCode && (
+              <div style={{ color: "#D97706", fontWeight: 600 }}>↪ Reemplazado por {doc.supersededByCode}{doc.supersededByTitle ? ` — ${doc.supersededByTitle}` : ""}. Este documento es histórico (obsoleto).</div>
+            )}
           </div>
         )}
 

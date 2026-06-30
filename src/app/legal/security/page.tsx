@@ -31,7 +31,7 @@ export default function SecurityPage() {
               const Icon = Ic[p.icon];
               return (
                 <article key={p.t} className="nf-tile">
-                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
                     <Icon/>
                   </span>
                   <div className="nf-h-4" style={{ marginTop: 14 }}>{p.t}</div>
@@ -42,7 +42,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="nf-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#04130c" }}>
+            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
               <Ic.mail/>
             </span>
             <div style={{ flex: 1, minWidth: 240 }}>

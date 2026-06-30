@@ -68,34 +68,35 @@ export default function SignupPage() {
     setLoading(false);
   }
 
-  const fields: { label: string; val: string; set: (v: string) => void; placeholder: string; type: string }[] = [
-    { label: "Nombre completo",     val: name,     set: setName,     placeholder: "María García",        type: "text" },
-    { label: "Organización",         val: org,      set: setOrg,      placeholder: "Tecnoserv Industrial", type: "text" },
-    { label: "Email profesional",    val: email,    set: setEmail,    placeholder: "maria@empresa.com",   type: "email" },
-    { label: "Contraseña",           val: password, set: setPassword, placeholder: "Mínimo 8 caracteres", type: "password" },
+  const fields: { id: string; label: string; val: string; set: (v: string) => void; placeholder: string; type: string }[] = [
+    { id: "signup-name", label: "Nombre completo", val: name, set: setName, placeholder: "María García", type: "text" },
+    { id: "signup-org", label: "Organización", val: org, set: setOrg, placeholder: "Tecnoserv Industrial", type: "text" },
+    { id: "signup-email", label: "Email profesional", val: email, set: setEmail, placeholder: "maria@empresa.com", type: "email" },
+    { id: "signup-password", label: "Contraseña", val: password, set: setPassword, placeholder: "Mínimo 8 caracteres", type: "password" },
   ];
 
   return (
     <>
-      <div className="nf-bg" aria-hidden="true"></div>
+      <div className="nf-bg" aria-hidden="true" />
       <div className="nf-app">
         <div className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 460 }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }}>
-              <Link href="/home" className="nf-logo" style={{ marginBottom: 22 }}>
-                <span className="nf-logo-mark"></span>
+            <div className="nf-auth-header">
+              <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
+                <span className="nf-logo-mark" aria-hidden />
                 NormaFlow
               </Link>
-              <h1 className="nf-h-3" style={{ marginTop: 18 }}>Empieza gratis · 14 días</h1>
-              <p style={{ fontSize: 14, color: "var(--nf-ink-3)", marginTop: 6 }}>Sin tarjeta de crédito. Sin compromiso.</p>
+              <h1 className="nf-h-3" style={{ marginTop: 20 }}>Empieza gratis · 14 días</h1>
+              <p>Sin tarjeta de crédito. Sin compromiso.</p>
             </div>
 
             <div className="nf-auth-card">
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <form onSubmit={handleSubmit} className="nf-auth-form">
                 {fields.map((f) => (
-                  <div key={f.label}>
-                    <label className="nf-label">{f.label}</label>
+                  <div key={f.id}>
+                    <label className="nf-label" htmlFor={f.id}>{f.label}</label>
                     <input
+                      id={f.id}
                       type={f.type}
                       value={f.val}
                       onChange={(e) => f.set(e.target.value)}
@@ -104,25 +105,21 @@ export default function SignupPage() {
                     />
                   </div>
                 ))}
-                {error ? (
-                  <div style={{ padding: "10px 12px", borderRadius: 8, background: "oklch(0.70 0.18 25 / 0.08)", border: "1px solid oklch(0.70 0.18 25 / 0.35)", fontSize: 13, color: "oklch(0.85 0.14 30)" }}>{error}</div>
-                ) : null}
-                <button type="submit" disabled={loading} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4, opacity: loading ? 0.7 : 1 }}>
-                  {loading ? "Creando cuenta…" : <>Crear cuenta gratuita <Ic.arrow className="nf-arrow"/></>}
+                {error ? <div className="nf-auth-alert nf-auth-alert--error">{error}</div> : null}
+                <button type="submit" disabled={loading} className="nf-btn nf-btn--primary" style={{ width: "100%", opacity: loading ? 0.7 : 1 }}>
+                  {loading ? "Creando cuenta…" : <>Crear cuenta gratuita <Ic.arrow className="nf-arrow" /></>}
                 </button>
-                <p style={{ fontSize: 11, color: "var(--nf-ink-3)", textAlign: "center", margin: 0, fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>
+                <p style={{ fontSize: 12, color: "var(--nf-ink-3)", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
                   Al registrarte aceptas los{" "}
-                  <Link href="/legal/terms" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Términos</Link>{" "}y la{" "}
+                  <Link href="/legal/terms" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Términos</Link>{" "}
+                  y la{" "}
                   <Link href="/legal/privacy" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Privacidad</Link>.
                 </p>
               </form>
             </div>
 
-            <p style={{ textAlign: "center", marginTop: 22, fontSize: 13, color: "var(--nf-ink-3)" }}>
-              ¿Ya tienes cuenta?{" "}
-              <Link href="/login" style={{ color: "var(--nf-accent)", fontWeight: 600 }}>
-                Inicia sesión
-              </Link>
+            <p className="nf-auth-footer">
+              ¿Ya tienes cuenta? <Link href="/login">Inicia sesión</Link>
             </p>
           </div>
         </div>

@@ -21,6 +21,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { notifyUser } from "@/lib/notify";
 import {
   createSignedEvidenceUrl,
   deleteEvidenceFile,
@@ -183,6 +184,9 @@ export async function createRisk(input: RiskInput) {
   await Promise.all([assertProcess(ctx.organization.id, data.processId), assertMember(ctx.organization.id, data.ownerId)]);
   const created = await prisma.risk.create({ data: { organizationId: ctx.organization.id, ...data } });
   await logAuditEvent({ ctx, action: "create", module: "risk", recordId: created.id, after: data });
+  if (data.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un riesgo", body: `Eres responsable del riesgo «${data.title}». Revisa su evaluación y controles.`, type: "WARNING", link: PATHS.risk });
+  }
   refresh(PATHS.risk, PATHS.process);
   return { id: created.id };
 }
@@ -195,6 +199,9 @@ export async function updateRisk(id: string, input: RiskInput) {
   await Promise.all([assertProcess(ctx.organization.id, data.processId), assertMember(ctx.organization.id, data.ownerId)]);
   await prisma.risk.update({ where: { id }, data });
   await logAuditEvent({ ctx, action: "update", module: "risk", recordId: id, before: existing, after: data });
+  if (data.ownerId && data.ownerId !== existing.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un riesgo", body: `Eres responsable del riesgo «${data.title}». Revisa su evaluación y controles.`, type: "WARNING", link: PATHS.risk });
+  }
   refresh(PATHS.risk, PATHS.process);
 }
 
@@ -312,6 +319,9 @@ export async function createAudit(input: AuditInput) {
   const data = await auditData(input, ctx.organization.id);
   const created = await prisma.audit.create({ data: { organizationId: ctx.organization.id, ...data } });
   await logAuditEvent({ ctx, action: "create", module: "audit", recordId: created.id, after: data });
+  if (data.auditorId && data.auditorId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.auditorId, title: "Se te asignó una auditoría", body: `Eres el auditor de «${data.title}»${data.scheduledDate ? ` (programada para ${new Date(data.scheduledDate).toLocaleDateString("es")})` : ""}.`, type: "INFO", link: PATHS.audit });
+  }
   refresh(PATHS.audit);
   return { id: created.id };
 }
@@ -323,6 +333,26 @@ export async function updateAudit(id: string, input: AuditInput) {
   const data = await auditData(input, ctx.organization.id, existing);
   await prisma.audit.update({ where: { id }, data });
   await logAuditEvent({ ctx, action: "update", module: "audit", recordId: id, before: existing, after: data });
+  if (data.auditorId && data.auditorId !== existing.auditorId && data.auditorId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.auditorId, title: "Se te asignó una auditoría", body: `Eres el auditor de «${data.title}»${data.scheduledDate ? ` (programada para ${new Date(data.scheduledDate).toLocaleDateString("es")})` : ""}.`, type: "INFO", link: PATHS.audit });
+  }
+  refresh(PATHS.audit);
+}
+
+export async function transitionAudit(id: string, toStatus: AuditStatus) {
+  const ctx = await requirePermission("audits:update");
+  const existing = await prisma.audit.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Auditoría no encontrada.");
+  if (existing.status === toStatus) return;
+  const now = new Date();
+  const data = {
+    status: toStatus,
+    startedAt: toStatus === AuditStatus.IN_PROGRESS || toStatus === AuditStatus.COMPLETED ? existing.startedAt ?? now : existing.startedAt,
+    completedAt: toStatus === AuditStatus.COMPLETED ? existing.completedAt ?? now : null,
+    progress: toStatus === AuditStatus.COMPLETED ? 100 : existing.progress,
+  };
+  await prisma.audit.update({ where: { id }, data });
+  await logAuditEvent({ ctx, action: toStatus === AuditStatus.COMPLETED ? "close" : "transition", module: "audit", recordId: id, before: { status: existing.status }, after: { status: toStatus } });
   refresh(PATHS.audit);
 }
 
@@ -431,6 +461,16 @@ export async function createNonconformity(input: NonconformityInput) {
   const data = await ncData(input, ctx.organization.id);
   const created = await prisma.nonconformity.create({ data: { organizationId: ctx.organization.id, ...data } });
   await logAuditEvent({ ctx, action: "create", module: "nonconformity", recordId: created.id, after: data });
+  if (data.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: data.ownerId,
+      title: "Se te asignó una no conformidad",
+      body: `Eres responsable de la NC «${data.title}». Revisa el análisis de causa y las acciones requeridas.`,
+      type: "WARNING",
+      link: PATHS.nc,
+    });
+  }
   refresh(PATHS.nc, PATHS.audit);
   return { id: created.id };
 }
@@ -442,6 +482,16 @@ export async function updateNonconformity(id: string, input: NonconformityInput)
   const data = await ncData(input, ctx.organization.id, existing.closedAt);
   await prisma.nonconformity.update({ where: { id }, data });
   await logAuditEvent({ ctx, action: "update", module: "nonconformity", recordId: id, before: existing, after: data });
+  if (data.ownerId && data.ownerId !== existing.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: data.ownerId,
+      title: "Se te asignó una no conformidad",
+      body: `Eres responsable de la NC «${data.title}». Revisa el análisis de causa y las acciones requeridas.`,
+      type: "WARNING",
+      link: PATHS.nc,
+    });
+  }
   refresh(PATHS.nc, PATHS.audit);
 }
 
@@ -453,6 +503,30 @@ export async function deleteNonconformity(id: string) {
   await prisma.nonconformity.delete({ where: { id } });
   await logAuditEvent({ ctx, action: "delete", module: "nonconformity", recordId: id, before: { title: existing.title } });
   refresh(PATHS.nc, PATHS.audit);
+}
+
+export async function addNonconformityComment(nonconformityId: string, content: string) {
+  const ctx = await requirePermission("nc:update");
+  const nc = await prisma.nonconformity.findFirst({ where: { id: nonconformityId, organizationId: ctx.organization.id }, select: { id: true } });
+  if (!nc) throw new Error("No conformidad no encontrada.");
+  const text = content.trim();
+  if (!text) throw new Error("Escribe un comentario.");
+  const created = await prisma.nonconformityComment.create({ data: { nonconformityId, authorId: ctx.user.id, content: text } });
+  await logAuditEvent({ ctx, action: "comment", module: "nonconformity", recordId: nonconformityId, extra: { message: text.slice(0, 200) } });
+  refresh(PATHS.nc);
+  return { id: created.id };
+}
+
+export async function deleteNonconformityComment(commentId: string) {
+  const ctx = await requirePermission("nc:update");
+  const comment = await prisma.nonconformityComment.findUnique({
+    where: { id: commentId },
+    include: { nonconformity: { select: { organizationId: true, id: true } } },
+  });
+  if (!comment || comment.nonconformity.organizationId !== ctx.organization.id) throw new Error("Comentario no encontrado.");
+  await prisma.nonconformityComment.delete({ where: { id: commentId } });
+  await logAuditEvent({ ctx, action: "delete_comment", module: "nonconformity", recordId: comment.nonconformity.id });
+  refresh(PATHS.nc);
 }
 
 // ─── Indicators ─────────────────────────────────────────────────────
@@ -490,6 +564,9 @@ export async function createIndicator(input: IndicatorInput) {
   const data = await indicatorData(input, ctx.organization.id);
   const created = await prisma.indicator.create({ data: { organizationId: ctx.organization.id, ...data } });
   await logAuditEvent({ ctx, action: "create", module: "indicator", recordId: created.id, after: data });
+  if (data.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un indicador", body: `Eres responsable del indicador «${data.name}». Mantén sus mediciones al día.`, type: "INFO", link: PATHS.indicator });
+  }
   refresh(PATHS.indicator, PATHS.process);
   return { id: created.id };
 }
@@ -501,6 +578,9 @@ export async function updateIndicator(id: string, input: IndicatorInput) {
   const data = await indicatorData(input, ctx.organization.id);
   await prisma.indicator.update({ where: { id }, data });
   await logAuditEvent({ ctx, action: "update", module: "indicator", recordId: id, before: existing, after: data });
+  if (data.ownerId && data.ownerId !== existing.ownerId && data.ownerId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un indicador", body: `Eres responsable del indicador «${data.name}». Mantén sus mediciones al día.`, type: "INFO", link: PATHS.indicator });
+  }
   refresh(PATHS.indicator, PATHS.process);
 }
 
@@ -513,6 +593,10 @@ export async function addIndicatorValue(indicatorId: string, input: { value: num
   const status = input.value >= indicator.target ? IndicatorStatus.ON_TRACK : input.value >= indicator.target * 0.8 ? IndicatorStatus.AT_RISK : IndicatorStatus.OFF_TRACK;
   await prisma.indicator.update({ where: { id: indicatorId }, data: { status } });
   await logAuditEvent({ ctx, action: "add_value", module: "indicator", recordId: indicatorId, after: { valueId: created.id, value: input.value, period: input.period, status } });
+  // Alert the indicator owner when a measurement falls below target.
+  if (status === IndicatorStatus.OFF_TRACK && indicator.ownerId && indicator.ownerId !== ctx.user.id) {
+    await notifyUser({ organizationId: ctx.organization.id, userId: indicator.ownerId, title: "Indicador por debajo de la meta", body: `«${indicator.name}» registró ${input.value} ${indicator.unit ?? ""} (meta ${indicator.target}) en ${input.period}. Requiere acción.`, type: "ALERT", link: PATHS.indicator });
+  }
   refresh(PATHS.indicator);
 }
 

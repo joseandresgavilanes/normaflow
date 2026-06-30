@@ -425,16 +425,57 @@ export default function ProcessesModule() {
   const { processes, documents, risks, indicators, changeRequests, trainingAssignments, trainingCourses } = state;
   const [detail, setDetail] = useState<ProcessRow | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ProcessRow | null>(null);
   const [form, setForm] = useState({ name: "", code: "", type: "core", description: "", owner: "", inputs: "", outputs: "" });
 
   function openCreate() {
+    setEditingId(null);
     setForm({ name: "", code: "", type: "core", description: "", owner: state.session.name, inputs: "", outputs: "" });
     setCreateOpen(true);
   }
 
-  function submitCreate() {
+  function openEdit(p: ProcessRow) {
+    setEditingId(p.id);
+    setForm({
+      name: p.name,
+      code: p.code ?? "",
+      type: p.type,
+      description: p.description ?? "",
+      owner: p.owner,
+      inputs: p.inputs.join(", "),
+      outputs: p.outputs.join(", "),
+    });
+    setDetail(null);
+    setCreateOpen(true);
+  }
+
+  function parseList(value: string) {
+    return value.split(",").map(s => s.trim()).filter(Boolean);
+  }
+
+  function submitForm() {
     if (!form.name.trim()) {
       showToast("Indica el nombre del proceso");
+      return;
+    }
+    if (editingId) {
+      dispatch({
+        type: "updateProcess",
+        id: editingId,
+        patch: {
+          name: form.name.trim(),
+          code: form.code.trim() || undefined,
+          type: form.type as ProcessRow["type"],
+          description: form.description.trim() || "",
+          owner: form.owner.trim() || state.session.name,
+          inputs: parseList(form.inputs),
+          outputs: parseList(form.outputs),
+        },
+      });
+      setCreateOpen(false);
+      setEditingId(null);
+      showToast("Proceso actualizado (sesión local)");
       return;
     }
     const p: ProcessRow = {
@@ -444,14 +485,8 @@ export default function ProcessesModule() {
       type: form.type as ProcessRow["type"],
       description: form.description.trim() || "",
       owner: form.owner.trim() || state.session.name,
-      inputs: form.inputs
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean),
-      outputs: form.outputs
-        .split(",")
-        .map(s => s.trim())
-        .filter(Boolean),
+      inputs: parseList(form.inputs),
+      outputs: parseList(form.outputs),
       siteId: `${state.session.activeOrgId}-s1`,
       linkedRiskCodes: [],
       linkedDocCodes: [],
@@ -462,6 +497,13 @@ export default function ProcessesModule() {
     dispatch({ type: "addProcess", p });
     setCreateOpen(false);
     showToast("Proceso añadido (sesión local)");
+  }
+
+  function removeProcess(p: ProcessRow) {
+    dispatch({ type: "deleteProcess", id: p.id });
+    setConfirmDelete(null);
+    setDetail(null);
+    showToast("Proceso eliminado (sesión local)");
   }
 
   return (
@@ -875,19 +917,35 @@ export default function ProcessesModule() {
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={700}>
         {detail && (
-          <ProcessDetailBody
-            detail={detail}
-            documents={documents}
-            risks={risks}
-            indicators={indicators}
-            changeRequests={changeRequests}
-            trainingAssignments={trainingAssignments}
-            trainingCourses={trainingCourses}
-          />
+          <>
+            <div className="nf-modal-actions" style={{ justifyContent: "flex-end", marginTop: 0, marginBottom: 16, paddingBottom: 16, borderBottom: "1px solid var(--nf-line)" }}>
+              <button type="button" className="nf-app-btn-ghost" onClick={() => openEdit(detail)}>Editar</button>
+              <button type="button" className="nf-app-btn-danger" onClick={() => setConfirmDelete(detail)}>Eliminar</button>
+            </div>
+            <ProcessDetailBody
+              detail={detail}
+              documents={documents}
+              risks={risks}
+              indicators={indicators}
+              changeRequests={changeRequests}
+              trainingAssignments={trainingAssignments}
+              trainingCourses={trainingCourses}
+            />
+          </>
         )}
       </Modal>
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo proceso" width={520}>
+      <Modal open={!!confirmDelete} onClose={() => setConfirmDelete(null)} title="Eliminar proceso" width={440}>
+        <p style={{ margin: "0 0 16px", fontSize: 14, color: "var(--nf-ink)", lineHeight: 1.6 }}>
+          ¿Eliminar el proceso <strong>{confirmDelete?.name}</strong>? Los documentos, riesgos e indicadores enlazados quedarán sin proceso asociado.
+        </p>
+        <div className="nf-modal-actions">
+          <button type="button" className="nf-app-btn-ghost" onClick={() => setConfirmDelete(null)}>Cancelar</button>
+          <button type="button" className="nf-app-btn-danger" onClick={() => confirmDelete && removeProcess(confirmDelete)}>Eliminar</button>
+        </div>
+      </Modal>
+
+      <Modal open={createOpen} onClose={() => { setCreateOpen(false); setEditingId(null); }} title={editingId ? "Editar proceso" : "Nuevo proceso"} width={520}>
         <div className="nf-modal-form">
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
             Nombre
@@ -960,8 +1018,8 @@ export default function ProcessesModule() {
             />
           </label>
           <div className="nf-modal-actions">
-            <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
-            <button type="button" className="nf-app-btn-primary" onClick={submitCreate}>Crear</button>
+            <button type="button" className="nf-app-btn-ghost" onClick={() => { setCreateOpen(false); setEditingId(null); }}>Cancelar</button>
+            <button type="button" className="nf-app-btn-primary" onClick={submitForm}>{editingId ? "Guardar" : "Crear"}</button>
           </div>
         </div>
       </Modal>

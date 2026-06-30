@@ -56,7 +56,7 @@ export default function GapAssessmentLandingPage() {
               Solicitar evaluación de ejemplo
             </div>
             {sent ? (
-              <div style={{ padding: 16, borderRadius: 10, background: "oklch(0.72 0.14 158 / 0.08)", border: "1px solid oklch(0.72 0.14 158 / 0.3)" }}>
+              <div style={{ padding: 16, borderRadius: 10, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
                 <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>● Enviado</div>
                 <p style={{ margin: 0, fontSize: 14, color: "var(--nf-ink)" }}>Te enviaremos un ejemplo en menos de un día laborable.</p>
               </div>
@@ -88,10 +88,10 @@ export default function GapAssessmentLandingPage() {
                 <div key={r.c}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
                     <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--nf-ink)" }}>{r.c}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "oklch(0.85 0.14 75)" : "oklch(0.78 0.14 30)" }}>{r.s}%</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)" }}>{r.s}%</span>
                   </div>
-                  <div style={{ height: 6, background: "rgba(255,255,255,0.06)", borderRadius: 99, overflow: "hidden" }}>
-                    <div style={{ width: `${r.s}%`, height: "100%", background: r.s >= 75 ? "linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2))" : r.s >= 60 ? "oklch(0.85 0.14 75)" : "oklch(0.78 0.14 30)", boxShadow: r.s >= 75 ? "0 0 8px var(--nf-accent)" : "none" }} />
+                  <div style={{ height: 6, background: "var(--nf-glass-2)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ width: `${r.s}%`, height: "100%", background: r.s >= 75 ? "linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2))" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)", boxShadow: r.s >= 75 ? "0 0 8px var(--nf-accent)" : "none" }} />
                   </div>
                 </div>
               ))}

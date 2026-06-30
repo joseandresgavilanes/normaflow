@@ -517,6 +517,8 @@ type Action =
   | { type: "setBillingPlan"; plan: PlanKey }
   | { type: "updateSession"; patch: Partial<SessionProfile> }
   | { type: "addProcess"; p: ProcessRow }
+  | { type: "updateProcess"; id: string; patch: Partial<ProcessRow> }
+  | { type: "deleteProcess"; id: string }
   | { type: "switchDemoOrg"; orgId: string }
   | { type: "markNotificationRead"; id: string }
   | { type: "markAllNotificationsRead" }
@@ -683,6 +685,10 @@ function reducer(state: WorkspaceState, a: Action): WorkspaceState {
       return { ...state, session: { ...state.session, ...a.patch } };
     case "addProcess":
       return { ...state, processes: [...state.processes, a.p] };
+    case "updateProcess":
+      return { ...state, processes: state.processes.map(p => (p.id === a.id ? { ...p, ...a.patch } : p)) };
+    case "deleteProcess":
+      return { ...state, processes: state.processes.filter(p => p.id !== a.id) };
     case "switchDemoOrg": {
       const org = getDemoOrg(a.orgId);
       if (!org) return state;

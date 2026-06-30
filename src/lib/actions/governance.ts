@@ -15,12 +15,22 @@ import {
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { notifyUsers } from "@/lib/notify";
 
 const PATHS = {
   changes: "/app/changes",
   suppliers: "/app/suppliers",
   integrations: "/app/integrations",
 } as const;
+
+/** Owner user IDs of the processes linked to a change request (the "process owners"). */
+async function changeProcessOwnerIds(changeRequestId: string): Promise<string[]> {
+  const links = await prisma.changeProcess.findMany({
+    where: { changeRequestId },
+    include: { process: { select: { ownerId: true } } },
+  });
+  return links.map((l) => l.process.ownerId).filter((id): id is string => !!id);
+}
 
 function required(value: string, label: string) {
   const normalized = value.trim();
@@ -214,6 +224,37 @@ export async function transitionChangeRequest(id: string, status: ChangeRequestS
     },
   });
   await logAuditEvent({ ctx, action: "status_change", module: "change", recordId: id, before: { status: existing.status }, after: { status }, extra: { reason: optional(reason) } });
+
+  const label = `${existing.code} — «${existing.title}»`;
+  if (status === ChangeRequestStatus.SUBMITTED || status === ChangeRequestStatus.UNDER_REVIEW) {
+    const pendingApprovers = existing.approvers.filter((a) => a.status === ApprovalStatus.PENDING).map((a) => a.userId);
+    await notifyUsers(pendingApprovers, {
+      organizationId: ctx.organization.id,
+      title: "Solicitud de cambio pendiente de tu aprobación",
+      body: `El cambio ${label} requiere tu revisión y aprobación.`,
+      type: "WARNING",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  } else if (status === ChangeRequestStatus.REJECTED) {
+    const owners = await changeProcessOwnerIds(id);
+    await notifyUsers([existing.requesterId, ...owners], {
+      organizationId: ctx.organization.id,
+      title: "Solicitud de cambio rechazada",
+      body: `El cambio ${label} fue rechazado.${reason?.trim() ? ` Motivo: ${reason.trim()}` : ""}`,
+      type: "ALERT",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  } else if (status === ChangeRequestStatus.APPROVED) {
+    const owners = await changeProcessOwnerIds(id);
+    await notifyUsers([existing.requesterId, ...owners], {
+      organizationId: ctx.organization.id,
+      title: "Solicitud de cambio aprobada",
+      body: `El cambio ${label} fue aprobado y puede pasar a implementación.`,
+      type: "SUCCESS",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  }
+
   refresh(PATHS.changes);
 }
 
@@ -221,11 +262,34 @@ export async function decideChangeApproval(changeRequestId: string, status: "APP
   const ctx = await requirePermission("changes:update");
   const approval = await prisma.changeApprover.findFirst({
     where: { changeRequestId, userId: ctx.user.id, changeRequest: { organizationId: ctx.organization.id } },
+    include: { changeRequest: { select: { code: true, title: true, requesterId: true } } },
   });
   if (!approval) throw new Error("No eres aprobador de este cambio.");
   if (approval.status !== ApprovalStatus.PENDING) throw new Error("Esta decisión ya fue registrada.");
   await prisma.changeApprover.update({ where: { id: approval.id }, data: { status, comment: optional(comment), attestationReason: optional(attestationReason), decidedAt: new Date() } });
   await logAuditEvent({ ctx, action: status === ApprovalStatus.APPROVED ? "approve" : "reject", module: "change", recordId: changeRequestId, after: { approverId: ctx.user.id, status }, extra: { reason: optional(attestationReason) } });
+
+  const label = `${approval.changeRequest.code} — «${approval.changeRequest.title}»`;
+  const motivo = (attestationReason ?? comment)?.trim();
+  if (status === "REJECTED") {
+    const owners = await changeProcessOwnerIds(changeRequestId);
+    await notifyUsers([approval.changeRequest.requesterId, ...owners], {
+      organizationId: ctx.organization.id,
+      title: "Tu solicitud de cambio fue rechazada",
+      body: `${ctx.user.name} rechazó el cambio ${label}.${motivo ? ` Motivo: ${motivo}` : ""}`,
+      type: "ALERT",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  } else {
+    await notifyUsers([approval.changeRequest.requesterId], {
+      organizationId: ctx.organization.id,
+      title: "Avance en tu solicitud de cambio",
+      body: `${ctx.user.name} aprobó el cambio ${label}.`,
+      type: "SUCCESS",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  }
+
   refresh(PATHS.changes);
 }
 

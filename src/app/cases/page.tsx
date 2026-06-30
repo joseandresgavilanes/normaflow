@@ -33,9 +33,9 @@ export default function CasesPage() {
               >
                 <div>
                   <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "oklch(0.72 0.14 158 / 0.12)", color: "var(--nf-accent)", border: "1px solid oklch(0.72 0.14 158 / 0.3)", letterSpacing: "0.06em" }}>{c.industry}</span>
-                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
-                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "rgba(255,255,255,0.04)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.employees}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>{c.industry}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.employees}</span>
                   </div>
                   <h3 className="nf-h-3">{c.company}</h3>
                   <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-accent)", marginTop: 8, marginBottom: 14 }}>↑ {c.result}</div>
@@ -45,7 +45,7 @@ export default function CasesPage() {
                   </Link>
                 </div>
 
-                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid var(--nf-line)", borderRadius: 16, padding: 24 }}>
+                <div style={{ background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", borderRadius: 16, padding: 24 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
                     <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.04 30))", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
                       {c.initials}
