@@ -3673,3 +3673,46 @@ button.nf-audit-card:focus-visible {
 .nf-app-main-inner .nf-kpi-card > div:first-child[style*="height: 5"] {
   display: none;
 }
+
+/* ============================================================
+   Impresión / Exportar a PDF (GAP Assessment y otros informes)
+   Oculta el chrome de la app y deja solo el contenido del módulo,
+   con colores y saltos de página adecuados.
+   ============================================================ */
+@media print {
+  /* Oculta barra lateral, topbar, panel IA, toasts y modales:
+     todo lo que no sea la columna principal y su contenido. */
+  .nf-app-shell > *:not(.nf-app-main) { display: none !important; }
+  .nf-app-main > *:not(.nf-app-main-inner) { display: none !important; }
+
+  /* Elementos marcados explícitamente como no imprimibles (controles). */
+  .nf-no-print { display: none !important; }
+
+  /* Oculta el botón de acción del encabezado de sección (p. ej. "Exportar PDF"). */
+  .nf-section-title > button { display: none !important; }
+
+  /* Layout a ancho completo, fondo blanco, sin sombras. */
+  html, body { background: #fff !important; }
+  .nf-app-shell { display: block !important; height: auto !important; min-height: 0 !important; }
+  .nf-app-main { margin: 0 !important; width: 100% !important; }
+  .nf-app-main-inner {
+    padding: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Conserva los colores de barras de progreso, badges, etc. */
+  .nf-app-main-inner * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Evita cortar tarjetas/filas entre páginas. */
+  .nf-card,
+  .nf-section-title,
+  .nf-app-main-inner button { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Las filas de cláusula son <button>: quítales apariencia de botón al imprimir. */
+  .nf-app-main-inner button { cursor: default !important; box-shadow: none !important; }
+
+  @page { margin: 14mm; }
+}

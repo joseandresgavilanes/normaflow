@@ -9,7 +9,7 @@ import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import { DEMO_GAP } from "@/lib/demo-data";
 import type { GapPayload } from "@/lib/server-queries";
-import { updateAssessmentAnswer } from "@/lib/actions/gap";
+import { updateAssessmentAnswer, exportGapReport } from "@/lib/actions/gap";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import type { GapClauseState } from "@/lib/demo/seed-entities";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
@@ -88,8 +88,33 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
   const weakClauses = data.filter(g => g.score < 70).slice(0, 4);
 
+  function downloadBase64(base64: string, mime: string, name: string) {
+    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   function exportPdf() {
-    window.print();
+    // En vivo genera un PDF corporativo en el servidor; en demo usa impresión limpia.
+    if (readOnlyLive) {
+      const code = standard === "iso9001" ? "ISO_9001" : "ISO_27001";
+      startTransition(async () => {
+        try {
+          const r = await exportGapReport(code);
+          downloadBase64(r.base64, r.mimeType, r.fileName);
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : "No se pudo generar el PDF.");
+        }
+      });
+    } else {
+      window.print();
+    }
   }
 
   function openClause(row: GapRow) {
@@ -177,7 +202,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
         </p>
       )}
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+      <div className="nf-no-print" style={{ display: "flex", gap: 8, marginBottom: 20 }}>
         {[{ key: "iso9001", label: "ISO 9001:2015" }, { key: "iso27001", label: "ISO 27001:2022" }].map(s => (
           <button
             key={s.key}
@@ -318,7 +343,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <button
             type="button"
             onClick={exportPdf}
-            className="nf-app-btn-primary"
+            className="nf-app-btn-primary nf-no-print"
             style={{ width: "100%" }}
           >
             <FileDown size={17} strokeWidth={2} aria-hidden />
@@ -327,6 +352,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <button
             type="button"
             onClick={aiSuggest}
+            className="nf-no-print"
             style={{
               display: "flex",
               alignItems: "center",
