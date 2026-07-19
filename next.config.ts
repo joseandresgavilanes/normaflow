@@ -10,6 +10,13 @@ const nextConfig: NextConfig = {
     domains: ["supabase.co", "avatars.githubusercontent.com"],
   },
   serverExternalPackages: ["@prisma/client"],
+  async redirects() {
+    return [
+      // Rutas índice de secciones que solo tienen sub-páginas.
+      { source: "/app/catalogs", destination: "/app/catalogs/locations", permanent: false },
+      { source: "/app/info", destination: "/app/info/personnel", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

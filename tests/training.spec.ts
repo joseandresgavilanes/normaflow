@@ -30,6 +30,6 @@ test.describe("Training management", () => {
     await dialog.getByRole("button", { name: "Crear asignación" }).click();
 
     await page.getByRole("button", { name: "Asignaciones" }).click();
-    await expect(page.getByText("Ana García")).toBeVisible();
+    await expect(page.getByRole("table").getByText("Ana García").first()).toBeVisible();
   });
 });

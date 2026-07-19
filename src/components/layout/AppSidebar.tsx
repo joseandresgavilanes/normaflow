@@ -39,65 +39,67 @@ import {
 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
+import { useI18n } from "@/context/I18nProvider";
 import { getDemoOrg } from "@/lib/demo/organizations";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-const NAV: { href: string; Icon: LucideIcon; label: string }[] = [
-  { href: "/app/dashboard", Icon: LayoutDashboard, label: "Home" },
-  { href: "/app/setup", Icon: Milestone, label: "Implementación" },
-  { href: "/app/gap", Icon: Target, label: "GAP Assessment" },
-  { href: "/app/documents", Icon: FileText, label: "Documentos" },
-  { href: "/app/records", Icon: Archive, label: "Registros" },
-  { href: "/app/training", Icon: GraduationCap, label: "Capacitación" },
-  { href: "/app/changes", Icon: RefreshCw, label: "Cambios" },
-  { href: "/app/processes", Icon: Workflow, label: "Procesos" },
-  { href: "/app/risks", Icon: AlertTriangle, label: "Riesgos" },
-  { href: "/app/suppliers", Icon: Factory, label: "Proveedores" },
-  { href: "/app/audit-program", Icon: CalendarRange, label: "Programa Auditorías" },
-  { href: "/app/audits", Icon: ClipboardCheck, label: "Auditorías" },
-  { href: "/app/management-review", Icon: Gavel, label: "Revisión Dirección" },
-  { href: "/app/nonconformities", Icon: CircleOff, label: "No Conformidades" },
-  { href: "/app/actions", Icon: Zap, label: "Plan de Acción" },
-  { href: "/app/indicators", Icon: BarChart3, label: "Indicadores" },
-  { href: "/app/evidence", Icon: Paperclip, label: "Evidencias" },
-  { href: "/app/integrations", Icon: Plug, label: "Integraciones" },
-  { href: "/app/reporting", Icon: ScrollText, label: "Informes" },
-  { href: "/app/activity", Icon: Activity, label: "Actividad" },
-  { href: "/app/notifications", Icon: Bell, label: "Notificaciones" },
-  { href: "/app/billing", Icon: CreditCard, label: "Billing" },
-  { href: "/app/settings", Icon: UserCircle, label: "Cuenta" },
+const NAV: { href: string; Icon: LucideIcon; labelKey: MessageKey }[] = [
+  { href: "/app/dashboard", Icon: LayoutDashboard, labelKey: "nav.home" },
+  { href: "/app/setup", Icon: Milestone, labelKey: "nav.setup" },
+  { href: "/app/gap", Icon: Target, labelKey: "nav.gap" },
+  { href: "/app/documents", Icon: FileText, labelKey: "nav.documents" },
+  { href: "/app/records", Icon: Archive, labelKey: "nav.records" },
+  { href: "/app/training", Icon: GraduationCap, labelKey: "nav.training" },
+  { href: "/app/changes", Icon: RefreshCw, labelKey: "nav.changes" },
+  { href: "/app/processes", Icon: Workflow, labelKey: "nav.processes" },
+  { href: "/app/risks", Icon: AlertTriangle, labelKey: "nav.risks" },
+  { href: "/app/suppliers", Icon: Factory, labelKey: "nav.suppliers" },
+  { href: "/app/audit-program", Icon: CalendarRange, labelKey: "nav.auditProgram" },
+  { href: "/app/audits", Icon: ClipboardCheck, labelKey: "nav.audits" },
+  { href: "/app/management-review", Icon: Gavel, labelKey: "nav.managementReview" },
+  { href: "/app/nonconformities", Icon: CircleOff, labelKey: "nav.nonconformities" },
+  { href: "/app/actions", Icon: Zap, labelKey: "nav.actions" },
+  { href: "/app/indicators", Icon: BarChart3, labelKey: "nav.indicators" },
+  { href: "/app/evidence", Icon: Paperclip, labelKey: "nav.evidence" },
+  { href: "/app/integrations", Icon: Plug, labelKey: "nav.integrations" },
+  { href: "/app/reporting", Icon: ScrollText, labelKey: "nav.reporting" },
+  { href: "/app/activity", Icon: Activity, labelKey: "nav.activity" },
+  { href: "/app/notifications", Icon: Bell, labelKey: "nav.notifications" },
+  { href: "/app/billing", Icon: CreditCard, labelKey: "nav.billing" },
+  { href: "/app/settings", Icon: UserCircle, labelKey: "nav.settings" },
 ];
 
 const ADMIN_GROUPS: {
-  label: string;
-  items: { href: string; Icon: LucideIcon; label: string }[];
+  labelKey: MessageKey;
+  items: { href: string; Icon: LucideIcon; labelKey: MessageKey }[];
 }[] = [
   {
-    label: "Información general",
+    labelKey: "nav.generalInfo",
     items: [
-      { href: "/app/info/positions", Icon: Briefcase, label: "Cargos" },
-      { href: "/app/info/personnel", Icon: Users, label: "Personal" },
+      { href: "/app/info/positions", Icon: Briefcase, labelKey: "nav.positions" },
+      { href: "/app/info/personnel", Icon: Users, labelKey: "nav.personnel" },
     ],
   },
   {
-    label: "Catálogos",
+    labelKey: "nav.catalogs",
     items: [
-      { href: "/app/catalogs/locations", Icon: MapPin, label: "Lugares" },
-      { href: "/app/catalogs/retention", Icon: Timer, label: "Retención" },
-      { href: "/app/catalogs/disposition", Icon: Archive, label: "Disposición" },
+      { href: "/app/catalogs/locations", Icon: MapPin, labelKey: "nav.locations" },
+      { href: "/app/catalogs/retention", Icon: Timer, labelKey: "nav.retention" },
+      { href: "/app/catalogs/disposition", Icon: Archive, labelKey: "nav.disposition" },
       {
         href: "/app/catalogs/archive-method",
         Icon: FolderTree,
-        label: "Método archivo",
+        labelKey: "nav.archiveMethod",
       },
-      { href: "/app/catalogs/record-type", Icon: FileText, label: "Tipo registro" },
+      { href: "/app/catalogs/record-type", Icon: FileText, labelKey: "nav.recordType" },
     ],
   },
   {
-    label: "Administración",
+    labelKey: "nav.admin",
     items: [
-      { href: "/app/settings/organization", Icon: Building2, label: "Organización" },
-      { href: "/app/settings/users", Icon: Users, label: "Usuarios y roles" },
-      { href: "/app/settings/groups", Icon: Shield, label: "Grupos y permisos" },
+      { href: "/app/settings/organization", Icon: Building2, labelKey: "nav.orgSettings" },
+      { href: "/app/settings/users", Icon: Users, labelKey: "nav.usersRoles" },
+      { href: "/app/settings/groups", Icon: Shield, labelKey: "nav.groupsPermissions" },
     ],
   },
 ];
@@ -149,6 +151,7 @@ export default function AppSidebar({
 }) {
   const pathname = usePathname();
   const ws = useWorkspaceOptional();
+  const { t } = useI18n();
   const sidebarName = ws?.state.session.name ?? userName;
   const sidebarRole = ws?.state.session.roleLabel ?? roleLabel;
   const displayOrgName = ws?.state.session.orgName ?? orgName;
@@ -192,7 +195,7 @@ export default function AppSidebar({
         className="nf-sidebar-org"
         style={demoAccent ? { borderLeftColor: demoAccent, borderLeftWidth: 3 } : undefined}
       >
-        <div className="nf-sidebar-org-label">Organización</div>
+        <div className="nf-sidebar-org-label">{t("common.organization")}</div>
         {demoSession && ws ? (
           <select
             value={ws.state.session.activeOrgId}
@@ -231,14 +234,14 @@ export default function AppSidebar({
               className={`nf-sidebar-nav-link${active ? " nf-sidebar-nav-link--active" : ""}`}
             >
               <NavIcon Icon={item.Icon} active={active} />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
 
         <button type="button" onClick={onAI} className="nf-sidebar-ai-btn">
           <Sparkles size={16} strokeWidth={2} aria-hidden />
-          Asistente IA
+          {t("nav.ai")}
         </button>
 
         {ADMIN_GROUPS.map((group) => {
@@ -246,7 +249,7 @@ export default function AppSidebar({
             (it) => pathname === it.href || pathname?.startsWith(it.href + "/"),
           );
           return (
-            <div key={group.label}>
+            <div key={group.labelKey}>
               <div
                 className={
                   groupActive
@@ -254,7 +257,7 @@ export default function AppSidebar({
                     : "nf-sidebar-group-title"
                 }
               >
-                {group.label}
+                {t(group.labelKey)}
               </div>
               {group.items.map((item) => {
                 const active = pathname === item.href;
@@ -264,9 +267,9 @@ export default function AppSidebar({
                     href={item.href}
                     onClick={() => onNavigate?.()}
                     className={`nf-sidebar-nav-link nf-sidebar-nav-link--admin${active ? " nf-sidebar-nav-link--active" : ""}`}
-                  >
-                    <NavIcon Icon={item.Icon} active={active} />
-                    {item.label}
+                    >
+                      <NavIcon Icon={item.Icon} active={active} />
+                    {t(item.labelKey)}
                   </Link>
                 );
               })}
@@ -291,8 +294,8 @@ export default function AppSidebar({
           type="button"
           onClick={() => logout()}
           className="nf-sidebar-logout"
-          title="Salir"
-          aria-label="Salir"
+          title={t("nav.logout")}
+          aria-label={t("nav.logout")}
         >
           <LogOut size={17} strokeWidth={1.75} aria-hidden />
         </button>

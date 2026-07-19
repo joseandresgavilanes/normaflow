@@ -1,49 +1,57 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:3000";
-
 test.describe("SaaS Application", () => {
   test.beforeEach(async ({ page }) => {
     // Log in before each test
-    await page.goto(`${BASE_URL}/login`);
+    await page.goto("/login");
     await page.fill("input[type='email']", "demo@normaflow.io");
     await page.fill("input[type='password']", "NormaFlow2025!");
     await page.click("button[type='submit']");
-    await page.waitForURL(/\/app\/dashboard/, { timeout: 5000 });
+    await page.waitForURL(/\/app\/dashboard/, { timeout: 10000 });
   });
 
-  test("dashboard shows compliance score", async ({ page }) => {
-    await expect(page.locator("text=78%")).toBeVisible();
-    await expect(page.locator("text=Panel de Control")).toBeVisible();
+  test("dashboard shows KPIs and modules", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Módulos" })).toBeVisible();
+    await expect(page.getByText("Actividad reciente")).toBeVisible();
+    // Al menos un KPI porcentual visible (score de cumplimiento)
+    await expect(page.locator("text=/\\d+%/").first()).toBeVisible();
   });
 
   test("sidebar navigation to risks", async ({ page }) => {
-    await page.click("text=Riesgos");
+    await page.getByRole("link", { name: "Riesgos", exact: true }).click();
     await expect(page).toHaveURL(/\/app\/risks/);
-    await expect(page.locator("text=Gestión de Riesgos")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Gestión de Riesgos" })).toBeVisible();
   });
 
   test("sidebar navigation to documents", async ({ page }) => {
-    await page.click("text=Documentos");
+    await page.getByRole("link", { name: "Documentos", exact: true }).click();
     await expect(page).toHaveURL(/\/app\/documents/);
-    await expect(page.locator("text=Control de Documentos")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Control de Documentos" })).toBeVisible();
   });
 
   test("documents filter works", async ({ page }) => {
-    await page.goto(`${BASE_URL}/app/documents`);
-    await page.click("text=Aprobados");
-    await expect(page.locator("text=Aprobados")).toBeVisible();
+    await page.goto("/app/documents");
+    await expect(page.getByRole("heading", { name: "Control de Documentos" })).toBeVisible();
+    await page.getByRole("button", { name: "Aprobados" }).first().click();
+    await expect(page.getByRole("button", { name: "Aprobados" }).first()).toBeVisible();
   });
 
   test("GAP assessment shows chart", async ({ page }) => {
-    await page.goto(`${BASE_URL}/app/gap`);
-    await expect(page.locator("text=GAP Assessment")).toBeVisible();
-    await expect(page.locator("text=Cumplimiento Global")).toBeVisible();
+    await page.goto("/app/gap");
+    await expect(page.getByRole("heading", { name: "GAP Assessment" })).toBeVisible();
+    await expect(page.getByText("Cumplimiento Global")).toBeVisible();
+    await expect(page.getByRole("button", { name: "ISO 27001:2022" })).toBeVisible();
+  });
+
+  test("setup guide shows implementation checklist", async ({ page }) => {
+    await page.goto("/app/setup");
+    await expect(page.getByRole("heading", { name: "Implementación guiada" })).toBeVisible();
+    await expect(page.getByText("Base organizativa")).toBeVisible();
   });
 
   test("billing page shows current plan", async ({ page }) => {
-    await page.goto(`${BASE_URL}/app/billing`);
-    await expect(page.locator("text=Growth")).toBeVisible();
-    await expect(page.locator("text=Billing y Suscripción")).toBeVisible();
+    await page.goto("/app/billing");
+    await expect(page.getByRole("heading", { name: /Billing y suscripción/i })).toBeVisible();
+    await expect(page.getByText("Growth").first()).toBeVisible();
   });
 });

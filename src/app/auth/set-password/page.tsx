@@ -7,15 +7,19 @@ import { createSupabaseBrowserClient } from "@/lib/supabase";
 import { clearSupabaseLegacyStorage } from "@/lib/auth/clear-client-auth";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { useI18n } from "@/context/I18nProvider";
 
 export default function SetPasswordPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
+  const [sessionInvalid, setSessionInvalid] = useState(false);
 
   useEffect(() => {
     clearSupabaseLegacyStorage();
@@ -23,35 +27,36 @@ export default function SetPasswordPage() {
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
       setChecking(false);
-      setError("Supabase no está configurado.");
+      setError(t("error.supabaseSimpleMissing"));
       return;
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setChecking(false);
       if (!session?.user?.email) {
-        setError("Sesión no válida. Abre de nuevo el enlace del correo de invitación.");
+        setSessionInvalid(true);
+        setError(t("error.invalidSession"));
         return;
       }
       setInviteEmail(session.user.email);
     });
-  }, []);
+  }, [t]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+      setError(t("error.passwordMin"));
       return;
     }
     if (password !== confirm) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("error.passwordMismatch"));
       return;
     }
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setError("Supabase no está configurado.");
+      setError(t("error.supabaseSimpleMissing"));
       return;
     }
 
@@ -89,6 +94,7 @@ export default function SetPasswordPage() {
   return (
     <>
       <div className="nf-bg" aria-hidden="true" />
+      <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
       <div className="nf-app">
         <div className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 440 }}>
@@ -97,53 +103,53 @@ export default function SetPasswordPage() {
                 <span className="nf-logo-mark" aria-hidden />
                 NormaFlow
               </Link>
-              <h1 className="nf-h-3" style={{ marginTop: 20 }}>Establece tu contraseña</h1>
+              <h1 className="nf-h-3" style={{ marginTop: 20 }}>{t("auth.setPassword.title")}</h1>
               <p>
                 {inviteEmail
-                  ? `Cuenta: ${inviteEmail}`
-                  : "Último paso para acceder a tu organización"}
+                  ? t("auth.setPassword.account", { email: inviteEmail })
+                  : t("auth.setPassword.subtitle")}
               </p>
             </div>
 
             <div className="nf-auth-card">
               <form onSubmit={handleSubmit} className="nf-auth-form">
                 <div>
-                  <label className="nf-label" htmlFor="set-password">Nueva contraseña</label>
+                  <label className="nf-label" htmlFor="set-password">{t("auth.setPassword.newPassword")}</label>
                   <input
                     id="set-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t("auth.signup.passwordPlaceholder")}
                     autoComplete="new-password"
                     className="nf-input"
-                    disabled={Boolean(error && error.includes("Sesión"))}
+                    disabled={sessionInvalid}
                   />
                 </div>
                 <div>
-                  <label className="nf-label" htmlFor="set-password-confirm">Confirmar contraseña</label>
+                  <label className="nf-label" htmlFor="set-password-confirm">{t("auth.setPassword.confirmPassword")}</label>
                   <input
                     id="set-password-confirm"
                     type="password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
-                    placeholder="Repite la contraseña"
+                    placeholder={t("auth.setPassword.confirmPlaceholder")}
                     autoComplete="new-password"
                     className="nf-input"
-                    disabled={Boolean(error && error.includes("Sesión"))}
+                    disabled={sessionInvalid}
                   />
                 </div>
                 {error ? <div className="nf-auth-alert nf-auth-alert--error">{error}</div> : null}
                 <button
                   type="submit"
-                  disabled={loading || Boolean(error && error.includes("Sesión"))}
+                  disabled={loading || sessionInvalid}
                   className="nf-btn nf-btn--primary"
                   style={{ width: "100%", opacity: loading ? 0.7 : 1 }}
                 >
-                  {loading ? "Guardando…" : <>Guardar contraseña <Ic.arrow className="nf-arrow" /></>}
+                  {loading ? t("auth.setPassword.loading") : <>{t("auth.setPassword.submit")} <Ic.arrow className="nf-arrow" /></>}
                 </button>
                 <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)", textAlign: "center" }}>
-                  Después irás a iniciar sesión con este email y tu nueva contraseña.
+                  {t("auth.setPassword.after")}
                 </p>
               </form>
             </div>

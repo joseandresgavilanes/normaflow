@@ -159,6 +159,8 @@ export type SessionProfile = {
   orgName: string;
   roleLabel: string;
   roleKey: string;
+  /** Permisos explícitos otorgados por grupos en modo live. */
+  extraPermissions?: readonly string[];
   activeOrgId: string;
   workspaceKind?: "demo" | "blank";
   plan?: string;

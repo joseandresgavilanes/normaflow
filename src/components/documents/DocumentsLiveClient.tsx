@@ -20,6 +20,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { ModalField, NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import {
   approveDocument,
@@ -1023,6 +1024,7 @@ function VersionRow({
   memberLookup: Map<string, string>;
 }) {
   const [loading, setLoading] = useState(false);
+  const [openError, setOpenError] = useState("");
 
   async function openFile() {
     if (!v.fileUrl) return;
@@ -1031,35 +1033,46 @@ function VersionRow({
       const url = await getDocumentVersionUrl(v.id);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Error.");
+      setOpenError(err instanceof Error ? err.message : "Error.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
-      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#5266F6" }}>v{v.version}</span>
-      <div>
-        <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>
-          {v.changeDescription ?? <span style={{ color: "var(--nf-ink-4)" }}>Sin descripción</span>}
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#5266F6" }}>v{v.version}</span>
+        <div>
+          <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>
+            {v.changeDescription ?? <span style={{ color: "var(--nf-ink-4)" }}>Sin descripción</span>}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 2 }}>
+            {v.createdById ? memberLookup.get(v.createdById) ?? "—" : "Sistema"} · {formatDate(v.createdAt, "dd/MM/yyyy HH:mm")}
+            {v.fileSize && ` · ${Math.round(v.fileSize / 1024)} KB`}
+          </div>
         </div>
-        <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 2 }}>
-          {v.createdById ? memberLookup.get(v.createdById) ?? "—" : "Sistema"} · {formatDate(v.createdAt, "dd/MM/yyyy HH:mm")}
-          {v.fileSize && ` · ${Math.round(v.fileSize / 1024)} KB`}
-        </div>
+        {v.previousVersion && (
+          <span style={{ fontSize: 10, color: "var(--nf-ink-4)", fontFamily: "monospace" }}>
+            ← v{v.previousVersion}
+          </span>
+        )}
+        {v.fileUrl && (
+          <button type="button" onClick={openFile} disabled={loading} className="nf-app-btn-ghost" title="Abrir archivo">
+            {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Download size={14} />}
+          </button>
+        )}
       </div>
-      {v.previousVersion && (
-        <span style={{ fontSize: 10, color: "var(--nf-ink-4)", fontFamily: "monospace" }}>
-          ← v{v.previousVersion}
-        </span>
-      )}
-      {v.fileUrl && (
-        <button type="button" onClick={openFile} disabled={loading} className="nf-app-btn-ghost" title="Abrir archivo">
-          {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Download size={14} />}
-        </button>
-      )}
-    </div>
+      <ConfirmActionModal
+        open={!!openError}
+        title="No se pudo abrir el archivo"
+        confirmLabel="Entendido"
+        onCancel={() => setOpenError("")}
+        onConfirm={() => setOpenError("")}
+      >
+        {openError}
+      </ConfirmActionModal>
+    </>
   );
 }
 
@@ -1108,4 +1121,3 @@ function Stat({
 function radioChoiceClass(active: boolean) {
   return active ? "nf-chip-choice nf-chip-choice--active" : "nf-chip-choice";
 }
-

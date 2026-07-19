@@ -110,6 +110,37 @@ export function CardGridSkeleton({ count = 6 }: { count?: number }) {
   );
 }
 
+export function ProcessCardGridSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="nf-skeleton-process-grid">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="nf-panel nf-skeleton-process-card">
+          <div className="nf-skeleton-process-accent" />
+          <div className="nf-skeleton-process-head">
+            <Skeleton style={{ width: 44, height: 44, flexShrink: 0 }} rounded="lg" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Skeleton style={{ width: "72%", height: 16, marginBottom: 8 }} rounded="sm" />
+              <Skeleton style={{ width: "46%", height: 11 }} rounded="sm" />
+            </div>
+            <Skeleton style={{ width: 70, height: 24 }} rounded="pill" />
+          </div>
+          <div className="nf-skeleton-mini-metrics">
+            {[0, 1, 2, 3].map((j) => (
+              <Skeleton key={j} style={{ width: "100%", height: 58 }} rounded="lg" />
+            ))}
+          </div>
+          <Skeleton style={{ width: "100%", height: 8, marginTop: 16 }} rounded="pill" />
+          <div className="nf-skeleton-card-tags">
+            <Skeleton style={{ width: 82, height: 22 }} rounded="pill" />
+            <Skeleton style={{ width: 96, height: 22 }} rounded="pill" />
+            <Skeleton style={{ width: 72, height: 22 }} rounded="pill" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function StackedCardsSkeleton({ count = 3 }: { count?: number }) {
   return (
     <div className="nf-skeleton-stacked-cards">
@@ -132,6 +163,122 @@ export function StackedCardsSkeleton({ count = 3 }: { count?: number }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function ActionListSkeleton({ count = 5 }: { count?: number }) {
+  return (
+    <div className="nf-skeleton-action-list">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="nf-panel nf-skeleton-action-card">
+          <div className="nf-skeleton-action-main">
+            <div style={{ flex: "1 1 280px", minWidth: 0 }}>
+              <div className="nf-skeleton-card-tags" style={{ marginTop: 0 }}>
+                <Skeleton style={{ width: 78, height: 22 }} rounded="pill" />
+                <Skeleton style={{ width: 92, height: 22 }} rounded="pill" />
+                <Skeleton style={{ width: 58, height: 18 }} rounded="sm" />
+              </div>
+              <Skeleton style={{ width: `${68 + (i % 2) * 10}%`, height: 17, marginBottom: 9 }} rounded="sm" />
+              <Skeleton style={{ width: `${78 - (i % 3) * 8}%`, height: 12 }} rounded="sm" />
+            </div>
+            <div className="nf-skeleton-action-side">
+              <Skeleton style={{ width: 86, height: 12 }} rounded="sm" />
+              <Skeleton style={{ width: 118, height: 8 }} rounded="pill" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function KanbanSkeleton({ columns = 3, cards = 3 }: { columns?: number; cards?: number }) {
+  return (
+    <div className="nf-skeleton-kanban">
+      {Array.from({ length: columns }, (_, col) => (
+        <div key={col} className="nf-panel nf-skeleton-kanban-column">
+          <div className="nf-skeleton-kanban-head">
+            <Skeleton style={{ width: 108, height: 14 }} rounded="sm" />
+            <Skeleton style={{ width: 28, height: 22 }} rounded="pill" />
+          </div>
+          {Array.from({ length: cards }, (_, i) => (
+            <div key={i} className="nf-skeleton-kanban-card">
+              <Skeleton style={{ width: `${72 - (i % 2) * 10}%`, height: 14, marginBottom: 8 }} rounded="sm" />
+              <Skeleton style={{ width: "92%", height: 11, marginBottom: 12 }} rounded="sm" />
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                <Skeleton style={{ width: 72, height: 20 }} rounded="pill" />
+                <Skeleton style={{ width: 48, height: 20 }} rounded="pill" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function HeatmapSkeleton() {
+  return (
+    <div className="nf-panel nf-skeleton-heatmap-panel">
+      <div className="nf-skeleton-panel-head">
+        <Skeleton style={{ width: 132, height: 15 }} rounded="sm" />
+        <Skeleton style={{ width: 76, height: 24 }} rounded="pill" />
+      </div>
+      <div className="nf-skeleton-heatmap">
+        {Array.from({ length: 25 }, (_, i) => (
+          <Skeleton key={i} style={{ width: "100%", aspectRatio: "1 / 1" }} rounded="sm" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ProgressListSkeleton({ rows = 8 }: { rows?: number }) {
+  return (
+    <div className="nf-skeleton-progress-list">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="nf-skeleton-progress-row">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <Skeleton style={{ width: 42, height: 16 }} rounded="sm" />
+              <Skeleton style={{ width: `${45 + (i % 4) * 8}%`, height: 14 }} rounded="sm" />
+            </div>
+            <Skeleton style={{ width: "100%", height: 7 }} rounded="pill" />
+          </div>
+          <Skeleton style={{ width: 74, height: 24, flexShrink: 0 }} rounded="pill" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function IntegrationsGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="nf-skeleton-integrations-grid">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="nf-panel nf-skeleton-integration-card">
+          <div className="nf-skeleton-integration-top">
+            <Skeleton style={{ width: 42, height: 42, flexShrink: 0 }} rounded="lg" />
+            <Skeleton style={{ width: 78, height: 22 }} rounded="pill" />
+          </div>
+          <Skeleton style={{ width: `${58 + (i % 3) * 8}%`, height: 16, marginBottom: 8 }} rounded="sm" />
+          <Skeleton style={{ width: "92%", height: 12, marginBottom: 6 }} rounded="sm" />
+          <Skeleton style={{ width: "74%", height: 12 }} rounded="sm" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function ChartPanelSkeleton({ height = 220 }: { height?: number }) {
+  return (
+    <div className="nf-panel nf-skeleton-chart-panel">
+      <div className="nf-skeleton-panel-head">
+        <Skeleton style={{ width: 136, height: 14 }} rounded="sm" />
+        <Skeleton style={{ width: 90, height: 28 }} rounded="pill" />
+      </div>
+      <Skeleton style={{ width: "100%", height }} rounded="lg" />
     </div>
   );
 }

@@ -69,6 +69,7 @@ export function mergePersistedWithSeed(
       orgName: profile.orgName,
       roleKey: profile.roleKey,
       roleLabel: profile.roleLabel,
+      extraPermissions: profile.extraPermissions,
       activeOrgId: profile.activeOrgId,
       workspaceKind: profile.workspaceKind,
       plan: profile.plan,

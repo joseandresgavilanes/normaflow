@@ -20,6 +20,7 @@ import {
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import {
   useAdminMock,
@@ -493,6 +494,7 @@ function ACPMDetailModal({
   const admin = useAdminMock();
   const [actionError, setActionError] = useState("");
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -554,11 +556,16 @@ function ACPMDetailModal({
 
   function handleDelete() {
     if (!acpm) return;
-    if (!window.confirm(`¿Eliminar la ACPM ${acpm.code} — “${acpm.title}”? Esta acción no se puede deshacer.`)) return;
+    setDeleteOpen(true);
+  }
+
+  function confirmDelete() {
+    if (!acpm) return;
     setActionError("");
     startTransition(async () => {
       try {
         await admin.deleteACPM(acpm.id);
+        setDeleteOpen(false);
         onClose();
       } catch (err: unknown) {
         setActionError(err instanceof Error ? err.message : "Error.");
@@ -713,6 +720,18 @@ function ACPMDetailModal({
       <Modal open={rejectOpen} onClose={() => !isPending && setRejectOpen(false)} title="Rechazar etapa" width={460}>
         <RejectForm onCancel={() => setRejectOpen(false)} onSubmit={handleReject} disabled={isPending} />
       </Modal>
+
+      <ConfirmActionModal
+        open={deleteOpen}
+        title="Eliminar ACPM"
+        confirmLabel="Eliminar"
+        pending={isPending}
+        danger
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={confirmDelete}
+      >
+        ¿Eliminar la ACPM <strong>{acpm.code}</strong> — “{acpm.title}”? Esta acción no se puede deshacer.
+      </ConfirmActionModal>
     </Modal>
   );
 }

@@ -1077,6 +1077,7 @@ export async function getAdminPayload() {
   }
 
   return {
+    groupPermissions: authorization.groupPermissions,
     organization: {
       name: ctx.organization.name,
       industry: canReadOrganization ? ctx.organization.industry : null,
@@ -1482,3 +1483,82 @@ export async function getAuditProgramPayload() {
 }
 
 export type AuditProgramPayload = Awaited<ReturnType<typeof getAuditProgramPayload>>;
+
+// ─── Setup / implementación guiada ─────────────────────────────────────
+
+/**
+ * Checklist de implementación derivado automáticamente de los datos reales
+ * de la organización — cada paso se marca solo cuando el dato existe en la DB.
+ */
+export async function getSetupPayload() {
+  const ctx = await requirePermission("dashboard:read");
+  const organizationId = ctx.organization.id;
+
+  const [
+    standardsCount,
+    membersCount,
+    personnelCount,
+    processesCount,
+    documentsCount,
+    approvedDocsCount,
+    recordsCount,
+    risksCount,
+    indicatorsCount,
+    trainingCount,
+    auditsCount,
+    actionsCount,
+    reviewsCount,
+    org,
+  ] = await Promise.all([
+    prisma.organizationStandard.count({ where: { organizationId } }),
+    prisma.membership.count({ where: { organizationId } }),
+    prisma.personnel.count({ where: { organizationId } }),
+    prisma.process.count({ where: { organizationId } }),
+    prisma.document.count({ where: { organizationId } }),
+    prisma.document.count({ where: { organizationId, status: "APPROVED" } }),
+    prisma.record.count({ where: { organizationId } }),
+    prisma.risk.count({ where: { organizationId } }),
+    prisma.indicator.count({ where: { organizationId } }),
+    prisma.trainingCourse.count({ where: { organizationId } }),
+    prisma.audit.count({ where: { organizationId } }),
+    prisma.action.count({ where: { organizationId } }),
+    prisma.managementReview.count({ where: { organizationId } }),
+    prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { industry: true, logoUrl: true },
+    }),
+  ]);
+
+  const items = [
+    { id: "adopt-standard", block: "foundation" as const, title: "Activa tus normas ISO", description: "Adopta ISO 9001 / ISO 27001 para generar la evaluación GAP inicial con todas las cláusulas.", href: "/app/gap", weight: 3, done: standardsCount > 0 },
+    { id: "org-profile", block: "foundation" as const, title: "Completa el perfil de la organización", description: "Sector y logo — aparecen en informes y exportaciones.", href: "/app/settings/organization", weight: 1, done: Boolean(org?.industry || org?.logoUrl) },
+    { id: "invite-team", block: "foundation" as const, title: "Invita a tu equipo", description: "Añade al menos un miembro más con su rol (auditor, gestor de cumplimiento…).", href: "/app/settings/users", weight: 2, done: membersCount > 1 },
+    { id: "personnel", block: "foundation" as const, title: "Registra el personal", description: "Fichas de personal para formación, cargos y firmas de documentos.", href: "/app/info/personnel", weight: 2, done: personnelCount > 0 },
+    { id: "processes", block: "foundation" as const, title: "Mapea tus procesos", description: "El mapa de procesos es la columna vertebral del SGC.", href: "/app/processes", weight: 2, done: processesCount > 0 },
+    { id: "first-document", block: "docs" as const, title: "Sube tu primer documento", description: "Política, manual o procedimiento — con control de versiones.", href: "/app/documents", weight: 2, done: documentsCount > 0 },
+    { id: "approved-document", block: "docs" as const, title: "Aprueba un documento", description: "Completa el flujo borrador → revisión → aprobación.", href: "/app/documents", weight: 3, done: approvedDocsCount > 0 },
+    { id: "records", block: "docs" as const, title: "Crea un registro controlado", description: "Registros con retención, disposición y archivo definidos.", href: "/app/records", weight: 1, done: recordsCount > 0 },
+    { id: "risks", block: "ops" as const, title: "Evalúa tus riesgos", description: "Matriz de riesgos con probabilidad, impacto y tratamiento.", href: "/app/risks", weight: 2, done: risksCount > 0 },
+    { id: "indicators", block: "ops" as const, title: "Define indicadores (KPIs)", description: "Objetivos medibles con metas y seguimiento periódico.", href: "/app/indicators", weight: 2, done: indicatorsCount > 0 },
+    { id: "training", block: "ops" as const, title: "Planifica la formación", description: "Cursos y asignaciones de formación al personal.", href: "/app/training", weight: 1, done: trainingCount > 0 },
+    { id: "audit", block: "assurance" as const, title: "Programa una auditoría interna", description: "Con plan, checklist y hallazgos.", href: "/app/audits", weight: 2, done: auditsCount > 0 },
+    { id: "acpm", block: "assurance" as const, title: "Abre tu primera acción (ACPM)", description: "Acciones correctivas/preventivas con flujo de aprobación.", href: "/app/actions", weight: 2, done: actionsCount > 0 },
+    { id: "mgmt-review", block: "assurance" as const, title: "Realiza la revisión por la dirección", description: "Entradas, decisiones y acciones derivadas.", href: "/app/management-review", weight: 2, done: reviewsCount > 0 },
+  ];
+
+  const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+  const doneWeight = items.filter((item) => item.done).reduce((sum, item) => sum + item.weight, 0);
+
+  return {
+    items,
+    progressPct: totalWeight ? Math.round((doneWeight / totalWeight) * 100) : 0,
+    counts: {
+      documents: documentsCount,
+      personnel: personnelCount,
+      risks: risksCount,
+      audits: auditsCount,
+    },
+  };
+}
+
+export type SetupPayload = Awaited<ReturnType<typeof getSetupPayload>>;

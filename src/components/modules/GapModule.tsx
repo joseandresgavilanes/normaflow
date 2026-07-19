@@ -10,6 +10,7 @@ import Modal from "@/components/ui/Modal";
 import { DEMO_GAP } from "@/lib/demo-data";
 import type { GapPayload } from "@/lib/server-queries";
 import { updateAssessmentAnswer, exportGapReport } from "@/lib/actions/gap";
+import { adoptStandard } from "@/lib/actions/standards";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import type { GapClauseState } from "@/lib/demo/seed-entities";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
@@ -57,6 +58,11 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
   const [editError, setEditError] = useState("");
   const [isPending, startTransition] = useTransition();
   const liveEditable = readOnlyLive && canEdit;
+
+  // Sugerencia IA (endpoint real /api/ai)
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiText, setAiText] = useState("");
 
   const fromDb = standard === "iso9001" ? live?.iso9001 : live?.iso27001;
 
@@ -178,8 +184,45 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
     dispatch({ type: "updateGapQuestion", standard, clause: fullClause.clause, questionId, answer });
   }
 
-  function aiSuggest() {
-    showToast("Borrador IA: priorizar cláusulas con score bajo 70% y vincular acciones correctivas en el Plan de Acción.");
+  function adoptCurrentStandard() {
+    const code = standard === "iso9001" ? "ISO_9001" : "ISO_27001";
+    startTransition(async () => {
+      try {
+        await adoptStandard(code);
+        showToast(`Norma ${code.replace("_", " ")} activada — evaluación inicial creada`);
+        router.refresh();
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : "No se pudo activar la norma.");
+      }
+    });
+  }
+
+  async function aiSuggest() {
+    const label = standard === "iso9001" ? "ISO 9001:2015" : "ISO 27001:2022";
+    const weak = data.filter(g => g.score < 70).slice(0, 8);
+    const summary = weak.length
+      ? weak.map(g => `- Cláusula ${g.clause} «${g.title}»: score ${g.score}%, estado ${g.status}`).join("\n")
+      : "Todas las cláusulas superan el 70%.";
+    setAiOpen(true);
+    setAiLoading(true);
+    setAiText("");
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: "gap",
+          message: `Norma evaluada: ${label}. Cumplimiento global: ${avg}%. Cláusulas más débiles:\n${summary}\n\nPropón un plan de acción priorizado para cerrar estas brechas.`,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : "Error del servicio de IA.");
+      setAiText(typeof json.text === "string" && json.text ? json.text : "El asistente no devolvió contenido.");
+    } catch (err) {
+      setAiText(err instanceof Error ? err.message : "No se pudo obtener la sugerencia de IA.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   return (
@@ -224,6 +267,34 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
         ))}
       </div>
 
+      {readOnlyLive && fromDb == null ? (
+        <Card>
+          <div style={{ textAlign: "center", padding: "36px 20px" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 8 }}>
+              {standard === "iso9001" ? "ISO 9001:2015" : "ISO 27001:2022"} aún no está activada
+            </div>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 480, margin: "0 auto 20px", lineHeight: 1.55 }}>
+              Al activar la norma se crea la evaluación GAP inicial con el desglose completo de
+              cláusulas{standard === "iso27001" ? " (incluidos los temas del Anexo A)" : ""}, lista
+              para puntuar el cumplimiento de tu organización.
+            </p>
+            {canEdit ? (
+              <button
+                type="button"
+                className="nf-app-btn-primary"
+                onClick={adoptCurrentStandard}
+                disabled={isPending}
+              >
+                {isPending ? "Activando…" : `Activar ${standard === "iso9001" ? "ISO 9001:2015" : "ISO 27001:2022"}`}
+              </button>
+            ) : (
+              <p style={{ fontSize: 12, color: "#D97706" }}>
+                Pide a un administrador o responsable de cumplimiento que active la norma.
+              </p>
+            )}
+          </div>
+        </Card>
+      ) : (
       <div className="nf-app-split-2">
         <Card>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
@@ -374,6 +445,22 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           </button>
         </div>
       </div>
+      )}
+
+      {aiOpen && (
+        <Modal open={aiOpen} title="Sugerencia IA — Plan de acción" onClose={() => setAiOpen(false)}>
+          {aiLoading ? (
+            <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Analizando las brechas de tu evaluación…</p>
+          ) : (
+            <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              {aiText}
+            </div>
+          )}
+          <div className="nf-modal-actions">
+            <button type="button" className="nf-app-btn-ghost" onClick={() => setAiOpen(false)}>Cerrar</button>
+          </div>
+        </Modal>
+      )}
 
       {fullClause && (
         <Modal

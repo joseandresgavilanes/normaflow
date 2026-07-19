@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "normaflow-demo",
+      "runtimeExecutable": "env",
+      "runtimeArgs": ["AUTH_DEMO_MODE=true", "NEXT_PUBLIC_AUTH_DEMO_MODE=true", "npm", "run", "dev"],
+      "port": 3000
     }
   ]
 }

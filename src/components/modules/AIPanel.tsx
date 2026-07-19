@@ -1,23 +1,23 @@
 "use client";
 import { useState } from "react";
 import { Check, RefreshCw, Sparkles, X } from "lucide-react";
+import { useI18n } from "@/context/I18nProvider";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-const CONTEXT_LABELS: Record<string, string> = {
-  gap: "GAP Assessment",
-  risk: "Gestión de Riesgos",
-  document: "Control de Documentos",
-  audit: "Auditorías",
-  nc: "No Conformidades",
+const CONTEXT_LABEL_KEYS: Record<string, MessageKey> = {
+  gap: "ai.context.gap",
+  risk: "ai.context.risk",
+  document: "ai.context.document",
+  audit: "ai.context.audit",
+  nc: "ai.context.nc",
 };
 
-const PROMPTS: Record<string, string> = {
-  gap: "Soy el compliance manager de Tecnoserv Industrial S.A. Estamos realizando un GAP assessment para ISO 9001:2015. Las cláusulas con menor puntuación son: 9 (Evaluación del desempeño, 55%) y 6 (Planificación, 60%). ¿Qué acciones prioritarias recomiendas para mejorar rápidamente nuestro nivel de cumplimiento?",
-  risk: "Tenemos un riesgo crítico: 'Fuga de datos de clientes' con score 20 (probabilidad 4, impacto 5) en ISO 27001. El control actual es cifrado AES-256 + DLP. ¿Qué tratamiento adicional y controles del Anexo A recomiendas implementar?",
-  document:
-    "Necesito generar un borrador de Procedimiento de Gestión de Incidentes de Seguridad (ISO 27001, cláusula 6.1). Debe incluir: objeto, alcance, responsabilidades, flujo de proceso y registros requeridos.",
-  audit:
-    "Hemos completado una auditoría interna ISO 9001 con 8 hallazgos: 1 no conformidad mayor (documentación desactualizada en producción), 4 no conformidades menores y 3 observaciones. ¿Cómo priorizamos las acciones correctivas y qué plazos son razonables?",
-  nc: "Tenemos una no conformidad mayor: 'Documentación de proceso de producción desactualizada desde hace 8 meses'. Causa raíz aparente: ausencia de proceso formal de revisión periódica. ¿Cómo aplicamos análisis de los 5 porqués y qué acciones correctivas son más eficaces?",
+const PROMPT_KEYS: Record<string, MessageKey> = {
+  gap: "ai.prompt.gap",
+  risk: "ai.prompt.risk",
+  document: "ai.prompt.document",
+  audit: "ai.prompt.audit",
+  nc: "ai.prompt.nc",
 };
 
 export default function AIPanel({
@@ -29,6 +29,7 @@ export default function AIPanel({
   onClose: () => void;
   context: string;
 }) {
+  const { locale, t, tx } = useI18n();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [confirmed, setConfirmed] = useState(false);
@@ -43,16 +44,19 @@ export default function AIPanel({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: promptOverride || PROMPTS[context] || PROMPTS.gap,
+          message: promptOverride || t(PROMPT_KEYS[context] ?? PROMPT_KEYS.gap),
           context,
+          locale,
         }),
       });
       const data = await res.json();
-      setResult(data.text || "No se pudo generar la sugerencia.");
+      if (!res.ok) {
+        setResult(typeof data.error === "string" ? tx(data.error) : t("ai.errorSuggestion"));
+      } else {
+        setResult(data.text || t("ai.errorSuggestion"));
+      }
     } catch {
-      setResult(
-        "Error al conectar con el asistente. Verifica tu conexión e inténtalo de nuevo.",
-      );
+      setResult(t("ai.errorConnect"));
     }
     setLoading(false);
   };
@@ -88,18 +92,18 @@ export default function AIPanel({
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Sparkles size={18} strokeWidth={2} color="#16A34A" aria-hidden />
             <span style={{ fontSize: 15, fontWeight: 700, color: "var(--nf-ink)" }}>
-              Asistente IA
+              {t("ai.title")}
             </span>
           </div>
           <div style={{ fontSize: 11, color: "var(--nf-ink-2, #223648)", marginTop: 2 }}>
-            Las sugerencias requieren confirmación humana antes de guardarse
+            {t("ai.humanReview")}
           </div>
         </div>
         <button
           type="button"
           className="nf-icon-btn"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label={t("common.close")}
         >
           <X size={18} strokeWidth={2} aria-hidden />
         </button>
@@ -126,8 +130,8 @@ export default function AIPanel({
             border: "1px solid #E8E8E8",
           }}
         >
-          <strong style={{ color: "var(--nf-ink)" }}>Contexto:</strong>{" "}
-          {CONTEXT_LABELS[context] ?? "General"}
+          <strong style={{ color: "var(--nf-ink)" }}>{t("ai.context")}</strong>{" "}
+          {CONTEXT_LABEL_KEYS[context] ? t(CONTEXT_LABEL_KEYS[context]) : t("common.general")}
         </div>
 
         {/* Custom prompt */}
@@ -141,12 +145,12 @@ export default function AIPanel({
               marginBottom: 6,
             }}
           >
-            Pregunta personalizada (opcional)
+            {t("ai.customPrompt")}
           </label>
           <textarea
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
-            placeholder="Escribe tu consulta específica..."
+            placeholder={t("ai.customPromptPlaceholder")}
             rows={3}
             style={{
               width: "100%",
@@ -175,8 +179,7 @@ export default function AIPanel({
                 marginBottom: 0,
               }}
             >
-              El asistente analizará el contexto y generará sugerencias basadas
-              en mejores prácticas ISO.
+              {t("ai.empty")}
             </p>
           </div>
         )}
@@ -184,7 +187,7 @@ export default function AIPanel({
         {loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <div style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", marginBottom: 10 }}>
-              Analizando contexto...
+              {t("ai.loadingContext")}
             </div>
             <div
               style={{
@@ -233,7 +236,7 @@ export default function AIPanel({
                   style={{ flex: 1 }}
                 >
                   <Check size={16} strokeWidth={2.5} aria-hidden />
-                  Confirmar y aplicar
+                  {t("ai.confirmApply")}
                 </button>
                 <button
                   type="button"
@@ -241,7 +244,7 @@ export default function AIPanel({
                   className="nf-app-btn-ghost"
                   style={{ flex: 1 }}
                 >
-                  Descartar
+                  {t("ai.dismiss")}
                 </button>
               </div>
             ) : (
@@ -261,7 +264,7 @@ export default function AIPanel({
                 }}
               >
                 <Check size={16} strokeWidth={2.5} aria-hidden />
-                Sugerencia confirmada y registrada con revisión humana
+                {t("ai.confirmed")}
               </div>
             )}
             <button
@@ -271,7 +274,7 @@ export default function AIPanel({
               style={{ marginTop: 10, width: "100%" }}
             >
               <RefreshCw size={14} strokeWidth={2} aria-hidden />
-              Regenerar
+              {t("ai.regenerate")}
             </button>
           </div>
         )}
@@ -286,11 +289,11 @@ export default function AIPanel({
           style={{ width: "100%" }}
         >
           {loading ? (
-            "Generando…"
+            t("ai.generating")
           ) : (
             <>
               <Sparkles size={17} strokeWidth={2} aria-hidden />
-              Generar sugerencia
+              {t("ai.generate")}
             </>
           )}
         </button>

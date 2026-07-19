@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { format, isToday, isYesterday } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es, ptBR } from "date-fns/locale";
 import {
   Activity,
   CalendarClock,
@@ -18,7 +18,11 @@ import {
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
 import { useAdminMock, type AuditTrailEntry } from "@/context/AdminMockStore";
+import { useI18n } from "@/context/I18nProvider";
 import { cn, formatDate, timeAgo } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/config";
+
+const dateFnsLocales = { es, en: enUS, "pt-BR": ptBR } satisfies Record<Locale, typeof es>;
 
 const MODULE_LABEL: Record<string, string> = {
   organization: "Organización",
@@ -96,11 +100,11 @@ function moduleLabel(mod: string): string {
   return MODULE_LABEL[mod] ?? mod;
 }
 
-function adminDayHeading(dayYmd: string) {
+function adminDayHeading(dayYmd: string, locale: Locale, t: ReturnType<typeof useI18n>["t"]) {
   const d = new Date(`${dayYmd}T12:00:00`);
-  if (isToday(d)) return "Hoy";
-  if (isYesterday(d)) return "Ayer";
-  return format(d, "EEEE, d MMM yyyy", { locale: es });
+  if (isToday(d)) return t("date.today");
+  if (isYesterday(d)) return t("date.yesterday");
+  return format(d, "EEEE, d MMM yyyy", { locale: dateFnsLocales[locale] });
 }
 
 function trailNodeClass(action: string): string {
@@ -119,6 +123,7 @@ export default function ActivityClient({
   liveEntries?: AuditTrailEntry[];
 } = {}) {
   const admin = useAdminMock();
+  const { locale, t } = useI18n();
   const events = liveEntries ?? admin.state.auditTrail;
 
   const [search, setSearch] = useState("");
@@ -214,7 +219,7 @@ export default function ActivityClient({
     URL.revokeObjectURL(url);
   }
 
-  const lastLabel = sortedPreview[0] ? timeAgo(sortedPreview[0].at) : null;
+  const lastLabel = sortedPreview[0] ? timeAgo(sortedPreview[0].at, locale) : null;
 
   return (
     <div className="nf-activity-page">
@@ -404,7 +409,7 @@ export default function ActivityClient({
                 <section key={day} className="nf-audit-day-group">
                   <header className="nf-audit-day-head">
                     <span className="nf-audit-day-head-marker" aria-hidden />
-                    <h4 className="nf-audit-day-title">{adminDayHeading(day)}</h4>
+                    <h4 className="nf-audit-day-title">{adminDayHeading(day, locale, t)}</h4>
                     <span className="nf-audit-day-count">{rows.length}</span>
                   </header>
                   <div className="nf-audit-day-rail">
@@ -417,8 +422,8 @@ export default function ActivityClient({
                           <div className="nf-audit-meta-row">
                             <ActionDot action={e.action} />
                             <time dateTime={e.at} className="nf-audit-pill nf-audit-pill--date">
-                              {formatDate(e.at, "HH:mm:ss")}
-                              <span className="nf-audit-pill-relative"> · {timeAgo(e.at)}</span>
+                              {formatDate(e.at, "HH:mm:ss", locale)}
+                              <span className="nf-audit-pill-relative"> · {timeAgo(e.at, locale)}</span>
                             </time>
                             <span className="nf-audit-pill nf-audit-pill--type">{actionLabel(e.action)}</span>
                             <span className="nf-audit-pill" style={{ fontWeight: 700, textTransform: "none", letterSpacing: "0.02em" }}>
@@ -454,6 +459,8 @@ export default function ActivityClient({
 }
 
 function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; onClose: () => void }) {
+  const { locale } = useI18n();
+
   if (!event) return null;
   const diff = diffPairs(event.before, event.after);
 
@@ -479,9 +486,9 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-          <Meta label="Fecha y hora" value={<span style={{ fontFamily: "monospace" }}>{formatDate(event.at, "yyyy-MM-dd HH:mm:ss")}</span>} />
+          <Meta label="Fecha y hora" value={<span style={{ fontFamily: "monospace" }}>{formatDate(event.at, "yyyy-MM-dd HH:mm:ss", locale)}</span>} />
           <Meta label="Actor" value={event.actorName ?? <span style={{ color: "var(--nf-ink-4, #3d5166)" }}>Sistema</span>} />
-          <Meta label="Cuándo" value={timeAgo(event.at)} />
+          <Meta label="Cuándo" value={timeAgo(event.at, locale)} />
           <Meta label="ID de recurso" value={event.recordId ? <code style={{ fontSize: 11 }}>{event.recordId}</code> : "—"} />
         </div>
 

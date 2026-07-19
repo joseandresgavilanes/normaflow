@@ -4,19 +4,26 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Ic } from "./Icons";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { useI18n } from "@/context/I18nProvider";
+import type { MessageKey } from "@/lib/i18n/messages";
 
-const LINKS: [string, string][] = [
-  ["Funcionalidades", "/features"],
+const LINKS: [MessageKey | string, string][] = [
+  ["marketing.features", "/features"],
   ["ISO 9001", "/iso9001"],
   ["ISO 27001", "/iso27001"],
-  ["Precios", "/pricing"],
-  ["Casos", "/cases"],
-  ["Blog", "/blog"],
+  ["nav.gap", "/solutions/gap-assessment"],
+  ["marketing.pricing", "/pricing"],
+  ["marketing.cases", "/cases"],
+  ["marketing.blog", "/blog"],
 ];
 
 export function NfNav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
+  const label = (value: MessageKey | string) =>
+    value.startsWith("marketing.") || value.startsWith("nav.") ? t(value as MessageKey) : value;
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
@@ -34,19 +41,20 @@ export function NfNav() {
         </Link>
         <nav className="nf-nav-links">
           {LINKS.map(([l, h]) => (
-            <Link key={l} href={h} aria-current={pathname === h ? "page" : undefined}>{l}</Link>
+            <Link key={l} href={h} aria-current={pathname === h ? "page" : undefined}>{label(l)}</Link>
           ))}
         </nav>
         <div className="nf-nav-cta">
-          <Link className="nf-btn nf-btn--ghost nf-btn--sm" href="/login">Entrar</Link>
-          <Link className="nf-btn nf-btn--primary nf-btn--sm" href="/demo">Demo gratuita <Ic.arrow className="nf-arrow"/></Link>
+          <LanguageSwitcher compact />
+          <Link className="nf-btn nf-btn--ghost nf-btn--sm" href="/login">{t("marketing.login")}</Link>
+          <Link className="nf-btn nf-btn--primary nf-btn--sm" href="/demo">{t("marketing.freeDemo")} <Ic.arrow className="nf-arrow"/></Link>
         </div>
         <button
           type="button"
           className="nf-nav-burger"
           aria-expanded={open}
           aria-controls="nf-nav-drawer"
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-label={open ? t("marketing.closeMenu") : t("marketing.openMenu")}
           onClick={() => setOpen((v) => !v)}
         >
           <span aria-hidden="true">{open ? "×" : "☰"}</span>
@@ -54,14 +62,15 @@ export function NfNav() {
       </div>
       {open && (
         <>
-          <button type="button" className="nf-nav-backdrop" aria-label="Cerrar menú" onClick={() => setOpen(false)} />
-          <div id="nf-nav-drawer" className="nf-nav-drawer" role="dialog" aria-modal="true" aria-label="Navegación">
+          <button type="button" className="nf-nav-backdrop" aria-label={t("marketing.closeMenu")} onClick={() => setOpen(false)} />
+          <div id="nf-nav-drawer" className="nf-nav-drawer" role="dialog" aria-modal="true" aria-label={t("marketing.navigation")}>
             {LINKS.map(([l, h]) => (
-              <Link key={l} href={h} onClick={() => setOpen(false)}>{l}</Link>
+              <Link key={l} href={h} onClick={() => setOpen(false)}>{label(l)}</Link>
             ))}
             <div className="nf-nav-drawer-cta">
-              <Link className="nf-btn nf-btn--ghost" href="/login" onClick={() => setOpen(false)}>Entrar</Link>
-              <Link className="nf-btn nf-btn--primary" href="/demo" onClick={() => setOpen(false)}>Demo gratuita <Ic.arrow/></Link>
+              <LanguageSwitcher compact />
+              <Link className="nf-btn nf-btn--ghost" href="/login" onClick={() => setOpen(false)}>{t("marketing.login")}</Link>
+              <Link className="nf-btn nf-btn--primary" href="/demo" onClick={() => setOpen(false)}>{t("marketing.freeDemo")} <Ic.arrow/></Link>
             </div>
           </div>
         </>

@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 import { isSupabaseConfigured } from "@/lib/env";
+import { getStandardSpec } from "@/lib/standards-catalog";
+import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/standards-adoption";
+import { sendWelcomeEmail } from "@/lib/resend";
 
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
@@ -15,6 +18,13 @@ export async function POST(request: NextRequest) {
   if (!organizationName || organizationName.length < 2) {
     return NextResponse.json({ error: "Nombre de organización inválido" }, { status: 400 });
   }
+  // Normas a adoptar al crear la organización (por defecto ISO 9001).
+  const requestedStandards: string[] = Array.isArray(body.standards)
+    ? body.standards.filter((s: unknown): s is string => typeof s === "string")
+    : ["ISO_9001"];
+  const standardSpecs = [...new Set(requestedStandards)]
+    .map((code) => getStandardSpec(code))
+    .filter((spec): spec is NonNullable<typeof spec> => spec != null);
 
   let response = NextResponse.json({ ok: true });
   const supabase = createServerClient(
@@ -47,7 +57,7 @@ export async function POST(request: NextRequest) {
     (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name) ||
     email.split("@")[0];
 
-  await prisma.$transaction(async tx => {
+  const created = await prisma.$transaction(async tx => {
     const u = await tx.user.upsert({
       where: { email },
       create: { email, name, authUserId: user.id },
@@ -55,7 +65,7 @@ export async function POST(request: NextRequest) {
     });
 
     const existing = await tx.membership.count({ where: { userId: u.id } });
-    if (existing > 0) return;
+    if (existing > 0) return null;
 
     let base = slugify(organizationName) || "org";
     let slug = base;
@@ -87,7 +97,31 @@ export async function POST(request: NextRequest) {
         currentPeriodEnd: new Date(Date.now() + 14 * 24 * 3600 * 1000),
       },
     });
+
+    return { organizationId: org.id, organizationName: org.name, userId: u.id };
   });
+
+  if (created) {
+    // Adopción de normas: catálogo global + evaluación GAP inicial por norma.
+    // Fuera de la transacción principal — es idempotente y no debe bloquear el alta.
+    for (const spec of standardSpecs) {
+      try {
+        const standard = await ensureStandardCatalog(spec);
+        await adoptStandardForOrganization({
+          organizationId: created.organizationId,
+          standardCode: spec.code,
+          standardId: standard.id,
+          assessorId: created.userId,
+        });
+      } catch (e) {
+        console.error("[bootstrap] adoptStandard", spec.code, e);
+      }
+    }
+
+    sendWelcomeEmail(email, name, created.organizationName).catch((e) =>
+      console.error("[bootstrap] welcome email", e)
+    );
+  }
 
   return response;
 }

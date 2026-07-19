@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import AuthHashRedirect from "@/components/auth/AuthHashRedirect";
+import { I18nProvider } from "@/context/I18nProvider";
+import { localeToOpenGraph } from "@/lib/i18n/config";
+import { translate } from "@/lib/i18n/messages";
+import { getServerLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -12,25 +16,34 @@ export const viewport = {
   viewportFit: "cover" as const,
 };
 
-export const metadata: Metadata = {
-  title: { default: "NormaFlow — Software de Gestión ISO", template: "%s | NormaFlow" },
-  description: "Digitaliza y gestiona tu sistema ISO 9001 e ISO 27001 con trazabilidad total. Auditorías, riesgos, documentos y cumplimiento en una plataforma.",
-  keywords: ["ISO 9001", "ISO 27001", "gestión de calidad", "cumplimiento", "auditorías", "software ISO"],
-  authors: [{ name: "NormaFlow" }],
-  openGraph: {
-    title: "NormaFlow — Software de Gestión ISO",
-    description: "Tu sistema de gestión, digitalizado y bajo control.",
-    type: "website",
-    locale: "es_ES",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const keywords = translate(locale, "meta.keywords").split(",");
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return {
+    title: { default: translate(locale, "meta.title.default"), template: translate(locale, "meta.title.template") },
+    description: translate(locale, "meta.description"),
+    keywords,
+    authors: [{ name: "NormaFlow" }],
+    openGraph: {
+      title: translate(locale, "meta.title.default"),
+      description: translate(locale, "meta.og.description"),
+      type: "website",
+      locale: localeToOpenGraph(locale),
+    },
+  };
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getServerLocale();
+
   return (
-    <html lang="es" className={`${inter.variable} ${manrope.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${inter.variable} ${manrope.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <AuthHashRedirect />
-        {children}
+        <I18nProvider initialLocale={locale}>
+          <AuthHashRedirect />
+          {children}
+        </I18nProvider>
       </body>
     </html>
   );

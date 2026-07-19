@@ -1,18 +1,21 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format, formatDistanceToNow, isAfter } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es, ptBR } from "date-fns/locale";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/config";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string, fmt = "dd/MM/yyyy") {
-  return format(new Date(date), fmt, { locale: es });
+const dateFnsLocales = { es, en: enUS, "pt-BR": ptBR } satisfies Record<Locale, typeof es>;
+
+export function formatDate(date: Date | string, fmt = "dd/MM/yyyy", locale: Locale = DEFAULT_LOCALE) {
+  return format(new Date(date), fmt, { locale: dateFnsLocales[locale] });
 }
 
-export function timeAgo(date: Date | string) {
-  return formatDistanceToNow(new Date(date), { addSuffix: true, locale: es });
+export function timeAgo(date: Date | string, locale: Locale = DEFAULT_LOCALE) {
+  return formatDistanceToNow(new Date(date), { addSuffix: true, locale: dateFnsLocales[locale] });
 }
 
 export function isOverdue(date: Date | string) {

@@ -8,6 +8,7 @@ import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
 import DataTable from "@/components/ui/Table";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import FileImportArea from "@/components/ui/FileImportArea";
 import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type DocumentRow, type DocVersion } from "@/context/WorkspaceStore";
@@ -102,6 +103,7 @@ export default function DocumentsModule() {
   const [approveAttestOpen, setApproveAttestOpen] = useState(false);
   const [historyViewingIndex, setHistoryViewingIndex] = useState<number | null>(null);
   const [historyVersionFile, setHistoryVersionFile] = useState<File | null>(null);
+  const [obsoleteConfirm, setObsoleteConfirm] = useState<DocumentRow | null>(null);
 
   const folderOptions = useMemo(() => {
     const u = new Set(documents.map(d => d.folder));
@@ -133,6 +135,27 @@ export default function DocumentsModule() {
     const code = processLinkDraft.trim();
     dispatch({ type: "updateDocument", id: detailLive.id, patch: { linkedProcessCode: code } });
     showToast(code ? `Documento enlazado al proceso ${code}` : "Enlace de proceso quitado");
+    setDetail(null);
+  }
+
+  function markObsolete(doc: DocumentRow) {
+    dispatch({ type: "updateDocument", id: doc.id, patch: { status: "OBSOLETE" } });
+    dispatch({
+      type: "appendAudit",
+      event: createAuditEvent({
+        ts: new Date().toISOString(),
+        actorName: state.session.name,
+        actorEmail: state.session.email,
+        action: AUDIT_ACTIONS.DOCUMENT_OBSOLETE,
+        entityType: "DOCUMENT",
+        entityId: doc.id,
+        entityLabel: doc.code,
+        oldValue: doc.status,
+        newValue: "OBSOLETE",
+      }),
+    });
+    showToast("Marcado como obsoleto · evento auditado");
+    setObsoleteConfirm(null);
     setDetail(null);
   }
 
@@ -566,26 +589,7 @@ export default function DocumentsModule() {
                   <button
                     type="button"
                     disabled={!perm.documents.edit}
-                    onClick={() => {
-                      if (!window.confirm("¿Marcar este documento como obsoleto? Esta acción quedará en el registro de actividad del sistema.")) return;
-                      dispatch({ type: "updateDocument", id: detailLive.id, patch: { status: "OBSOLETE" } });
-                      dispatch({
-                        type: "appendAudit",
-                        event: createAuditEvent({
-                          ts: new Date().toISOString(),
-                          actorName: state.session.name,
-                          actorEmail: state.session.email,
-                          action: AUDIT_ACTIONS.DOCUMENT_OBSOLETE,
-                          entityType: "DOCUMENT",
-                          entityId: detailLive.id,
-                          entityLabel: detailLive.code,
-                          oldValue: detailLive.status,
-                          newValue: "OBSOLETE",
-                        }),
-                      });
-                      showToast("Marcado como obsoleto · evento auditado");
-                      setDetail(null);
-                    }}
+                    onClick={() => setObsoleteConfirm(detailLive)}
                     className="nf-app-btn-ghost"
                   >
                     Marcar obsoleto
@@ -622,6 +626,17 @@ export default function DocumentsModule() {
           </div>
         )}
       </Modal>
+
+      <ConfirmActionModal
+        open={!!obsoleteConfirm}
+        title="Marcar documento como obsoleto"
+        confirmLabel="Marcar obsoleto"
+        danger
+        onCancel={() => setObsoleteConfirm(null)}
+        onConfirm={() => obsoleteConfirm && markObsolete(obsoleteConfirm)}
+      >
+        ¿Marcar <strong>{obsoleteConfirm?.code}</strong> como obsoleto? Esta acción quedará en el registro de actividad del sistema.
+      </ConfirmActionModal>
 
       <Modal open={!!previewDoc} onClose={() => setPreviewDoc(null)} title={previewDoc ? `Vista — ${previewDoc.code}` : ""} width={720}>
         {previewDoc && (

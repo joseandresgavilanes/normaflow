@@ -12,6 +12,25 @@ export function canDemo(roleKey: string, permission: string): boolean {
   return perms.some(p => p === `${res}:*` || p === permission);
 }
 
+export function canExplicitPermission(
+  permissions: readonly string[] | undefined,
+  permission: string,
+): boolean {
+  if (!permissions?.length) return false;
+  if (permissions.includes("*")) return true;
+  if (permissions.includes(permission)) return true;
+  const [resource] = permission.split(":");
+  return permissions.includes(`${resource}:*`);
+}
+
+export function canFrontend(
+  roleKey: string,
+  permission: string,
+  extraPermissions?: readonly string[],
+): boolean {
+  return canDemo(roleKey, permission) || canExplicitPermission(extraPermissions, permission);
+}
+
 export function canCreateDocuments(roleKey: string): boolean {
   return canDemo(roleKey, "documents:create") || canDemo(roleKey, "documents:*");
 }

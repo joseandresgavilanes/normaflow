@@ -8,29 +8,30 @@ import * as P from "@/lib/permissions/frontend";
 export function useDemoPermission() {
   const ws = useWorkspaceOptional();
   const roleKey = ws?.state.session.roleKey ?? "COMPLIANCE_MANAGER";
+  const extraPermissions = ws?.state.session.extraPermissions ?? [];
 
   return useMemo(
     () => ({
       roleKey,
-      can: (perm: string) => P.canDemo(roleKey, perm),
+      can: (perm: string) => P.canFrontend(roleKey, perm, extraPermissions),
       documents: {
-        create: P.canCreateDocuments(roleKey),
-        edit: P.canEditDocuments(roleKey),
-        approve: P.canApproveDocuments(roleKey),
+        create: P.canFrontend(roleKey, "documents:create", extraPermissions) || P.canFrontend(roleKey, "documents:*", extraPermissions),
+        edit: P.canFrontend(roleKey, "documents:*", extraPermissions),
+        approve: P.canApproveDocuments(roleKey) || P.canFrontend(roleKey, "documents:approve", extraPermissions),
       },
-      risks: { manage: P.canManageRisks(roleKey) },
-      audits: { manage: P.canManageAudits(roleKey) },
-      nc: { manage: P.canManageNc(roleKey) },
-      actions: { manage: P.canManageActions(roleKey) },
-      gap: { manage: P.canManageGap(roleKey) },
-      billing: { manage: P.canAccessBilling(roleKey) },
-      training: { manage: P.canManageTraining(roleKey) },
-      changes: { manage: P.canManageChanges(roleKey) },
-      suppliers: { manage: P.canManageSuppliers(roleKey) },
-      reporting: { use: P.canUseReporting(roleKey) },
-      activity: { read: P.canReadActivity(roleKey) },
-      integrations: { manage: P.canManageIntegrations(roleKey) },
+      risks: { manage: P.canFrontend(roleKey, "risks:*", extraPermissions) },
+      audits: { manage: P.canFrontend(roleKey, "audits:*", extraPermissions) },
+      nc: { manage: P.canFrontend(roleKey, "nc:*", extraPermissions) || P.canFrontend(roleKey, "nc:create", extraPermissions) },
+      actions: { manage: P.canFrontend(roleKey, "actions:*", extraPermissions) || P.canFrontend(roleKey, "actions:update", extraPermissions) },
+      gap: { manage: P.canFrontend(roleKey, "gap:*", extraPermissions) },
+      billing: { manage: P.canAccessBilling(roleKey) || P.canFrontend(roleKey, "billing:*", extraPermissions) },
+      training: { manage: P.canFrontend(roleKey, "training:*", extraPermissions) },
+      changes: { manage: P.canFrontend(roleKey, "changes:*", extraPermissions) },
+      suppliers: { manage: P.canFrontend(roleKey, "suppliers:*", extraPermissions) },
+      reporting: { use: P.canFrontend(roleKey, "reporting:*", extraPermissions) || P.canFrontend(roleKey, "reporting:read", extraPermissions) },
+      activity: { read: P.canFrontend(roleKey, "activity:read", extraPermissions) || P.canFrontend(roleKey, "activity:*", extraPermissions) },
+      integrations: { manage: P.canFrontend(roleKey, "integrations:manage", extraPermissions) || P.canFrontend(roleKey, "org:*", extraPermissions) },
     }),
-    [roleKey]
+    [roleKey, extraPermissions]
   );
 }

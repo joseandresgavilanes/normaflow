@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuditProgramStatus } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import ProgressBar from "@/components/ui/ProgressBar";
 import { useServerAction } from "@/hooks/useServerAction";
 import {
@@ -65,6 +66,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ProgramRow | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ProgramRow | null>(null);
   const detail = detailId ? initial.programs.find(p => p.id === detailId) ?? null : null;
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -83,8 +85,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
   }
 
   function remove(row: ProgramRow) {
-    if (!window.confirm(`¿Eliminar el programa “${row.year} · ${row.title}”? Las auditorías enlazadas se conservarán sin programa.`)) return;
-    run(() => deleteAuditProgram(row.id), { onSuccess: () => setDetailId(null), successMessage: "Programa eliminado." });
+    setConfirmDelete(row);
   }
 
   function changeStatus(id: string, to: AuditProgramStatus, label: string) {
@@ -185,6 +186,26 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
           </div>
         )}
       </Modal>
+      <ConfirmActionModal
+        open={!!confirmDelete}
+        title="Eliminar programa"
+        confirmLabel="Eliminar"
+        danger
+        pending={isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          run(() => deleteAuditProgram(confirmDelete.id), {
+            onSuccess: () => {
+              setDetailId((current) => current === confirmDelete.id ? null : current);
+              setConfirmDelete(null);
+            },
+            successMessage: "Programa eliminado.",
+          });
+        }}
+      >
+        ¿Eliminar el programa <strong>{confirmDelete ? `${confirmDelete.year} · ${confirmDelete.title}` : ""}</strong>? Las auditorías enlazadas se conservarán sin programa.
+      </ConfirmActionModal>
     </div>
   );
 }

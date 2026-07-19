@@ -1,7 +1,7 @@
 "use client";
 
 import { format, isToday, isYesterday } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es, ptBR } from "date-fns/locale";
 import {
   CheckCircle2,
   Eye,
@@ -16,16 +16,20 @@ import {
 import type { AuditEventRow } from "@/lib/domain/audit-event";
 import { auditEntityTypeLabel } from "@/lib/audit-entity-labels";
 import { cn, formatDate, timeAgo } from "@/lib/utils";
+import { useI18n } from "@/context/I18nProvider";
+import type { Locale } from "@/lib/i18n/config";
+
+const dateFnsLocales = { es, en: enUS, "pt-BR": ptBR } satisfies Record<Locale, typeof es>;
 
 function formatAction(action: string) {
   return action.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function dayHeading(ts: string) {
+function dayHeading(ts: string, locale: Locale, t: ReturnType<typeof useI18n>["t"]) {
   const d = new Date(ts);
-  if (isToday(d)) return "Hoy";
-  if (isYesterday(d)) return "Ayer";
-  return format(d, "EEEE, d MMM yyyy", { locale: es });
+  if (isToday(d)) return t("date.today");
+  if (isYesterday(d)) return t("date.yesterday");
+  return format(d, "EEEE, d MMM yyyy", { locale: dateFnsLocales[locale] });
 }
 
 function actionFlair(action: string): { Icon: LucideIcon; nodeClass: string } {
@@ -48,14 +52,14 @@ function actionFlair(action: string): { Icon: LucideIcon; nodeClass: string } {
   return { Icon: ShieldCheck, nodeClass: "nf-audit-slot-node--default" };
 }
 
-function buildDayGroups(events: AuditEventRow[]) {
+function buildDayGroups(events: AuditEventRow[], locale: Locale, t: ReturnType<typeof useI18n>["t"]) {
   const sorted = [...events].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
   const groups: { key: string; heading: string; events: AuditEventRow[] }[] = [];
   for (const ev of sorted) {
-    const key = format(new Date(ev.ts), "yyyy-MM-dd", { locale: es });
+    const key = format(new Date(ev.ts), "yyyy-MM-dd");
     const last = groups[groups.length - 1];
     if (last?.key === key) last.events.push(ev);
-    else groups.push({ key, heading: dayHeading(ev.ts), events: [ev] });
+    else groups.push({ key, heading: dayHeading(ev.ts, locale, t), events: [ev] });
   }
   return groups;
 }
@@ -75,7 +79,10 @@ export default function AuditTimeline({
   /** Muestra “hace X min” junto a la hora absoluta. */
   showRelativeTime?: boolean;
 }) {
+  const { locale, t } = useI18n();
   const list = events.slice(0, max);
+  const dateTimeFormat = locale === "en" ? "MM/dd/yyyy HH:mm" : "dd/MM/yyyy HH:mm";
+  const resolvedEmptyText = emptyText === "Sin eventos registrados." ? t("audit.empty") : emptyText;
 
   if (list.length === 0) {
     return (
@@ -83,7 +90,7 @@ export default function AuditTimeline({
         <div className="nf-audit-empty-icon nf-audit-empty-icon--glow" aria-hidden>
           <ScrollText size={22} strokeWidth={2.25} />
         </div>
-        <p className="nf-app-help nf-audit-empty-text">{emptyText}</p>
+        <p className="nf-app-help nf-audit-empty-text">{resolvedEmptyText}</p>
       </div>
     );
   }
@@ -97,9 +104,9 @@ export default function AuditTimeline({
             <Icon size={15} strokeWidth={2.4} />
           </span>
           <time dateTime={ev.ts} className="nf-audit-pill nf-audit-pill--date">
-            {formatDate(ev.ts, "dd/MM/yyyy HH:mm")}
+            {formatDate(ev.ts, dateTimeFormat, locale)}
             {showRelativeTime ? (
-              <span className="nf-audit-pill-relative"> · {timeAgo(ev.ts)}</span>
+              <span className="nf-audit-pill-relative"> · {timeAgo(ev.ts, locale)}</span>
             ) : null}
           </time>
           <span className="nf-audit-pill nf-audit-pill--type">{auditEntityTypeLabel(ev.entityType)}</span>
@@ -121,7 +128,7 @@ export default function AuditTimeline({
           {ev.field && (
             <>
               <br />
-              <span style={{ color: "var(--nf-ink-3)", fontWeight: 600 }}>Campo:</span> {ev.field}
+              <span style={{ color: "var(--nf-ink-3)", fontWeight: 600 }}>{t("audit.field")}</span> {ev.field}
               {ev.oldValue != null && <span> · de «{ev.oldValue}»</span>}
               {ev.newValue != null && <span> a «{ev.newValue}»</span>}
             </>
@@ -129,7 +136,7 @@ export default function AuditTimeline({
           {ev.reason && (
             <>
               <br />
-              <span style={{ fontStyle: "italic", color: "var(--nf-ink-3)" }}>Motivo: {ev.reason}</span>
+              <span style={{ fontStyle: "italic", color: "var(--nf-ink-3)" }}>{t("audit.reason")} {ev.reason}</span>
             </>
           )}
         </div>
@@ -140,9 +147,9 @@ export default function AuditTimeline({
               <PenLine size={18} strokeWidth={2.25} />
             </span>
             <div style={{ minWidth: 0 }}>
-              <div className="nf-audit-sign-title">Firma electrónica simulada</div>
+              <div className="nf-audit-sign-title">{t("audit.simulatedSignature")}</div>
               <div className="nf-audit-sign-text">{ev.attestation.statement}</div>
-              <div className="nf-audit-sign-meta">Confirmado {formatDate(ev.attestation.confirmedAt, "dd/MM/yyyy HH:mm")}</div>
+              <div className="nf-audit-sign-meta">{t("audit.confirmed")} {formatDate(ev.attestation.confirmedAt, dateTimeFormat, locale)}</div>
             </div>
           </div>
         )}
@@ -171,7 +178,7 @@ export default function AuditTimeline({
     return <div className="nf-audit-stack">{list.map((ev) => renderCard(ev))}</div>;
   }
 
-  const groups = buildDayGroups(list);
+  const groups = buildDayGroups(list, locale, t);
 
   return (
     <div className="nf-audit-timeline">

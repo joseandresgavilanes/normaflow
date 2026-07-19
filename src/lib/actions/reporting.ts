@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireAuthorization } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { buildTablePdf, type PdfColumn } from "@/lib/export/pdf";
+import { buildXlsx } from "@/lib/export/xlsx";
 
 const REPORT_IDS = ["exec", "iso", "site", "capa", "train", "changes", "auditpack"] as const;
 type ReportId = (typeof REPORT_IDS)[number];
@@ -15,31 +17,22 @@ function cleanCell(value: Cell) { return value == null ? "" : String(value); }
 function csvCell(value: Cell) { const text = cleanCell(value); return `"${text.replaceAll('"', '""')}"`; }
 function csv(rows: Row[]) {
   const headers = rows.length ? Object.keys(rows[0]) : ["resultado"];
-  return [headers.map(csvCell).join(","), ...rows.map(row => headers.map(key => csvCell(row[key])).join(","))].join("\r\n");
+  // BOM para que Excel abra el CSV como UTF-8 y respete los acentos.
+  return "\ufeff" + [headers.map(csvCell).join(","), ...rows.map(row => headers.map(key => csvCell(row[key])).join(","))].join("\r\n");
 }
-function xml(rows: Row[]) {
+
+function pdfColumns(rows: Row[]): PdfColumn<Row>[] {
   const headers = rows.length ? Object.keys(rows[0]) : ["resultado"];
-  const esc = (value: Cell) => cleanCell(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
-  const line = (values: Cell[]) => `<Row>${values.map(value => `<Cell><Data ss:Type="String">${esc(value)}</Data></Cell>`).join("")}</Row>`;
-  return `<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Informe"><Table>${line(headers)}${rows.map(row => line(headers.map(key => row[key]))).join("")}</Table></Worksheet></Workbook>`;
-}
-function pdf(title: string, rows: Row[]) {
-  const ascii = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\x20-\x7E]/g, "?").replace(/[()\\]/g, "\\$&");
-  const lines = [title, "", ...csv(rows).split(/\r?\n/)].slice(0, 48).map(ascii);
-  const stream = ["BT", "/F1 9 Tf", "42 800 Td", ...lines.flatMap((line, index) => index ? ["0 -15 Td", `(${line.slice(0, 110)}) Tj`] : [`(${line.slice(0, 110)}) Tj`]), "ET"].join("\n");
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
-    `<< /Length ${Buffer.byteLength(stream)} >>\nstream\n${stream}\nendstream`,
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-  ];
-  let result = "%PDF-1.4\n";
-  const offsets = [0];
-  objects.forEach((object, index) => { offsets.push(Buffer.byteLength(result)); result += `${index + 1} 0 obj\n${object}\nendobj\n`; });
-  const xref = Buffer.byteLength(result);
-  result += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n${offsets.slice(1).map(offset => String(offset).padStart(10, "0") + " 00000 n ").join("\n")}\ntrailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
-  return result;
+  return headers.map((key) => {
+    const numeric = rows.every((row) => row[key] == null || typeof row[key] === "number" || typeof row[key] === "boolean");
+    const longest = Math.max(key.length, ...rows.slice(0, 100).map((row) => cleanCell(row[key]).length));
+    return {
+      key,
+      label: key.replaceAll("_", " "),
+      width: numeric ? 1 : Math.min(Math.max(longest / 8, 1), 4),
+      align: numeric ? "right" : "left",
+    };
+  });
 }
 
 async function reportRows(reportId: ReportId, organizationId: string, from: Date, to: Date): Promise<Row[]> {
@@ -70,13 +63,34 @@ export async function exportReport(input: { reportId: string; title: string; for
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || from > to) throw new Error("El rango de fechas no es válido.");
   const rows = await reportRows(input.reportId as ReportId, ctx.organization.id, from, to);
   const slug = input.reportId.replace(/[^a-z0-9-]/gi, "-");
-  const extension = input.format === "PDF" ? "pdf" : input.format === "EXCEL" ? "xls" : "csv";
+  const extension = input.format === "PDF" ? "pdf" : input.format === "EXCEL" ? "xlsx" : "csv";
   const fileName = `${slug}-${input.from}-${input.to}.${extension}`;
-  const content = input.format === "PDF" ? pdf(input.title, rows) : input.format === "EXCEL" ? xml(rows) : csv(rows);
-  const mimeType = input.format === "PDF" ? "application/pdf" : input.format === "EXCEL" ? "application/vnd.ms-excel" : "text/csv;charset=utf-8";
+
+  let base64: string;
+  let mimeType: string;
+  if (input.format === "PDF") {
+    const bytes = await buildTablePdf({
+      orgName: ctx.organization.name,
+      title: input.title,
+      subtitle: `Periodo: ${input.from} — ${input.to}`,
+      summary: [`${rows.length} registro${rows.length === 1 ? "" : "s"} en el periodo seleccionado.`],
+      columns: pdfColumns(rows),
+      rows,
+    });
+    base64 = Buffer.from(bytes).toString("base64");
+    mimeType = "application/pdf";
+  } else if (input.format === "EXCEL") {
+    const buffer = await buildXlsx("Informe", rows, `${input.title} · ${input.from} — ${input.to}`);
+    base64 = buffer.toString("base64");
+    mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  } else {
+    base64 = Buffer.from(csv(rows), "utf8").toString("base64");
+    mimeType = "text/csv;charset=utf-8";
+  }
+
   const record = await prisma.reportExport.create({ data: { organizationId: ctx.organization.id, generatedById: ctx.user.id, reportType: input.reportId, format: input.format, dateFrom: from, dateTo: to, rowCount: rows.length, fileName } });
   await logAuditEvent({ ctx, action: "export", module: "reporting", recordId: record.id, extra: { reportType: input.reportId, format: input.format, rowCount: rows.length, dateFrom: input.from, dateTo: input.to } });
   revalidatePath("/app/reporting");
   revalidatePath("/app/activity");
-  return { fileName, mimeType, base64: Buffer.from(content, "utf8").toString("base64"), rowCount: rows.length };
+  return { fileName, mimeType, base64, rowCount: rows.length };
 }

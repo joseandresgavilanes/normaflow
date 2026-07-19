@@ -229,6 +229,60 @@
   margin-left: auto;
 }
 
+.nf-lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 4px 5px 4px 9px;
+  border: 1px solid var(--nf-line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--nf-ink-3);
+  box-shadow: 0 1px 2px rgba(15, 27, 45, 0.04);
+}
+
+.nf-lang-switcher--compact {
+  min-height: 30px;
+  padding: 3px 4px 3px 7px;
+}
+
+.nf-lang-switcher-options {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.nf-lang-switcher-btn {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 26px;
+  padding: 6px 7px;
+}
+
+.nf-lang-switcher-btn:hover {
+  color: var(--nf-ink);
+  background: var(--nf-app-panel);
+}
+
+.nf-lang-switcher-btn--active {
+  color: #fff;
+  background: var(--nf-primary, #5266F6);
+}
+
+.nf-auth-lang {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 20;
+}
+
 .nf-quick-create {
   position: relative;
 }
@@ -349,6 +403,20 @@
 
 .nf-topbar-icon-btn:hover {
   background: var(--nf-app-surface-1);
+}
+
+.nf-topbar-icon-btn--active {
+  background: var(--nf-app-accent-soft);
+  color: var(--nf-app-accent);
+}
+
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidebar-brand-name, .nf-sidebar-org-name, .nf-sidebar-footer-profile) {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidebar-brand-name, .nf-sidebar-org-name, .nf-sidebar-footer-profile) :where(a, button, input, textarea, select) {
+  pointer-events: none;
 }
 
 .nf-topbar-menu {
@@ -3110,6 +3178,51 @@ button.nf-audit-card:focus-visible {
   padding: 18px;
 }
 
+.nf-skeleton-process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 16px;
+}
+
+.nf-skeleton-process-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+}
+
+.nf-skeleton-process-accent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #EBEBEB;
+}
+
+.nf-skeleton-process-head,
+.nf-skeleton-action-main,
+.nf-skeleton-integration-top,
+.nf-skeleton-panel-head,
+.nf-skeleton-audit-program,
+.nf-skeleton-gap-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.nf-skeleton-mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.nf-skeleton-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .nf-skeleton-stacked-cards {
   display: flex;
   flex-direction: column;
@@ -3118,6 +3231,140 @@ button.nf-audit-card:focus-visible {
 
 .nf-skeleton-course-card {
   padding: 18px 20px;
+}
+
+.nf-skeleton-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-skeleton-action-card {
+  padding: 16px 18px;
+}
+
+.nf-skeleton-action-side {
+  display: flex;
+  flex: 0 0 150px;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.nf-skeleton-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-kanban-column {
+  padding: 14px;
+  background: var(--nf-app-surface-2, #f8fafc);
+}
+
+.nf-skeleton-kanban-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nf-skeleton-kanban-card {
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--nf-line);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.nf-skeleton-kanban-card:last-child {
+  margin-bottom: 0;
+}
+
+.nf-skeleton-risk-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-skeleton-heatmap-panel {
+  padding: 20px;
+}
+
+.nf-skeleton-panel-head {
+  margin-bottom: 16px;
+}
+
+.nf-skeleton-heatmap {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nf-skeleton-gap-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-skeleton-gap-main {
+  padding: 20px;
+}
+
+.nf-skeleton-gap-summary {
+  margin-bottom: 20px;
+}
+
+.nf-skeleton-gap-counts {
+  display: flex;
+  gap: 18px;
+  text-align: center;
+}
+
+.nf-skeleton-gap-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nf-skeleton-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-skeleton-progress-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-progress-row:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-integration-card {
+  padding: 18px;
+}
+
+.nf-skeleton-integration-top {
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.nf-skeleton-audit-program {
+  padding: 20px 22px;
 }
 
 .nf-skeleton-rail {
@@ -3218,6 +3465,52 @@ button.nf-audit-card:focus-visible {
   gap: 10px;
   flex: 1;
   min-width: 140px;
+}
+
+@media (max-width: 920px) {
+  .nf-skeleton-risk-grid,
+  .nf-skeleton-gap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .nf-skeleton-page-header {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-table-head,
+  .nf-skeleton-table-row {
+    grid-template-columns: 40px 1fr auto;
+  }
+
+  .nf-skeleton-table-head > :last-child,
+  .nf-skeleton-table-row > :last-child {
+    display: none;
+  }
+
+  .nf-skeleton-mini-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nf-skeleton-action-main {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-action-side {
+    width: 100%;
+    flex-basis: auto;
+    align-items: stretch;
+  }
+
+  .nf-skeleton-gap-summary {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-gap-counts {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Modal overlay padding on phones */

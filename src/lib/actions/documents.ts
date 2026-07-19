@@ -40,9 +40,12 @@ async function loadDocument(documentId: string, organizationId: string) {
 }
 
 /** Owner user id of the process a document belongs to (the "process owner"), if any. */
-async function documentProcessOwnerId(processId: string | null): Promise<string | null> {
+async function documentProcessOwnerId(processId: string | null, organizationId: string): Promise<string | null> {
   if (!processId) return null;
-  const process = await prisma.process.findUnique({ where: { id: processId }, select: { ownerId: true } });
+  const process = await prisma.process.findFirst({
+    where: { id: processId, organizationId },
+    select: { ownerId: true },
+  });
   return process?.ownerId ?? null;
 }
 
@@ -483,7 +486,7 @@ export async function approveDocument(
   }
 
   await notifyUsers(
-    [existing.ownerId, await documentProcessOwnerId(existing.processId)],
+    [existing.ownerId, await documentProcessOwnerId(existing.processId, ctx.organization.id)],
     {
       organizationId: ctx.organization.id,
       title: "Documento aprobado",
@@ -537,7 +540,7 @@ export async function rejectDocument(
   });
 
   await notifyUsers(
-    [existing.ownerId, await documentProcessOwnerId(existing.processId)],
+    [existing.ownerId, await documentProcessOwnerId(existing.processId, ctx.organization.id)],
     {
       organizationId: ctx.organization.id,
       title: "Documento devuelto a borrador",
@@ -597,7 +600,7 @@ export async function supersedeDocument(
   // Avisar al dueño del documento viejo y al dueño del proceso afectado.
   const processId = oldDoc.processId ?? newDoc.processId;
   await notifyUsers(
-    [oldDoc.ownerId, newDoc.ownerId, await documentProcessOwnerId(processId)],
+    [oldDoc.ownerId, newDoc.ownerId, await documentProcessOwnerId(processId, ctx.organization.id)],
     {
       organizationId: ctx.organization.id,
       title: "Documento reemplazado",

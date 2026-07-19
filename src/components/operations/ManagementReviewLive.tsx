@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ManagementReviewStatus, ManagementReviewTopic } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useServerAction } from "@/hooks/useServerAction";
 import {
   createManagementReview,
@@ -72,6 +73,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ReviewRow | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ReviewRow | null>(null);
   const detail = detailId ? initial.reviews.find(r => r.id === detailId) ?? null : null;
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
@@ -98,8 +100,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
   }
 
   function remove(row: ReviewRow) {
-    if (!window.confirm(`¿Eliminar la revisión “${row.title}”?`)) return;
-    run(() => deleteManagementReview(row.id), { onSuccess: () => setDetailId(null), successMessage: "Revisión eliminada." });
+    setConfirmDelete(row);
   }
 
   function addInput(event: FormEvent<HTMLFormElement>, reviewId: string) {
@@ -266,6 +267,26 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
           </div>
         )}
       </Modal>
+      <ConfirmActionModal
+        open={!!confirmDelete}
+        title="Eliminar revisión"
+        confirmLabel="Eliminar"
+        danger
+        pending={isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          run(() => deleteManagementReview(confirmDelete.id), {
+            onSuccess: () => {
+              setDetailId((current) => current === confirmDelete.id ? null : current);
+              setConfirmDelete(null);
+            },
+            successMessage: "Revisión eliminada.",
+          });
+        }}
+      >
+        ¿Eliminar la revisión <strong>{confirmDelete?.title}</strong>?
+      </ConfirmActionModal>
     </div>
   );
 }

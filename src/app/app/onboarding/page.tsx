@@ -4,11 +4,23 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+const STANDARD_OPTIONS = [
+  { code: "ISO_9001", label: "ISO 9001:2015", detail: "Gestión de la Calidad" },
+  { code: "ISO_27001", label: "ISO 27001:2022", detail: "Seguridad de la Información" },
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [orgName, setOrgName] = useState("");
+  const [standards, setStandards] = useState<string[]>(["ISO_9001"]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function toggleStandard(code: string) {
+    setStandards((prev) =>
+      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
+    );
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,12 +29,16 @@ export default function OnboardingPage() {
       setError("Indica el nombre de tu organización.");
       return;
     }
+    if (standards.length === 0) {
+      setError("Selecciona al menos una norma para tu sistema de gestión.");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/auth/bootstrap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ organizationName: orgName.trim() }),
+        body: JSON.stringify({ organizationName: orgName.trim(), standards }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -137,6 +153,72 @@ export default function OnboardingPage() {
                   boxSizing: "border-box",
                 }}
               />
+            </div>
+            <div>
+              <label
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "#142033",
+                  display: "block",
+                  marginBottom: 6,
+                }}
+              >
+                Normas de tu sistema de gestión
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {STANDARD_OPTIONS.map((option) => {
+                  const checked = standards.includes(option.code);
+                  return (
+                    <button
+                      key={option.code}
+                      type="button"
+                      onClick={() => toggleStandard(option.code)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        border: `1px solid ${checked ? "#5266F6" : "#E5EAF2"}`,
+                        background: checked ? "#F2F4FF" : "#fff",
+                        borderRadius: 8,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span
+                        aria-hidden
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 4,
+                          flexShrink: 0,
+                          border: `1.5px solid ${checked ? "#5266F6" : "#B9C2CF"}`,
+                          background: checked ? "#5266F6" : "#fff",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "#fff",
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {checked ? "✓" : ""}
+                      </span>
+                      <span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "#142033", display: "block" }}>
+                          {option.label}
+                        </span>
+                        <span style={{ fontSize: 12, color: "#5E6B7A" }}>{option.detail}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p style={{ fontSize: 12, color: "#5E6B7A", margin: "8px 0 0" }}>
+                Se creará la evaluación GAP inicial con el desglose de cláusulas de cada norma.
+                Podrás activar más normas después.
+              </p>
             </div>
             {error ? (
               <div

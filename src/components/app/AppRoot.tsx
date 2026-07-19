@@ -11,6 +11,7 @@ import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { AdminMockProvider } from "@/context/AdminMockStore";
 import { AdminLiveProvider } from "@/context/AdminLiveProvider";
+import { useI18n } from "@/context/I18nProvider";
 import type { AdminPayload } from "@/lib/server-queries";
 import { ROLES } from "@/lib/constants";
 import type { AppRoleKey } from "@/lib/permissions/frontend";
@@ -64,6 +65,7 @@ export default function AppRoot({
   const [aiOpen, setAiOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const isCompactNav = useMatchMedia("(max-width: 768px)");
+  const { t } = useI18n();
 
   useEffect(() => {
     setNavOpen(false);
@@ -110,7 +112,7 @@ export default function AppRoot({
             background: "var(--bg)",
           }}
         >
-          <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>Preparando tu espacio…</p>
+          <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }}>{t("app.preparingWorkspace")}</p>
         </div>
       );
     }
@@ -118,13 +120,13 @@ export default function AppRoot({
   }
 
   if (initial.mode === "live" && !adminPayload) {
-    return <LiveDataUnavailable section="los datos de tu organización" />;
+    return <LiveDataUnavailable section={t("app.liveDataUnavailable")} />;
   }
 
   const orgName = initial.organization.name;
   const userName = initial.user.name;
   const roleKey = normalizeRoleKey(initial.role);
-  const roleLabel = ROLES[roleKey];
+  const roleLabel = t(`role.${roleKey}`);
   const memberships = initial.memberships;
   const activeOrgId = initial.organization.id;
   const workspaceKind = initial.mode === "demo" ? initial.workspaceKind : "blank";
@@ -147,6 +149,7 @@ export default function AppRoot({
     orgName,
     roleLabel,
     roleKey,
+    extraPermissions: initial.mode === "live" ? adminPayload?.groupPermissions ?? [] : [],
     activeOrgId,
     workspaceKind,
     plan: initial.organization.plan,

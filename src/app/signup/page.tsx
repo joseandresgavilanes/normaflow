@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
+import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import { useI18n } from "@/context/I18nProvider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [org, setOrg] = useState("");
   const [email, setEmail] = useState("");
@@ -19,18 +22,18 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
     if (!name || !org || !email || !password) {
-      setError("Completa todos los campos.");
+      setError(t("error.requiredFields"));
       return;
     }
     if (password.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres.");
+      setError(t("error.passwordMin"));
       return;
     }
     setLoading(true);
 
     const supabase = createSupabaseBrowserClient();
     if (!supabase) {
-      setError("Supabase no está configurado. Usa AUTH_DEMO_MODE y los logins locales, o añade las variables NEXT_PUBLIC_SUPABASE_*.");
+      setError(t("error.supabaseMissing"));
       setLoading(false);
       return;
     }
@@ -54,7 +57,7 @@ export default function SignupPage() {
       });
       if (!boot.ok) {
         const j = await boot.json().catch(() => ({}));
-        setError(typeof j.error === "string" ? j.error : "No se pudo crear la organización.");
+        setError(typeof j.error === "string" ? j.error : t("error.orgCreateFailed"));
         setLoading(false);
         return;
       }
@@ -64,20 +67,21 @@ export default function SignupPage() {
       return;
     }
 
-    setError("Revisa tu correo para confirmar la cuenta. Tras confirmar, inicia sesión y se completará el alta de la organización.");
+    setError(t("error.confirmEmail"));
     setLoading(false);
   }
 
   const fields: { id: string; label: string; val: string; set: (v: string) => void; placeholder: string; type: string }[] = [
-    { id: "signup-name", label: "Nombre completo", val: name, set: setName, placeholder: "María García", type: "text" },
-    { id: "signup-org", label: "Organización", val: org, set: setOrg, placeholder: "Tecnoserv Industrial", type: "text" },
-    { id: "signup-email", label: "Email profesional", val: email, set: setEmail, placeholder: "maria@empresa.com", type: "email" },
-    { id: "signup-password", label: "Contraseña", val: password, set: setPassword, placeholder: "Mínimo 8 caracteres", type: "password" },
+    { id: "signup-name", label: t("auth.signup.name"), val: name, set: setName, placeholder: t("auth.signup.namePlaceholder"), type: "text" },
+    { id: "signup-org", label: t("auth.signup.org"), val: org, set: setOrg, placeholder: t("auth.signup.orgPlaceholder"), type: "text" },
+    { id: "signup-email", label: t("auth.signup.email"), val: email, set: setEmail, placeholder: t("auth.signup.emailPlaceholder"), type: "email" },
+    { id: "signup-password", label: t("common.password"), val: password, set: setPassword, placeholder: t("auth.signup.passwordPlaceholder"), type: "password" },
   ];
 
   return (
     <>
       <div className="nf-bg" aria-hidden="true" />
+      <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
       <div className="nf-app">
         <div className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 460 }}>
@@ -86,8 +90,8 @@ export default function SignupPage() {
                 <span className="nf-logo-mark" aria-hidden />
                 NormaFlow
               </Link>
-              <h1 className="nf-h-3" style={{ marginTop: 20 }}>Empieza gratis · 14 días</h1>
-              <p>Sin tarjeta de crédito. Sin compromiso.</p>
+              <h1 className="nf-h-3" style={{ marginTop: 20 }}>{t("auth.signup.title")}</h1>
+              <p>{t("auth.signup.subtitle")}</p>
             </div>
 
             <div className="nf-auth-card">
@@ -107,19 +111,19 @@ export default function SignupPage() {
                 ))}
                 {error ? <div className="nf-auth-alert nf-auth-alert--error">{error}</div> : null}
                 <button type="submit" disabled={loading} className="nf-btn nf-btn--primary" style={{ width: "100%", opacity: loading ? 0.7 : 1 }}>
-                  {loading ? "Creando cuenta…" : <>Crear cuenta gratuita <Ic.arrow className="nf-arrow" /></>}
+                  {loading ? t("auth.signup.loading") : <>{t("auth.signup.submit")} <Ic.arrow className="nf-arrow" /></>}
                 </button>
                 <p style={{ fontSize: 12, color: "var(--nf-ink-3)", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
-                  Al registrarte aceptas los{" "}
-                  <Link href="/legal/terms" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Términos</Link>{" "}
-                  y la{" "}
-                  <Link href="/legal/privacy" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>Privacidad</Link>.
+                  {t("auth.signup.acceptPrefix")}{" "}
+                  <Link href="/legal/terms" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>{t("marketing.terms")}</Link>{" "}
+                  {t("auth.signup.acceptConnector")}{" "}
+                  <Link href="/legal/privacy" style={{ color: "var(--nf-ink-2)", textDecoration: "underline" }}>{t("marketing.privacy")}</Link>.
                 </p>
               </form>
             </div>
 
             <p className="nf-auth-footer">
-              ¿Ya tienes cuenta? <Link href="/login">Inicia sesión</Link>
+              {t("auth.signup.haveAccount")} <Link href="/login">{t("auth.signup.signin")}</Link>
             </p>
           </div>
         </div>

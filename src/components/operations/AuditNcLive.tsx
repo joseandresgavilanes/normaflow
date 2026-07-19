@@ -5,6 +5,7 @@ import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { AuditStatus, AuditType, ChecklistItemStatus, FindingSeverity, FindingType, NCSeverity, NCSource, NCStatus } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useServerAction } from "@/hooks/useServerAction";
 import {
   addAuditChecklistItem,
@@ -40,6 +41,7 @@ export function AuditsLiveClient({ initial }: { initial: AuditsPayload }) {
   const [checklistAudit, setChecklistAudit] = useState<AuditRow | null>(null);
   const [checklistItem, setChecklistItem] = useState<ChecklistRow | null>(null);
   const [findingAudit, setFindingAudit] = useState<AuditRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AuditRow | null>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,7 +79,7 @@ export function AuditsLiveClient({ initial }: { initial: AuditsPayload }) {
     }), { onSuccess: () => setChecklistItem(null), successMessage: "Respuesta de checklist guardada." });
   }
 
-  function remove(row: AuditRow) { if (window.confirm(`¿Eliminar la auditoría “${row.title}”?`)) run(() => deleteAudit(row.id), { successMessage: "Auditoría eliminada." }); }
+  function remove(row: AuditRow) { setConfirmDelete(row); }
   const row = editing;
   useCreateFromQuery(initial.access.canCreate, () => {
     setError("");
@@ -115,6 +117,26 @@ export function AuditsLiveClient({ initial }: { initial: AuditsPayload }) {
     <FormModal open={!!checklistAudit} title="Nueva pregunta de checklist" pending={isPending} error={error} onClose={() => setChecklistAudit(null)} onSubmit={submitChecklist}><Field label="Cláusula"><input name="clauseCode" className="nf-app-input" style={inputStyle} /></Field><Field label="Pregunta"><textarea name="question" required rows={3} className="nf-app-input" style={inputStyle} /></Field><Field label="Resultado esperado"><textarea name="expected" rows={2} className="nf-app-input" style={inputStyle} /></Field></FormModal>
     <FormModal open={!!checklistItem} title="Responder checklist" pending={isPending} error={error} onClose={() => { setChecklistItem(null); setError(""); }} onSubmit={submitChecklistResponse}><Field label="Pregunta"><div style={{ fontSize: 13, fontWeight: 600 }}>{checklistItem?.question}</div></Field><Field label="Estado"><select name="status" className="nf-app-input" style={inputStyle} defaultValue={checklistItem?.status ?? ChecklistItemStatus.PENDING}>{Object.values(ChecklistItemStatus).map((value) => <option key={value}>{value}</option>)}</select></Field><Field label="Respuesta"><textarea name="response" rows={3} className="nf-app-input" style={inputStyle} defaultValue={checklistItem?.response ?? ""} /></Field><Field label="Notas"><textarea name="notes" rows={2} className="nf-app-input" style={inputStyle} defaultValue={checklistItem?.notes ?? ""} /></Field><Field label="URL de evidencia"><input name="evidenceUrl" className="nf-app-input" style={inputStyle} defaultValue={checklistItem?.evidenceUrl ?? ""} /></Field></FormModal>
     <FormModal open={!!findingAudit} title="Registrar hallazgo" pending={isPending} error={error} onClose={() => setFindingAudit(null)} onSubmit={submitFinding}><Field label="Título"><input name="title" required className="nf-app-input" style={inputStyle} /></Field><div className="nf-grid-2" style={{ gap: 12 }}><Field label="Tipo"><select name="type" className="nf-app-input" style={inputStyle}>{Object.values(FindingType).map((value) => <option key={value}>{value}</option>)}</select></Field><Field label="Severidad"><select name="severity" className="nf-app-input" style={inputStyle}>{Object.values(FindingSeverity).map((value) => <option key={value}>{value}</option>)}</select></Field></div><Field label="Cláusula"><input name="clauseCode" className="nf-app-input" style={inputStyle} /></Field><Field label="Descripción"><textarea name="description" rows={3} className="nf-app-input" style={inputStyle} /></Field><Field label="URL de evidencia"><input name="evidenceUrl" className="nf-app-input" style={inputStyle} /></Field></FormModal>
+    <ConfirmActionModal
+      open={!!confirmDelete}
+      title="Eliminar auditoría"
+      confirmLabel="Eliminar"
+      danger
+      pending={isPending}
+      onCancel={() => setConfirmDelete(null)}
+      onConfirm={() => {
+        if (!confirmDelete) return;
+        run(() => deleteAudit(confirmDelete.id), {
+          onSuccess: () => {
+            setDetail((current) => current?.id === confirmDelete.id ? null : current);
+            setConfirmDelete(null);
+          },
+          successMessage: "Auditoría eliminada.",
+        });
+      }}
+    >
+      ¿Eliminar la auditoría <strong>{confirmDelete?.title}</strong>?
+    </ConfirmActionModal>
   </div>;
 }
 
@@ -122,9 +144,10 @@ export function NonconformitiesLiveClient({ initial }: { initial: Nonconformitie
   const { run, isPending, error, setError, success } = useServerAction();
   const [creating, setCreating] = useState(false); const [editing, setEditing] = useState<NcRow | null>(null); const [detailId, setDetailId] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<NcRow | null>(null);
   const detail = detailId ? initial.nonconformities.find((n) => n.id === detailId) ?? null : null;
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const fd = new FormData(event.currentTarget); const input: NonconformityInput = { title: String(fd.get("title") ?? ""), description: String(fd.get("description") ?? ""), source: fd.get("source") as NCSource, severity: fd.get("severity") as NCSeverity, status: fd.get("status") as NCStatus, ownerId: String(fd.get("ownerId") ?? "") || undefined, rootCause: String(fd.get("rootCause") ?? ""), dueDate: String(fd.get("dueDate") ?? "") || undefined, auditId: String(fd.get("auditId") ?? "") || undefined, findingId: String(fd.get("findingId") ?? "") || undefined, effectivenessValidated: fd.get("effectivenessValidated") === "on" }; run(() => editing ? updateNonconformity(editing.id, input) : createNonconformity(input), { onSuccess: () => { setCreating(false); setEditing(null); }, successMessage: editing ? "NC actualizada." : "NC creada en Supabase." }); }
-  function remove(row: NcRow) { if (window.confirm(`¿Eliminar la NC “${row.title}”?`)) run(() => deleteNonconformity(row.id), { successMessage: "NC eliminada." }); }
+  function remove(row: NcRow) { setConfirmDelete(row); }
   const row = editing;
   useCreateFromQuery(initial.access.canCreate, () => {
     setError("");
@@ -161,5 +184,25 @@ export function NonconformitiesLiveClient({ initial }: { initial: Nonconformitie
         )}
       </section>
     </div>}</Modal>
+    <ConfirmActionModal
+      open={!!confirmDelete}
+      title="Eliminar no conformidad"
+      confirmLabel="Eliminar"
+      danger
+      pending={isPending}
+      onCancel={() => setConfirmDelete(null)}
+      onConfirm={() => {
+        if (!confirmDelete) return;
+        run(() => deleteNonconformity(confirmDelete.id), {
+          onSuccess: () => {
+            setDetailId((current) => current === confirmDelete.id ? null : current);
+            setConfirmDelete(null);
+          },
+          successMessage: "NC eliminada.",
+        });
+      }}
+    >
+      ¿Eliminar la NC <strong>{confirmDelete?.title}</strong>?
+    </ConfirmActionModal>
   </div>;
 }

@@ -1,5 +1,7 @@
 import "server-only";
 import { getSupabaseAdmin } from "@/lib/supabase";
+import { prisma } from "@/lib/prisma";
+import { PLANS } from "@/lib/stripe";
 
 /**
  * Capa de almacenamiento sobre Supabase Storage para documentos del SGC.
@@ -48,6 +50,43 @@ export function isAllowedMime(mime: string): boolean {
   return ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p));
 }
 
+/**
+ * Cuota de almacenamiento por plan (límites de PLANS en GB).
+ * El uso se calcula desde los tamaños registrados en la DB (versiones de
+ * documentos, evidencias y entradas de registros), no listando el bucket.
+ */
+export async function assertStorageQuota(organizationId: string, incomingBytes: number): Promise<void> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { plan: true },
+  });
+  const plan = PLANS[(org?.plan ?? "STARTER") as keyof typeof PLANS] ?? PLANS.STARTER;
+  const limitGb = plan.limits.storage;
+  if (!limitGb || limitGb <= 0) return;
+  const limitBytes = limitGb * 1024 * 1024 * 1024;
+
+  const [docs, evidence, records] = await Promise.all([
+    prisma.documentVersion.aggregate({
+      _sum: { fileSize: true },
+      where: { document: { organizationId } },
+    }),
+    prisma.evidenceFile.aggregate({ _sum: { fileSize: true }, where: { organizationId } }),
+    prisma.recordEntry.aggregate({
+      _sum: { fileSize: true },
+      where: { record: { organizationId } },
+    }),
+  ]);
+  const used =
+    (docs._sum.fileSize ?? 0) + (evidence._sum.fileSize ?? 0) + (records._sum.fileSize ?? 0);
+
+  if (used + incomingBytes > limitBytes) {
+    const usedGb = (used / 1024 / 1024 / 1024).toFixed(2);
+    throw new StorageError(
+      `Se alcanzó el límite de almacenamiento del plan ${plan.name} (${usedGb} de ${limitGb} GB usados). Amplía tu plan en Facturación para subir más archivos.`
+    );
+  }
+}
+
 function safeFilename(name: string): string {
   // Quita acentos, espacios y caracteres conflictivos
   return name
@@ -86,6 +125,7 @@ export async function uploadDocumentFile(args: {
   if (file.type && !isAllowedMime(file.type)) {
     throw new StorageError(`Tipo de archivo no permitido: ${file.type}`);
   }
+  await assertStorageQuota(args.organizationId, file.size);
 
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
@@ -149,6 +189,7 @@ export async function uploadRecordFile(args: {
     throw new StorageError(`El archivo supera el tamaño máximo permitido (${Math.round(MAX_FILE_SIZE_BYTES / 1024 / 1024)} MB).`);
   }
   if (file.type && !isAllowedMime(file.type)) throw new StorageError(`Tipo de archivo no permitido: ${file.type}`);
+  await assertStorageQuota(args.organizationId, file.size);
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
   const fileName = safeFilename(file.name) || "registro";
@@ -183,6 +224,7 @@ export async function uploadEvidenceFile(args: {
   if (file.type && !isAllowedMime(file.type)) {
     throw new StorageError(`Tipo de archivo no permitido: ${file.type}`);
   }
+  await assertStorageQuota(args.organizationId, file.size);
   const supabase = getSupabaseAdmin();
   if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
   const filename = safeFilename(file.name) || "evidencia";

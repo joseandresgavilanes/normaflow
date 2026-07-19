@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { ControlStatus, ControlType, RiskStatus, RiskTreatment } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useServerAction } from "@/hooks/useServerAction";
 import {
   createProcess,
@@ -47,6 +48,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<ProcessRow | null>(null);
   const [detail, setDetail] = useState<ProcessRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ProcessRow | null>(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,8 +69,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
   }
 
   function remove(row: ProcessRow) {
-    if (!window.confirm(`¿Eliminar el proceso “${row.name}”? Los vínculos quedarán sin proceso.`)) return;
-    run(() => deleteProcess(row.id), { successMessage: "Proceso eliminado." });
+    setConfirmDelete(row);
   }
 
   const formRow = editing;
@@ -122,6 +123,26 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
           <ProcessDocuments documents={detail.documents} />
         </div>}
       </Modal>
+      <ConfirmActionModal
+        open={!!confirmDelete}
+        title="Eliminar proceso"
+        confirmLabel="Eliminar"
+        danger
+        pending={isPending}
+        onCancel={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (!confirmDelete) return;
+          run(() => deleteProcess(confirmDelete.id), {
+            onSuccess: () => {
+              setDetail((current) => current?.id === confirmDelete.id ? null : current);
+              setConfirmDelete(null);
+            },
+            successMessage: "Proceso eliminado.",
+          });
+        }}
+      >
+        ¿Eliminar el proceso <strong>{confirmDelete?.name}</strong>? Los vínculos quedarán sin proceso.
+      </ConfirmActionModal>
     </div>
   );
 }
@@ -167,6 +188,11 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
   const [detail, setDetail] = useState<RiskRow | null>(null);
   const [controlRisk, setControlRisk] = useState<RiskRow | null>(null);
   const [editingControl, setEditingControl] = useState<ControlRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<
+    | { type: "risk"; row: RiskRow }
+    | { type: "control"; row: ControlRow }
+    | null
+  >(null);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -183,8 +209,7 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
   }
 
   function remove(row: RiskRow) {
-    if (!window.confirm(`¿Eliminar el riesgo “${row.title}”?`)) return;
-    run(() => deleteRisk(row.id), { successMessage: "Riesgo eliminado." });
+    setConfirmDelete({ type: "risk", row });
   }
 
   function submitControl(event: FormEvent<HTMLFormElement>) {
@@ -205,11 +230,7 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
   }
 
   function removeControl(control: ControlRow) {
-    if (!window.confirm(`¿Eliminar el control “${control.title}”?`)) return;
-    run(() => deleteRiskControl(control.id), {
-      onSuccess: () => setDetail(null),
-      successMessage: "Control eliminado.",
-    });
+    setConfirmDelete({ type: "control", row: control });
   }
   const formRow = editing;
   return <div>
@@ -236,5 +257,40 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
       <Field label="Responsable"><select name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editingControl?.ownerId ?? ""}><option value="">Sin asignar</option>{initial.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
       <Field label="Descripción"><textarea name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingControl?.description ?? ""} /></Field>
     </FormModal>
+    <ConfirmActionModal
+      open={!!confirmDelete}
+      title={confirmDelete?.type === "control" ? "Eliminar control" : "Eliminar riesgo"}
+      confirmLabel="Eliminar"
+      danger
+      pending={isPending}
+      onCancel={() => setConfirmDelete(null)}
+      onConfirm={() => {
+        if (!confirmDelete) return;
+        if (confirmDelete.type === "risk") {
+          const row = confirmDelete.row;
+          run(() => deleteRisk(row.id), {
+            onSuccess: () => {
+              setDetail((current) => current?.id === row.id ? null : current);
+              setConfirmDelete(null);
+            },
+            successMessage: "Riesgo eliminado.",
+          });
+          return;
+        }
+        run(() => deleteRiskControl(confirmDelete.row.id), {
+          onSuccess: () => {
+            setDetail(null);
+            setConfirmDelete(null);
+          },
+          successMessage: "Control eliminado.",
+        });
+      }}
+    >
+      {confirmDelete?.type === "control" ? (
+        <>¿Eliminar el control <strong>{confirmDelete.row.title}</strong>?</>
+      ) : (
+        <>¿Eliminar el riesgo <strong>{confirmDelete?.row.title}</strong>?</>
+      )}
+    </ConfirmActionModal>
   </div>;
 }
