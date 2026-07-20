@@ -615,6 +615,1098 @@ type KnownTextTranslation = Partial<Record<Locale, string>>;
 const SUPPORTED_MESSAGE_LOCALES = SUPPORTED_LOCALES;
 
 const knownTextTranslations: Record<string, KnownTextTranslation> = {
+  "Asistente IA · Anexo A 2022 actualizado": {
+    en: "AI assistant · Annex A 2022 updated",
+    "pt-BR": "Assistente IA · Anexo A 2022 atualizado",
+  },
+  "Del caos ISO al": {
+    en: "From ISO chaos to",
+    "pt-BR": "Do caos ISO ao",
+  },
+  "control continuo.": {
+    en: "continuous control.",
+    "pt-BR": "controle contínuo.",
+  },
+  "NormaFlow centraliza documentos, riesgos, auditorías, evidencias, CAPA e indicadores en una plataforma diseñada para mantener": {
+    en: "NormaFlow centralizes documents, risks, audits, evidence, CAPA, and indicators in a platform designed to keep",
+    "pt-BR": "NormaFlow centraliza documentos, riscos, auditorias, evidências, CAPA e indicadores em uma plataforma criada para manter",
+  },
+  "siempre bajo control. Sin hojas de cálculo, sin caos.": {
+    en: "always under control. No spreadsheets, no chaos.",
+    "pt-BR": "sempre sob controle. Sem planilhas, sem caos.",
+  },
+  "Solicitar demo gratuita": {
+    en: "Request a free demo",
+    "pt-BR": "Solicitar demo gratuita",
+  },
+  "Solicitar demo": {
+    en: "Request demo",
+    "pt-BR": "Solicitar demo",
+  },
+  "Ver la aplicación": {
+    en: "See the app",
+    "pt-BR": "Ver o aplicativo",
+  },
+  "Calidad": {
+    en: "Quality",
+    "pt-BR": "Qualidade",
+  },
+  "Seguridad": {
+    en: "Security",
+    "pt-BR": "Segurança",
+  },
+  "Trial gratis": {
+    en: "Free trial",
+    "pt-BR": "Teste gratuito",
+  },
+  "Sin tarjeta": {
+    en: "No card",
+    "pt-BR": "Sem cartão",
+  },
+  "Sin compromiso": {
+    en: "No commitment",
+    "pt-BR": "Sem compromisso",
+  },
+  "e": {
+    en: "and",
+    "pt-BR": "e",
+  },
+  "Equipos de calidad y seguridad que confían en NormaFlow": {
+    en: "Quality and security teams that trust NormaFlow",
+    "pt-BR": "Equipes de qualidade e segurança que confiam no NormaFlow",
+  },
+  "El problema": {
+    en: "The problem",
+    "pt-BR": "O problema",
+  },
+  "El cumplimiento no falla": {
+    en: "Compliance does not fail",
+    "pt-BR": "A conformidade não falha",
+  },
+  "de golpe.": {
+    en: "all at once.",
+    "pt-BR": "de uma vez.",
+  },
+  "Se rompe en silencio.": {
+    en: "It breaks quietly.",
+    "pt-BR": "Ela se rompe em silêncio.",
+  },
+  "La mayoría de empresas certificadas gestionan sus sistemas en hojas de cálculo, correos y carpetas compartidas. El coste no se ve en una factura — se ve en cada auditoría.": {
+    en: "Most certified companies manage their systems in spreadsheets, emails, and shared folders. The cost does not show up on an invoice; it shows up in every audit.",
+    "pt-BR": "A maioria das empresas certificadas gerencia seus sistemas em planilhas, emails e pastas compartilhadas. O custo não aparece em uma fatura; aparece em cada auditoria.",
+  },
+  "Correos perdidos": {
+    en: "Lost emails",
+    "pt-BR": "Emails perdidos",
+  },
+  "Aprobaciones de documentos que nadie recuerda. Versiones desactualizadas circulando entre equipos.": {
+    en: "Document approvals nobody remembers. Outdated versions circulating between teams.",
+    "pt-BR": "Aprovações de documentos que ninguém lembra. Versões desatualizadas circulando entre equipes.",
+  },
+  "Auditorías estresantes": {
+    en: "Stressful audits",
+    "pt-BR": "Auditorias estressantes",
+  },
+  "Buscar evidencias durante semanas antes de cada auditoría. Preparación reactiva en lugar de continua.": {
+    en: "Searching for evidence for weeks before every audit. Reactive preparation instead of continuous readiness.",
+    "pt-BR": "Buscar evidências por semanas antes de cada auditoria. Preparação reativa em vez de contínua.",
+  },
+  "Hojas de cálculo inviables": {
+    en: "Unmanageable spreadsheets",
+    "pt-BR": "Planilhas inviáveis",
+  },
+  "Registros de riesgos y planes de acción en archivos sin trazabilidad ni control de cambios real.": {
+    en: "Risk registers and action plans in files with no traceability or real change control.",
+    "pt-BR": "Registros de riscos e planos de ação em arquivos sem rastreabilidade nem controle real de mudanças.",
+  },
+  "Sin alertas ni seguimiento": {
+    en: "No alerts or follow-up",
+    "pt-BR": "Sem alertas nem acompanhamento",
+  },
+  "Acciones vencidas sin responsable. Indicadores que nadie actualiza. El cumplimiento se deteriora lentamente.": {
+    en: "Overdue actions with no owner. Indicators nobody updates. Compliance slowly deteriorates.",
+    "pt-BR": "Ações vencidas sem responsável. Indicadores que ninguém atualiza. A conformidade se deteriora lentamente.",
+  },
+  "La transformación": {
+    en: "The transformation",
+    "pt-BR": "A transformação",
+  },
+  "Una plataforma.": {
+    en: "One platform.",
+    "pt-BR": "Uma plataforma.",
+  },
+  "Toda la evidencia.": {
+    en: "All the evidence.",
+    "pt-BR": "Toda a evidência.",
+  },
+  "El mismo trabajo, pero conectado: lo que hoy son archivos sueltos, hilos de correo y hojas dispersas se convierte en un único sistema vivo y trazable.": {
+    en: "The same work, but connected: what is now loose files, email threads, and scattered sheets becomes one living, traceable system.",
+    "pt-BR": "O mesmo trabalho, mas conectado: o que hoje são arquivos soltos, threads de email e planilhas dispersas vira um sistema único, vivo e rastreável.",
+  },
+  "antes · disperso": {
+    en: "before · scattered",
+    "pt-BR": "antes · disperso",
+  },
+  "después · conectado": {
+    en: "after · connected",
+    "pt-BR": "depois · conectado",
+  },
+  "Sistema único": {
+    en: "Single system",
+    "pt-BR": "Sistema único",
+  },
+  "Nueve módulos. Un mismo sistema,": {
+    en: "Nine modules. One system,",
+    "pt-BR": "Nove módulos. Um mesmo sistema,",
+  },
+  "cada paso conectado.": {
+    en: "every step connected.",
+    "pt-BR": "cada passo conectado.",
+  },
+  "Cada módulo escribe en la misma capa de evidencia, así nada se duplica y todo se puede auditar.": {
+    en: "Every module writes to the same evidence layer, so nothing is duplicated and everything can be audited.",
+    "pt-BR": "Cada módulo grava na mesma camada de evidências, então nada se duplica e tudo pode ser auditado.",
+  },
+  "Módulos": {
+    en: "Modules",
+    "pt-BR": "Módulos",
+  },
+  "Evalúa tu nivel de cumplimiento por cláusula. Scoring global, plan de acción y exportación a PDF.": {
+    en: "Assess your compliance level by clause. Global scoring, action plan, and PDF export.",
+    "pt-BR": "Avalie seu nível de conformidade por cláusula. Pontuação global, plano de ação e exportação para PDF.",
+  },
+  "Versionado automático, flujo de aprobación y trazabilidad completa con cláusulas ISO.": {
+    en: "Automatic versioning, approval workflow, and full traceability with ISO clauses.",
+    "pt-BR": "Versionamento automático, fluxo de aprovação e rastreabilidade completa com cláusulas ISO.",
+  },
+  "Heatmap 5×5 interactivo, tratamiento (mitigar, aceptar, transferir, evitar) y controles vinculados.": {
+    en: "Interactive 5x5 heatmap, treatment (mitigate, accept, transfer, avoid), and linked controls.",
+    "pt-BR": "Heatmap 5x5 interativo, tratamento (mitigar, aceitar, transferir, evitar) e controles vinculados.",
+  },
+  "Plan anual, checklists editables, hallazgos NC y informe final con firma digital.": {
+    en: "Annual plan, editable checklists, NC findings, and final report with digital signature.",
+    "pt-BR": "Plano anual, checklists editáveis, achados de NC e relatório final com assinatura digital.",
+  },
+  "Causa raíz con 5 porqués e Ishikawa, acción correctiva, validación de eficacia y cierre con evidencia.": {
+    en: "Root cause with 5 Whys and Ishikawa, corrective action, effectiveness validation, and evidence-based closure.",
+    "pt-BR": "Causa raiz com 5 porquês e Ishikawa, ação corretiva, validação de eficácia e fechamento com evidência.",
+  },
+  "Indicadores KPI": {
+    en: "KPI indicators",
+    "pt-BR": "Indicadores KPI",
+  },
+  "Metas, umbrales, semáforo y alertas cuando un indicador se sale de objetivo.": {
+    en: "Targets, thresholds, traffic lights, and alerts when an indicator goes off target.",
+    "pt-BR": "Metas, limites, semáforo e alertas quando um indicador sai do objetivo.",
+  },
+  "Seguimiento centralizado: responsables, vencimientos y notificaciones automáticas.": {
+    en: "Centralized tracking: owners, due dates, and automatic notifications.",
+    "pt-BR": "Acompanhamento centralizado: responsáveis, vencimentos e notificações automáticas.",
+  },
+  "Repositorio único de pruebas vinculadas a auditoría, riesgo, documento o NC.": {
+    en: "Single proof repository linked to audit, risk, document, or NC.",
+    "pt-BR": "Repositório único de provas vinculadas a auditoria, risco, documento ou NC.",
+  },
+  "Borradores, resúmenes y sugerencias. Toda salida requiere confirmación humana.": {
+    en: "Drafts, summaries, and suggestions. Every output requires human confirmation.",
+    "pt-BR": "Rascunhos, resumos e sugestões. Toda saída exige confirmação humana.",
+  },
+  "Un recorrido.": {
+    en: "One walkthrough.",
+    "pt-BR": "Um percurso.",
+  },
+  "Cinco módulos. Cero contexto perdido.": {
+    en: "Five modules. Zero lost context.",
+    "pt-BR": "Cinco módulos. Zero contexto perdido.",
+  },
+  "Control documental con versionado real": {
+    en: "Document control with real versioning",
+    "pt-BR": "Controle documental com versionamento real",
+  },
+  "Cada documento conserva su historial, su flujo de aprobación y su vínculo a las cláusulas ISO. La versión activa es siempre la que se ve.": {
+    en: "Every document keeps its history, approval workflow, and ISO clause links. The active version is always the one people see.",
+    "pt-BR": "Cada documento mantém seu histórico, fluxo de aprovação e vínculo com cláusulas ISO. A versão ativa é sempre a exibida.",
+  },
+  "Auditorías siempre preparadas": {
+    en: "Audits always ready",
+    "pt-BR": "Auditorias sempre preparadas",
+  },
+  "Plan anual, checklists por norma y hallazgos vinculados a la evidencia. Sin semanas de búsqueda previas a cada auditoría.": {
+    en: "Annual plan, standard-based checklists, and findings linked to evidence. No weeks of searching before each audit.",
+    "pt-BR": "Plano anual, checklists por norma e achados vinculados à evidência. Sem semanas de busca antes de cada auditoria.",
+  },
+  "Riesgos con un heatmap 5×5 vivo": {
+    en: "Risks with a live 5x5 heatmap",
+    "pt-BR": "Riscos com um heatmap 5x5 vivo",
+  },
+  "Tratamiento, controles preventivos/detectivos y revisiones programadas. El nivel residual se recalcula al cerrar acciones.": {
+    en: "Treatment, preventive/detective controls, and scheduled reviews. Residual level is recalculated when actions close.",
+    "pt-BR": "Tratamento, controles preventivos/detectivos e revisões programadas. O nível residual é recalculado ao fechar ações.",
+  },
+  "CAPA de causa a eficacia": {
+    en: "CAPA from cause to effectiveness",
+    "pt-BR": "CAPA da causa à eficácia",
+  },
+  "5 porqués, Ishikawa, acción correctiva, validación de eficacia y cierre con evidencia. Todo en un solo expediente.": {
+    en: "5 Whys, Ishikawa, corrective action, effectiveness validation, and evidence-based closure. All in one record.",
+    "pt-BR": "5 porquês, Ishikawa, ação corretiva, validação de eficácia e fechamento com evidência. Tudo em um único expediente.",
+  },
+  "Una sola fuente de verdad": {
+    en: "One source of truth",
+    "pt-BR": "Uma única fonte da verdade",
+  },
+  "Toda la evidencia (firmas, capturas, informes, registros) está enlazada al riesgo, control, documento o auditoría que la justifica.": {
+    en: "All evidence (signatures, screenshots, reports, records) is linked to the risk, control, document, or audit that justifies it.",
+    "pt-BR": "Toda evidência (assinaturas, capturas, relatórios, registros) é vinculada ao risco, controle, documento ou auditoria que a justifica.",
+  },
+  "Producto": {
+    en: "Product",
+    "pt-BR": "Produto",
+  },
+  "Flujo documental": {
+    en: "Document workflow",
+    "pt-BR": "Fluxo documental",
+  },
+  "Cada documento sigue el mismo camino.": {
+    en: "Every document follows the same path.",
+    "pt-BR": "Cada documento segue o mesmo caminho.",
+  },
+  "Sin atajos por correo.": {
+    en: "No email shortcuts.",
+    "pt-BR": "Sem atalhos por email.",
+  },
+  "Borrador → revisión → aprobación → activo. Con historial completo, firma digital y notificaciones automáticas a cada responsable.": {
+    en: "Draft -> review -> approval -> active. With full history, digital signature, and automatic notifications to every owner.",
+    "pt-BR": "Rascunho -> revisão -> aprovação -> ativo. Com histórico completo, assinatura digital e notificações automáticas para cada responsável.",
+  },
+  "Trazabilidad": {
+    en: "Traceability",
+    "pt-BR": "Rastreabilidade",
+  },
+  "Cada cambio queda registrado con autor, fecha y diff exportable a PDF.": {
+    en: "Every change is recorded with author, date, and a PDF-exportable diff.",
+    "pt-BR": "Cada alteração fica registrada com autor, data e diff exportável para PDF.",
+  },
+  "Vínculo ISO": {
+    en: "ISO link",
+    "pt-BR": "Vínculo ISO",
+  },
+  "Cláusulas, controles del Anexo A y procesos enlazados al documento.": {
+    en: "Clauses, Annex A controls, and processes linked to the document.",
+    "pt-BR": "Cláusulas, controles do Anexo A e processos vinculados ao documento.",
+  },
+  "Revisión periódica": {
+    en: "Periodic review",
+    "pt-BR": "Revisão periódica",
+  },
+  "Alertas automáticas antes de que cualquier política quede desactualizada.": {
+    en: "Automatic alerts before any policy becomes outdated.",
+    "pt-BR": "Alertas automáticos antes que qualquer política fique desatualizada.",
+  },
+  "Mejora continua": {
+    en: "Continuous improvement",
+    "pt-BR": "Melhoria contínua",
+  },
+  "en movimiento.": {
+    en: "in motion.",
+    "pt-BR": "em movimento.",
+  },
+  "NormaFlow estructura el trabajo alrededor de las cuatro fases del ciclo PDCA — y conecta cada una con sus módulos.": {
+    en: "NormaFlow structures work around the four PDCA cycle phases and connects each one with its modules.",
+    "pt-BR": "NormaFlow estrutura o trabalho em torno das quatro fases do ciclo PDCA e conecta cada uma aos seus módulos.",
+  },
+  "Planificar": {
+    en: "Plan",
+    "pt-BR": "Planejar",
+  },
+  "Hacer": {
+    en: "Do",
+    "pt-BR": "Fazer",
+  },
+  "Verificar": {
+    en: "Check",
+    "pt-BR": "Verificar",
+  },
+  "Actuar": {
+    en: "Act",
+    "pt-BR": "Agir",
+  },
+  "Estándares": {
+    en: "Standards",
+    "pt-BR": "Normas",
+  },
+  "Soporte nativo para las normas": {
+    en: "Native support for the standards",
+    "pt-BR": "Suporte nativo para as normas",
+  },
+  "más demandadas.": {
+    en: "in highest demand.",
+    "pt-BR": "mais demandadas.",
+  },
+  "Sistema de Gestión de la Calidad": {
+    en: "Quality Management System",
+    "pt-BR": "Sistema de Gestão da Qualidade",
+  },
+  "Sistema de Gestión de Seguridad de la Información": {
+    en: "Information Security Management System",
+    "pt-BR": "Sistema de Gestão de Segurança da Informação",
+  },
+  "IA que": {
+    en: "AI that",
+    "pt-BR": "IA que",
+  },
+  "redacta y sugiere.": {
+    en: "drafts and suggests.",
+    "pt-BR": "redige e sugere.",
+  },
+  "El humano aprueba.": {
+    en: "Humans approve.",
+    "pt-BR": "O humano aprova.",
+  },
+  "Borradores de políticas, resúmenes de evaluaciones GAP, propuestas de causa raíz y sugerencias de controles — pero nada entra al sistema sin la confirmación explícita de una persona responsable.": {
+    en: "Policy drafts, GAP assessment summaries, root-cause proposals, and control suggestions, but nothing enters the system without explicit confirmation from a responsible person.",
+    "pt-BR": "Rascunhos de políticas, resumos de avaliações GAP, propostas de causa raiz e sugestões de controles, mas nada entra no sistema sem confirmação explícita de uma pessoa responsável.",
+  },
+  "Borradores de políticas y procedimientos por norma": {
+    en: "Policy and procedure drafts by standard",
+    "pt-BR": "Rascunhos de políticas e procedimentos por norma",
+  },
+  "Resumen de evaluaciones GAP listo para dirección": {
+    en: "GAP assessment summary ready for leadership",
+    "pt-BR": "Resumo de avaliações GAP pronto para a direção",
+  },
+  "Sugerencia de acciones correctivas con justificación": {
+    en: "Corrective action suggestions with justification",
+    "pt-BR": "Sugestão de ações corretivas com justificativa",
+  },
+  "Análisis del tratamiento de un riesgo": {
+    en: "Risk treatment analysis",
+    "pt-BR": "Análise do tratamento de um risco",
+  },
+  "Resumen de hallazgos de auditoría con prioridades": {
+    en: "Audit findings summary with priorities",
+    "pt-BR": "Resumo de achados de auditoria com prioridades",
+  },
+  "Human-in-the-loop por diseño.": {
+    en: "Human-in-the-loop by design.",
+    "pt-BR": "Human-in-the-loop por design.",
+  },
+  "Cada sugerencia se marca como tal hasta que un responsable la aprueba y la firma.": {
+    en: "Every suggestion is marked as such until an owner approves and signs it.",
+    "pt-BR": "Cada sugestão é marcada como tal até que um responsável a aprove e assine.",
+  },
+  "Caso real": {
+    en: "Real case",
+    "pt-BR": "Caso real",
+  },
+  "Pasamos de 3 semanas a": {
+    en: "We went from 3 weeks to",
+    "pt-BR": "Passamos de 3 semanas para",
+  },
+  "de preparación para auditoría.": {
+    en: "of audit preparation.",
+    "pt-BR": "de preparação para auditoria.",
+  },
+  "Antes tardábamos semanas en preparar cada auditoría interna. Con NormaFlow, toda la evidencia está centralizada y siempre actualizada. La última revisión por dirección duró 45 minutos en lugar de medio día": {
+    en: "Before, each internal audit took weeks to prepare. With NormaFlow, all evidence is centralized and always up to date. The last management review took 45 minutes instead of half a day",
+    "pt-BR": "Antes levávamos semanas para preparar cada auditoria interna. Com o NormaFlow, toda a evidência está centralizada e sempre atualizada. A última análise crítica pela direção durou 45 minutos em vez de meio dia",
+  },
+  "Directora de Calidad · Tecnoserv Industrial S.A.": {
+    en: "Quality Director · Tecnoserv Industrial S.A.",
+    "pt-BR": "Diretora de Qualidade · Tecnoserv Industrial S.A.",
+  },
+  "menos tiempo en gestión documental": {
+    en: "less time on document management",
+    "pt-BR": "menos tempo em gestão documental",
+  },
+  "preparación de auditoría": {
+    en: "audit preparation",
+    "pt-BR": "preparação de auditoria",
+  },
+  "NC mayores en certificación": {
+    en: "major NCs in certification",
+    "pt-BR": "NCs maiores na certificação",
+  },
+  "Ver caso completo + 2 casos más": {
+    en: "View full case + 2 more cases",
+    "pt-BR": "Ver caso completo + 2 casos mais",
+  },
+  "Tres planes.": {
+    en: "Three plans.",
+    "pt-BR": "Três planos.",
+  },
+  "Una sola plataforma.": {
+    en: "One platform.",
+    "pt-BR": "Uma única plataforma.",
+  },
+  "14 días de prueba en cualquier plan. Sin tarjeta, sin compromiso.": {
+    en: "14-day trial on any plan. No card, no commitment.",
+    "pt-BR": "14 dias de teste em qualquer plano. Sem cartão, sem compromisso.",
+  },
+  "Elige cómo prefieres usar NormaFlow: suscripción mensual gestionada por nosotros, o licencia única para instalar en tu propia infraestructura.": {
+    en: "Choose how you prefer to use NormaFlow: a monthly subscription managed by us, or a one-time license to install on your own infrastructure.",
+    "pt-BR": "Escolha como prefere usar o NormaFlow: assinatura mensal gerenciada por nós ou licença única para instalar na sua própria infraestrutura.",
+  },
+  "SaaS · mensual": {
+    en: "SaaS · monthly",
+    "pt-BR": "SaaS · mensal",
+  },
+  "Self-hosted · lifetime": {
+    en: "Self-hosted · lifetime",
+    "pt-BR": "Self-hosted · vitalício",
+  },
+  "14 días de prueba gratis. Sin tarjeta, sin compromiso. Hosting, respaldos y actualizaciones incluidos.": {
+    en: "14-day free trial. No card, no commitment. Hosting, backups, and updates included.",
+    "pt-BR": "14 dias de teste gratuito. Sem cartão, sem compromisso. Hospedagem, backups e atualizações incluídos.",
+  },
+  "Pago único. Te entregamos el software listo para desplegar en tu propio Supabase + Vercel. Instalación remota + 12 meses de actualizaciones incluidos.": {
+    en: "One-time payment. We deliver the software ready to deploy on your own Supabase + Vercel. Remote installation + 12 months of updates included.",
+    "pt-BR": "Pagamento único. Entregamos o software pronto para implantar no seu próprio Supabase + Vercel. Instalação remota + 12 meses de atualizações incluídos.",
+  },
+  "Para implementar ISO sin caos": {
+    en: "For implementing ISO without chaos",
+    "pt-BR": "Para implementar ISO sem caos",
+  },
+  "Para equipos en mantenimiento activo": {
+    en: "For teams in active maintenance",
+    "pt-BR": "Para equipes em manutenção ativa",
+  },
+  "Para multi-organización y SLA": {
+    en: "For multi-organization and SLA",
+    "pt-BR": "Para multi-organização e SLA",
+  },
+  "Módulos esenciales": {
+    en: "Essential modules",
+    "pt-BR": "Módulos essenciais",
+  },
+  "10 GB de almacenamiento": {
+    en: "10 GB storage",
+    "pt-BR": "10 GB de armazenamento",
+  },
+  "50 GB de almacenamiento": {
+    en: "50 GB storage",
+    "pt-BR": "50 GB de armazenamento",
+  },
+  "Soporte por correo": {
+    en: "Email support",
+    "pt-BR": "Suporte por email",
+  },
+  "Todos los módulos": {
+    en: "All modules",
+    "pt-BR": "Todos os módulos",
+  },
+  "Asistente IA incluido": {
+    en: "AI assistant included",
+    "pt-BR": "Assistente IA incluído",
+  },
+  "Soporte prioritario": {
+    en: "Priority support",
+    "pt-BR": "Suporte prioritário",
+  },
+  "Onboarding guiado": {
+    en: "Guided onboarding",
+    "pt-BR": "Onboarding guiado",
+  },
+  "Usuarios ilimitados": {
+    en: "Unlimited users",
+    "pt-BR": "Usuários ilimitados",
+  },
+  "Multi-organización": {
+    en: "Multi-organization",
+    "pt-BR": "Multi-organização",
+  },
+  "Almacenamiento ilimitado": {
+    en: "Unlimited storage",
+    "pt-BR": "Armazenamento ilimitado",
+  },
+  "SLA 99.9% garantizado": {
+    en: "99.9% guaranteed SLA",
+    "pt-BR": "SLA 99,9% garantido",
+  },
+  "Soporte dedicado · CSM": {
+    en: "Dedicated support · CSM",
+    "pt-BR": "Suporte dedicado · CSM",
+  },
+  "Empezar 14 días gratis": {
+    en: "Start 14 days free",
+    "pt-BR": "Começar 14 dias grátis",
+  },
+  "Probar 14 días": {
+    en: "Try 14 days",
+    "pt-BR": "Testar 14 dias",
+  },
+  "Hablar con ventas": {
+    en: "Talk to sales",
+    "pt-BR": "Falar com vendas",
+  },
+  "Más popular": {
+    en: "Most popular",
+    "pt-BR": "Mais popular",
+  },
+  "Convierte el caos ISO en": {
+    en: "Turn ISO chaos into",
+    "pt-BR": "Transforme o caos ISO em",
+  },
+  "Programa una demo de 30 minutos con un especialista. Vemos tu sistema actual y te mostramos cómo quedaría en NormaFlow.": {
+    en: "Book a 30-minute demo with a specialist. We review your current system and show how it would look in NormaFlow.",
+    "pt-BR": "Agende uma demo de 30 minutos com um especialista. Vemos seu sistema atual e mostramos como ficaria no NormaFlow.",
+  },
+  "Crear cuenta · 14 días gratis": {
+    en: "Create account · 14 days free",
+    "pt-BR": "Criar conta · 14 dias grátis",
+  },
+  "Cancela cuando quieras": {
+    en: "Cancel anytime",
+    "pt-BR": "Cancele quando quiser",
+  },
+  "Cada módulo,": {
+    en: "Every module,",
+    "pt-BR": "Cada módulo,",
+  },
+  "diseñado para tu SGC.": {
+    en: "designed for your QMS.",
+    "pt-BR": "projetado para seu SGQ.",
+  },
+  "De la evaluación inicial a la mejora continua, NormaFlow cubre todo el ciclo de vida del cumplimiento.": {
+    en: "From initial assessment to continuous improvement, NormaFlow covers the full compliance lifecycle.",
+    "pt-BR": "Da avaliação inicial à melhoria contínua, o NormaFlow cobre todo o ciclo de vida da conformidade.",
+  },
+  "¿Listo para verlo en tu sistema?": {
+    en: "Ready to see it in your system?",
+    "pt-BR": "Pronto para ver no seu sistema?",
+  },
+  "Ver precios": {
+    en: "See pricing",
+    "pt-BR": "Ver preços",
+  },
+  "Vemos tu sistema.": {
+    en: "We review your system.",
+    "pt-BR": "Vemos seu sistema.",
+  },
+  "Te enseñamos el nuestro.": {
+    en: "We show you ours.",
+    "pt-BR": "Mostramos o nosso.",
+  },
+  "Una llamada con un especialista en cumplimiento. Sin guion comercial — analizamos cómo gestionas tu SGC hoy y te mostramos en qué cambia con NormaFlow.": {
+    en: "A call with a compliance specialist. No sales script; we analyze how you manage your QMS today and show what changes with NormaFlow.",
+    "pt-BR": "Uma chamada com um especialista em conformidade. Sem roteiro comercial; analisamos como você gerencia seu SGQ hoje e mostramos o que muda com o NormaFlow.",
+  },
+  "Te respondemos en menos de un día laborable.": {
+    en: "We respond in less than one business day.",
+    "pt-BR": "Respondemos em menos de um dia útil.",
+  },
+  "Sin compromiso, sin tarjeta.": {
+    en: "No commitment, no card.",
+    "pt-BR": "Sem compromisso, sem cartão.",
+  },
+  "Adaptamos la demo a tu sector y norma.": {
+    en: "We tailor the demo to your industry and standard.",
+    "pt-BR": "Adaptamos a demo ao seu setor e norma.",
+  },
+  "¿Prefieres probar solo?": {
+    en: "Prefer to try it yourself?",
+    "pt-BR": "Prefere testar sozinho?",
+  },
+  "Mensaje enviado": {
+    en: "Message sent",
+    "pt-BR": "Mensagem enviada",
+  },
+  "Gracias por contactar con NormaFlow. Te respondemos en breve.": {
+    en: "Thanks for contacting NormaFlow. We'll reply shortly.",
+    "pt-BR": "Obrigado por entrar em contato com o NormaFlow. Responderemos em breve.",
+  },
+  "Email corporativo": {
+    en: "Work email",
+    "pt-BR": "Email corporativo",
+  },
+  "Empresa": {
+    en: "Company",
+    "pt-BR": "Empresa",
+  },
+  "Teléfono (opcional)": {
+    en: "Phone (optional)",
+    "pt-BR": "Telefone (opcional)",
+  },
+  "Tamaño": {
+    en: "Size",
+    "pt-BR": "Tamanho",
+  },
+  "Más de 250": {
+    en: "More than 250",
+    "pt-BR": "Mais de 250",
+  },
+  "Mensaje": {
+    en: "Message",
+    "pt-BR": "Mensagem",
+  },
+  "¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?": {
+    en: "Which standards do you manage? When is your next audit?",
+    "pt-BR": "Quais normas você gerencia? Quando é sua próxima auditoria?",
+  },
+  "Enviar solicitud": {
+    en: "Send request",
+    "pt-BR": "Enviar solicitação",
+  },
+  "Tus datos solo se usan para contactarte.": {
+    en: "Your data is only used to contact you.",
+    "pt-BR": "Seus dados são usados apenas para entrar em contato.",
+  },
+  "Política de privacidad": {
+    en: "Privacy policy",
+    "pt-BR": "Política de privacidade",
+  },
+  "Sistema de Gestión": {
+    en: "Quality Management",
+    "pt-BR": "Sistema de Gestão",
+  },
+  "de la": {
+    en: "",
+    "pt-BR": "da",
+  },
+  "Implementa, mantén y mejora tu SGC con trazabilidad total, evidencias siempre disponibles y auditorías sin estrés.": {
+    en: "Implement, maintain, and improve your QMS with full traceability, always-available evidence, and stress-free audits.",
+    "pt-BR": "Implemente, mantenha e melhore seu SGQ com rastreabilidade total, evidências sempre disponíveis e auditorias sem estresse.",
+  },
+  "Seguridad de la": {
+    en: "Information",
+    "pt-BR": "Segurança da",
+  },
+  "Información.": {
+    en: "Security.",
+    "pt-BR": "Informação.",
+  },
+  "Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con la versión 2022 y los 93 controles del Anexo A.": {
+    en: "Digitize your ISMS with auditable controls, risks, and evidence. Compatible with the 2022 version and the 93 Annex A controls.",
+    "pt-BR": "Digitalize seu SGSI com controles, riscos e evidências auditáveis. Compatível com a versão 2022 e os 93 controles do Anexo A.",
+  },
+  "Cláusula": {
+    en: "Clause",
+    "pt-BR": "Cláusula",
+  },
+  "Evalúa tu cumplimiento": {
+    en: "Assess your compliance",
+    "pt-BR": "Avalie sua conformidade",
+  },
+  "por cláusula.": {
+    en: "by clause.",
+    "pt-BR": "por cláusula.",
+  },
+  "ISO 9001 e ISO 27001 — con puntuación, comentarios y plan de acción priorizado. Versión resumida gratuita; informe completo dentro de la plataforma.": {
+    en: "ISO 9001 and ISO 27001, with scoring, comments, and a prioritized action plan. Free summary version; full report inside the platform.",
+    "pt-BR": "ISO 9001 e ISO 27001, com pontuação, comentários e plano de ação priorizado. Versão resumida gratuita; relatório completo dentro da plataforma.",
+  },
+  "Solicitar evaluación de ejemplo": {
+    en: "Request sample assessment",
+    "pt-BR": "Solicitar avaliação de exemplo",
+  },
+  "Enviado": {
+    en: "Sent",
+    "pt-BR": "Enviado",
+  },
+  "Te enviaremos un ejemplo en menos de un día laborable.": {
+    en: "We'll send you an example in less than one business day.",
+    "pt-BR": "Enviaremos um exemplo em menos de um dia útil.",
+  },
+  "Email profesional": {
+    en: "Work email",
+    "pt-BR": "Email profissional",
+  },
+  "Enviar": {
+    en: "Send",
+    "pt-BR": "Enviar",
+  },
+  "Ejemplo de resultado": {
+    en: "Sample result",
+    "pt-BR": "Exemplo de resultado",
+  },
+  "(resumen)": {
+    en: "(summary)",
+    "pt-BR": "(resumo)",
+  },
+  "En NormaFlow verás": {
+    en: "In NormaFlow you will see",
+    "pt-BR": "No NormaFlow você verá",
+  },
+  "todas las cláusulas": {
+    en: "all clauses",
+    "pt-BR": "todas as cláusulas",
+  },
+  "evidencias adjuntas y acciones sugeridas priorizadas.": {
+    en: "attached evidence and prioritized suggested actions.",
+    "pt-BR": "evidências anexas e ações sugeridas priorizadas.",
+  },
+  "Probar 14 días gratis": {
+    en: "Try 14 days free",
+    "pt-BR": "Testar 14 dias grátis",
+  },
+  "USD / mes": {
+    en: "USD / month",
+    "pt-BR": "USD / mês",
+  },
+  "USD · pago único": {
+    en: "USD · one-time payment",
+    "pt-BR": "USD · pagamento único",
+  },
+  "A medida": {
+    en: "Custom",
+    "pt-BR": "Sob medida",
+  },
+  "Hasta 5 usuarios": {
+    en: "Up to 5 users",
+    "pt-BR": "Até 5 usuários",
+  },
+  "Hasta 20 usuarios": {
+    en: "Up to 20 users",
+    "pt-BR": "Até 20 usuários",
+  },
+  "Instalación remota + 12 meses de actualizaciones": {
+    en: "Remote installation + 12 months of updates",
+    "pt-BR": "Instalação remota + 12 meses de atualizações",
+  },
+  "Evalúa el nivel de cumplimiento de tu organización frente a los requisitos de cada norma. Diagnóstico por cláusula, scoring automatizado y plan de acción sugerido por IA.": {
+    en: "Assess your organization's compliance against each standard's requirements. Clause-by-clause diagnosis, automated scoring, and AI-suggested action plan.",
+    "pt-BR": "Avalie a conformidade da sua organização frente aos requisitos de cada norma. Diagnóstico por cláusula, pontuação automatizada e plano de ação sugerido por IA.",
+  },
+  "Plantillas por norma (ISO 9001, 27001, 14001, 45001)": {
+    en: "Templates by standard (ISO 9001, 27001, 14001, 45001)",
+    "pt-BR": "Modelos por norma (ISO 9001, 27001, 14001, 45001)",
+  },
+  "Scoring por cláusula y puntuación global": {
+    en: "Clause scoring and global score",
+    "pt-BR": "Pontuação por cláusula e pontuação global",
+  },
+  "Plan de acción sugerido automáticamente": {
+    en: "Automatically suggested action plan",
+    "pt-BR": "Plano de ação sugerido automaticamente",
+  },
+  "Exportación a PDF con portada y resumen ejecutivo": {
+    en: "PDF export with cover and executive summary",
+    "pt-BR": "Exportação para PDF com capa e resumo executivo",
+  },
+  "Versión resumida gratuita para captación de leads": {
+    en: "Free summary version for lead capture",
+    "pt-BR": "Versão resumida gratuita para captação de leads",
+  },
+  "Centraliza todos tus documentos del sistema de gestión con control de versiones, flujos de aprobación configurables y trazabilidad total. Sin correos, sin versiones desactualizadas circulando.": {
+    en: "Centralize all management-system documents with version control, configurable approval flows, and full traceability. No emails, no outdated versions circulating.",
+    "pt-BR": "Centralize todos os documentos do sistema de gestão com controle de versões, fluxos de aprovação configuráveis e rastreabilidade total. Sem emails, sem versões desatualizadas circulando.",
+  },
+  "Versionado automático con historial completo": {
+    en: "Automatic versioning with full history",
+    "pt-BR": "Versionamento automático com histórico completo",
+  },
+  "Flujo de aprobación configurable por tipo de documento": {
+    en: "Configurable approval flow by document type",
+    "pt-BR": "Fluxo de aprovação configurável por tipo de documento",
+  },
+  "Relación con cláusulas ISO, procesos y auditorías": {
+    en: "Links to ISO clauses, processes, and audits",
+    "pt-BR": "Relação com cláusulas ISO, processos e auditorias",
+  },
+  "Vista previa y descarga segura de archivos": {
+    en: "Secure file preview and download",
+    "pt-BR": "Pré-visualização e download seguro de arquivos",
+  },
+  "Alertas de revisión periódica": {
+    en: "Periodic review alerts",
+    "pt-BR": "Alertas de revisão periódica",
+  },
+  "Registra, evalúa y trata los riesgos de tu organización con matriz probabilidad × impacto, heatmap visual e historial de controles. Compatible con ISO 27001 Anexo A y metodologías MAGERIT.": {
+    en: "Register, assess, and treat organizational risks with a probability x impact matrix, visual heatmap, and control history. Compatible with ISO 27001 Annex A and MAGERIT methodologies.",
+    "pt-BR": "Registre, avalie e trate os riscos da sua organização com matriz probabilidade x impacto, heatmap visual e histórico de controles. Compatível com ISO 27001 Anexo A e metodologias MAGERIT.",
+  },
+  "Heatmap 5×5 interactivo con drill-down": {
+    en: "Interactive 5x5 heatmap with drill-down",
+    "pt-BR": "Heatmap 5x5 interativo com drill-down",
+  },
+  "Tratamiento: mitigar, aceptar, transferir, evitar": {
+    en: "Treatment: mitigate, accept, transfer, avoid",
+    "pt-BR": "Tratamento: mitigar, aceitar, transferir, evitar",
+  },
+  "Controles preventivos, detectivos y correctivos": {
+    en: "Preventive, detective, and corrective controls",
+    "pt-BR": "Controles preventivos, detectivos e corretivos",
+  },
+  "Vencimientos y alertas de revisión": {
+    en: "Due dates and review alerts",
+    "pt-BR": "Vencimentos e alertas de revisão",
+  },
+  "Sugerencias de controles mediante IA": {
+    en: "AI-powered control suggestions",
+    "pt-BR": "Sugestões de controles por IA",
+  },
+  "Planifica y ejecuta auditorías internas y externas con checklists por cláusula, registro de hallazgos con evidencias y generación automática del informe final.": {
+    en: "Plan and run internal and external audits with clause-based checklists, evidence-backed findings, and automatic final report generation.",
+    "pt-BR": "Planeje e execute auditorias internas e externas com checklists por cláusula, registro de achados com evidências e geração automática do relatório final.",
+  },
+  "Plan anual de auditorías con calendario": {
+    en: "Annual audit plan with calendar",
+    "pt-BR": "Plano anual de auditorias com calendário",
+  },
+  "Checklists editables por norma y alcance": {
+    en: "Editable checklists by standard and scope",
+    "pt-BR": "Checklists editáveis por norma e escopo",
+  },
+  "Registro de hallazgos: NC mayor, menor, observación": {
+    en: "Finding register: major NC, minor NC, observation",
+    "pt-BR": "Registro de achados: NC maior, menor, observação",
+  },
+  "Vinculación de evidencias y documentos": {
+    en: "Evidence and document linking",
+    "pt-BR": "Vinculação de evidências e documentos",
+  },
+  "Informe final en PDF con firma digital": {
+    en: "Final PDF report with digital signature",
+    "pt-BR": "Relatório final em PDF com assinatura digital",
+  },
+  "Gestiona el ciclo completo de no conformidades: alta manual o desde auditoría, análisis de causa raíz, acción correctiva, seguimiento y validación de eficacia.": {
+    en: "Manage the full nonconformity cycle: manual entry or from audit, root-cause analysis, corrective action, follow-up, and effectiveness validation.",
+    "pt-BR": "Gerencie o ciclo completo de não conformidades: cadastro manual ou a partir de auditoria, análise de causa raiz, ação corretiva, acompanhamento e validação de eficácia.",
+  },
+  "Alta desde auditoría o de forma manual": {
+    en: "Create from audit or manually",
+    "pt-BR": "Cadastro a partir de auditoria ou manual",
+  },
+  "Análisis de causa raíz (5 porqués, Ishikawa)": {
+    en: "Root-cause analysis (5 Whys, Ishikawa)",
+    "pt-BR": "Análise de causa raiz (5 porquês, Ishikawa)",
+  },
+  "Acción correctiva y preventiva vinculada": {
+    en: "Linked corrective and preventive action",
+    "pt-BR": "Ação corretiva e preventiva vinculada",
+  },
+  "Validación de eficacia con fecha límite": {
+    en: "Effectiveness validation with deadline",
+    "pt-BR": "Validação de eficácia com prazo",
+  },
+  "Cierre con evidencia adjunta": {
+    en: "Closure with attached evidence",
+    "pt-BR": "Fechamento com evidência anexa",
+  },
+  "Integración real con IA para acelerar el trabajo de cumplimiento. Genera borradores, analiza gaps y sugiere tratamientos. Toda sugerencia requiere confirmación humana antes de guardarse.": {
+    en: "Real AI integration to accelerate compliance work. Generate drafts, analyze gaps, and suggest treatments. Every suggestion requires human confirmation before it is saved.",
+    "pt-BR": "Integração real com IA para acelerar o trabalho de conformidade. Gere rascunhos, analise gaps e sugira tratamentos. Toda sugestão exige confirmação humana antes de ser salva.",
+  },
+  "Generación de borradores de políticas y procedimientos": {
+    en: "Policy and procedure draft generation",
+    "pt-BR": "Geração de rascunhos de políticas e procedimentos",
+  },
+  "Resumen de evaluaciones GAP": {
+    en: "GAP assessment summaries",
+    "pt-BR": "Resumo de avaliações GAP",
+  },
+  "Sugerencia de acciones correctivas": {
+    en: "Corrective action suggestions",
+    "pt-BR": "Sugestão de ações corretivas",
+  },
+  "Análisis de tratamiento de riesgos": {
+    en: "Risk treatment analysis",
+    "pt-BR": "Análise de tratamento de riscos",
+  },
+  "Resumen de hallazgos de auditoría": {
+    en: "Audit findings summary",
+    "pt-BR": "Resumo de achados de auditoria",
+  },
+  "Define KPIs con metas, frecuencia y semáforo. Historial de valores para la revisión por la dirección y las auditorías.": {
+    en: "Define KPIs with targets, frequency, and traffic-light status. Value history for management review and audits.",
+    "pt-BR": "Defina KPIs com metas, frequência e semáforo. Histórico de valores para análise crítica pela direção e auditorias.",
+  },
+  "Metas y umbrales configurables": {
+    en: "Configurable targets and thresholds",
+    "pt-BR": "Metas e limites configuráveis",
+  },
+  "Histórico por periodo": {
+    en: "History by period",
+    "pt-BR": "Histórico por período",
+  },
+  "Alertas cuando se sale de objetivo": {
+    en: "Alerts when off target",
+    "pt-BR": "Alertas quando sai do objetivo",
+  },
+  "Vínculo a cláusulas y procesos": {
+    en: "Links to clauses and processes",
+    "pt-BR": "Vínculo a cláusulas e processos",
+  },
+  "Un solo sitio para pruebas de cumplimiento: subidas seguras, filtros por módulo y trazabilidad hasta auditorías, riesgos o NC.": {
+    en: "One place for compliance proof: secure uploads, filters by module, and traceability to audits, risks, or NCs.",
+    "pt-BR": "Um único lugar para provas de conformidade: uploads seguros, filtros por módulo e rastreabilidade até auditorias, riscos ou NCs.",
+  },
+  "Almacenamiento centralizado": {
+    en: "Centralized storage",
+    "pt-BR": "Armazenamento centralizado",
+  },
+  "Vínculo a auditoría, riesgo, documento o NC": {
+    en: "Link to audit, risk, document, or NC",
+    "pt-BR": "Vínculo a auditoria, risco, documento ou NC",
+  },
+  "Vista previa y descarga controlada": {
+    en: "Controlled preview and download",
+    "pt-BR": "Pré-visualização e download controlado",
+  },
+  "Contexto y liderazgo": {
+    en: "Context and leadership",
+    "pt-BR": "Contexto e liderança",
+  },
+  "Gestiona partes interesadas, alcance del SGC y política de calidad.": {
+    en: "Manage interested parties, QMS scope, and quality policy.",
+    "pt-BR": "Gerencie partes interessadas, escopo do SGQ e política da qualidade.",
+  },
+  "Planificación y apoyo": {
+    en: "Planning and support",
+    "pt-BR": "Planejamento e apoio",
+  },
+  "Objetivos de calidad, recursos, competencias y control documental.": {
+    en: "Quality objectives, resources, competencies, and document control.",
+    "pt-BR": "Objetivos da qualidade, recursos, competências e controle documental.",
+  },
+  "Control operacional": {
+    en: "Operational control",
+    "pt-BR": "Controle operacional",
+  },
+  "Documenta procesos, instrucciones y controles de calidad de producto/servicio.": {
+    en: "Document processes, instructions, and product/service quality controls.",
+    "pt-BR": "Documente processos, instruções e controles de qualidade de produto/serviço.",
+  },
+  "Evaluación del desempeño": {
+    en: "Performance evaluation",
+    "pt-BR": "Avaliação de desempenho",
+  },
+  "KPIs, satisfacción del cliente, auditorías internas y revisión por dirección.": {
+    en: "KPIs, customer satisfaction, internal audits, and management review.",
+    "pt-BR": "KPIs, satisfação do cliente, auditorias internas e análise crítica pela direção.",
+  },
+  "CAPA, no conformidades, análisis de causa raíz y planes de acción.": {
+    en: "CAPA, nonconformities, root-cause analysis, and action plans.",
+    "pt-BR": "CAPA, não conformidades, análise de causa raiz e planos de ação.",
+  },
+  "IA para ISO 9001": {
+    en: "AI for ISO 9001",
+    "pt-BR": "IA para ISO 9001",
+  },
+  "Generación de procedimientos, análisis de GAP y sugerencias de mejora con IA.": {
+    en: "Procedure generation, GAP analysis, and AI improvement suggestions.",
+    "pt-BR": "Geração de procedimentos, análise GAP e sugestões de melhoria com IA.",
+  },
+  "Gestión de riesgos de SI": {
+    en: "IS risk management",
+    "pt-BR": "Gestão de riscos de SI",
+  },
+  "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.": {
+    en: "MAGERIT or your own methodology. Probability x impact, treatment, and Annex A controls.",
+    "pt-BR": "Metodologia MAGERIT ou própria. Probabilidade x impacto, tratamento e controles Anexo A.",
+  },
+  "Controles Anexo A": {
+    en: "Annex A controls",
+    "pt-BR": "Controles Anexo A",
+  },
+  "Los 93 controles ISO 27001:2022 organizados por dominio, con estado y evidencia adjunta.": {
+    en: "The 93 ISO 27001:2022 controls organized by domain, with status and attached evidence.",
+    "pt-BR": "Os 93 controles ISO 27001:2022 organizados por domínio, com status e evidência anexa.",
+  },
+  "Auditorías de seguridad": {
+    en: "Security audits",
+    "pt-BR": "Auditorias de segurança",
+  },
+  "Auditorías técnicas y de gestión con hallazgos trazables y acciones correctivas vinculadas.": {
+    en: "Technical and management audits with traceable findings and linked corrective actions.",
+    "pt-BR": "Auditorias técnicas e de gestão com achados rastreáveis e ações corretivas vinculadas.",
+  },
+  "Gestión de evidencias": {
+    en: "Evidence management",
+    "pt-BR": "Gestão de evidências",
+  },
+  "Repositorio centralizado con vinculación a controles, auditorías y no conformidades.": {
+    en: "Centralized repository linked to controls, audits, and nonconformities.",
+    "pt-BR": "Repositório centralizado com vínculo a controles, auditorias e não conformidades.",
+  },
+  "Gestión de incidentes": {
+    en: "Incident management",
+    "pt-BR": "Gestão de incidentes",
+  },
+  "Registro, análisis y cierre de incidentes de seguridad con notificación automática.": {
+    en: "Security incident logging, analysis, and closure with automatic notification.",
+    "pt-BR": "Registro, análise e fechamento de incidentes de segurança com notificação automática.",
+  },
+  "Continuidad del negocio": {
+    en: "Business continuity",
+    "pt-BR": "Continuidade do negócio",
+  },
+  "Plan BCP/DRP documentado, probado y vinculado al SGSI.": {
+    en: "Documented, tested BCP/DRP plan linked to the ISMS.",
+    "pt-BR": "Plano BCP/DRP documentado, testado e vinculado ao SGSI.",
+  },
+  "Calidad.": {
+    en: "System.",
+    "pt-BR": "Qualidade.",
+  },
+  "Anexo A": {
+    en: "Annex A",
+    "pt-BR": "Anexo A",
+  },
+  "módulo · 01": {
+    en: "module · 01",
+    "pt-BR": "módulo · 01",
+  },
+  "módulo · 02": {
+    en: "module · 02",
+    "pt-BR": "módulo · 02",
+  },
+  "módulo · 03": {
+    en: "module · 03",
+    "pt-BR": "módulo · 03",
+  },
+  "módulo · 04": {
+    en: "module · 04",
+    "pt-BR": "módulo · 04",
+  },
+  "módulo · 05": {
+    en: "module · 05",
+    "pt-BR": "módulo · 05",
+  },
+  "módulo · 06": {
+    en: "module · 06",
+    "pt-BR": "módulo · 06",
+  },
+  "módulo · 07": {
+    en: "module · 07",
+    "pt-BR": "módulo · 07",
+  },
+  "módulo · 08": {
+    en: "module · 08",
+    "pt-BR": "módulo · 08",
+  },
+  "4 · Contexto": {
+    en: "4 · Context",
+    "pt-BR": "4 · Contexto",
+  },
+  "5 · Liderazgo": {
+    en: "5 · Leadership",
+    "pt-BR": "5 · Liderança",
+  },
+  "6 · Planificación": {
+    en: "6 · Planning",
+    "pt-BR": "6 · Planejamento",
+  },
+  "7 · Soporte": {
+    en: "7 · Support",
+    "pt-BR": "7 · Suporte",
+  },
+  "8 · Operación": {
+    en: "8 · Operation",
+    "pt-BR": "8 · Operação",
+  },
+  "9 · Evaluación del desempeño": {
+    en: "9 · Performance evaluation",
+    "pt-BR": "9 · Avaliação de desempenho",
+  },
+  "10 · Mejora": {
+    en: "10 · Improvement",
+    "pt-BR": "10 · Melhoria",
+  },
+  "Exportación a PDF con resumen ejecutivo": {
+    en: "PDF export with executive summary",
+    "pt-BR": "Exportação para PDF com resumo executivo",
+  },
   "Organización": {
     en: "Organization",
     "pt-BR": "Organização",
