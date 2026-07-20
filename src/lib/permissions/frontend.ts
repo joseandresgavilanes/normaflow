@@ -48,7 +48,11 @@ export function canManageRisks(roleKey: string): boolean {
 }
 
 export function canManageAudits(roleKey: string): boolean {
-  return canDemo(roleKey, "audits:*");
+  return canDemo(roleKey, "audits:*") || canDemo(roleKey, "audits:create");
+}
+
+export function canManageIndicators(roleKey: string): boolean {
+  return canDemo(roleKey, "indicators:*") || canDemo(roleKey, "indicators:create");
 }
 
 export function canManageNc(roleKey: string): boolean {

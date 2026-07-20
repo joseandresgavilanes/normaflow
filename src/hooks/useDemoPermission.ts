@@ -24,7 +24,11 @@ export function useDemoPermission() {
           P.canFrontend(roleKey, "risks:*", extraPermissions) ||
           P.canFrontend(roleKey, "risks:create", extraPermissions),
       },
-      audits: { manage: P.canFrontend(roleKey, "audits:*", extraPermissions) },
+      audits: {
+        manage:
+          P.canFrontend(roleKey, "audits:*", extraPermissions) ||
+          P.canFrontend(roleKey, "audits:create", extraPermissions),
+      },
       nc: { manage: P.canFrontend(roleKey, "nc:*", extraPermissions) || P.canFrontend(roleKey, "nc:create", extraPermissions) },
       actions: { manage: P.canFrontend(roleKey, "actions:*", extraPermissions) || P.canFrontend(roleKey, "actions:update", extraPermissions) },
       gap: { manage: P.canFrontend(roleKey, "gap:*", extraPermissions) },
