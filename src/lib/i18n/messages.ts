@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, type Locale } from "./config";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "./config";
 
 export const messages = {
   es: {
@@ -611,6 +611,751 @@ export const messages = {
 
 export type MessageKey = keyof (typeof messages)[typeof DEFAULT_LOCALE];
 type Params = Record<string, string | number>;
+type KnownTextTranslation = Partial<Record<Locale, string>>;
+const SUPPORTED_MESSAGE_LOCALES = SUPPORTED_LOCALES;
+
+const knownTextTranslations: Record<string, KnownTextTranslation> = {
+  "Organización": {
+    en: "Organization",
+    "pt-BR": "Organização",
+  },
+  "Nombre, sector, país y marca. Los cambios se guardan en la sesión local del navegador.": {
+    en: "Name, sector, country, and brand. Changes are saved in the browser's local session.",
+    "pt-BR": "Nome, setor, país e marca. As alterações são salvas na sessão local do navegador.",
+  },
+  "Gestión de capacitación": {
+    en: "Training management",
+    "pt-BR": "Gestão de treinamento",
+  },
+  "Cursos, destinatarios, asignaciones, evidencias, vencimientos y automatización documental": {
+    en: "Courses, recipients, assignments, evidence, due dates, and document automation",
+    "pt-BR": "Cursos, destinatários, atribuições, evidências, vencimentos e automação documental",
+  },
+  "Catálogo, asignaciones por sede/equipo/persona, vencimientos y vínculo con documentos controlados": {
+    en: "Catalog, assignments by site/team/person, due dates, and links to controlled documents",
+    "pt-BR": "Catálogo, atribuições por local/equipe/pessoa, vencimentos e vínculo com documentos controlados",
+  },
+  "Control de Registros": {
+    en: "Records control",
+    "pt-BR": "Controle de registros",
+  },
+  "Lista maestra de registros del SGC: retención, custodio, disposición y trazabilidad de entradas (ISOTech 13.2).": {
+    en: "QMS master records list: retention, custodian, disposition, and entry traceability (ISOTech 13.2).",
+    "pt-BR": "Lista mestra de registros do SGQ: retenção, custodiante, disposição e rastreabilidade de entradas (ISOTech 13.2).",
+  },
+  "Actividad y audit trail": {
+    en: "Activity and audit trail",
+    "pt-BR": "Atividade e trilha de auditoria",
+  },
+  "Registro cronológico defendible del espacio admin: catálogos, personal, registros y ACPM — base para auditoría legal e ISO.": {
+    en: "Defensible chronological admin log: catalogs, personnel, records, and CAPA — foundation for legal and ISO audits.",
+    "pt-BR": "Registro cronológico defensável do espaço admin: catálogos, pessoal, registros e CAPA — base para auditoria legal e ISO.",
+  },
+  "Registro cronológico defendible: quién hizo qué, cuándo y por qué. Filtra por entidad, periodo o texto; preparado para exportación legal.": {
+    en: "Defensible chronological log: who did what, when, and why. Filter by entity, period, or text; ready for legal export.",
+    "pt-BR": "Registro cronológico defensável: quem fez o quê, quando e por quê. Filtre por entidade, período ou texto; pronto para exportação legal.",
+  },
+  "Control de Documentos": {
+    en: "Document control",
+    "pt-BR": "Controle de documentos",
+  },
+  "Lista maestra del SGC con versionado, flujo de aprobación y trazabilidad ISO.": {
+    en: "QMS master list with versioning, approval workflow, and ISO traceability.",
+    "pt-BR": "Lista mestra do SGQ com versionamento, fluxo de aprovação e rastreabilidade ISO.",
+  },
+  "Informes y paquetes de auditoría": {
+    en: "Reports and audit packages",
+    "pt-BR": "Relatórios e pacotes de auditoria",
+  },
+  "Exportaciones trazables · listas para comité o auditor externo": {
+    en: "Traceable exports · ready for committee or external auditor",
+    "pt-BR": "Exportações rastreáveis · prontas para comitê ou auditor externo",
+  },
+  "Grupos y permisos": {
+    en: "Groups and permissions",
+    "pt-BR": "Grupos e permissões",
+  },
+  "Delega permisos extra por equipo sin subir el rol global de cada persona (ISOTech 10).": {
+    en: "Delegate extra permissions by team without raising each person's global role (ISOTech 10).",
+    "pt-BR": "Delegue permissões extras por equipe sem elevar a função global de cada pessoa (ISOTech 10).",
+  },
+  "Personal": {
+    en: "Personnel",
+    "pt-BR": "Pessoal",
+  },
+  "Personas que pertenecen a la organización, con o sin acceso al sistema (ISOTech § 11.3).": {
+    en: "People who belong to the organization, with or without system access (ISOTech § 11.3).",
+    "pt-BR": "Pessoas que pertencem à organização, com ou sem acesso ao sistema (ISOTech § 11.3).",
+  },
+  "Usuarios y roles": {
+    en: "Users and roles",
+    "pt-BR": "Usuários e funções",
+  },
+  "Personas con acceso a esta organización en NormaFlow.": {
+    en: "People with access to this organization in NormaFlow.",
+    "pt-BR": "Pessoas com acesso a esta organização no NormaFlow.",
+  },
+  "Plan de acción": {
+    en: "Action plan",
+    "pt-BR": "Plano de ação",
+  },
+  "ACPM: correctivas, preventivas y de mejora. Pipeline solicitud → aprobación → análisis → solución → implementación → verificación → cierre.": {
+    en: "CAPA: corrective, preventive, and improvement actions. Pipeline request → approval → analysis → solution → implementation → verification → closure.",
+    "pt-BR": "CAPA: ações corretivas, preventivas e de melhoria. Pipeline solicitação → aprovação → análise → solução → implementação → verificação → fechamento.",
+  },
+  "No Conformidades y CAPA": {
+    en: "Nonconformities and CAPA",
+    "pt-BR": "Não conformidades e CAPA",
+  },
+  "Hallazgos, análisis de causa raíz y acciones correctivas": {
+    en: "Findings, root cause analysis, and corrective actions",
+    "pt-BR": "Achados, análise de causa raiz e ações corretivas",
+  },
+  "Proveedores y contratistas": {
+    en: "Suppliers and contractors",
+    "pt-BR": "Fornecedores e contratados",
+  },
+  "Criticidad, revisiones, riesgos, documentos y evidencias": {
+    en: "Criticality, reviews, risks, documents, and evidence",
+    "pt-BR": "Criticidade, revisões, riscos, documentos e evidências",
+  },
+  "Catálogo de conectores para evidencias, identidad y operación — estados operativos simulados": {
+    en: "Connector catalog for evidence, identity, and operations — simulated operational states",
+    "pt-BR": "Catálogo de conectores para evidências, identidade e operação — estados operacionais simulados",
+  },
+  "Plan de Acción Global": {
+    en: "Global action plan",
+    "pt-BR": "Plano de ação global",
+  },
+  "Correctivas, preventivas y mejoras — filtra por estado, abre el detalle y actualiza el progreso.": {
+    en: "Corrective, preventive, and improvement actions — filter by status, open details, and update progress.",
+    "pt-BR": "Ações corretivas, preventivas e melhorias — filtre por status, abra os detalhes e atualize o progresso.",
+  },
+  "Cuenta y perfil": {
+    en: "Account and profile",
+    "pt-BR": "Conta e perfil",
+  },
+  "Perfil vinculado a tu identidad y organización en Supabase.": {
+    en: "Profile linked to your identity and organization in Supabase.",
+    "pt-BR": "Perfil vinculado à sua identidade e organização no Supabase.",
+  },
+  "Datos de la sesión demo del navegador.": {
+    en: "Browser demo session data.",
+    "pt-BR": "Dados da sessão demo do navegador.",
+  },
+  "Programa anual · alcance, criterios y cierre trazable": {
+    en: "Annual program · scope, criteria, and traceable closure",
+    "pt-BR": "Programa anual · escopo, critérios e fechamento rastreável",
+  },
+  "Billing y suscripción": {
+    en: "Billing and subscription",
+    "pt-BR": "Faturamento e assinatura",
+  },
+  "Suscripción, consumo y facturas persistidos en Supabase y sincronizados por Stripe.": {
+    en: "Subscription, usage, and invoices persisted in Supabase and synchronized by Stripe.",
+    "pt-BR": "Assinatura, consumo e faturas persistidos no Supabase e sincronizados pelo Stripe.",
+  },
+  "Vista de demostración de facturación.": {
+    en: "Billing demo view.",
+    "pt-BR": "Visualização demo de faturamento.",
+  },
+  "Revisión por la dirección": {
+    en: "Management review",
+    "pt-BR": "Análise crítica pela direção",
+  },
+  "Implementación guiada": {
+    en: "Guided implementation",
+    "pt-BR": "Implementação guiada",
+  },
+  "Gestión de Riesgos": {
+    en: "Risk management",
+    "pt-BR": "Gestão de riscos",
+  },
+  "Registro, evaluación y tratamiento de riesgos": {
+    en: "Risk register, assessment, and treatment",
+    "pt-BR": "Registro, avaliação e tratamento de riscos",
+  },
+  "Control de cambios": {
+    en: "Change control",
+    "pt-BR": "Controle de mudanças",
+  },
+  "Evaluación de impacto, aprobadores, tareas, evidencias y trazabilidad completa": {
+    en: "Impact assessment, approvers, tasks, evidence, and full traceability",
+    "pt-BR": "Avaliação de impacto, aprovadores, tarefas, evidências e rastreabilidade completa",
+  },
+  "Programa anual de auditorías": {
+    en: "Annual audit program",
+    "pt-BR": "Programa anual de auditorias",
+  },
+  "Mapa de procesos": {
+    en: "Process map",
+    "pt-BR": "Mapa de processos",
+  },
+  "Repositorio de evidencias": {
+    en: "Evidence repository",
+    "pt-BR": "Repositório de evidências",
+  },
+  "Pruebas vinculadas a auditorías, riesgos y documentos · Vista previa según tipo de archivo": {
+    en: "Proof linked to audits, risks, and documents · Preview by file type",
+    "pt-BR": "Provas vinculadas a auditorias, riscos e documentos · Pré-visualização por tipo de arquivo",
+  },
+  "Aprobaciones, vencimientos y alertas del espacio de trabajo": {
+    en: "Approvals, due dates, and workspace alerts",
+    "pt-BR": "Aprovações, vencimentos e alertas do workspace",
+  },
+  "Indicadores y KPIs": {
+    en: "Indicators and KPIs",
+    "pt-BR": "Indicadores e KPIs",
+  },
+  "Seguimiento de desempeño, tendencia y vínculo a cláusulas ISO — listo para revisión por la dirección": {
+    en: "Performance tracking, trends, and ISO clause links — ready for management review",
+    "pt-BR": "Acompanhamento de desempenho, tendência e vínculo a cláusulas ISO — pronto para análise crítica pela direção",
+  },
+  "Acción no disponible en este contexto": {
+    en: "Action unavailable in this context",
+    "pt-BR": "Ação indisponível neste contexto",
+  },
+  "Sin registros": {
+    en: "No records",
+    "pt-BR": "Sem registros",
+  },
+  "Cancelar": {
+    en: "Cancel",
+    "pt-BR": "Cancelar",
+  },
+  "Guardar": {
+    en: "Save",
+    "pt-BR": "Salvar",
+  },
+  "Confirmar": {
+    en: "Confirm",
+    "pt-BR": "Confirmar",
+  },
+  "Eliminar": {
+    en: "Delete",
+    "pt-BR": "Excluir",
+  },
+  "Editar": {
+    en: "Edit",
+    "pt-BR": "Editar",
+  },
+  "Crear": {
+    en: "Create",
+    "pt-BR": "Criar",
+  },
+  "Procesando...": {
+    en: "Processing...",
+    "pt-BR": "Processando...",
+  },
+  "Suelta para adjuntar": {
+    en: "Drop to attach",
+    "pt-BR": "Solte para anexar",
+  },
+  "Arrastra aquí o elige archivo": {
+    en: "Drag here or choose a file",
+    "pt-BR": "Arraste aqui ou escolha um arquivo",
+  },
+  "Un solo archivo · vista previa local en esta sesión": {
+    en: "One file · local preview in this session",
+    "pt-BR": "Um arquivo · pré-visualização local nesta sessão",
+  },
+  "Cambiar": {
+    en: "Change",
+    "pt-BR": "Alterar",
+  },
+  "Quitar archivo": {
+    en: "Remove file",
+    "pt-BR": "Remover arquivo",
+  },
+  "Cerrar menú de navegación": {
+    en: "Close navigation menu",
+    "pt-BR": "Fechar menu de navegação",
+  },
+  "Nombre": {
+    en: "Name",
+    "pt-BR": "Nome",
+  },
+  "Código": {
+    en: "Code",
+    "pt-BR": "Código",
+  },
+  "Título": {
+    en: "Title",
+    "pt-BR": "Título",
+  },
+  "Tipo": {
+    en: "Type",
+    "pt-BR": "Tipo",
+  },
+  "Estado": {
+    en: "Status",
+    "pt-BR": "Status",
+  },
+  "Responsable": {
+    en: "Owner",
+    "pt-BR": "Responsável",
+  },
+  "Descripción": {
+    en: "Description",
+    "pt-BR": "Descrição",
+  },
+  "Proceso": {
+    en: "Process",
+    "pt-BR": "Processo",
+  },
+  "Procesos": {
+    en: "Processes",
+    "pt-BR": "Processos",
+  },
+  "Documento": {
+    en: "Document",
+    "pt-BR": "Documento",
+  },
+  "Documentos": {
+    en: "Documents",
+    "pt-BR": "Documentos",
+  },
+  "Riesgo": {
+    en: "Risk",
+    "pt-BR": "Risco",
+  },
+  "Riesgos": {
+    en: "Risks",
+    "pt-BR": "Riscos",
+  },
+  "Evidencia": {
+    en: "Evidence",
+    "pt-BR": "Evidência",
+  },
+  "Evidencias": {
+    en: "Evidence",
+    "pt-BR": "Evidências",
+  },
+  "Auditoría": {
+    en: "Audit",
+    "pt-BR": "Auditoria",
+  },
+  "Auditorías": {
+    en: "Audits",
+    "pt-BR": "Auditorias",
+  },
+  "No conformidad": {
+    en: "Nonconformity",
+    "pt-BR": "Não conformidade",
+  },
+  "No conformidades": {
+    en: "Nonconformities",
+    "pt-BR": "Não conformidades",
+  },
+  "Proveedor": {
+    en: "Supplier",
+    "pt-BR": "Fornecedor",
+  },
+  "Proveedores": {
+    en: "Suppliers",
+    "pt-BR": "Fornecedores",
+  },
+  "Integración": {
+    en: "Integration",
+    "pt-BR": "Integração",
+  },
+  "Integraciones": {
+    en: "Integrations",
+    "pt-BR": "Integrações",
+  },
+  "Indicador": {
+    en: "Indicator",
+    "pt-BR": "Indicador",
+  },
+  "Indicadores": {
+    en: "Indicators",
+    "pt-BR": "Indicadores",
+  },
+  "Fecha objetivo": {
+    en: "Target date",
+    "pt-BR": "Data-alvo",
+  },
+  "Actualizado": {
+    en: "Updated",
+    "pt-BR": "Atualizado",
+  },
+  "Fecha": {
+    en: "Date",
+    "pt-BR": "Data",
+  },
+  "Prioridad": {
+    en: "Priority",
+    "pt-BR": "Prioridade",
+  },
+  "Categoría": {
+    en: "Category",
+    "pt-BR": "Categoria",
+  },
+  "Impacto": {
+    en: "Impact",
+    "pt-BR": "Impacto",
+  },
+  "Probabilidad": {
+    en: "Probability",
+    "pt-BR": "Probabilidade",
+  },
+  "Tratamiento": {
+    en: "Treatment",
+    "pt-BR": "Tratamento",
+  },
+  "Aprobado": {
+    en: "Approved",
+    "pt-BR": "Aprovado",
+  },
+  "Borrador": {
+    en: "Draft",
+    "pt-BR": "Rascunho",
+  },
+  "En revisión": {
+    en: "In review",
+    "pt-BR": "Em revisão",
+  },
+  "Obsoleto": {
+    en: "Obsolete",
+    "pt-BR": "Obsoleto",
+  },
+  "Completada": {
+    en: "Completed",
+    "pt-BR": "Concluída",
+  },
+  "En curso": {
+    en: "In progress",
+    "pt-BR": "Em andamento",
+  },
+  "Planificada": {
+    en: "Planned",
+    "pt-BR": "Planejada",
+  },
+  "Abierta": {
+    en: "Open",
+    "pt-BR": "Aberta",
+  },
+  "Cerrada": {
+    en: "Closed",
+    "pt-BR": "Fechada",
+  },
+  "Pendiente": {
+    en: "Pending",
+    "pt-BR": "Pendente",
+  },
+  "Pendiente validación": {
+    en: "Pending validation",
+    "pt-BR": "Pendente de validação",
+  },
+  "En tratamiento": {
+    en: "Under treatment",
+    "pt-BR": "Em tratamento",
+  },
+  "Monitoreo": {
+    en: "Monitoring",
+    "pt-BR": "Monitoramento",
+  },
+  "Mitigado": {
+    en: "Mitigated",
+    "pt-BR": "Mitigado",
+  },
+  "Aceptado": {
+    en: "Accepted",
+    "pt-BR": "Aceito",
+  },
+  "Identificado": {
+    en: "Identified",
+    "pt-BR": "Identificado",
+  },
+  "En objetivo": {
+    en: "On track",
+    "pt-BR": "No objetivo",
+  },
+  "En riesgo": {
+    en: "At risk",
+    "pt-BR": "Em risco",
+  },
+  "Desviado": {
+    en: "Off track",
+    "pt-BR": "Desviado",
+  },
+  "Activo": {
+    en: "Active",
+    "pt-BR": "Ativo",
+  },
+  "Cancelado": {
+    en: "Canceled",
+    "pt-BR": "Cancelado",
+  },
+  "Crítica": {
+    en: "Critical",
+    "pt-BR": "Crítica",
+  },
+  "Alta": {
+    en: "High",
+    "pt-BR": "Alta",
+  },
+  "Media": {
+    en: "Medium",
+    "pt-BR": "Média",
+  },
+  "Baja": {
+    en: "Low",
+    "pt-BR": "Baixa",
+  },
+  "Mayor": {
+    en: "Major",
+    "pt-BR": "Maior",
+  },
+  "Menor": {
+    en: "Minor",
+    "pt-BR": "Menor",
+  },
+  "Atención": {
+    en: "Attention",
+    "pt-BR": "Atenção",
+  },
+  "Alerta": {
+    en: "Alert",
+    "pt-BR": "Alerta",
+  },
+  "Sin asignar": {
+    en: "Unassigned",
+    "pt-BR": "Sem atribuição",
+  },
+  "Sin responsable": {
+    en: "No owner",
+    "pt-BR": "Sem responsável",
+  },
+  "Sin controles.": {
+    en: "No controls.",
+    "pt-BR": "Sem controles.",
+  },
+  "Nuevo proceso": {
+    en: "New process",
+    "pt-BR": "Novo processo",
+  },
+  "Nuevo riesgo": {
+    en: "New risk",
+    "pt-BR": "Novo risco",
+  },
+  "Nueva acción": {
+    en: "New action",
+    "pt-BR": "Nova ação",
+  },
+  "+ Nueva acción": {
+    en: "+ New action",
+    "pt-BR": "+ Nova ação",
+  },
+  "Nueva asignación": {
+    en: "New assignment",
+    "pt-BR": "Nova atribuição",
+  },
+  "Editar asignación": {
+    en: "Edit assignment",
+    "pt-BR": "Editar atribuição",
+  },
+  "Completar formación": {
+    en: "Complete training",
+    "pt-BR": "Concluir treinamento",
+  },
+  "Nuevo documento": {
+    en: "New document",
+    "pt-BR": "Novo documento",
+  },
+  "Nuevo Documento": {
+    en: "New document",
+    "pt-BR": "Novo documento",
+  },
+  "Nueva revisión": {
+    en: "New review",
+    "pt-BR": "Nova análise",
+  },
+  "+ Nueva revisión": {
+    en: "+ New review",
+    "pt-BR": "+ Nova análise",
+  },
+  "Nueva revisión por la dirección": {
+    en: "New management review",
+    "pt-BR": "Nova análise crítica pela direção",
+  },
+  "Subir evidencia": {
+    en: "Upload evidence",
+    "pt-BR": "Enviar evidência",
+  },
+  "+ Subir evidencia": {
+    en: "+ Upload evidence",
+    "pt-BR": "+ Enviar evidência",
+  },
+  "+ Nuevo Riesgo": {
+    en: "+ New risk",
+    "pt-BR": "+ Novo risco",
+  },
+  "+ Nuevo programa": {
+    en: "+ New program",
+    "pt-BR": "+ Novo programa",
+  },
+  "Registrar evaluación": {
+    en: "Register evaluation",
+    "pt-BR": "Registrar avaliação",
+  },
+  "Añadir control": {
+    en: "Add control",
+    "pt-BR": "Adicionar controle",
+  },
+  "Añadir comentario": {
+    en: "Add comment",
+    "pt-BR": "Adicionar comentário",
+  },
+  "Comentar": {
+    en: "Comment",
+    "pt-BR": "Comentar",
+  },
+  "Ver": {
+    en: "View",
+    "pt-BR": "Ver",
+  },
+  "Descargar": {
+    en: "Download",
+    "pt-BR": "Baixar",
+  },
+  "Cerrar vista": {
+    en: "Close view",
+    "pt-BR": "Fechar visualização",
+  },
+  "Vista previa": {
+    en: "Preview",
+    "pt-BR": "Pré-visualização",
+  },
+  "Subir nueva versión": {
+    en: "Upload new version",
+    "pt-BR": "Enviar nova versão",
+  },
+  "Editar documento": {
+    en: "Edit document",
+    "pt-BR": "Editar documento",
+  },
+  "Enviar a revisión": {
+    en: "Send for review",
+    "pt-BR": "Enviar para revisão",
+  },
+  "Rechazar documento": {
+    en: "Reject document",
+    "pt-BR": "Rejeitar documento",
+  },
+  "Marcar como obsoleto": {
+    en: "Mark as obsolete",
+    "pt-BR": "Marcar como obsoleto",
+  },
+  "Borrar borrador": {
+    en: "Delete draft",
+    "pt-BR": "Excluir rascunho",
+  },
+  "Nueva ACPM": {
+    en: "New CAPA",
+    "pt-BR": "Nova CAPA",
+  },
+  "Rechazar etapa": {
+    en: "Reject stage",
+    "pt-BR": "Rejeitar etapa",
+  },
+  "Registrar no conformidad": {
+    en: "Register nonconformity",
+    "pt-BR": "Registrar não conformidade",
+  },
+  "Nueva acción correctiva": {
+    en: "New corrective action",
+    "pt-BR": "Nova ação corretiva",
+  },
+  "Cierre de no conformidad (CAPA)": {
+    en: "Nonconformity closure (CAPA)",
+    "pt-BR": "Fechamento de não conformidade (CAPA)",
+  },
+  "Nueva auditoría": {
+    en: "New audit",
+    "pt-BR": "Nova auditoria",
+  },
+  "Cierre formal de auditoría": {
+    en: "Formal audit closure",
+    "pt-BR": "Fechamento formal da auditoria",
+  },
+  "Editar riesgo": {
+    en: "Edit risk",
+    "pt-BR": "Editar risco",
+  },
+  "Nueva solicitud de cambio": {
+    en: "New change request",
+    "pt-BR": "Nova solicitação de mudança",
+  },
+  "Nuevo programa anual": {
+    en: "New annual program",
+    "pt-BR": "Novo programa anual",
+  },
+  "Aprobación formal de documento": {
+    en: "Formal document approval",
+    "pt-BR": "Aprovação formal de documento",
+  },
+  "Desactivar registro": {
+    en: "Deactivate record",
+    "pt-BR": "Desativar registro",
+  },
+  "Eliminar entrada": {
+    en: "Delete entry",
+    "pt-BR": "Excluir entrada",
+  },
+  "Detalle del evento": {
+    en: "Event detail",
+    "pt-BR": "Detalhe do evento",
+  },
+  "Eliminar grupo": {
+    en: "Delete group",
+    "pt-BR": "Excluir grupo",
+  },
+  "Invitar persona": {
+    en: "Invite person",
+    "pt-BR": "Convidar pessoa",
+  },
+  "Quitar miembro": {
+    en: "Remove member",
+    "pt-BR": "Remover membro",
+  },
+  "Desactivar persona": {
+    en: "Deactivate person",
+    "pt-BR": "Desativar pessoa",
+  },
+  "Enlace con proceso": {
+    en: "Process link",
+    "pt-BR": "Vínculo com processo",
+  },
+  "Sugerencia IA — Plan de acción": {
+    en: "AI suggestion — Action plan",
+    "pt-BR": "Sugestão de IA — Plano de ação",
+  },
+  "Eliminar ACPM": {
+    en: "Delete CAPA",
+    "pt-BR": "Excluir CAPA",
+  },
+  "Eliminar proceso": {
+    en: "Delete process",
+    "pt-BR": "Excluir processo",
+  },
+  "Eliminar riesgo": {
+    en: "Delete risk",
+    "pt-BR": "Excluir risco",
+  },
+  "Eliminar control": {
+    en: "Delete control",
+    "pt-BR": "Excluir controle",
+  },
+  "No se pudo abrir el archivo": {
+    en: "The file could not be opened",
+    "pt-BR": "Não foi possível abrir o arquivo",
+  },
+  "Entendido": {
+    en: "Got it",
+    "pt-BR": "Entendi",
+  },
+};
 
 export function translate(locale: Locale, key: MessageKey, params?: Params) {
   const template = messages[locale][key] ?? messages[DEFAULT_LOCALE][key] ?? key;
@@ -623,8 +1368,20 @@ export function translate(locale: Locale, key: MessageKey, params?: Params) {
 }
 
 export function translateKnownText(locale: Locale, text: string) {
-  if (locale === DEFAULT_LOCALE) return text;
+  const clean = text.trim();
+  if (!clean) return text;
+  const directKnown = knownTextTranslations[clean];
+  if (directKnown) return locale === DEFAULT_LOCALE ? clean : directKnown[locale] ?? clean;
+  const knownBase = Object.entries(knownTextTranslations).find(([, values]) =>
+    Object.values(values).some((value) => value === clean),
+  )?.[0];
+  if (knownBase) {
+    if (locale === DEFAULT_LOCALE) return knownBase;
+    return knownTextTranslations[knownBase]?.[locale] ?? knownBase;
+  }
+
   const entries = Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[];
-  const match = entries.find((key) => messages[DEFAULT_LOCALE][key] === text);
-  return match ? messages[locale][match] ?? text : text;
+  const match = entries.find((key) => messages[DEFAULT_LOCALE][key] === clean)
+    ?? entries.find((key) => SUPPORTED_MESSAGE_LOCALES.some((item) => messages[item][key] === clean));
+  return match ? messages[locale][match] ?? clean : text;
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
+import { useI18n } from "@/context/I18nProvider";
 
 export function ConfirmActionModal({
   open,
@@ -24,6 +25,7 @@ export function ConfirmActionModal({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { tx } = useI18n();
   return (
     <Modal open={open} onClose={() => !pending && onCancel()} title={title} width={460}>
       <div style={{ display: "grid", gap: 16 }}>
@@ -32,7 +34,7 @@ export function ConfirmActionModal({
         </div>
         <div className="nf-modal-actions">
           <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onCancel}>
-            {cancelLabel}
+            {tx(cancelLabel)}
           </button>
           <button
             type="button"
@@ -40,7 +42,7 @@ export function ConfirmActionModal({
             disabled={pending}
             onClick={onConfirm}
           >
-            {pending ? "Procesando..." : confirmLabel}
+            {pending ? tx("Procesando...") : tx(confirmLabel)}
           </button>
         </div>
       </div>
@@ -79,6 +81,7 @@ export function PromptActionModal({
   onCancel: () => void;
   onConfirm: (value: string) => void;
 }) {
+  const { tx } = useI18n();
   const [value, setValue] = useState(initialValue);
   const disabled = pending || (required && !value.trim());
 
@@ -97,14 +100,14 @@ export function PromptActionModal({
       <form className="nf-modal-form" onSubmit={submit}>
         {message && <div style={{ color: "var(--nf-ink-2)", fontSize: 14, lineHeight: 1.6 }}>{message}</div>}
         <label className="nf-modal-field">
-          <span className="nf-modal-field-label">{label}</span>
+          <span className="nf-modal-field-label">{tx(label)}</span>
           {multiline ? (
             <textarea
               className="nf-app-input"
               rows={4}
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              placeholder={placeholder}
+              placeholder={placeholder ? tx(placeholder) : undefined}
               disabled={pending}
               autoFocus
             />
@@ -113,7 +116,7 @@ export function PromptActionModal({
               className="nf-app-input"
               value={value}
               onChange={(event) => setValue(event.target.value)}
-              placeholder={placeholder}
+              placeholder={placeholder ? tx(placeholder) : undefined}
               disabled={pending}
               autoFocus
             />
@@ -121,10 +124,10 @@ export function PromptActionModal({
         </label>
         <div className="nf-modal-actions">
           <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onCancel}>
-            {cancelLabel}
+            {tx(cancelLabel)}
           </button>
           <button type="submit" className={danger ? "nf-app-btn-danger" : "nf-app-btn-primary"} disabled={disabled}>
-            {pending ? "Procesando..." : confirmLabel}
+            {pending ? tx("Procesando...") : tx(confirmLabel)}
           </button>
         </div>
       </form>

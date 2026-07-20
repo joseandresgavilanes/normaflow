@@ -1,10 +1,12 @@
 "use client";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
+import { useI18n } from "@/context/I18nProvider";
 
 import { Z_INDEX } from "@/lib/z-index";
 
 export default function WorkspaceToast() {
   const ws = useWorkspaceOptional();
+  const { tx } = useI18n();
   if (!ws?.state.toast) return null;
   return (
     <div
@@ -22,7 +24,7 @@ export default function WorkspaceToast() {
         maxWidth: 360,
       }}
     >
-      {ws.state.toast}
+      {tx(ws.state.toast)}
     </div>
   );
 }

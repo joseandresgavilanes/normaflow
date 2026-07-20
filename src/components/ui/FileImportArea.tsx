@@ -2,6 +2,7 @@
 
 import { useCallback, useId, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { FileText, Upload, X } from "lucide-react";
+import { useI18n } from "@/context/I18nProvider";
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -40,6 +41,7 @@ export default function FileImportArea({
   disabled = false,
   compact = false,
 }: FileImportAreaProps) {
+  const { tx } = useI18n();
   const reactId = useId();
   const baseId = baseIdProp ?? `nf-file-import-${reactId.replace(/:/g, "")}`;
   const inputId = `${baseId}-input`;
@@ -106,7 +108,7 @@ export default function FileImportArea({
           letterSpacing: "-0.01em",
         }}
       >
-        {label}
+        {tx(label)}
       </div>
 
       <input
@@ -168,10 +170,10 @@ export default function FileImportArea({
           </span>
           <div>
             <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: "var(--nf-ink)", lineHeight: 1.35 }}>
-              {dragOver ? "Suelta para adjuntar" : "Arrastra aquí o elige archivo"}
+              {dragOver ? tx("Suelta para adjuntar") : tx("Arrastra aquí o elige archivo")}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4, lineHeight: 1.45 }}>
-              {zoneNote}
+              {tx(zoneNote)}
             </div>
           </div>
         </button>
@@ -235,13 +237,13 @@ export default function FileImportArea({
                 cursor: disabled ? "not-allowed" : "pointer",
               }}
             >
-              Cambiar
+              {tx("Cambiar")}
             </button>
             <button
               type="button"
               disabled={disabled}
               onClick={() => onFileChange(null)}
-              aria-label="Quitar archivo"
+              aria-label={tx("Quitar archivo")}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -263,7 +265,7 @@ export default function FileImportArea({
 
       {hint && (
         <p id={`${baseId}-hint`} className="nf-app-help" style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.5 }}>
-          {hint}
+          {tx(hint)}
         </p>
       )}
     </div>

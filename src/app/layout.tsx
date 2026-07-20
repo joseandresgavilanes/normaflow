@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import AuthHashRedirect from "@/components/auth/AuthHashRedirect";
+import I18nDomBridge from "@/components/i18n/I18nDomBridge";
 import { I18nProvider } from "@/context/I18nProvider";
 import { localeToOpenGraph } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/messages";
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="font-sans antialiased" suppressHydrationWarning>
         <I18nProvider initialLocale={locale}>
           <AuthHashRedirect />
+          <I18nDomBridge />
           {children}
         </I18nProvider>
       </body>

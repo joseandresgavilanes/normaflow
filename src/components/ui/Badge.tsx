@@ -1,3 +1,6 @@
+"use client";
+
+import { useI18n } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
 
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
@@ -57,12 +60,13 @@ export default function Badge({
   size = "sm",
   className,
 }: BadgeProps) {
+  const { tx } = useI18n();
   const s = STATUS_MAP[status] ?? {
     bg: "#F5F5F5",
     color: "#525252",
     label: label ?? status,
   };
-  const displayLabel = label ?? s.label;
+  const displayLabel = tx(label ?? s.label);
   return (
     <span
       className={cn(
@@ -83,6 +87,7 @@ export default function Badge({
 }
 
 export function PriorityBadge({ priority }: { priority: string }) {
+  const { tx } = useI18n();
   const map: Record<string, { bg: string; color: string }> = {
     CRITICAL: { bg: "#FEF2F2", color: "#DC2626" },
     HIGH: { bg: "#FFFBEB", color: "#D97706" },
@@ -109,7 +114,7 @@ export function PriorityBadge({ priority }: { priority: string }) {
         lineHeight: 1.25,
       }}
     >
-      {labels[priority] ?? priority}
+      {tx(labels[priority] ?? priority)}
     </span>
   );
 }

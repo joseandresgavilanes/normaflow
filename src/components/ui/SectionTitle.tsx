@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { useI18n } from "@/context/I18nProvider";
 
 interface SectionTitleProps {
   title: string;
@@ -16,21 +19,23 @@ export default function SectionTitle({
   actionButtonClass,
 }: SectionTitleProps) {
   const dead = Boolean(action) && !onAction;
+  const { tx } = useI18n();
+  const actionContent = typeof action === "string" ? tx(action) : action;
   return (
     <div className="nf-section-title">
       <div>
-        <h2 className="nf-app-page-title">{title}</h2>
-        {sub && <p className="nf-app-page-sub">{sub}</p>}
+        <h2 className="nf-app-page-title">{tx(title)}</h2>
+        {sub && <p className="nf-app-page-sub">{tx(sub)}</p>}
       </div>
       {action && (
         <button
           type="button"
           onClick={onAction}
           disabled={dead}
-          title={dead ? "Acción no disponible en este contexto" : undefined}
+          title={dead ? tx("Acción no disponible en este contexto") : undefined}
           className={actionButtonClass ?? "nf-app-btn-ghost"}
         >
-          {action}
+          {actionContent}
         </button>
       )}
     </div>

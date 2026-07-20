@@ -3,6 +3,7 @@
 import { useEffect, useId, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useI18n } from "@/context/I18nProvider";
 import { modalLayerDepth, popModalLayer, pushModalLayer } from "@/lib/modal-stack";
 
 function getModalPortalRoot(): HTMLElement {
@@ -25,6 +26,7 @@ export default function Modal({
   width = 560,
 }: ModalProps) {
   const titleId = useId();
+  const { tx } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [zIndex, setZIndex] = useState(1);
 
@@ -65,13 +67,13 @@ export default function Modal({
       >
         <div className="nf-modal-header">
           <h3 id={titleId} className="nf-modal-header-title">
-            {title}
+            {tx(title)}
           </h3>
           <button
             type="button"
             className="nf-modal-close"
             onClick={onClose}
-            aria-label="Cerrar"
+            aria-label={tx("Cerrar")}
           >
             <X size={18} strokeWidth={2} aria-hidden />
           </button>

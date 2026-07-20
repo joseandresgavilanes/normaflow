@@ -1,3 +1,7 @@
+"use client";
+
+import { useI18n } from "@/context/I18nProvider";
+
 export interface Column<T> {
   key: keyof T | string;
   label: string;
@@ -15,10 +19,11 @@ export default function DataTable<T extends Record<string, any>>({
   onRow,
   emptyText = "Sin registros",
 }: TableProps<T>) {
+  const { tx } = useI18n();
   if (rows.length === 0)
     return (
       <div className="nf-data-table-wrap">
-        <div className="nf-data-table-empty">{emptyText}</div>
+        <div className="nf-data-table-empty">{tx(emptyText)}</div>
       </div>
     );
   return (
@@ -27,7 +32,7 @@ export default function DataTable<T extends Record<string, any>>({
         <thead>
           <tr>
             {columns.map((col, i) => (
-              <th key={i}>{col.label}</th>
+              <th key={i}>{tx(col.label)}</th>
             ))}
           </tr>
         </thead>

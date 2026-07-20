@@ -175,7 +175,7 @@ export default function AppRoot({
             <button
               type="button"
               className="nf-sidebar-backdrop"
-              aria-label="Cerrar menú de navegación"
+              aria-label={t("marketing.closeMenu")}
               onClick={() => setNavOpen(false)}
             />
           )}
