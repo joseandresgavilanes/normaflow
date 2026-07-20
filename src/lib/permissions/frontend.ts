@@ -44,7 +44,7 @@ export function canApproveDocuments(roleKey: string): boolean {
 }
 
 export function canManageRisks(roleKey: string): boolean {
-  return canDemo(roleKey, "risks:*");
+  return canDemo(roleKey, "risks:*") || canDemo(roleKey, "risks:create");
 }
 
 export function canManageAudits(roleKey: string): boolean {

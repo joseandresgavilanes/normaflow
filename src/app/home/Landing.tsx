@@ -1152,7 +1152,7 @@ function NfStandards() {
 function NfAI() {
   return (
     <section className="nf-section" id="ai">
-      <div className="nf-container" style={{ display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 56, alignItems: "center" }}>
+      <div className="nf-container nf-ai-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 56, alignItems: "center" }}>
         <div data-reveal>
           <span className="nf-eyebrow"><span className="dot"/> Asistente IA</span>
           <h2 className="nf-h-section" style={{ marginTop: 22 }}>

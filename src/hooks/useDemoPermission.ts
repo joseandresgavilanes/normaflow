@@ -19,7 +19,11 @@ export function useDemoPermission() {
         edit: P.canFrontend(roleKey, "documents:*", extraPermissions),
         approve: P.canApproveDocuments(roleKey) || P.canFrontend(roleKey, "documents:approve", extraPermissions),
       },
-      risks: { manage: P.canFrontend(roleKey, "risks:*", extraPermissions) },
+      risks: {
+        manage:
+          P.canFrontend(roleKey, "risks:*", extraPermissions) ||
+          P.canFrontend(roleKey, "risks:create", extraPermissions),
+      },
       audits: { manage: P.canFrontend(roleKey, "audits:*", extraPermissions) },
       nc: { manage: P.canFrontend(roleKey, "nc:*", extraPermissions) || P.canFrontend(roleKey, "nc:create", extraPermissions) },
       actions: { manage: P.canFrontend(roleKey, "actions:*", extraPermissions) || P.canFrontend(roleKey, "actions:update", extraPermissions) },

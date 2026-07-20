@@ -3968,6 +3968,235 @@ button.nf-audit-card:focus-visible {
 }
 
 /* ============================================================
+   Responsive contract
+   Shared mobile rules for every app route.  Modules can keep their
+   desktop composition while the shell owns spacing, wrapping and
+   horizontal overflow behavior on narrow viewports.
+   ============================================================ */
+.nf-app-main-inner > * {
+  min-width: 0;
+}
+
+.nf-panel-head > *,
+.nf-section-title > * {
+  min-width: 0;
+}
+
+.nf-panel-head-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.nf-data-table-wrap,
+.nf-dash-table-wrap {
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1100px) {
+  .nf-app-main-inner {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nf-app-main-inner {
+    padding-top: 20px;
+  }
+
+  .nf-topbar {
+    height: 56px;
+    min-height: 56px;
+    padding-top: env(safe-area-inset-top);
+    height: calc(56px + env(safe-area-inset-top));
+  }
+
+  .nf-sidebar {
+    max-width: calc(100vw - 24px);
+  }
+
+  .nf-app-page-title {
+    font-size: clamp(24px, 6vw, 28px);
+  }
+
+  .nf-section-title {
+    gap: 10px;
+  }
+
+  .nf-section-title > :last-child {
+    flex: 0 1 auto;
+    max-width: 100%;
+  }
+
+  .nf-panel-head,
+  .nf-panel-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .nf-panel-head {
+    flex-wrap: wrap;
+  }
+
+  .nf-action-bar {
+    width: 100%;
+  }
+
+  .nf-action-bar .nf-app-input {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  .nf-quick-create-menu {
+    min-width: min(280px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+
+  .nf-dash-actions {
+    margin-bottom: 16px;
+  }
+
+  .nf-dash-card {
+    padding: 18px;
+  }
+
+  .nf-dash-card-value {
+    font-size: 32px;
+  }
+
+  .nf-dash-chart {
+    height: 104px;
+    margin-top: 18px;
+  }
+
+  .nf-dash-table-head {
+    padding: 16px 18px 14px;
+  }
+
+  .nf-dash-table {
+    min-width: 600px;
+  }
+
+  .nf-dash-table th,
+  .nf-dash-table td {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .nf-modal-overlay {
+    padding: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+
+  .nf-modal-header,
+  .nf-modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .nf-topbar {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    gap: 6px;
+  }
+
+  .nf-topbar-actions {
+    gap: 3px;
+  }
+
+  .nf-topbar-actions .nf-lang-switcher {
+    display: none;
+  }
+
+  .nf-quick-create-trigger {
+    width: 36px;
+    min-width: 36px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .nf-topbar-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nf-topbar-crumb {
+    font-size: 12px;
+  }
+
+  .nf-dash-actions > * {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .nf-dash-card {
+    padding: 16px;
+  }
+
+  .nf-dash-bottom-grid {
+    gap: 12px;
+  }
+
+  .nf-section-title > :last-child {
+    width: 100%;
+  }
+
+  .nf-section-title > :last-child:is(button, a) {
+    justify-content: center;
+  }
+
+  .nf-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .nf-modal-actions > * {
+    width: 100%;
+  }
+
+  /* Inline metric grids used by operational cards. */
+  .nf-app-main-inner [style*="repeat(4, 1fr)"],
+  .nf-app-main-inner [style*="repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .nf-dash-actions > * {
+    flex-basis: 100%;
+  }
+
+  .nf-topbar-menu {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nf-topbar-profile-text {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .nf-app-main-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .nf-sidebar {
+    max-width: calc(100vw - 16px);
+  }
+
+  .nf-app-main-inner [style*="repeat(4, 1fr)"],
+  .nf-app-main-inner [style*="repeat(3, 1fr)"],
+  .nf-app-main-inner [style*="1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================================
    Impresión / Exportar a PDF (GAP Assessment y otros informes)
    Oculta el chrome de la app y deja solo el contenido del módulo,
    con colores y saltos de página adecuados.

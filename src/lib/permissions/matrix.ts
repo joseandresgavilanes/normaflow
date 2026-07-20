@@ -3,7 +3,7 @@
  *
  * Permission shape: "<resource>:<action>"
  *   - resource: dashboard, notifications, documents, processes, evidence,
- *               records, audits, nc, actions, indicators, gap, training,
+ *               records, risks, audits, nc, actions, indicators, gap, training,
  *               changes, suppliers, integrations, reporting, activity,
  *               positions, personnel, locations, catalogs, groups,
  *               mgmt-review, audit-program, org, members, billing
@@ -105,6 +105,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "documents:read",
     "documents:create",
     "processes:read",
+    "risks:read",
+    "risks:create",
     "evidence:read",
     "evidence:create",
     "records:read",

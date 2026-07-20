@@ -53,6 +53,7 @@ export default function QuickCreateMenu() {
         className="nf-app-btn-primary nf-quick-create-trigger"
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label={t("quick.create")}
         onClick={() => setOpen((value) => !value)}
       >
         {t("quick.create")}
