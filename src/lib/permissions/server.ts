@@ -31,6 +31,29 @@ export class TenantMismatchError extends Error {
 }
 
 /**
+ * Adds the active tenant to a Prisma filter and rejects an accidental caller
+ * supplied tenant mismatch. Use this for every direct tenant-scoped query.
+ */
+export function tenantWhere<T extends Record<string, unknown>>(
+  ctx: LiveAppContext,
+  where: T = {} as T,
+): T & { organizationId: string } {
+  const requested = where.organizationId;
+  if (typeof requested === "string" && requested !== ctx.organization.id) {
+    throw new TenantMismatchError();
+  }
+  return { ...where, organizationId: ctx.organization.id } as T & { organizationId: string };
+}
+
+/** Never trust organizationId from a browser form when creating a row. */
+export function tenantData<T extends Record<string, unknown>>(
+  ctx: LiveAppContext,
+  data: T,
+): T & { organizationId: string } {
+  return tenantWhere(ctx, data);
+}
+
+/**
  * Require a live (non-demo) authenticated context with a selected organization.
  * Throws `UnauthenticatedError` otherwise.
  */

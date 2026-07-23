@@ -5,6 +5,8 @@ import { IntegrationsLiveClient } from "@/components/operations/GovernanceLive";
 import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getIntegrationsPayload } from "@/lib/server-queries";
+import { PlanLimitError } from "@/lib/plan-entitlements";
+import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
 export const metadata = { title: "Integraciones | NormaFlow" };
 export const dynamic = "force-dynamic";
@@ -15,6 +17,7 @@ export default async function IntegrationsPage() {
     try {
       return <IntegrationsLiveClient initial={await getIntegrationsPayload()} />;
     } catch (error) {
+      if (error instanceof PlanLimitError) return <PlanUpgradeGate module="Integraciones" />;
       if (isAuthorizationError(error)) return <AccessDenied />;
       console.error("[integrations] live payload failed:", error);
       return <LiveDataUnavailable section="Integraciones" />;

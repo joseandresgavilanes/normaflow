@@ -76,6 +76,8 @@ const ISO_27001_CLAUSES: ClauseSpec[] = [
   { code: "5.3", title: "Roles, responsabilidades y autoridades en la organización", parent: "5" },
   { code: "6", title: "Planificación" },
   { code: "6.1", title: "Acciones para abordar riesgos y oportunidades", parent: "6" },
+  { code: "6.1.2", title: "Evaluación de riesgos de seguridad de la información", parent: "6.1" },
+  { code: "6.1.3", title: "Tratamiento de riesgos de seguridad de la información", parent: "6.1" },
   { code: "6.2", title: "Objetivos de seguridad de la información y planificación para lograrlos", parent: "6" },
   { code: "6.3", title: "Planificación de los cambios", parent: "6" },
   { code: "7", title: "Apoyo" },

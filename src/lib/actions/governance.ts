@@ -13,7 +13,7 @@ import {
   SupplierStatus,
 } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/permissions/server";
+import { getServerAuthorization, requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { notifyUsers } from "@/lib/notify";
 
@@ -205,6 +205,9 @@ export async function transitionChangeRequest(id: string, status: ChangeRequestS
   });
   if (!existing) throw new Error("Cambio no encontrado.");
   if (!CHANGE_TRANSITIONS[existing.status].includes(status)) throw new Error(`Transición ${existing.status} → ${status} no permitida.`);
+  if (status === ChangeRequestStatus.SUBMITTED && existing.approvers.length === 0) {
+    throw new Error("Asigna al menos un revisor antes de enviar el cambio a revisión.");
+  }
   if (status === ChangeRequestStatus.APPROVED && existing.approvers.some((item) => item.status !== ApprovalStatus.APPROVED)) {
     throw new Error("Todos los aprobadores deben aprobar antes de avanzar.");
   }
@@ -259,7 +262,8 @@ export async function transitionChangeRequest(id: string, status: ChangeRequestS
 }
 
 export async function decideChangeApproval(changeRequestId: string, status: "APPROVED" | "REJECTED", comment?: string, attestationReason?: string) {
-  const ctx = await requirePermission("changes:update");
+  const authorization = await getServerAuthorization();
+  const { ctx } = authorization;
   const approval = await prisma.changeApprover.findFirst({
     where: { changeRequestId, userId: ctx.user.id, changeRequest: { organizationId: ctx.organization.id } },
     include: { changeRequest: { select: { code: true, title: true, requesterId: true } } },
@@ -371,6 +375,7 @@ async function supplierData(organizationId: string, input: SupplierInput) {
 export async function createSupplier(input: SupplierInput) {
   const ctx = await requirePermission("suppliers:create");
   const parsed = await supplierData(ctx.organization.id, input);
+  parsed.data.status = SupplierStatus.UNDER_REVIEW;
   const code = parsed.data.code ?? generatedCode("PRV");
   if (await prisma.supplier.findFirst({ where: { organizationId: ctx.organization.id, code }, select: { id: true } })) throw new Error(`Ya existe un proveedor con el código ${code}.`);
   const created = await prisma.$transaction(async (tx) => {
@@ -383,6 +388,13 @@ export async function createSupplier(input: SupplierInput) {
     return row;
   });
   await logAuditEvent({ ctx, action: "create", module: "supplier", recordId: created.id, after: { code, name: created.name, status: created.status } });
+  await notifyUsers([created.ownerId], {
+    organizationId: ctx.organization.id,
+    title: "Se te asignó un proveedor",
+    body: `Eres responsable del proveedor «${created.name}». Debe completar su revisión y evaluación inicial.`,
+    type: "WARNING",
+    link: PATHS.suppliers,
+  }, { skipUserId: ctx.user.id });
   refresh(PATHS.suppliers);
   return { id: created.id };
 }
@@ -391,6 +403,9 @@ export async function updateSupplier(id: string, input: SupplierInput) {
   const ctx = await requirePermission("suppliers:update");
   const existing = await prisma.supplier.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Proveedor no encontrado.");
+  if (input.status !== existing.status) {
+    throw new Error("El estado del proveedor se actualiza mediante una evaluación.");
+  }
   const parsed = await supplierData(ctx.organization.id, input);
   const code = parsed.data.code ?? existing.code;
   if (await prisma.supplier.findFirst({ where: { organizationId: ctx.organization.id, code, id: { not: id } }, select: { id: true } })) throw new Error(`Ya existe otro proveedor con el código ${code}.`);
@@ -408,6 +423,15 @@ export async function updateSupplier(id: string, input: SupplierInput) {
     ]);
   });
   await logAuditEvent({ ctx, action: "update", module: "supplier", recordId: id, before: { code: existing.code, name: existing.name }, after: { code, name: parsed.data.name, status: parsed.data.status } });
+  if (parsed.data.ownerId && parsed.data.ownerId !== existing.ownerId) {
+    await notifyUsers([parsed.data.ownerId], {
+      organizationId: ctx.organization.id,
+      title: "Se te asignó un proveedor",
+      body: `Eres responsable del proveedor «${parsed.data.name}». Debe completar su revisión y evaluación.`,
+      type: "WARNING",
+      link: PATHS.suppliers,
+    }, { skipUserId: ctx.user.id });
+  }
   refresh(PATHS.suppliers);
 }
 
@@ -438,6 +462,17 @@ export async function registerSupplierEvaluation(supplierId: string, input: Supp
     return row;
   });
   await logAuditEvent({ ctx, action: "evaluate", module: "supplier", recordId: supplierId, after: { evaluationId: evaluation.id, score, outcome: input.outcome, status } });
+  await notifyUsers(
+    [supplier.ownerId],
+    {
+      organizationId: ctx.organization.id,
+      title: "Evaluación de proveedor registrada",
+      body: `El proveedor «${supplier.name}» fue evaluado con resultado ${input.outcome}. Estado actual: ${status}.`,
+      type: status === SupplierStatus.SUSPENDED ? "ALERT" : "INFO",
+      link: PATHS.suppliers,
+    },
+    { skipUserId: ctx.user.id },
+  );
   refresh(PATHS.suppliers);
 }
 

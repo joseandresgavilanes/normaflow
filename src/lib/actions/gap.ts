@@ -5,7 +5,8 @@ import { ClauseStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
-import { buildTablePdf } from "@/lib/export/pdf";
+import { assertExportQuota } from "@/lib/plan-entitlements";
+import { queueReportForContext } from "@/lib/report-queue";
 
 const PATH = "/app/gap";
 
@@ -109,6 +110,7 @@ const STATUS_PDF: Record<string, { label: string; color: [number, number, number
 
 export async function exportGapReport(standardCode: "ISO_9001" | "ISO_27001") {
   const ctx = await requirePermission("gap:read");
+  await assertExportQuota(ctx.organization.id, ctx.organization.plan);
   const assessment = await prisma.assessment.findFirst({
     where: { organizationId: ctx.organization.id, standard: { code: standardCode }, status: { in: ["IN_PROGRESS", "COMPLETED"] } },
     include: { standard: true, answers: { include: { clause: true } } },
@@ -118,39 +120,9 @@ export async function exportGapReport(standardCode: "ISO_9001" | "ISO_27001") {
     throw new Error("No hay una evaluación GAP con datos para esta norma.");
   }
 
-  const rows = assessment.answers
-    .map(a => {
-      const s = STATUS_PDF[a.status] ?? STATUS_PDF.NOT_EVALUATED;
-      return { clause: a.clause.code, title: a.clause.title, score: `${a.score}%`, statusLabel: s.label, color: s.color };
-    })
-    .sort((x, y) => x.clause.localeCompare(y.clause, undefined, { numeric: true }));
-
-  const evaluated = assessment.answers.filter(a => a.status !== "NOT_APPLICABLE");
-  const avg = evaluated.length ? Math.round(evaluated.reduce((sum, a) => sum + a.score, 0) / evaluated.length) : 0;
-  const compliant = assessment.answers.filter(a => a.status === "COMPLIANT").length;
-  const partial = assessment.answers.filter(a => a.status === "PARTIALLY_COMPLIANT").length;
-  const nonCompliant = assessment.answers.filter(a => a.status === "NON_COMPLIANT").length;
-  const standardLabel = `${assessment.standard.code.replace("_", " ")} ${assessment.standard.version}`;
-
-  const bytes = await buildTablePdf({
-    orgName: ctx.organization.name,
-    title: `Informe GAP Assessment — ${standardLabel}`,
-    summary: [
-      `Cumplimiento global: ${avg}%`,
-      `Conforme: ${compliant}  ·  Parcial: ${partial}  ·  No conforme: ${nonCompliant}  ·  Total: ${assessment.answers.length} cláusulas`,
-    ],
-    columns: [
-      { key: "clause", label: "Cláusula", width: 0.9, color: () => [0.32, 0.4, 0.96] },
-      { key: "title", label: "Título", width: 4 },
-      { key: "score", label: "Score", width: 0.7, align: "right" },
-      { key: "statusLabel", label: "Estado", width: 1.2, color: (row) => row.color },
-    ],
-    rows,
-    footerNote: "NormaFlow · Documento generado automáticamente — válido como evidencia del SGC.",
-  });
-
-  const fileName = `gap-${standardCode.toLowerCase()}-${new Date().toISOString().slice(0, 10)}.pdf`;
-  await logAuditEvent({ ctx, action: "export", module: "gap", recordId: assessment.id, extra: { standard: standardCode, rowCount: rows.length, avg } });
+  const date = new Date().toISOString().slice(0, 10);
+  const fileName = `gap-${standardCode.toLowerCase()}-${date}.pdf`;
+  const report = await queueReportForContext({ ctx, reportType: "gap", title: `Informe GAP Assessment — ${standardCode.replace("_", " ")}`, format: "PDF", fileName, dateFrom: new Date(`${date}T00:00:00.000Z`), dateTo: new Date(`${date}T23:59:59.999Z`), filters: { from: `${new Date().getUTCFullYear()}-01-01`, to: date, standardCode } });
   revalidatePath(PATH);
-  return { fileName, mimeType: "application/pdf", base64: Buffer.from(bytes).toString("base64") };
+  return { id: report.id, fileName, mimeType: "application/pdf", status: report.status, rowCount: report.rowCount };
 }

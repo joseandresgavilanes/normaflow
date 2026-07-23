@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { DocumentType } from "@prisma/client";
 import {
   CheckCircle2,
   Clock,
   Download,
+  Eye,
+  FileDown,
   FileText,
   Loader2,
   Pencil,
@@ -25,20 +27,25 @@ import { ModalField, NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/Mod
 import {
   approveDocument,
   createDocument,
+  createDocumentFromTemplate,
   deleteDraftDocument,
+  exportDocumentsList,
   getDocumentVersionUrl,
   markDocumentObsolete,
   rejectDocument,
   submitForReview,
   supersedeDocument,
   updateDocumentMetadata,
+  updateDocumentContent,
   uploadDocumentVersion,
   type CreateDocumentInput,
 } from "@/lib/actions/documents";
 import type { DocumentsPayload, DocumentRowLive } from "@/lib/server-queries";
+import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
 import { useServerAction } from "@/hooks/useServerAction";
 import { formatDate, timeAgo } from "@/lib/utils";
+import type { TemplateField } from "@/lib/document-templates";
 
 type Status = "ALL" | "DRAFT" | "IN_REVIEW" | "APPROVED" | "OBSOLETE";
 
@@ -75,7 +82,7 @@ export default function DocumentsLiveClient({
   currentUserId: string;
 }) {
   const { run, isPending, error, setError, success } = useServerAction();
-  const { documents, locations, personnel, members, processes, clauses, standards } = initial;
+  const { documents, locations, personnel, members, processes, clauses, standards, templates } = initial;
   const personnelLookup = useMemo(
     () => new Map(personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`])),
     [personnel],
@@ -85,8 +92,15 @@ export default function DocumentsLiveClient({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("ALL");
   const [typeFilter, setTypeFilter] = useState<"ALL" | DocumentType>("ALL");
+  const [standardFilter, setStandardFilter] = useState("ALL");
+  const [clauseFilter, setClauseFilter] = useState("ALL");
+  const [processFilter, setProcessFilter] = useState("ALL");
+  const [ownerFilter, setOwnerFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState<DocumentSortKey>("activity_desc");
+  const [exportBusy, setExportBusy] = useState<"PDF" | "EXCEL" | null>(null);
   const [creating, setCreating] = useState(false);
+  const [creatingFromTemplate, setCreatingFromTemplate] = useState(false);
+  const [editingContent, setEditingContent] = useState<DocumentRowLive | null>(null);
   const [editing, setEditing] = useState<DocumentRowLive | null>(null);
   const [detail, setDetail] = useState<DocumentRowLive | null>(null);
   const [uploadingFor, setUploadingFor] = useState<DocumentRowLive | null>(null);
@@ -112,6 +126,10 @@ export default function DocumentsLiveClient({
     const rows = documents.filter((d) => {
       if (statusFilter !== "ALL" && d.status !== statusFilter) return false;
       if (typeFilter !== "ALL" && d.type !== typeFilter) return false;
+      if (standardFilter !== "ALL" && d.standardCode !== standardFilter) return false;
+      if (clauseFilter !== "ALL" && d.clauseId !== clauseFilter) return false;
+      if (processFilter !== "ALL" && d.processId !== processFilter) return false;
+      if (ownerFilter !== "ALL" && d.ownerId !== ownerFilter) return false;
       if (!q) return true;
       return (
         d.code.toLowerCase().includes(q) ||
@@ -122,7 +140,31 @@ export default function DocumentsLiveClient({
       );
     });
     return sortDocuments(rows, sortBy, (d) => new Date(d.updatedAt).getTime());
-  }, [documents, search, statusFilter, typeFilter, sortBy]);
+  }, [documents, search, statusFilter, typeFilter, standardFilter, clauseFilter, processFilter, ownerFilter, sortBy]);
+
+  const activeFilters = {
+    search,
+    status: statusFilter,
+    type: typeFilter,
+    standardCode: standardFilter,
+    clauseId: clauseFilter,
+    processId: processFilter,
+    ownerId: ownerFilter,
+  } as const;
+
+  async function exportList(format: "PDF" | "EXCEL") {
+    setExportBusy(format);
+    setError("");
+    try {
+      const result = await exportDocumentsList({ format, filters: activeFilters });
+      await downloadQueuedReport(result.id);
+      setError("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo exportar el listado.");
+    } finally {
+      setExportBusy(null);
+    }
+  }
 
   const stats = useMemo(
     () => ({
@@ -186,7 +228,7 @@ export default function DocumentsLiveClient({
       label: "",
       render: (_, d) => (
         <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          {initial.access.canApprove && d.status === "APPROVED" && !d.supersededById && (
+          {initial.access.canObsolete && d.status === "APPROVED" && !d.supersededById && (
             <button type="button" onClick={(e) => { e.stopPropagation(); setError(""); setSupersedeFor(d); }} className="nf-app-btn-ghost">
               Reemplazar
             </button>
@@ -239,12 +281,48 @@ export default function DocumentsLiveClient({
             <option value="ALL">Todos los tipos</option>
             {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
+          <select value={standardFilter} onChange={(e) => { setStandardFilter(e.target.value); setClauseFilter("ALL"); }} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por norma">
+            <option value="ALL">Todas las normas</option>
+            {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
+          </select>
+          <select value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por cláusula">
+            <option value="ALL">Todas las cláusulas</option>
+            {clauses.filter((clause) => standardFilter === "ALL" || clause.standardCode === standardFilter).map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode.replace("_", " ")} · {clause.code}</option>)}
+          </select>
+          <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por proceso">
+            <option value="ALL">Todos los procesos</option>
+            {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
+          </select>
+          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por responsable">
+            <option value="ALL">Todos los responsables</option>
+            {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
+          </select>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Ordenar documentos">
             {DOCUMENT_SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
           <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {documents.length}</span>
+          {(standardFilter !== "ALL" || clauseFilter !== "ALL" || processFilter !== "ALL" || ownerFilter !== "ALL" || statusFilter !== "ALL" || typeFilter !== "ALL" || search) && (
+            <button type="button" className="nf-app-btn-ghost" onClick={() => { setSearch(""); setStatusFilter("ALL"); setTypeFilter("ALL"); setStandardFilter("ALL"); setClauseFilter("ALL"); setProcessFilter("ALL"); setOwnerFilter("ALL"); }}>
+              Limpiar filtros
+            </button>
+          )}
+          {initial.access.canExport && (
+            <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
+              <button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportList("EXCEL")} title="Exportar listado filtrado a Excel">
+                <FileDown size={14} aria-hidden /> {exportBusy === "EXCEL" ? "Generando…" : "Excel"}
+              </button>
+              <button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportList("PDF")} title="Exportar listado filtrado a PDF">
+                <FileDown size={14} aria-hidden /> {exportBusy === "PDF" ? "Generando…" : "PDF"}
+              </button>
+            </div>
+          )}
+          {canCreate && templates.length > 0 && (
+            <button type="button" className="nf-app-btn-primary" onClick={() => { setCreatingFromTemplate(true); setError(""); }}>
+              <FileText size={14} aria-hidden /> Desde plantilla
+            </button>
+          )}
         </div>
 
         <DataTable
@@ -282,15 +360,42 @@ export default function DocumentsLiveClient({
         }}
       />
 
+      <TemplateCreateModal
+        open={creatingFromTemplate}
+        templates={templates}
+        processes={processes}
+        members={members}
+        isPending={isPending}
+        onClose={() => !isPending && setCreatingFromTemplate(false)}
+        onSubmit={(templateId, form) => run(() => createDocumentFromTemplate(templateId, form), {
+          onSuccess: () => setCreatingFromTemplate(false),
+          successMessage: "Documento creado desde plantilla. Revisa el contenido antes de enviarlo a aprobación.",
+        })}
+      />
+
+      <ContentEditorModal
+        document={editingContent}
+        isPending={isPending}
+        onClose={() => !isPending && setEditingContent(null)}
+        onSubmit={(content, changeDescription, bump) => {
+          if (!editingContent) return;
+          run(() => updateDocumentContent(editingContent.id, { content, changeDescription, bump }), {
+            onSuccess: () => setEditingContent(null),
+            successMessage: "Nueva versión de contenido guardada.",
+          });
+        }}
+      />
+
       {/* Upload version */}
       <UploadVersionModal
         document={uploadingFor}
+        members={members}
         isPending={isPending}
         onClose={() => !isPending && setUploadingFor(null)}
-        onSubmit={(file, note, bump) => {
+        onSubmit={(file, note, bump, approverIds) => {
           if (!uploadingFor) return;
           run(
-            () => uploadDocumentVersion(uploadingFor.id, { file, changeDescription: note, bump }),
+            () => uploadDocumentVersion(uploadingFor.id, { file, changeDescription: note, bump, approverIds }),
             {
               onSuccess: () => {
                 setUploadingFor(null);
@@ -419,10 +524,12 @@ export default function DocumentsLiveClient({
         memberLookup={memberLookup}
         canCreate={canCreate}
         canApprove={canApprove}
+        canObsolete={initial.access.canObsolete}
         currentUserId={currentUserId}
         isPending={isPending}
         onClose={closeDetail}
         onEdit={() => detailDoc && (setEditing(detailDoc), closeDetail())}
+        onEditContent={() => detailDoc && (setEditingContent(detailDoc), closeDetail())}
         onUpload={() => detailDoc && setUploadingFor(detailDoc)}
         onSubmitReview={() => detailDoc && setSubmittingFor(detailDoc)}
         onApprove={(comment) =>
@@ -611,9 +718,100 @@ function DocumentFormModal({
   );
 }
 
-// ─── Upload version ───────────────────────────────────────────────────
+function TemplateCreateModal({
+  open,
+  templates,
+  processes,
+  members,
+  isPending,
+  onClose,
+  onSubmit,
+}: {
+  open: boolean;
+  templates: DocumentsPayload["templates"];
+  processes: DocumentsPayload["processes"];
+  members: DocumentsPayload["members"];
+  isPending: boolean;
+  onClose: () => void;
+  onSubmit: (templateId: string, input: Parameters<typeof createDocumentFromTemplate>[1]) => void;
+}) {
+  const [templateId, setTemplateId] = useState(templates[0]?.id ?? "");
+  const template = templates.find((item) => item.id === templateId) ?? templates[0];
+  const fields = (Array.isArray(template?.fields) ? template.fields : []) as unknown as TemplateField[];
 
-function UploadVersionModal({
+  return (
+    <Modal open={open} onClose={onClose} title="Crear documento desde plantilla" width={760}>
+      {template && (
+        <form
+          key={template.id}
+          className="nf-modal-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const fd = new FormData(event.currentTarget);
+            const fieldValues: Record<string, string> = {};
+            for (const field of fields) fieldValues[field.key] = String(fd.get(`field:${field.key}`) ?? "");
+            onSubmit(template.id, {
+              code: String(fd.get("code") ?? ""),
+              title: String(fd.get("title") ?? "") || undefined,
+              processId: String(fd.get("processId") ?? "") || undefined,
+              ownerId: String(fd.get("ownerId") ?? "") || undefined,
+              fields: fieldValues,
+            });
+          }}
+          style={{ display: "flex", flexDirection: "column", gap: 14 }}
+        >
+          <Field label="Plantilla ISO">
+            <select value={template.id} onChange={(event) => setTemplateId(event.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
+              {templates.map((item) => <option key={item.id} value={item.id}>{item.standardCode.replace("_", " ")} · {item.title}</option>)}
+            </select>
+          </Field>
+          <div style={{ padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 12, color: "var(--nf-ink-2)" }}>
+            <strong>{template.code}</strong> · {template.description} {template.clauseCode && `· Cláusula ${template.clauseCode}`}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "180px 1fr", gap: 12 }}>
+            <Field label="Código del documento *"><input name="code" required defaultValue={template.code} className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
+            <Field label="Título"><input name="title" defaultValue={template.title} className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <Field label="Proceso relacionado">
+              <select name="processId" defaultValue="" className={NF_INPUT_CLASS} style={modalInputStyle}>
+                <option value="">— Sin proceso —</option>
+                {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Responsable">
+              <select name="ownerId" defaultValue="" className={NF_INPUT_CLASS} style={modalInputStyle}>
+                <option value="">— Usuario actual —</option>
+                {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
+              </select>
+            </Field>
+          </div>
+          <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 10 }}>Campos de adaptación a la organización</div>
+            <div style={{ display: "grid", gap: 12 }}>
+              {fields.map((field) => (
+                <Field key={field.key} label={`${field.label}${field.required ? " *" : ""}`}>
+                  {field.type === "textarea" ? (
+                    <textarea name={`field:${field.key}`} required={field.required} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder={field.placeholder} />
+                  ) : (
+                    <input name={`field:${field.key}`} required={field.required} type={field.type} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder={field.placeholder} />
+                  )}
+                </Field>
+              ))}
+            </div>
+          </div>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)" }}>Se creará como borrador con versión 1.0. Podrás editar el contenido, adjuntar el archivo y enviarlo a revisión.</p>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+            <button type="submit" disabled={isPending} className="nf-app-btn-primary">{isPending ? "Creando…" : "Crear documento controlado"}</button>
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+function ContentEditorModal({
   document: doc,
   isPending,
   onClose,
@@ -622,22 +820,75 @@ function UploadVersionModal({
   document: DocumentRowLive | null;
   isPending: boolean;
   onClose: () => void;
-  onSubmit: (file: File, note: string, bump: "minor" | "major") => void;
+  onSubmit: (content: string, changeDescription: string, bump: "minor" | "major") => void;
+}) {
+  const [content, setContent] = useState("");
+  const [changeDescription, setChangeDescription] = useState("");
+  const [bump, setBump] = useState<"minor" | "major">("minor");
+
+  useEffect(() => {
+    setContent(doc?.content ?? doc?.versions[0]?.content ?? "");
+    setChangeDescription("");
+    setBump("minor");
+  }, [doc]);
+
+  return (
+    <Modal open={doc != null} onClose={onClose} title={`Editar contenido · ${doc?.code ?? ""}`} width={900}>
+      {doc && (
+        <form className="nf-modal-form" onSubmit={(event) => { event.preventDefault(); onSubmit(content, changeDescription, bump); }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>El guardado crea una nueva versión y conserva la anterior. Formato recomendado: Markdown.</div>
+          <textarea value={content} onChange={(event) => setContent(event.target.value)} required rows={22} className={NF_INPUT_CLASS} style={{ ...modalInputStyle, fontFamily: "ui-monospace, SFMono-Regular, monospace", fontSize: 12, lineHeight: 1.55 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", gap: 12 }}>
+            <Field label="Descripción del cambio *"><input value={changeDescription} onChange={(event) => setChangeDescription(event.target.value)} required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Qué se adaptó o actualizó" /></Field>
+            <Field label="Tipo de versión">
+              <select value={bump} onChange={(event) => setBump(event.target.value as "minor" | "major")} className={NF_INPUT_CLASS} style={modalInputStyle}>
+                <option value="minor">Minor · {nextMinor(doc.currentVersion)}</option>
+                <option value="major">Mayor</option>
+              </select>
+            </Field>
+          </div>
+          <div className="nf-modal-actions">
+            <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
+            <button type="submit" disabled={isPending || !content.trim() || !changeDescription.trim()} className="nf-app-btn-primary">{isPending ? "Guardando…" : "Guardar nueva versión"}</button>
+          </div>
+        </form>
+      )}
+    </Modal>
+  );
+}
+
+// ─── Upload version ───────────────────────────────────────────────────
+
+function UploadVersionModal({
+  document: doc,
+  members,
+  isPending,
+  onClose,
+  onSubmit,
+  }: {
+    document: DocumentRowLive | null;
+    members: { userId: string; name: string; email: string; role: string; canApprove: boolean }[];
+  isPending: boolean;
+  onClose: () => void;
+  onSubmit: (file: File, note: string, bump: "minor" | "major", approverIds: string[]) => void;
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [note, setNote] = useState("");
   const [bump, setBump] = useState<"minor" | "major">("minor");
+  const [pickedReviewers, setPickedReviewers] = useState<Set<string>>(new Set());
 
   return (
-    <Modal open={doc != null} onClose={() => { setFile(null); setNote(""); onClose(); }} title="Subir nueva versión" width={520}>
+    <Modal open={doc != null} onClose={() => { setFile(null); setNote(""); setPickedReviewers(new Set()); onClose(); }} title="Subir nueva versión" width={560}>
       {doc && (
         <form
           onSubmit={(e) => {
             e.preventDefault();
             if (!file) return;
-            onSubmit(file, note, bump);
+            if (doc.status === "APPROVED" && pickedReviewers.size === 0) return;
+            onSubmit(file, note, bump, Array.from(pickedReviewers));
             setFile(null);
             setNote("");
+            setPickedReviewers(new Set());
           }}
           style={{ display: "flex", flexDirection: "column", gap: 14 }}
         className="nf-modal-form"
@@ -661,10 +912,23 @@ function UploadVersionModal({
           <Field label="Descripción del cambio *">
             <textarea required rows={3} value={note} onChange={(e) => setNote(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Resumen de qué cambió respecto de la versión anterior." />
           </Field>
+          <Field label="Enviar a revisión">
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 8 }}>
+              {doc.status === "APPROVED" ? "La versión aprobada actual no cambia hasta que uno de los revisores la apruebe." : "Puedes enviarla ahora o hacerlo desde el detalle del documento."}
+            </div>
+            <div style={{ maxHeight: 150, overflow: "auto", border: "1px solid var(--nf-line)", borderRadius: 8 }}>
+              {members.filter((m) => m.canApprove).map((member) => (
+                <label key={member.userId} style={{ display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderBottom: "1px solid var(--nf-line)", cursor: "pointer" }}>
+                  <input type="checkbox" checked={pickedReviewers.has(member.userId)} onChange={() => setPickedReviewers((current) => { const next = new Set(current); if (next.has(member.userId)) next.delete(member.userId); else next.add(member.userId); return next; })} />
+                  <span style={{ fontSize: 12, color: "var(--nf-ink)" }}>{member.name} · {member.role}</span>
+                </label>
+              ))}
+            </div>
+          </Field>
           <div className="nf-modal-actions">
             <button type="button" onClick={onClose} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>
-            <button type="submit" disabled={isPending || !file} className="nf-app-btn-primary">
-              {isPending ? "Subiendo…" : "Subir versión"}
+            <button type="submit" disabled={isPending || !file || (doc.status === "APPROVED" && pickedReviewers.size === 0)} className="nf-app-btn-primary">
+              {isPending ? "Subiendo…" : pickedReviewers.size > 0 ? "Subir y enviar a revisión" : "Subir versión"}
             </button>
           </div>
         </form>
@@ -688,9 +952,9 @@ function SubmitReviewModal({
   isPending,
   onClose,
   onSubmit,
-}: {
-  document: DocumentRowLive | null;
-  members: { userId: string; name: string; email: string; role: string }[];
+  }: {
+    document: DocumentRowLive | null;
+    members: { userId: string; name: string; email: string; role: string; canApprove: boolean }[];
   isPending: boolean;
   onClose: () => void;
   onSubmit: (approverIds: string[]) => void;
@@ -705,7 +969,7 @@ function SubmitReviewModal({
             Selecciona las personas que deben aprobar <strong>{doc.code}</strong>. Recibirán una notificación.
           </p>
           <div style={{ maxHeight: 280, overflow: "auto", border: "1px solid var(--nf-line)", borderRadius: 8 }}>
-            {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER").map((m) => (
+            {members.filter((m) => m.canApprove).map((m) => (
               <label key={m.userId} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid var(--nf-line)", cursor: "pointer" }}>
                 <input
                   type="checkbox"
@@ -722,7 +986,7 @@ function SubmitReviewModal({
                 </div>
               </label>
             ))}
-            {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER").length === 0 && (
+            {members.filter((m) => m.canApprove).length === 0 && (
               <div style={{ padding: 20, textAlign: "center", fontSize: 13, color: "var(--nf-ink-4)" }}>
                 No hay aprobadores disponibles. Invita un Admin o Compliance Manager primero.
               </div>
@@ -841,10 +1105,12 @@ function DocumentDetailModal({
   memberLookup,
   canCreate,
   canApprove,
+  canObsolete,
   currentUserId,
   isPending,
   onClose,
   onEdit,
+  onEditContent,
   onUpload,
   onSubmitReview,
   onApprove,
@@ -857,10 +1123,12 @@ function DocumentDetailModal({
   memberLookup: Map<string, string>;
   canCreate: boolean;
   canApprove: boolean;
+  canObsolete: boolean;
   currentUserId: string;
   isPending: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onEditContent: () => void;
   onUpload: () => void;
   onSubmitReview: () => void;
   onApprove: (comment?: string) => void;
@@ -877,7 +1145,7 @@ function DocumentDetailModal({
   const canShowSubmit = canCreate && doc.status === "DRAFT" && doc.versions.length > 0;
   const canShowUpload = canCreate && (doc.status === "DRAFT" || doc.status === "APPROVED");
   const canShowDelete = canCreate && doc.status === "DRAFT";
-  const canShowObsolete = canApprove && doc.status === "APPROVED";
+  const canShowObsolete = canObsolete && doc.status === "APPROVED";
 
   return (
     <Modal open onClose={onClose} title={`${doc.code} — ${doc.title}`} width={820}>
@@ -959,9 +1227,12 @@ function DocumentDetailModal({
             </>
           )}
           {canCreate && doc.status === "DRAFT" && (
-            <button type="button" onClick={onEdit} className="nf-app-btn-ghost">
-              <Pencil size={14} aria-hidden /> Editar metadata
-            </button>
+            <>
+              <button type="button" onClick={onEdit} className="nf-app-btn-ghost">
+                <Pencil size={14} aria-hidden /> Editar metadata
+              </button>
+              {doc.content && <button type="button" onClick={onEditContent} className="nf-app-btn-ghost"><FileText size={14} aria-hidden /> Editar contenido</button>}
+            </>
           )}
           {canShowDelete && (
             <button type="button" onClick={onDelete} className="nf-app-btn-danger">Borrar borrador</button>
@@ -1025,6 +1296,7 @@ function VersionRow({
 }) {
   const [loading, setLoading] = useState(false);
   const [openError, setOpenError] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   async function openFile() {
     if (!v.fileUrl) return;
@@ -1039,9 +1311,24 @@ function VersionRow({
     }
   }
 
+  async function previewFile() {
+    if (!v.fileUrl) return;
+    setLoading(true);
+    try {
+      setPreviewUrl(await getDocumentVersionUrl(v.id));
+    } catch (err) {
+      setOpenError(err instanceof Error ? err.message : "No se pudo generar la vista previa.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const isPdf = v.mimeType === "application/pdf" || /\.pdf($|\?)/i.test(v.fileUrl ?? "");
+  const isImage = v.mimeType?.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg)($|\?)/i.test(v.fileUrl ?? "");
+
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: "60px 1fr auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "60px minmax(0, 1fr) auto auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
         <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#5266F6" }}>v{v.version}</span>
         <div>
           <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>
@@ -1052,17 +1339,32 @@ function VersionRow({
             {v.fileSize && ` · ${Math.round(v.fileSize / 1024)} KB`}
           </div>
         </div>
+        <Badge status={v.status} label={v.status === "PENDING" ? "En revisión" : v.status === "APPROVED" ? "Aprobada" : v.status === "REJECTED" ? "Devuelta" : "Borrador"} />
         {v.previousVersion && (
           <span style={{ fontSize: 10, color: "var(--nf-ink-4)", fontFamily: "monospace" }}>
             ← v{v.previousVersion}
           </span>
         )}
         {v.fileUrl && (
-          <button type="button" onClick={openFile} disabled={loading} className="nf-app-btn-ghost" title="Abrir archivo">
-            {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Download size={14} />}
-          </button>
+          <div style={{ display: "flex", gap: 5 }}>
+            {(isPdf || isImage) && (
+              <button type="button" onClick={() => void previewFile()} disabled={loading} className="nf-app-btn-ghost" title="Vista previa">
+                {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Eye size={14} />}
+              </button>
+            )}
+            <button type="button" onClick={() => void openFile()} disabled={loading} className="nf-app-btn-ghost" title="Abrir o descargar archivo">
+              {loading ? <Loader2 size={14} className="nf-icon-spin" /> : <Download size={14} />}
+            </button>
+          </div>
         )}
       </div>
+      <Modal open={previewUrl != null} onClose={() => setPreviewUrl(null)} title={`Vista previa · v${v.version}`} width={900}>
+        {previewUrl && (isImage ? (
+          <img src={previewUrl} alt={`Vista previa de la versión ${v.version}`} style={{ display: "block", maxWidth: "100%", maxHeight: "70vh", margin: "0 auto", borderRadius: 8 }} />
+        ) : (
+          <iframe title={`Vista previa de la versión ${v.version}`} src={previewUrl} style={{ width: "100%", height: "70vh", border: "1px solid var(--nf-line)", borderRadius: 8 }} />
+        ))}
+      </Modal>
       <ConfirmActionModal
         open={!!openError}
         title="No se pudo abrir el archivo"

@@ -133,6 +133,7 @@ export default function ACPMClient() {
           priority: String(fd.get("priority") || "MEDIUM") as ACPMPriority,
           source: String(fd.get("source") || "") || undefined,
           dueDate: String(fd.get("dueDate") || "") || undefined,
+          ownerId: String(fd.get("ownerId") || "") || undefined,
         });
         setCreating(false);
       } catch (err: unknown) {
@@ -453,6 +454,14 @@ export default function ACPMClient() {
           </div>
           <Field label="Origen">
             <input name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
+          </Field>
+          <Field label="Responsable de la acción">
+            <select name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
+              <option value="">— Sin asignar por ahora —</option>
+              {personnel.filter((person) => person.active).map((person) => (
+                <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
+              ))}
+            </select>
           </Field>
           {createError && <div className="nf-modal-error">{createError}</div>}
           <div className="nf-modal-actions">

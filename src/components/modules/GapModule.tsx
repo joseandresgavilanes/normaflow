@@ -10,6 +10,7 @@ import Modal from "@/components/ui/Modal";
 import { DEMO_GAP } from "@/lib/demo-data";
 import type { GapPayload } from "@/lib/server-queries";
 import { updateAssessmentAnswer, exportGapReport } from "@/lib/actions/gap";
+import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { adoptStandard } from "@/lib/actions/standards";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import type { GapClauseState } from "@/lib/demo/seed-entities";
@@ -94,18 +95,6 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
   const weakClauses = data.filter(g => g.score < 70).slice(0, 4);
 
-  function downloadBase64(base64: string, mime: string, name: string) {
-    const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
   function exportPdf() {
     // En vivo genera un PDF corporativo en el servidor; en demo usa impresión limpia.
     if (readOnlyLive) {
@@ -113,7 +102,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
       startTransition(async () => {
         try {
           const r = await exportGapReport(code);
-          downloadBase64(r.base64, r.mimeType, r.fileName);
+          await downloadQueuedReport(r.id);
         } catch (err) {
           showToast(err instanceof Error ? err.message : "No se pudo generar el PDF.");
         }

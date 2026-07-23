@@ -1,12 +1,12 @@
-import { AdminGate } from "@/components/admin/AdminPageGate";
+import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import { RetentionCatalogClient } from "@/components/admin/CatalogClient";
 
 export const metadata = { title: "Tiempo de retención — NormaFlow" };
 
 export default function RetentionPage() {
   return (
-    <AdminGate permission="catalogs:read">
+    <ServerPermissionGate permission="catalogs:read">
       <RetentionCatalogClient />
-    </AdminGate>
+    </ServerPermissionGate>
   );
 }

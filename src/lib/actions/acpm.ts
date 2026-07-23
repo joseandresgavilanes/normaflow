@@ -1,11 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ACPMStage, ActionStatus, ActionType, Priority } from "@prisma/client";
+import { ACPMStage, ActionStatus, ActionType, Priority, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { logAuditEvent, writeAuditLog } from "@/lib/audit-log";
 import { notifyUser, notifyUsers } from "@/lib/notify";
+import { assertCollaboratorCanAccess } from "@/lib/permissions/scope";
+import { assertACPMTransition, canCloseACPM, rejectionStage } from "@/lib/acpm-workflow";
+import { parseId, parseInput } from "@/lib/validation/common";
+import { acpmCreateSchema, acpmTransitionSchema, acpmUpdateSchema } from "@/lib/validation/workflows";
 
 const PATH = "/app/actions";
 
@@ -21,17 +25,17 @@ function stageTransitionMessage(toStage: ACPMStage): string {
   }
 }
 
-async function nextACPMCode(organizationId: string): Promise<string> {
+async function nextACPMCode(organizationId: string, db: Pick<Prisma.TransactionClient, "action"> = prisma): Promise<string> {
   const year = new Date().getFullYear();
   const prefix = `ACPM-${year}-`;
-  const last = await prisma.action.findFirst({
+  const last = await db.action.findFirst({
     where: { organizationId, title: { startsWith: "" } /* placeholder */ },
     orderBy: { createdAt: "desc" },
     select: { description: true },
   });
   // Codes se guardan en `description` solo si no hay un campo dedicado. Como no
   // hay un campo "code" en Action, derivamos por contador simple sobre createdAt del año.
-  const count = await prisma.action.count({
+  const count = await db.action.count({
     where: {
       organizationId,
       createdAt: { gte: new Date(`${year}-01-01T00:00:00Z`) },
@@ -48,37 +52,57 @@ export type CreateACPMInput = {
   priority: Priority;
   source?: string;
   dueDate?: string;
+  ownerId?: string;
 };
 
 export async function createACPM(input: CreateACPMInput): Promise<{ id: string; code: string }> {
+  input = parseInput(acpmCreateSchema, input) as CreateACPMInput;
   const ctx = await requirePermission("actions:*");
   const title = input.title.trim();
   if (!title) throw new Error("El título es obligatorio.");
+  if (input.ownerId) {
+    const ownerMembership = await prisma.membership.findUnique({
+      where: { userId_organizationId: { userId: input.ownerId, organizationId: ctx.organization.id } },
+      select: { id: true },
+    });
+    if (!ownerMembership) throw new Error("La persona responsable no pertenece a la organización.");
+  }
 
-  const code = await nextACPMCode(ctx.organization.id);
-  const created = await prisma.action.create({
-    data: {
+  const createdResult = await prisma.$transaction(async (tx) => {
+    // Action has no dedicated code column; serialize the derived sequence per tenant/year.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`acpm:${ctx.organization.id}:${new Date().getUTCFullYear()}`}))`;
+    const code = await nextACPMCode(ctx.organization.id, tx);
+    const created = await tx.action.create({
+      data: {
+        organizationId: ctx.organization.id,
+        title: `${code} · ${title}`,
+        description: input.description?.trim() || null,
+        type: input.type,
+        priority: input.priority,
+        status: ActionStatus.PENDING,
+        stage: ACPMStage.REQUEST,
+        source: input.source?.trim() || null,
+        requestedById: ctx.user.id,
+        ownerId: input.ownerId || null,
+        dueDate: input.dueDate ? new Date(input.dueDate) : null,
+        progress: 0,
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: "acpm", recordId: created.id, after: { code, title, type: input.type, priority: input.priority, stage: "REQUEST" } });
+    return { created, code };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  const { created, code } = createdResult;
+
+  if (created.ownerId && created.ownerId !== ctx.user.id) {
+    await notifyUser({
       organizationId: ctx.organization.id,
-      title: `${code} · ${title}`,
-      description: input.description?.trim() || null,
-      type: input.type,
-      priority: input.priority,
-      status: ActionStatus.PENDING,
-      stage: ACPMStage.REQUEST,
-      source: input.source?.trim() || null,
-      requestedById: ctx.user.id,
-      dueDate: input.dueDate ? new Date(input.dueDate) : null,
-      progress: 0,
-    },
-  });
-
-  await logAuditEvent({
-    ctx,
-    action: "create",
-    module: "acpm",
-    recordId: created.id,
-    after: { code, title, type: input.type, priority: input.priority, stage: "REQUEST" },
-  });
+      userId: created.ownerId,
+      title: "Se te asignó una acción correctiva (ACPM)",
+      body: `Eres responsable de «${created.title}». Revisa el plan de acción y sus fechas objetivo.`,
+      type: "WARNING",
+      link: PATH,
+    });
+  }
 
   revalidatePath(PATH);
   revalidatePath("/app/activity");
@@ -101,9 +125,12 @@ export type UpdateACPMFields = {
 };
 
 export async function updateACPMFields(id: string, input: UpdateACPMFields): Promise<void> {
+  id = parseId(id);
+  input = parseInput(acpmUpdateSchema, input) as UpdateACPMFields;
   const ctx = await requirePermission("actions:update");
   const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
+  await assertCollaboratorCanAccess(ctx, "actionIds", id);
 
   const patch: Record<string, unknown> = {};
   if (input.title !== undefined) patch.title = input.title.trim();
@@ -127,15 +154,23 @@ export async function updateACPMFields(id: string, input: UpdateACPMFields): Pro
     if (!ownerMembership) throw new Error("La persona responsable no pertenece a la organización.");
   }
 
-  await prisma.action.update({ where: { id }, data: patch });
-  await logAuditEvent({
-    ctx,
-    action: "update",
-    module: "acpm",
-    recordId: id,
-    before: { stage: existing.stage, progress: existing.progress },
-    after: patch,
+  const changed = await prisma.$transaction(async (tx) => {
+    const result = await tx.action.updateMany({
+      where: { id, organizationId: ctx.organization.id, updatedAt: existing.updatedAt },
+      data: patch,
+    });
+    if (result.count !== 1) throw new Error("La ACPM cambió mientras la editabas. Recarga e inténtalo nuevamente.");
+    await writeAuditLog(tx, {
+      ctx,
+      action: "update",
+      module: "acpm",
+      recordId: id,
+      before: { stage: existing.stage, progress: existing.progress },
+      after: patch,
+    });
+    return result;
   });
+  void changed;
   if (input.ownerId && input.ownerId !== existing.ownerId && input.ownerId !== ctx.user.id) {
     await notifyUser({
       organizationId: ctx.organization.id,
@@ -155,17 +190,30 @@ export async function transitionACPM(
   toStage: ACPMStage,
   comment?: string
 ): Promise<void> {
-  const ctx = await requirePermission("actions:*");
+  id = parseId(id);
+  ({ stage: toStage, comment } = parseInput(acpmTransitionSchema, { stage: toStage, comment }));
+  if (!Object.values(ACPMStage).includes(toStage)) throw new Error("La etapa ACPM no es válida.");
+  const requiresApproval = toStage === ACPMStage.ANALYSIS || toStage === ACPMStage.IMPLEMENTATION || toStage === ACPMStage.CLOSED;
+  const ctx = await requirePermission(requiresApproval ? "actions:approve" : "actions:update");
   const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
-  if (existing.stage === toStage) return;
+  await assertCollaboratorCanAccess(ctx, "actionIds", id);
+  assertACPMTransition(existing.stage, toStage);
 
   if (toStage === "SOLUTION_APPROVAL") {
     if (!existing.rootCause?.trim()) throw new Error("Documenta la causa raíz antes de enviar la solución a aprobación.");
     if (!existing.proposedSolution?.trim()) throw new Error("Documenta la solución propuesta antes de enviarla a aprobación.");
   }
-  if (toStage === "CLOSED" && !existing.effectivenessCheck?.trim()) {
-    throw new Error("Documenta la verificación de eficacia antes de cerrar.");
+  if (toStage === "VERIFICATION" && existing.progress < 100) {
+    throw new Error("La implementación debe estar al 100% antes de verificar su eficacia.");
+  }
+  if (toStage === "CLOSED" && !canCloseACPM({
+    stage: existing.stage,
+    progress: existing.progress,
+    effectivenessEvidence: existing.effectivenessCheck,
+    effectivenessVerifiedAt: existing.effectivenessAt,
+  })) {
+    throw new Error("No se puede cerrar: registra evidencia y fecha de verificación de eficacia después de completar la implementación.");
   }
 
   const patch: Record<string, unknown> = { stage: toStage };
@@ -182,16 +230,23 @@ export async function transitionACPM(
     if (!existing.effectivenessAt) patch.effectivenessAt = new Date();
   }
 
-  await prisma.action.update({ where: { id }, data: patch });
-
-  await logAuditEvent({
-    ctx,
-    action: toStage === "CLOSED" ? "close" : toStage === "ANALYSIS" && existing.stage === "REQUEST_APPROVAL" ? "approve" : toStage === "IMPLEMENTATION" && existing.stage === "SOLUTION_APPROVAL" ? "approve" : "transition",
-    module: "acpm",
-    recordId: id,
-    before: { stage: existing.stage },
-    after: { stage: toStage },
-    extra: { message: comment ?? stageTransitionMessage(toStage) },
+  const updated = await prisma.$transaction(async (tx) => {
+    const result = await tx.action.updateMany({
+      where: { id, organizationId: ctx.organization.id, stage: existing.stage, updatedAt: existing.updatedAt },
+      data: patch,
+    });
+    if (result.count !== 1) throw new Error("La ACPM cambió mientras se procesaba la transición. Recarga e inténtalo nuevamente.");
+    const after = { stage: toStage, status: patch.status ?? existing.status, progress: patch.progress ?? existing.progress, effectivenessEvidence: patch.effectivenessCheck ?? existing.effectivenessCheck, effectivenessVerifiedAt: patch.effectivenessAt instanceof Date ? patch.effectivenessAt.toISOString() : existing.effectivenessAt?.toISOString() ?? null };
+    await writeAuditLog(tx, {
+      ctx,
+      action: toStage === "CLOSED" ? "close" : toStage === "ANALYSIS" && existing.stage === "REQUEST_APPROVAL" ? "approve" : toStage === "IMPLEMENTATION" && existing.stage === "SOLUTION_APPROVAL" ? "approve" : "transition",
+      module: "acpm",
+      recordId: id,
+      before: { stage: existing.stage, status: existing.status, progress: existing.progress, effectivenessEvidence: existing.effectivenessCheck, effectivenessVerifiedAt: existing.effectivenessAt?.toISOString() ?? null },
+      after,
+      extra: { message: comment?.trim() || stageTransitionMessage(toStage) },
+    });
+    return { stage: toStage, status: after.status, progress: after.progress, effectivenessCheck: after.effectivenessEvidence, effectivenessAt: after.effectivenessVerifiedAt ? new Date(after.effectivenessVerifiedAt) : null };
   });
 
   // Notify owner + requester (excluding whoever performed the transition).
@@ -212,17 +267,16 @@ export async function transitionACPM(
 }
 
 export async function rejectACPM(id: string, comment: string): Promise<void> {
-  const ctx = await requirePermission("actions:*");
+  id = parseId(id);
+  comment = parseInput(acpmTransitionSchema.pick({ comment: true }), { comment }).comment ?? "";
+  const ctx = await requirePermission("actions:approve");
   const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
   if (!comment.trim()) throw new Error("Indica el motivo del rechazo.");
 
-  const back: ACPMStage =
-    existing.stage === "REQUEST_APPROVAL" ? "REQUEST"
-    : existing.stage === "SOLUTION_APPROVAL" ? "ANALYSIS"
-    : existing.stage;
-
-  if (back === existing.stage) throw new Error("Esta etapa no admite rechazo.");
+  await assertCollaboratorCanAccess(ctx, "actionIds", id);
+  const back = rejectionStage(existing.stage);
+  if (!back) throw new Error("Esta etapa no admite rechazo.");
 
   await prisma.action.update({ where: { id }, data: { stage: back } });
 
@@ -253,9 +307,12 @@ export async function rejectACPM(id: string, comment: string): Promise<void> {
 }
 
 export async function commentACPM(id: string, message: string): Promise<void> {
+  id = parseId(id);
+  message = parseInput(acpmTransitionSchema.pick({ comment: true }), { comment: message }).comment ?? "";
   const ctx = await requirePermission("actions:update");
   const existing = await prisma.action.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("ACPM no encontrada.");
+  await assertCollaboratorCanAccess(ctx, "actionIds", id);
   if (!message.trim()) throw new Error("Escribe un comentario.");
 
   await prisma.actionComment.create({
@@ -269,6 +326,17 @@ export async function commentACPM(id: string, message: string): Promise<void> {
     recordId: id,
     extra: { message: message.trim().slice(0, 200) },
   });
+  await notifyUsers(
+    [existing.ownerId, existing.requestedById],
+    {
+      organizationId: ctx.organization.id,
+      title: "Nuevo comentario en una ACPM",
+      body: `Se añadió un comentario en «${existing.title}»: ${message.trim().slice(0, 240)}`,
+      type: "INFO",
+      link: PATH,
+    },
+    { skipUserId: ctx.user.id },
+  );
   revalidatePath(PATH);
   revalidatePath("/app/activity");
 }

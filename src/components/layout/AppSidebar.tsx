@@ -19,6 +19,7 @@ import {
   FolderTree,
   GraduationCap,
   LayoutDashboard,
+  Lightbulb,
   LogOut,
   MapPin,
   Milestone,
@@ -36,12 +37,21 @@ import {
   Zap,
   CircleOff,
   Gavel,
+  LockKeyhole,
+  FileCheck2,
+  ShieldAlert,
+  Boxes,
+  Siren,
+  Bug,
+  LifeBuoy,
+  Handshake,
 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import { getDemoOrg } from "@/lib/demo/organizations";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { planHasModule } from "@/lib/constants";
 
 const NAV: { href: string; Icon: LucideIcon; labelKey: MessageKey }[] = [
   { href: "/app/dashboard", Icon: LayoutDashboard, labelKey: "nav.home" },
@@ -53,6 +63,7 @@ const NAV: { href: string; Icon: LucideIcon; labelKey: MessageKey }[] = [
   { href: "/app/changes", Icon: RefreshCw, labelKey: "nav.changes" },
   { href: "/app/processes", Icon: Workflow, labelKey: "nav.processes" },
   { href: "/app/risks", Icon: AlertTriangle, labelKey: "nav.risks" },
+  { href: "/app/opportunities", Icon: Lightbulb, labelKey: "nav.opportunities" },
   { href: "/app/suppliers", Icon: Factory, labelKey: "nav.suppliers" },
   { href: "/app/audit-program", Icon: CalendarRange, labelKey: "nav.auditProgram" },
   { href: "/app/audits", Icon: ClipboardCheck, labelKey: "nav.audits" },
@@ -61,6 +72,14 @@ const NAV: { href: string; Icon: LucideIcon; labelKey: MessageKey }[] = [
   { href: "/app/actions", Icon: Zap, labelKey: "nav.actions" },
   { href: "/app/indicators", Icon: BarChart3, labelKey: "nav.indicators" },
   { href: "/app/evidence", Icon: Paperclip, labelKey: "nav.evidence" },
+  { href: "/app/security-controls", Icon: LockKeyhole, labelKey: "nav.securityControls" },
+  { href: "/app/assets", Icon: Boxes, labelKey: "nav.assets" },
+  { href: "/app/soa", Icon: FileCheck2, labelKey: "nav.soa" },
+  { href: "/app/risk-treatment", Icon: ShieldAlert, labelKey: "nav.riskTreatment" },
+  { href: "/app/incidents", Icon: Siren, labelKey: "nav.incidents" },
+  { href: "/app/vulnerabilities", Icon: Bug, labelKey: "nav.vulnerabilities" },
+  { href: "/app/continuity", Icon: LifeBuoy, labelKey: "nav.continuity" },
+  { href: "/app/suppliers/security", Icon: Handshake, labelKey: "nav.supplierSecurity" },
   { href: "/app/integrations", Icon: Plug, labelKey: "nav.integrations" },
   { href: "/app/reporting", Icon: ScrollText, labelKey: "nav.reporting" },
   { href: "/app/activity", Icon: Activity, labelKey: "nav.activity" },
@@ -92,6 +111,7 @@ const ADMIN_GROUPS: {
         labelKey: "nav.archiveMethod",
       },
       { href: "/app/catalogs/record-type", Icon: FileText, labelKey: "nav.recordType" },
+      { href: "/app/settings/catalogs", Icon: ClipboardCheck, labelKey: "nav.catalogs" },
     ],
   },
   {
@@ -124,11 +144,18 @@ function NavIcon({
   );
 }
 
+function moduleForPath(href: string) {
+  return /^\/app\/([^/]+)/.exec(href)?.[1] ?? null;
+}
+
 export default function AppSidebar({
   onAI,
   orgName,
   userName,
   roleLabel,
+  roleKey,
+  plan = "STARTER",
+  trialActive = false,
   memberships = [],
   currentOrgId,
   onOrgChange,
@@ -141,6 +168,9 @@ export default function AppSidebar({
   orgName: string;
   userName: string;
   roleLabel: string;
+  roleKey?: string;
+  plan?: string;
+  trialActive?: boolean;
   memberships?: Membership[];
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
@@ -154,6 +184,13 @@ export default function AppSidebar({
   const { t } = useI18n();
   const sidebarName = ws?.state.session.name ?? userName;
   const sidebarRole = ws?.state.session.roleLabel ?? roleLabel;
+  const activeRoleKey = ws?.state.session.roleKey ?? roleKey;
+  const contributorNav = new Set([
+    "/app/dashboard", "/app/documents", "/app/records", "/app/training", "/app/changes",
+    "/app/processes", "/app/risks", "/app/opportunities", "/app/suppliers", "/app/audits",
+    "/app/nonconformities", "/app/actions", "/app/indicators", "/app/evidence", "/app/notifications", "/app/settings",
+  ]);
+  const visibleNav = activeRoleKey === "CONTRIBUTOR" ? NAV.filter((item) => contributorNav.has(item.href)) : NAV;
   const displayOrgName = ws?.state.session.orgName ?? orgName;
   const demoAccent =
     demoSession && ws
@@ -224,17 +261,21 @@ export default function AppSidebar({
       </div>
 
       <nav className="nf-sidebar-nav">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const active = pathname === item.href;
+          const navModule = moduleForPath(item.href);
+          const locked = Boolean(navModule && !planHasModule(plan, navModule, trialActive));
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={locked ? `/app/billing?upgrade=${navModule}` : item.href}
               onClick={() => onNavigate?.()}
               className={`nf-sidebar-nav-link${active ? " nf-sidebar-nav-link--active" : ""}`}
+              title={locked ? "Disponible desde Growth" : undefined}
             >
               <NavIcon Icon={item.Icon} active={active} />
               {t(item.labelKey)}
+              {locked && <LockKeyhole size={13} style={{ marginLeft: "auto", color: "#9aa6b5" }} aria-label="Disponible desde Growth" />}
             </Link>
           );
         })}

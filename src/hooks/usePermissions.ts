@@ -1,13 +1,12 @@
 "use client";
-import { PERMISSIONS } from "@/lib/constants";
 import { useUser } from "./useUser";
+import { canFrontend } from "@/lib/permissions/frontend";
 
 export function usePermissions() {
   const { user } = useUser();
 
   function can(action: string): boolean {
-    const perms = PERMISSIONS[user.role] as readonly string[];
-    return perms.includes("*") || perms.includes(action);
+    return canFrontend(user.role, action);
   }
 
   function canAny(...actions: string[]): boolean {

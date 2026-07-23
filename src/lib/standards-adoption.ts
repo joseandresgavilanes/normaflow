@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clauseIdFor, getStandardSpec, type StandardSpec } from "@/lib/standards-catalog";
+import { ensureSecurityControlCatalog, ensureOrganizationControlSet } from "@/lib/security-control-catalog";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
@@ -120,6 +121,11 @@ export async function adoptStandardForOrganization(args: {
       })),
       skipDuplicates: true,
     });
+  }
+
+  if (args.standardCode === "ISO_27001") {
+    await ensureSecurityControlCatalog(db);
+    await ensureOrganizationControlSet(args.organizationId, db);
   }
 
   return { adoptionId: adoption.id, assessmentId: assessment.id, answersCreated: missing.length };

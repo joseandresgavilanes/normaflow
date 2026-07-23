@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getAppContext } from "@/lib/app-context";
 import { detectLocale, LOCALE_COOKIE, normalizeLocale, type Locale } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/messages";
+import { canUseAI } from "@/lib/plan-entitlements";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -69,9 +70,7 @@ export async function POST(req: NextRequest) {
 
     // El asistente IA está incluido en Growth/Enterprise y durante el trial.
     if (ctx.mode === "live") {
-      const plan = ctx.organization.plan;
-      const inTrial = ctx.organization.trialEndsAt != null && ctx.organization.trialEndsAt > new Date();
-      if (plan === "STARTER" && !inTrial) {
+      if (!canUseAI(ctx.organization)) {
         return NextResponse.json(
           { error: translate(requestLocale, "ai.api.plan") },
           { status: 402 }

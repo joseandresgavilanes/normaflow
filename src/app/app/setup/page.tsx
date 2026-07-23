@@ -11,6 +11,7 @@ export default async function SetupPage() {
   const ctx = await getAppContext();
   let live = null;
   if (ctx?.mode === "live") {
+    if (ctx.role === "CONTRIBUTOR") return <AccessDenied />;
     try {
       live = await getSetupPayload();
     } catch (err) {

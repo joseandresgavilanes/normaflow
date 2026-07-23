@@ -1,7 +1,7 @@
 import AccessDenied from "@/components/app/AccessDenied";
 import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import EvidenceModule from "@/components/modules/EvidenceModule";
-import { EvidenceLiveClient } from "@/components/operations/IndicatorEvidenceLive";
+import { EvidenceRepositoryLiveClient } from "@/components/evidence/EvidenceRepositoryLiveClient";
 import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getEvidencePayload } from "@/lib/server-queries";
@@ -14,7 +14,7 @@ export default async function EvidencePage() {
 
   if (context?.mode === "live") {
     try {
-      return <EvidenceLiveClient initial={await getEvidencePayload()} />;
+      return <EvidenceRepositoryLiveClient initial={await getEvidencePayload()} />;
     } catch (error) {
       if (isAuthorizationError(error)) return <AccessDenied />;
       console.error("[evidence] live payload failed:", error);

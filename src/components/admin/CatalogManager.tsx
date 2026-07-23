@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 
 export type CatalogRow = {
   id: string;
+  code?: string | null;
   name: string;
   description?: string | null;
   months?: number | null;
@@ -19,7 +20,7 @@ export type CatalogRow = {
 };
 
 export type CatalogField = {
-  key: "name" | "description" | "months";
+  key: "name" | "code" | "description" | "months";
   label: string;
   type: "text" | "textarea" | "number";
   required?: boolean;
@@ -43,8 +44,8 @@ export default function CatalogManager({
   fields: CatalogField[];
   canEdit: boolean;
   emptyText?: string;
-  onCreate: (form: { name: string; description?: string; months?: number }) => Promise<void>;
-  onUpdate: (id: string, form: { name?: string; description?: string; months?: number; active?: boolean }) => Promise<void>;
+  onCreate: (form: { name: string; code?: string; description?: string; months?: number }) => Promise<void>;
+  onUpdate: (id: string, form: { name?: string; code?: string; description?: string; months?: number; active?: boolean }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
   const [search, setSearch] = useState("");
@@ -81,6 +82,9 @@ export default function CatalogManager({
       ),
     },
   ];
+  if (fields.some((f) => f.key === "code")) {
+    columns.unshift({ key: "code", label: "Código", render: (_, r) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code ?? "—"}</span> });
+  }
   if (fields.some((f) => f.key === "months")) {
     columns.push({
       key: "months",
@@ -137,9 +141,10 @@ export default function CatalogManager({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>, mode: "create" | "edit") {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const payload: { name: string; description?: string; months?: number } = {
+    const payload: { name: string; code?: string; description?: string; months?: number } = {
       name: String(fd.get("name") || ""),
     };
+    if (fields.some((f) => f.key === "code")) payload.code = String(fd.get("code") || "");
     if (fields.some((f) => f.key === "description")) {
       payload.description = String(fd.get("description") || "");
     }
@@ -237,7 +242,7 @@ export default function CatalogManager({
                   type="text"
                   name={f.key}
                   required={f.required}
-                  defaultValue={editing ? (f.key === "name" ? editing.name : f.key === "description" ? editing.description ?? "" : "") : ""}
+                  defaultValue={editing ? (f.key === "name" ? editing.name : f.key === "code" ? editing.code ?? "" : f.key === "description" ? editing.description ?? "" : "") : ""}
                   className={NF_INPUT_CLASS} style={modalInputStyle}
                 />
               )}
@@ -312,5 +317,4 @@ export default function CatalogManager({
     </div>
   );
 }
-
 

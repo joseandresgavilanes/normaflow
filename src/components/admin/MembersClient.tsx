@@ -16,6 +16,9 @@ import { formatDate } from "@/lib/utils";
 type Role = OrgMemberMockRow["role"];
 
 const ROLE_LABELS: Record<Role, string> = {
+  OWNER: "Owner",
+  ADMIN: "Admin",
+  MANAGER: "Manager",
   SUPER_ADMIN: "Super Admin",
   ORG_ADMIN: "Admin de Organización",
   COMPLIANCE_MANAGER: "Compliance Manager",
@@ -24,7 +27,7 @@ const ROLE_LABELS: Record<Role, string> = {
   VIEWER: "Visor",
 };
 
-const ASSIGNABLE_ROLES: Role[] = ["ORG_ADMIN", "COMPLIANCE_MANAGER", "AUDITOR", "CONTRIBUTOR", "VIEWER"];
+const ASSIGNABLE_ROLES: Role[] = ["OWNER", "ADMIN", "MANAGER", "AUDITOR", "VIEWER", "ORG_ADMIN", "COMPLIANCE_MANAGER", "CONTRIBUTOR"];
 
 export default function MembersClient() {
   const admin = useAdminMock();
@@ -35,7 +38,7 @@ export default function MembersClient() {
   const plan = admin.state.organization.plan as PlanKey;
   const planInfo = PLAN_LIMITS[plan];
   const maxUsers = planInfo?.maxUsers ?? null;
-  const usedUsers = rows.length;
+  const usedUsers = rows.filter((row) => row.active !== false).length;
   const atLimit = maxUsers !== null && usedUsers >= maxUsers;
   const nearLimit = maxUsers !== null && !atLimit && usedUsers / maxUsers >= 0.8;
 
@@ -45,7 +48,7 @@ export default function MembersClient() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
-  const isDemoMode = process.env.NEXT_PUBLIC_AUTH_DEMO_MODE === "true";
+  const isDemoMode = admin.mode === "demo";
   const orgName = admin.state.organization.name;
 
   const filtered = useMemo(() => {
@@ -88,6 +91,11 @@ export default function MembersClient() {
       ),
     },
     {
+      key: "active",
+      label: "Estado",
+      render: (_, r) => <Badge status={r.active === false ? "OBSOLETE" : "ACTIVE"} label={r.active === false ? "Inactivo" : "Activo"} />,
+    },
+    {
       key: "role",
       label: "Rol",
       render: (_, r) => (
@@ -113,7 +121,27 @@ export default function MembersClient() {
       label: "",
       render: (_, r) =>
         r.isSelf ? null : (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div className="flex justify-end gap-2" style={{ flexWrap: "wrap" }}>
+            {admin.resendMemberInvite && (
+              <button type="button" disabled={isPending} onClick={() => startTransition(async () => {
+                try {
+                  await admin.resendMemberInvite?.(r.membershipId);
+                  setSuccess("Invitación reenviada.");
+                } catch (err: unknown) {
+                  setError(err instanceof Error ? err.message : "No se pudo reenviar la invitación.");
+                }
+              })} className="nf-app-btn-ghost">Reenviar</button>
+            )}
+            {admin.setMemberActive && (
+              <button type="button" disabled={isPending} onClick={() => startTransition(async () => {
+                try {
+                  await admin.setMemberActive?.(r.membershipId, r.active === false);
+                  setSuccess(r.active === false ? "Usuario activado." : "Usuario desactivado.");
+                } catch (err: unknown) {
+                  setError(err instanceof Error ? err.message : "No se pudo actualizar el estado.");
+                }
+              })} className={r.active === false ? "nf-app-btn-primary" : "nf-app-btn-ghost"}>{r.active === false ? "Activar" : "Desactivar"}</button>
+            )}
             <button type="button" onClick={() => setConfirmRemove(r)} className="nf-app-btn-danger">Quitar</button>
           </div>
         ),
@@ -279,4 +307,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-

@@ -54,18 +54,21 @@ function delegateFor(c: SimpleCatalog): GenericDelegate {
 
 export async function createSimpleCatalog(
   catalog: SimpleCatalog,
-  data: { name: string; description?: string }
+  data: { name: string; description?: string; code?: string }
 ) {
   const meta = CATALOG_META[catalog];
   const ctx = await requirePermission(meta.permission);
   const name = data.name.trim();
   if (!name) throw new Error(`El nombre de ${meta.label} es obligatorio.`);
+  const code = catalog === "recordType" ? data.code?.trim() || null : null;
+  if (catalog === "recordType" && !code) throw new Error("El código del tipo de registro es obligatorio.");
 
   const delegate = delegateFor(catalog);
 
   const created = await delegate.create({
     data: {
       organizationId: ctx.organization.id,
+      ...(catalog === "recordType" ? { code } : {}),
       name,
       description: catalog === "location" || catalog === "position" ? data.description?.trim() || null : undefined,
     },
@@ -76,7 +79,7 @@ export async function createSimpleCatalog(
     action: "create",
     module: meta.module,
     recordId: created.id,
-    after: { name, description: data.description },
+    after: { name, code, description: data.description },
   });
   revalidatePath(meta.pagePath);
 }
@@ -84,7 +87,7 @@ export async function createSimpleCatalog(
 export async function updateSimpleCatalog(
   catalog: SimpleCatalog,
   id: string,
-  data: { name?: string; description?: string; active?: boolean }
+  data: { name?: string; code?: string; description?: string; active?: boolean }
 ) {
   const meta = CATALOG_META[catalog];
   const ctx = await requirePermission(meta.permission);
@@ -96,6 +99,11 @@ export async function updateSimpleCatalog(
 
   const updatePayload: Record<string, unknown> = {};
   if (data.name !== undefined) updatePayload.name = data.name.trim();
+  if (catalog === "recordType" && data.code !== undefined) {
+    const code = data.code.trim();
+    if (!code) throw new Error("El código del tipo de registro es obligatorio.");
+    updatePayload.code = code;
+  }
   if (data.active !== undefined) updatePayload.active = data.active;
   if ((catalog === "location" || catalog === "position") && data.description !== undefined) {
     updatePayload.description = data.description.trim() || null;

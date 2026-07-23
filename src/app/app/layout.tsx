@@ -14,6 +14,8 @@ function serializeContext(
         id: ctx.organization.id,
         name: ctx.organization.name,
         plan: ctx.organization.plan,
+        onboardingStatus: ctx.organization.onboardingStatus,
+        trialEndsAt: ctx.organization.trialEndsAt?.toISOString() ?? null,
       },
       role: ctx.role,
       memberships: ctx.memberships,

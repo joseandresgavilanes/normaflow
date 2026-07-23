@@ -5,6 +5,8 @@ import { ChangesLiveClient } from "@/components/operations/GovernanceLive";
 import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getChangesPayload } from "@/lib/server-queries";
+import { PlanLimitError } from "@/lib/plan-entitlements";
+import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
 export const metadata = { title: "Control de cambios | NormaFlow" };
 export const dynamic = "force-dynamic";
@@ -15,6 +17,7 @@ export default async function ChangesPage() {
     try {
       return <ChangesLiveClient initial={await getChangesPayload()} />;
     } catch (error) {
+      if (error instanceof PlanLimitError) return <PlanUpgradeGate module="Control de cambios" />;
       if (isAuthorizationError(error)) return <AccessDenied />;
       console.error("[changes] live payload failed:", error);
       return <LiveDataUnavailable section="Gestión de cambios" />;

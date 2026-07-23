@@ -26,7 +26,7 @@ type SerializedCtx =
   | {
       mode: "live";
       user: { id: string; name: string; email: string };
-      organization: { id: string; name: string; plan: string };
+      organization: { id: string; name: string; plan: string; onboardingStatus: string; trialEndsAt: string | null };
       role: string;
       memberships: {
         organizationId: string;
@@ -93,10 +93,18 @@ export default function AppRoot({
       router.replace("/app/onboarding");
     }
     if (
-      initial.mode !== "needs_organization" &&
+      initial.mode === "live" &&
       pathname === "/app/onboarding"
     ) {
+      if (initial.mode === "live" && ["IN_PROGRESS", "NOT_STARTED"].includes(initial.organization.onboardingStatus)) return;
       router.replace("/app/dashboard");
+    }
+    if (
+      initial.mode === "live" &&
+      ["IN_PROGRESS", "NOT_STARTED"].includes(initial.organization.onboardingStatus) &&
+      pathname !== "/app/onboarding"
+    ) {
+      router.replace("/app/onboarding");
     }
   }, [initial.mode, pathname, router]);
 
@@ -187,6 +195,9 @@ export default function AppRoot({
             orgName={orgName}
             userName={userName}
             roleLabel={roleLabel}
+            roleKey={roleKey}
+            plan={initial.mode === "live" ? initial.organization.plan : profile.plan}
+            trialActive={initial.mode === "live" && Boolean(initial.organization.trialEndsAt && new Date(initial.organization.trialEndsAt) > new Date())}
             memberships={memberships}
             demoSession={initial.mode === "demo" && workspaceKind === "demo"}
             currentOrgId={

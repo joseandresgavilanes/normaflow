@@ -1,0 +1,102 @@
+name: NormaFlow quality gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    env:
+      NORMAFLOW_ENV: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx prisma validate
+      - name: Prisma schema formatted & committed (drift guard)
+        run: npx prisma format && git diff --exit-code prisma/schema.prisma
+      - run: npm run lint
+      - run: npm run validate:plans
+      - run: npm run validate:runtime-config
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm test -- --project=chromium
+
+  # Hard block: a PR carrying an unresolved P0/do-not-merge label cannot merge.
+  p0-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Block on P0 / do-not-merge labels
+        if: contains(github.event.pull_request.labels.*.name, 'P0') || contains(github.event.pull_request.labels.*.name, 'do-not-merge')
+        run: |
+          echo "::error::PR bloqueado por etiqueta P0/do-not-merge. Resolver el incidente P0 antes de fusionar."
+          exit 1
+
+  staging-build:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      NORMAFLOW_ENV: staging
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.STAGING_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.STAGING_SUPABASE_SERVICE_ROLE_KEY }}
+      DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.STAGING_APP_URL }}
+      STRIPE_SECRET_KEY: ${{ secrets.STAGING_STRIPE_SECRET_KEY }}
+      STRIPE_WEBHOOK_SECRET: ${{ secrets.STAGING_STRIPE_WEBHOOK_SECRET }}
+      STRIPE_PRICE_STARTER: ${{ secrets.STAGING_STRIPE_PRICE_STARTER }}
+      STRIPE_PRICE_GROWTH: ${{ secrets.STAGING_STRIPE_PRICE_GROWTH }}
+      RESEND_API_KEY: ${{ secrets.STAGING_RESEND_API_KEY }}
+      RESEND_FROM_EMAIL: ${{ secrets.STAGING_RESEND_FROM_EMAIL }}
+      CRON_SECRET: ${{ secrets.STAGING_CRON_SECRET }}
+      NEXTAUTH_SECRET: ${{ secrets.STAGING_NEXTAUTH_SECRET }}
+      DEMO_SESSION_SECRET: ${{ secrets.STAGING_DEMO_SESSION_SECRET }}
+      AUTH_DEMO_MODE: "false"
+      NEXT_PUBLIC_AUTH_DEMO_MODE: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+  live-security:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: testing
+    env:
+      NORMAFLOW_ENV: testing
+      NORMAFLOW_DB_ENV: testing
+      NORMAFLOW_MIGRATION_CONFIRM: apply-testing
+      LIVE_TEST_ALLOW_MUTATIONS: "true"
+      NORMAFLOW_TEST_ENV: isolated
+      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      TEST_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
+      TEST_SUPABASE_ANON_KEY: ${{ secrets.TEST_SUPABASE_ANON_KEY }}
+      TEST_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TEST_SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: npm ci
+      - run: npm run validate:runtime-config
+      - run: npm run db:deploy:safe
+      - run: npm run db:smoke
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:live

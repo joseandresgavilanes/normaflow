@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { Role } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuthorization, requirePermission } from "@/lib/permissions/server";
@@ -9,6 +10,18 @@ import { logAuditEvent } from "@/lib/audit-log";
 import { notifyUser } from "@/lib/notify";
 import { planMaxUsers } from "@/lib/constants";
 import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
+import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/standards-adoption";
+import { getStandardSpec } from "@/lib/standards-catalog";
+import {
+  groupAssociationSchema,
+  groupSchema,
+  inviteMemberSchema,
+  memberRoleSchema,
+  organizationSettingsSchema,
+  parseActionInput,
+  standardCodeSchema,
+} from "@/lib/validation/admin";
+import { parseId } from "@/lib/validation/common";
 
 // ─── Organization settings ──────────────────────────────────────────
 
@@ -17,37 +30,97 @@ export async function updateOrganizationSettings(input: {
   industry?: string;
   country?: string;
   logoUrl?: string;
+  size?: string;
+  contactName?: string;
+  contactEmail?: string | null;
+  contactPhone?: string;
+  website?: string | null;
+  address?: string;
+  standards?: ("ISO_9001" | "ISO_27001")[];
 }) {
   const ctx = await requirePermission("org:*");
+  const parsed = parseActionInput(organizationSettingsSchema, input);
   const patch: Record<string, unknown> = {};
-  if (input.name !== undefined) {
-    const name = input.name.trim();
-    if (!name) throw new Error("El nombre de la organización es obligatorio.");
-    patch.name = name;
-  }
-  if (input.industry !== undefined) patch.industry = input.industry.trim() || null;
-  if (input.country !== undefined) patch.country = input.country.trim() || "ES";
-  if (input.logoUrl !== undefined) patch.logoUrl = input.logoUrl.trim() || null;
+  if (parsed.name !== undefined) patch.name = parsed.name;
+  if (parsed.industry !== undefined) patch.industry = parsed.industry || null;
+  if (parsed.country !== undefined) patch.country = parsed.country.toUpperCase();
+  if (parsed.logoUrl !== undefined) patch.logoUrl = parsed.logoUrl || null;
+  if (parsed.size !== undefined) patch.size = parsed.size || null;
+  if (parsed.contactName !== undefined) patch.contactName = parsed.contactName || null;
+  if (parsed.contactEmail !== undefined) patch.contactEmail = parsed.contactEmail || null;
+  if (parsed.contactPhone !== undefined) patch.contactPhone = parsed.contactPhone || null;
+  if (parsed.website !== undefined) patch.website = parsed.website || null;
+  if (parsed.address !== undefined) patch.address = parsed.address || null;
 
-  const before = { name: ctx.organization.name, industry: ctx.organization.industry, country: ctx.organization.country };
+  const before = {
+    name: ctx.organization.name,
+    industry: ctx.organization.industry,
+    country: ctx.organization.country,
+    size: ctx.organization.size,
+    contactName: ctx.organization.contactName,
+    contactEmail: ctx.organization.contactEmail,
+    contactPhone: ctx.organization.contactPhone,
+    website: ctx.organization.website,
+    address: ctx.organization.address,
+  };
   await prisma.organization.update({ where: { id: ctx.organization.id }, data: patch });
   await logAuditEvent({ ctx, action: "update", module: "org", recordId: ctx.organization.id, before, after: patch });
+
+  if (parsed.standards) {
+    const wanted = new Set(parsed.standards);
+    const current = await prisma.organizationStandard.findMany({
+      where: { organizationId: ctx.organization.id },
+      include: { standard: { select: { id: true, code: true } } },
+    });
+    const currentCodes = new Set(current.map((item) => item.standard.code));
+    for (const rawCode of wanted) {
+      const code = standardCodeSchema.parse(rawCode);
+      if (currentCodes.has(code)) continue;
+      const spec = getStandardSpec(code);
+      if (!spec) throw new Error("Norma no soportada.");
+      const standard = await ensureStandardCatalog(spec);
+      const adoption = await adoptStandardForOrganization({
+        organizationId: ctx.organization.id,
+        standardCode: code,
+        standardId: standard.id,
+        assessorId: ctx.user.id,
+      });
+      await logAuditEvent({
+        ctx,
+        action: "enable",
+        module: "standard",
+        recordId: adoption.adoptionId,
+        after: { standard: code },
+      });
+    }
+    for (const item of current) {
+      const itemCode = standardCodeSchema.safeParse(item.standard.code);
+      if (itemCode.success && wanted.has(itemCode.data)) continue;
+      await prisma.organizationStandard.delete({ where: { id: item.id } });
+      await logAuditEvent({
+        ctx,
+        action: "disable",
+        module: "standard",
+        recordId: item.id,
+        before: { standard: item.standard.code },
+      });
+    }
+  }
   revalidatePath("/app/settings/organization");
 }
 
 // ─── Members (users in the org) ─────────────────────────────────────
 
-const ROLES_VALUES: Role[] = ["SUPER_ADMIN", "ORG_ADMIN", "COMPLIANCE_MANAGER", "AUDITOR", "CONTRIBUTOR", "VIEWER"];
+const ROLES_VALUES: Role[] = ["OWNER", "ADMIN", "MANAGER", "AUDITOR", "VIEWER", "SUPER_ADMIN", "ORG_ADMIN", "COMPLIANCE_MANAGER", "CONTRIBUTOR"];
 
 export async function inviteMember(input: { email: string; name: string; role: Role }) {
   const ctx = await requirePermission("members:*");
-  const email = input.email.trim().toLowerCase();
-  const name = input.name.trim();
-  if (!email) throw new Error("El email es obligatorio.");
-  if (!name) throw new Error("El nombre es obligatorio.");
-  if (!ROLES_VALUES.includes(input.role)) throw new Error("Rol no válido.");
-  if (input.role === "SUPER_ADMIN" && ctx.role !== "SUPER_ADMIN") {
-    throw new Error("Solo un Super Admin puede asignar ese rol.");
+  const parsed = parseActionInput(inviteMemberSchema, input);
+  const email = parsed.email.toLowerCase();
+  const name = parsed.name;
+  const role = parsed.role as Role;
+  if ((role === "SUPER_ADMIN" || role === "OWNER") && !["SUPER_ADMIN", "OWNER"].includes(ctx.role)) {
+    throw new Error("Solo un Owner puede asignar ese rol.");
   }
 
   if (!isSupabaseInviteConfigured()) {
@@ -85,7 +158,7 @@ export async function inviteMember(input: { email: string; name: string; role: R
   }
 
   const membership = await prisma.membership.create({
-    data: { userId: user.id, organizationId: ctx.organization.id, role: input.role },
+    data: { userId: user.id, organizationId: ctx.organization.id, role },
   });
 
   const inviteResult = await sendSupabaseMemberInvite({
@@ -99,6 +172,19 @@ export async function inviteMember(input: { email: string; name: string; role: R
     throw new Error(`No se pudo enviar la invitación por correo: ${inviteResult.error}`);
   }
 
+  const now = new Date();
+  await prisma.memberInvite.create({
+    data: {
+      organizationId: ctx.organization.id,
+      email,
+      role,
+      token: randomUUID(),
+      invitedById: ctx.user.id,
+      expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      lastSentAt: now,
+    },
+  });
+
   await logAuditEvent({
     ctx,
     action: "invite",
@@ -107,7 +193,7 @@ export async function inviteMember(input: { email: string; name: string; role: R
     after: {
       email,
       name,
-      role: input.role,
+      role,
       inviteMethod: inviteResult.method,
     },
   });
@@ -115,19 +201,86 @@ export async function inviteMember(input: { email: string; name: string; role: R
   revalidatePath("/app/settings/users");
 }
 
-export async function updateMemberRole(membershipId: string, role: Role) {
+export async function resendMemberInvite(membershipId: string) {
+  membershipId = parseId(membershipId);
   const ctx = await requirePermission("members:*");
+  if (!isSupabaseInviteConfigured()) {
+    throw new Error("Configura Supabase y NEXT_PUBLIC_APP_URL para reenviar invitaciones.");
+  }
+  const membership = await prisma.membership.findFirst({
+    where: { id: membershipId, organizationId: ctx.organization.id },
+    include: { user: { select: { id: true, email: true, name: true } } },
+  });
+  if (!membership) throw new Error("Miembro no encontrado.");
+  const result = await sendSupabaseMemberInvite({
+    email: membership.user.email,
+    name: membership.user.name,
+    organizationName: ctx.organization.name,
+  });
+  if (!result.ok) throw new Error(`No se pudo reenviar la invitación: ${result.error}`);
+  const now = new Date();
+  const latest = await prisma.memberInvite.findFirst({
+    where: { organizationId: ctx.organization.id, email: membership.user.email, acceptedAt: null },
+    orderBy: { createdAt: "desc" },
+  });
+  if (latest) {
+    await prisma.memberInvite.update({
+      where: { id: latest.id },
+      data: { lastSentAt: now, expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) },
+    });
+  } else {
+    await prisma.memberInvite.create({
+      data: {
+        organizationId: ctx.organization.id,
+        email: membership.user.email,
+        role: membership.role,
+        token: randomUUID(),
+        invitedById: ctx.user.id,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+        lastSentAt: now,
+      },
+    });
+  }
+  await logAuditEvent({ ctx, action: "resend_invite", module: "member", recordId: membership.user.id, after: { email: membership.user.email } });
+  revalidatePath("/app/settings/users");
+}
+
+export async function setMemberActive(membershipId: string, active: boolean) {
+  membershipId = parseId(membershipId);
+  if (typeof active !== "boolean") throw new Error("El estado del miembro no es válido.");
+  const ctx = await requirePermission("members:*");
+  const membership = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
+  if (!membership) throw new Error("Miembro no encontrado.");
+  if (membership.userId === ctx.user.id && !active) throw new Error("No puedes desactivarte a ti mismo.");
+  if (!active && ["ORG_ADMIN", "ADMIN", "OWNER"].includes(membership.role)) {
+    const remainingAdmins = await prisma.membership.count({
+      where: { organizationId: ctx.organization.id, active: true, role: { in: ["ORG_ADMIN", "ADMIN", "OWNER"] }, id: { not: membershipId } },
+    });
+    if (remainingAdmins === 0) throw new Error("No puedes dejar la organización sin un Admin activo.");
+  }
+  await prisma.membership.update({
+    where: { id: membershipId },
+    data: { active, deactivatedAt: active ? null : new Date() },
+  });
+  await logAuditEvent({ ctx, action: active ? "activate" : "deactivate", module: "member", recordId: membership.userId, before: { active: membership.active }, after: { active } });
+  revalidatePath("/app/settings/users");
+}
+
+export async function updateMemberRole(membershipId: string, role: Role) {
+  membershipId = parseId(membershipId);
+  const ctx = await requirePermission("members:*");
+  role = parseActionInput(memberRoleSchema, { role }).role as Role;
   const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Miembro no encontrado.");
   if (!ROLES_VALUES.includes(role)) throw new Error("Rol no válido.");
-  if ((existing.role === "SUPER_ADMIN" || role === "SUPER_ADMIN") && ctx.role !== "SUPER_ADMIN") {
-    throw new Error("Solo un Super Admin puede modificar ese rol.");
+  if ((existing.role === "SUPER_ADMIN" || existing.role === "OWNER" || role === "SUPER_ADMIN" || role === "OWNER") && !["SUPER_ADMIN", "OWNER"].includes(ctx.role)) {
+    throw new Error("Solo un Owner puede modificar ese rol.");
   }
 
   // Prevent demoting the last ORG_ADMIN — otherwise the org becomes orphan.
-  if (existing.role === "ORG_ADMIN" && role !== "ORG_ADMIN") {
+  if (["ORG_ADMIN", "ADMIN", "OWNER"].includes(existing.role) && !["ORG_ADMIN", "ADMIN", "OWNER"].includes(role)) {
     const remainingAdmins = await prisma.membership.count({
-      where: { organizationId: ctx.organization.id, role: "ORG_ADMIN", id: { not: membershipId } },
+      where: { organizationId: ctx.organization.id, role: { in: ["ORG_ADMIN", "ADMIN", "OWNER"] }, id: { not: membershipId } },
     });
     if (remainingAdmins === 0) throw new Error("No puedes dejar la organización sin Admin.");
   }
@@ -155,16 +308,17 @@ export async function updateMemberRole(membershipId: string, role: Role) {
 }
 
 export async function removeMember(membershipId: string) {
+  membershipId = parseId(membershipId);
   const ctx = await requirePermission("members:*");
   const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Miembro no encontrado.");
-  if (existing.role === "SUPER_ADMIN" && ctx.role !== "SUPER_ADMIN") {
-    throw new Error("Solo un Super Admin puede eliminar a otro Super Admin.");
+  if ((existing.role === "SUPER_ADMIN" || existing.role === "OWNER") && !["SUPER_ADMIN", "OWNER"].includes(ctx.role)) {
+    throw new Error("Solo un Owner puede eliminar a otro Owner.");
   }
   if (existing.userId === ctx.user.id) throw new Error("No puedes eliminarte a ti mismo.");
-  if (existing.role === "ORG_ADMIN") {
+  if (["ORG_ADMIN", "ADMIN", "OWNER"].includes(existing.role)) {
     const remainingAdmins = await prisma.membership.count({
-      where: { organizationId: ctx.organization.id, role: "ORG_ADMIN", id: { not: membershipId } },
+      where: { organizationId: ctx.organization.id, role: { in: ["ORG_ADMIN", "ADMIN", "OWNER"] }, id: { not: membershipId } },
     });
     if (remainingAdmins === 0) throw new Error("No puedes eliminar al último Admin.");
   }
@@ -177,10 +331,10 @@ export async function removeMember(membershipId: string) {
 
 export async function createGroup(input: { name: string; description?: string }) {
   const ctx = await requirePermission("groups:*");
-  const name = input.name.trim();
-  if (!name) throw new Error("El nombre del grupo es obligatorio.");
+  const parsed = parseActionInput(groupSchema, input);
+  const name = parsed.name;
   const created = await prisma.group.create({
-    data: { organizationId: ctx.organization.id, name, description: input.description?.trim() || null },
+    data: { organizationId: ctx.organization.id, name, description: parsed.description || null },
   });
   await logAuditEvent({ ctx, action: "create", module: "group", recordId: created.id, after: { name } });
   revalidatePath("/app/settings/groups");
@@ -190,9 +344,10 @@ export async function updateGroup(id: string, input: { name?: string; descriptio
   const ctx = await requirePermission("groups:*");
   const existing = await prisma.group.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Grupo no encontrado.");
+  const parsed = parseActionInput(groupSchema.partial(), input);
   const patch: Record<string, unknown> = {};
-  if (input.name !== undefined) patch.name = input.name.trim();
-  if (input.description !== undefined) patch.description = input.description.trim() || null;
+  if (parsed.name !== undefined) patch.name = parsed.name;
+  if (parsed.description !== undefined) patch.description = parsed.description || null;
   await prisma.group.update({ where: { id }, data: patch });
   await logAuditEvent({
     ctx,
@@ -278,5 +433,58 @@ export async function removeGroupMember(groupId: string, userId: string) {
   if (!group) throw new Error("Grupo no encontrado.");
   await prisma.groupMembership.deleteMany({ where: { groupId, userId } });
   await logAuditEvent({ ctx, action: "remove_member", module: "group", recordId: groupId, before: { userId } });
+  revalidatePath("/app/settings/groups");
+}
+
+const GROUP_MODULES = [
+  "dashboard",
+  "documents",
+  "processes",
+  "risks",
+  "audits",
+  "nonconformities",
+  "actions",
+  "indicators",
+  "evidence",
+  "training",
+  "reporting",
+] as const;
+
+export async function setGroupAssociations(input: {
+  groupId: string;
+  processIds: string[];
+  modules: string[];
+}) {
+  const ctx = await requirePermission("groups:*");
+  const parsed = parseActionInput(groupAssociationSchema, input);
+  const modules = [...new Set(parsed.modules)].filter((module): module is (typeof GROUP_MODULES)[number] =>
+    (GROUP_MODULES as readonly string[]).includes(module),
+  );
+  const group = await prisma.group.findFirst({ where: { id: parsed.groupId, organizationId: ctx.organization.id } });
+  if (!group) throw new Error("Grupo no encontrado.");
+  const processes = await prisma.process.findMany({
+    where: { id: { in: [...new Set(parsed.processIds)] }, organizationId: ctx.organization.id },
+    select: { id: true },
+  });
+  if (processes.length !== new Set(parsed.processIds).size) throw new Error("Uno o más procesos no pertenecen a la organización.");
+
+  const before = await prisma.$transaction([
+    prisma.groupProcess.findMany({ where: { groupId: group.id }, select: { processId: true } }),
+    prisma.groupModule.findMany({ where: { groupId: group.id }, select: { module: true } }),
+  ]);
+  await prisma.$transaction([
+    prisma.groupProcess.deleteMany({ where: { groupId: group.id } }),
+    prisma.groupModule.deleteMany({ where: { groupId: group.id } }),
+    ...(processes.length ? [prisma.groupProcess.createMany({ data: processes.map((process) => ({ groupId: group.id, processId: process.id })) })] : []),
+    ...(modules.length ? [prisma.groupModule.createMany({ data: modules.map((module) => ({ groupId: group.id, module })) })] : []),
+  ]);
+  await logAuditEvent({
+    ctx,
+    action: "update",
+    module: "group_association",
+    recordId: group.id,
+    before: { processIds: before[0].map((item) => item.processId), modules: before[1].map((item) => item.module) },
+    after: { processIds: processes.map((process) => process.id), modules },
+  });
   revalidatePath("/app/settings/groups");
 }

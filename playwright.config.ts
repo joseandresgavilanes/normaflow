@@ -7,7 +7,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: "html",
+  outputDir: "test-results",
+  reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   expect: {
     timeout: 15000,
   },
@@ -35,6 +36,12 @@ export default defineConfig({
       NEXT_PUBLIC_AUTH_DEMO_MODE: "true",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3200",
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || "playwright-test-secret-min-32-chars!!",
+      DEMO_EMAIL: "demo@normaflow.io",
+      DEMO_PASSWORD: "NormaFlow2025!",
+      DEMO_NAME: "Ana García",
+      CUSTOMER_EMAIL: "cliente@normaflow.io",
+      CUSTOMER_PASSWORD: "NormaFlow2025!",
+      CUSTOMER_NAME: "Admin Cliente",
     },
   },
 });

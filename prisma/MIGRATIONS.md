@@ -34,11 +34,58 @@ El orden reproducible es:
 11. `20260619043000_authenticated_schema_usage`: permite que PostgREST alcance
     las tablas del esquema `public`; RLS sigue decidiendo cada fila y acción.
 12. `20260619044000_post_rls_table_grants`: concede lectura de relación a las
-    tablas creadas después del baseline RLS; sus políticas continúan filtrando
-    por tenant y permiso.
+   tablas creadas después del baseline RLS; sus políticas continúan filtrando
+   por tenant y permiso.
+13. `20260722140000_live_roles`: añade los roles canónicos `OWNER`, `ADMIN`
+   y `MANAGER`, manteniendo los valores legacy para una migración gradual.
+14. `20260722141000_permission_contract`: alinea RLS con las acciones `view`,
+   `create`, `update`, `approve`, `delete` y `export`, manteniendo `read` como
+   alias retrocompatible.
+15. `20260722160000_document_control_hardening`: añade índices tenant para los
+   filtros del control documental y una restricción única por documento/versión.
+16. `20260722170000_evidence_repository`: completa el repositorio de evidencias
+   con metadatos, estados, fechas, relaciones many-to-many, índices y RLS.
+17. `20260722180000_records_live_control`: completa el control live de registros
+    con códigos de tipo, cláusulas ISO, entradas controladas, estados y fechas.
+18. `20260722190000_acpm_capa_live`: crea el agregado CAPA multi-tenant con sus
+    seis etapas, causa raíz aprobable, evidencias por etapa, verificación de
+    eficacia, cierre bloqueado, comentarios, RLS y validación de referencias.
+19. `20260722200000_audit_program_internal_audits`: completa el programa anual
+    y auditorías internas con proceso, fechas de ejecución, participantes,
+    checklist vinculado a cláusulas, evidencias revisadas, informe de cierre,
+    exportación PDF/XLSX, conversión de hallazgos críticos a CAPA y validación
+    multi-tenant/RLS.
+20. `20260722210000_management_review_live`: amplía la revisión por la dirección
+    con normas, participantes internos, entradas vinculadas a auditorías/KPIs/
+    riesgos/NC/acciones/CAPA, acciones derivadas en Plan de Acción, evidencias,
+    acta PDF, validaciones tenant-safe y RLS.
+21. `20260722220000_reporting_audit_pack`: añade artefactos persistidos de
+   informes con MIME, título, filtros, contenido descargable e índice por tipo
+   para re-descarga e historial de paquetes de auditoría.
+22. `20260722230000_onboarding_activation`: persiste el estado del onboarding,
+    objetivo, trial, fecha de activación y eventos de conversión por tenant.
+23. `20260723000000_stripe_billing_hardening`: registra eventos de webhook de
+   forma idempotente y cambia el valor por defecto de facturas a USD.
+24. `20260723010000_document_templates`: crea el catálogo global de plantillas
+   ISO 9001/27001 y enlaza documentos controlados con su plantilla y contenido
+   versionable.
+25. `20260723150000_storage_rls_org_scoped`: exige buckets privados `documents`
+   y `evidence`, y aplica policies SELECT/INSERT/UPDATE/DELETE por prefijo
+   `org-{organizationId}/` y permiso de la organización.
 
-Después, para un proyecto Supabase, se aplican las migraciones de `supabase/`
-para crear los buckets y proteger `storage.objects`.
+La migración `20260723150000_storage_rls_org_scoped` requiere que los buckets
+privados `documents` y `evidence` ya existan. Falla explícitamente si
+`storage.objects` o cualquiera de los buckets no está disponible.
+
+26. `20260723160000_p1_report_workers_billing_audit`: convierte reportes en
+   trabajos persistentes con lease, reintentos e idempotencia; añade grace
+   period/suspensión de billing y vuelve append-only el audit trail.
+27. `20260723161000_p1_storage_quota_reservations`: añade el contador de bytes
+   por organización y lo inicializa desde los metadatos persistidos para que
+   las cargas concurrentes reserven cuota atómicamente.
+28. `20260723170000_iso27001_control_catalog`: crea el catálogo versionado de
+   93 controles ISO 27001, estados por organización, vínculos de evidencia y
+   riesgo, revisiones, checks de referencias tenant y políticas RLS.
 
 ## Base existente creada con db push o SQL manual
 

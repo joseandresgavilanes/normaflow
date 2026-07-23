@@ -1,12 +1,12 @@
-import { AdminGate } from "@/components/admin/AdminPageGate";
+import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import RecordsClient from "@/components/admin/RecordsClient";
 
 export const metadata = { title: "Control de Registros — NormaFlow" };
 
 export default function RecordsPage() {
   return (
-    <AdminGate permission="records:read">
+    <ServerPermissionGate permission="records:read">
       <RecordsClient />
-    </AdminGate>
+    </ServerPermissionGate>
   );
 }

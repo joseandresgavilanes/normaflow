@@ -13,6 +13,14 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useReducer } from "react";
 import { planMaxUsers } from "@/lib/constants";
+import {
+  DEFAULT_ARCHIVE_METHODS,
+  DEFAULT_DISPOSITIONS,
+  DEFAULT_LOCATIONS,
+  DEFAULT_POSITIONS,
+  DEFAULT_RECORD_TYPES,
+  DEFAULT_RETENTION_TIMES,
+} from "@/lib/catalog-defaults";
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -22,7 +30,7 @@ export type PositionRow = CatalogBase & { description: string | null };
 export type LocationRow = CatalogBase & { description: string | null };
 export type DispositionRow = CatalogBase;
 export type ArchiveMethodRow = CatalogBase;
-export type RecordTypeRow = CatalogBase;
+export type RecordTypeRow = CatalogBase & { code?: string | null };
 export type RetentionTimeRow = CatalogBase & { months: number };
 export type ProcessOptionRow = { id: string; code: string | null; name: string };
 
@@ -32,11 +40,16 @@ export type RecordMockRow = {
   name: string;
   processId: string | null;
   processName: string | null;
+  clauseId?: string | null;
   recordTypeId: string | null;
   retentionTimeId: string | null;
   dispositionId: string | null;
   archiveMethodId: string | null;
   custodianId: string | null;
+  reviewerId?: string | null;
+  reviewStatus?: "DRAFT" | "IN_REVIEW" | "APPROVED" | "REJECTED";
+  reviewComment?: string | null;
+  reviewedAt?: string | null;
   physicalLocation: string | null;
   digitalLocation: string | null;
   observations: string | null;
@@ -49,7 +62,11 @@ export type RecordEntryMockRow = {
   id: string;
   recordId: string;
   reference: string;
+  title?: string;
   description: string | null;
+  entryDate?: string;
+  status?: "DRAFT" | "VALID" | "EXPIRED" | "ARCHIVED";
+  responsibleId?: string | null;
   fileName: string | null;
   hasFile?: boolean;
   /** URL de objeto en navegador (demo); revocar al eliminar entrada. */
@@ -137,7 +154,9 @@ export type OrgMemberMockRow = {
   userId: string;
   name: string;
   email: string;
-  role: "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
+  role: "OWNER" | "ADMIN" | "MANAGER" | "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
+  active?: boolean;
+  deactivatedAt?: string | null;
   createdAt: string;
   isSelf: boolean;
 };
@@ -148,7 +167,20 @@ export type GroupMockRow = {
   description: string | null;
   permissions: string[];
   memberIds: string[];
+  processIds?: string[];
+  modules?: string[];
   createdAt: string;
+};
+
+export type AdminCatalogItemRow = {
+  id: string;
+  kind: string;
+  name: string;
+  description: string | null;
+  active: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt?: string;
 };
 
 export type OrgSettingsMock = {
@@ -156,6 +188,13 @@ export type OrgSettingsMock = {
   industry: string | null;
   country: string;
   logoUrl: string | null;
+  size?: string | null;
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactPhone?: string | null;
+  website?: string | null;
+  address?: string | null;
+  standards?: string[];
   plan: "STARTER" | "GROWTH" | "ENTERPRISE";
 };
 
@@ -163,6 +202,7 @@ type AdminMockState = {
   organization: OrgSettingsMock;
   members: OrgMemberMockRow[];
   groups: GroupMockRow[];
+  catalogItems?: AdminCatalogItemRow[];
   positions: PositionRow[];
   personnel: PersonnelMockRow[];
   locations: LocationRow[];
@@ -170,6 +210,7 @@ type AdminMockState = {
   dispositions: DispositionRow[];
   archiveMethods: ArchiveMethodRow[];
   recordTypes: RecordTypeRow[];
+  clauses: { id: string; code: string; title: string; standardCode: string; standardName: string }[];
   processes: ProcessOptionRow[];
   records: RecordMockRow[];
   recordEntries: RecordEntryMockRow[];
@@ -200,6 +241,9 @@ function id(prefix: string): string {
 function normalizeAdminRole(role: string | undefined): OrgMemberMockRow["role"] {
   const key = role?.trim().toUpperCase().replace(/\s+/g, "_");
   if (
+    key === "OWNER" ||
+    key === "ADMIN" ||
+    key === "MANAGER" ||
     key === "SUPER_ADMIN" ||
     key === "ORG_ADMIN" ||
     key === "COMPLIANCE_MANAGER" ||
@@ -209,7 +253,7 @@ function normalizeAdminRole(role: string | undefined): OrgMemberMockRow["role"] 
   ) {
     return key;
   }
-  return "ORG_ADMIN";
+  return "ADMIN";
 }
 
 function normalizeAdminPlan(plan: string | undefined): OrgSettingsMock["plan"] {
@@ -222,6 +266,7 @@ function blankState(profile?: AdminMockProfile): AdminMockState {
   const adminUserId = "u-self";
   const memberName = profile?.name || "Admin Cliente";
   const memberEmail = profile?.email || "cliente@normaflow.io";
+  const createdAt = NOW;
   return {
     organization: {
       name: profile?.orgName || "Mi Organización",
@@ -242,13 +287,47 @@ function blankState(profile?: AdminMockProfile): AdminMockState {
       },
     ],
     groups: [],
-    positions: [],
+    positions: DEFAULT_POSITIONS.map((position, index) => ({
+      id: `blank-pos-${index + 1}`,
+      name: position.name,
+      description: position.description,
+      active: true,
+      createdAt,
+    })),
     personnel: [],
-    locations: [],
-    retentionTimes: [],
-    dispositions: [],
-    archiveMethods: [],
-    recordTypes: [],
+    locations: DEFAULT_LOCATIONS.map((location, index) => ({
+      id: `blank-loc-${index + 1}`,
+      name: location.name,
+      description: location.description,
+      active: true,
+      createdAt,
+    })),
+    retentionTimes: DEFAULT_RETENTION_TIMES.map((retention, index) => ({
+      id: `blank-ret-${index + 1}`,
+      name: retention.name,
+      months: retention.months,
+      active: true,
+      createdAt,
+    })),
+    dispositions: DEFAULT_DISPOSITIONS.map((name, index) => ({
+      id: `blank-dis-${index + 1}`,
+      name,
+      active: true,
+      createdAt,
+    })),
+    archiveMethods: DEFAULT_ARCHIVE_METHODS.map((name, index) => ({
+      id: `blank-archive-${index + 1}`,
+      name,
+      active: true,
+      createdAt,
+    })),
+    recordTypes: DEFAULT_RECORD_TYPES.map((name, index) => ({
+      id: `blank-record-type-${index + 1}`,
+      name,
+      active: true,
+      createdAt,
+    })),
+    clauses: [],
     processes: [],
     records: [],
     recordEntries: [],
@@ -352,6 +431,7 @@ function initialState(): AdminMockState {
       { id: "rt-2", name: "ELECTRÓNICO",            active: true, createdAt: past(900) },
       { id: "rt-3", name: "FÍSICO Y ELECTRÓNICO",   active: true, createdAt: past(900) },
     ],
+    clauses: [],
     processes: [
       { id: "proc-production", code: "P-01", name: "Producción" },
       { id: "proc-governance", code: "P-02", name: "Gobierno SGC" },
@@ -926,8 +1006,8 @@ type AdminMockContextValue = {
   createArchiveMethod: (data: { name: string }) => void;
   updateArchiveMethod: (id: string, data: { name?: string }) => void;
   deactivateArchiveMethod: (id: string) => void;
-  createRecordType: (data: { name: string }) => void;
-  updateRecordType: (id: string, data: { name?: string }) => void;
+  createRecordType: (data: { name: string; code?: string }) => void;
+  updateRecordType: (id: string, data: { name?: string; code?: string }) => void;
   deactivateRecordType: (id: string) => void;
   // retention
   createRetention: (data: { name: string; months: number }) => void;
@@ -941,33 +1021,48 @@ type AdminMockContextValue = {
   inviteMember: (data: { name: string; email: string; role: OrgMemberMockRow["role"] }) => void | Promise<void>;
   updateMemberRole: (membershipId: string, role: OrgMemberMockRow["role"]) => void;
   removeMember: (membershipId: string) => void;
+  setMemberActive?: (membershipId: string, active: boolean) => void | Promise<void>;
+  resendMemberInvite?: (membershipId: string) => void | Promise<void>;
   // groups
   createGroup: (data: { name: string; description?: string }) => void;
   updateGroup: (id: string, data: { name?: string; description?: string }) => void;
   deleteGroup: (id: string) => void;
   toggleGroupPermission: (groupId: string, permission: string) => void;
   toggleGroupMember: (groupId: string, userId: string) => void;
+  setGroupAssociations?: (groupId: string, processIds: string[], modules: string[]) => void | Promise<void>;
+  createAdminCatalogItem?: (data: { kind: string; name: string; description?: string; sortOrder?: number }) => void | Promise<void>;
+  updateAdminCatalogItem?: (data: { id: string; name?: string; description?: string; active?: boolean; sortOrder?: number }) => void | Promise<void>;
+  deleteAdminCatalogItem?: (id: string) => void | Promise<void>;
   // records
   createRecord: (data: {
     code: string;
     name: string;
     processId?: string;
+    clauseId?: string;
     recordTypeId?: string;
     retentionTimeId?: string;
     dispositionId?: string;
     archiveMethodId?: string;
     custodianId?: string;
+    reviewerId?: string;
     physicalLocation?: string;
     digitalLocation?: string;
     observations?: string;
   }) => void;
   updateRecord: (id: string, data: Partial<Omit<RecordMockRow, "id" | "createdAt" | "lastEntryAt" | "active">>) => void;
+  submitRecordForReview: (id: string) => void;
+  approveRecord: (id: string, comment?: string) => void;
+  rejectRecord: (id: string, comment: string) => void;
   deactivateRecord: (id: string) => void;
   addRecordEntry: (
     recordId: string,
     data: {
       reference: string;
+      title?: string;
       description?: string;
+      entryDate?: string;
+      status?: "DRAFT" | "VALID" | "EXPIRED" | "ARCHIVED";
+      responsibleId?: string;
       fileName?: string;
       file?: File;
       blobUrl?: string | null;
@@ -978,7 +1073,7 @@ type AdminMockContextValue = {
   getRecordEntryUrl: (id: string) => Promise<string>;
   deleteRecordEntry: (id: string) => void;
   // ACPMs
-  createACPM: (data: { title: string; description?: string; type: ACPMType; priority: ACPMPriority; source?: string; dueDate?: string }) => void;
+  createACPM: (data: { title: string; description?: string; type: ACPMType; priority: ACPMPriority; source?: string; dueDate?: string; ownerId?: string }) => void;
   updateACPMFields: (id: string, data: Partial<Pick<ACPMRow, "title" | "description" | "priority" | "type" | "source" | "rootCause" | "proposedSolution" | "effectivenessCheck" | "effectivenessAt" | "ownerId" | "dueDate" | "progress">>) => void;
   transitionACPM: (id: string, toStage: ACPMStage, comment?: string) => void;
   rejectACPM: (id: string, comment: string) => void;
@@ -1103,10 +1198,11 @@ export function AdminMockProvider({
 
       createRecordType: (data) => {
         if (!data.name.trim()) throw new Error("El nombre es obligatorio.");
-        dispatch({ type: "addCatalog", key: "recordTypes", row: mkSimple("rt", data) });
+        if (!data.code?.trim()) throw new Error("El código es obligatorio.");
+        dispatch({ type: "addCatalog", key: "recordTypes", row: { ...mkSimple("rt", data), code: data.code.trim() } });
       },
       updateRecordType: (id, data) =>
-        dispatch({ type: "updateCatalog", key: "recordTypes", id, patch: data.name !== undefined ? { name: data.name.trim() } : {} }),
+        dispatch({ type: "updateCatalog", key: "recordTypes", id, patch: { ...(data.name !== undefined ? { name: data.name.trim() } : {}), ...(data.code !== undefined ? { code: data.code.trim() } : {}) } }),
       deactivateRecordType: (id) => dispatch({ type: "deactivateCatalog", key: "recordTypes", id }),
 
       createRetention: (data) => {
@@ -1250,6 +1346,10 @@ export function AdminMockProvider({
           dispositionId: data.dispositionId || null,
           archiveMethodId: data.archiveMethodId || null,
           custodianId: data.custodianId || null,
+          reviewerId: data.reviewerId || null,
+          reviewStatus: "DRAFT",
+          reviewComment: null,
+          reviewedAt: null,
           physicalLocation: data.physicalLocation?.trim() || null,
           digitalLocation: data.digitalLocation?.trim() || null,
           observations: data.observations?.trim() || null,
@@ -1275,10 +1375,28 @@ export function AdminMockProvider({
         if (data.dispositionId !== undefined) patch.dispositionId = data.dispositionId || null;
         if (data.archiveMethodId !== undefined) patch.archiveMethodId = data.archiveMethodId || null;
         if (data.custodianId !== undefined) patch.custodianId = data.custodianId || null;
+        if (data.reviewerId !== undefined) patch.reviewerId = data.reviewerId || null;
         if (data.physicalLocation !== undefined) patch.physicalLocation = data.physicalLocation?.trim() || null;
         if (data.digitalLocation !== undefined) patch.digitalLocation = data.digitalLocation?.trim() || null;
         if (data.observations !== undefined) patch.observations = data.observations?.trim() || null;
         dispatch({ type: "updateRecord", id, patch });
+      },
+      submitRecordForReview: (recordId) => {
+        const record = state.records.find((r) => r.id === recordId);
+        if (!record) throw new Error("Registro no encontrado.");
+        if (!record.reviewerId) throw new Error("Asigna un revisor antes de enviar el registro a revisión.");
+        dispatch({ type: "updateRecord", id: recordId, patch: { reviewStatus: "IN_REVIEW", reviewComment: null, reviewedAt: null } });
+      },
+      approveRecord: (recordId, comment) => {
+        const record = state.records.find((r) => r.id === recordId);
+        if (!record) throw new Error("Registro no encontrado.");
+        dispatch({ type: "updateRecord", id: recordId, patch: { reviewStatus: "APPROVED", reviewComment: comment?.trim() || null, reviewedAt: new Date().toISOString() } });
+      },
+      rejectRecord: (recordId, comment) => {
+        if (!comment.trim()) throw new Error("Indica el motivo del rechazo.");
+        const record = state.records.find((r) => r.id === recordId);
+        if (!record) throw new Error("Registro no encontrado.");
+        dispatch({ type: "updateRecord", id: recordId, patch: { reviewStatus: "REJECTED", reviewComment: comment.trim(), reviewedAt: new Date().toISOString() } });
       },
       deactivateRecord: (recordId) => dispatch({ type: "deactivateRecord", id: recordId }),
 
@@ -1359,7 +1477,7 @@ export function AdminMockProvider({
             requestedById,
             requestApproverId: null,
             solutionApproverId: null,
-            ownerId: null,
+            ownerId: data.ownerId || null,
             dueDate: data.dueDate || null,
             progress: 0,
             createdAt: now,

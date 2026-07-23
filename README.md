@@ -4,13 +4,12 @@ Software SaaS para digitalizar sistemas de gestión ISO 9001 e ISO 27001. Audito
 
 ---
 
-## 🔑 Credenciales de acceso demo
+## 🔑 Acceso demo local
 
-```
-URL:       http://localhost:3000
-Email:     demo@normaflow.io
-Password:  NormaFlow2025!
-```
+No existen credenciales demo incluidas en el repositorio ni válidas en
+producción. Para usar el modo demo local, define explícitamente las cuentas
+`DEMO_*` y `CUSTOMER_*` en `.env.local`; Playwright aporta sus propias
+credenciales efímeras para la suite E2E.
 
 ---
 
@@ -55,7 +54,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXTAUTH_SECRET=genera-un-secreto-largo-para-firmar-sesiones-demo
 ```
 
-**Sin Supabase (solo local / e2e):** define `AUTH_DEMO_MODE=true` y `NEXT_PUBLIC_AUTH_DEMO_MODE=true` además de `NEXTAUTH_SECRET`. Hay dos logins locales con cookie firmada: la demo (`demo@normaflow.io` / `NormaFlow2025!`) mantiene datos de ejemplo, y la cuenta cliente nuevo (`cliente@normaflow.io` / `NormaFlow2025!`) entra como `ORG_ADMIN` con workspace limpio. Puedes cambiar roles con `DEMO_ROLE` o `CUSTOMER_ROLE` (`COMPLIANCE_MANAGER`, `AUDITOR`, `CONTRIBUTOR`, `VIEWER`) y los datos de la organización cliente con `CUSTOMER_ORG_NAME` / `CUSTOMER_PLAN`.
+**Sin Supabase (solo local / E2E):** define `AUTH_DEMO_MODE=true` y
+`NEXT_PUBLIC_AUTH_DEMO_MODE=true`, un secreto aleatorio de al menos 32
+caracteres y los seis valores `DEMO_EMAIL`, `DEMO_PASSWORD`, `DEMO_NAME`,
+`CUSTOMER_EMAIL`, `CUSTOMER_PASSWORD`, `CUSTOMER_NAME`. El modo demo se
+rechaza automáticamente en producción. Puedes cambiar roles con `DEMO_ROLE`
+o `CUSTOMER_ROLE` (`COMPLIANCE_MANAGER`, `AUDITOR`, `CONTRIBUTOR`, `VIEWER`)
+y los datos de la organización cliente con `CUSTOMER_ORG_NAME` /
+`CUSTOMER_PLAN`.
 
 ### 3. Base de datos
 
@@ -81,6 +87,10 @@ recrear tablas.
 npm run dev
 # → http://localhost:3000
 ```
+
+## Lanzamiento comercial
+
+El backlog de primera venta, los gates de seguridad, sprints y criterios de aceptación viven en [`docs/commercial-launch-plan.md`](docs/commercial-launch-plan.md). La ejecución E2E reproducible está documentada en [`docs/e2e-testing.md`](docs/e2e-testing.md).
 
 ### Invitar usuarios (producción / staging)
 

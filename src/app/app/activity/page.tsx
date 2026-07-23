@@ -1,4 +1,4 @@
-import { AdminGate } from "@/components/admin/AdminPageGate";
+import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import ActivityClient from "@/components/admin/ActivityClient";
 import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import { getAppContext } from "@/lib/app-context";
@@ -16,9 +16,9 @@ export default async function ActivityPage() {
     try {
       const { auditTrail } = await getActivityPayload();
       return (
-        <AdminGate permission="activity:read">
+        <ServerPermissionGate permission="activity:read">
           <ActivityClient liveEntries={auditTrail} />
-        </AdminGate>
+        </ServerPermissionGate>
       );
     } catch (err) {
       if (isAuthorizationError(err)) return <AccessDenied />;
@@ -29,8 +29,8 @@ export default async function ActivityPage() {
 
   // Modo demo: el componente lee del AdminMockProvider.
   return (
-    <AdminGate permission="activity:read">
+    <ServerPermissionGate permission="activity:read">
       <ActivityClient />
-    </AdminGate>
+    </ServerPermissionGate>
   );
 }

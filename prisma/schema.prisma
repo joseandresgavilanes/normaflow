@@ -15,33 +15,92 @@ datasource db {
 // ─── ORGANIZATIONS & USERS ───────────────────────────
 
 model Organization {
-  id          String    @id @default(cuid())
-  name        String
-  slug        String    @unique
-  industry    String?
-  country     String    @default("ES")
-  logoUrl     String?
-  plan        Plan      @default(STARTER)
-  trialEndsAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                    String           @id @default(cuid())
+  name                  String
+  slug                  String           @unique
+  industry              String?
+  country               String           @default("ES")
+  size                  String?
+  logoUrl               String?
+  contactName           String?
+  contactEmail          String?
+  contactPhone          String?
+  website               String?
+  address               String?
+  plan                  Plan             @default(STARTER)
+  trialEndsAt           DateTime?
+  onboardingStatus      OnboardingStatus @default(COMPLETED)
+  onboardingStep        Int              @default(1)
+  onboardingGoal        OnboardingGoal?
+  onboardingStartedAt   DateTime?
+  onboardingCompletedAt DateTime?
+  activationAt          DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  storageBytes          Int              @default(0)
 
-  memberships     Membership[]
-  standards       OrganizationStandard[]
-  assessments     Assessment[]
-  documents       Document[]
-  processes       Process[]
-  risks           Risk[]
-  audits          Audit[]
-  nonconformities Nonconformity[]
-  actions         Action[]
-  indicators      Indicator[]
-  evidenceFiles   EvidenceFile[]
-  notifications   Notification[]
-  subscription    Subscription?
-  billingInvoices BillingInvoice[]
-  reportExports   ReportExport[]
-  auditLogs       AuditLog[]
+  memberships                   Membership[]
+  standards                     OrganizationStandard[]
+  assessments                   Assessment[]
+  documents                     Document[]
+  processes                     Process[]
+  risks                         Risk[]
+  audits                        Audit[]
+  nonconformities               Nonconformity[]
+  actions                       Action[]
+  capas                         CAPA[]
+  capaEvidences                 CAPAEvidence[]
+  auditParticipants             AuditParticipant[]
+  managementReviewParticipants  ManagementReviewParticipant[]
+  indicators                    Indicator[]
+  evidenceFiles                 EvidenceFile[]
+  notifications                 Notification[]
+  notificationDeliveryJobs      NotificationDeliveryJob[]
+  notificationPreferences       NotificationPreference[]
+  subscription                  Subscription?
+  billingInvoices               BillingInvoice[]
+  reportExports                 ReportExport[]
+  auditLogs                     AuditLog[]
+  onboardingMetricEvents        OnboardingMetricEvent[]
+  evidenceDocumentLinks         EvidenceDocumentLink[]
+  evidenceRiskLinks             EvidenceRiskLink[]
+  evidenceAuditLinks            EvidenceAuditLink[]
+  evidenceFindingLinks          EvidenceFindingLink[]
+  evidenceNonconformityLinks    EvidenceNonconformityLink[]
+  evidenceIndicatorLinks        EvidenceIndicatorLink[]
+  evidenceManagementReviewLinks EvidenceManagementReviewLink[]
+  organizationControls          OrganizationControl[]
+  controlEvidences              ControlEvidence[]
+  controlReviews                ControlReview[]
+  riskControlLinks              RiskControlLink[]
+  statementsOfApplicability     StatementOfApplicability[]
+  soaControlEntries             SoAControlEntry[]
+  riskMethodologies             RiskAssessmentMethodology[]
+  riskTreatmentPlans            RiskTreatmentPlan[]
+  riskTreatmentItems            RiskTreatmentItem[]
+  riskTreatmentControls         RiskTreatmentControl[]
+  residualRiskAssessments       ResidualRiskAssessment[]
+  riskAcceptances               RiskAcceptance[]
+  informationAssets             InformationAsset[]
+  assetClassifications          AssetClassification[]
+  assetDependencies             AssetDependency[]
+  assetRisks                    AssetRisk[]
+  assetControls                 AssetControl[]
+  securityIncidents             SecurityIncident[]
+  securityIncidentAssets        SecurityIncidentAsset[]
+  securityIncidentEvidences     SecurityIncidentEvidence[]
+  vulnerabilities               Vulnerability[]
+  vulnerabilityAssets           VulnerabilityAsset[]
+  remediations                  Remediation[]
+  verifications                 Verification[]
+  businessContinuityPlans       BusinessContinuityPlan[]
+  bcpProcesses                  BCPProcess[]
+  disasterRecoveryPlans         DisasterRecoveryPlan[]
+  continuityScenarios           ContinuityScenario[]
+  continuityTests               ContinuityTest[]
+  continuityTestResults         TestResult[]
+  improvementActions            ImprovementAction[]
+  supplierSecurityProfiles      SupplierSecurityProfile[]
 
   // ISOTech manual alignment
   groups              Group[]
@@ -53,8 +112,10 @@ model Organization {
   archiveMethods      ArchiveMethod[]
   recordTypes         RecordType[]
   records             Record[]
+  catalogItems        OrganizationCatalogItem[]
   auditPrograms       AuditProgram[]
   managementReviews   ManagementReview[]
+  opportunities       Opportunity[]
   trainingCourses     TrainingCourse[]
   trainingAssignments TrainingAssignment[]
   changeRequests      ChangeRequest[]
@@ -75,22 +136,71 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships    Membership[]
-  notifications  Notification[]
-  auditLogs      AuditLog[]
-  sentInvites    MemberInvite[] @relation("InvitedBy")
-  ownedDocuments Document[]     @relation("DocumentOwner")
-  reportExports  ReportExport[] @relation("ReportGeneratedBy")
+  memberships                   Membership[]
+  notifications                 Notification[]
+  notificationDeliveryJobs      NotificationDeliveryJob[]
+  notificationPreferences       NotificationPreference[]
+  auditLogs                     AuditLog[]
+  onboardingMetricEvents        OnboardingMetricEvent[]
+  sentInvites                   MemberInvite[]                @relation("InvitedBy")
+  ownedDocuments                Document[]                    @relation("DocumentOwner")
+  reportExports                 ReportExport[]                @relation("ReportGeneratedBy")
+  uploadedEvidenceFiles         EvidenceFile[]                @relation("EvidenceUploadedBy")
+  responsibleEvidenceFiles      EvidenceFile[]                @relation("EvidenceResponsible")
+  reviewedEvidenceFiles         EvidenceFile[]                @relation("EvidenceReviewedBy")
+  ownedOpportunities            Opportunity[]                 @relation("OpportunityOwner")
+  reviewedOpportunities         Opportunity[]                 @relation("OpportunityReviewer")
+  reviewedRecords               Record[]                      @relation("RecordReviewer")
+  responsibleRecordEntries      RecordEntry[]                 @relation("RecordEntryResponsible")
+  enteredRecordEntries          RecordEntry[]                 @relation("RecordEntryEnteredBy")
+  capaOwners                    CAPA[]                        @relation("CAPAOwner")
+  capaRequesters                CAPA[]                        @relation("CAPARequester")
+  capaRootCauseApprovals        CAPA[]                        @relation("CAPARootCauseApprovedBy")
+  capaVerifiers                 CAPA[]                        @relation("CAPAVerifier")
+  capaClosers                   CAPA[]                        @relation("CAPACloser")
+  uploadedCAPAEvidence          CAPAEvidence[]                @relation("CAPAEvidenceUploadedBy")
+  capaComments                  CAPAComment[]                 @relation("CAPACommentAuthor")
+  responsibleAuditPrograms      AuditProgram[]                @relation("AuditProgramResponsible")
+  auditParticipants             AuditParticipant[]
+  managementReviewParticipants  ManagementReviewParticipant[]
+  closedAudits                  Audit[]                       @relation("AuditClosedBy")
+  responsibleSecurityControls   OrganizationControl[]         @relation("SecurityControlResponsible")
+  controlEvidenceValidators     ControlEvidence[]             @relation("ControlEvidenceValidator")
+  controlReviewers              ControlReview[]               @relation("ControlReviewer")
+  ownedSoAs                     StatementOfApplicability[]    @relation("SoAOwner")
+  approvedSoAs                  StatementOfApplicability[]    @relation("SoAApprover")
+  responsibleSoAEntries         SoAControlEntry[]             @relation("SoAEntryResponsible")
+  ownedRiskMethodologies        RiskAssessmentMethodology[]   @relation("RiskMethodologyOwner")
+  approvedRiskMethodologies     RiskAssessmentMethodology[]   @relation("RiskMethodologyApprover")
+  ownedRiskPlans                RiskTreatmentPlan[]           @relation("RiskPlanOwner")
+  approvedRiskPlans             RiskTreatmentPlan[]           @relation("RiskPlanApprover")
+  ownedRiskItems                RiskTreatmentItem[]           @relation("RiskItemOwner")
+  residualRiskAssessments       ResidualRiskAssessment[]      @relation("ResidualRiskAssessor")
+  riskAcceptances               RiskAcceptance[]              @relation("RiskAcceptedBy")
+  ownedAssets                   InformationAsset[]            @relation("AssetOwner")
+  custodiedAssets               InformationAsset[]            @relation("AssetCustodian")
+  reportedIncidents             SecurityIncident[]            @relation("IncidentReporter")
+  responsibleIncidents          SecurityIncident[]            @relation("IncidentResponsible")
+  responsibleVulnerabilities    Vulnerability[]               @relation("VulnerabilityResponsible")
+  responsibleRemediations       Remediation[]                 @relation("RemediationResponsible")
+  performedVerifications        Verification[]                @relation("VerificationBy")
+  ownedBcps                     BusinessContinuityPlan[]      @relation("BcpOwner")
+  ownedDrps                     DisasterRecoveryPlan[]        @relation("DrpOwner")
+  responsibleContinuityTests    ContinuityTest[]              @relation("ContinuityTestResponsible")
+  continuityTestResults         TestResult[]                  @relation("TestResultBy")
+  responsibleImprovementActions ImprovementAction[]           @relation("ImprovementActionResponsible")
 
   @@map("users")
 }
 
 model Membership {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   userId         String
   organizationId String
-  role           Role     @default(CONTRIBUTOR)
-  createdAt      DateTime @default(now())
+  role           Role      @default(CONTRIBUTOR)
+  active         Boolean   @default(true)
+  deactivatedAt  DateTime?
+  createdAt      DateTime  @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -108,6 +218,7 @@ model MemberInvite {
   invitedById    String?
   expiresAt      DateTime
   acceptedAt     DateTime?
+  lastSentAt     DateTime?
   createdAt      DateTime  @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -128,9 +239,10 @@ model Standard {
   description String?
   isActive    Boolean @default(true)
 
-  clauses      Clause[]
-  assessments  Assessment[]
-  orgStandards OrganizationStandard[]
+  clauses                Clause[]
+  assessments            Assessment[]
+  orgStandards           OrganizationStandard[]
+  controlCatalogVersions ControlCatalogVersion[]
 
   @@map("standards")
 }
@@ -144,13 +256,43 @@ model Clause {
   parentId    String?
   order       Int     @default(0)
 
-  standard          Standard           @relation(fields: [standardId], references: [id])
-  parent            Clause?            @relation("ClauseParent", fields: [parentId], references: [id])
-  children          Clause[]           @relation("ClauseParent")
+  standard          Standard             @relation(fields: [standardId], references: [id])
+  parent            Clause?              @relation("ClauseParent", fields: [parentId], references: [id])
+  children          Clause[]             @relation("ClauseParent")
   assessmentAnswers AssessmentAnswer[]
   documents         Document[]
+  evidenceFiles     EvidenceFile[]
+  records           Record[]
+  capas             CAPA[]
+  audits            Audit[]
+  checklistItems    AuditChecklistItem[]
+  documentTemplates DocumentTemplate[]
 
   @@map("clauses")
+}
+
+model DocumentTemplate {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  standardCode String
+  title        String
+  description  String?
+  documentType DocumentType @default(PROCEDURE)
+  clauseId     String?
+  content      String
+  fieldSchema  Json?
+  tags         String[]     @default([])
+  isActive     Boolean      @default(true)
+  sortOrder    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  clause    Clause?    @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  documents Document[]
+
+  @@index([standardCode, isActive])
+  @@index([clauseId])
+  @@map("document_templates")
 }
 
 model OrganizationStandard {
@@ -166,6 +308,140 @@ model OrganizationStandard {
 
   @@unique([organizationId, standardId])
   @@map("organization_standards")
+}
+
+// ─── ISO 27001:2022 ANNEX A CONTROL CATALOG ────────
+
+model ControlCatalogVersion {
+  id          String               @id @default(cuid())
+  standardId  String
+  version     String
+  catalogDate DateTime
+  status      ControlCatalogStatus @default(DRAFT)
+  active      Boolean              @default(false)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  standard Standard          @relation(fields: [standardId], references: [id], onDelete: Restrict)
+  controls SecurityControl[]
+
+  @@unique([standardId, version])
+  @@index([standardId, active])
+  @@map("control_catalog_versions")
+}
+
+model SecurityControl {
+  id                  String                @id @default(cuid())
+  catalogVersionId    String
+  code                String
+  domain              SecurityControlDomain
+  title               String
+  descriptionInternal String?
+  objective           String?
+  sortOrder           Int
+  active              Boolean               @default(true)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  catalogVersion     ControlCatalogVersion @relation(fields: [catalogVersionId], references: [id], onDelete: Cascade)
+  organizationStates OrganizationControl[]
+  soaEntries         SoAControlEntry[]
+
+  @@unique([catalogVersionId, code])
+  @@index([domain, active])
+  @@map("security_controls")
+}
+
+model OrganizationControl {
+  id                  String                    @id @default(cuid())
+  organizationId      String
+  controlId           String
+  applicability       ControlApplicability      @default(UNDER_REVIEW)
+  status              OrganizationControlStatus @default(NOT_ASSESSED)
+  responsibleId       String?
+  reviewDate          DateTime?
+  nextReviewDate      DateTime?
+  implementationLevel Int                       @default(0)
+  notes               String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  control        SecurityControl        @relation(fields: [controlId], references: [id], onDelete: Cascade)
+  responsible    User?                  @relation("SecurityControlResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  evidence       ControlEvidence[]
+  reviews        ControlReview[]
+  riskLinks      RiskControlLink[]
+  treatmentLinks RiskTreatmentControl[]
+  assetLinks     AssetControl[]
+
+  @@unique([organizationId, controlId])
+  @@index([organizationId, status])
+  @@index([organizationId, applicability])
+  @@index([organizationId, nextReviewDate])
+  @@map("organization_controls")
+}
+
+model ControlEvidence {
+  id                    String                @id @default(cuid())
+  organizationId        String
+  organizationControlId String
+  evidenceId            String
+  period                String
+  status                ControlEvidenceStatus @default(PENDING_VALIDATION)
+  validatorId           String?
+  validatedAt           DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationControl OrganizationControl @relation(fields: [organizationControlId], references: [id], onDelete: Cascade)
+  evidence            EvidenceFile        @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  validator           User?               @relation("ControlEvidenceValidator", fields: [validatorId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationControlId, evidenceId, period])
+  @@index([organizationId, status])
+  @@index([organizationId, evidenceId])
+  @@map("control_evidences")
+}
+
+model ControlReview {
+  id                    String               @id @default(cuid())
+  organizationId        String
+  organizationControlId String
+  result                ControlReviewResult
+  effectiveness         ControlEffectiveness
+  comments              String?
+  reviewerId            String
+  reviewedAt            DateTime             @default(now())
+  createdAt             DateTime             @default(now())
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationControl OrganizationControl @relation(fields: [organizationControlId], references: [id], onDelete: Cascade)
+  reviewer            User                @relation("ControlReviewer", fields: [reviewerId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, organizationControlId, reviewedAt])
+  @@map("control_reviews")
+}
+
+model RiskControlLink {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  riskId                String
+  organizationControlId String
+  purpose               String
+  expectedEffectiveness String?
+  observedEffectiveness String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risk                Risk                @relation(fields: [riskId], references: [id], onDelete: Cascade)
+  organizationControl OrganizationControl @relation(fields: [organizationControlId], references: [id], onDelete: Cascade)
+
+  @@unique([riskId, organizationControlId])
+  @@index([organizationId, organizationControlId])
+  @@map("risk_control_links")
 }
 
 // ─── GAP ASSESSMENT ──────────────────────────────────
@@ -238,9 +514,11 @@ model Document {
   physicalLocation         String?
   distributionList         String[] @default([])
   observations             String?
+  content                  String?
+  templateId               String?
 
   // Reemplazo / supersede: el documento obsoleto (01) apunta a su reemplazo (02).
-  supersededById           String?  @unique
+  supersededById String? @unique
 
   organization                 Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   supersededBy                 Document?                @relation("DocumentSupersede", fields: [supersededById], references: [id], onDelete: SetNull)
@@ -258,44 +536,59 @@ model Document {
   triggeredTrainingAssignments TrainingAssignment[]     @relation("TrainingTriggerDocument")
   changeLinks                  ChangeDocument[]
   supplierLinks                SupplierDocument[]
+  evidenceLinks                EvidenceDocumentLink[]
+  template                     DocumentTemplate?        @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
   @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([organizationId, standardCode])
+  @@index([organizationId, clauseId])
+  @@index([organizationId, processId])
+  @@index([organizationId, ownerId])
   @@index([processId])
   @@index([ownerId])
   @@index([responsibleElaborationId])
   @@index([responsibleApprovalId])
   @@index([custodianId])
+  @@index([templateId])
   @@map("documents")
 }
 
 model DocumentVersion {
-  id                String   @id @default(cuid())
-  documentId        String
-  version           String
-  fileUrl           String?
-  fileSize          Int?
-  mimeType          String?
-  changeLog         String?
-  changeDescription String?
-  previousVersion   String?
-  createdById       String?
-  createdAt         DateTime @default(now())
+  id                 String                @id @default(cuid())
+  documentId         String
+  version            String
+  status             DocumentVersionStatus @default(DRAFT)
+  reviewedFromStatus DocumentStatus?
+  fileUrl            String?
+  fileSize           Int?
+  mimeType           String?
+  changeLog          String?
+  changeDescription  String?
+  previousVersion    String?
+  createdById        String?
+  content            String?
+  createdAt          DateTime              @default(now())
 
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document  Document   @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  approvals Approval[]
 
+  @@unique([documentId, version])
   @@map("document_versions")
 }
 
 model Approval {
   id         String         @id @default(cuid())
   documentId String
+  versionId  String?
   approverId String
   status     ApprovalStatus @default(PENDING)
   comment    String?
   decidedAt  DateTime?
   createdAt  DateTime       @default(now())
 
-  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  document Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version  DocumentVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
 
   @@map("approvals")
 }
@@ -322,6 +615,12 @@ model Process {
   trainingAssignments TrainingAssignment[]
   changeLinks         ChangeProcess[]
   records             Record[]
+  groupLinks          GroupProcess[]
+  evidenceFiles       EvidenceFile[]
+  capas               CAPA[]
+  audits              Audit[]
+  informationAssets   InformationAsset[]
+  bcpLinks            BCPProcess[]
 
   @@map("processes")
 }
@@ -346,12 +645,17 @@ model Risk {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  process       Process?       @relation(fields: [processId], references: [id], onDelete: SetNull)
-  controls      Control[]
-  actions       Action[]
-  changeLinks   ChangeRisk[]
-  supplierLinks SupplierRisk[]
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process                Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
+  controls               Control[]
+  actions                Action[]
+  changeLinks            ChangeRisk[]
+  supplierLinks          SupplierRisk[]
+  evidenceLinks          EvidenceRiskLink[]
+  managementReviewInputs ManagementReviewInput[]
+  securityControlLinks   RiskControlLink[]
+  treatmentItems         RiskTreatmentItem[]     @relation("RiskTreatmentItemRisk")
+  assetRisks             AssetRisk[]
 
   @@index([processId])
   @@map("risks")
@@ -375,32 +679,51 @@ model Control {
 // ─── AUDITS ──────────────────────────────────────────
 
 model Audit {
-  id              String      @id @default(cuid())
-  organizationId  String
-  programId       String?
-  title           String
-  type            AuditType   @default(INTERNAL)
-  standardCode    String?
-  status          AuditStatus @default(PLANNED)
-  auditorId       String?
-  auditorExternal String?
-  scheduledDate   DateTime?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  scope           String?
-  objectives      String?
-  criteria        String?
-  reportUrl       String?
-  progress        Int         @default(0)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id               String      @id @default(cuid())
+  organizationId   String
+  programId        String?
+  processId        String?
+  title            String
+  type             AuditType   @default(INTERNAL)
+  standardCode     String?
+  status           AuditStatus @default(PLANNED)
+  auditorId        String?
+  auditorExternal  String?
+  plannedDate      DateTime?
+  scheduledDate    DateTime?
+  startDate        DateTime?
+  endDate          DateTime?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  scope            String?
+  objectives       String?
+  criteria         String?
+  reportUrl        String?
+  reportSummary    String?
+  reportConclusion String?
+  reportIssuedAt   DateTime?
+  closedById       String?
+  progress         Int         @default(0)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  organization    Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  program         AuditProgram?        @relation(fields: [programId], references: [id])
-  findings        AuditFinding[]
-  nonconformities Nonconformity[]
-  checklistItems  AuditChecklistItem[]
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  program                AuditProgram?           @relation(fields: [programId], references: [id])
+  process                Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
+  closedBy               User?                   @relation("AuditClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  findings               AuditFinding[]
+  nonconformities        Nonconformity[]
+  checklistItems         AuditChecklistItem[]
+  evidenceLinks          EvidenceAuditLink[]
+  participants           AuditParticipant[]
+  managementReviewInputs ManagementReviewInput[]
+  clause                 Clause?                 @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  clauseId               String?
 
+  @@index([organizationId, plannedDate])
+  @@index([organizationId, processId])
+  @@index([organizationId, status])
+  @@index([organizationId, clauseId])
   @@map("audits")
 }
 
@@ -417,8 +740,10 @@ model AuditFinding {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  audit         Audit          @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  audit         Audit                 @relation(fields: [auditId], references: [id], onDelete: Cascade)
   nonconformity Nonconformity?
+  evidenceLinks EvidenceFindingLink[]
+  capa          CAPA?
 
   @@map("audit_findings")
 }
@@ -440,16 +765,22 @@ model Nonconformity {
   dueDate                DateTime?
   closedAt               DateTime?
   effectivenessValidated Boolean    @default(false)
+  archiveReason          String?
+  archivedAt             DateTime?
+  archivedById           String?
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
 
-  organization   Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  audit          Audit?                  @relation(fields: [auditId], references: [id])
-  finding        AuditFinding?           @relation(fields: [findingId], references: [id])
-  actions        Action[]
-  changeRequests ChangeRequest[]
-  supplierLinks  SupplierNonconformity[]
-  comments       NonconformityComment[]
+  organization           Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  audit                  Audit?                      @relation(fields: [auditId], references: [id])
+  finding                AuditFinding?               @relation(fields: [findingId], references: [id])
+  actions                Action[]
+  changeRequests         ChangeRequest[]
+  supplierLinks          SupplierNonconformity[]
+  comments               NonconformityComment[]
+  evidenceLinks          EvidenceNonconformityLink[]
+  capa                   CAPA?
+  managementReviewInputs ManagementReviewInput[]
 
   @@map("nonconformities")
 }
@@ -467,40 +798,75 @@ model NonconformityComment {
   @@map("nonconformity_comments")
 }
 
+// ─── OPPORTUNITIES ──────────────────────────────────
+
+model Opportunity {
+  id                      String            @id @default(cuid())
+  organizationId          String
+  title                   String
+  description             String?
+  standardCode            String?
+  source                  String?
+  category                String
+  status                  OpportunityStatus @default(IDENTIFIED)
+  ownerId                 String?
+  reviewerId              String?
+  materializationAnalysis String?
+  materializationPlan     String?
+  materializationEvidence String?
+  dueDate                 DateTime?
+  materializedAt          DateTime?
+  closedAt                DateTime?
+  rejectionReason         String?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner        User?        @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  reviewer     User?        @relation("OpportunityReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@index([organizationId, reviewerId, status])
+  @@map("opportunities")
+}
+
 // ─── ACTIONS ─────────────────────────────────────────
 
 model Action {
-  id                 String       @id @default(cuid())
-  organizationId     String
-  title              String
-  description        String?
-  type               ActionType   @default(CORRECTIVE)
-  priority           Priority     @default(MEDIUM)
-  status             ActionStatus @default(PENDING)
-  stage              ACPMStage    @default(REQUEST)
-  source             String?
-  rootCause          String?
-  proposedSolution   String?
-  effectivenessCheck String?
-  effectivenessAt    DateTime?
-  ownerId            String?
-  requestedById      String?
-  requestApproverId  String?
-  solutionApproverId String?
-  dueDate            DateTime?
-  completedAt        DateTime?
-  progress           Int          @default(0)
-  riskId             String?
-  nonconformityId    String?
-  managementReviewId String?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  id                         String       @id @default(cuid())
+  organizationId             String
+  title                      String
+  description                String?
+  type                       ActionType   @default(CORRECTIVE)
+  priority                   Priority     @default(MEDIUM)
+  status                     ActionStatus @default(PENDING)
+  stage                      ACPMStage    @default(REQUEST)
+  source                     String?
+  rootCause                  String?
+  proposedSolution           String?
+  effectivenessCheck         String?
+  effectivenessAt            DateTime?
+  ownerId                    String?
+  requestedById              String?
+  requestApproverId          String?
+  solutionApproverId         String?
+  dueDate                    DateTime?
+  completedAt                DateTime?
+  progress                   Int          @default(0)
+  riskId                     String?
+  nonconformityId            String?
+  managementReviewId         String?
+  managementReviewDecisionId String?      @unique
+  createdAt                  DateTime     @default(now())
+  updatedAt                  DateTime     @updatedAt
 
-  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  risk             Risk?             @relation(fields: [riskId], references: [id])
-  nonconformity    Nonconformity?    @relation(fields: [nonconformityId], references: [id])
-  managementReview ManagementReview? @relation(fields: [managementReviewId], references: [id])
-  comments         ActionComment[]
+  organization             Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  risk                     Risk?                     @relation(fields: [riskId], references: [id])
+  nonconformity            Nonconformity?            @relation(fields: [nonconformityId], references: [id])
+  managementReview         ManagementReview?         @relation(fields: [managementReviewId], references: [id])
+  managementReviewDecision ManagementReviewDecision? @relation(fields: [managementReviewDecisionId], references: [id], onDelete: SetNull)
+  comments                 ActionComment[]
+  managementReviewInputs   ManagementReviewInput[]
 
   @@map("actions")
 }
@@ -515,6 +881,105 @@ model ActionComment {
   action Action @relation(fields: [actionId], references: [id], onDelete: Cascade)
 
   @@map("action_comments")
+}
+
+// ─── ACPM / CAPA ────────────────────────────────────
+
+model CAPA {
+  id                     String               @id @default(cuid())
+  organizationId         String
+  code                   String
+  title                  String
+  description            String
+  origin                 ACPMOrigin           @default(OTHER)
+  standardCode           String?
+  clauseId               String?
+  processId              String?
+  nonconformityId        String?              @unique
+  findingId              String?              @unique
+  severity               NCSeverity           @default(MINOR)
+  priority               Priority             @default(MEDIUM)
+  stage                  CAPAStage            @default(REGISTERED)
+  rootCauseMethod        ACPMRootCauseMethod?
+  fiveWhys               Json?
+  ishikawaAnalysis       String?
+  rootCause              String?
+  rootCauseApproved      Boolean              @default(false)
+  rootCauseApprovedById  String?
+  rootCauseApprovedAt    DateTime?
+  correctiveAction       String?
+  ownerId                String?
+  dueDate                DateTime?
+  progress               Int                  @default(0)
+  implementationComments String?
+  efficacyStatus         ACPMEfficacyStatus   @default(PENDING)
+  verifierId             String?
+  verifierComment        String?
+  verifiedAt             DateTime?
+  closedAt               DateTime?
+  closedById             String?
+  lessonsLearned         String?
+  requestedById          String
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clause                 Clause?                 @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  process                Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
+  nonconformity          Nonconformity?          @relation(fields: [nonconformityId], references: [id], onDelete: SetNull)
+  finding                AuditFinding?           @relation(fields: [findingId], references: [id], onDelete: SetNull)
+  owner                  User?                   @relation("CAPAOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  requestedBy            User                    @relation("CAPARequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  rootCauseApprovedBy    User?                   @relation("CAPARootCauseApprovedBy", fields: [rootCauseApprovedById], references: [id], onDelete: SetNull)
+  verifier               User?                   @relation("CAPAVerifier", fields: [verifierId], references: [id], onDelete: SetNull)
+  closedBy               User?                   @relation("CAPACloser", fields: [closedById], references: [id], onDelete: SetNull)
+  evidences              CAPAEvidence[]
+  comments               CAPAComment[]
+  managementReviewInputs ManagementReviewInput[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, stage])
+  @@index([organizationId, dueDate])
+  @@index([organizationId, processId])
+  @@index([organizationId, clauseId])
+  @@index([organizationId, findingId])
+  @@map("capas")
+}
+
+model CAPAEvidence {
+  id             String           @id @default(cuid())
+  organizationId String
+  capaId         String
+  kind           CAPAEvidenceKind
+  title          String
+  description    String?
+  fileName       String
+  fileUrl        String
+  fileSize       Int
+  mimeType       String
+  uploadedById   String
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  capa         CAPA         @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  uploadedBy   User         @relation("CAPAEvidenceUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, capaId, kind])
+  @@map("capa_evidences")
+}
+
+model CAPAComment {
+  id        String   @id @default(cuid())
+  capaId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  capa   CAPA @relation(fields: [capaId], references: [id], onDelete: Cascade)
+  author User @relation("CAPACommentAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([capaId, createdAt])
+  @@map("capa_comments")
 }
 
 // ─── INDICATORS ──────────────────────────────────────
@@ -534,9 +999,11 @@ model Indicator {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
-  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  process      Process?         @relation(fields: [processId], references: [id], onDelete: SetNull)
-  values       IndicatorValue[]
+  organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process                Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
+  values                 IndicatorValue[]
+  evidenceLinks          EvidenceIndicatorLink[]
+  managementReviewInputs ManagementReviewInput[]
 
   @@index([processId])
   @@map("indicators")
@@ -558,20 +1025,181 @@ model IndicatorValue {
 // ─── EVIDENCE ────────────────────────────────────────
 
 model EvidenceFile {
-  id             String   @id @default(cuid())
+  id             String         @id @default(cuid())
   organizationId String
   title          String
+  description    String?
+  evidenceType   EvidenceType   @default(OTHER)
+  status         EvidenceStatus @default(PENDING_REVIEW)
   fileUrl        String
   fileSize       Int?
   mimeType       String?
-  module         String? // process, risk, audit, nc, indicator, document, change, supplier, integration
+  processId      String?
+  standardCode   String?
+  clauseId       String?
+  responsibleId  String?
+  issuedAt       DateTime?
+  expiresAt      DateTime?
+  reviewedAt     DateTime?
+  reviewedById   String?
+  module         String? // legacy polymorphic link kept for backwards compatibility
   moduleId       String?
   uploadedById   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+
+  organization             Organization                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process                  Process?                       @relation(fields: [processId], references: [id], onDelete: SetNull)
+  clause                   Clause?                        @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  uploadedBy               User?                          @relation("EvidenceUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+  responsible              User?                          @relation("EvidenceResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  reviewedBy               User?                          @relation("EvidenceReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  documentLinks            EvidenceDocumentLink[]
+  riskLinks                EvidenceRiskLink[]
+  auditLinks               EvidenceAuditLink[]
+  findingLinks             EvidenceFindingLink[]
+  nonconformityLinks       EvidenceNonconformityLink[]
+  indicatorLinks           EvidenceIndicatorLink[]
+  managementReviewLinks    EvidenceManagementReviewLink[]
+  controlEvidences         ControlEvidence[]
+  soaApprovalEvidence      StatementOfApplicability[]     @relation("SoAApprovalEvidence")
+  soaEntryEvidence         SoAControlEntry[]              @relation("SoAEntryEvidence")
+  riskPlanApprovalEvidence RiskTreatmentPlan[]            @relation("RiskPlanApprovalEvidence")
+  riskAcceptanceEvidence   RiskAcceptance[]               @relation("RiskAcceptanceEvidence")
+  assetControlEvidence     AssetControl[]                 @relation("AssetControlEvidence")
+  incidentEvidence         SecurityIncidentEvidence[]
+  remediationEvidence      Remediation[]                  @relation("RemediationEvidence")
+  verificationEvidence     Verification[]                 @relation("VerificationEvidence")
+  testResultEvidence       TestResult[]                   @relation("TestResultEvidence")
+  supplierSecurityEvidence SupplierSecurityProfile[]      @relation("SupplierSecurityEvidence")
+
+  @@index([organizationId, status])
+  @@index([organizationId, expiresAt])
+  @@index([organizationId, evidenceType])
+  @@index([organizationId, processId])
+  @@index([organizationId, clauseId])
+  @@index([organizationId, responsibleId])
+  @@map("evidence_files")
+}
+
+model EvidenceDocumentLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  documentId     String
+  createdById    String?
   createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  document     Document     @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  @@map("evidence_files")
+  @@unique([evidenceId, documentId])
+  @@index([organizationId, documentId])
+  @@map("evidence_document_links")
+}
+
+model EvidenceRiskLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  riskId         String
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  risk         Risk         @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, riskId])
+  @@index([organizationId, riskId])
+  @@map("evidence_risk_links")
+}
+
+model EvidenceAuditLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  auditId        String
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  audit        Audit        @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, auditId])
+  @@index([organizationId, auditId])
+  @@map("evidence_audit_links")
+}
+
+model EvidenceFindingLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  findingId      String
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  finding      AuditFinding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, findingId])
+  @@index([organizationId, findingId])
+  @@map("evidence_finding_links")
+}
+
+model EvidenceNonconformityLink {
+  id              String   @id @default(cuid())
+  organizationId  String
+  evidenceId      String
+  nonconformityId String
+  createdById     String?
+  createdAt       DateTime @default(now())
+
+  organization  Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence      EvidenceFile  @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  nonconformity Nonconformity @relation(fields: [nonconformityId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, nonconformityId])
+  @@index([organizationId, nonconformityId])
+  @@map("evidence_nonconformity_links")
+}
+
+model EvidenceIndicatorLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  indicatorId    String
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  indicator    Indicator    @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, indicatorId])
+  @@index([organizationId, indicatorId])
+  @@map("evidence_indicator_links")
+}
+
+model EvidenceManagementReviewLink {
+  id                 String   @id @default(cuid())
+  organizationId     String
+  evidenceId         String
+  managementReviewId String
+  createdById        String?
+  createdAt          DateTime @default(now())
+
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence         EvidenceFile     @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  managementReview ManagementReview @relation(fields: [managementReviewId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, managementReviewId])
+  @@index([organizationId, managementReviewId])
+  @@map("evidence_management_review_links")
 }
 
 // ─── NOTIFICATIONS ───────────────────────────────────
@@ -586,13 +1214,65 @@ model Notification {
   read           Boolean          @default(false)
   readAt         DateTime?
   link           String?
+  idempotencyKey String?
   createdAt      DateTime         @default(now())
+
+  organization Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveryJob  NotificationDeliveryJob?
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([userId, read, createdAt])
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id             String             @id @default(cuid())
+  organizationId String
+  userId         String
+  emailEnabled   Boolean            @default(true)
+  disabledTypes  NotificationType[] @default([])
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, read, createdAt])
-  @@map("notifications")
+  @@unique([organizationId, userId])
+  @@map("notification_preferences")
+}
+
+model NotificationDeliveryJob {
+  id                  String                     @id @default(cuid())
+  organizationId      String
+  notificationId      String?                    @unique
+  userId              String?
+  recipientEmail      String
+  recipientName       String
+  title               String
+  body                String
+  link                String?
+  idempotencyKey      String
+  status              NotificationDeliveryStatus @default(PENDING)
+  attempts            Int                        @default(0)
+  maxAttempts         Int                        @default(5)
+  nextAttemptAt       DateTime                   @default(now())
+  processingStartedAt DateTime?
+  providerMessageId   String?
+  lastError           String?
+  lastErrorAt         DateTime?
+  sentAt              DateTime?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([status, nextAttemptAt])
+  @@index([organizationId, createdAt])
+  @@map("notification_delivery_jobs")
 }
 
 // ─── BILLING ─────────────────────────────────────────
@@ -607,6 +1287,9 @@ model Subscription {
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)
+  gracePeriodEndsAt    DateTime?
+  suspendedAt          DateTime?
+  lastPaymentFailedAt  DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
@@ -623,7 +1306,7 @@ model BillingInvoice {
   stripeInvoiceId  String    @unique
   number           String?
   status           String
-  currency         String    @default("eur")
+  currency         String    @default("usd")
   amountDue        Int
   amountPaid       Int       @default(0)
   periodStart      DateTime?
@@ -641,24 +1324,67 @@ model BillingInvoice {
   @@map("billing_invoices")
 }
 
+model StripeWebhookEvent {
+  id          String    @id @default(cuid())
+  eventId     String    @unique
+  type        String
+  payload     Json?
+  attempts    Int       @default(1)
+  processedAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([type, createdAt])
+  @@index([processedAt])
+  @@map("stripe_webhook_events")
+}
+
 model ReportExport {
-  id             String       @id @default(cuid())
-  organizationId String
-  generatedById  String?
-  reportType     String
-  format         ReportFormat
-  dateFrom       DateTime
-  dateTo         DateTime
-  rowCount       Int
-  fileName       String
-  createdAt      DateTime     @default(now())
+  id                  String               @id @default(cuid())
+  organizationId      String
+  generatedById       String?
+  reportType          String
+  format              ReportFormat
+  dateFrom            DateTime
+  dateTo              DateTime
+  rowCount            Int
+  fileName            String
+  mimeType            String?
+  title               String?
+  filters             Json?
+  content             Bytes?
+  storagePath         String?
+  fileSize            Int?
+  checksum            String?
+  status              ReportArtifactStatus @default(QUEUED)
+  error               String?
+  idempotencyKey      String?
+  attempts            Int                  @default(0)
+  maxAttempts         Int                  @default(3)
+  nextAttemptAt       DateTime             @default(now())
+  processingStartedAt DateTime?
+  leaseToken          String?
+  lastErrorAt         DateTime?
+  failedAt            DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   generatedBy  User?        @relation("ReportGeneratedBy", fields: [generatedById], references: [id], onDelete: SetNull)
 
+  @@unique([organizationId, idempotencyKey])
   @@index([organizationId, createdAt])
   @@index([generatedById])
+  @@index([organizationId, status, createdAt])
   @@map("report_exports")
+}
+
+enum ReportArtifactStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 // ─── AUDIT LOGS ──────────────────────────────────────
@@ -681,6 +1407,23 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model OnboardingMetricEvent {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  event          String
+  step           Int?
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, event, createdAt])
+  @@index([userId, createdAt])
+  @@map("onboarding_metric_events")
+}
+
 // ─── ISOTECH MANUAL ALIGNMENT ───────────────────────
 // Models that extend the SaaS to cover the ISOTech functional reference.
 // All entities are tenant-scoped via organizationId.
@@ -697,9 +1440,55 @@ model Group {
   organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   members      GroupMembership[]
   permissions  GroupPermission[]
+  processLinks GroupProcess[]
+  moduleLinks  GroupModule[]
 
   @@unique([organizationId, name])
   @@map("groups")
+}
+
+model GroupProcess {
+  id        String   @id @default(cuid())
+  groupId   String
+  processId String
+  createdAt DateTime @default(now())
+
+  group   Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  process Process @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, processId])
+  @@index([processId])
+  @@map("group_processes")
+}
+
+model GroupModule {
+  id        String   @id @default(cuid())
+  groupId   String
+  module    String
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, module])
+  @@map("group_modules")
+}
+
+model OrganizationCatalogItem {
+  id             String   @id @default(cuid())
+  organizationId String
+  kind           String
+  name           String
+  description    String?
+  active         Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, kind, name])
+  @@index([organizationId, kind, active])
+  @@map("organization_catalog_items")
 }
 
 model GroupMembership {
@@ -990,11 +1779,12 @@ model Supplier {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  organization    Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization    Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   documents       SupplierDocument[]
   risks           SupplierRisk[]
   nonconformities SupplierNonconformity[]
   evaluations     SupplierEvaluation[]
+  securityProfile SupplierSecurityProfile?
 
   @@unique([organizationId, code])
   @@index([organizationId, status])
@@ -1110,8 +1900,9 @@ model Location {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  documents    Document[]
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documents         Document[]
+  informationAssets InformationAsset[]
 
   @@unique([organizationId, name])
   @@map("locations")
@@ -1167,6 +1958,7 @@ model ArchiveMethod {
 model RecordType {
   id             String   @id @default(cuid())
   organizationId String
+  code           String?
   name           String // FISICO, ELECTRONICO, FISICO_Y_ELECTRONICO, ...
   active         Boolean  @default(true)
   createdAt      DateTime @default(now())
@@ -1174,58 +1966,77 @@ model RecordType {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   records      Record[]
 
+  @@unique([organizationId, code])
   @@unique([organizationId, name])
   @@map("record_types")
 }
 
 // § 13.2 Control de Registros
 model Record {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   organizationId   String
   code             String
   name             String
   processId        String?
+  clauseId         String?
   recordTypeId     String?
   retentionTimeId  String?
   dispositionId    String?
   archiveMethodId  String?
   custodianId      String?
+  reviewerId       String?
+  reviewStatus     RecordReviewStatus @default(DRAFT)
+  reviewComment    String?
+  reviewedAt       DateTime?
   physicalLocation String?
   digitalLocation  String?
   observations     String?
-  active           Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  active           Boolean            @default(true)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   process       Process?       @relation(fields: [processId], references: [id], onDelete: SetNull)
+  clause        Clause?        @relation(fields: [clauseId], references: [id], onDelete: SetNull)
   recordType    RecordType?    @relation(fields: [recordTypeId], references: [id])
   retentionTime RetentionTime? @relation(fields: [retentionTimeId], references: [id])
   disposition   Disposition?   @relation(fields: [dispositionId], references: [id])
   archiveMethod ArchiveMethod? @relation(fields: [archiveMethodId], references: [id])
   custodian     Personnel?     @relation("RecordCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
+  reviewer      User?          @relation("RecordReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   entries       RecordEntry[]
 
   @@unique([organizationId, code])
   @@index([processId])
+  @@index([organizationId, clauseId])
   @@index([custodianId])
   @@map("records")
 }
 
 model RecordEntry {
-  id          String   @id @default(cuid())
-  recordId    String
-  reference   String? // e.g. registry number, batch
-  description String?
-  fileName    String?
-  fileUrl     String?
-  fileSize    Int?
-  mimeType    String?
-  enteredById String?
-  enteredAt   DateTime @default(now())
+  id            String            @id @default(cuid())
+  recordId      String
+  title         String            @default("Entrada")
+  reference     String? // e.g. registry number, batch
+  description   String?
+  entryDate     DateTime          @default(now())
+  status        RecordEntryStatus @default(VALID)
+  responsibleId String?
+  fileName      String?
+  fileUrl       String?
+  fileSize      Int?
+  mimeType      String?
+  enteredById   String?
+  enteredAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  record Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  record      Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  responsible User?  @relation("RecordEntryResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  enteredBy   User?  @relation("RecordEntryEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
 
+  @@index([recordId, entryDate])
+  @@index([recordId, status])
+  @@index([responsibleId])
   @@map("record_entries")
 }
 
@@ -1237,6 +2048,9 @@ model AuditProgram {
   title          String
   objectives     String?
   scope          String?
+  standards      String[]           @default([])
+  criteria       String?
+  responsibleId  String?
   status         AuditProgramStatus @default(DRAFT)
   approvedById   String?
   approvedAt     DateTime?
@@ -1244,6 +2058,7 @@ model AuditProgram {
   updatedAt      DateTime           @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responsible  User?        @relation("AuditProgramResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
   audits       Audit[]
 
   @@unique([organizationId, year, title])
@@ -1254,6 +2069,7 @@ model AuditChecklistItem {
   id          String              @id @default(cuid())
   auditId     String
   clauseCode  String?
+  clauseId    String?
   question    String
   expected    String?
   response    String?
@@ -1263,9 +2079,28 @@ model AuditChecklistItem {
   order       Int                 @default(0)
   createdAt   DateTime            @default(now())
 
-  audit Audit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  audit  Audit   @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  clause Clause? @relation(fields: [clauseId], references: [id], onDelete: SetNull)
 
   @@map("audit_checklist_items")
+}
+
+model AuditParticipant {
+  id             String               @id @default(cuid())
+  organizationId String
+  auditId        String
+  userId         String
+  role           AuditParticipantRole @default(AUDITEE)
+  createdAt      DateTime             @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  audit        Audit        @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([auditId, userId])
+  @@index([organizationId, auditId])
+  @@index([userId])
+  @@map("audit_participants")
 }
 
 // § 16 Revisión por la Dirección
@@ -1277,29 +2112,51 @@ model ManagementReview {
   heldAt         DateTime?
   status         ManagementReviewStatus @default(PLANNED)
   chairId        String?
-  attendees      String[] @default([]) // free-text names or user IDs
+  attendees      String[]               @default([]) // free-text names or user IDs
+  standards      String[]               @default([])
   summary        String?
   reportUrl      String?
   createdAt      DateTime               @default(now())
   updatedAt      DateTime               @updatedAt
 
-  organization Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  inputs       ManagementReviewInput[]
-  decisions    ManagementReviewDecision[]
-  actions      Action[]
+  organization  Organization                   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  inputs        ManagementReviewInput[]
+  decisions     ManagementReviewDecision[]
+  actions       Action[]
+  evidenceLinks EvidenceManagementReviewLink[]
+  participants  ManagementReviewParticipant[]
 
   @@map("management_reviews")
 }
 
 model ManagementReviewInput {
-  id        String                @id @default(cuid())
-  reviewId  String
-  topic     ManagementReviewTopic
-  content   String
-  createdAt DateTime              @default(now())
+  id              String                @id @default(cuid())
+  reviewId        String
+  topic           ManagementReviewTopic
+  content         String
+  auditId         String?
+  indicatorId     String?
+  riskId          String?
+  nonconformityId String?
+  actionId        String?
+  capaId          String?
+  createdAt       DateTime              @default(now())
 
-  review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  review        ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  audit         Audit?           @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  indicator     Indicator?       @relation(fields: [indicatorId], references: [id], onDelete: SetNull)
+  risk          Risk?            @relation(fields: [riskId], references: [id], onDelete: SetNull)
+  nonconformity Nonconformity?   @relation(fields: [nonconformityId], references: [id], onDelete: SetNull)
+  action        Action?          @relation(fields: [actionId], references: [id], onDelete: SetNull)
+  capa          CAPA?            @relation(fields: [capaId], references: [id], onDelete: SetNull)
 
+  @@index([reviewId, topic])
+  @@index([auditId])
+  @@index([indicatorId])
+  @@index([riskId])
+  @@index([nonconformityId])
+  @@index([actionId])
+  @@index([capaId])
   @@map("management_review_inputs")
 }
 
@@ -1313,8 +2170,711 @@ model ManagementReviewDecision {
   createdAt DateTime  @default(now())
 
   review ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  action Action?
 
   @@map("management_review_decisions")
+}
+
+model ManagementReviewParticipant {
+  id             String                          @id @default(cuid())
+  organizationId String
+  reviewId       String
+  userId         String
+  role           ManagementReviewParticipantRole @default(ATTENDEE)
+  createdAt      DateTime                        @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  review       ManagementReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@index([organizationId, reviewId])
+  @@index([userId])
+  @@map("management_review_participants")
+}
+
+// ─── STATEMENT OF APPLICABILITY ──────────────────────
+
+model StatementOfApplicability {
+  id                 String    @id @default(cuid())
+  organizationId     String
+  version            Int
+  status             SoAStatus @default(DRAFT)
+  scope              String?
+  ownerId            String?
+  approverId         String?
+  approvalComment    String?
+  approvalEvidenceId String?
+  approvedAt         DateTime?
+  nextReviewDate     DateTime?
+  supersededById     String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  organization     Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner            User?                      @relation("SoAOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  approver         User?                      @relation("SoAApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  approvalEvidence EvidenceFile?              @relation("SoAApprovalEvidence", fields: [approvalEvidenceId], references: [id], onDelete: SetNull)
+  supersededBy     StatementOfApplicability?  @relation("SoASupersede", fields: [supersededById], references: [id], onDelete: SetNull)
+  supersedes       StatementOfApplicability[] @relation("SoASupersede")
+  entries          SoAControlEntry[]
+  riskPlans        RiskTreatmentPlan[]        @relation("SoARiskPlans")
+
+  @@unique([organizationId, version])
+  @@index([organizationId, status])
+  @@map("statements_of_applicability")
+}
+
+model SoAControlEntry {
+  id                   String                    @id @default(cuid())
+  organizationId       String
+  soaId                String
+  controlId            String
+  controlCode          String
+  controlTitle         String
+  controlDomain        SecurityControlDomain
+  applicability        ControlApplicability      @default(UNDER_REVIEW)
+  justification        String?
+  implementationStatus OrganizationControlStatus @default(NOT_ASSESSED)
+  relatedRiskItemId    String?
+  evidenceId           String?
+  responsibleId        String?
+  reviewDate           DateTime?
+  notes                String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+
+  organization    Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  soa             StatementOfApplicability @relation(fields: [soaId], references: [id], onDelete: Cascade)
+  control         SecurityControl          @relation(fields: [controlId], references: [id], onDelete: Restrict)
+  relatedRiskItem RiskTreatmentItem?       @relation("SoAEntryRiskItem", fields: [relatedRiskItemId], references: [id], onDelete: SetNull)
+  evidence        EvidenceFile?            @relation("SoAEntryEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+  responsible     User?                    @relation("SoAEntryResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+
+  @@unique([soaId, controlId])
+  @@index([organizationId, soaId])
+  @@index([organizationId, applicability])
+  @@map("soa_control_entries")
+}
+
+// ─── RISK TREATMENT ──────────────────────────────────
+
+model RiskAssessmentMethodology {
+  id                  String    @id @default(cuid())
+  organizationId      String
+  version             Int
+  title               String
+  description         String?
+  probabilityScale    Json
+  impactScale         Json
+  riskMatrix          Json
+  acceptanceCriteria  String
+  acceptanceThreshold Int?
+  ownerId             String?
+  approvedById        String?
+  approvedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner        User?               @relation("RiskMethodologyOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  approvedBy   User?               @relation("RiskMethodologyApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  plans        RiskTreatmentPlan[]
+
+  @@unique([organizationId, version])
+  @@map("risk_assessment_methodologies")
+}
+
+model RiskTreatmentPlan {
+  id                 String                  @id @default(cuid())
+  organizationId     String
+  methodologyId      String?
+  soaId              String?
+  version            Int
+  title              String
+  status             RiskTreatmentPlanStatus @default(DRAFT)
+  ownerId            String?
+  approverId         String?
+  approvalComment    String?
+  approvalEvidenceId String?
+  approvedAt         DateTime?
+  nextReviewDate     DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  organization     Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  methodology      RiskAssessmentMethodology? @relation(fields: [methodologyId], references: [id], onDelete: SetNull)
+  soa              StatementOfApplicability?  @relation("SoARiskPlans", fields: [soaId], references: [id], onDelete: SetNull)
+  owner            User?                      @relation("RiskPlanOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  approver         User?                      @relation("RiskPlanApprover", fields: [approverId], references: [id], onDelete: SetNull)
+  approvalEvidence EvidenceFile?              @relation("RiskPlanApprovalEvidence", fields: [approvalEvidenceId], references: [id], onDelete: SetNull)
+  items            RiskTreatmentItem[]
+
+  @@unique([organizationId, version])
+  @@index([organizationId, status])
+  @@map("risk_treatment_plans")
+}
+
+model RiskTreatmentItem {
+  id                  String                  @id @default(cuid())
+  organizationId      String
+  planId              String
+  reference           String
+  title               String
+  description         String?
+  riskId              String?
+  asset               String?
+  threat              String?
+  vulnerability       String?
+  impact              Int
+  probability         Int
+  inherentRisk        Int
+  existingControls    String?
+  proposedControls    String?
+  treatment           RiskTreatment           @default(MITIGATE)
+  residualImpact      Int?
+  residualProbability Int?
+  residualRisk        Int?
+  ownerId             String?
+  targetDate          DateTime?
+  status              RiskTreatmentItemStatus @default(OPEN)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  organization        Organization             @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan                RiskTreatmentPlan        @relation(fields: [planId], references: [id], onDelete: Cascade)
+  risk                Risk?                    @relation("RiskTreatmentItemRisk", fields: [riskId], references: [id], onDelete: SetNull)
+  owner               User?                    @relation("RiskItemOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  controls            RiskTreatmentControl[]
+  residualAssessments ResidualRiskAssessment[]
+  acceptances         RiskAcceptance[]
+  soaEntries          SoAControlEntry[]        @relation("SoAEntryRiskItem")
+
+  @@unique([planId, reference])
+  @@index([organizationId, status])
+  @@index([organizationId, planId])
+  @@map("risk_treatment_items")
+}
+
+model RiskTreatmentControl {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  itemId                String
+  organizationControlId String
+  role                  String   @default("PROPOSED")
+  createdAt             DateTime @default(now())
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item                RiskTreatmentItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  organizationControl OrganizationControl @relation(fields: [organizationControlId], references: [id], onDelete: Cascade)
+
+  @@unique([itemId, organizationControlId])
+  @@index([organizationId, itemId])
+  @@map("risk_treatment_controls")
+}
+
+model ResidualRiskAssessment {
+  id                  String   @id @default(cuid())
+  organizationId      String
+  itemId              String
+  residualImpact      Int
+  residualProbability Int
+  residualRisk        Int
+  rationale           String?
+  assessedById        String
+  assessedAt          DateTime @default(now())
+  approved            Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item         RiskTreatmentItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  assessedBy   User              @relation("ResidualRiskAssessor", fields: [assessedById], references: [id], onDelete: Restrict)
+  acceptances  RiskAcceptance[]
+
+  @@index([organizationId, itemId, assessedAt])
+  @@map("residual_risk_assessments")
+}
+
+model RiskAcceptance {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  itemId               String
+  residualAssessmentId String?
+  justification        String
+  acceptedById         String
+  acceptedAt           DateTime  @default(now())
+  comment              String?
+  evidenceId           String?
+  validUntil           DateTime?
+  createdAt            DateTime  @default(now())
+
+  organization       Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  item               RiskTreatmentItem       @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  residualAssessment ResidualRiskAssessment? @relation(fields: [residualAssessmentId], references: [id], onDelete: SetNull)
+  acceptedBy         User                    @relation("RiskAcceptedBy", fields: [acceptedById], references: [id], onDelete: Restrict)
+  evidence           EvidenceFile?           @relation("RiskAcceptanceEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, itemId])
+  @@map("risk_acceptances")
+}
+
+// ─── INFORMATION ASSET INVENTORY ─────────────────────
+
+model InformationAsset {
+  id             String           @id @default(cuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  category       AssetCategory
+  ownerId        String?
+  custodianId    String?
+  processId      String?
+  locationId     String?
+  status         AssetStatus      @default(ACTIVE)
+  criticality    AssetCriticality @default(MEDIUM)
+  reviewDate     DateTime?
+  nextReviewDate DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization       Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner              User?                   @relation("AssetOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  custodian          User?                   @relation("AssetCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
+  process            Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
+  location           Location?               @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  classification     AssetClassification?
+  dependencies       AssetDependency[]       @relation("AssetDependencySource")
+  dependents         AssetDependency[]       @relation("AssetDependencyTarget")
+  risks              AssetRisk[]
+  controls           AssetControl[]
+  incidentLinks      SecurityIncidentAsset[]
+  vulnerabilityLinks VulnerabilityAsset[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, category])
+  @@index([organizationId, status])
+  @@index([organizationId, criticality])
+  @@index([organizationId, nextReviewDate])
+  @@map("information_assets")
+}
+
+model AssetClassification {
+  id                String                    @id @default(cuid())
+  organizationId    String
+  assetId           String                    @unique
+  confidentiality   CIARating                 @default(MEDIUM)
+  integrity         CIARating                 @default(MEDIUM)
+  availability      CIARating                 @default(MEDIUM)
+  classification    InformationClassification @default(INTERNAL)
+  legalRequirements String?
+  retention         String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset        InformationAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, classification])
+  @@map("asset_classifications")
+}
+
+model AssetDependency {
+  id               String              @id @default(cuid())
+  organizationId   String
+  sourceAssetId    String
+  dependentAssetId String
+  type             AssetDependencyType @default(DEPENDS_ON)
+  description      String?
+  createdAt        DateTime            @default(now())
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sourceAsset    InformationAsset @relation("AssetDependencySource", fields: [sourceAssetId], references: [id], onDelete: Cascade)
+  dependentAsset InformationAsset @relation("AssetDependencyTarget", fields: [dependentAssetId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceAssetId, dependentAssetId])
+  @@index([organizationId, sourceAssetId])
+  @@map("asset_dependencies")
+}
+
+model AssetRisk {
+  id             String   @id @default(cuid())
+  organizationId String
+  assetId        String
+  riskId         String?
+  threat         String?
+  vulnerability  String?
+  description    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset        InformationAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  risk         Risk?            @relation(fields: [riskId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, assetId])
+  @@map("asset_risks")
+}
+
+model AssetControl {
+  id                    String                    @id @default(cuid())
+  organizationId        String
+  assetId               String
+  organizationControlId String
+  status                OrganizationControlStatus @default(NOT_ASSESSED)
+  evidenceId            String?
+  note                  String?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  organization        Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  asset               InformationAsset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  organizationControl OrganizationControl @relation(fields: [organizationControlId], references: [id], onDelete: Cascade)
+  evidence            EvidenceFile?       @relation("AssetControlEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@unique([assetId, organizationControlId])
+  @@index([organizationId, assetId])
+  @@map("asset_controls")
+}
+
+// ─── SECURITY INCIDENTS ──────────────────────────────
+
+model SecurityIncident {
+  id                   String           @id @default(cuid())
+  organizationId       String
+  code                 String
+  detectedAt           DateTime
+  occurredAt           DateTime?
+  reporterId           String?
+  responsibleId        String?
+  severity             IncidentSeverity @default(MEDIUM)
+  category             IncidentCategory @default(OTHER)
+  description          String
+  impact               String?
+  status               IncidentStatus   @default(DETECTED)
+  notificationRequired Boolean          @default(false)
+  notificationDetails  String?
+  lessonsLearned       String?
+  closedAt             DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  organization   Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reporter       User?                      @relation("IncidentReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  responsible    User?                      @relation("IncidentResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  affectedAssets SecurityIncidentAsset[]
+  evidenceLinks  SecurityIncidentEvidence[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([organizationId, severity])
+  @@map("security_incidents")
+}
+
+model SecurityIncidentAsset {
+  id             String   @id @default(cuid())
+  organizationId String
+  incidentId     String
+  assetId        String
+  createdAt      DateTime @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident     SecurityIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  asset        InformationAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, assetId])
+  @@index([organizationId, incidentId])
+  @@map("security_incident_assets")
+}
+
+model SecurityIncidentEvidence {
+  id             String   @id @default(cuid())
+  organizationId String
+  incidentId     String
+  evidenceId     String
+  createdAt      DateTime @default(now())
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  incident     SecurityIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile     @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, evidenceId])
+  @@index([organizationId, incidentId])
+  @@map("security_incident_evidences")
+}
+
+// ─── VULNERABILITIES ─────────────────────────────────
+
+model Vulnerability {
+  id             String                @id @default(cuid())
+  organizationId String
+  code           String
+  source         String
+  cve            String?
+  severity       VulnerabilitySeverity @default(MEDIUM)
+  exposure       String?
+  description    String?
+  responsibleId  String?
+  targetDate     DateTime?
+  status         VulnerabilityStatus   @default(OPEN)
+  discoveredAt   DateTime              @default(now())
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responsible  User?                @relation("VulnerabilityResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  assets       VulnerabilityAsset[]
+  remediations Remediation[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@index([organizationId, severity])
+  @@map("vulnerabilities")
+}
+
+model VulnerabilityAsset {
+  id              String   @id @default(cuid())
+  organizationId  String
+  vulnerabilityId String
+  assetId         String
+  exposure        String?
+  createdAt       DateTime @default(now())
+
+  organization  Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vulnerability Vulnerability    @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+  asset         InformationAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([vulnerabilityId, assetId])
+  @@index([organizationId, vulnerabilityId])
+  @@map("vulnerability_assets")
+}
+
+model Remediation {
+  id              String            @id @default(cuid())
+  organizationId  String
+  vulnerabilityId String
+  description     String
+  responsibleId   String?
+  targetDate      DateTime?
+  status          RemediationStatus @default(PLANNED)
+  evidenceId      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  vulnerability Vulnerability  @relation(fields: [vulnerabilityId], references: [id], onDelete: Cascade)
+  responsible   User?          @relation("RemediationResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  evidence      EvidenceFile?  @relation("RemediationEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+  verifications Verification[]
+
+  @@index([organizationId, vulnerabilityId])
+  @@map("remediations")
+}
+
+model Verification {
+  id             String             @id @default(cuid())
+  organizationId String
+  remediationId  String
+  result         VerificationResult
+  notes          String?
+  verifiedById   String
+  verifiedAt     DateTime           @default(now())
+  evidenceId     String?
+  createdAt      DateTime           @default(now())
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  remediation  Remediation   @relation(fields: [remediationId], references: [id], onDelete: Cascade)
+  verifiedBy   User          @relation("VerificationBy", fields: [verifiedById], references: [id], onDelete: Restrict)
+  evidence     EvidenceFile? @relation("VerificationEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, remediationId])
+  @@map("verifications")
+}
+
+// ─── BUSINESS CONTINUITY ─────────────────────────────
+
+model BusinessContinuityPlan {
+  id             String               @id @default(cuid())
+  organizationId String
+  code           String
+  title          String
+  scope          String?
+  ownerId        String?
+  status         ContinuityPlanStatus @default(DRAFT)
+  rtoMinutes     Int?
+  rpoMinutes     Int?
+  dependencies   String?
+  reviewDate     DateTime?
+  nextReviewDate DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization      Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  owner             User?                  @relation("BcpOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  criticalProcesses BCPProcess[]
+  drPlans           DisasterRecoveryPlan[]
+  scenarios         ContinuityScenario[]
+  tests             ContinuityTest[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@map("business_continuity_plans")
+}
+
+model BCPProcess {
+  id             String   @id @default(cuid())
+  organizationId String
+  planId         String
+  processId      String
+  rtoMinutes     Int?
+  rpoMinutes     Int?
+  createdAt      DateTime @default(now())
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         BusinessContinuityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  process      Process                @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, processId])
+  @@index([organizationId, planId])
+  @@map("bcp_processes")
+}
+
+model DisasterRecoveryPlan {
+  id             String               @id @default(cuid())
+  organizationId String
+  code           String
+  title          String
+  bcpId          String?
+  ownerId        String?
+  status         ContinuityPlanStatus @default(DRAFT)
+  rtoMinutes     Int?
+  rpoMinutes     Int?
+  systems        String?
+  dependencies   String?
+  reviewDate     DateTime?
+  nextReviewDate DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bcp          BusinessContinuityPlan? @relation(fields: [bcpId], references: [id], onDelete: SetNull)
+  owner        User?                   @relation("DrpOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, code])
+  @@index([organizationId, status])
+  @@map("disaster_recovery_plans")
+}
+
+model ContinuityScenario {
+  id             String   @id @default(cuid())
+  organizationId String
+  planId         String
+  title          String
+  description    String?
+  type           String?
+  createdAt      DateTime @default(now())
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         BusinessContinuityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tests        ContinuityTest[]
+
+  @@index([organizationId, planId])
+  @@map("continuity_scenarios")
+}
+
+model ContinuityTest {
+  id             String               @id @default(cuid())
+  organizationId String
+  planId         String
+  scenarioId     String?
+  title          String
+  type           ContinuityTestType   @default(TABLETOP)
+  status         ContinuityTestStatus @default(PLANNED)
+  plannedDate    DateTime?
+  executedDate   DateTime?
+  responsibleId  String?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  organization Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan         BusinessContinuityPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  scenario     ContinuityScenario?    @relation(fields: [scenarioId], references: [id], onDelete: SetNull)
+  responsible  User?                  @relation("ContinuityTestResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  results      TestResult[]
+
+  @@index([organizationId, planId])
+  @@index([organizationId, status])
+  @@map("continuity_tests")
+}
+
+model TestResult {
+  id                 String                @id @default(cuid())
+  organizationId     String
+  testId             String
+  outcome            ContinuityTestOutcome
+  rtoAchievedMinutes Int?
+  rpoAchievedMinutes Int?
+  summary            String?
+  evidenceId         String?
+  testedById         String
+  testedAt           DateTime              @default(now())
+  createdAt          DateTime              @default(now())
+
+  organization       Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  test               ContinuityTest      @relation(fields: [testId], references: [id], onDelete: Cascade)
+  evidence           EvidenceFile?       @relation("TestResultEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+  testedBy           User                @relation("TestResultBy", fields: [testedById], references: [id], onDelete: Restrict)
+  improvementActions ImprovementAction[]
+
+  @@index([organizationId, testId])
+  @@map("test_results")
+}
+
+model ImprovementAction {
+  id             String                  @id @default(cuid())
+  organizationId String
+  testResultId   String
+  description    String
+  responsibleId  String?
+  targetDate     DateTime?
+  status         ImprovementActionStatus @default(OPEN)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  testResult   TestResult   @relation(fields: [testResultId], references: [id], onDelete: Cascade)
+  responsible  User?        @relation("ImprovementActionResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, testResultId])
+  @@map("improvement_actions")
+}
+
+// ─── SECURITY SUPPLIER PROFILE ───────────────────────
+
+model SupplierSecurityProfile {
+  id                  String              @id @default(cuid())
+  organizationId      String
+  supplierId          String              @unique
+  securityCriticality SupplierCriticality @default(MEDIUM)
+  dataProcessed       String?
+  accessGranted       String?
+  obligations         String?
+  controls            String?
+  riskLevel           String?
+  reviewDate          DateTime?
+  nextReviewDate      DateTime?
+  contractExpiry      DateTime?
+  evidenceId          String?
+  notes               String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supplier     Supplier      @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile? @relation("SupplierSecurityEvidence", fields: [evidenceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, securityCriticality])
+  @@index([organizationId, contractExpiry])
+  @@map("supplier_security_profiles")
 }
 
 // ─── ENUMS ───────────────────────────────────────────
@@ -1325,7 +2885,27 @@ enum Plan {
   ENTERPRISE
 }
 
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum OnboardingGoal {
+  CERTIFY
+  MAINTAIN_CERTIFICATION
+  AUDIT_PREPARATION
+  ORGANIZE_DOCUMENTS_EVIDENCE
+}
+
 enum Role {
+  // Canonical live roles. Legacy values remain valid so existing tenants can
+  // migrate without downtime; the authorization matrix treats them as
+  // backwards-compatible aliases.
+  OWNER
+  ADMIN
+  MANAGER
   SUPER_ADMIN
   ORG_ADMIN
   COMPLIANCE_MANAGER
@@ -1370,6 +2950,81 @@ enum DocumentStatus {
   IN_REVIEW
   APPROVED
   OBSOLETE
+}
+
+enum RecordEntryStatus {
+  DRAFT
+  VALID
+  EXPIRED
+  ARCHIVED
+}
+
+enum EvidenceType {
+  POLICY
+  PROCEDURE
+  RECORD
+  REPORT
+  CERTIFICATE
+  LOG
+  PHOTO
+  SCREENSHOT
+  MINUTES
+  OTHER
+}
+
+enum EvidenceStatus {
+  VALID
+  EXPIRED
+  PENDING_REVIEW
+}
+
+enum ControlCatalogStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+enum SecurityControlDomain {
+  ORGANIZATIONAL
+  PEOPLE
+  PHYSICAL
+  TECHNOLOGICAL
+}
+
+enum ControlApplicability {
+  INCLUDED
+  EXCLUDED
+  UNDER_REVIEW
+}
+
+enum OrganizationControlStatus {
+  NOT_ASSESSED
+  NOT_IMPLEMENTED
+  PLANNED
+  PARTIALLY_IMPLEMENTED
+  IMPLEMENTED
+  EFFECTIVE
+  NOT_EFFECTIVE
+}
+
+enum ControlEvidenceStatus {
+  PENDING_VALIDATION
+  VALID
+  INVALID
+  EXPIRED
+}
+
+enum ControlReviewResult {
+  NOT_ASSESSED
+  CONFORMING
+  PARTIALLY_CONFORMING
+  NONCONFORMING
+}
+
+enum ControlEffectiveness {
+  NOT_TESTED
+  EFFECTIVE
+  INEFFECTIVE
 }
 
 enum ApprovalStatus {
@@ -1455,6 +3110,165 @@ enum RiskTreatment {
   AVOID
 }
 
+enum SoAStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  SUPERSEDED
+}
+
+enum RiskTreatmentPlanStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  SUPERSEDED
+}
+
+enum RiskTreatmentItemStatus {
+  OPEN
+  IN_TREATMENT
+  RESIDUAL_PENDING
+  ACCEPTED
+  CLOSED
+}
+
+enum AssetCategory {
+  INFORMATION
+  SOFTWARE
+  HARDWARE
+  SERVICES
+  PEOPLE
+  FACILITIES
+  SUPPLIERS
+}
+
+enum AssetStatus {
+  ACTIVE
+  UNDER_REVIEW
+  INACTIVE
+  RETIRED
+}
+
+enum AssetCriticality {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum CIARating {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InformationClassification {
+  PUBLIC
+  INTERNAL
+  CONFIDENTIAL
+  RESTRICTED
+}
+
+enum AssetDependencyType {
+  DEPENDS_ON
+  SUPPORTS
+  PROCESSES
+  STORES
+  HOSTS
+  BACKS_UP
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum IncidentCategory {
+  MALWARE
+  PHISHING
+  UNAUTHORIZED_ACCESS
+  DATA_LEAK
+  DENIAL_OF_SERVICE
+  PHYSICAL
+  HUMAN_ERROR
+  OTHER
+}
+
+enum IncidentStatus {
+  DETECTED
+  TRIAGED
+  INVESTIGATING
+  CONTAINED
+  ERADICATED
+  RECOVERED
+  CLOSED
+}
+
+enum VulnerabilitySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum VulnerabilityStatus {
+  OPEN
+  IN_PROGRESS
+  REMEDIATED
+  VERIFIED
+  ACCEPTED
+  CLOSED
+}
+
+enum RemediationStatus {
+  PLANNED
+  IN_PROGRESS
+  DONE
+  VERIFIED
+}
+
+enum VerificationResult {
+  PASSED
+  FAILED
+  PARTIAL
+}
+
+enum ContinuityPlanStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  RETIRED
+}
+
+enum ContinuityTestType {
+  TABLETOP
+  WALKTHROUGH
+  SIMULATION
+  FAILOVER
+  FULL
+}
+
+enum ContinuityTestStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ContinuityTestOutcome {
+  PASSED
+  PARTIAL
+  FAILED
+}
+
+enum ImprovementActionStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
 enum ControlType {
   PREVENTIVE
   DETECTIVE
@@ -1483,10 +3297,17 @@ enum AuditStatus {
 }
 
 enum FindingType {
+  CONFORMITY
   NONCONFORMITY
   OBSERVATION
   OPPORTUNITY
   STRENGTH
+}
+
+enum AuditParticipantRole {
+  AUDITEE
+  PROCESS_OWNER
+  OBSERVER
 }
 
 enum FindingSeverity {
@@ -1498,6 +3319,16 @@ enum FindingSeverity {
 enum FindingStatus {
   OPEN
   IN_PROGRESS
+  CLOSED
+}
+
+enum OpportunityStatus {
+  IDENTIFIED
+  UNDER_REVIEW
+  APPROVED
+  IN_MATERIALIZATION
+  MATERIALIZED
+  REJECTED
   CLOSED
 }
 
@@ -1521,6 +3352,7 @@ enum NCStatus {
   IN_PROGRESS
   PENDING_VALIDATION
   CLOSED
+  ARCHIVED
 }
 
 enum ActionType {
@@ -1557,18 +3389,43 @@ enum NotificationType {
   SUCCESS
 }
 
+enum NotificationDeliveryStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  RETRYING
+  PERMANENTLY_FAILED
+}
+
 enum SubscriptionStatus {
   TRIALING
   ACTIVE
+  GRACE_PERIOD
   PAST_DUE
   CANCELLED
   PAUSED
+  SUSPENDED
 }
 
 enum ReportFormat {
   PDF
   EXCEL
   CSV
+}
+
+enum DocumentVersionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecordReviewStatus {
+  DRAFT
+  IN_REVIEW
+  APPROVED
+  REJECTED
 }
 
 // ISOTech alignment enums
@@ -1580,6 +3437,43 @@ enum ACPMStage {
   IMPLEMENTATION
   VERIFICATION
   CLOSED
+}
+
+enum ACPMOrigin {
+  AUDIT
+  COMPLAINT
+  PROCESS
+  SUPPLIER
+  INDICATOR
+  RISK
+  OTHER
+}
+
+enum ACPMRootCauseMethod {
+  FIVE_WHY
+  ISHIKAWA
+  FREE_TEXT
+}
+
+enum ACPMEfficacyStatus {
+  PENDING
+  EFFECTIVE
+  NOT_EFFECTIVE
+}
+
+enum CAPAStage {
+  REGISTERED
+  ROOT_CAUSE
+  ACTION_PLAN
+  IMPLEMENTATION
+  VERIFICATION
+  CLOSED
+}
+
+enum CAPAEvidenceKind {
+  NONCONFORMITY
+  IMPLEMENTATION
+  EFFECTIVENESS
 }
 
 enum AuditProgramStatus {
@@ -1612,10 +3506,18 @@ enum ManagementReviewTopic {
   PRODUCT_CONFORMITY
   NONCONFORMITIES_ACTIONS
   MONITORING_MEASUREMENT
+  KPI_RESULTS
   EXTERNAL_PROVIDERS
   ADEQUACY_RESOURCES
   EFFECTIVENESS_RISK_ACTIONS
+  RISKS_OPPORTUNITIES
   IMPROVEMENT_OPPORTUNITIES
   CHANGES_INTERNAL_EXTERNAL
   OTHER
+}
+
+enum ManagementReviewParticipantRole {
+  ATTENDEE
+  PROCESS_OWNER
+  OBSERVER
 }

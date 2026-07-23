@@ -6,9 +6,15 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import { ensureDocumentTemplates } from "../src/lib/document-templates";
+import { ensureSecurityControlCatalog, ensureOrganizationControlSet } from "../src/lib/security-control-catalog";
 const prisma = new PrismaClient();
 
 async function wipeOrgChildren(organizationId: string) {
+  await prisma.controlReview.deleteMany({ where: { organizationId } });
+  await prisma.controlEvidence.deleteMany({ where: { organizationId } });
+  await prisma.riskControlLink.deleteMany({ where: { organizationId } });
+  await prisma.organizationControl.deleteMany({ where: { organizationId } });
   const actions = await prisma.action.findMany({
     where: { organizationId },
     select: { id: true },
@@ -48,6 +54,8 @@ async function main() {
     update: {},
     create: { code: "ISO_27001", name: "ISO 27001", version: "2022", description: "Sistema de Gestión de Seguridad de la Información", isActive: true },
   });
+
+  await ensureDocumentTemplates(prisma);
 
   const clauses9001 = [
     { code: "4", title: "Contexto de la organización", order: 1 },
@@ -107,6 +115,9 @@ async function main() {
   await prisma.organizationStandard.create({
     data: { organizationId: org.id, standardId: iso27001.id, score: 74, targetDate: new Date("2027-03-31") },
   });
+
+  await ensureSecurityControlCatalog(prisma);
+  await ensureOrganizationControlSet(org.id, prisma);
 
   const users = [
     { id: "u_demo_ana", name: "Ana García", email: "demo@normaflow.io", role: "COMPLIANCE_MANAGER" as const },

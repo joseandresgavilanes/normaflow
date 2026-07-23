@@ -23,6 +23,7 @@ import * as catalogA from "@/lib/actions/catalogs";
 import * as personnelA from "@/lib/actions/personnel";
 import * as recordA from "@/lib/actions/records";
 import * as acpmA from "@/lib/actions/acpm";
+import * as adminCatalogA from "@/lib/actions/admin-catalogs";
 
 type State = AdminPayload;
 
@@ -62,6 +63,7 @@ export function AdminLiveProvider({
         organization: state.organization,
         members: state.members.map((m) => ({ ...m, isSelf: m.userId === currentUserId })),
         groups: state.groups,
+        catalogItems: state.catalogItems,
         positions: state.positions,
         personnel: state.personnel,
         locations: state.locations,
@@ -69,6 +71,7 @@ export function AdminLiveProvider({
         dispositions: state.dispositions,
         archiveMethods: state.archiveMethods,
         recordTypes: state.recordTypes,
+        clauses: state.clauses,
         processes: state.processes,
         records: state.records,
         recordEntries: state.recordEntries,
@@ -85,6 +88,13 @@ export function AdminLiveProvider({
           industry: patch.industry ?? undefined,
           country: patch.country ?? undefined,
           logoUrl: patch.logoUrl ?? undefined,
+          size: patch.size ?? undefined,
+          contactName: patch.contactName ?? undefined,
+          contactEmail: patch.contactEmail ?? undefined,
+          contactPhone: patch.contactPhone ?? undefined,
+          website: patch.website ?? undefined,
+          address: patch.address ?? undefined,
+          standards: patch.standards?.map((standard) => standard as "ISO_9001" | "ISO_27001"),
         });
         refresh();
       },
@@ -147,7 +157,7 @@ export function AdminLiveProvider({
 
       // ─── Record types ──────────────────────────────────────
       createRecordType: async (data) => {
-        await catalogA.createSimpleCatalog("recordType", { name: data.name });
+        await catalogA.createSimpleCatalog("recordType", { name: data.name, code: data.code });
         refresh();
       },
       updateRecordType: async (id, data) => {
@@ -208,6 +218,14 @@ export function AdminLiveProvider({
         await adminA.removeMember(membershipId);
         refresh();
       },
+      setMemberActive: async (membershipId, active) => {
+        await adminA.setMemberActive(membershipId, active);
+        refresh();
+      },
+      resendMemberInvite: async (membershipId) => {
+        await adminA.resendMemberInvite(membershipId);
+        refresh();
+      },
 
       // ─── Groups ────────────────────────────────────────────
       createGroup: async (data) => {
@@ -241,6 +259,22 @@ export function AdminLiveProvider({
         }
         refresh();
       },
+      setGroupAssociations: async (groupId, processIds, modules) => {
+        await adminA.setGroupAssociations({ groupId, processIds, modules });
+        refresh();
+      },
+      createAdminCatalogItem: async (data) => {
+        await adminCatalogA.createAdminCatalogItem(data as Parameters<typeof adminCatalogA.createAdminCatalogItem>[0]);
+        refresh();
+      },
+      updateAdminCatalogItem: async (data) => {
+        await adminCatalogA.updateAdminCatalogItem(data as Parameters<typeof adminCatalogA.updateAdminCatalogItem>[0]);
+        refresh();
+      },
+      deleteAdminCatalogItem: async (id) => {
+        await adminCatalogA.deleteAdminCatalogItem(id);
+        refresh();
+      },
 
       // ─── Records ───────────────────────────────────────────
       createRecord: async (data) => {
@@ -252,15 +286,29 @@ export function AdminLiveProvider({
         if (data.code !== undefined) cleaned.code = data.code;
         if (data.name !== undefined) cleaned.name = data.name;
         if (data.processId !== undefined) cleaned.processId = data.processId ?? undefined;
+        if (data.clauseId !== undefined) cleaned.clauseId = data.clauseId ?? undefined;
         if (data.recordTypeId !== undefined) cleaned.recordTypeId = data.recordTypeId ?? undefined;
         if (data.retentionTimeId !== undefined) cleaned.retentionTimeId = data.retentionTimeId ?? undefined;
         if (data.dispositionId !== undefined) cleaned.dispositionId = data.dispositionId ?? undefined;
         if (data.archiveMethodId !== undefined) cleaned.archiveMethodId = data.archiveMethodId ?? undefined;
         if (data.custodianId !== undefined) cleaned.custodianId = data.custodianId ?? undefined;
+        if (data.reviewerId !== undefined) cleaned.reviewerId = data.reviewerId ?? undefined;
         if (data.physicalLocation !== undefined) cleaned.physicalLocation = data.physicalLocation ?? undefined;
         if (data.digitalLocation !== undefined) cleaned.digitalLocation = data.digitalLocation ?? undefined;
         if (data.observations !== undefined) cleaned.observations = data.observations ?? undefined;
         await recordA.updateRecord(id, cleaned);
+        refresh();
+      },
+      submitRecordForReview: async (id) => {
+        await recordA.submitRecordForReview(id);
+        refresh();
+      },
+      approveRecord: async (id, comment) => {
+        await recordA.approveRecord(id, comment);
+        refresh();
+      },
+      rejectRecord: async (id, comment) => {
+        await recordA.rejectRecord(id, comment);
         refresh();
       },
       deactivateRecord: async (id) => {
@@ -268,7 +316,7 @@ export function AdminLiveProvider({
         refresh();
       },
       addRecordEntry: async (recordId, data) => {
-        await recordA.addRecordEntry(recordId, data);
+        await recordA.addRecordEntry(recordId, { ...data, title: data.title ?? data.reference ?? "Entrada" });
         refresh();
       },
       getRecordEntryUrl: recordA.getRecordEntryUrl,
@@ -286,6 +334,7 @@ export function AdminLiveProvider({
           priority: data.priority as Priority,
           source: data.source,
           dueDate: data.dueDate,
+          ownerId: data.ownerId,
         });
         refresh();
       },
