@@ -56,7 +56,10 @@ function validateNonProductionRuntime(mode: Exclude<RuntimeEnvironment, "develop
 
   const stripeKey = process.env.STRIPE_SECRET_KEY!.trim();
   if (mode === "staging" && !stripeKey.startsWith("sk_test_")) throw new Error("Staging debe usar una clave Stripe test.");
-  if (mode === "production" && !stripeKey.startsWith("sk_live_")) throw new Error("Producción debe usar una clave Stripe live.");
+  // Stripe LIVE aún no es obligatorio: se permite desplegar con clave test y
+  // billing en modo prueba. Antes de aceptar clientes pagados, configurar
+  // STRIPE_SECRET_KEY=sk_live_... (y esta advertencia desaparecerá).
+  if (mode === "production" && !stripeKey.startsWith("sk_live_")) console.warn("⚠ ADVERTENCIA: Stripe en modo TEST en producción — el cobro real requiere una clave sk_live_ antes de aceptar clientes pagados.");
   assertStripePlanConfiguration();
 
   if (process.env.NORMAFLOW_AI_ENABLED?.trim().toLowerCase() === "true") required("ANTHROPIC_API_KEY");
