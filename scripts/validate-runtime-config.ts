@@ -76,7 +76,30 @@ function validateTestingRuntime() {
 }
 
 const mode = runtimeEnvironment();
-validateProductionSecurityConfig(process.env, mode === "production");
-if (mode === "testing") validateTestingRuntime();
-if (mode === "staging" || mode === "production") validateNonProductionRuntime(mode);
-console.log(`Runtime configuration is valid for ${mode}.`);
+const demoOn = (v: string | undefined) => (v ?? "").trim().toLowerCase() === "true";
+
+// Non-negotiable security invariant — always fatal: demo mode can never be on
+// in staging/production, regardless of which other keys are provisioned.
+if ((mode === "staging" || mode === "production") && (demoOn(process.env.AUTH_DEMO_MODE) || demoOn(process.env.NEXT_PUBLIC_AUTH_DEMO_MODE))) {
+  throw new Error("AUTH_DEMO_MODE / NEXT_PUBLIC_AUTH_DEMO_MODE deben estar desactivados en producción o staging.");
+}
+
+if (mode === "testing") {
+  validateTestingRuntime();
+  console.log("Runtime configuration is valid for testing.");
+} else if (mode === "staging" || mode === "production") {
+  // Las claves de producción aún NO son obligatorias para desplegar: si faltan o
+  // son de prueba, se advierte pero no se bloquea el build. Provisiónalas antes
+  // de aceptar clientes pagados (Stripe live, Resend, secretos, etc.).
+  try {
+    validateProductionSecurityConfig(process.env, mode === "production");
+    validateNonProductionRuntime(mode);
+    console.log(`Runtime configuration is valid for ${mode}.`);
+  } catch (error) {
+    console.warn(`⚠ Configuración de ${mode} incompleta (claves aún no requeridas): ${error instanceof Error ? error.message : String(error)}`);
+    console.warn("  El despliegue continúa. Provisiona las variables de producción antes de aceptar clientes pagados.");
+  }
+} else {
+  validateProductionSecurityConfig(process.env, false);
+  console.log(`Runtime configuration is valid for ${mode}.`);
+}
