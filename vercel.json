@@ -6,19 +6,19 @@
     },
     {
       "path": "/api/cron/notification-delivery",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/report-delivery",
-      "schedule": "*/5 * * * *"
+      "schedule": "15 6 * * *"
     },
     {
       "path": "/api/cron/billing-enforcement",
-      "schedule": "0 * * * *"
+      "schedule": "30 6 * * *"
     },
     {
       "path": "/api/cron/ops-monitor",
-      "schedule": "*/10 * * * *"
+      "schedule": "45 6 * * *"
     }
   ]
 }

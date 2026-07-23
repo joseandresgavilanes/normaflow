@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NORMAFLOW_ENV: development
+      # Non-connecting placeholders so Prisma can parse the datasource and the
+      # build can run (app routes are force-dynamic; no DB connection at build).
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/normaflow_ci
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/normaflow_ci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
