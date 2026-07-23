@@ -1,11 +1,11 @@
-import { AdminGate } from "@/components/admin/AdminPageGate";
+import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import { SimpleCatalogClient } from "@/components/admin/CatalogClient";
 
 export const metadata = { title: "Lugares — NormaFlow" };
 
 export default function LocationsPage() {
   return (
-    <AdminGate permission="locations:read">
+    <ServerPermissionGate permission="locations:read">
       <SimpleCatalogClient
         catalog="location"
         title="Lugares"
@@ -13,6 +13,6 @@ export default function LocationsPage() {
         permission="locations:*"
         withDescription
       />
-    </AdminGate>
+    </ServerPermissionGate>
   );
 }

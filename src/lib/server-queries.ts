@@ -2,11 +2,18 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthorization, requireAuthorization, requirePermission } from "@/lib/permissions/server";
 import { isPlanCheckoutConfigured, isStripeConfigured, PLANS } from "@/lib/stripe";
+import { ensureOrganizationDefaults } from "@/lib/organization-defaults";
+import { getCollaboratorScope } from "@/lib/permissions/scope";
+import { roleOrGroupCan } from "@/lib/permissions/matrix";
+import { planEntitlements, isTrialActive, assertPlanModule } from "@/lib/plan-entitlements";
+import { ensureDocumentTemplates } from "@/lib/document-templates";
+import { memberPayload } from "@/lib/payload-privacy";
 
 export async function getDashboardPayload() {
   const ctx = await requirePermission("dashboard:read");
   const organizationId = ctx.organization.id;
   const currentUserId = ctx.user.id;
+  const scope = await getCollaboratorScope(ctx);
   const now = new Date();
 
   const [
@@ -29,40 +36,41 @@ export async function getDashboardPayload() {
       where: { organizationId },
       include: { standard: true },
     }),
-    prisma.action.findMany({ where: { organizationId } }),
-    prisma.risk.findMany({ where: { organizationId } }),
+    prisma.action.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.actionIds } } : {}) } }),
+    prisma.risk.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) } }),
     prisma.document.count({
-      where: { organizationId, status: "IN_REVIEW" },
+      where: { organizationId, status: "IN_REVIEW", ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) },
     }),
     prisma.audit.count({
       where: {
         organizationId,
         status: "PLANNED",
+        ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}),
       },
     }),
     prisma.nonconformity.count({
-      where: { organizationId, status: { not: "CLOSED" } },
+      where: { organizationId, status: { notIn: ["CLOSED", "ARCHIVED"] }, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) },
     }),
     prisma.indicator.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.indicatorIds } } : {}) },
       include: { values: { orderBy: { createdAt: "desc" }, take: 6 } },
     }),
     prisma.audit.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) },
       orderBy: { updatedAt: "desc" },
       take: 4,
     }),
     prisma.trainingAssignment.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.trainingAssignmentIds } } : {}) },
       select: { status: true, dueAt: true, completedAt: true, course: { select: { defaultValidityMonths: true } } },
     }),
     prisma.auditLog.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { userId: currentUserId } : {}) },
       include: { user: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: 8,
     }),
-    prisma.auditLog.count({ where: { organizationId } }),
+    prisma.auditLog.count({ where: { organizationId, ...(scope.isScoped ? { userId: currentUserId } : {}) } }),
     prisma.location.findMany({
       where: { organizationId, active: true },
       select: { id: true, name: true, description: true },
@@ -72,6 +80,7 @@ export async function getDashboardPayload() {
       where: {
         organizationId,
         status: "APPROVED",
+        ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}),
         reviewDate: { gte: now, lte: new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000) },
       },
     }),
@@ -144,7 +153,7 @@ export async function getDashboardPayload() {
     auditEventCount,
     documentsReviewDueSoon,
     indicatorRows,
-    locations,
+    locations: scope.isScoped ? [] : locations,
     recentActivity: recentActivity.map(event => ({
       user: event.user?.name ?? "Sistema",
       action: event.action.replaceAll("_", " "),
@@ -230,11 +239,17 @@ export async function getDocumentsPayload() {
   const authorization = await requireAuthorization("documents:read");
   const { ctx, can } = authorization;
   const organizationId = ctx.organization.id;
+  await ensureDocumentTemplates();
+  const scope = await getCollaboratorScope(ctx);
   const canCreate = can("documents:create");
   const canReadProcesses = can("processes:read");
-  const [documents, locations, personnel, members, processes, clauses, standards] = await Promise.all([
+  const canReadMembers = can("members:*");
+  const [documents, locations, personnel, members, processes, clauses, standards, templates] = await Promise.all([
     prisma.document.findMany({
-      where: { organizationId },
+      where: {
+        organizationId,
+        ...(scope.isScoped ? { OR: [{ ownerId: ctx.user.id }, { approvals: { some: { approverId: ctx.user.id } } }, ...(scope.processIds.length ? [{ processId: { in: scope.processIds } }] : [])] } : {}),
+      },
       include: {
         versions: { orderBy: { createdAt: "desc" } },
         approvals: { orderBy: { createdAt: "asc" } },
@@ -252,12 +267,12 @@ export async function getDocumentsPayload() {
       orderBy: { lastName: "asc" },
       select: { id: true, firstName: true, lastName: true, email: true },
     }),
-    prisma.membership.findMany({
-      where: { organizationId },
+    canReadMembers ? prisma.membership.findMany({
+      where: { organizationId, active: true },
       include: { user: { select: { name: true, email: true } } },
-    }),
+    }) : Promise.resolve([]),
     canReadProcesses ? prisma.process.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) },
       select: { id: true, code: true, name: true },
       orderBy: [{ code: "asc" }, { name: "asc" }],
     }) : Promise.resolve([]),
@@ -271,7 +286,22 @@ export async function getDocumentsPayload() {
       select: { standard: { select: { code: true, name: true } } },
       orderBy: { standard: { code: "asc" } },
     }),
+    prisma.documentTemplate.findMany({
+      where: { isActive: true },
+      include: { clause: { select: { code: true, title: true } } },
+      orderBy: [{ standardCode: "asc" }, { sortOrder: "asc" }],
+    }),
   ]);
+  const memberGroupPermissions = canReadMembers ? await prisma.groupMembership.findMany({
+    where: { userId: { in: members.map((membership) => membership.userId) }, group: { organizationId } },
+    select: { userId: true, group: { select: { permissions: { select: { permission: true } } } } },
+  }) : [];
+  const groupPermissionsByUser = new Map<string, string[]>();
+  for (const membership of memberGroupPermissions) {
+    const permissions = groupPermissionsByUser.get(membership.userId) ?? [];
+    permissions.push(...membership.group.permissions.map((permission) => permission.permission));
+    groupPermissionsByUser.set(membership.userId, permissions);
+  }
   const memberNames = new Map(members.map((membership) => [membership.userId, membership.user.name]));
   const processNames = new Map(processes.map((process) => [process.id, process]));
   const clauseNames = new Map(clauses.map((clause) => [clause.id, clause]));
@@ -284,7 +314,9 @@ export async function getDocumentsPayload() {
   return {
     access: {
       canCreate,
-      canApprove: can("documents:*"),
+      canApprove: can("documents:approve"),
+      canObsolete: can("documents:*"),
+      canExport: can("documents:export"),
     },
     documents: documents.map((d) => ({
       id: d.id,
@@ -307,6 +339,8 @@ export async function getDocumentsPayload() {
       reviewDate: d.reviewDate?.toISOString() ?? null,
       tags: d.tags,
       observations: d.observations,
+      content: d.content,
+      templateId: d.templateId,
       distributionList: d.distributionList,
       locationId: d.locationId,
       locationName: d.location?.name ?? null,
@@ -325,6 +359,7 @@ export async function getDocumentsPayload() {
       versions: d.versions.map((v) => ({
         id: v.id,
         version: v.version,
+        status: v.status,
         previousVersion: v.previousVersion,
         changeDescription: v.changeDescription ?? v.changeLog,
         fileUrl: v.fileUrl,
@@ -332,9 +367,11 @@ export async function getDocumentsPayload() {
         mimeType: v.mimeType,
         createdAt: v.createdAt.toISOString(),
         createdById: v.createdById,
+        content: v.content,
       })),
       approvals: d.approvals.map((a) => ({
         id: a.id,
+        versionId: a.versionId,
         approverId: a.approverId,
         status: a.status,
         comment: a.comment,
@@ -342,16 +379,31 @@ export async function getDocumentsPayload() {
         createdAt: a.createdAt.toISOString(),
       })),
     })),
-    locations,
-    personnel,
+    locations: scope.isScoped ? [] : locations,
+    personnel: scope.isScoped ? [] : personnel,
     processes: canCreate ? processes : [],
-    standards: canCreate ? standards.map((item) => item.standard) : [],
-    clauses: canCreate ? clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })) : [],
-    members: members.map((m) => ({
+    standards: standards.map((item) => item.standard),
+    clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
+    members: memberPayload(canReadMembers, members.map((m) => ({
       userId: m.userId,
       name: m.user.name,
       email: m.user.email,
       role: m.role,
+      canApprove: roleOrGroupCan(m.role, groupPermissionsByUser.get(m.userId) ?? [], "documents:approve"),
+    }))),
+    templates: templates.map((template) => ({
+      id: template.id,
+      code: template.code,
+      standardCode: template.standardCode,
+      title: template.title,
+      description: template.description,
+      documentType: template.documentType,
+      clauseId: template.clauseId,
+      clauseCode: template.clause?.code ?? null,
+      clauseTitle: template.clause?.title ?? null,
+      content: template.content,
+      fields: template.fieldSchema,
+      tags: template.tags,
     })),
   };
 }
@@ -364,16 +416,18 @@ export type DocumentRowLive = DocumentsPayload["documents"][number];
 export async function getTrainingPayload() {
   const authorization = await requireAuthorization("training:read");
   const { ctx, can } = authorization;
+  assertPlanModule(ctx, "training");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const now = new Date();
   const [courses, assignments, personnel, processes, documents, auditEvents] = await Promise.all([
     prisma.trainingCourse.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.trainingCourseIds } } : {}) },
       include: { documentLinks: true, audienceLinks: true },
       orderBy: [{ active: "desc" }, { code: "asc" }],
     }),
     prisma.trainingAssignment.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.trainingAssignmentIds } } : {}) },
       include: {
         course: true,
         personnel: { include: { position: true } },
@@ -383,21 +437,21 @@ export async function getTrainingPayload() {
       orderBy: [{ dueAt: "asc" }, { assignedAt: "desc" }],
     }),
     prisma.personnel.findMany({
-      where: { organizationId, active: true },
+      where: { organizationId, active: true, ...(scope.isScoped ? { id: { in: scope.personnelIds } } : {}) },
       include: { position: true },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
     prisma.process.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) },
       orderBy: [{ code: "asc" }, { name: "asc" }],
     }),
     prisma.document.findMany({
-      where: { organizationId, status: { not: "OBSOLETE" } },
+      where: { organizationId, status: { not: "OBSOLETE" }, ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) },
       orderBy: { code: "asc" },
       select: { id: true, code: true, title: true, currentVersion: true, status: true },
     }),
     prisma.auditLog.findMany({
-      where: { organizationId, module: { in: ["training_course", "training_assignment"] } },
+      where: { organizationId, module: { in: ["training_course", "training_assignment"] }, ...(scope.isScoped ? { recordId: { in: scope.trainingAssignmentIds } } : {}) },
       include: { user: { select: { name: true } } },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -498,6 +552,7 @@ async function getOrganizationMembers(organizationId: string) {
 export async function getProcessesPayload() {
   const { ctx, can } = await requireAuthorization("processes:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("processes:create") || can("processes:update");
   const linkedAccess = {
     documents: can("documents:read"),
@@ -514,7 +569,7 @@ export async function getProcessesPayload() {
   const hasLinkedAccess = Object.keys(linkedCountSelect).length > 0;
   const [processes, members] = await Promise.all([
     prisma.process.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) },
       include: {
         ...(hasLinkedAccess ? { _count: { select: linkedCountSelect } } : {}),
         ...(linkedAccess.documents
@@ -533,7 +588,7 @@ export async function getProcessesPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("processes:create"), canUpdate: can("processes:update"), canDelete: can("processes:delete") },
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members : [],
     processes: processes.map((process) => {
       const counts = "_count" in process
         ? process._count as Partial<Record<keyof typeof linkedAccess, number>>
@@ -574,26 +629,27 @@ export async function getProcessesPayload() {
 export async function getRisksPayload() {
   const { ctx, can } = await requireAuthorization("risks:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("risks:create") || can("risks:update");
   const canReadProcesses = can("processes:read");
   const canReadActions = can("actions:read");
   const [risks, processes, members] = await Promise.all([
     prisma.risk.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) },
       include: {
         controls: { orderBy: { createdAt: "desc" } },
         ...(canReadActions ? { _count: { select: { actions: true } } } : {}),
       },
       orderBy: [{ score: "desc" }, { updatedAt: "desc" }],
     }),
-    canReadProcesses ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canReadProcesses ? prisma.process.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
     getOrganizationMembers(organizationId),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   const processNames = new Map(processes.map((process) => [process.id, process]));
   return {
     access: { canCreate: can("risks:create"), canUpdate: can("risks:update"), canDelete: can("risks:delete") },
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     processes: canManage ? processes : [],
     risks: risks.map((risk) => ({
       id: risk.id,
@@ -624,55 +680,125 @@ export async function getRisksPayload() {
   };
 }
 
+export async function getOpportunitiesPayload() {
+  const { ctx, can } = await requireAuthorization("opportunities:read");
+  assertPlanModule(ctx, "opportunities");
+  const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
+  const canManage = can("opportunities:create") || can("opportunities:update");
+  const [opportunities, members] = await Promise.all([
+    prisma.opportunity.findMany({
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.opportunityIds } } : {}) },
+      orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+    }),
+    getOrganizationMembers(organizationId),
+  ]);
+  const memberNames = new Map(members.map((member) => [member.id, member.name]));
+  return {
+    access: {
+      canCreate: can("opportunities:create"),
+      canUpdate: can("opportunities:update"),
+      canDelete: can("opportunities:delete"),
+      currentUserId: ctx.user.id,
+    },
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    opportunities: opportunities.map((opportunity) => ({
+      id: opportunity.id,
+      title: opportunity.title,
+      description: opportunity.description,
+      standardCode: opportunity.standardCode,
+      source: opportunity.source,
+      category: opportunity.category,
+      status: opportunity.status,
+      ownerId: opportunity.ownerId,
+      ownerName: opportunity.ownerId ? memberNames.get(opportunity.ownerId) ?? null : null,
+      reviewerId: opportunity.reviewerId,
+      reviewerName: opportunity.reviewerId ? memberNames.get(opportunity.reviewerId) ?? null : null,
+      materializationAnalysis: opportunity.materializationAnalysis,
+      materializationPlan: opportunity.materializationPlan,
+      materializationEvidence: opportunity.materializationEvidence,
+      dueDate: opportunity.dueDate?.toISOString() ?? null,
+      materializedAt: opportunity.materializedAt?.toISOString() ?? null,
+      closedAt: opportunity.closedAt?.toISOString() ?? null,
+      rejectionReason: opportunity.rejectionReason,
+      createdAt: opportunity.createdAt.toISOString(),
+      updatedAt: opportunity.updatedAt.toISOString(),
+    })),
+  };
+}
+
 export async function getAuditsPayload() {
   const { ctx, can } = await requireAuthorization("audits:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("audits:create") || can("audits:update");
   const canReadPrograms = can("audit-program:read");
   const canReadNonconformities = can("nc:read");
-  const [audits, programs, members] = await Promise.all([
+  const [audits, programs, members, processes, clauses, evidenceFiles] = await Promise.all([
     prisma.audit.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) },
       include: {
-        checklistItems: { orderBy: [{ order: "asc" }, { createdAt: "asc" }] },
-        findings: { orderBy: { createdAt: "desc" } },
+        process: { select: { id: true, code: true, name: true } },
+        closedBy: { select: { id: true, name: true } },
+        participants: { include: { user: { select: { id: true, name: true } } } },
+        evidenceLinks: { include: { evidence: { select: { id: true, title: true, evidenceType: true, fileUrl: true } } } },
+        checklistItems: { orderBy: [{ order: "asc" }, { createdAt: "asc" }], include: { clause: { select: { id: true, code: true, title: true } } } },
+        findings: { orderBy: { createdAt: "desc" }, include: { capa: { select: { id: true, code: true, stage: true } } } },
         ...(canReadNonconformities ? { _count: { select: { nonconformities: true } } } : {}),
       },
-      orderBy: [{ scheduledDate: "desc" }, { createdAt: "desc" }],
+      orderBy: [{ plannedDate: "desc" }, { scheduledDate: "desc" }, { createdAt: "desc" }],
     }),
     canReadPrograms ? prisma.auditProgram.findMany({ where: { organizationId }, select: { id: true, year: true, title: true, status: true }, orderBy: [{ year: "desc" }, { title: "asc" }] }) : Promise.resolve([]),
     getOrganizationMembers(organizationId),
+    canManage ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canManage ? prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
+    canManage ? prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true, evidenceType: true }, orderBy: { createdAt: "desc" }, take: 500 }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   const programNames = new Map(programs.map((program) => [program.id, program.title]));
   return {
-    access: { canCreate: can("audits:create"), canUpdate: can("audits:update"), canDelete: can("audits:delete") },
+    access: { canCreate: can("audits:create"), canUpdate: can("audits:update"), canDelete: can("audits:delete"), canExport: can("audits:export"), canConvertFinding: can("actions:create") },
     programs: canManage ? programs : [],
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    processes,
+    clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code })),
+    evidenceFiles,
     audits: audits.map((audit) => ({
       id: audit.id,
       title: audit.title,
       type: audit.type,
       status: audit.status,
       standardCode: audit.standardCode,
+      processId: audit.processId,
+      processName: audit.process?.name ?? null,
       auditorId: audit.auditorId,
       auditorName: audit.auditorId ? memberNames.get(audit.auditorId) ?? null : null,
       auditorExternal: audit.auditorExternal,
+      plannedDate: audit.plannedDate?.toISOString() ?? null,
       scheduledDate: audit.scheduledDate?.toISOString() ?? null,
+      startDate: audit.startDate?.toISOString() ?? null,
+      endDate: audit.endDate?.toISOString() ?? null,
       startedAt: audit.startedAt?.toISOString() ?? null,
       completedAt: audit.completedAt?.toISOString() ?? null,
       scope: audit.scope,
       objectives: audit.objectives,
       criteria: audit.criteria,
       reportUrl: audit.reportUrl,
+      reportSummary: audit.reportSummary,
+      reportConclusion: audit.reportConclusion,
+      reportIssuedAt: audit.reportIssuedAt?.toISOString() ?? null,
+      closedByName: audit.closedBy?.name ?? null,
       progress: audit.progress,
       programId: canReadPrograms ? audit.programId : null,
       programTitle: audit.programId ? programNames.get(audit.programId) ?? null : null,
+      participants: audit.participants.map((participant) => ({ id: participant.user.id, name: participant.user.name, role: participant.role })),
+      evidenceLinks: audit.evidenceLinks.map((link) => ({ id: link.evidence.id, title: link.evidence.title, evidenceType: link.evidence.evidenceType })),
       checklistItems: audit.checklistItems.map((item) => ({
         ...item,
+        clauseName: item.clause?.title ?? null,
         createdAt: item.createdAt.toISOString(),
       })),
-      findings: audit.findings.map((finding) => ({ ...finding, createdAt: finding.createdAt.toISOString(), updatedAt: finding.updatedAt.toISOString() })),
+      findings: audit.findings.map((finding) => ({ ...finding, capaId: finding.capa?.id ?? null, capaCode: finding.capa?.code ?? null, capaStage: finding.capa?.stage ?? null, createdAt: finding.createdAt.toISOString(), updatedAt: finding.updatedAt.toISOString() })),
       nonconformityCount: canReadNonconformities && "_count" in audit ? audit._count.nonconformities : 0,
       createdAt: audit.createdAt.toISOString(),
       updatedAt: audit.updatedAt.toISOString(),
@@ -683,20 +809,21 @@ export async function getAuditsPayload() {
 export async function getNonconformitiesPayload() {
   const { ctx, can } = await requireAuthorization("nc:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("nc:create") || can("nc:update");
   const canReadAudits = can("audits:read");
   const canReadActions = can("actions:read");
   const [nonconformities, audits, findings, members] = await Promise.all([
     prisma.nonconformity.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) },
       include: {
         comments: { orderBy: { createdAt: "asc" } },
         ...(canReadActions ? { _count: { select: { actions: true } } } : {}),
       },
       orderBy: [{ status: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
     }),
-    canReadAudits ? prisma.audit.findMany({ where: { organizationId }, select: { id: true, title: true, type: true, status: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
-    canReadAudits ? prisma.auditFinding.findMany({ where: { audit: { organizationId } }, select: { id: true, title: true, auditId: true, status: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    canReadAudits ? prisma.audit.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) }, select: { id: true, title: true, type: true, status: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    canReadAudits ? prisma.auditFinding.findMany({ where: { audit: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) } }, select: { id: true, title: true, auditId: true, status: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
     getOrganizationMembers(organizationId),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
@@ -706,7 +833,7 @@ export async function getNonconformitiesPayload() {
     access: { canCreate: can("nc:create"), canUpdate: can("nc:update"), canDelete: can("nc:delete") },
     audits: canManage ? audits : [],
     findings: canManage ? findings : [],
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     nonconformities: nonconformities.map((nc) => ({
       id: nc.id,
       title: nc.title,
@@ -720,6 +847,9 @@ export async function getNonconformitiesPayload() {
       dueDate: nc.dueDate?.toISOString() ?? null,
       closedAt: nc.closedAt?.toISOString() ?? null,
       effectivenessValidated: nc.effectivenessValidated,
+      archiveReason: nc.archiveReason,
+      archivedAt: nc.archivedAt?.toISOString() ?? null,
+      archivedById: nc.archivedById,
       auditId: canReadAudits ? nc.auditId : null,
       auditTitle: nc.auditId ? auditNames.get(nc.auditId) ?? null : null,
       findingId: canReadAudits ? nc.findingId : null,
@@ -740,15 +870,16 @@ export async function getNonconformitiesPayload() {
 export async function getIndicatorsPayload() {
   const { ctx, can } = await requireAuthorization("indicators:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("indicators:create") || can("indicators:update");
   const canReadProcesses = can("processes:read");
   const [indicators, processes, members] = await Promise.all([
     prisma.indicator.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.indicatorIds } } : {}) },
       include: { values: { orderBy: { createdAt: "desc" }, take: 24 } },
       orderBy: { name: "asc" },
     }),
-    canReadProcesses ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canReadProcesses ? prisma.process.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
     getOrganizationMembers(organizationId),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
@@ -756,7 +887,7 @@ export async function getIndicatorsPayload() {
   return {
     access: { canCreate: can("indicators:create"), canUpdate: can("indicators:update"), canDelete: can("indicators:delete") },
     processes: canManage ? processes : [],
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     indicators: indicators.map((indicator) => ({
       id: indicator.id,
       name: indicator.name,
@@ -781,47 +912,121 @@ export async function getIndicatorsPayload() {
 export async function getEvidencePayload() {
   const { ctx, can } = await requireAuthorization("evidence:read");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canCreate = can("evidence:create");
-  const [evidence, processes, risks, audits, nonconformities, indicators, documents, changes, suppliers, integrations] = await Promise.all([
-    prisma.evidenceFile.findMany({ where: { organizationId }, orderBy: { createdAt: "desc" } }),
-    can("processes:read") ? prisma.process.findMany({ where: { organizationId }, select: { id: true, name: true, code: true } }) : Promise.resolve([]),
-    can("risks:read") ? prisma.risk.findMany({ where: { organizationId }, select: { id: true, title: true } }) : Promise.resolve([]),
-    can("audits:read") ? prisma.audit.findMany({ where: { organizationId }, select: { id: true, title: true } }) : Promise.resolve([]),
-    can("nc:read") ? prisma.nonconformity.findMany({ where: { organizationId }, select: { id: true, title: true } }) : Promise.resolve([]),
-    can("indicators:read") ? prisma.indicator.findMany({ where: { organizationId }, select: { id: true, name: true } }) : Promise.resolve([]),
-    can("documents:read") ? prisma.document.findMany({ where: { organizationId }, select: { id: true, code: true, title: true } }) : Promise.resolve([]),
-    can("changes:read") ? prisma.changeRequest.findMany({ where: { organizationId }, select: { id: true, code: true, title: true } }) : Promise.resolve([]),
-    can("suppliers:read") ? prisma.supplier.findMany({ where: { organizationId }, select: { id: true, code: true, name: true } }) : Promise.resolve([]),
-    can("integrations:read") ? prisma.integration.findMany({ where: { organizationId }, select: { id: true, name: true, provider: true } }) : Promise.resolve([]),
+  const canManage = canCreate || can("evidence:update");
+  const visibleEvidenceTargets = scope.isScoped ? [
+    ...(scope.processIds.length ? [{ processId: { in: scope.processIds } }] : []),
+    ...(scope.documentIds.length ? [{ documentLinks: { some: { documentId: { in: scope.documentIds } } } }] : []),
+    ...(scope.riskIds.length ? [{ riskLinks: { some: { riskId: { in: scope.riskIds } } } }] : []),
+    ...(scope.auditIds.length ? [{ auditLinks: { some: { auditId: { in: scope.auditIds } } } }] : []),
+    ...(scope.nonconformityIds.length ? [{ nonconformityLinks: { some: { nonconformityId: { in: scope.nonconformityIds } } } }] : []),
+    ...(scope.indicatorIds.length ? [{ indicatorLinks: { some: { indicatorId: { in: scope.indicatorIds } } } }] : []),
+  ] : [];
+  const [evidence, processes, risks, audits, findings, nonconformities, indicators, documents, reviews, clauses, standards, members] = await Promise.all([
+    prisma.evidenceFile.findMany({
+      where: { organizationId, deletedAt: null, ...(scope.isScoped ? { OR: [{ uploadedById: ctx.user.id }, ...visibleEvidenceTargets] } : {}) },
+      include: {
+        process: { select: { id: true, code: true, name: true } },
+        clause: { select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } } },
+        uploadedBy: { select: { id: true, name: true } },
+        responsible: { select: { id: true, name: true } },
+        reviewedBy: { select: { id: true, name: true } },
+        documentLinks: { include: { document: { select: { id: true, code: true, title: true } } } },
+        riskLinks: { include: { risk: { select: { id: true, title: true } } } },
+        auditLinks: { include: { audit: { select: { id: true, title: true } } } },
+        findingLinks: { include: { finding: { select: { id: true, title: true } } } },
+        nonconformityLinks: { include: { nonconformity: { select: { id: true, title: true } } } },
+        indicatorLinks: { include: { indicator: { select: { id: true, name: true } } } },
+        managementReviewLinks: { include: { managementReview: { select: { id: true, title: true } } } },
+      },
+      orderBy: [{ status: "asc" }, { expiresAt: "asc" }, { createdAt: "desc" }],
+    }),
+    can("processes:read") ? prisma.process.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) }, select: { id: true, name: true, code: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    can("risks:read") ? prisma.risk.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    can("audits:read") ? prisma.audit.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    can("audits:read") ? prisma.auditFinding.findMany({ where: { audit: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) } }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    can("nc:read") ? prisma.nonconformity.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    can("indicators:read") ? prisma.indicator.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.indicatorIds } } : {}) }, select: { id: true, name: true }, orderBy: { name: "asc" } }) : Promise.resolve([]),
+    can("documents:read") ? prisma.document.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
+    can("mgmt-review:read") ? prisma.managementReview.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
+    prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true } } }, orderBy: { standard: { code: "asc" } } }),
+    canManage ? prisma.membership.findMany({ where: { organizationId, active: true }, include: { user: { select: { id: true, name: true, email: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
   ]);
   const targets = {
     process: processes.map((item) => ({ id: item.id, label: `${item.code ?? "PROC"} · ${item.name}` })),
     risk: risks.map((item) => ({ id: item.id, label: item.title })),
     audit: audits.map((item) => ({ id: item.id, label: item.title })),
+    finding: findings.map((item) => ({ id: item.id, label: item.title })),
     nc: nonconformities.map((item) => ({ id: item.id, label: item.title })),
     indicator: indicators.map((item) => ({ id: item.id, label: item.name })),
     document: documents.map((item) => ({ id: item.id, label: `${item.code} · ${item.title}` })),
-    change: changes.map((item) => ({ id: item.id, label: `${item.code} · ${item.title}` })),
-    supplier: suppliers.map((item) => ({ id: item.id, label: `${item.code} · ${item.name}` })),
-    integration: integrations.map((item) => ({ id: item.id, label: `${item.provider} · ${item.name}` })),
+    managementReview: reviews.map((item) => ({ id: item.id, label: item.title })),
+    // Legacy selector keys retained while old indicator evidence screens are phased out.
+    change: [],
+    supplier: [],
+    integration: [],
   };
-  const targetLabels = new Map(
-    Object.entries(targets).flatMap(([module, rows]) => rows.map((row) => [`${module}:${row.id}`, row.label] as const)),
-  );
+  const targetLabels = new Map(Object.entries(targets).flatMap(([module, rows]) => rows.map((row) => [`${module}:${row.id}`, row.label] as const)));
+  const now = new Date();
+  const displayStatus = (status: string, expiresAt: Date | null) => status === "PENDING_REVIEW" ? status : expiresAt && expiresAt < now ? "EXPIRED" : "VALID";
   return {
-    access: { canCreate, canDelete: can("evidence:delete") },
+    access: { canCreate, canUpdate: can("evidence:update"), canReview: can("evidence:approve"), canDelete: can("evidence:delete"), canExport: can("evidence:export") },
     evidence: evidence.map((item) => ({
-      ...item,
-      targetLabel: item.module && item.moduleId ? targetLabels.get(`${item.module}:${item.moduleId}`) ?? null : null,
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      evidenceType: item.evidenceType,
+      status: displayStatus(item.status, item.expiresAt),
+      fileUrl: item.fileUrl,
+      fileSize: item.fileSize,
+      mimeType: item.mimeType,
+      processId: item.processId,
+      processName: item.process ? `${item.process.code ?? "PROC"} · ${item.process.name}` : null,
+      standardCode: item.standardCode ?? item.clause?.standard.code ?? null,
+      clauseId: item.clauseId,
+      clauseName: item.clause ? `${item.clause.code} · ${item.clause.title}` : null,
+      responsibleId: item.responsibleId,
+      responsibleName: item.responsible?.name ?? null,
+      issuedAt: item.issuedAt?.toISOString() ?? null,
+      expiresAt: item.expiresAt?.toISOString() ?? null,
+      reviewedAt: item.reviewedAt?.toISOString() ?? null,
+      reviewedByName: item.reviewedBy?.name ?? null,
+      uploadedByName: item.uploadedBy?.name ?? null,
       createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+      targetLabel: item.module && item.moduleId ? targetLabels.get(`${item.module}:${item.moduleId}`) ?? null : null,
+      module: item.module,
+      moduleId: item.moduleId,
+      uploadedById: item.uploadedById,
+      documentIds: item.documentLinks.map((link) => link.documentId),
+      documentLabels: item.documentLinks.map((link) => `${link.document.code} · ${link.document.title}`),
+      riskIds: item.riskLinks.map((link) => link.riskId),
+      riskLabels: item.riskLinks.map((link) => link.risk.title),
+      auditIds: item.auditLinks.map((link) => link.auditId),
+      auditLabels: item.auditLinks.map((link) => link.audit.title),
+      findingIds: item.findingLinks.map((link) => link.findingId),
+      findingLabels: item.findingLinks.map((link) => link.finding.title),
+      nonconformityIds: item.nonconformityLinks.map((link) => link.nonconformityId),
+      nonconformityLabels: item.nonconformityLinks.map((link) => link.nonconformity.title),
+      indicatorIds: item.indicatorLinks.map((link) => link.indicatorId),
+      indicatorLabels: item.indicatorLinks.map((link) => link.indicator.name),
+      managementReviewIds: item.managementReviewLinks.map((link) => link.managementReviewId),
+      managementReviewLabels: item.managementReviewLinks.map((link) => link.managementReview.title),
     })),
-    targets: canCreate ? targets : { process: [], risk: [], audit: [], nc: [], indicator: [], document: [], change: [], supplier: [], integration: [] },
+    targets: canManage ? targets : { process: [], risk: [], audit: [], finding: [], nc: [], indicator: [], document: [], managementReview: [], change: [], supplier: [], integration: [] },
+    clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
+    standards: standards.map((item) => item.standard),
+    members: memberPayload(can("members:*"), members.map((membership) => ({ id: membership.user.id, name: membership.user.name, email: membership.user.email, role: membership.role }))),
   };
 }
 
 export async function getChangesPayload() {
   const { ctx, can } = await requireAuthorization("changes:read");
+  assertPlanModule(ctx, "changes");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("changes:create") || can("changes:update");
   const access = {
     processes: can("processes:read"),
@@ -832,7 +1037,7 @@ export async function getChangesPayload() {
   };
   const [changes, members, processes, documents, risks, courses, nonconformities] = await Promise.all([
     prisma.changeRequest.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.changeIds } } : {}) },
       include: {
         processes: { select: { processId: true } },
         documents: { select: { documentId: true } },
@@ -844,16 +1049,16 @@ export async function getChangesPayload() {
       orderBy: [{ updatedAt: "desc" }],
     }),
     getOrganizationMembers(organizationId),
-    access.processes ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
-    access.documents ? prisma.document.findMany({ where: { organizationId }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
-    access.risks ? prisma.risk.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    access.processes ? prisma.process.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    access.documents ? prisma.document.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
+    access.risks ? prisma.risk.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
     access.training ? prisma.trainingCourse.findMany({ where: { organizationId, active: true }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
-    access.nonconformities ? prisma.nonconformity.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    access.nonconformities ? prisma.nonconformity.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("changes:create"), canUpdate: can("changes:update"), canDelete: can("changes:delete"), currentUserId: ctx.user.id },
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     processes: canManage ? processes : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
@@ -898,12 +1103,14 @@ export async function getChangesPayload() {
 
 export async function getSuppliersPayload() {
   const { ctx, can } = await requireAuthorization("suppliers:read");
+  assertPlanModule(ctx, "suppliers");
   const organizationId = ctx.organization.id;
+  const scope = await getCollaboratorScope(ctx);
   const canManage = can("suppliers:create") || can("suppliers:update");
   const linkedAccess = { documents: can("documents:read"), risks: can("risks:read"), nonconformities: can("nc:read") };
   const [suppliers, members, documents, risks, nonconformities] = await Promise.all([
     prisma.supplier.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.supplierIds } } : {}) },
       include: {
         documents: { select: { documentId: true } },
         risks: { select: { riskId: true } },
@@ -913,14 +1120,14 @@ export async function getSuppliersPayload() {
       orderBy: [{ criticality: "desc" }, { name: "asc" }],
     }),
     getOrganizationMembers(organizationId),
-    linkedAccess.documents ? prisma.document.findMany({ where: { organizationId }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
-    linkedAccess.risks ? prisma.risk.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
-    linkedAccess.nonconformities ? prisma.nonconformity.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
+    linkedAccess.documents ? prisma.document.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
+    linkedAccess.risks ? prisma.risk.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    linkedAccess.nonconformities ? prisma.nonconformity.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("suppliers:create"), canUpdate: can("suppliers:update"), canDelete: can("suppliers:delete") },
-    members: canManage ? members : [],
+    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
     nonconformities: canManage ? nonconformities : [],
@@ -950,6 +1157,7 @@ export async function getSuppliersPayload() {
 
 export async function getIntegrationsPayload() {
   const { ctx, can } = await requireAuthorization("integrations:read");
+  assertPlanModule(ctx, "integrations");
   const organizationId = ctx.organization.id;
   const rows = await prisma.integration.findMany({
     where: { organizationId },
@@ -980,6 +1188,7 @@ export async function getIntegrationsPayload() {
 
 export type ProcessesPayload = Awaited<ReturnType<typeof getProcessesPayload>>;
 export type RisksPayload = Awaited<ReturnType<typeof getRisksPayload>>;
+export type OpportunitiesPayload = Awaited<ReturnType<typeof getOpportunitiesPayload>>;
 export type AuditsPayload = Awaited<ReturnType<typeof getAuditsPayload>>;
 export type NonconformitiesPayload = Awaited<ReturnType<typeof getNonconformitiesPayload>>;
 export type IndicatorsPayload = Awaited<ReturnType<typeof getIndicatorsPayload>>;
@@ -988,13 +1197,67 @@ export type ChangesPayload = Awaited<ReturnType<typeof getChangesPayload>>;
 export type SuppliersPayload = Awaited<ReturnType<typeof getSuppliersPayload>>;
 export type IntegrationsPayload = Awaited<ReturnType<typeof getIntegrationsPayload>>;
 
+// ─── ACPM / CAPA live ───────────────────────────────────────────────
+
+export async function getCAPAPayload() {
+  const authorization = await getServerAuthorization();
+  const { ctx, can } = authorization;
+  const organizationId = ctx.organization.id;
+  if (!can("actions:read")) {
+    return { capas: [], members: [], processes: [], clauses: [], standards: [], access: { canCreate: false, canUpdate: false, canApprove: false, canExport: false } };
+  }
+  const contributorScope = ctx.role === "CONTRIBUTOR";
+  const canReadMembers = can("members:*");
+  const [capas, members, processes, clauses, standards] = await Promise.all([
+    prisma.cAPA.findMany({
+      where: { organizationId, ...(contributorScope ? { OR: [{ ownerId: ctx.user.id }, { requestedById: ctx.user.id }] } : {}) },
+      include: {
+        clause: { include: { standard: { select: { code: true, name: true } } } },
+        process: { select: { id: true, code: true, name: true } },
+        owner: { select: { id: true, name: true } },
+        requestedBy: { select: { id: true, name: true } },
+        rootCauseApprovedBy: { select: { id: true, name: true } },
+        verifier: { select: { id: true, name: true } },
+        closedBy: { select: { id: true, name: true } },
+        evidences: { orderBy: { createdAt: "asc" }, include: { uploadedBy: { select: { id: true, name: true } } } },
+        comments: { orderBy: { createdAt: "asc" }, include: { author: { select: { id: true, name: true } } } },
+      },
+      orderBy: [{ stage: "asc" }, { dueDate: "asc" }, { createdAt: "desc" }],
+    }),
+    canReadMembers ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { userId: true, user: { select: { id: true, name: true, email: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }),
+    prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
+    prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } }, orderBy: { standard: { code: "asc" } } }),
+  ]);
+  return {
+    capas,
+    members: memberPayload(canReadMembers, members.map((row) => row.user)),
+    processes,
+    clauses: clauses.map((row) => ({ id: row.id, code: row.code, title: row.title, standardCode: row.standard.code, standardName: row.standard.name })),
+    standards: standards.map((row) => row.standard),
+    access: { canCreate: can("actions:create"), canUpdate: can("actions:update"), canApprove: can("actions:approve"), canExport: can("actions:export") },
+  };
+}
+
+export type CAPAPayload = Awaited<ReturnType<typeof getCAPAPayload>>;
+
 // ─── Admin / Info / Catalogs / Records / ACPM — full payload ─────────
 
 export async function getAdminPayload() {
   const authorization = await getServerAuthorization();
   const { ctx, can } = authorization;
   const organizationId = ctx.organization.id;
+
+  // Backfill organizations created before the default catalogs were added.
+  // This is idempotent and keeps existing tenants usable without a manual DB task.
+  try {
+    await ensureOrganizationDefaults(organizationId);
+  } catch (error) {
+    console.error("[admin-payload] unable to ensure organization defaults", error);
+  }
+
   const currentUserId = ctx.user.id;
+  const scope = await getCollaboratorScope(ctx);
   const canReadOrganization = can("org:*");
   const canReadMembers = can("members:*");
   const canReadGroups = can("groups:read");
@@ -1005,6 +1268,7 @@ export async function getAdminPayload() {
   const canReadRecords = can("records:read");
   const canReadProcesses = can("processes:read");
   const canReadActions = can("actions:read");
+  const recordsScopedToAssignedProcess = scope.isScoped;
 
   const [
     memberships,
@@ -1016,11 +1280,14 @@ export async function getAdminPayload() {
     dispositions,
     archiveMethods,
     recordTypes,
+    clauses,
     processes,
     records,
     recordEntries,
     actions,
     actionComments,
+    organizationStandards,
+    catalogItems,
   ] = await Promise.all([
     canReadMembers ? prisma.membership.findMany({
       where: { organizationId },
@@ -1032,6 +1299,8 @@ export async function getAdminPayload() {
       include: {
         permissions: { select: { permission: true } },
         members: { select: { userId: true } },
+        processLinks: { select: { processId: true } },
+        moduleLinks: { select: { module: true } },
       },
       orderBy: { name: "asc" },
     }) : Promise.resolve([]),
@@ -1042,19 +1311,29 @@ export async function getAdminPayload() {
     canReadCatalogs ? prisma.disposition.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadCatalogs ? prisma.archiveMethod.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadCatalogs ? prisma.recordType.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadRecords && canReadProcesses ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadRecords ? prisma.record.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }) : Promise.resolve([]),
+    canReadRecords ? prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
+    canReadRecords && canReadProcesses ? prisma.process.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canReadRecords ? prisma.record.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }) : Promise.resolve([]),
     canReadRecords ? prisma.recordEntry.findMany({
-      where: { record: { organizationId } },
+      where: { record: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) } },
       orderBy: { enteredAt: "desc" },
     }) : Promise.resolve([]),
     canReadActions ? prisma.action.findMany({
-      where: { organizationId },
+      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.actionIds } } : {}) },
       orderBy: { createdAt: "desc" },
     }) : Promise.resolve([]),
     canReadActions ? prisma.actionComment.findMany({
-      where: { action: { organizationId } },
+      where: { action: { organizationId, ...(scope.isScoped ? { id: { in: scope.actionIds } } : {}) } },
       orderBy: { createdAt: "desc" },
+    }) : Promise.resolve([]),
+    canReadOrganization ? prisma.organizationStandard.findMany({
+      where: { organizationId },
+      select: { standard: { select: { code: true, name: true, version: true } } },
+      orderBy: { standard: { code: "asc" } },
+    }) : Promise.resolve([]),
+    canReadCatalogs ? prisma.organizationCatalogItem.findMany({
+      where: { organizationId },
+      orderBy: [{ kind: "asc" }, { sortOrder: "asc" }, { name: "asc" }],
     }) : Promise.resolve([]),
   ]);
 
@@ -1062,7 +1341,7 @@ export async function getAdminPayload() {
   const processNames = new Map(processes.map((process) => [process.id, process]));
   recordEntries.forEach((e) => {
     const cur = lastEntryAtByRecord.get(e.recordId);
-    const iso = e.enteredAt.toISOString();
+    const iso = e.entryDate.toISOString();
     if (!cur || cur < iso) lastEntryAtByRecord.set(e.recordId, iso);
   });
 
@@ -1082,34 +1361,55 @@ export async function getAdminPayload() {
       name: ctx.organization.name,
       industry: canReadOrganization ? ctx.organization.industry : null,
       country: canReadOrganization ? ctx.organization.country : "",
+      size: canReadOrganization ? ctx.organization.size : null,
       logoUrl: canReadOrganization ? ctx.organization.logoUrl : null,
+      contactName: canReadOrganization ? ctx.organization.contactName : null,
+      contactEmail: canReadOrganization ? ctx.organization.contactEmail : null,
+      contactPhone: canReadOrganization ? ctx.organization.contactPhone : null,
+      website: canReadOrganization ? ctx.organization.website : null,
+      address: canReadOrganization ? ctx.organization.address : null,
+      standards: organizationStandards.map((item) => item.standard.code),
       plan: ctx.organization.plan as "STARTER" | "GROWTH" | "ENTERPRISE",
     },
-    members: memberships.map((m) => ({
+    members: memberPayload(canReadMembers, memberships.filter((m) => !scope.isScoped || m.userId === currentUserId).map((m) => ({
       membershipId: m.id,
       userId: m.userId,
       name: m.user.name,
       email: m.user.email,
       role: m.role,
+      active: m.active,
+      deactivatedAt: m.deactivatedAt?.toISOString() ?? null,
       createdAt: m.createdAt.toISOString(),
       isSelf: m.userId === currentUserId,
-    })),
-    groups: groups.map((g) => ({
+    }))),
+    groups: (scope.isScoped ? [] : groups).map((g) => ({
       id: g.id,
       name: g.name,
       description: g.description,
       permissions: g.permissions.map((p) => p.permission),
       memberIds: g.members.map((m) => m.userId),
+      processIds: g.processLinks.map((link) => link.processId),
+      modules: g.moduleLinks.map((link) => link.module),
       createdAt: g.createdAt.toISOString(),
     })),
-    positions: positions.map((p) => ({
+    catalogItems: catalogItems.map((item) => ({
+      id: item.id,
+      kind: item.kind,
+      name: item.name,
+      description: item.description,
+      active: item.active,
+      sortOrder: item.sortOrder,
+      createdAt: item.createdAt.toISOString(),
+      updatedAt: item.updatedAt.toISOString(),
+    })),
+    positions: (scope.isScoped ? [] : positions).map((p) => ({
       id: p.id,
       name: p.name,
       description: p.description,
       active: p.active,
       createdAt: p.createdAt.toISOString(),
     })),
-    personnel: personnel.map((p) => ({
+    personnel: (scope.isScoped ? [] : personnel).map((p) => ({
       id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,
@@ -1120,34 +1420,35 @@ export async function getAdminPayload() {
       hiredAt: p.hiredAt?.toISOString() ?? null,
       createdAt: p.createdAt.toISOString(),
     })),
-    locations: locations.map((l) => ({
+    locations: (scope.isScoped ? [] : locations).map((l) => ({
       id: l.id,
       name: l.name,
       description: l.description,
       active: l.active,
       createdAt: l.createdAt.toISOString(),
     })),
-    retentionTimes: retentionTimes.map((r) => ({
+    retentionTimes: (scope.isScoped ? [] : retentionTimes).map((r) => ({
       id: r.id,
       name: r.name,
       months: r.months,
       active: r.active,
       createdAt: r.createdAt.toISOString(),
     })),
-    dispositions: dispositions.map((d) => ({
+    dispositions: (scope.isScoped ? [] : dispositions).map((d) => ({
       id: d.id,
       name: d.name,
       active: d.active,
       createdAt: d.createdAt.toISOString(),
     })),
-    archiveMethods: archiveMethods.map((a) => ({
+    archiveMethods: (scope.isScoped ? [] : archiveMethods).map((a) => ({
       id: a.id,
       name: a.name,
       active: a.active,
       createdAt: a.createdAt.toISOString(),
     })),
-    recordTypes: recordTypes.map((t) => ({
+    recordTypes: (scope.isScoped ? [] : recordTypes).map((t) => ({
       id: t.id,
+      code: t.code,
       name: t.name,
       active: t.active,
       createdAt: t.createdAt.toISOString(),
@@ -1159,11 +1460,16 @@ export async function getAdminPayload() {
       name: r.name,
       processId: canReadProcesses ? r.processId : null,
       processName: r.processId ? processNames.get(r.processId)?.name ?? null : null,
+      clauseId: r.clauseId,
       recordTypeId: r.recordTypeId,
       retentionTimeId: r.retentionTimeId,
       dispositionId: r.dispositionId,
       archiveMethodId: r.archiveMethodId,
       custodianId: r.custodianId,
+      reviewerId: r.reviewerId,
+      reviewStatus: r.reviewStatus,
+      reviewComment: r.reviewComment,
+      reviewedAt: r.reviewedAt?.toISOString() ?? null,
       physicalLocation: r.physicalLocation,
       digitalLocation: r.digitalLocation,
       observations: r.observations,
@@ -1181,8 +1487,13 @@ export async function getAdminPayload() {
       fileSize: e.fileSize,
       mimeType: e.mimeType,
       enteredById: e.enteredById,
+      title: e.title,
+      entryDate: e.entryDate.toISOString(),
+      status: e.status,
+      responsibleId: e.responsibleId,
       enteredAt: e.enteredAt.toISOString(),
     })),
+    clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
     acpms: actions.map((a, idx) => {
       const parsed = parseACPM(a.title);
       const code = parsed.code || deriveCode(idx + 1, new Date(a.createdAt).getFullYear());
@@ -1313,27 +1624,40 @@ export async function getBillingPayload() {
   const monthStart = new Date();
   monthStart.setUTCDate(1);
   monthStart.setUTCHours(0, 0, 0, 0);
-  const [subscription, invoices, users, documents, audits, documentStorage, evidenceStorage, recordStorage] = await Promise.all([
+  const [subscription, invoices, users, documents, audits, exportsThisMonth, storageUsage] = await Promise.all([
     prisma.subscription.findUnique({ where: { organizationId } }),
     prisma.billingInvoice.findMany({ where: { organizationId }, orderBy: { createdAt: "desc" }, take: 24 }),
     prisma.membership.count({ where: { organizationId } }),
     prisma.document.count({ where: { organizationId } }),
     prisma.audit.count({ where: { organizationId, createdAt: { gte: monthStart } } }),
-    prisma.documentVersion.aggregate({ where: { document: { organizationId } }, _sum: { fileSize: true } }),
-    prisma.evidenceFile.aggregate({ where: { organizationId }, _sum: { fileSize: true } }),
-    prisma.recordEntry.aggregate({ where: { record: { organizationId } }, _sum: { fileSize: true } }),
+    prisma.reportExport.count({ where: { organizationId, createdAt: { gte: monthStart } } }),
+    prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { storageBytes: true } }),
   ]);
   const plan = subscription?.plan ?? ctx.organization.plan;
   const limits = PLANS[plan].limits;
-  const storageBytes = (documentStorage._sum.fileSize ?? 0) + (evidenceStorage._sum.fileSize ?? 0) + (recordStorage._sum.fileSize ?? 0);
+  const entitlements = planEntitlements(plan, ctx.organization.trialEndsAt);
+  const storageBytes = storageUsage.storageBytes;
   return {
     plan,
     status: subscription?.status ?? null,
+    hasStripeSubscription: Boolean(subscription?.stripeSubscriptionId),
+    trialActive: isTrialActive(ctx.organization.trialEndsAt),
+    trialEndsAt: ctx.organization.trialEndsAt?.toISOString() ?? null,
+    trialDaysRemaining: ctx.organization.trialEndsAt ? Math.max(0, Math.ceil((ctx.organization.trialEndsAt.getTime() - Date.now()) / 86400000)) : null,
     currentPeriodEnd: subscription?.currentPeriodEnd?.toISOString() ?? null,
     cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd ?? false,
     stripeConfigured: isStripeConfigured(),
     checkoutConfigured: { STARTER: isPlanCheckoutConfigured("STARTER"), GROWTH: isPlanCheckoutConfigured("GROWTH") },
     canManage: can("billing:*"),
+    entitlements,
+    plans: Object.entries(PLANS).map(([key, item]) => ({
+      key,
+      name: item.name,
+      price: item.price,
+      currency: item.currency,
+      features: item.features,
+      checkoutConfigured: key === "STARTER" || key === "GROWTH" ? isPlanCheckoutConfigured(key as "STARTER" | "GROWTH") : false,
+    })),
     usage: {
       users,
       userLimit: limits.users,
@@ -1341,6 +1665,7 @@ export async function getBillingPayload() {
       storageLimitGb: limits.storage,
       documents,
       auditsThisMonth: audits,
+      exportsThisMonth,
     },
     invoices: invoices.map(invoice => ({
       id: invoice.id,
@@ -1364,12 +1689,16 @@ export async function getReportingPayload() {
   const { ctx, can } = await requireAuthorization("reporting:read");
   const exports = await prisma.reportExport.findMany({
     where: { organizationId: ctx.organization.id },
-    include: { generatedBy: { select: { name: true } } },
+    select: { id: true, reportType: true, format: true, dateFrom: true, dateTo: true, rowCount: true, fileName: true, mimeType: true, storagePath: true, fileSize: true, checksum: true, status: true, error: true, completedAt: true, title: true, filters: true, createdAt: true, generatedBy: { select: { name: true } } },
     orderBy: { createdAt: "desc" },
     take: 30,
   });
   return {
-    canExport: can("reporting:read"),
+    canExport: can("reporting:export"),
+    organizationName: ctx.organization.name,
+    logoUrl: ctx.organization.logoUrl,
+    currentUser: ctx.user.name,
+    standards: await prisma.organizationStandard.findMany({ where: { organizationId: ctx.organization.id }, select: { standard: { select: { code: true, name: true } } }, orderBy: { standard: { code: "asc" } } }),
     exports: exports.map(item => ({
       id: item.id,
       reportType: item.reportType,
@@ -1378,6 +1707,14 @@ export async function getReportingPayload() {
       dateTo: item.dateTo.toISOString(),
       rowCount: item.rowCount,
       fileName: item.fileName,
+      title: item.title,
+      filters: item.filters,
+      hasContent: Boolean(item.storagePath),
+      status: item.status,
+      fileSize: item.fileSize,
+      checksum: item.checksum,
+      error: item.error,
+      completedAt: item.completedAt?.toISOString() ?? null,
       generatedBy: item.generatedBy?.name ?? "Sistema",
       createdAt: item.createdAt.toISOString(),
     })),
@@ -1388,24 +1725,38 @@ export type ReportingPayload = Awaited<ReturnType<typeof getReportingPayload>>;
 
 export async function getManagementReviewPayload() {
   const { ctx, can } = await requireAuthorization("mgmt-review:read");
+  assertPlanModule(ctx, "management-review");
   const organizationId = ctx.organization.id;
   const canManage = can("mgmt-review:*");
-  const [reviews, members] = await Promise.all([
+  const [reviews, members, standards, evidenceFiles, audits, indicators, risks, nonconformities, actions, capas] = await Promise.all([
     prisma.managementReview.findMany({
       where: { organizationId },
       include: {
         inputs: { orderBy: { createdAt: "asc" } },
-        decisions: { orderBy: { createdAt: "asc" } },
+        decisions: { orderBy: { createdAt: "asc" }, include: { action: { select: { id: true, title: true, status: true, ownerId: true, dueDate: true } } } },
+        participants: { include: { user: { select: { id: true, name: true } } } },
+        evidenceLinks: { include: { evidence: { select: { id: true, title: true, evidenceType: true } } } },
         _count: { select: { actions: true } },
       },
       orderBy: [{ scheduledDate: "desc" }, { createdAt: "desc" }],
     }),
     getOrganizationMembers(organizationId),
+    canManage ? prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } }, orderBy: { standard: { code: "asc" } } }) : Promise.resolve([]),
+    canManage ? prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true, evidenceType: true }, orderBy: { createdAt: "desc" }, take: 500 }) : Promise.resolve([]),
+    canManage ? prisma.audit.findMany({ where: { organizationId }, select: { id: true, title: true, standardCode: true }, orderBy: { createdAt: "desc" }, take: 200 }) : Promise.resolve([]),
+    canManage ? prisma.indicator.findMany({ where: { organizationId }, select: { id: true, name: true, status: true }, orderBy: { name: "asc" }, take: 200 }) : Promise.resolve([]),
+    canManage ? prisma.risk.findMany({ where: { organizationId }, select: { id: true, title: true, status: true }, orderBy: { title: "asc" }, take: 200 }) : Promise.resolve([]),
+    canManage ? prisma.nonconformity.findMany({ where: { organizationId }, select: { id: true, title: true, status: true }, orderBy: { createdAt: "desc" }, take: 200 }) : Promise.resolve([]),
+    canManage ? prisma.action.findMany({ where: { organizationId }, select: { id: true, title: true, status: true }, orderBy: { createdAt: "desc" }, take: 200 }) : Promise.resolve([]),
+    canManage ? prisma.cAPA.findMany({ where: { organizationId }, select: { id: true, code: true, title: true, stage: true }, orderBy: { createdAt: "desc" }, take: 200 }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map(m => [m.id, m.name]));
   return {
-    access: { canManage },
-    members: canManage ? members : [],
+    access: { canManage, canExport: can("mgmt-review:export"), canCreateAction: can("actions:create") },
+    members: canManage && can("members:*") ? members : [],
+    standards: standards.map((item) => ({ code: item.standard.code, name: item.standard.name, version: item.standard.version })),
+    evidenceFiles,
+    sources: { audits, indicators, risks, nonconformities, actions, capas },
     reviews: reviews.map(r => ({
       id: r.id,
       title: r.title,
@@ -1415,9 +1766,12 @@ export async function getManagementReviewPayload() {
       chairId: r.chairId,
       chairName: r.chairId ? memberNames.get(r.chairId) ?? null : null,
       attendees: r.attendees,
+      standards: r.standards,
+      participants: r.participants.map((participant) => ({ id: participant.user.id, name: participant.user.name, role: participant.role })),
+      evidenceLinks: r.evidenceLinks.map((link) => ({ id: link.evidence.id, title: link.evidence.title, evidenceType: link.evidence.evidenceType })),
       summary: r.summary,
       actionCount: r._count.actions,
-      inputs: r.inputs.map(i => ({ id: i.id, topic: i.topic, content: i.content })),
+      inputs: r.inputs.map(i => ({ id: i.id, topic: i.topic, content: i.content, auditId: i.auditId, indicatorId: i.indicatorId, riskId: i.riskId, nonconformityId: i.nonconformityId, actionId: i.actionId, capaId: i.capaId })),
       decisions: r.decisions.map(d => ({
         id: d.id,
         topic: d.topic,
@@ -1425,6 +1779,10 @@ export async function getManagementReviewPayload() {
         ownerId: d.ownerId,
         ownerName: d.ownerId ? memberNames.get(d.ownerId) ?? null : null,
         dueDate: d.dueDate?.toISOString() ?? null,
+        actionId: d.action?.id ?? null,
+        actionTitle: d.action?.title ?? null,
+        actionStatus: d.action?.status ?? null,
+        actionOwnerId: d.action?.ownerId ?? null,
       })),
     })),
   };
@@ -1436,22 +1794,28 @@ export async function getAuditProgramPayload() {
   const { ctx, can } = await requireAuthorization("audit-program:read");
   const organizationId = ctx.organization.id;
   const canManage = can("audit-program:*");
-  const [programs, members] = await Promise.all([
+  const [programs, members, processes, standards] = await Promise.all([
     prisma.auditProgram.findMany({
       where: { organizationId },
       include: {
+        responsible: { select: { id: true, name: true } },
         audits: {
-          select: { id: true, title: true, status: true, progress: true, scheduledDate: true, type: true },
-          orderBy: [{ scheduledDate: "asc" }, { createdAt: "asc" }],
+          select: { id: true, title: true, status: true, progress: true, plannedDate: true, scheduledDate: true, type: true, processId: true, process: { select: { id: true, code: true, name: true } }, auditorId: true },
+          orderBy: [{ plannedDate: "asc" }, { scheduledDate: "asc" }, { createdAt: "asc" }],
         },
       },
       orderBy: [{ year: "desc" }, { title: "asc" }],
     }),
     getOrganizationMembers(organizationId),
+    canManage ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
+    prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } } }),
   ]);
   const memberNames = new Map(members.map(m => [m.id, m.name]));
   return {
-    access: { canManage },
+    access: { canManage, canExport: can("audit-program:export") },
+    members: canManage && can("members:*") ? members : [],
+    processes,
+    standards: standards.map((row) => row.standard),
     programs: programs.map(p => {
       const total = p.audits.length;
       const completed = p.audits.filter(a => a.status === "COMPLETED").length;
@@ -1462,6 +1826,10 @@ export async function getAuditProgramPayload() {
         title: p.title,
         objectives: p.objectives,
         scope: p.scope,
+        standards: p.standards,
+        criteria: p.criteria,
+        responsibleId: p.responsibleId,
+        responsibleName: p.responsible?.name ?? null,
         status: p.status,
         approvedById: p.approvedById,
         approvedByName: p.approvedById ? memberNames.get(p.approvedById) ?? null : null,
@@ -1475,7 +1843,12 @@ export async function getAuditProgramPayload() {
           status: a.status,
           progress: a.progress,
           type: a.type,
+          plannedDate: a.plannedDate?.toISOString() ?? null,
           scheduledDate: a.scheduledDate?.toISOString() ?? null,
+          processId: a.processId,
+          processName: a.process?.name ?? null,
+          processCode: a.process?.code ?? null,
+          auditorId: a.auditorId,
         })),
       };
     }),
@@ -1483,6 +1856,77 @@ export async function getAuditProgramPayload() {
 }
 
 export type AuditProgramPayload = Awaited<ReturnType<typeof getAuditProgramPayload>>;
+
+// ─── Trial onboarding / activation ─────────────────────────────────────
+
+export async function getOnboardingPayload() {
+  const { ctx, can } = await requireAuthorization("dashboard:read");
+  const organizationId = ctx.organization.id;
+  const [org, standards, processes, documents, answers, risks, actions, templates, metricEvents] = await Promise.all([
+    prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: {
+        name: true, industry: true, country: true, size: true, logoUrl: true, contactEmail: true,
+        onboardingStatus: true, onboardingStep: true, onboardingGoal: true, onboardingStartedAt: true,
+        onboardingCompletedAt: true, activationAt: true, trialEndsAt: true, plan: true,
+      },
+    }),
+    prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } }, orderBy: { standard: { code: "asc" } } }),
+    prisma.process.count({ where: { organizationId } }),
+    prisma.document.count({ where: { organizationId } }),
+    prisma.assessmentAnswer.count({ where: { assessment: { organizationId } } }),
+    prisma.risk.count({ where: { organizationId } }),
+    prisma.action.count({ where: { organizationId } }),
+    prisma.organizationCatalogItem.count({ where: { organizationId, kind: "DOCUMENT_TEMPLATE", active: true } }),
+    prisma.onboardingMetricEvent.findMany({ where: { organizationId }, select: { event: true, createdAt: true }, orderBy: { createdAt: "desc" }, take: 100 }),
+  ]);
+  if (!org) throw new Error("Organización no encontrada.");
+
+  const items = [
+    { id: "org-profile", title: "Completa el perfil de tu organización", description: "Añade sector y tamaño para contextualizar informes y auditorías.", href: "/app/settings/organization", done: Boolean(org.industry || org.contactEmail), weight: 1 },
+    { id: "process", title: "Crea o confirma tu primer proceso", description: "Los procesos conectan documentos, riesgos, indicadores y auditorías.", href: "/app/processes", done: processes > 0, weight: 1 },
+    { id: "document", title: "Carga tu primer documento", description: "Empieza por tu política, manual o procedimiento más importante.", href: "/app/documents", done: documents > 0, weight: 2 },
+    { id: "gap", title: "Responde tu primer GAP", description: "Obtén una línea base de cumplimiento por cláusula ISO.", href: "/app/gap", done: answers > 0, weight: 2 },
+    { id: "risk", title: "Registra tu primer riesgo", description: "Prioriza las amenazas y oportunidades que afectan tus objetivos.", href: "/app/risks", done: risks > 0, weight: 1 },
+    { id: "action", title: "Crea tu primera acción", description: "Convierte una brecha o riesgo en una tarea con responsable y fecha.", href: "/app/actions", done: actions > 0, weight: 1 },
+  ];
+  const completed = items.filter((item) => item.done).length;
+  const progressPct = Math.round((completed / items.length) * 100);
+  const trialDaysRemaining = org.trialEndsAt ? Math.max(0, Math.ceil((org.trialEndsAt.getTime() - Date.now()) / 86400000)) : null;
+
+  return {
+    organization: {
+      name: org.name,
+      industry: org.industry,
+      country: org.country,
+      size: org.size,
+      contactEmail: org.contactEmail,
+      standards: standards.map((item) => item.standard),
+      plan: org.plan,
+      status: org.onboardingStatus,
+      step: org.onboardingStep,
+      goal: org.onboardingGoal,
+      startedAt: org.onboardingStartedAt?.toISOString() ?? null,
+      completedAt: org.onboardingCompletedAt?.toISOString() ?? null,
+      activationAt: org.activationAt?.toISOString() ?? null,
+      trialEndsAt: org.trialEndsAt?.toISOString() ?? null,
+    },
+    items,
+    completed,
+    progressPct,
+    counts: { processes, documents, answers, risks, actions, templates },
+    trialDaysRemaining,
+    metrics: metricEvents.map((event) => ({ event: event.event, createdAt: event.createdAt.toISOString() })),
+    billing: {
+      canManage: can("billing:*") || can("org:*") || can("billing:update"),
+      stripeConfigured: isStripeConfigured(),
+      checkoutConfigured: { STARTER: isPlanCheckoutConfigured("STARTER"), GROWTH: isPlanCheckoutConfigured("GROWTH") },
+      plans: Object.entries(PLANS).map(([key, plan]) => ({ key, name: plan.name, price: plan.price, features: plan.features })),
+    },
+  };
+}
+
+export type OnboardingPayload = Awaited<ReturnType<typeof getOnboardingPayload>>;
 
 // ─── Setup / implementación guiada ─────────────────────────────────────
 

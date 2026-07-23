@@ -28,6 +28,14 @@ yarn-debug.log*
 # Playwright (live fixtures may contain temporary credentials)
 test-results-live/
 playwright-report-live/
+test-results/
+playwright-report/
+backups/
+
+# DB backups, data exports and restore-drill evidence (may contain personal data)
+exports/
+*.dump
+*.sql.gz
 
 # TypeScript
 *.tsbuildinfo

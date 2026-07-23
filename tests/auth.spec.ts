@@ -1,4 +1,21 @@
 import { test, expect } from "@playwright/test";
+import { assertStrongSecret, validateProductionSecurityConfig } from "@/lib/env";
+
+test.describe("production authentication guardrails", () => {
+  test("rejects demo mode and default secrets in production", () => {
+    expect(() => validateProductionSecurityConfig({ AUTH_DEMO_MODE: "true" }, true)).toThrow(/desactivados/i);
+    expect(() => validateProductionSecurityConfig({ NEXT_PUBLIC_AUTH_DEMO_MODE: "true" }, true)).toThrow(/desactivados/i);
+    expect(() => assertStrongSecret("normaflow-dev-change-me", "NEXTAUTH_SECRET")).toThrow(/32 caracteres|defecto/i);
+    expect(() => assertStrongSecret("change-me-012345678901234567890123456", "NEXTAUTH_SECRET")).toThrow(/defecto/i);
+  });
+
+  test("accepts a non-default strong production secret", () => {
+    expect(() => validateProductionSecurityConfig({
+      NEXTAUTH_SECRET: "a-secure-production-secret-with-entropy-123456",
+      CRON_SECRET: "another-secure-production-secret-with-entropy-123456",
+    }, true)).not.toThrow();
+  });
+});
 
 test.describe("Authentication", () => {
   test.beforeEach(async ({ context }) => {

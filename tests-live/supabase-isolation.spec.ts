@@ -126,6 +126,24 @@ test.describe("Supabase RLS and multi-organization isolation", () => {
 
     expect((await clientA.storage.from("documents").download(ownPath)).error).toBeNull();
     expect((await clientB.storage.from("documents").download(ownPath)).error).not.toBeNull();
+    const ownListing = await clientA.storage.from("documents").list(`org-${state.actorA.organizationId}/documents/live-${state.runId}`);
+    expect(ownListing.error).toBeNull();
+    const crossListing = await clientA.storage.from("documents").list(`org-${state.actorB.organizationId}/documents/live-${state.runId}`);
+    expect(Boolean(crossListing.error) || crossListing.data?.length === 0).toBe(true);
     expect((await clientA.storage.from("documents").remove([ownPath])).error).toBeNull();
+  });
+
+  test("applies the same tenant boundary to the evidence bucket", async () => {
+    const clientA = await actorClient(state.actorA);
+    const clientB = await actorClient(state.actorB);
+    const ownPath = `org-${state.actorA.organizationId}/evidence/live-${state.runId}/probe.txt`;
+    const crossPath = `org-${state.actorB.organizationId}/evidence/live-${state.runId}/probe.txt`;
+
+    expect((await clientA.storage.from("evidence").upload(ownPath, new Blob(["evidence A"], { type: "text/plain" }), { upsert: true })).error).toBeNull();
+    expect((await clientA.storage.from("evidence").upload(crossPath, new Blob(["evidence B"], { type: "text/plain" }), { upsert: true })).error).not.toBeNull();
+    expect((await clientB.storage.from("evidence").download(ownPath)).error).not.toBeNull();
+    const crossListing = await clientA.storage.from("evidence").list(`org-${state.actorB.organizationId}/evidence/live-${state.runId}`);
+    expect(Boolean(crossListing.error) || crossListing.data?.length === 0).toBe(true);
+    expect((await clientA.storage.from("evidence").remove([ownPath])).error).toBeNull();
   });
 });

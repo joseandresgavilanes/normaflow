@@ -1,12 +1,12 @@
-import { AdminGate } from "@/components/admin/AdminPageGate";
+import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import OrgSettingsClient from "@/components/admin/OrgSettingsClient";
 
 export const metadata = { title: "Organización — NormaFlow" };
 
 export default function OrganizationSettingsPage() {
   return (
-    <AdminGate permission="org:*">
+    <ServerPermissionGate permission="org:*">
       <OrgSettingsClient />
-    </AdminGate>
+    </ServerPermissionGate>
   );
 }

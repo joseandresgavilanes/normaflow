@@ -6,17 +6,22 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
-import { exportReport } from "@/lib/actions/reporting";
+import { downloadReportExport, exportReport, getReportExportStatus } from "@/lib/actions/reporting";
+import type { ReportFilters } from "@/lib/reporting-contract";
 import type { ReportingPayload } from "@/lib/server-queries";
 
 const REPORTS = [
-  { id: "exec", title: "Ejecutivo — salud del sistema", desc: "Readiness, formación, cambios y acciones críticas.", accent: "#5266F6" },
-  { id: "iso", title: "Cumplimiento por norma", desc: "Normas activas, versión y porcentaje de avance.", accent: "#16A34A" },
-  { id: "site", title: "Por sede", desc: "Sedes activas y documentos asociados.", accent: "#6B3FB5" },
-  { id: "capa", title: "CAPA y NC", desc: "Estado, eficacia y antigüedad.", accent: "#DC2626" },
-  { id: "train", title: "Training compliance", desc: "Asignaciones, vencidos y reacreditaciones.", accent: "#D97706" },
-  { id: "changes", title: "Cambios abiertos", desc: "Pipeline de control de cambios.", accent: "#5266F6" },
-  { id: "auditpack", title: "Resumen de auditoría", desc: "Auditorías, hallazgos, NC, checklist e informe asociado.", accent: "#5266F6" },
+  { id: "gap", title: "Informe GAP Assessment", desc: "Brechas, score y estado por cláusula ISO.", accent: "#5266F6", formats: ["PDF", "EXCEL"] },
+  { id: "documents", title: "Matriz documental", desc: "Documentos, versiones, responsables y estado.", accent: "#16A34A", formats: ["PDF", "EXCEL"] },
+  { id: "risks", title: "Matriz de riesgos", desc: "Probabilidad, impacto, tratamiento y vencimientos.", accent: "#DC2626", formats: ["PDF", "EXCEL"] },
+  { id: "audit-program", title: "Programa anual de auditorías", desc: "Auditorías planificadas por proceso y norma.", accent: "#6B3FB5", formats: ["PDF", "EXCEL"] },
+  { id: "audit", title: "Informe de auditoría interna", desc: "Auditorías, checklist, hallazgos e informe.", accent: "#5266F6", formats: ["PDF", "EXCEL"] },
+  { id: "capa", title: "Matriz de NC y CAPA", desc: "No conformidades, etapas, responsables y eficacia.", accent: "#DC2626", formats: ["PDF", "EXCEL"] },
+  { id: "actions", title: "Plan de acción", desc: "Acciones derivadas, prioridades y avances.", accent: "#D97706", formats: ["PDF", "EXCEL"] },
+  { id: "indicators", title: "Matriz de indicadores / KPIs", desc: "Objetivos, tendencia reciente y estado.", accent: "#16A34A", formats: ["PDF", "EXCEL"] },
+  { id: "evidence", title: "Índice de evidencias", desc: "Evidencias, responsables, vigencia y cláusulas.", accent: "#6B3FB5", formats: ["PDF", "EXCEL"] },
+  { id: "management-review", title: "Acta de revisión por la dirección", desc: "Entradas, decisiones, acciones y conclusiones.", accent: "#5266F6", formats: ["PDF"] },
+  { id: "audit-package", title: "Paquete completo de auditoría", desc: "Compendio GAP, documentos, riesgos, auditoría, CAPA, KPIs y evidencias.", accent: "#0F766E", formats: ["PDF", "EXCEL"] },
 ];
 
 function today() { return new Date().toISOString().slice(0, 10); }
@@ -27,6 +32,8 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
   const perm = useDemoPermission();
   const [from, setFrom] = useState(yearStart);
   const [to, setTo] = useState(today);
+  const [standardCode, setStandardCode] = useState("");
+  const [status, setStatus] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
   const live = liveData !== undefined;
 
@@ -40,22 +47,41 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
     );
   }
 
-  function download(base64: string, mimeType: string, fileName: string) {
-    const bytes = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
-    const url = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  function download(url: string, fileName: string) {
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = fileName;
     anchor.click();
-    URL.revokeObjectURL(url);
   }
 
-  function runExport(reportId: string, title: string, format: "PDF" | "EXCEL" | "CSV") {
+  async function waitForArtifact(id: string) {
+    for (let attempt = 0; attempt < 60; attempt += 1) {
+      const status = await getReportExportStatus(id);
+      if (status.status === "COMPLETED") {
+        const artifact = await downloadReportExport(id);
+        download(artifact.url, artifact.fileName);
+        return artifact;
+      }
+      if (status.status === "FAILED") throw new Error(status.error ?? "El worker no pudo generar el informe.");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+    throw new Error("El informe sigue en cola. Puedes descargarlo desde el historial cuando termine.");
+  }
+
+  function runExport(reportId: string, title: string, format: "PDF" | "EXCEL") {
     if (live) {
       setBusy(`${reportId}-${format}`);
-      void exportReport({ reportId, title, format, from, to }).then(result => {
-        download(result.base64, result.mimeType, result.fileName);
-        showToast(`Informe generado · ${result.rowCount} filas`);
+      const filters: ReportFilters = { from, to, standardCode: standardCode || undefined, status: status || undefined };
+      void exportReport({ reportId, title, format, filters }).then(async result => {
+        if (result.status === "COMPLETED") {
+          const artifact = await downloadReportExport(result.id);
+          download(artifact.url, artifact.fileName);
+          showToast(`Informe descargado · ${artifact.rowCount} filas`);
+          return;
+        }
+        showToast("Informe en cola. Se descargará cuando finalice el worker.");
+        const artifact = await waitForArtifact(result.id);
+        showToast(`Informe descargado · ${artifact.rowCount} filas`);
       }).catch(error => showToast(error instanceof Error ? error.message : "No se pudo generar el informe")).finally(() => setBusy(null));
       return;
     }
@@ -71,7 +97,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
           entityType: "REPORT",
           entityId: reportId,
           entityLabel: title,
-          reason: `Rango ${from} — ${to} · Exportación demo (${format})`,
+          reason: `Rango ${from} — ${to} · Norma ${standardCode || "todas"} · Estado ${status || "todos"} · Exportación demo (${format})`,
         }),
       });
       showToast(`Generado: ${title} (${format}, demo)`);
@@ -160,7 +186,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             <Sparkles size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink-2)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>PDF / Excel / CSV</div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink-2)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>PDF / XLSX</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>{live ? "Exportación real" : "Modo demo"}</div>
           </div>
         </div>
@@ -174,6 +200,8 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             </span>
             <input type="date" className="nf-app-input" value={from} onChange={e => setFrom(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
           </label>
+          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Norma</span><select className="nf-app-input" value={standardCode} onChange={e => setStandardCode(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todas las normas</option>{liveData.standards.map(item => <option key={item.standard.code} value={item.standard.code}>{item.standard.code} · {item.standard.name}</option>)}</select></label>}
+          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Estado</span><select className="nf-app-input" value={status} onChange={e => setStatus(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todos los estados</option><option value="COMPLETED">Completado</option><option value="IN_PROGRESS">En curso</option><option value="PENDING">Pendiente</option><option value="OPEN">Abierto</option><option value="APPROVED">Aprobado</option></select></label>}
           <label style={{ display: "block" }}>
             <span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
               Hasta
@@ -211,7 +239,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
                 {r.desc}
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button
+                {live && !liveData.canExport ? <span className="nf-app-help">Sin permiso de exportación</span> : <button
                   type="button"
                   disabled={!!busy}
                   onClick={() => runExport(r.id, r.title, "PDF")}
@@ -229,13 +257,8 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
                   }}
                 >
                   {busy === `${r.id}-PDF` || busy === r.id ? "Generando…" : "Exportar PDF"}
-                </button>
-                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => runExport(r.id, r.title, "EXCEL")}>
-                  Excel
-                </button>
-                <button type="button" disabled={!!busy} className="nf-app-btn-outline" onClick={() => runExport(r.id, r.title, "CSV")}>
-                  CSV
-                </button>
+                </button>}
+                {r.formats.includes("EXCEL") && <button type="button" disabled={!!busy || (live && !liveData.canExport)} className="nf-app-btn-outline" onClick={() => runExport(r.id, r.title, "EXCEL")}>XLSX</button>}
               </div>
             </div>
           </Card>
@@ -263,7 +286,8 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
                 <strong style={{ display: "block", color: "var(--nf-ink, #0f1b2d)", fontWeight: 700, fontSize: 14, wordBreak: "break-all" }}>{item.fileName}</strong>
                 <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2, #223648)" }}>{item.generatedBy} · {new Date(item.createdAt).toLocaleString("es-ES")}</div>
               </div>
-              <span className="nf-chip nf-chip--on">{item.format} · {item.rowCount} filas</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><span className="nf-chip nf-chip--on">{item.format} · {item.rowCount} filas · {item.status}</span>{item.hasContent && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" onClick={() => { setBusy(`download-${item.id}`); void downloadReportExport(item.id).then(result => download(result.url, result.fileName)).catch(error => showToast(error instanceof Error ? error.message : "No se pudo descargar el informe")).finally(() => setBusy(null)); }}>{busy === `download-${item.id}` ? "Descargando…" : "Descargar"}</button>}</div>
+              {item.status === "FAILED" && item.error && <p style={{ margin: 0, color: "var(--nf-danger, #b42318)", fontSize: 12 }}>Error: {item.error}</p>}
             </div>
           )) : <p className="nf-app-help" style={{ padding: 18, margin: 0, color: "var(--nf-ink-2, #223648)" }}>Todavía no se generaron informes.</p>}
         </Card>

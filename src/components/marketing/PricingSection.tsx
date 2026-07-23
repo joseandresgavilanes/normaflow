@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Ic } from "@/components/marketing/nf/Icons";
-import { PLAN_LIMITS, ENTERPRISE_LIFETIME_FROM_USD, ENTERPRISE_MAINTENANCE_FROM_USD } from "@/lib/constants";
+import { PLAN_CATALOG, PLAN_LIMITS, ENTERPRISE_LIFETIME_FROM_USD, ENTERPRISE_MAINTENANCE_FROM_USD } from "@/lib/constants";
 
 type Mode = "saas" | "lifetime";
 
@@ -34,11 +34,7 @@ const PLANS: Plan[] = [
     lifetimePrice: fmtUsd(STARTER_LIFETIME), lifetimeUnit: "USD · pago único",
     tag: "Para implementar ISO sin caos",
     features: [
-      `Hasta ${STARTER_USERS} usuarios`,
-      "ISO 9001 + ISO 27001",
-      "Módulos esenciales",
-      "10 GB de almacenamiento",
-      "Soporte por correo",
+      ...PLAN_CATALOG.STARTER.features,
     ],
     cta: "Empezar 14 días gratis",
     popular: false,
@@ -50,12 +46,7 @@ const PLANS: Plan[] = [
     lifetimePrice: fmtUsd(GROWTH_LIFETIME), lifetimeUnit: "USD · pago único",
     tag: "Para equipos en mantenimiento activo",
     features: [
-      `Hasta ${GROWTH_USERS} usuarios`,
-      "Todos los módulos",
-      "Asistente IA incluido",
-      "50 GB de almacenamiento",
-      "Soporte prioritario",
-      "Onboarding guiado",
+      ...PLAN_CATALOG.GROWTH.features,
     ],
     cta: "Probar 14 días",
     popular: true,
@@ -67,12 +58,7 @@ const PLANS: Plan[] = [
     lifetimePrice: `desde ${fmtUsd(ENTERPRISE_LIFETIME_FROM_USD)}`,   lifetimeUnit: "USD · pago único",
     tag: "Para multi-organización y SLA",
     features: [
-      "Usuarios ilimitados",
-      "Multi-organización",
-      "Almacenamiento ilimitado",
-      "SLA 99.9% garantizado",
-      "Soporte dedicado · CSM",
-      "API + integraciones · SSO",
+      ...PLAN_CATALOG.ENTERPRISE.features,
     ],
     cta: "Hablar con ventas",
     popular: false,

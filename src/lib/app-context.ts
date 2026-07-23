@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
+import { getDemoLoginAccounts } from "@/lib/demo-accounts";
 import { demoCookieName, verifyDemoSession } from "@/lib/demo-auth";
 import { DEMO_ORGANIZATIONS, getDemoOrg } from "@/lib/demo/organizations";
 import { isAuthDemoMode, isSupabaseConfigured, sessionSecret } from "@/lib/env";
@@ -31,19 +31,19 @@ export type NeedsOrgContext = {
 
 export type AppContext = LiveAppContext | DemoAppContext | NeedsOrgContext;
 
-const DEMO_ROLES: Role[] = ["SUPER_ADMIN", "ORG_ADMIN", "COMPLIANCE_MANAGER", "AUDITOR", "CONTRIBUTOR", "VIEWER"];
+const DEMO_ROLES: Role[] = ["OWNER", "ADMIN", "MANAGER", "SUPER_ADMIN", "ORG_ADMIN", "COMPLIANCE_MANAGER", "AUDITOR", "CONTRIBUTOR", "VIEWER"];
 
 function normalizeDemoRole(role: string | undefined): Role {
   const key = role?.trim().toUpperCase().replace(/\s+/g, "_");
-  return DEMO_ROLES.includes(key as Role) ? (key as Role) : "ORG_ADMIN";
+  return DEMO_ROLES.includes(key as Role) ? (key as Role) : "ADMIN";
 }
 
 function configuredDemoEmail(): string {
-  return process.env.DEMO_EMAIL || DEMO_CREDENTIALS.email;
+  return getDemoLoginAccounts().demo.email;
 }
 
 function configuredCustomerEmail(): string {
-  return process.env.CUSTOMER_EMAIL || CUSTOMER_CREDENTIALS.email;
+  return getDemoLoginAccounts().customer.email;
 }
 
 function localContextForEmail(email: string): DemoAppContext | null {
@@ -138,6 +138,7 @@ export async function getAppContext(): Promise<AppContext | null> {
       where: { email },
       include: {
         memberships: {
+          where: { active: true },
           include: { organization: true },
         },
       },

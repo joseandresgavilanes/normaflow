@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
+import { parseInput } from "@/lib/validation/common";
+import { personnelSchema } from "@/lib/validation/p1";
 
 export type PersonnelInput = {
   firstName: string;
@@ -15,6 +17,7 @@ export type PersonnelInput = {
 };
 
 function normalize(input: PersonnelInput) {
+  const validated = parseInput(personnelSchema, { firstName: input.firstName, lastName: input.lastName, email: input.email, positionId: input.positionId, hiredAt: input.hiredAt });
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
   if (!firstName) throw new Error("El nombre es obligatorio.");
@@ -22,10 +25,10 @@ function normalize(input: PersonnelInput) {
   return {
     firstName,
     lastName,
-    email: input.email?.trim() || null,
+    email: validated.email?.trim() || null,
     identification: input.identification?.trim() || null,
-    positionId: input.positionId || null,
-    hiredAt: input.hiredAt ? new Date(input.hiredAt) : null,
+    positionId: validated.positionId || null,
+    hiredAt: validated.hiredAt ? new Date(validated.hiredAt) : null,
   };
 }
 

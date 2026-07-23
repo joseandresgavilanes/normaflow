@@ -61,7 +61,7 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
-      router.push("/app/dashboard");
+      router.push("/app/onboarding");
       router.refresh();
       setLoading(false);
       return;

@@ -6,9 +6,10 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 
 type SimpleCatalogKey = "position" | "location" | "disposition" | "archiveMethod" | "recordType";
 
-function asRow(r: { id: string; name: string; active: boolean; createdAt: string; description?: string | null }): CatalogRow {
+function asRow(r: { id: string; code?: string | null; name: string; active: boolean; createdAt: string; description?: string | null }): CatalogRow {
   return {
     id: r.id,
+    code: r.code ?? null,
     name: r.name,
     description: r.description ?? null,
     active: r.active,
@@ -28,11 +29,12 @@ export function SimpleCatalogClient(props: {
   const canEdit = perm.can(props.permission);
 
   const fields: CatalogField[] = [{ key: "name", label: "Nombre", type: "text", required: true }];
+  if (props.catalog === "recordType") fields.unshift({ key: "code", label: "Código", type: "text", required: true, helper: "Código único dentro de la organización." });
   if (props.withDescription) fields.push({ key: "description", label: "Descripción", type: "textarea" });
 
   let rows: CatalogRow[] = [];
-  let onCreate: (form: { name: string; description?: string }) => Promise<void>;
-  let onUpdate: (id: string, form: { name?: string; description?: string }) => Promise<void>;
+  let onCreate: (form: { name: string; code?: string; description?: string }) => Promise<void>;
+  let onUpdate: (id: string, form: { name?: string; code?: string; description?: string }) => Promise<void>;
   let onDelete: (id: string) => Promise<void>;
 
   switch (props.catalog) {
@@ -62,8 +64,8 @@ export function SimpleCatalogClient(props: {
       break;
     case "recordType":
       rows = admin.state.recordTypes.map(asRow);
-      onCreate = async (f) => admin.createRecordType({ name: f.name });
-      onUpdate = async (id, f) => admin.updateRecordType(id, { name: f.name });
+      onCreate = async (f) => admin.createRecordType({ name: f.name, code: f.code });
+      onUpdate = async (id, f) => admin.updateRecordType(id, { name: f.name, code: f.code });
       onDelete = async (id) => admin.deactivateRecordType(id);
       break;
   }

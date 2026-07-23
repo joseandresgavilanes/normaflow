@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ManagementReviewStatus, ManagementReviewTopic } from "@prisma/client";
+import { ManagementReviewStatus, ManagementReviewTopic, Priority } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
@@ -14,8 +14,12 @@ import {
   deleteReviewInput,
   addReviewDecision,
   deleteReviewDecision,
+  createReviewAction,
+  linkReviewEvidence,
+  exportManagementReview,
 } from "@/lib/actions/management-review";
 import type { ManagementReviewPayload } from "@/lib/server-queries";
+import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import {
   CardActions,
   EmptyOperational,
@@ -43,7 +47,9 @@ export const TOPIC_LABELS: Record<ManagementReviewTopic, string> = {
   ADEQUACY_RESOURCES: "Adecuación de los recursos",
   EFFECTIVENESS_RISK_ACTIONS: "Eficacia de acciones frente a riesgos",
   IMPROVEMENT_OPPORTUNITIES: "Oportunidades de mejora",
+  RISKS_OPPORTUNITIES: "Riesgos y oportunidades",
   CHANGES_INTERNAL_EXTERNAL: "Cambios internos y externos",
+  KPI_RESULTS: "Resultados de KPIs",
   OTHER: "Otro",
 };
 
@@ -74,6 +80,8 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
   const [editing, setEditing] = useState<ReviewRow | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ReviewRow | null>(null);
+  const [actionDecision, setActionDecision] = useState<ReviewRow["decisions"][number] | null>(null);
+  const [exporting, setExporting] = useState(false);
   const detail = detailId ? initial.reviews.find(r => r.id === detailId) ?? null : null;
 
   function submitReview(event: FormEvent<HTMLFormElement>) {
@@ -84,6 +92,8 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
       scheduledDate: String(fd.get("scheduledDate") ?? "") || undefined,
       chairId: String(fd.get("chairId") ?? "") || undefined,
       attendees: String(fd.get("attendees") ?? "").split(",").map(s => s.trim()).filter(Boolean),
+      participantIds: fd.getAll("participantIds").map(String),
+      standards: fd.getAll("standards").map(String),
     };
     run(() => (editing ? updateManagementReview(editing.id, input) : createManagementReview(input)), {
       onSuccess: () => { setCreating(false); setEditing(null); },
@@ -107,10 +117,18 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
     event.preventDefault();
     const form = event.currentTarget;
     const fd = new FormData(form);
-    run(() => addReviewInput(reviewId, { topic: fd.get("topic") as ManagementReviewTopic, content: String(fd.get("content") ?? "") }), {
+    run(() => addReviewInput(reviewId, { topic: fd.get("topic") as ManagementReviewTopic, content: String(fd.get("content") ?? ""), auditId: String(fd.get("auditId") ?? "") || undefined, indicatorId: String(fd.get("indicatorId") ?? "") || undefined, riskId: String(fd.get("riskId") ?? "") || undefined, nonconformityId: String(fd.get("nonconformityId") ?? "") || undefined, actionId: String(fd.get("actionId") ?? "") || undefined, capaId: String(fd.get("capaId") ?? "") || undefined }), {
       onSuccess: () => form.reset(),
       successMessage: "Entrada añadida.",
     });
+  }
+
+  async function downloadActa(review: ReviewRow) {
+    setExporting(true);
+    try {
+      const result = await exportManagementReview(review.id);
+      await downloadQueuedReport(result.id);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo generar el acta PDF."); } finally { setExporting(false); }
   }
 
   function addDecision(event: FormEvent<HTMLFormElement>, reviewId: string) {
@@ -176,6 +194,8 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
           <Field label="Fecha programada"><input name="scheduledDate" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.scheduledDate?.slice(0, 10) ?? ""} /></Field>
           <Field label="Presidente / responsable"><select name="chairId" className="nf-app-input" style={inputStyle} defaultValue={editing?.chairId ?? ""}><option value="">Sin asignar</option>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
         </div>
+        {initial.standards.length > 0 && <Field label="Normas incluidas"><select name="standards" multiple className="nf-app-input" style={{ ...inputStyle, minHeight: 90 }} defaultValue={editing?.standards ?? []}>{initial.standards.map(s => <option key={s.code} value={s.code}>{s.code} · {s.name}{s.version ? ` (${s.version})` : ""}</option>)}</select><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>⌘/Ctrl + clic para seleccionar varias.</span></Field>}
+        {initial.members.length > 0 && <Field label="Participantes internos"><select name="participantIds" multiple className="nf-app-input" style={{ ...inputStyle, minHeight: 90 }} defaultValue={editing?.participants.map(p => p.id) ?? []}>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>Los participantes quedan trazados como miembros activos del tenant.</span></Field>}
         <Field label="Asistentes (separados por comas)"><input name="attendees" className="nf-app-input" style={inputStyle} defaultValue={editing?.attendees.join(", ") ?? ""} placeholder="Dirección general, Calidad, Operaciones" /></Field>
       </FormModal>
 
@@ -189,14 +209,15 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                 <Meta label="Presidente" value={detail.chairName ?? "—"} />
                 <Meta label="Programada" value={fmtDate(detail.scheduledDate)} />
                 <Meta label="Realizada" value={fmtDate(detail.heldAt)} />
+                <Meta label="Normas" value={detail.standards.join(" · ") || "—"} />
               </div>
-              {canManage && NEXT_STATUS[detail.status] && (
-                <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => advance(detail)}>
-                  {detail.status === "PLANNED" ? "Iniciar revisión" : "Cerrar revisión"}
-                </button>
-              )}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {canManage && NEXT_STATUS[detail.status] && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => advance(detail)}>{detail.status === "PLANNED" ? "Iniciar revisión" : "Cerrar revisión"}</button>}
+                {initial.access.canExport && <button type="button" className="nf-app-btn-outline" disabled={exporting} onClick={() => downloadActa(detail)}>{exporting ? "Generando…" : "Acta PDF"}</button>}
+              </div>
             </div>
             {detail.attendees.length > 0 && <Meta label="Asistentes" value={detail.attendees.join(" · ")} />}
+            {detail.participants.length > 0 && <Meta label="Participantes internos" value={detail.participants.map(p => p.name).join(" · ")} />}
 
             {/* Inputs 9.3.2 */}
             <section>
@@ -210,6 +231,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                       {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "#a62d29" }} disabled={isPending} onClick={() => run(() => deleteReviewInput(i.id))}>Eliminar</button>}
                     </div>
                     <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--nf-ink)" }}>{i.content}</p>
+                    {(i.auditId || i.indicatorId || i.riskId || i.nonconformityId || i.actionId || i.capaId) && <div style={{ marginTop: 5, fontSize: 11, color: "var(--nf-ink-3)" }}>Fuente vinculada: {i.auditId ? "Auditoría" : i.indicatorId ? "KPI" : i.riskId ? "Riesgo" : i.nonconformityId ? "NC" : i.actionId ? "Acción" : "CAPA"}</div>}
                   </div>
                 ))}
               </div>
@@ -220,6 +242,18 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                       {Object.entries(TOPIC_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                     <button type="submit" className="nf-app-btn-outline" disabled={isPending}>Añadir entrada</button>
+                  </div>
+                  <div className="nf-grid-2" style={{ gap: 8 }}>
+                    <select name="auditId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular auditoría…</option>{initial.sources.audits.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
+                    <select name="indicatorId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular KPI…</option>{initial.sources.indicators.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+                  </div>
+                  <div className="nf-grid-2" style={{ gap: 8 }}>
+                    <select name="riskId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular riesgo…</option>{initial.sources.risks.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
+                    <select name="nonconformityId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular NC…</option>{initial.sources.nonconformities.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
+                  </div>
+                  <div className="nf-grid-2" style={{ gap: 8 }}>
+                    <select name="actionId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular acción…</option>{initial.sources.actions.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
+                    <select name="capaId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular CAPA…</option>{initial.sources.capas.map(item => <option key={item.id} value={item.id}>{item.code} · {item.title}</option>)}</select>
                   </div>
                   <textarea name="content" className="nf-app-input" style={inputStyle} rows={2} placeholder="Resumen / datos de la entrada…" required />
                 </form>
@@ -238,7 +272,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                       {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "#a62d29" }} disabled={isPending} onClick={() => run(() => deleteReviewDecision(d.id))}>Eliminar</button>}
                     </div>
                     <p style={{ margin: "4px 0", fontSize: 13, color: "var(--nf-ink)" }}>{d.decision}</p>
-                    <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{d.ownerName ?? "Sin responsable"}{d.dueDate ? ` · vence ${fmtDate(d.dueDate)}` : ""}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", fontSize: 12, color: "var(--nf-ink-3)" }}><span>{d.ownerName ?? "Sin responsable"}{d.dueDate ? ` · vence ${fmtDate(d.dueDate)}` : ""}</span>{initial.access.canCreateAction && !d.actionId && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" onClick={() => setActionDecision(d)}>Crear acción</button>}{d.actionTitle && <span>Acción: {d.actionTitle} · {d.actionStatus}</span>}</div>
                   </div>
                 ))}
               </div>
@@ -257,6 +291,11 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
               )}
             </section>
 
+            <section>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong style={{ fontSize: 14 }}>Evidencias vinculadas · {detail.evidenceLinks.length}</strong>{canManage && <select className="nf-app-input" style={{ ...inputStyle, maxWidth: 280 }} defaultValue="" onChange={event => { const evidenceId = event.target.value; if (evidenceId) run(() => linkReviewEvidence(detail.id, evidenceId), { successMessage: "Evidencia vinculada." }); event.currentTarget.value = ""; }}><option value="">Vincular evidencia…</option>{initial.evidenceFiles.filter(file => !detail.evidenceLinks.some(link => link.id === file.id)).map(file => <option key={file.id} value={file.id}>{file.title}</option>)}</select>}</div>
+              {detail.evidenceLinks.length > 0 ? <ul style={{ margin: "9px 0 0" }}>{detail.evidenceLinks.map(link => <li key={link.id}>{link.title} · {link.evidenceType}</li>)}</ul> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin evidencias vinculadas.</p>}
+            </section>
+
             {/* Summary */}
             {canManage && (
               <section>
@@ -267,6 +306,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
           </div>
         )}
       </Modal>
+      <FormModal open={!!actionDecision} title="Crear acción en Plan de Acción" pending={isPending} error={error} onClose={() => setActionDecision(null)} onSubmit={event => { event.preventDefault(); if (!actionDecision) return; const fd = new FormData(event.currentTarget); run(() => createReviewAction(actionDecision.id, { title: String(fd.get("actionTitle") ?? ""), description: String(fd.get("actionDescription") ?? ""), ownerId: String(fd.get("actionOwnerId") ?? "") || undefined, dueDate: String(fd.get("actionDueDate") ?? "") || undefined, priority: fd.get("actionPriority") as Priority }), { onSuccess: () => setActionDecision(null), successMessage: "Acción creada en Plan de Acción." }); }}><Field label="Acción"><input name="actionTitle" className="nf-app-input" style={inputStyle} defaultValue={actionDecision?.decision ?? ""} required /></Field><Field label="Descripción"><textarea name="actionDescription" className="nf-app-input" style={inputStyle} rows={3} /></Field><div className="nf-grid-2" style={{ gap: 8 }}><select name="actionOwnerId" className="nf-app-input" style={inputStyle} defaultValue={actionDecision?.ownerId ?? ""}><option value="">Responsable…</option>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select><select name="actionPriority" className="nf-app-input" style={inputStyle} defaultValue={Priority.MEDIUM}>{Object.values(Priority).map(value => <option key={value}>{value}</option>)}</select></div><Field label="Fecha objetivo"><input name="actionDueDate" type="date" className="nf-app-input" style={inputStyle} /></Field></FormModal>
       <ConfirmActionModal
         open={!!confirmDelete}
         title="Eliminar revisión"

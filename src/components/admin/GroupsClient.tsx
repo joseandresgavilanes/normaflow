@@ -145,6 +145,23 @@ export default function GroupsClient() {
 
   const current = useMemo(() => groups.find((g) => g.id === selected) ?? null, [groups, selected]);
 
+  function toggleAssociation(kind: "process" | "module", value: string) {
+    if (!current || !admin.setGroupAssociations) return;
+    const processIds = [...(current.processIds ?? [])];
+    const modules = [...(current.modules ?? [])];
+    const target = kind === "process" ? processIds : modules;
+    const index = target.indexOf(value);
+    if (index >= 0) target.splice(index, 1);
+    else target.push(value);
+    startTransition(async () => {
+      try {
+        await admin.setGroupAssociations?.(current.id, processIds, modules);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "No se pudo guardar la asociación.");
+      }
+    });
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>, mode: "create" | "edit") {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
@@ -477,6 +494,33 @@ export default function GroupsClient() {
                       );
                     })
                   )}
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-5 border-t border-gray-200 pt-5 lg:grid-cols-2">
+                <div>
+                  <h4 className="mb-1 text-sm font-semibold text-gray-900">Procesos asociados</h4>
+                  <p className="mb-3 text-xs text-gray-500">Limita el contexto operativo que este equipo gestiona.</p>
+                  <div className="grid gap-2">
+                    {admin.state.processes.length === 0 ? <p className="text-xs text-gray-500">No hay procesos disponibles.</p> : admin.state.processes.map((process) => (
+                      <label key={process.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
+                        <input type="checkbox" checked={(current.processIds ?? []).includes(process.id)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("process", process.id)} className="accent-indigo-600" />
+                        <span>{process.code ? `${process.code} · ` : ""}{process.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="mb-1 text-sm font-semibold text-gray-900">Módulos asociados</h4>
+                  <p className="mb-3 text-xs text-gray-500">Define qué áreas aparecen como contexto del grupo.</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {["documents", "processes", "risks", "audits", "actions", "reporting"].map((module) => (
+                      <label key={module} className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
+                        <input type="checkbox" checked={(current.modules ?? []).includes(module)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("module", module)} className="accent-indigo-600" />
+                        <span className="capitalize">{module}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
 

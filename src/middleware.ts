@@ -4,6 +4,30 @@ import { isAuthDemoMode, isSupabaseConfigured } from "@/lib/env";
 
 const NF_DEMO_COOKIE = "nf_demo";
 
+function secure(response: NextResponse) {
+  const csp = [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    "style-src 'self' 'unsafe-inline' https:",
+    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+    "connect-src 'self' https: wss:",
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+    "upgrade-insecure-requests",
+  ].join("; ");
+  response.headers.set("Content-Security-Policy", csp);
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(self)");
+  response.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  return response;
+}
+
 function looksLikeSignedDemoCookie(raw: string): boolean {
   const i = raw.lastIndexOf(".");
   if (i <= 0 || i === raw.length - 1) return false;
@@ -22,7 +46,7 @@ function looksLikeSignedDemoCookie(raw: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (!pathname.startsWith("/app")) {
-    return NextResponse.next();
+    return secure(NextResponse.next());
   }
 
   let response = NextResponse.next({ request });
@@ -61,12 +85,12 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    return secure(NextResponse.redirect(url));
   }
 
-  return response;
+  return secure(response);
 }
 
 export const config = {
-  matcher: ["/app/:path*"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

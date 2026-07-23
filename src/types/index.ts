@@ -1,4 +1,4 @@
-export type Role = "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
+export type Role = "OWNER" | "ADMIN" | "MANAGER" | "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
 export type Plan = "STARTER" | "GROWTH" | "ENTERPRISE";
 export type DocumentStatus = "DRAFT" | "IN_REVIEW" | "APPROVED" | "OBSOLETE";
 export type DocumentType = "MANUAL" | "PROCEDURE" | "POLICY" | "INSTRUCTION" | "FORM" | "RECORD" | "PLAN" | "OTHER";

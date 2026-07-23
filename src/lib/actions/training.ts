@@ -230,6 +230,7 @@ export async function createTrainingAssignment(input: TrainingAssignmentInput): 
   });
 
   await notifyEmail({
+    organizationId: ctx.organization.id,
     to: personnel.email,
     name: `${personnel.firstName} ${personnel.lastName}`.trim(),
     title: `Formación asignada: ${course.title}`,
@@ -252,7 +253,10 @@ export async function updateTrainingAssignment(
   },
 ): Promise<void> {
   const ctx = await requirePermission("training:*");
-  const existing = await prisma.trainingAssignment.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  const existing = await prisma.trainingAssignment.findFirst({
+    where: { id, organizationId: ctx.organization.id },
+    include: { personnel: true, course: true },
+  });
   if (!existing) throw new Error("Asignación no encontrada.");
 
   if (patch.processId) {
@@ -278,6 +282,17 @@ export async function updateTrainingAssignment(
   if (patch.evidenceNote !== undefined) data.evidenceNote = patch.evidenceNote.trim() || null;
   if (patch.evidenceUrl !== undefined) data.evidenceUrl = patch.evidenceUrl.trim() || null;
   if (patch.status !== undefined) {
+    const allowedTransitions: Record<TrainingAssignmentStatus, TrainingAssignmentStatus[]> = {
+      ASSIGNED: [TrainingAssignmentStatus.IN_PROGRESS, TrainingAssignmentStatus.OVERDUE, TrainingAssignmentStatus.CANCELLED],
+      IN_PROGRESS: [TrainingAssignmentStatus.COMPLETED, TrainingAssignmentStatus.CANCELLED],
+      OVERDUE: [TrainingAssignmentStatus.IN_PROGRESS, TrainingAssignmentStatus.CANCELLED],
+      RETRAINING_REQUIRED: [TrainingAssignmentStatus.IN_PROGRESS, TrainingAssignmentStatus.CANCELLED],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+    if (patch.status !== existing.status && !allowedTransitions[existing.status].includes(patch.status)) {
+      throw new Error(`Transición ${existing.status} → ${patch.status} no permitida.`);
+    }
     data.status = patch.status;
     if (patch.status === TrainingAssignmentStatus.IN_PROGRESS && !existing.startedAt) data.startedAt = new Date();
     if (patch.status === TrainingAssignmentStatus.COMPLETED) {
@@ -297,5 +312,17 @@ export async function updateTrainingAssignment(
     before: { status: existing.status, dueAt: existing.dueAt.toISOString(), processId: existing.processId },
     after: { ...patch },
   });
+  if ((patch.status !== undefined && patch.status !== existing.status) || patch.dueAt !== undefined) {
+    const statusLabel = patch.status && patch.status !== existing.status ? ` Estado: ${patch.status.replaceAll("_", " ")}.` : "";
+    const dueLabel = patch.dueAt ? ` Nueva fecha límite: ${new Date(patch.dueAt).toLocaleDateString("es")}.` : "";
+    await notifyEmail({
+      organizationId: ctx.organization.id,
+      to: existing.personnel.email,
+      name: `${existing.personnel.firstName} ${existing.personnel.lastName}`.trim(),
+      title: `Actualización de formación: ${existing.course.title}`,
+      body: `La asignación «${existing.course.title}» fue actualizada.${statusLabel}${dueLabel}`,
+      link: PATH,
+    });
+  }
   revalidatePath(PATH);
 }

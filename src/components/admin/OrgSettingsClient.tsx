@@ -22,6 +22,13 @@ export default function OrgSettingsClient() {
   const [name, setName] = useState(org.name);
   const [industry, setIndustry] = useState(org.industry ?? "");
   const [country, setCountry] = useState(org.country);
+  const [size, setSize] = useState(org.size ?? "");
+  const [contactName, setContactName] = useState(org.contactName ?? "");
+  const [contactEmail, setContactEmail] = useState(org.contactEmail ?? "");
+  const [contactPhone, setContactPhone] = useState(org.contactPhone ?? "");
+  const [website, setWebsite] = useState(org.website ?? "");
+  const [address, setAddress] = useState(org.address ?? "");
+  const [standards, setStandards] = useState<string[]>(org.standards ?? ["ISO_9001"]);
   const [logoUrl, setLogoUrl] = useState(org.logoUrl ?? "");
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -43,6 +50,13 @@ export default function OrgSettingsClient() {
           industry: industry.trim() || null,
           country: country.trim() || "ES",
           logoUrl: logoUrl.trim() || null,
+          size: size.trim() || null,
+          contactName: contactName.trim() || null,
+          contactEmail: contactEmail.trim() || null,
+          contactPhone: contactPhone.trim() || null,
+          website: website.trim() || null,
+          address: address.trim() || null,
+          standards,
         });
         setSavedAt(new Date().toLocaleTimeString());
       } catch (err: unknown) {
@@ -58,7 +72,7 @@ export default function OrgSettingsClient() {
       <div className="nf-activity-hero" style={{ marginBottom: 4 }}>
         <SectionTitle
           title="Organización"
-          sub="Nombre, sector, país y marca. Los cambios se guardan en la sesión local del navegador."
+          sub="Configura la identidad, contacto y normas activas de tu organización."
         />
         <div className="nf-activity-hero-badges" aria-hidden>
           <span className="nf-activity-hero-pill">
@@ -75,7 +89,7 @@ export default function OrgSettingsClient() {
       <div className="nf-org-panel">
         <div className="nf-org-panel-head">
           <h2 className="nf-org-panel-title">Datos generales</h2>
-          <p className="nf-org-panel-sub">Identidad mostrada en informes y pantallas internas. El plan activo se gestiona desde Billing.</p>
+            <p className="nf-org-panel-sub">Estos datos se aplican a todos los módulos, informes y usuarios de este tenant.</p>
         </div>
 
         <div className="nf-org-panel-body">
@@ -112,7 +126,53 @@ export default function OrgSettingsClient() {
                   style={{ width: "100%", boxSizing: "border-box", fontFamily: "ui-monospace, monospace", textTransform: "none" }}
                 />
               </Field>
+              <Field label="Tamaño">
+                <select value={size} onChange={(e) => setSize(e.target.value)} disabled={!canEdit} className="nf-app-input w-full">
+                  <option value="">Selecciona un tamaño</option>
+                  <option value="1-10">1–10 personas</option>
+                  <option value="11-50">11–50 personas</option>
+                  <option value="51-200">51–200 personas</option>
+                  <option value="201-500">201–500 personas</option>
+                  <option value="501+">501+ personas</option>
+                </select>
+              </Field>
             </div>
+
+            <div className="nf-org-grid-2">
+              <Field label="Nombre de contacto">
+                <input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="Responsable del sistema" />
+              </Field>
+              <Field label="Email de contacto">
+                <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="calidad@empresa.com" />
+              </Field>
+              <Field label="Teléfono">
+                <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" />
+              </Field>
+              <Field label="Sitio web">
+                <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="https://empresa.com" />
+              </Field>
+            </div>
+
+            <Field label="Dirección">
+              <textarea value={address} onChange={(e) => setAddress(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" rows={2} />
+            </Field>
+
+            <Field label="Normas activas">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["ISO_9001", "ISO 9001:2015", "Gestión de la calidad"],
+                  ["ISO_27001", "ISO 27001:2022", "Seguridad de la información"],
+                ].map(([code, label, detail]) => {
+                  const checked = standards.includes(code);
+                  return (
+                    <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-white"}`}>
+                      <input type="checkbox" checked={checked} disabled={!canEdit || (checked && standards.length === 1)} onChange={() => setStandards((current) => checked ? current.filter((item) => item !== code) : [...current, code])} className="mt-1 accent-indigo-600" />
+                      <span><strong className="block text-sm text-gray-900">{label}</strong><span className="text-xs text-gray-500">{detail}</span></span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Field>
 
             <Field label="Logo (URL)">
               <div className="nf-org-logo-row">
@@ -142,8 +202,8 @@ export default function OrgSettingsClient() {
               </div>
             </Field>
 
-            <Field label="Plan actual">
-              <PlanUsageCard plan={org.plan} usedUsers={admin.state.members.length} />
+          <Field label="Plan actual">
+              <PlanUsageCard plan={org.plan} usedUsers={admin.state.members.filter((member) => member.active !== false).length} />
             </Field>
 
             {error ? <div className="nf-org-msg-error">{error}</div> : null}

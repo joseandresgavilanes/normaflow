@@ -1,5 +1,4 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, {
   useCallback,
@@ -8,8 +7,10 @@ import React, {
   useState,
   type CSSProperties,
 } from "react";
+import Link from "next/link";
 import { Ic } from "@/components/marketing/nf/Icons";
 import { useReveal, useMouseParallax } from "@/components/marketing/nf/hooks";
+import { PLAN_CATALOG, type PlanKey } from "@/lib/constants";
 
 function riskHeatCellBg(lvl: number): string {
   if (lvl >= 7) return "var(--nf-danger)";
@@ -1279,9 +1280,9 @@ function NfCase() {
               ))}
             </div>
 
-            <a href="/cases" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontSize: 14, color: "var(--nf-accent)" }}>
+            <Link href="/cases" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontSize: 14, color: "var(--nf-accent)" }}>
               Ver caso completo + 2 casos más <Ic.arrow/>
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -1291,11 +1292,16 @@ function NfCase() {
 
 /* ============ Pricing ============ */
 function NfPricing() {
-  const plans = [
-    { name: "Starter",    price: "$149",     tag: "Para implementar ISO sin caos",          features: ["Hasta 5 usuarios", "ISO 9001 + ISO 27001", "Módulos esenciales", "10 GB de almacenamiento", "Soporte por correo"], cta: "Empezar 14 días gratis", popular: false },
-    { name: "Growth",     price: "$449",     tag: "Para equipos en mantenimiento activo",   features: ["Hasta 20 usuarios", "Todos los módulos", "Asistente IA incluido", "50 GB de almacenamiento", "Soporte prioritario", "Onboarding guiado"], cta: "Probar 14 días", popular: true },
-    { name: "Enterprise", price: "A medida", tag: "Para multi-organización y SLA",          features: ["Usuarios ilimitados", "Multi-organización", "Almacenamiento ilimitado", "SLA 99.9% garantizado", "Soporte dedicado · CSM", "API + integraciones · SSO"], cta: "Hablar con ventas", popular: false },
-  ];
+  const planMeta: Record<PlanKey, { tag: string; cta: string; popular: boolean }> = {
+    STARTER: { tag: "Para implementar ISO sin caos", cta: "Empezar 14 días gratis", popular: false },
+    GROWTH: { tag: "Para equipos en mantenimiento activo", cta: "Probar 14 días", popular: true },
+    ENTERPRISE: { tag: "Para multi-organización y SLA", cta: "Hablar con ventas", popular: false },
+  };
+  const plans = (Object.keys(PLAN_CATALOG) as PlanKey[]).map((key) => ({
+    ...PLAN_CATALOG[key],
+    ...planMeta[key],
+    price: PLAN_CATALOG[key].monthlyUsd == null ? "A medida" : `$${PLAN_CATALOG[key].monthlyUsd}`,
+  }));
   return (
     <section className="nf-section" id="precios">
       <div className="nf-container">
@@ -1311,12 +1317,12 @@ function NfPricing() {
 
         <div className="nf-pricing-grid">
           {plans.map((p, i) => (
-            <div key={p.name} className={`nf-price-card ${p.popular ? "popular" : ""}`} data-reveal style={{ transitionDelay: `${i * 60}ms` }}>
+              <div key={p.key} className={`nf-price-card ${p.popular ? "popular" : ""}`} data-reveal style={{ transitionDelay: `${i * 60}ms` }}>
               {p.popular && <span className="nf-popular-badge">Más popular</span>}
-              <div className="name">{p.name}</div>
+              <div className="name">{p.label}</div>
               <div className="price">
                 {p.price}
-                {p.price.startsWith("$") && <span className="unit"> USD / mes</span>}
+                {p.monthlyUsd != null && <span className="unit"> USD / mes</span>}
               </div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>{p.tag}</div>
               <ul>
@@ -1326,7 +1332,7 @@ function NfPricing() {
                   </li>
                 ))}
               </ul>
-              <a href={p.price === "Custom" ? "/demo" : "/signup"} className={`nf-btn ${p.popular ? "nf-btn--primary" : "nf-btn--ghost"}`} style={{ justifyContent: "center" }}>
+              <a href={p.key === "ENTERPRISE" ? "/demo" : "/signup"} className={`nf-btn ${p.popular ? "nf-btn--primary" : "nf-btn--ghost"}`} style={{ justifyContent: "center" }}>
                 {p.cta} <Ic.arrow className="nf-arrow"/>
               </a>
             </div>

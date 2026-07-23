@@ -7,6 +7,7 @@ import {
   ArchiveX,
   ClipboardList,
   Clock,
+  FileDown,
   Eye,
   Loader2,
   Paperclip,
@@ -22,6 +23,8 @@ import FileImportArea from "@/components/ui/FileImportArea";
 import { useAdminMock, type RecordEntryMockRow, type RecordMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
+import { exportRecordsMatrix } from "@/lib/actions/records";
+import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 
 type Status = "ALL" | "ACTIVE" | "INACTIVE" | "DUE_SOON" | "OVERDUE";
 
@@ -39,7 +42,8 @@ export default function RecordsClient() {
   const canEdit = perm.can("records:*");
   const canCreate = canEdit || perm.can("records:create");
 
-  const { records, recordEntries, recordTypes, retentionTimes, dispositions, archiveMethods, personnel, processes } = admin.state;
+  const { records, recordEntries, recordTypes, retentionTimes, dispositions, archiveMethods, personnel, processes, members } = admin.state;
+  const isProcessScopedContributor = members.some((member) => member.isSelf && member.role === "CONTRIBUTOR");
 
   const recordTypeName = useMemo(() => new Map(recordTypes.map((r) => [r.id, r.name])), [recordTypes]);
   const retentionLabel = useMemo(() => new Map(retentionTimes.map((r) => [r.id, { name: r.name, months: r.months }])), [retentionTimes]);
@@ -54,12 +58,15 @@ export default function RecordsClient() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status>("ALL");
   const [typeFilter, setTypeFilter] = useState<string>("ALL");
+  const [processFilter, setProcessFilter] = useState<string>("ALL");
+  const [clauseFilter, setClauseFilter] = useState<string>("ALL");
   const [editing, setEditing] = useState<RecordMockRow | null>(null);
   const [creating, setCreating] = useState(false);
   const [detail, setDetail] = useState<RecordMockRow | null>(null);
   const [confirmDeactivate, setConfirmDeactivate] = useState<RecordMockRow | null>(null);
   const [formError, setFormError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [exportBusy, setExportBusy] = useState<"PDF" | "EXCEL" | null>(null);
 
   function retentionStatus(r: RecordMockRow): "ok" | "due_soon" | "overdue" | "none" {
     if (!r.retentionTimeId || !r.lastEntryAt) return "none";
@@ -77,6 +84,8 @@ export default function RecordsClient() {
     const q = search.trim().toLowerCase();
     return records.filter((r) => {
       if (typeFilter !== "ALL" && r.recordTypeId !== typeFilter) return false;
+      if (processFilter !== "ALL" && r.processId !== processFilter) return false;
+      if (clauseFilter !== "ALL" && r.clauseId !== clauseFilter) return false;
       const st = retentionStatus(r);
       switch (statusFilter) {
         case "ACTIVE":
@@ -100,7 +109,7 @@ export default function RecordsClient() {
         (r.observations ?? "").toLowerCase().includes(q)
       );
     });
-  }, [records, search, statusFilter, typeFilter, retentionLabel]);
+  }, [records, search, statusFilter, typeFilter, processFilter, clauseFilter, retentionLabel]);
 
   const stats = useMemo(() => {
     const active = records.filter((r) => r.active);
@@ -250,11 +259,13 @@ export default function RecordsClient() {
       code: String(fd.get("code") || ""),
       name: String(fd.get("name") || ""),
       processId: String(fd.get("processId") || "") || undefined,
+      clauseId: String(fd.get("clauseId") || "") || undefined,
       recordTypeId: String(fd.get("recordTypeId") || "") || undefined,
       retentionTimeId: String(fd.get("retentionTimeId") || "") || undefined,
       dispositionId: String(fd.get("dispositionId") || "") || undefined,
       archiveMethodId: String(fd.get("archiveMethodId") || "") || undefined,
       custodianId: String(fd.get("custodianId") || "") || undefined,
+      reviewerId: String(fd.get("reviewerId") || "") || undefined,
       physicalLocation: String(fd.get("physicalLocation") || ""),
       digitalLocation: String(fd.get("digitalLocation") || ""),
       observations: String(fd.get("observations") || ""),
@@ -275,11 +286,26 @@ export default function RecordsClient() {
     });
   }
 
+  async function exportMatrix(format: "PDF" | "EXCEL") {
+    setExportBusy(format);
+    setFormError("");
+    try {
+      const result = await exportRecordsMatrix({ format, filters: { search, status: statusFilter, processId: processFilter, recordTypeId: typeFilter, clauseId: clauseFilter } });
+      await downloadQueuedReport(result.id);
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "No se pudo exportar la matriz.");
+    } finally {
+      setExportBusy(null);
+    }
+  }
+
   return (
     <div>
       <SectionTitle
         title="Control de Registros"
-        sub="Lista maestra de registros del SGC: retención, custodio, disposición y trazabilidad de entradas (ISOTech 13.2)."
+        sub={isProcessScopedContributor
+          ? "Registros del proceso asignado: puedes consultar y cargar entradas únicamente en este ámbito."
+          : "Lista maestra de registros del SGC: retención, custodio, disposición y trazabilidad de entradas (ISOTech 13.2)."}
         action={
           canCreate ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
@@ -400,10 +426,19 @@ export default function RecordsClient() {
               <option value="ALL">Todos los tipos</option>
               {recordTypes.map((t) => (
                 <option key={t.id} value={t.id}>
-                  {t.name}
+                  {t.code ? `${t.code} · ` : ""}{t.name}
                 </option>
               ))}
             </select>
+            <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+              <option value="ALL">Todos los procesos</option>
+              {processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}
+            </select>
+            <select value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+              <option value="ALL">Todas las cláusulas ISO</option>
+              {admin.state.clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code}</option>)}
+            </select>
+            {admin.mode === "live" && perm.can("records:export") && <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportMatrix("EXCEL")}><FileDown size={14} />{exportBusy === "EXCEL" ? "Generando…" : "Excel"}</button><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportMatrix("PDF")}><FileDown size={14} />{exportBusy === "PDF" ? "Generando…" : "PDF"}</button></div>}
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink-3)", whiteSpace: "nowrap" }}>
               {filtered.length} de {records.length}
             </span>
@@ -434,9 +469,11 @@ export default function RecordsClient() {
         editing={editing}
         recordTypes={recordTypes}
         retentionTimes={retentionTimes}
+        clauses={admin.state.clauses}
         dispositions={dispositions}
         archiveMethods={archiveMethods}
         personnel={personnel}
+        members={members}
         processes={processes}
         persistenceMode={admin.mode}
         isPending={isPending}
@@ -450,7 +487,7 @@ export default function RecordsClient() {
         onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")}
       />
 
-      <RecordDetailModal record={detail} canEdit={canEdit} onClose={() => setDetail(null)} />
+      <RecordDetailModal record={detail} canEdit={canEdit} canSubmit={canCreate} canAddEntry={canCreate} onClose={() => setDetail(null)} />
 
       <Modal open={confirmDeactivate != null} onClose={() => !isPending && setConfirmDeactivate(null)} title="Desactivar registro" width={480}>
         <p style={{ margin: "0 0 18px", color: "var(--nf-ink)", fontSize: 14, lineHeight: 1.55 }}>
@@ -508,10 +545,12 @@ function RecordFormModal({
   mode,
   editing,
   recordTypes,
+  clauses,
   retentionTimes,
   dispositions,
   archiveMethods,
   personnel,
+  members,
   processes,
   persistenceMode,
   isPending,
@@ -522,11 +561,13 @@ function RecordFormModal({
   open: boolean;
   mode: "create" | "edit";
   editing: RecordMockRow | null;
-  recordTypes: { id: string; name: string; active: boolean }[];
+  recordTypes: { id: string; code?: string | null; name: string; active: boolean }[];
+  clauses: { id: string; code: string; title: string; standardCode: string; standardName: string }[];
   retentionTimes: { id: string; name: string; active: boolean }[];
   dispositions: { id: string; name: string; active: boolean }[];
   archiveMethods: { id: string; name: string; active: boolean }[];
   personnel: { id: string; firstName: string; lastName: string; active: boolean }[];
+  members: { userId: string; name: string; email: string; role: string; isSelf?: boolean }[];
   processes: { id: string; code: string | null; name: string }[];
   persistenceMode: "demo" | "live";
   isPending: boolean;
@@ -571,6 +612,12 @@ function RecordFormModal({
                 ))}
               </select>
             </Field>
+            <Field label="Cláusula ISO relacionada">
+              <select name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <option value="">— Sin cláusula relacionada —</option>
+                {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code} — {clause.title}</option>)}
+              </select>
+            </Field>
           </FormSection>
 
           <FormSection title="Clasificación y custodio">
@@ -580,7 +627,7 @@ function RecordFormModal({
                   <option value="">— Sin tipo —</option>
                   {recordTypes.filter((t) => t.active).map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name}
+                      {t.code ? `${t.code} · ` : ""}{t.name}
                     </option>
                   ))}
                 </select>
@@ -598,6 +645,14 @@ function RecordFormModal({
                 </select>
               </Field>
             </div>
+            <Field label="Revisor asignado">
+              <select name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <option value="">— Seleccionar revisor —</option>
+                {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER" || m.role === "AUDITOR").map((member) => (
+                  <option key={member.userId} value={member.userId}>{member.name} · {member.role}</option>
+                ))}
+              </select>
+            </Field>
           </FormSection>
 
           <FormSection title="Retención y archivo">
@@ -758,20 +813,21 @@ function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) 
   );
 }
 
-function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow | null; canEdit: boolean; onClose: () => void }) {
+function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }: { record: RecordMockRow | null; canEdit: boolean; canSubmit: boolean; canAddEntry: boolean; onClose: () => void }) {
   const admin = useAdminMock();
   const [addingEntry, setAddingEntry] = useState(false);
   const [entryError, setEntryError] = useState("");
   const [isPending, startTransition] = useTransition();
   const [previewEntry, setPreviewEntry] = useState<RecordEntryMockRow | null>(null);
   const [entryFile, setEntryFile] = useState<File | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
 
   if (!record) return null;
   const recordId = record.id;
 
   const entries = admin.state.recordEntries
     .filter((e) => e.recordId === recordId)
-    .sort((a, b) => b.enteredAt.localeCompare(a.enteredAt));
+    .sort((a, b) => (b.entryDate ?? b.enteredAt).localeCompare(a.entryDate ?? a.enteredAt));
 
   const actorName = new Map([
     ...admin.state.personnel.map((p) => [p.id, `${p.firstName} ${p.lastName}`] as const),
@@ -781,6 +837,25 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
   const disposition = record.dispositionId ? admin.state.dispositions.find((d) => d.id === record.dispositionId) : null;
   const archive = record.archiveMethodId ? admin.state.archiveMethods.find((a) => a.id === record.archiveMethodId) : null;
   const recordType = record.recordTypeId ? admin.state.recordTypes.find((t) => t.id === record.recordTypeId) : null;
+  const clause = record.clauseId ? admin.state.clauses.find((item) => item.id === record.clauseId) : null;
+  const currentUserId = admin.state.members.find((member) => member.isSelf)?.userId;
+  const reviewerName = record.reviewerId ? actorName.get(record.reviewerId) ?? "—" : "Sin asignar";
+  const canReview = canEdit || record.reviewerId === currentUserId;
+
+  function review(action: "submit" | "approve" | "reject") {
+    setEntryError("");
+    startTransition(async () => {
+      try {
+        if (action === "submit") await admin.submitRecordForReview(recordId);
+        if (action === "approve") await admin.approveRecord(recordId, reviewComment);
+        if (action === "reject") await admin.rejectRecord(recordId, reviewComment);
+        setReviewComment("");
+        onClose();
+      } catch (err: unknown) {
+        setEntryError(err instanceof Error ? err.message : "No se pudo actualizar la revisión.");
+      }
+    });
+  }
 
   function handleAddEntry(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -789,8 +864,12 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
     startTransition(async () => {
       try {
         await admin.addRecordEntry(recordId, {
+          title: String(fd.get("title") || ""),
           reference: String(fd.get("reference") || ""),
           description: String(fd.get("description") || "") || undefined,
+          entryDate: String(fd.get("entryDate") || "") || undefined,
+          status: String(fd.get("status") || "VALID") as "DRAFT" | "VALID" | "EXPIRED" | "ARCHIVED",
+          responsibleId: String(fd.get("responsibleId") || "") || undefined,
           file: entryFile ?? undefined,
         });
         setAddingEntry(false);
@@ -823,14 +902,37 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(148px, 1fr))", gap: 10 }}>
             <MetaCell label="Estado" value={<Badge status={record.active ? "ACTIVE" : "OBSOLETE"} label={record.active ? "Activo" : "Inactivo"} />} />
             <MetaCell label="Tipo" value={recordType?.name ?? "—"} />
+            <MetaCell label="Cláusula ISO" value={clause ? `${clause.standardCode} · ${clause.code}` : "—"} />
             <MetaCell label="Proceso" value={record.processName ?? "—"} />
             <MetaCell label="Custodio" value={record.custodianId ? actorName.get(record.custodianId) ?? "—" : "—"} />
+            <MetaCell label="Revisor" value={reviewerName} />
+            <MetaCell label="Revisión" value={<Badge status={record.reviewStatus ?? "DRAFT"} label={record.reviewStatus === "IN_REVIEW" ? "En revisión" : record.reviewStatus === "APPROVED" ? "Aprobado" : record.reviewStatus === "REJECTED" ? "Devuelto" : "Borrador"} />} />
             <MetaCell label="Retención" value={retention ? `${retention.name} (${retention.months} m)` : "—"} />
             <MetaCell label="Disposición" value={disposition?.name ?? "—"} />
             <MetaCell label="Método archivo" value={archive?.name ?? "—"} />
             <MetaCell label="Creado" value={formatDate(record.createdAt)} />
           </div>
         </div>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", padding: "12px 14px", borderRadius: 12, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>Flujo de revisión</div>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>
+              {record.reviewStatus === "IN_REVIEW" ? "El registro espera la aprobación del revisor asignado." : record.reviewComment ?? "Asigna un revisor y envía el registro para aprobación."}
+            </div>
+          </div>
+          {canSubmit && record.reviewStatus !== "IN_REVIEW" && record.active && (
+            <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => review("submit")}>Enviar a revisión</button>
+          )}
+          {canReview && record.reviewStatus === "IN_REVIEW" && (
+            <>
+              <input value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Comentario (opcional)" className="nf-app-input" style={{ minWidth: 190, flex: 1 }} />
+              <button type="button" className="nf-app-btn-success" disabled={isPending} onClick={() => review("approve")}>Aprobar</button>
+              <button type="button" className="nf-app-btn-danger" disabled={isPending || !reviewComment.trim()} onClick={() => review("reject")}>Devolver</button>
+            </>
+          )}
+        </div>
+        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
 
         {(record.physicalLocation || record.digitalLocation) && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
@@ -872,7 +974,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                 <span style={{ fontWeight: 700, color: "var(--nf-ink-3)", marginLeft: 8 }}>({entries.length})</span>
               </h4>
             </div>
-            {canEdit && record.active && (
+            {canAddEntry && record.active && (
               <button
                 type="button"
                 className="nf-app-btn-primary"
@@ -905,8 +1007,16 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)" }}>Nueva entrada</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                 <div>
-                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia *</label>
-                  <input name="reference" required placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} />
+                  <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Título *</label>
+                  <input name="title" required placeholder="Acta, inspección, certificado…" className="nf-app-input" style={inputFieldStyle} />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
                 </div>
                 <FileImportArea
                   baseId={`record-entry-${recordId}`}
@@ -976,6 +1086,7 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                 >
                   <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
                   <div style={{ minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 700, lineHeight: 1.45 }}>{e.title ?? e.reference}</div><span className="nf-chip" style={{ fontSize: 10 }}>{e.status === "DRAFT" ? "Borrador" : e.status === "EXPIRED" ? "Vencido" : e.status === "ARCHIVED" ? "Archivado" : "Vigente"}</span></div>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
                     {e.fileName && (
                       <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 4, display: "flex", alignItems: "center", gap: 5, fontWeight: 600, flexWrap: "wrap" }}>
@@ -988,9 +1099,9 @@ function RecordDetailModal({ record, canEdit, onClose }: { record: RecordMockRow
                     )}
                   </div>
                   <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600, textAlign: "right", whiteSpace: "nowrap" }}>
-                    {e.enteredById ? actorName.get(e.enteredById) ?? "—" : "—"}
+                    {e.responsibleId ? actorName.get(e.responsibleId) ?? "—" : e.enteredById ? actorName.get(e.enteredById) ?? "—" : "—"}
                     <br />
-                    <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 500 }}>{timeAgo(e.enteredAt)}</span>
+                    <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 500 }}>{formatDate(e.entryDate ?? e.enteredAt)}</span>
                   </span>
                   <div
                     style={{

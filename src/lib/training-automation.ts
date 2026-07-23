@@ -63,6 +63,7 @@ export async function assignTrainingForApprovedDocument(input: {
         .filter((r) => r.email)
         .map((r) =>
           notifyEmail({
+            organizationId: input.organizationId,
             to: r.email,
             name: r.name,
             title: `Formación asignada: ${r.courseTitle}`,

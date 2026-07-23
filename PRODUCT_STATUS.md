@@ -1,5 +1,7 @@
 # NormaFlow — Product Status
 
+> **Nota de actualización (2026-07-22):** este documento conserva el histórico de fases iniciales. Para el estado comercial ejecutable y los criterios de primera venta, usar [`docs/commercial-launch-plan.md`](docs/commercial-launch-plan.md). El núcleo live, Server Actions, RLS, Storage, billing y E2E avanzaron desde la fotografía histórica de las secciones siguientes.
+
 Honest snapshot of the codebase against the **ISOTech Manual del Usuario** functional reference.
 
 > **Reference:** ISOTech is used **only** for functional scope. The visual design of NormaFlow is preserved and is much better; do not regress to ISOTech's UI.
