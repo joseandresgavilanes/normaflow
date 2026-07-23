@@ -4,16 +4,56 @@
  * Permission shape: "<resource>:<action>"
  *   - resource: dashboard, notifications, documents, processes, evidence,
  *               records, risks, audits, nc, actions, indicators, gap, training,
- *               changes, suppliers, integrations, reporting, activity,
+ *               changes, suppliers, opportunities, integrations, reporting, activity,
  *               positions, personnel, locations, catalogs, groups,
  *               mgmt-review, audit-program, org, members, billing
- *   - action:   read | create | update | delete | approve | * (wildcard)
+ *   - action:   view | create | update | approve | delete | export | *
+ *               (`read` remains a backwards-compatible alias for `view`)
  *
  * Used by both `src/lib/permissions/frontend.ts` (client gating) and
  * `src/lib/permissions/server.ts` (server-action enforcement).
  */
 
 import type { Role } from "@prisma/client";
+
+/** Actions supported by the live authorization contract. `read` and
+ * `manage` are legacy aliases kept for existing server actions and groups. */
+export const PERMISSION_ACTIONS = [
+  "view",
+  "create",
+  "update",
+  "approve",
+  "delete",
+  "export",
+] as const;
+
+export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
+
+export const PERMISSION_MODULES = [
+  "dashboard", "notifications", "org", "members", "groups", "documents",
+  "processes", "evidence", "records", "risks", "audits", "audit-program",
+  "nc", "actions", "indicators", "gap", "training", "changes", "suppliers",
+  "opportunities", "integrations", "reporting", "activity", "positions",
+  "personnel", "locations", "catalogs", "mgmt-review", "billing", "security-controls",
+  "soa", "risk-treatment", "assets", "incidents", "vulnerabilities", "continuity",
+] as const;
+
+export function normalizePermission(permission: string): string {
+  const separator = permission.indexOf(":");
+  if (separator < 0) return permission;
+  const resource = permission.slice(0, separator);
+  const action = permission.slice(separator + 1);
+  return `${resource}:${action === "read" ? "view" : action}`;
+}
+
+export function permissionMatches(granted: string, requested: string): boolean {
+  const normalizedGranted = normalizePermission(granted);
+  const normalizedRequested = normalizePermission(requested);
+  if (normalizedGranted === "*") return true;
+  if (normalizedGranted === normalizedRequested) return true;
+  const [resource] = normalizedRequested.split(":");
+  return normalizedGranted === `${resource}:*`;
+}
 
 const ADMIN_PERMS = [
   "dashboard:read",
@@ -35,6 +75,7 @@ const ADMIN_PERMS = [
   "training:*",
   "changes:*",
   "suppliers:*",
+  "opportunities:*",
   "integrations:*",
   "reporting:*",
   "activity:*",
@@ -44,9 +85,55 @@ const ADMIN_PERMS = [
   "catalogs:*",
   "mgmt-review:*",
   "billing:*",
+  "security-controls:*",
+  "soa:*",
+  "risk-treatment:*",
+  "assets:*",
+  "incidents:*",
+  "vulnerabilities:*",
+  "continuity:*",
+];
+
+const MANAGER_PERMS = [
+  "dashboard:view",
+  "notifications:view",
+  "documents:*",
+  "processes:*",
+  "evidence:*",
+  "records:*",
+  "risks:*",
+  "audits:*",
+  "audit-program:*",
+  "nc:*",
+  "actions:*",
+  "indicators:*",
+  "gap:*",
+  "training:*",
+  "changes:*",
+  "suppliers:*",
+  "opportunities:*",
+  "integrations:view",
+  "reporting:*",
+  "activity:view",
+  "positions:view",
+  "personnel:view",
+  "locations:view",
+  "catalogs:view",
+  "mgmt-review:*",
+  "groups:view",
+  "security-controls:*",
+  "soa:*",
+  "risk-treatment:*",
+  "assets:*",
+  "incidents:*",
+  "vulnerabilities:*",
+  "continuity:*",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
+  OWNER: ["*"],
+  ADMIN: ADMIN_PERMS,
+  MANAGER: MANAGER_PERMS,
   SUPER_ADMIN: ["*"],
   ORG_ADMIN: ADMIN_PERMS,
   COMPLIANCE_MANAGER: [
@@ -66,6 +153,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "training:*",
     "changes:*",
     "suppliers:*",
+    "opportunities:*",
     "integrations:read",
     "integrations:manage",
     "reporting:*",
@@ -76,28 +164,64 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "catalogs:read",
     "mgmt-review:*",
     "groups:read",
+    "security-controls:*",
+    "soa:*",
+    "risk-treatment:*",
+    "assets:*",
+    "incidents:*",
+    "vulnerabilities:*",
+    "continuity:*",
   ],
   AUDITOR: [
     "dashboard:read",
     "notifications:read",
     "audits:*",
     "audit-program:read",
+    "audit-program:export",
+    "audits:export",
     "nc:create",
     "nc:read",
     "documents:read",
     "processes:read",
     "evidence:read",
     "records:read",
+    "records:export",
     "risks:read",
     "training:read",
     "changes:read",
     "suppliers:read",
+    "opportunities:read",
+    "documents:approve",
+    "documents:export",
+    "actions:read",
+    "actions:create",
+    "actions:export",
+    "evidence:export",
+    "reporting:export",
     "reporting:read",
     "activity:read",
     "personnel:read",
     "positions:read",
     "catalogs:read",
     "mgmt-review:read",
+    "mgmt-review:export",
+    "security-controls:read",
+    "security-controls:export",
+    "security-controls:approve",
+    "soa:read",
+    "soa:export",
+    "soa:approve",
+    "risk-treatment:read",
+    "risk-treatment:export",
+    "assets:read",
+    "assets:export",
+    "suppliers:export",
+    "incidents:read",
+    "incidents:export",
+    "vulnerabilities:read",
+    "vulnerabilities:export",
+    "continuity:read",
+    "continuity:export",
   ],
   CONTRIBUTOR: [
     "dashboard:read",
@@ -116,14 +240,25 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "records:read",
     "records:create",
     "actions:read",
+    "actions:create",
     "actions:update",
     "nc:read",
     "training:read",
     "changes:read",
     "suppliers:read",
+    "opportunities:read",
     "personnel:read",
     "positions:read",
     "catalogs:read",
+    "security-controls:read",
+    "soa:read",
+    "risk-treatment:read",
+    "assets:read",
+    "assets:create",
+    "incidents:read",
+    "incidents:create",
+    "vulnerabilities:read",
+    "continuity:read",
   ],
   VIEWER: [
     "dashboard:read",
@@ -138,19 +273,31 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "training:read",
     "changes:read",
     "suppliers:read",
+    "opportunities:read",
     "reporting:read",
     "activity:read",
     "personnel:read",
     "positions:read",
     "catalogs:read",
+    "security-controls:read",
     "mgmt-review:read",
+    "soa:read",
+    "risk-treatment:read",
+    "assets:read",
+    "incidents:read",
+    "vulnerabilities:read",
+    "continuity:read",
   ],
 };
 
 /** Explicit allowlist for grants stored in GroupPermission. Global `*` is a
  * role-only capability and can never be obtained through a group. */
 export const GROUP_PERMISSION_ALLOWLIST = new Set(
-  Object.values(ROLE_PERMISSIONS).flat().filter((permission) => permission !== "*"),
+  [
+    ...Object.values(ROLE_PERMISSIONS).flat().filter((permission) => permission !== "*"),
+    ...PERMISSION_MODULES.flatMap((module) => PERMISSION_ACTIONS.map((action) => `${module}:${action}`)),
+    ...PERMISSION_MODULES.flatMap((module) => [`${module}:read`, `${module}:*`]),
+  ],
 );
 
 /**
@@ -160,10 +307,7 @@ export const GROUP_PERMISSION_ALLOWLIST = new Set(
 export function roleCan(role: Role | string, permission: string): boolean {
   const perms = ROLE_PERMISSIONS[role as Role];
   if (!perms) return false;
-  if (perms.includes("*")) return true;
-  if (perms.includes(permission)) return true;
-  const [resource] = permission.split(":");
-  return perms.includes(`${resource}:*`);
+  return perms.some((granted) => permissionMatches(granted, permission));
 }
 
 /**
@@ -177,7 +321,5 @@ export function roleOrGroupCan(
   permission: string
 ): boolean {
   if (roleCan(role, permission)) return true;
-  if (groupPermissions.includes(permission)) return true;
-  const [resource] = permission.split(":");
-  return groupPermissions.includes(`${resource}:*`);
+  return groupPermissions.some((granted) => permissionMatches(granted, permission));
 }

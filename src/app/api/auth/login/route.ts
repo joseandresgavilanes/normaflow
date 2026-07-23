@@ -1,10 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { CUSTOMER_CREDENTIALS, DEMO_CREDENTIALS } from "@/lib/constants";
 import { signDemoSession, demoCookieName } from "@/lib/demo-auth";
+import { getDemoLoginAccounts } from "@/lib/demo-accounts";
 import { syncAuthUser } from "@/lib/auth/sync-auth-user";
 import { appendClearAuthCookies } from "@/lib/auth/session-cookies";
 import { isAuthDemoMode, isSupabaseConfigured, sessionSecret } from "@/lib/env";
+import { clientAddress, rateLimitResponse, takeRateLimit } from "@/lib/rate-limit";
+import { parseInput } from "@/lib/validation/common";
+import { loginSchema } from "@/lib/validation/workflows";
 
 type LocalAuthAccount = {
   kind: "demo" | "customer";
@@ -15,20 +18,15 @@ type LocalAuthAccount = {
 };
 
 function localAuthAccounts(): LocalAuthAccount[] {
+  const accounts = getDemoLoginAccounts();
   return [
     {
       kind: "demo",
-      id: "demo-local",
-      email: process.env.DEMO_EMAIL || DEMO_CREDENTIALS.email,
-      password: process.env.DEMO_PASSWORD || DEMO_CREDENTIALS.password,
-      name: process.env.DEMO_NAME || "Ana García",
+      ...accounts.demo,
     },
     {
       kind: "customer",
-      id: "customer-local",
-      email: process.env.CUSTOMER_EMAIL || CUSTOMER_CREDENTIALS.email,
-      password: process.env.CUSTOMER_PASSWORD || CUSTOMER_CREDENTIALS.password,
-      name: process.env.CUSTOMER_NAME || "Admin Cliente",
+      ...accounts.customer,
     },
   ];
 }
@@ -57,13 +55,11 @@ async function signLocalResponse(account: LocalAuthAccount, request: NextRequest
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json().catch(() => ({}));
-  const email = typeof body.email === "string" ? body.email.trim() : "";
-  const password = typeof body.password === "string" ? body.password : "";
-
-  if (!email || !password) {
-    return NextResponse.json({ error: "Email y contraseña son obligatorios" }, { status: 400 });
-  }
+  const limit = takeRateLimit(`login:${clientAddress(request)}`, { limit: 10, windowMs: 15 * 60_000 });
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
+  let email: string; let password: string;
+  try { ({ email, password } = parseInput(loginSchema, await request.json().catch(() => ({})))); }
+  catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Credenciales inválidas" }, { status: 400 }); }
 
   const localAccount = isAuthDemoMode() ? matchLocalAuthAccount(email, password) : null;
   if (localAccount) return signLocalResponse(localAccount, request);

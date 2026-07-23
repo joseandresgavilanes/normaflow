@@ -1,4 +1,5 @@
 import { PERMISSIONS, ROLES } from "@/lib/constants";
+import { permissionMatches } from "./matrix";
 
 export type AppRoleKey = keyof typeof ROLES;
 
@@ -6,10 +7,7 @@ export type AppRoleKey = keyof typeof ROLES;
 export function canDemo(roleKey: string, permission: string): boolean {
   const perms = PERMISSIONS[roleKey as AppRoleKey] as readonly string[] | undefined;
   if (!perms) return false;
-  if (perms.includes("*")) return true;
-  if (perms.includes(permission)) return true;
-  const [res, action] = permission.split(":");
-  return perms.some(p => p === `${res}:*` || p === permission);
+  return perms.some(p => permissionMatches(p, permission));
 }
 
 export function canExplicitPermission(
@@ -17,10 +15,7 @@ export function canExplicitPermission(
   permission: string,
 ): boolean {
   if (!permissions?.length) return false;
-  if (permissions.includes("*")) return true;
-  if (permissions.includes(permission)) return true;
-  const [resource] = permission.split(":");
-  return permissions.includes(`${resource}:*`);
+  return permissions.some(p => permissionMatches(p, permission));
 }
 
 export function canFrontend(
@@ -40,7 +35,7 @@ export function canEditDocuments(roleKey: string): boolean {
 }
 
 export function canApproveDocuments(roleKey: string): boolean {
-  return roleKey === "ORG_ADMIN" || roleKey === "COMPLIANCE_MANAGER" || roleKey === "SUPER_ADMIN";
+  return ["OWNER", "ADMIN", "MANAGER", "ORG_ADMIN", "COMPLIANCE_MANAGER", "SUPER_ADMIN"].includes(roleKey) || canDemo(roleKey, "documents:approve");
 }
 
 export function canManageRisks(roleKey: string): boolean {
@@ -68,7 +63,7 @@ export function canManageGap(roleKey: string): boolean {
 }
 
 export function canAccessBilling(roleKey: string): boolean {
-  return roleKey === "ORG_ADMIN" || roleKey === "SUPER_ADMIN";
+  return ["OWNER", "ADMIN", "ORG_ADMIN", "SUPER_ADMIN"].includes(roleKey);
 }
 
 export function canManageTraining(roleKey: string): boolean {

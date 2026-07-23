@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAppContext } from "@/lib/app-context";
+import { parseId } from "@/lib/validation/common";
 
 export async function POST(request: NextRequest) {
   const ctx = await getAppContext();
@@ -9,10 +10,9 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const organizationId = typeof body.organizationId === "string" ? body.organizationId : "";
-  if (!organizationId) {
-    return NextResponse.json({ error: "organizationId requerido" }, { status: 400 });
-  }
+  let organizationId: string;
+  try { organizationId = parseId(body.organizationId); }
+  catch { return NextResponse.json({ error: "organizationId inválido" }, { status: 400 }); }
 
   const allowed = await prisma.membership.findFirst({
     where: { userId: ctx.user.id, organizationId },

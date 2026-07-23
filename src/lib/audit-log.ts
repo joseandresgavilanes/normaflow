@@ -33,9 +33,9 @@ export type AuditLogInput = {
   extra?: Record<string, unknown>;
 };
 
-export async function logAuditEvent(input: AuditLogInput): Promise<void> {
-  const { ctx, action, module, recordId, before, after, extra } = input;
+type AuditLogWriter = Pick<Prisma.TransactionClient, "auditLog">;
 
+async function requestMetadata() {
   let ip: string | undefined;
   let userAgent: string | undefined;
   try {
@@ -45,13 +45,19 @@ export async function logAuditEvent(input: AuditLogInput): Promise<void> {
   } catch {
     /* headers() unavailable outside request context — fine */
   }
+  return { ip, userAgent };
+}
+
+export async function writeAuditLog(writer: AuditLogWriter, input: AuditLogInput, request?: { ip?: string; userAgent?: string }): Promise<void> {
+  const { ctx, action, module, recordId, before, after, extra } = input;
 
   const metadata: Record<string, unknown> = {};
   if (before) metadata.before = before;
   if (after) metadata.after = after;
   if (extra) Object.assign(metadata, extra);
 
-  await prisma.auditLog.create({
+  const requestInfo = request ?? await requestMetadata();
+  await writer.auditLog.create({
     data: {
       organizationId: ctx.organization.id,
       userId: ctx.user.id,
@@ -59,10 +65,14 @@ export async function logAuditEvent(input: AuditLogInput): Promise<void> {
       module,
       recordId: recordId ?? null,
       metadata: Object.keys(metadata).length ? (metadata as Prisma.InputJsonValue) : undefined,
-      ip,
-      userAgent,
+      ip: requestInfo.ip,
+      userAgent: requestInfo.userAgent,
     },
   });
+}
+
+export async function logAuditEvent(input: AuditLogInput): Promise<void> {
+  await prisma.$transaction(async (tx) => writeAuditLog(tx, input));
 }
 
 /**
