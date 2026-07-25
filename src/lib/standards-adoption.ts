@@ -1,53 +1,25 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { clauseIdFor, getStandardSpec, type StandardSpec } from "@/lib/standards-catalog";
+import { getPackForFamily, installPack } from "@/lib/standard-packs";
 import { ensureSecurityControlCatalog, ensureOrganizationControlSet } from "@/lib/security-control-catalog";
 
 type Db = PrismaClient | Prisma.TransactionClient;
 
 /**
- * Siembra (idempotente) el catálogo global Standard + Clause de una norma.
+ * Siembra (idempotente) el catálogo de una norma (StandardFamily + StandardEdition
+ * + StandardRequirement) instalando su paquete normativo y devuelve la EDICIÓN.
  * Solo añade lo que falte; nunca borra ni pisa datos de organizaciones.
  */
 export async function ensureStandardCatalog(spec: StandardSpec, db: Db = prisma) {
-  const standard = await db.standard.upsert({
-    where: { code: spec.code },
-    update: { name: spec.name, version: spec.version, description: spec.description, isActive: true },
-    create: { code: spec.code, name: spec.name, version: spec.version, description: spec.description, isActive: true },
-  });
+  const pack = getPackForFamily(spec.code);
+  if (pack) await installPack(pack, db);
 
-  const chapters = spec.clauses.filter((c) => !c.parent);
-  const children = spec.clauses.filter((c) => c.parent);
-  for (const [index, clause] of chapters.entries()) {
-    await db.clause.upsert({
-      where: { id: clauseIdFor(spec.code, clause.code) },
-      update: { title: clause.title },
-      create: {
-        id: clauseIdFor(spec.code, clause.code),
-        standardId: standard.id,
-        code: clause.code,
-        title: clause.title,
-        description: clause.description ?? null,
-        order: index + 1,
-      },
-    });
-  }
-  for (const [index, clause] of children.entries()) {
-    await db.clause.upsert({
-      where: { id: clauseIdFor(spec.code, clause.code) },
-      update: { title: clause.title },
-      create: {
-        id: clauseIdFor(spec.code, clause.code),
-        standardId: standard.id,
-        code: clause.code,
-        title: clause.title,
-        description: clause.description ?? null,
-        parentId: clauseIdFor(spec.code, clause.parent!),
-        order: chapters.length + index + 1,
-      },
-    });
-  }
-  return standard;
+  const edition = await db.standardEdition.findFirst({
+    where: { family: { code: spec.code }, editionCode: spec.version },
+  });
+  if (!edition) throw new Error(`No se pudo preparar la edición ${spec.code}:${spec.version}.`);
+  return edition;
 }
 
 /** Cláusulas evaluables de una norma: las hojas del catálogo. */
@@ -67,7 +39,7 @@ export async function adoptStandardForOrganization(args: {
   db?: Db;
   organizationId: string;
   standardCode: StandardSpec["code"];
-  standardId: string;
+  standardId: string; // StandardEdition.id
   assessorId?: string | null;
 }) {
   const db = args.db ?? prisma;

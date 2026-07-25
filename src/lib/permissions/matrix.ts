@@ -36,6 +36,10 @@ export const PERMISSION_MODULES = [
   "opportunities", "integrations", "reporting", "activity", "positions",
   "personnel", "locations", "catalogs", "mgmt-review", "billing", "security-controls",
   "soa", "risk-treatment", "assets", "incidents", "vulnerabilities", "continuity",
+  "standards", "packs", "environment", "safety", "integrated", "aims",
+  // `speakup` es un módulo aparte de `compliance` a propósito: quien gestiona el
+  // programa de cumplimiento no accede por ello al canal de denuncias.
+  "compliance", "speakup", "energy", "food-safety", "itsm", "medical-devices", "md-sensitive",
 ] as const;
 
 export function normalizePermission(permission: string): string {
@@ -92,6 +96,20 @@ const ADMIN_PERMS = [
   "incidents:*",
   "vulnerabilities:*",
   "continuity:*",
+  "standards:*",
+  "environment:*",
+  "safety:*",
+  "integrated:*",
+  "aims:*",
+  "compliance:*",
+  // Administrar la organización no da acceso a las denuncias: solo a presentarlas.
+  // Un expediente se abre con una autorización explícita en `SpeakUpCaseAccess`.
+  "speakup:create",
+  "energy:*",
+  "food-safety:*",
+  "itsm:*",
+  "medical-devices:*",
+  "md-sensitive:*",
 ];
 
 const MANAGER_PERMS = [
@@ -128,6 +146,19 @@ const MANAGER_PERMS = [
   "incidents:*",
   "vulnerabilities:*",
   "continuity:*",
+  "standards:read",
+  "standards:activate",
+  "environment:*",
+  "safety:*",
+  "integrated:*",
+  "aims:*",
+  "compliance:*",
+  "speakup:create",
+  "energy:*",
+  "food-safety:*",
+  "itsm:*",
+  "medical-devices:*",
+  "md-sensitive:*",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
@@ -171,6 +202,24 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "incidents:*",
     "vulnerabilities:*",
     "continuity:*",
+    "standards:*",
+    "environment:*",
+    "safety:*",
+    "integrated:*",
+    "aims:*",
+    "compliance:*",
+    // El único rol que opera el canal. Aun así, cada expediente exige su
+    // autorización: el permiso abre la bandeja, no los casos.
+    "speakup:read",
+    "speakup:create",
+    "speakup:update",
+    "speakup:approve",
+    "speakup:export",
+    "energy:*",
+    "food-safety:*",
+    "itsm:*",
+    "medical-devices:*",
+    "md-sensitive:*",
   ],
   AUDITOR: [
     "dashboard:read",
@@ -222,6 +271,31 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "vulnerabilities:export",
     "continuity:read",
     "continuity:export",
+    "standards:read",
+    "standards:export",
+    "environment:read",
+    "environment:export",
+    "safety:read",
+    "safety:export",
+    "integrated:read",
+    "integrated:export",
+    "aims:read",
+    "aims:export",
+    "compliance:read",
+    "compliance:export",
+    // El auditor ve el canal solo agregado y anonimizado; los expedientes,
+    // únicamente si se le autoriza caso por caso.
+    "speakup:create",
+    "energy:read",
+    "energy:export",
+    "food-safety:read",
+    "food-safety:export",
+    "itsm:read",
+    "itsm:export",
+    "medical-devices:read",
+    "medical-devices:export",
+    "md-sensitive:read",
+    "md-sensitive:export",
   ],
   CONTRIBUTOR: [
     "dashboard:read",
@@ -259,6 +333,27 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "incidents:create",
     "vulnerabilities:read",
     "continuity:read",
+    "standards:read",
+    "environment:read",
+    "environment:create",
+    "safety:read",
+    "safety:create",
+    "integrated:read",
+    // Puede registrar y enviar a revisión salidas de IA, nunca aprobarlas:
+    // `aims:approve` se reserva a los roles de gestión (regla humana).
+    "aims:read",
+    "aims:create",
+    "compliance:read",
+    // Cualquiera puede denunciar: es la razón de existir del canal.
+    "speakup:create",
+    "energy:read",
+    "energy:create",
+    "food-safety:read",
+    "food-safety:create",
+    "itsm:read",
+    "itsm:create",
+    "medical-devices:read",
+    "medical-devices:create",
   ],
   VIEWER: [
     "dashboard:read",
@@ -287,6 +382,17 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "incidents:read",
     "vulnerabilities:read",
     "continuity:read",
+    "standards:read",
+    "environment:read",
+    "safety:read",
+    "integrated:read",
+    "aims:read",
+    "compliance:read",
+    "speakup:create",
+    "energy:read",
+    "food-safety:read",
+    "itsm:read",
+    "medical-devices:read",
   ],
 };
 

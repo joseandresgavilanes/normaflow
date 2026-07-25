@@ -55,7 +55,7 @@ function assertCAPACollaborator(ctx: { role: string; user: { id: string } }, cap
 async function assertReferences(input: { processId?: string; clauseId?: string; standardCode?: string; ownerId?: string; nonconformityId?: string; findingId?: string }, organizationId: string) {
   const [process, clause, standard, owner, nc, finding] = await Promise.all([
     input.processId ? prisma.process.findFirst({ where: { id: input.processId, organizationId }, select: { id: true } }) : null,
-    input.clauseId ? prisma.clause.findFirst({ where: { id: input.clauseId, standard: { code: input.standardCode || undefined, orgStandards: { some: { organizationId } } } }, select: { id: true } }) : null,
+    input.clauseId ? prisma.standardRequirement.findFirst({ where: { id: input.clauseId, standard: { code: input.standardCode || undefined, orgStandards: { some: { organizationId } } } }, select: { id: true } }) : null,
     input.standardCode ? prisma.organizationStandard.findFirst({ where: { organizationId, standard: { code: input.standardCode } }, select: { id: true } }) : null,
     input.ownerId ? prisma.membership.findFirst({ where: { organizationId, userId: input.ownerId, active: true }, select: { id: true } }) : null,
     input.nonconformityId ? prisma.nonconformity.findFirst({ where: { id: input.nonconformityId, organizationId }, select: { id: true } }) : null,

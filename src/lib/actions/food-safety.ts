@@ -1,0 +1,896 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { prisma } from "@/lib/prisma";
+import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
+import { logAuditEvent } from "@/lib/audit-log";
+import { assertHazardAssessmentApproval, decideControlMeasure, scoreHazard } from "@/lib/food-safety/hazard";
+import { assertLimitDefinition, isWithinCriticalLimits } from "@/lib/food-safety/monitoring";
+import { lotsAffectedByRecall, runTraceabilityTest, type TraceLotNode } from "@/lib/food-safety/traceability";
+import type {
+  DeviationStatus,
+  FoodAssessmentStatus,
+  FoodEmergencyStatus,
+  FoodFlowStatus,
+  RecallStatus,
+} from "@prisma/client";
+
+const MODULE = "food-safety";
+const revalidate = () => {
+  revalidatePath("/app/food-safety");
+  revalidatePath("/app/activity");
+};
+
+async function assertRefInOrg(
+  organizationId: string,
+  refs: Partial<Record<
+    "processId" | "locationId" | "documentId" | "evidenceId" | "capaId" | "supplierId",
+    string | null | undefined
+  >>,
+) {
+  const checks: Promise<unknown>[] = [];
+  const guard = (p: Promise<{ id: string } | null>, label: string) =>
+    checks.push(p.then((r) => { if (!r) throw new Error(`Referencia ${label} no pertenece a la organización.`); }));
+  const w = (id: string) => ({ where: { id, organizationId }, select: { id: true } });
+  if (refs.processId) guard(prisma.process.findFirst(w(refs.processId)), "de proceso");
+  if (refs.locationId) guard(prisma.location.findFirst(w(refs.locationId)), "de sede");
+  if (refs.documentId) guard(prisma.document.findFirst(w(refs.documentId)), "de documento");
+  if (refs.evidenceId) guard(prisma.evidenceFile.findFirst(w(refs.evidenceId)), "de evidencia");
+  if (refs.capaId) guard(prisma.cAPA.findFirst(w(refs.capaId)), "de CAPA");
+  if (refs.supplierId) guard(prisma.supplier.findFirst(w(refs.supplierId)), "de proveedor");
+  await Promise.all(checks);
+}
+
+async function nextCode(prefix: string, count: Promise<number>) {
+  return `${prefix}-${String((await count) + 1).padStart(4, "0")}`;
+}
+
+// ─── Products / materials / allergens / intended use ───
+
+const productSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  description: z.string().max(4000).optional(),
+  category: z.string().max(120).optional(),
+  shelfLifeDays: z.number().int().min(0).optional(),
+  storageConditions: z.string().max(500).optional(),
+  allergenCodes: z.array(z.string()).default([]),
+  processId: z.string().optional(),
+  documentId: z.string().optional(),
+});
+
+export async function createFoodProduct(input: z.infer<typeof productSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = productSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { processId: data.processId, documentId: data.documentId });
+  const code = data.code ?? await nextCode("PROD", prisma.foodProduct.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.foodProduct.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_food_product" } });
+  revalidate();
+  return created;
+}
+
+const materialSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  description: z.string().max(4000).optional(),
+  supplierId: z.string().optional(),
+  specification: z.string().max(4000).optional(),
+  allergenCodes: z.array(z.string()).default([]),
+  storageConditions: z.string().max(500).optional(),
+  documentId: z.string().optional(),
+});
+
+export async function createRawMaterial(input: z.infer<typeof materialSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = materialSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { supplierId: data.supplierId, documentId: data.documentId });
+  const code = data.code ?? await nextCode("MP", prisma.rawMaterial.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.rawMaterial.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_raw_material" } });
+  revalidate();
+  return created;
+}
+
+const allergenSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  category: z.string().max(120).optional(),
+  description: z.string().max(2000).optional(),
+});
+
+export async function createAllergen(input: z.infer<typeof allergenSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = allergenSchema.parse(input);
+  const code = data.code ?? await nextCode("ALR", prisma.allergen.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.allergen.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_allergen" } });
+  revalidate();
+  return created;
+}
+
+const intendedUseSchema = z.object({
+  code: z.string().max(40).optional(),
+  productId: z.string().min(1),
+  consumerGroup: z.string().max(200).optional(),
+  preparationMethod: z.string().max(2000).optional(),
+  vulnerableConsumers: z.boolean().default(false),
+  misusePotential: z.string().max(2000).optional(),
+  notes: z.string().max(2000).optional(),
+});
+
+export async function createIntendedUse(input: z.infer<typeof intendedUseSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = intendedUseSchema.parse(input);
+  const product = await prisma.foodProduct.findFirst({ where: tenantWhere(ctx, { id: data.productId }) });
+  if (!product) throw new Error("Producto alimentario no encontrado.");
+  const code = data.code ?? await nextCode("USO", prisma.intendedUse.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.intendedUse.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_intended_use" } });
+  revalidate();
+  return created;
+}
+
+// ─── Process flow / steps ───
+
+const flowSchema = z.object({
+  code: z.string().max(40).optional(),
+  productId: z.string().min(1),
+  title: z.string().min(1).max(200),
+  version: z.string().max(20).default("1"),
+  notes: z.string().max(4000).optional(),
+  documentId: z.string().optional(),
+});
+
+export async function createProcessFlow(input: z.infer<typeof flowSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = flowSchema.parse(input);
+  const product = await prisma.foodProduct.findFirst({ where: tenantWhere(ctx, { id: data.productId }) });
+  if (!product) throw new Error("Producto alimentario no encontrado.");
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId });
+  const code = data.code ?? await nextCode("FLU", prisma.processFlow.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.processFlow.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_process_flow" } });
+  revalidate();
+  return created;
+}
+
+export async function transitionProcessFlow(id: string, to: FoodFlowStatus) {
+  const needsApprove = to === "APPROVED";
+  const ctx = await requirePermission(needsApprove ? "food-safety:approve" : "food-safety:update");
+  const row = await prisma.processFlow.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Diagrama de flujo no encontrado.");
+  const now = new Date();
+  await prisma.processFlow.update({
+    where: { id },
+    data: {
+      status: to,
+      ...(to === "APPROVED" ? { verifiedOnSite: row.verifiedOnSite || true, verifiedAt: row.verifiedAt ?? now, verifiedById: row.verifiedById ?? ctx.user.id } : {}),
+    },
+  });
+  await logAuditEvent({
+    ctx, action: needsApprove ? "approve" : "update", module: MODULE, recordId: id,
+    before: { status: row.status }, after: { status: to }, extra: { event: "transition_process_flow" },
+  });
+  revalidate();
+  return { id, status: to };
+}
+
+const stepSchema = z.object({
+  code: z.string().max(40).optional(),
+  flowId: z.string().min(1),
+  sequence: z.number().int().min(1),
+  name: z.string().min(1).max(200),
+  stepType: z.enum(["RECEIPT", "STORAGE", "PREP", "PROCESS", "COOKING", "COOLING", "PACKAGING", "DISTRIBUTION", "OTHER"]).default("PROCESS"),
+  description: z.string().max(4000).optional(),
+  processId: z.string().optional(),
+  temperature: z.string().max(120).optional(),
+  timeParam: z.string().max(120).optional(),
+});
+
+export async function createProcessStep(input: z.infer<typeof stepSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = stepSchema.parse(input);
+  const flow = await prisma.processFlow.findFirst({ where: tenantWhere(ctx, { id: data.flowId }) });
+  if (!flow) throw new Error("Diagrama de flujo no encontrado.");
+  await assertRefInOrg(ctx.organization.id, { processId: data.processId });
+  const code = data.code ?? await nextCode("PAS", prisma.processStep.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.processStep.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_process_step" } });
+  revalidate();
+  return created;
+}
+
+// ─── Hazards / assessments ───
+
+const hazardSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  hazardType: z.enum(["BIOLOGICAL", "CHEMICAL", "PHYSICAL", "ALLERGEN"]).default("BIOLOGICAL"),
+  description: z.string().max(4000).optional(),
+  source: z.string().max(500).optional(),
+});
+
+export async function createFoodHazard(input: z.infer<typeof hazardSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = hazardSchema.parse(input);
+  const code = data.code ?? await nextCode("PEL", prisma.foodHazard.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.foodHazard.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_food_hazard" } });
+  revalidate();
+  return created;
+}
+
+const assessmentSchema = z.object({
+  code: z.string().max(40).optional(),
+  hazardId: z.string().min(1),
+  stepId: z.string().optional(),
+  productId: z.string().optional(),
+  severity: z.number().int().min(1).max(5),
+  likelihood: z.number().int().min(1).max(5),
+  controlAtStep: z.boolean().optional(),
+  criticalAndMeasurable: z.boolean().optional(),
+  essentialOperational: z.boolean().optional(),
+  controlDecision: z.enum(["NONE", "PRP", "OPRP", "CCP"]).optional(),
+  justification: z.string().max(4000).optional(),
+  existingMeasures: z.string().max(4000).optional(),
+});
+
+export async function createHazardAssessment(input: z.infer<typeof assessmentSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = assessmentSchema.parse(input);
+  const hazard = await prisma.foodHazard.findFirst({ where: tenantWhere(ctx, { id: data.hazardId }) });
+  if (!hazard) throw new Error("Peligro alimentario no encontrado.");
+  if (data.stepId) {
+    const step = await prisma.processStep.findFirst({ where: tenantWhere(ctx, { id: data.stepId }) });
+    if (!step) throw new Error("Paso de proceso no encontrado.");
+  }
+  const { score, significant } = scoreHazard({ severity: data.severity, likelihood: data.likelihood });
+  const controlDecision = data.controlDecision ?? decideControlMeasure({
+    significant,
+    controlAtStep: data.controlAtStep,
+    criticalAndMeasurable: data.criticalAndMeasurable,
+    essentialOperational: data.essentialOperational,
+  });
+  const code = data.code ?? await nextCode("EVA", prisma.hazardAssessment.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.hazardAssessment.create({
+    data: tenantData(ctx, {
+      code,
+      hazardId: data.hazardId,
+      stepId: data.stepId ?? null,
+      productId: data.productId ?? null,
+      severity: data.severity,
+      likelihood: data.likelihood,
+      score,
+      significant,
+      controlDecision,
+      justification: data.justification,
+      existingMeasures: data.existingMeasures,
+      assessedById: ctx.user.id,
+      createdById: ctx.user.id,
+    }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, score, controlDecision }, extra: { event: "create_hazard_assessment" } });
+  revalidate();
+  return created;
+}
+
+export async function approveHazardAssessment(id: string) {
+  const ctx = await requirePermission("food-safety:approve");
+  const row = await prisma.hazardAssessment.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Evaluación de peligro no encontrada.");
+  assertHazardAssessmentApproval({ assessedById: row.assessedById ?? ctx.user.id });
+  const to: FoodAssessmentStatus = "APPROVED";
+  await prisma.hazardAssessment.update({
+    where: { id },
+    data: { status: to, assessedById: row.assessedById ?? ctx.user.id, assessedAt: new Date() },
+  });
+  await logAuditEvent({
+    ctx, action: "approve", module: MODULE, recordId: id,
+    before: { status: row.status }, after: { status: to }, extra: { event: "approve_hazard_assessment" },
+  });
+  revalidate();
+  return { id, status: to };
+}
+
+// ─── PRP / OPRP / CCP / limits ───
+
+const prpSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  category: z.enum(["HYGIENE", "PEST_CONTROL", "WATER", "CLEANING", "MAINTENANCE", "PERSONNEL", "SUPPLIER", "WASTE", "ALLERGEN_CONTROL", "OTHER"]).default("OTHER"),
+  description: z.string().max(4000).optional(),
+  responsibleId: z.string().optional(),
+  frequency: z.string().max(200).optional(),
+  documentId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createPrerequisiteProgram(input: z.infer<typeof prpSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = prpSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, evidenceId: data.evidenceId });
+  const code = data.code ?? await nextCode("PRP", prisma.prerequisiteProgram.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.prerequisiteProgram.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_prp" } });
+  revalidate();
+  return created;
+}
+
+const oprpSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  hazardAssessmentId: z.string().optional(),
+  stepId: z.string().optional(),
+  description: z.string().max(4000).optional(),
+  monitoringMethod: z.string().max(2000).optional(),
+  monitoringFrequency: z.string().max(200).optional(),
+  correctionAction: z.string().max(2000).optional(),
+  responsibleId: z.string().optional(),
+  documentId: z.string().optional(),
+});
+
+export async function createOperationalPrp(input: z.infer<typeof oprpSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = oprpSchema.parse(input);
+  if (data.hazardAssessmentId) {
+    const ha = await prisma.hazardAssessment.findFirst({ where: tenantWhere(ctx, { id: data.hazardAssessmentId }) });
+    if (!ha) throw new Error("Evaluación de peligro no encontrada.");
+  }
+  if (data.stepId) {
+    const step = await prisma.processStep.findFirst({ where: tenantWhere(ctx, { id: data.stepId }) });
+    if (!step) throw new Error("Paso de proceso no encontrado.");
+  }
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId });
+  const code = data.code ?? await nextCode("OPRP", prisma.operationalPRP.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.operationalPRP.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_oprp" } });
+  revalidate();
+  return created;
+}
+
+const ccpSchema = z.object({
+  code: z.string().max(40).optional(),
+  name: z.string().min(1).max(200),
+  stepId: z.string().min(1),
+  hazardAssessmentId: z.string().optional(),
+  justification: z.string().max(4000).optional(),
+  hazardControlled: z.string().max(500).optional(),
+});
+
+export async function createCriticalControlPoint(input: z.infer<typeof ccpSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = ccpSchema.parse(input);
+  const step = await prisma.processStep.findFirst({ where: tenantWhere(ctx, { id: data.stepId }) });
+  if (!step) throw new Error("Paso de proceso no encontrado.");
+  if (data.hazardAssessmentId) {
+    const ha = await prisma.hazardAssessment.findFirst({ where: tenantWhere(ctx, { id: data.hazardAssessmentId }) });
+    if (!ha) throw new Error("Evaluación de peligro no encontrada.");
+  }
+  const code = data.code ?? await nextCode("CCP", prisma.criticalControlPoint.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.criticalControlPoint.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_ccp" } });
+  revalidate();
+  return created;
+}
+
+const limitSchema = z.object({
+  code: z.string().max(40).optional(),
+  ccpId: z.string().min(1),
+  parameter: z.string().min(1).max(120),
+  operator: z.enum(["LT", "LTE", "GT", "GTE", "EQ", "BETWEEN"]).default("BETWEEN"),
+  minValue: z.number().optional(),
+  maxValue: z.number().optional(),
+  targetValue: z.number().optional(),
+  unit: z.string().max(40).optional(),
+  rationale: z.string().max(2000).optional(),
+});
+
+export async function createCriticalLimit(input: z.infer<typeof limitSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = limitSchema.parse(input);
+  assertLimitDefinition(data);
+  const ccp = await prisma.criticalControlPoint.findFirst({ where: tenantWhere(ctx, { id: data.ccpId }) });
+  if (!ccp) throw new Error("PCC no encontrado.");
+  const code = data.code ?? await nextCode("LIM", prisma.criticalLimit.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.criticalLimit.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_critical_limit" } });
+  revalidate();
+  return created;
+}
+
+// ─── Monitoring ───
+
+const planSchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  ccpId: z.string().optional(),
+  oprpId: z.string().optional(),
+  method: z.string().max(2000).optional(),
+  frequency: z.string().max(200).optional(),
+  responsibleId: z.string().optional(),
+  parameter: z.string().max(120).optional(),
+});
+
+export async function createMonitoringPlan(input: z.infer<typeof planSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = planSchema.parse(input);
+  if (!data.ccpId && !data.oprpId) throw new Error("El plan de monitoreo debe vincularse a un PCC o a un PPRO.");
+  if (data.ccpId) {
+    const ccp = await prisma.criticalControlPoint.findFirst({ where: tenantWhere(ctx, { id: data.ccpId }) });
+    if (!ccp) throw new Error("PCC no encontrado.");
+  }
+  if (data.oprpId) {
+    const oprp = await prisma.operationalPRP.findFirst({ where: tenantWhere(ctx, { id: data.oprpId }) });
+    if (!oprp) throw new Error("PPRO no encontrado.");
+  }
+  const code = data.code ?? await nextCode("MON", prisma.monitoringPlan.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.monitoringPlan.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_monitoring_plan" } });
+  revalidate();
+  return created;
+}
+
+const recordSchema = z.object({
+  code: z.string().max(40).optional(),
+  planId: z.string().min(1),
+  recordedAt: z.string().optional(),
+  valueNumeric: z.number().optional(),
+  valueText: z.string().max(500).optional(),
+  unit: z.string().max(40).optional(),
+  notes: z.string().max(2000).optional(),
+  evidenceId: z.string().optional(),
+  autoOpenDeviation: z.boolean().default(true),
+});
+
+export async function createMonitoringRecord(input: z.infer<typeof recordSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = recordSchema.parse(input);
+  const plan = await prisma.monitoringPlan.findFirst({
+    where: tenantWhere(ctx, { id: data.planId }),
+    include: { ccp: { include: { limits: true } } },
+  });
+  if (!plan) throw new Error("Plan de monitoreo no encontrado.");
+  await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId });
+
+  let withinLimits = true;
+  if (typeof data.valueNumeric === "number" && plan.ccp?.limits.length) {
+    withinLimits = plan.ccp.limits.every((lim) => isWithinCriticalLimits(data.valueNumeric!, lim));
+  }
+
+  const code = data.code ?? await nextCode("REG", prisma.monitoringRecord.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.monitoringRecord.create({
+    data: tenantData(ctx, {
+      code,
+      planId: data.planId,
+      recordedAt: data.recordedAt ? new Date(data.recordedAt) : new Date(),
+      valueNumeric: data.valueNumeric,
+      valueText: data.valueText,
+      unit: data.unit,
+      withinLimits,
+      notes: data.notes,
+      evidenceId: data.evidenceId ?? null,
+      recordedById: ctx.user.id,
+    }),
+  });
+
+  if (!withinLimits && data.autoOpenDeviation && plan.ccpId) {
+    const devCode = await nextCode("DES", prisma.deviation.count({ where: { organizationId: ctx.organization.id } }));
+    await prisma.deviation.create({
+      data: tenantData(ctx, {
+        code: devCode,
+        title: `Desviación de límite crítico — ${plan.ccp?.code ?? plan.code}`,
+        description: `Monitoreo ${code} fuera de límites (valor: ${data.valueNumeric}).`,
+        ccpId: plan.ccpId,
+        monitoringRecordId: created.id,
+        severity: "MAJOR",
+        productHold: true,
+        createdById: ctx.user.id,
+      }),
+    });
+  }
+
+  await logAuditEvent({
+    ctx, action: "create", module: MODULE, recordId: created.id,
+    after: { code, withinLimits }, extra: { event: "create_monitoring_record" },
+  });
+  revalidate();
+  return created;
+}
+
+// ─── Deviations / corrections ───
+
+const deviationSchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  description: z.string().max(4000).optional(),
+  ccpId: z.string().optional(),
+  monitoringRecordId: z.string().optional(),
+  severity: z.enum(["MINOR", "MODERATE", "MAJOR", "CRITICAL"]).default("MODERATE"),
+  productHold: z.boolean().default(false),
+  lotCodes: z.array(z.string()).default([]),
+  capaId: z.string().optional(),
+});
+
+export async function createDeviation(input: z.infer<typeof deviationSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = deviationSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { capaId: data.capaId });
+  const code = data.code ?? await nextCode("DES", prisma.deviation.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.deviation.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_deviation" } });
+  revalidate();
+  return created;
+}
+
+export async function transitionDeviation(id: string, to: DeviationStatus) {
+  const ctx = await requirePermission("food-safety:update");
+  const row = await prisma.deviation.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Desviación no encontrada.");
+  await prisma.deviation.update({
+    where: { id },
+    data: { status: to, ...(to === "CLOSED" || to === "VERIFIED" ? { closedAt: new Date() } : {}) },
+  });
+  await logAuditEvent({
+    ctx, action: "update", module: MODULE, recordId: id,
+    before: { status: row.status }, after: { status: to }, extra: { event: "transition_deviation" },
+  });
+  revalidate();
+  return { id, status: to };
+}
+
+const correctionSchema = z.object({
+  code: z.string().max(40).optional(),
+  deviationId: z.string().min(1),
+  actionTaken: z.string().min(1).max(4000),
+  completedAt: z.string().optional(),
+  capaId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createFoodSafetyCorrection(input: z.infer<typeof correctionSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = correctionSchema.parse(input);
+  const deviation = await prisma.deviation.findFirst({ where: tenantWhere(ctx, { id: data.deviationId }) });
+  if (!deviation) throw new Error("Desviación no encontrada.");
+  await assertRefInOrg(ctx.organization.id, { capaId: data.capaId, evidenceId: data.evidenceId });
+  const code = data.code ?? await nextCode("COR", prisma.foodSafetyCorrection.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.foodSafetyCorrection.create({
+    data: tenantData(ctx, {
+      code,
+      deviationId: data.deviationId,
+      actionTaken: data.actionTaken,
+      completedAt: data.completedAt ? new Date(data.completedAt) : new Date(),
+      capaId: data.capaId ?? null,
+      evidenceId: data.evidenceId ?? null,
+      createdById: ctx.user.id,
+    }),
+  });
+  if (deviation.status === "OPEN") {
+    await prisma.deviation.update({ where: { id: deviation.id }, data: { status: "UNDER_CORRECTION" } });
+  }
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_food_safety_correction" } });
+  revalidate();
+  return created;
+}
+
+export async function verifyFoodSafetyCorrection(id: string, effective: boolean) {
+  const ctx = await requirePermission("food-safety:approve");
+  const row = await prisma.foodSafetyCorrection.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Corrección no encontrada.");
+  await prisma.foodSafetyCorrection.update({
+    where: { id },
+    data: { effective, verifiedById: ctx.user.id, verifiedAt: new Date() },
+  });
+  if (effective) {
+    await prisma.deviation.update({
+      where: { id: row.deviationId },
+      data: { status: "VERIFIED", closedAt: new Date() },
+    });
+  }
+  await logAuditEvent({
+    ctx, action: "approve", module: MODULE, recordId: id,
+    after: { effective }, extra: { event: "verify_food_safety_correction" },
+  });
+  revalidate();
+  return { id, effective };
+}
+
+// ─── Validation / verification ───
+
+const validationSchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  targetType: z.enum(["CCP", "OPRP", "PRP", "PROCESS", "OTHER"]).default("CCP"),
+  targetCode: z.string().max(40).optional(),
+  method: z.string().max(4000).optional(),
+  result: z.enum(["PENDING", "VALID", "INVALID", "CONDITIONAL"]).default("PENDING"),
+  findings: z.string().max(8000).optional(),
+  documentId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createValidationRecord(input: z.infer<typeof validationSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = validationSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, evidenceId: data.evidenceId });
+  const code = data.code ?? await nextCode("VAL", prisma.validationRecord.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.validationRecord.create({
+    data: tenantData(ctx, {
+      ...data,
+      code,
+      validatedAt: data.result !== "PENDING" ? new Date() : null,
+      validatedById: data.result !== "PENDING" ? ctx.user.id : null,
+      createdById: ctx.user.id,
+    }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_validation_record" } });
+  revalidate();
+  return created;
+}
+
+const verificationSchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  activityType: z.enum(["INTERNAL_AUDIT", "RECORD_REVIEW", "CALIBRATION_CHECK", "SAMPLING", "SUPPLIER_AUDIT", "OTHER"]).default("INTERNAL_AUDIT"),
+  scheduledFor: z.string().optional(),
+  result: z.enum(["PENDING", "CONFORMING", "NONCONFORMING", "PARTIAL"]).default("PENDING"),
+  findings: z.string().max(8000).optional(),
+  responsibleId: z.string().optional(),
+  documentId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createVerificationActivity(input: z.infer<typeof verificationSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = verificationSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, evidenceId: data.evidenceId });
+  const code = data.code ?? await nextCode("VER", prisma.verificationActivity.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.verificationActivity.create({
+    data: tenantData(ctx, {
+      code,
+      title: data.title,
+      activityType: data.activityType,
+      scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
+      completedAt: data.result !== "PENDING" ? new Date() : null,
+      result: data.result,
+      findings: data.findings,
+      responsibleId: data.responsibleId ?? null,
+      documentId: data.documentId ?? null,
+      evidenceId: data.evidenceId ?? null,
+      createdById: ctx.user.id,
+    }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_verification_activity" } });
+  revalidate();
+  return created;
+}
+
+// ─── Traceability / recall / emergency ───
+
+const lotSchema = z.object({
+  code: z.string().max(40).optional(),
+  lotType: z.enum(["RAW_MATERIAL", "INTERMEDIATE", "FINISHED", "DISTRIBUTED"]).default("FINISHED"),
+  productId: z.string().optional(),
+  rawMaterialId: z.string().optional(),
+  supplierId: z.string().optional(),
+  customerName: z.string().max(200).optional(),
+  quantity: z.number().optional(),
+  unit: z.string().max(40).optional(),
+  producedAt: z.string().optional(),
+  receivedAt: z.string().optional(),
+  expiresAt: z.string().optional(),
+  previousLotIds: z.array(z.string()).default([]),
+  processStepCode: z.string().max(40).optional(),
+  locationId: z.string().optional(),
+  distributionRef: z.string().max(200).optional(),
+  notes: z.string().max(2000).optional(),
+});
+
+export async function createTraceabilityLot(input: z.infer<typeof lotSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = lotSchema.parse(input);
+  if (data.productId) {
+    const p = await prisma.foodProduct.findFirst({ where: tenantWhere(ctx, { id: data.productId }) });
+    if (!p) throw new Error("Producto no encontrado.");
+  }
+  if (data.rawMaterialId) {
+    const m = await prisma.rawMaterial.findFirst({ where: tenantWhere(ctx, { id: data.rawMaterialId }) });
+    if (!m) throw new Error("Materia prima no encontrada.");
+  }
+  if (data.previousLotIds.length) {
+    const prev = await prisma.traceabilityLot.findMany({
+      where: { organizationId: ctx.organization.id, id: { in: data.previousLotIds } },
+      select: { id: true },
+    });
+    if (prev.length !== data.previousLotIds.length) {
+      throw new Error("Uno o más lotes previos no pertenecen a la organización.");
+    }
+  }
+  await assertRefInOrg(ctx.organization.id, { supplierId: data.supplierId, locationId: data.locationId });
+  const code = data.code ?? await nextCode("LOT", prisma.traceabilityLot.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.traceabilityLot.create({
+    data: tenantData(ctx, {
+      code,
+      lotType: data.lotType,
+      productId: data.productId ?? null,
+      rawMaterialId: data.rawMaterialId ?? null,
+      supplierId: data.supplierId ?? null,
+      customerName: data.customerName,
+      quantity: data.quantity,
+      unit: data.unit,
+      producedAt: data.producedAt ? new Date(data.producedAt) : null,
+      receivedAt: data.receivedAt ? new Date(data.receivedAt) : null,
+      expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+      previousLotIds: data.previousLotIds,
+      processStepCode: data.processStepCode,
+      locationId: data.locationId ?? null,
+      distributionRef: data.distributionRef,
+      notes: data.notes,
+      createdById: ctx.user.id,
+    }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_traceability_lot" } });
+  revalidate();
+  return created;
+}
+
+export async function runFoodTraceabilityTest(rootIdOrCode: string) {
+  const ctx = await requirePermission("food-safety:read");
+  const lots = await prisma.traceabilityLot.findMany({
+    where: { organizationId: ctx.organization.id },
+    include: { product: { select: { code: true } }, rawMaterial: { select: { code: true } } },
+  });
+  const nodes: TraceLotNode[] = lots.map((lot) => ({
+    id: lot.id,
+    code: lot.code,
+    lotType: lot.lotType,
+    productCode: lot.product?.code,
+    rawMaterialCode: lot.rawMaterial?.code,
+    supplierId: lot.supplierId,
+    customerName: lot.customerName,
+    previousLotIds: lot.previousLotIds,
+    quantity: lot.quantity,
+    unit: lot.unit,
+    status: lot.status,
+  }));
+  const result = runTraceabilityTest({ rootIdOrCode, lots: nodes });
+  await logAuditEvent({
+    ctx, action: "read", module: MODULE, recordId: rootIdOrCode,
+    after: { ok: result.ok, summary: result.summary }, extra: { event: "run_traceability_test" },
+  });
+  return result;
+}
+
+const recallSchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  reason: z.string().min(1).max(4000),
+  recallType: z.enum(["WITHDRAWAL", "RECALL", "STOCK_RECOVERY"]).default("WITHDRAWAL"),
+  lotCodes: z.array(z.string()).min(1),
+  customersNotified: z.string().max(4000).optional(),
+  authorityNotified: z.boolean().default(false),
+  quantityAffected: z.number().optional(),
+  unit: z.string().max(40).optional(),
+  capaId: z.string().optional(),
+  documentId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createWithdrawalRecall(input: z.infer<typeof recallSchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = recallSchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { capaId: data.capaId, documentId: data.documentId, evidenceId: data.evidenceId });
+  const lots = await prisma.traceabilityLot.findMany({ where: { organizationId: ctx.organization.id } });
+  const nodes: TraceLotNode[] = lots.map((lot) => ({
+    id: lot.id, code: lot.code, lotType: lot.lotType, previousLotIds: lot.previousLotIds,
+    supplierId: lot.supplierId, customerName: lot.customerName, quantity: lot.quantity, unit: lot.unit, status: lot.status,
+  }));
+  const affected = lotsAffectedByRecall(data.lotCodes, nodes);
+  const code = data.code ?? await nextCode("RET", prisma.withdrawalRecall.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.withdrawalRecall.create({
+    data: tenantData(ctx, {
+      ...data,
+      code,
+      lotCodes: [...new Set([...data.lotCodes, ...affected.map((l) => l.code)])],
+      createdById: ctx.user.id,
+    }),
+  });
+  if (affected.length) {
+    await prisma.traceabilityLot.updateMany({
+      where: { organizationId: ctx.organization.id, id: { in: affected.map((l) => l.id) } },
+      data: { status: "RECALLED" },
+    });
+  }
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, lots: created.lotCodes.length }, extra: { event: "create_withdrawal_recall" } });
+  revalidate();
+  return created;
+}
+
+export async function transitionWithdrawalRecall(id: string, to: RecallStatus) {
+  const ctx = await requirePermission("food-safety:update");
+  const row = await prisma.withdrawalRecall.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Retiro/recall no encontrado.");
+  const now = new Date();
+  await prisma.withdrawalRecall.update({
+    where: { id },
+    data: {
+      status: to,
+      ...(to === "NOTIFYING" || to === "IN_PROGRESS" ? { notifiedAt: row.notifiedAt ?? now } : {}),
+      ...(to === "CLOSED" || to === "COMPLETED" ? { closedAt: now } : {}),
+    },
+  });
+  await logAuditEvent({
+    ctx, action: "update", module: MODULE, recordId: id,
+    before: { status: row.status }, after: { status: to }, extra: { event: "transition_withdrawal_recall" },
+  });
+  revalidate();
+  return { id, status: to };
+}
+
+const emergencySchema = z.object({
+  code: z.string().max(40).optional(),
+  title: z.string().min(1).max(200),
+  emergencyType: z.enum(["CONTAMINATION", "ALLERGEN_INCIDENT", "RECALL_EVENT", "SUPPLY_DISRUPTION", "FACILITY", "OTHER"]).default("OTHER"),
+  description: z.string().max(8000).optional(),
+  recallId: z.string().optional(),
+  capaId: z.string().optional(),
+  documentId: z.string().optional(),
+  evidenceId: z.string().optional(),
+});
+
+export async function createFoodSafetyEmergency(input: z.infer<typeof emergencySchema>) {
+  const ctx = await requirePermission("food-safety:create");
+  const data = emergencySchema.parse(input);
+  await assertRefInOrg(ctx.organization.id, { capaId: data.capaId, documentId: data.documentId, evidenceId: data.evidenceId });
+  const code = data.code ?? await nextCode("EME", prisma.foodSafetyEmergency.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.foodSafetyEmergency.create({
+    data: tenantData(ctx, { ...data, code, createdById: ctx.user.id }),
+  });
+  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code }, extra: { event: "create_food_safety_emergency" } });
+  revalidate();
+  return created;
+}
+
+export async function transitionFoodSafetyEmergency(id: string, to: FoodEmergencyStatus) {
+  const ctx = await requirePermission("food-safety:update");
+  const row = await prisma.foodSafetyEmergency.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!row) throw new Error("Emergencia de inocuidad no encontrada.");
+  await prisma.foodSafetyEmergency.update({
+    where: { id },
+    data: { status: to, ...(to === "CLOSED" ? { closedAt: new Date() } : {}) },
+  });
+  await logAuditEvent({
+    ctx, action: "update", module: MODULE, recordId: id,
+    before: { status: row.status }, after: { status: to }, extra: { event: "transition_food_safety_emergency" },
+  });
+  revalidate();
+  return { id, status: to };
+}

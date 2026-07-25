@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { PrismaClient, type Role } from "@prisma/client";
 import { adminClient, cleanupLiveFixture, LIVE_STATE_PATH, type LiveActor, type LiveFixtureState, writeLiveState } from "./support";
 import { ensureOrganizationControlSet, ensureSecurityControlCatalog } from "../src/lib/security-control-catalog";
+import { installAllPacks } from "../src/lib/standard-packs";
 
 export default async function globalSetup() {
   const prisma = new PrismaClient();
@@ -77,7 +78,7 @@ export default async function globalSetup() {
     const actorAViewer = await createMember("a-viewer", "VIEWER", actorA);
     const actorAAuditor = await createMember("a-auditor", "AUDITOR", actorA);
     const actorBAdmin = await createMember("b-admin", "ORG_ADMIN", actorB);
-    await prisma.standard.upsert({ where: { code: "ISO_27001" }, update: {}, create: { code: "ISO_27001", name: "ISO 27001", version: "2022", isActive: true } });
+    await installAllPacks(prisma);
     await ensureSecurityControlCatalog(prisma);
     await ensureOrganizationControlSet(actorA.organizationId, prisma);
     await ensureOrganizationControlSet(actorB.organizationId, prisma);

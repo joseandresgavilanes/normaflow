@@ -1,0 +1,102 @@
+import type { StandardPackInput } from "./pack-schema";
+
+/**
+ * ISO 13485:2016 — Sistemas de gestión de la calidad para dispositivos médicos.
+ * Pack configurable. NormaFlow NO sustituye requisitos regulatorios nacionales
+ * (MDR, FDA QSR/QMSR, etc.). Títulos propios — nunca el texto protegido.
+ */
+export const iso13485Pack: StandardPackInput = {
+  code: "PACK_ISO_13485",
+  name: "ISO 13485 — Dispositivos médicos",
+  version: "2016.1",
+  description:
+    "Paquete configurable ISO 13485:2016 (SGC dispositivos médicos). Complementa — no reemplaza — obligaciones regulatorias locales.",
+  requiredModules: [
+    "gap", "documents", "audits", "nc", "capa", "risks", "suppliers", "medical-devices",
+  ],
+  featureFlags: { medicalDeviceQms: true, designControls: true, vigilance: true },
+  editions: [
+    {
+      familyCode: "ISO_13485",
+      familyName: "ISO 13485",
+      category: "Dispositivos médicos",
+      familyDescription: "Sistemas de gestión de la calidad — Dispositivos médicos",
+      editionCode: "2016",
+      name: "ISO 13485",
+      version: "2016",
+      year: 2016,
+      description: "Requisitos para fines reglamentarios",
+      catalogVersion: "2016.1",
+      status: "ACTIVE",
+      requirements: [
+        { code: "4", title: "Sistema de gestión de la calidad" },
+        { code: "4.1", title: "Requisitos generales", parent: "4" },
+        { code: "4.2", title: "Documentación", parent: "4", summary: "Expediente maestro (DMR) e historial de diseño (DHF)." },
+        { code: "5", title: "Responsabilidad de la dirección" },
+        { code: "5.1", title: "Compromiso de la dirección", parent: "5" },
+        { code: "5.2", title: "Enfoque al cliente", parent: "5" },
+        { code: "5.3", title: "Política de la calidad", parent: "5" },
+        { code: "5.4", title: "Planificación", parent: "5" },
+        { code: "5.5", title: "Responsabilidad, autoridad y comunicación", parent: "5" },
+        { code: "5.6", title: "Revisión por la dirección", parent: "5" },
+        { code: "6", title: "Gestión de los recursos" },
+        { code: "6.1", title: "Provisión de los recursos", parent: "6" },
+        { code: "6.2", title: "Recursos humanos", parent: "6" },
+        { code: "6.3", title: "Infraestructura", parent: "6" },
+        { code: "6.4", title: "Ambiente de trabajo y control de contaminación", parent: "6" },
+        { code: "7", title: "Realización del producto" },
+        { code: "7.1", title: "Planificación de la realización del producto", parent: "7" },
+        { code: "7.2", title: "Procesos relacionados con el cliente", parent: "7" },
+        { code: "7.3", title: "Diseño y desarrollo", parent: "7", summary: "Inputs, outputs, revisión, verificación, validación y transferencia." },
+        { code: "7.4", title: "Compras", parent: "7", summary: "Proveedores críticos y cualificación." },
+        { code: "7.5", title: "Producción y prestación del servicio", parent: "7", summary: "Lotes, trazabilidad, validación de procesos y esterilización." },
+        { code: "7.6", title: "Control de los equipos de seguimiento y de medición", parent: "7" },
+        { code: "8", title: "Medición, análisis y mejora" },
+        { code: "8.1", title: "Generalidades", parent: "8" },
+        { code: "8.2", title: "Seguimiento y medición", parent: "8", summary: "Quejas, vigilancia post-comercialización y eventos adversos (sin PII innecesaria)." },
+        { code: "8.3", title: "Control del producto no conforme", parent: "8", summary: "Acciones de seguridad en campo y retiros." },
+        { code: "8.4", title: "Análisis de datos", parent: "8" },
+        { code: "8.5", title: "Mejora", parent: "8" },
+      ],
+      evidenceRules: [
+        { requirementCode: "4.2", expectedType: "RECORD", note: "DMR y DHF versionados/aprobados." },
+        { requirementCode: "7.3", expectedType: "RECORD", note: "Inputs/outputs, revisiones, verificación, validación y transferencia." },
+        { requirementCode: "7.4", expectedType: "RECORD", frequency: "ANNUAL", note: "Cualificación de proveedores críticos." },
+        { requirementCode: "7.5", expectedType: "RECORD", note: "Lotes, trazabilidad y validaciones de proceso/esterilización." },
+        { requirementCode: "8.2", expectedType: "RECORD", note: "Quejas, PMS y eventos adversos con referencias opacas." },
+        { requirementCode: "8.3", expectedType: "RECORD", note: "FSCA/FSN y retiros de producto." },
+      ],
+      gapQuestions: [
+        { requirementCode: "4.2", question: "¿Existe expediente maestro (DMR) aprobado por dispositivo?", weight: 3 },
+        { requirementCode: "7.3", question: "¿El historial de diseño cubre inputs→outputs→revisión→verificación→validación→transferencia?", weight: 3 },
+        { requirementCode: "7.4", question: "¿Los proveedores críticos están cualificados con revisión periódica?", weight: 2 },
+        { requirementCode: "7.5", question: "¿Los lotes permiten trazabilidad hacia atrás/adelante sin datos de paciente?", weight: 3 },
+        { requirementCode: "8.2", question: "¿Las quejas y eventos adversos se gestionan sin almacenar PII clínica innecesaria?", weight: 3 },
+        { requirementCode: "8.3", question: "¿Hay procedimiento de retiro / acción de seguridad en campo?", weight: 3 },
+      ],
+      auditChecklist: [
+        { requirementCode: "4.2", question: "Revisar DMR aprobado con atribución.", expectedEvidence: "DeviceMasterRecord APPROVED + approvedById.", criterion: "Versiones anteriores SUPERSEDED." },
+        { requirementCode: "7.3", question: "Muestrear DHF con verificación y validación atribuidas.", expectedEvidence: "DesignVerification/Validation con evaluador y fecha.", criterion: "Inputs cubiertos por outputs." },
+        { requirementCode: "8.2", question: "Comprobar queja/AE sin email ni identificadores largos.", expectedEvidence: "Complaint/AdverseEvent con anonymizedSubjectRef opaco.", criterion: "Acceso restringido a md-sensitive." },
+        { requirementCode: "8.3", question: "Revisar un retiro con lotes afectados.", expectedEvidence: "ProductRecall + lotes RECALLED.", criterion: "Distinto de retiro alimentario." },
+        { requirementCode: "7.4", question: "Verificar cualificación vigente de un proveedor crítico.", expectedEvidence: "SupplierQualification QUALIFIED + nextReviewAt.", criterion: "Enlace opcional a Supplier maestro." },
+      ],
+      templates: [
+        { requirementCode: "5.3", templateType: "POLICY", name: "Política de calidad — dispositivos médicos (plantilla)", content: "" },
+        { requirementCode: "4.2", templateType: "RECORD", name: "Expediente maestro de dispositivo — DMR (plantilla)", content: "" },
+        { requirementCode: "7.3", templateType: "RECORD", name: "Historial de diseño — DHF (plantilla)", content: "" },
+        { requirementCode: "8.2", templateType: "RECORD", name: "Registro de queja / evento adverso (plantilla)", content: "Usar solo referencias opacas; no incluir datos clínicos personales." },
+        { requirementCode: "8.3", templateType: "RECORD", name: "Retiro / acción de seguridad en campo (plantilla)", content: "" },
+      ],
+    },
+  ],
+  mappings: [
+    { sourceFamily: "ISO_13485", sourceCode: "4.1", targetFamily: "ISO_9001", targetCode: "4.4", relationType: "RELATED", equivalencePercent: 70, notes: "SGC dispositivos ⇄ SGC calidad; 13485 añade requisitos reglamentarios." },
+    { sourceFamily: "ISO_13485", sourceCode: "5.3", targetFamily: "ISO_9001", targetCode: "5.2", relationType: "PARTIAL", equivalencePercent: 75 },
+    { sourceFamily: "ISO_13485", sourceCode: "7.3", targetFamily: "ISO_9001", targetCode: "8.3", relationType: "RELATED", equivalencePercent: 55, notes: "Diseño y desarrollo con controles reforzados (DHF)." },
+    { sourceFamily: "ISO_13485", sourceCode: "7.4", targetFamily: "ISO_9001", targetCode: "8.4", relationType: "RELATED", equivalencePercent: 60 },
+    { sourceFamily: "ISO_13485", sourceCode: "8.2", targetFamily: "ISO_9001", targetCode: "9.1", relationType: "RELATED", equivalencePercent: 50, notes: "Vigilancia y quejas de dispositivo; permiso md-sensitive." },
+    { sourceFamily: "ISO_13485", sourceCode: "8.5", targetFamily: "ISO_9001", targetCode: "10.2", relationType: "EQUIVALENT", equivalencePercent: 90 },
+    { sourceFamily: "ISO_13485", sourceCode: "7.1", targetFamily: "ISO_14971", targetCode: "4", relationType: "RELATED", equivalencePercent: 40, notes: "Gestión del riesgo del dispositivo; DeviceRiskFile enlaza Risks corporativos. ISO 14971 puede configurarse como framework en RegulatoryRequirement." },
+  ],
+};

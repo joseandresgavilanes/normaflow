@@ -71,7 +71,7 @@ async function assertContributorProcessAccess(
 async function assertRecordReferences(input: Partial<RecordInput>, organizationId: string) {
   const [process, clause, recordType, retentionTime, disposition, archiveMethod, custodian, reviewer] = await Promise.all([
     input.processId ? prisma.process.findFirst({ where: { id: input.processId, organizationId }, select: { id: true } }) : null,
-    input.clauseId ? prisma.clause.findFirst({ where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId } } } }, select: { id: true } }) : null,
+    input.clauseId ? prisma.standardRequirement.findFirst({ where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId } } } }, select: { id: true } }) : null,
     input.recordTypeId ? prisma.recordType.findFirst({ where: { id: input.recordTypeId, organizationId }, select: { id: true } }) : null,
     input.retentionTimeId ? prisma.retentionTime.findFirst({ where: { id: input.retentionTimeId, organizationId }, select: { id: true } }) : null,
     input.dispositionId ? prisma.disposition.findFirst({ where: { id: input.dispositionId, organizationId }, select: { id: true } }) : null,

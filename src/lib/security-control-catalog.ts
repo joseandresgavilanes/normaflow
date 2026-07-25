@@ -46,7 +46,7 @@ export function securityControlCounts() {
 type Db = PrismaClient | Prisma.TransactionClient;
 
 export async function ensureSecurityControlCatalog(db: Db = prisma) {
-  const standard = await db.standard.findUnique({ where: { code: "ISO_27001" } });
+  const standard = await db.standardEdition.findFirst({ where: { family: { code: "ISO_27001" } }, orderBy: { version: "desc" } });
   if (!standard) throw new Error("ISO_27001 debe existir antes de cargar el catálogo de controles.");
   const version = await db.controlCatalogVersion.upsert({
     where: { standardId_version: { standardId: standard.id, version: SECURITY_CONTROL_CATALOG_VERSION } },

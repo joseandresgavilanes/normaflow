@@ -47,6 +47,9 @@ export const ALL_MODULES = [
   ...ESSENTIAL_MODULES, "training", "changes", "opportunities", "suppliers",
   "management-review", "integrations", "security-controls", "soa", "risk-treatment", "assets",
   "incidents", "vulnerabilities", "continuity",
+  // Standard Pack Engine + módulos especializados por norma + Sistema Integrado.
+  "standards", "environment", "safety", "integrated", "aims", "compliance", "antibribery", "energy",
+  "food-safety", "itsm", "medical-devices",
 ] as const;
 
 /** The only commercial-plan catalog. UI, limits and Stripe must derive from it. */
@@ -124,6 +127,13 @@ export const STANDARDS = {
   ISO_27001: { code: "ISO_27001", name: "ISO 27001", version: "2022", color: "#2E8B57" },
   ISO_14001: { code: "ISO_14001", name: "ISO 14001", version: "2015", color: "#6B3FB5" },
   ISO_45001: { code: "ISO_45001", name: "ISO 45001", version: "2018", color: "#D68A1A" },
+  ISO_42001: { code: "ISO_42001", name: "ISO/IEC 42001", version: "2023", color: "#0F7B8A" },
+  ISO_37301: { code: "ISO_37301", name: "ISO 37301", version: "2021", color: "#8C2F39" },
+  ISO_37001: { code: "ISO_37001", name: "ISO 37001", version: "2016", color: "#9F1239" },
+  ISO_50001: { code: "ISO_50001", name: "ISO 50001", version: "2018", color: "#CA8A04" },
+  ISO_22000: { code: "ISO_22000", name: "ISO 22000", version: "2018", color: "#0F766E" },
+  ISO_20000: { code: "ISO_20000", name: "ISO/IEC 20000", version: "2018", color: "#1D4ED8" },
+  ISO_13485: { code: "ISO_13485", name: "ISO 13485", version: "2016", color: "#0E7490" },
 } as const;
 
 export const COLORS = {

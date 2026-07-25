@@ -85,7 +85,7 @@ async function assertEvidenceReferences(input: {
   const { organizationId, links } = input;
   const [process, clause, responsible, standard, documentCount, riskCount, auditCount, findingCount, nonconformityCount, indicatorCount, managementReviewCount] = await Promise.all([
     input.processId ? prisma.process.findFirst({ where: { id: input.processId, organizationId }, select: { id: true } }) : null,
-    input.clauseId ? prisma.clause.findFirst({ where: { id: input.clauseId, standard: { ...(input.standardCode ? { code: input.standardCode } : {}), orgStandards: { some: { organizationId } } } }, select: { id: true, standard: { select: { code: true } } } }) : null,
+    input.clauseId ? prisma.standardRequirement.findFirst({ where: { id: input.clauseId, standard: { ...(input.standardCode ? { code: input.standardCode } : {}), orgStandards: { some: { organizationId } } } }, select: { id: true, standard: { select: { code: true } } } }) : null,
     input.responsibleId ? prisma.membership.findFirst({ where: { organizationId, userId: input.responsibleId, active: true }, select: { userId: true } }) : null,
     input.standardCode ? prisma.organizationStandard.findFirst({ where: { organizationId, standard: { code: input.standardCode } }, select: { id: true } }) : null,
     links?.documentIds?.length ? prisma.document.count({ where: { organizationId, id: { in: uniqueIds(links.documentIds) } } }) : 0,

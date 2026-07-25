@@ -276,7 +276,7 @@ export async function getDocumentsPayload() {
       select: { id: true, code: true, name: true },
       orderBy: [{ code: "asc" }, { name: "asc" }],
     }) : Promise.resolve([]),
-    prisma.clause.findMany({
+    prisma.standardRequirement.findMany({
       where: { standard: { orgStandards: { some: { organizationId } } } },
       select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } },
       orderBy: [{ standard: { code: "asc" } }, { order: "asc" }],
@@ -751,7 +751,7 @@ export async function getAuditsPayload() {
     canReadPrograms ? prisma.auditProgram.findMany({ where: { organizationId }, select: { id: true, year: true, title: true, status: true }, orderBy: [{ year: "desc" }, { title: "asc" }] }) : Promise.resolve([]),
     getOrganizationMembers(organizationId),
     canManage ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canManage ? prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
+    canManage ? prisma.standardRequirement.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
     canManage ? prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true, evidenceType: true }, orderBy: { createdAt: "desc" }, take: 500 }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
@@ -950,7 +950,7 @@ export async function getEvidencePayload() {
     can("indicators:read") ? prisma.indicator.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.indicatorIds } } : {}) }, select: { id: true, name: true }, orderBy: { name: "asc" } }) : Promise.resolve([]),
     can("documents:read") ? prisma.document.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.documentIds } } : {}) }, select: { id: true, code: true, title: true }, orderBy: { code: "asc" } }) : Promise.resolve([]),
     can("mgmt-review:read") ? prisma.managementReview.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { createdAt: "desc" } }) : Promise.resolve([]),
-    prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
+    prisma.standardRequirement.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
     prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true } } }, orderBy: { standard: { code: "asc" } } }),
     canManage ? prisma.membership.findMany({ where: { organizationId, active: true }, include: { user: { select: { id: true, name: true, email: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
   ]);
@@ -1226,7 +1226,7 @@ export async function getCAPAPayload() {
     }),
     canReadMembers ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { userId: true, user: { select: { id: true, name: true, email: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
     prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }),
-    prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
+    prisma.standardRequirement.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }),
     prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } }, orderBy: { standard: { code: "asc" } } }),
   ]);
   return {
@@ -1311,7 +1311,7 @@ export async function getAdminPayload() {
     canReadCatalogs ? prisma.disposition.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadCatalogs ? prisma.archiveMethod.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadCatalogs ? prisma.recordType.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadRecords ? prisma.clause.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
+    canReadRecords ? prisma.standardRequirement.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
     canReadRecords && canReadProcesses ? prisma.process.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadRecords ? prisma.record.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }) : Promise.resolve([]),
     canReadRecords ? prisma.recordEntry.findMany({

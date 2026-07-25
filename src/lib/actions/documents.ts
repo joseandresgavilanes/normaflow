@@ -105,12 +105,12 @@ async function assertDocumentReferences(input: Partial<CreateDocumentInput>, org
     input.locationId ? prisma.location.findFirst({ where: { id: input.locationId, organizationId }, select: { id: true } }) : null,
     personnelIds.length ? prisma.personnel.count({ where: { id: { in: personnelIds }, organizationId } }) : 0,
     input.ownerId ? prisma.membership.findFirst({ where: { userId: input.ownerId, organizationId }, select: { id: true } }) : null,
-    input.clauseId ? prisma.clause.findFirst({
+    input.clauseId ? prisma.standardRequirement.findFirst({
       where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId } } } },
-      select: { id: true, standard: { select: { code: true } } },
+      select: { id: true, standard: { select: { family: { select: { code: true } } } } },
     }) : null,
-    input.standardCode ? prisma.standard.findFirst({
-      where: { code: input.standardCode, orgStandards: { some: { organizationId } } },
+    input.standardCode ? prisma.standardEdition.findFirst({
+      where: { family: { code: input.standardCode }, orgStandards: { some: { organizationId } } },
       select: { code: true },
     }) : null,
   ]);
@@ -120,7 +120,7 @@ async function assertDocumentReferences(input: Partial<CreateDocumentInput>, org
   if (input.ownerId && !owner) throw new Error("El responsable no pertenece a la organización.");
   if (input.clauseId && !clause) throw new Error("La cláusula no pertenece a una norma habilitada para la organización.");
   if (input.standardCode && !standard) throw new Error("La norma no está habilitada para la organización.");
-  if (clause && input.standardCode && clause.standard.code !== input.standardCode) {
+  if (clause && input.standardCode && clause.standard.family.code !== input.standardCode) {
     throw new Error("La cláusula seleccionada no corresponde a la norma indicada.");
   }
   dateOrNull(input.reviewDate);

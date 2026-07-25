@@ -582,7 +582,7 @@ export async function addAuditChecklistItem(auditId: string, input: { clauseCode
   const audit = await prisma.audit.findFirst({ where: { id: auditId, organizationId: ctx.organization.id }, select: { id: true } });
   if (!audit) throw new Error("Auditoría no encontrada.");
   if (input.clauseId) {
-    const clause = await prisma.clause.findFirst({ where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId: ctx.organization.id } } } }, select: { id: true, code: true } });
+    const clause = await prisma.standardRequirement.findFirst({ where: { id: input.clauseId, standard: { orgStandards: { some: { organizationId: ctx.organization.id } } } }, select: { id: true, code: true } });
     if (!clause) throw new Error("La cláusula no pertenece a la organización.");
   }
   const order = await prisma.auditChecklistItem.count({ where: { auditId } });

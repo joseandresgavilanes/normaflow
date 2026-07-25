@@ -8,9 +8,11 @@
 import { PrismaClient } from "@prisma/client";
 import { ensureDocumentTemplates } from "../src/lib/document-templates";
 import { ensureSecurityControlCatalog, ensureOrganizationControlSet } from "../src/lib/security-control-catalog";
+import { installAllPacks } from "../src/lib/standard-packs";
 const prisma = new PrismaClient();
 
 async function wipeOrgChildren(organizationId: string) {
+  await prisma.requirementCoverage.deleteMany({ where: { organizationId } });
   await prisma.controlReview.deleteMany({ where: { organizationId } });
   await prisma.controlEvidence.deleteMany({ where: { organizationId } });
   await prisma.riskControlLink.deleteMany({ where: { organizationId } });
@@ -43,55 +45,13 @@ async function wipeOrgChildren(organizationId: string) {
 async function main() {
   console.log("🌱 Iniciando seed de NormaFlow...");
 
-  const iso9001 = await prisma.standard.upsert({
-    where: { code: "ISO_9001" },
-    update: {},
-    create: { code: "ISO_9001", name: "ISO 9001", version: "2015", description: "Sistema de Gestión de la Calidad", isActive: true },
-  });
-
-  const iso27001 = await prisma.standard.upsert({
-    where: { code: "ISO_27001" },
-    update: {},
-    create: { code: "ISO_27001", name: "ISO 27001", version: "2022", description: "Sistema de Gestión de Seguridad de la Información", isActive: true },
-  });
+  // Standard Pack Engine: install the built-in norm packs (families, editions,
+  // requirement trees, mappings, GAP/audit templates, evidence rules).
+  await installAllPacks(prisma);
+  const iso9001 = await prisma.standardEdition.findFirstOrThrow({ where: { family: { code: "ISO_9001" } } });
+  const iso27001 = await prisma.standardEdition.findFirstOrThrow({ where: { family: { code: "ISO_27001" } } });
 
   await ensureDocumentTemplates(prisma);
-
-  const clauses9001 = [
-    { code: "4", title: "Contexto de la organización", order: 1 },
-    { code: "5", title: "Liderazgo", order: 2 },
-    { code: "6", title: "Planificación", order: 3 },
-    { code: "7", title: "Apoyo", order: 4 },
-    { code: "8", title: "Operación", order: 5 },
-    { code: "9", title: "Evaluación del desempeño", order: 6 },
-    { code: "10", title: "Mejora", order: 7 },
-  ];
-
-  for (const c of clauses9001) {
-    await prisma.clause.upsert({
-      where: { id: `cl-9001-${c.code}` },
-      update: {},
-      create: { id: `cl-9001-${c.code}`, standardId: iso9001.id, ...c },
-    });
-  }
-
-  const clauses27001 = [
-    { code: "4", title: "Contexto de la organización", order: 1 },
-    { code: "5", title: "Liderazgo", order: 2 },
-    { code: "6", title: "Planificación", order: 3 },
-    { code: "7", title: "Apoyo", order: 4 },
-    { code: "8", title: "Operación", order: 5 },
-    { code: "9", title: "Evaluación del desempeño", order: 6 },
-    { code: "10", title: "Mejora", order: 7 },
-  ];
-
-  for (const c of clauses27001) {
-    await prisma.clause.upsert({
-      where: { id: `cl-27001-${c.code}` },
-      update: {},
-      create: { id: `cl-27001-${c.code}`, standardId: iso27001.id, ...c },
-    });
-  }
 
   const org = await prisma.organization.upsert({
     where: { slug: "tecnoserv-industrial" },

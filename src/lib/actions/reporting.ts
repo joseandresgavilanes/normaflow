@@ -34,6 +34,11 @@ export async function parseFilters(filters: ReportFilters) {
 }
 
 function rowDate(value: Date | null | undefined) { return value?.toISOString().slice(0, 10) ?? ""; }
+/** Resolve org user ids → display names for report rows that store scalar ids. */
+async function orgUserNames(organizationId: string): Promise<Map<string, string>> {
+  const users = await prisma.user.findMany({ where: { memberships: { some: { organizationId } } }, select: { id: true, name: true } });
+  return new Map(users.map((u) => [u.id, u.name]));
+}
 function dateFilter(filters: ReportFilters) { return filters.standardCode ? { standardCode: filters.standardCode } : {}; }
 function statusFilter(filters: ReportFilters) { return filters.status ? { status: filters.status } : {}; }
 
@@ -114,6 +119,580 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
   }
   if (reportId === "bcp-dr-tests") return (await prisma.continuityTest.findMany({ where: { organizationId }, include: { plan: { select: { code: true } }, responsible: true, results: { orderBy: { testedAt: "desc" }, take: 1, include: { _count: { select: { improvementActions: true } } } } }, orderBy: { createdAt: "desc" } })).map(t => { const r = t.results[0]; return { plan: t.plan.code, prueba: t.title, tipo: t.type, estado: t.status, planificada: rowDate(t.plannedDate), ejecutada: rowDate(t.executedDate), responsable: t.responsible?.name ?? "", resultado: r?.outcome ?? "", rto_logrado: r?.rtoAchievedMinutes ?? "", rpo_logrado: r?.rpoAchievedMinutes ?? "", acciones_mejora: r?._count.improvementActions ?? 0 }; });
   if (reportId === "critical-suppliers") return (await prisma.supplierSecurityProfile.findMany({ where: { organizationId }, include: { supplier: { select: { code: true, name: true } } }, orderBy: [{ securityCriticality: "desc" }] })).map(p => ({ codigo: p.supplier.code, proveedor: p.supplier.name, criticidad_seguridad: p.securityCriticality, datos_tratados: p.dataProcessed ?? "", accesos: p.accessGranted ?? "", obligaciones: p.obligations ?? "", riesgo: p.riskLevel ?? "", revision: rowDate(p.nextReviewDate), vencimiento_contrato: rowDate(p.contractExpiry) }));
+  // ── ISO 14001 environmental reports ──
+  if (reportId === "env-aspects-impacts" || reportId === "env-significant-aspects") {
+    const names = await orgUserNames(organizationId);
+    const impacts = await prisma.environmentalImpact.findMany({
+      where: { organizationId, ...(reportId === "env-significant-aspects" ? { significant: true } : {}) },
+      include: { aspect: true }, orderBy: [{ significant: "desc" }, { score: "desc" }],
+    });
+    return impacts.map(i => ({ codigo_aspecto: i.aspect.code, actividad: i.aspect.activity, producto_servicio: i.aspect.productService ?? "", condicion: i.aspect.condition, ciclo_vida: i.aspect.lifeCycleStage ?? "", proceso: i.aspect.processId ?? "", responsable: i.aspect.responsibleId ? (names.get(i.aspect.responsibleId) ?? "") : "", tipo_impacto: i.impactType, severidad: i.severity, frecuencia: i.frequency, alcance: i.scope, control_existente: i.existingControl ?? "", efectividad_control: i.controlEffectiveness ?? "", valor: i.score ?? "", nivel: i.level, significativo: i.significant ? "Sí" : "No" }));
+  }
+  if (reportId === "env-legal-obligations") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.environmentalComplianceObligation.findMany({ where: { organizationId }, orderBy: { reviewDate: "asc" } })).map(o => ({ codigo: o.code, fuente: o.source, jurisdiccion: o.jurisdiction ?? "", obligacion: o.obligation, aplicabilidad: o.applicability ?? "", responsable: o.responsibleId ? (names.get(o.responsibleId) ?? "") : "", proxima_revision: rowDate(o.reviewDate), frecuencia_meses: o.reviewFrequencyMonths ?? "", activa: o.active ? "Sí" : "No" }));
+  }
+  if (reportId === "env-compliance-evaluation") {
+    const names = await orgUserNames(organizationId);
+    const obligations = await prisma.environmentalComplianceObligation.findMany({ where: { organizationId }, include: { evaluations: { orderBy: { evaluatedAt: "desc" }, take: 1 } }, orderBy: { code: "asc" } });
+    const now = new Date();
+    return obligations.map(o => { const ev = o.evaluations[0]; const overdue = o.reviewDate && o.reviewDate < now && (!ev || ev.evaluatedAt < o.reviewDate); return { codigo: o.code, obligacion: o.obligation, fuente: o.source, ultima_evaluacion: ev ? rowDate(ev.evaluatedAt) : "", resultado: ev?.result ?? "SIN EVALUAR", evaluador: ev?.evaluatorId ? (names.get(ev.evaluatorId) ?? "") : "", proxima_revision: rowDate(o.reviewDate), vencido: overdue ? "Sí" : "No", hallazgos: ev?.findings ?? "", accion_derivada: ev?.derivedActionId ?? "" }; });
+  }
+  if (reportId === "env-objectives") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.environmentalObjective.findMany({ where: { organizationId }, include: { programs: true }, orderBy: { code: "asc" } })).map(o => ({ codigo: o.code, objetivo: o.objective, linea_base: o.baseline ?? "", meta: o.target ?? "", responsable: o.responsibleId ? (names.get(o.responsibleId) ?? "") : "", recursos: o.resources ?? "", fecha: rowDate(o.dueDate), estado: o.status, avance_pct: o.progress, programas: o.programs.length }));
+  }
+  if (reportId === "env-resource-consumption") {
+    return (await prisma.environmentalMetric.findMany({ where: { organizationId, ...(filters.recordId ? { period: filters.recordId } : {}) }, orderBy: [{ period: "asc" }] })).map(m => ({ periodo: m.period, proceso: m.processId ?? "", sede: m.locationId ?? "", agua: m.water ?? "", energia: m.energy ?? "", combustible: m.fuel ?? "", emisiones: m.emissions ?? "", vertidos: m.discharges ?? "", residuos: m.waste ?? "", materias_primas: m.rawMaterials ?? "", nota: m.unitNote ?? "" }));
+  }
+  if (reportId === "env-emissions") {
+    return (await prisma.environmentalMetric.findMany({ where: { organizationId, emissions: { not: null } }, orderBy: [{ period: "asc" }] })).map(m => ({ periodo: m.period, proceso: m.processId ?? "", sede: m.locationId ?? "", emisiones_co2e: m.emissions ?? "", combustible: m.fuel ?? "", energia: m.energy ?? "", nota: m.unitNote ?? "" }));
+  }
+  if (reportId === "env-waste") {
+    return (await prisma.wasteStream.findMany({ where: { organizationId }, orderBy: [{ classification: "desc" }, { code: "asc" }] })).map(w => ({ codigo: w.code, tipo: w.wasteType, clasificacion: w.classification, cantidad: w.quantity ?? "", unidad: w.unit ?? "", periodo: w.period ?? "", almacenamiento: w.storage ?? "", gestor: w.managerName ?? "", disposicion: w.disposition ?? "", manifiesto: w.manifest ?? "" }));
+  }
+  if (reportId === "env-emergencies") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.environmentalEmergencyScenario.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(e => ({ codigo: e.code, escenario: e.scenario, impacto: e.impact ?? "", controles: e.controls ?? "", plan: e.responsePlan ?? "", responsable: e.responsibleId ? (names.get(e.responsibleId) ?? "") : "", ultimo_simulacro: rowDate(e.lastDrillAt), proximo_simulacro: rowDate(e.nextDrillAt), resultados: e.drillResults ?? "" }));
+  }
+  if (reportId === "env-audit-package") {
+    const sections: ReportId[] = ["env-aspects-impacts", "env-significant-aspects", "env-legal-obligations", "env-compliance-evaluation", "env-objectives", "env-resource-consumption", "env-waste", "env-emissions", "env-emergencies"];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
+  // ── ISO 45001 occupational health & safety reports ──
+  if (reportId === "safety-hazard-matrix" || reportId === "safety-critical-risks") {
+    const names = await orgUserNames(organizationId);
+    const hazards = await prisma.occupationalHazard.findMany({ where: { organizationId }, include: { assessments: { orderBy: { assessedAt: "desc" }, take: 1 } }, orderBy: { code: "asc" } });
+    const rows = hazards.map(h => { const a = h.assessments[0]; return { codigo: h.code, proceso: h.processId ?? "", actividad: h.activity, tarea: h.task ?? "", peligro: h.hazard, categoria: h.category, trabajadores_expuestos: h.exposedWorkers ?? "", controles_existentes: h.existingControls ?? "", probabilidad: a?.probability ?? "", consecuencia: a?.consequence ?? "", exposicion: a?.exposure ?? "", nivel_inherente: a?.inherentLevel ?? "", nivel_residual: a?.residualLevel ?? "", aceptabilidad: a?.acceptability ?? "", responsable: h.responsibleId ? (names.get(h.responsibleId) ?? "") : "" }; });
+    return reportId === "safety-critical-risks" ? rows.filter(r => r.nivel_residual === "HIGH" || r.nivel_residual === "CRITICAL" || r.aceptabilidad === "NOT_ACCEPTABLE") : rows;
+  }
+  if (reportId === "safety-inspections") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.safetyInspection.findMany({ where: { organizationId, inspectedAt: range }, orderBy: { inspectedAt: "desc" } })).map(i => ({ codigo: i.code, tipo: i.type, ubicacion: i.locationId ?? "", area: i.area ?? "", inspector: i.inspectorId ? (names.get(i.inspectorId) ?? "") : "", fecha: rowDate(i.inspectedAt), hallazgos: i.findings ?? "", acciones: i.actions ?? "" }));
+  }
+  if (reportId === "safety-ppe") {
+    const items = await prisma.pPEItem.findMany({ where: { organizationId }, include: { assignments: { orderBy: { deliveredAt: "desc" } } }, orderBy: { code: "asc" } });
+    return items.flatMap(it => (it.assignments.length ? it.assignments : [null]).map(a => ({ codigo_epp: it.code, epp: it.name, tipo: it.ppeType, norma_tecnica: it.technicalStandard ?? "", vida_util_meses: it.lifespanMonths ?? "", trabajador: a?.workerName ?? a?.personnelId ?? "", cantidad: a?.quantity ?? "", entregado: a ? rowDate(a.deliveredAt) : "", capacitacion: a ? (a.trainingProvided ? "Sí" : "No") : "", reposicion: a ? rowDate(a.replacementDate) : "" })));
+  }
+  if (reportId === "safety-permits") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.permitToWork.findMany({ where: ({ organizationId, ...statusFilter(filters) }) as Prisma.PermitToWorkWhereInput, orderBy: { createdAt: "desc" } })).map(p => ({ codigo: p.code, tipo_trabajo: p.workType, ubicacion: p.locationId ?? "", area: p.area ?? "", peligros: p.hazards ?? "", controles: p.controls ?? "", autorizador: p.authorizerId ? (names.get(p.authorizerId) ?? "") : "", vigencia_desde: rowDate(p.validFrom), vigencia_hasta: rowDate(p.validTo), estado: p.status, cierre: rowDate(p.closedAt) }));
+  }
+  if (reportId === "safety-incidents") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.occupationalIncident.findMany({ where: ({ organizationId, occurredAt: range, ...statusFilter(filters) }) as Prisma.OccupationalIncidentWhereInput, orderBy: { occurredAt: "desc" } })).map(i => ({ codigo: i.code, tipo: i.type, severidad: i.severity, titulo: i.title, lesion: i.injury ?? "", enfermedad: i.illness ?? "", fecha: rowDate(i.occurredAt), ubicacion: i.locationId ?? "", trabajador: i.workerName ?? i.personnelId ?? "", dias_perdidos: i.lostDays, estado: i.status, responsable: i.responsibleId ? (names.get(i.responsibleId) ?? "") : "" }));
+  }
+  if (reportId === "safety-investigation") {
+    return (await prisma.occupationalIncident.findMany({ where: { organizationId, occurredAt: range, status: { in: ["INVESTIGATING", "ROOT_CAUSE", "ACTION_PLAN", "IMPLEMENTED", "EFFECTIVENESS_VERIFIED", "CLOSED"] } }, orderBy: { occurredAt: "desc" } })).map(i => ({ codigo: i.code, titulo: i.title, estado: i.status, investigacion: i.investigation ?? "", metodo_causa: i.rootCauseMethod ?? "", causa_raiz: i.rootCause ?? "", causas: i.causes ?? "", acciones: i.actions ?? "", fecha_objetivo: rowDate(i.dueDate), cerrado: rowDate(i.closedAt) }));
+  }
+  if (reportId === "safety-drills") {
+    return (await prisma.emergencyDrill.findMany({ where: { organizationId, drillDate: range }, orderBy: { drillDate: "desc" } })).map(d => ({ codigo: d.code, escenario: d.scenario, participantes: d.participants ?? "", tiempo_respuesta_min: d.responseTimeMinutes ?? "", resultado: d.outcome ?? "", fallos: d.failures ?? "", acciones: d.actions ?? "", fecha: rowDate(d.drillDate) }));
+  }
+  if (reportId === "safety-contractors") {
+    return (await prisma.contractorSafetyAssessment.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(c => ({ codigo: c.code, contratista: c.contractorName ?? c.supplierId ?? "", riesgos: c.risks ?? "", requisitos: c.requirements ?? "", documentacion: c.documentation ?? "", evaluacion: c.outcome, puntaje: c.score ?? "", incidentes: c.incidents, evaluado: rowDate(c.assessedAt), proxima_revision: rowDate(c.nextReviewDate) }));
+  }
+  if (reportId === "safety-indicators") {
+    const now = new Date();
+    const [accidents, accidentsLostTime, nearMisses, lostDaysAgg, inspections, overdue] = await Promise.all([
+      prisma.occupationalIncident.count({ where: { organizationId, occurredAt: range, type: "ACCIDENT" } }),
+      prisma.occupationalIncident.count({ where: { organizationId, occurredAt: range, type: "ACCIDENT", lostDays: { gt: 0 } } }),
+      prisma.occupationalIncident.count({ where: { organizationId, occurredAt: range, type: "NEAR_MISS" } }),
+      prisma.occupationalIncident.aggregate({ where: { organizationId, occurredAt: range }, _sum: { lostDays: true } }),
+      prisma.safetyInspection.count({ where: { organizationId, inspectedAt: range } }),
+      prisma.occupationalIncident.count({ where: { organizationId, dueDate: { lt: now }, status: { notIn: ["EFFECTIVENESS_VERIFIED", "CLOSED"] } } }),
+    ]);
+    const { computeSafetyIndicators } = await import("@/lib/safety/indicators");
+    const hoursWorked = Number(filters.hoursWorked ?? "0") || 0;
+    const lostDays = lostDaysAgg._sum.lostDays ?? 0;
+    const ind = computeSafetyIndicators({ accidentsWithLostTime: accidentsLostTime, totalAccidents: accidents, lostDays, nearMisses, inspections, overdueActions: overdue, hoursWorked });
+    return [{ periodo: `${filters.from} → ${filters.to}`, horas_hombre: hoursWorked, accidentes: accidents, indice_frecuencia: ind.frequencyIndex, indice_gravedad: ind.severityIndex, indice_accidentabilidad: ind.accidentRate, dias_perdidos: ind.lostDays, casi_accidentes: ind.nearMisses, inspecciones: ind.inspections, acciones_vencidas: ind.overdueActions }];
+  }
+  if (reportId === "safety-audit-package") {
+    const sections: ReportId[] = ["safety-hazard-matrix", "safety-critical-risks", "safety-inspections", "safety-ppe", "safety-permits", "safety-incidents", "safety-investigation", "safety-drills", "safety-indicators", "safety-contractors"];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
+  // ── Sistema Integrado de Gestión (ISO 9001 + 14001 + 45001) ──
+  if (reportId === "sig-crosswalk") {
+    const { getIntegratedCrosswalkRows } = await import("@/lib/integrated/report-data");
+    return getIntegratedCrosswalkRows(organizationId, filters.standardCode);
+  }
+  if (reportId === "sig-scope-policy") {
+    const system = await prisma.integratedSystem.findUnique({ where: { organizationId }, include: { standards: true, policyApprovedBy: { select: { name: true } } } });
+    if (!system) return [];
+    return [{
+      sistema: system.name, alcance: system.scope ?? "", exclusiones: system.scopeExclusions ?? "",
+      limites: system.boundaries ?? "", contexto: system.contextNotes ?? "",
+      politica: system.policy ?? "", version_politica: system.policyVersion,
+      aprobada_por: system.policyApprovedBy?.name ?? "", aprobada_el: rowDate(system.policyApprovedAt),
+      normas: system.standards.map(s => s.standardCode).join(", "),
+    }];
+  }
+  if (reportId === "sig-interested-parties") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.interestedParty.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(p => ({
+      codigo: p.code, parte_interesada: p.name, tipo: p.type ?? "",
+      necesidades: p.needs ?? "", requisitos: p.requirements ?? "",
+      influencia: p.influence, dependencia: p.dependency, pertinente: p.isRelevant ? "SI" : "NO",
+      disciplinas: p.disciplines.join(", ") || "TODAS", normas: p.standards.join(", "),
+      responsable: p.responsibleId ? names.get(p.responsibleId) ?? "" : "",
+    }));
+  }
+  if (reportId === "sig-objectives") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.integratedObjective.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(o => ({
+      codigo: o.code, objetivo: o.title, meta: o.target ?? "",
+      valor_meta: o.targetValue ?? "", valor_actual: o.currentValue ?? "", unidad: o.unit ?? "",
+      disciplinas: o.disciplines.join(", ") || "TODAS",
+      compartido: (o.disciplines.length > 1 || o.standards.length > 1) ? "SI" : "NO",
+      normas: o.standards.join(", "), estado: o.status, vence: rowDate(o.dueDate),
+      responsable: o.ownerId ? names.get(o.ownerId) ?? "" : "",
+    }));
+  }
+  if (reportId === "sig-shared-elements") {
+    const { getSharedElementRows } = await import("@/lib/integrated/report-data");
+    return getSharedElementRows(organizationId);
+  }
+  if (reportId === "sig-integrated-audit") {
+    const audits = await prisma.audit.findMany({
+      where: { organizationId, createdAt: range },
+      include: { findings: true },
+      orderBy: { plannedDate: "desc" },
+    });
+    return audits.flatMap(a => {
+      const normas = (a.standards.length ? a.standards : a.standardCode ? [a.standardCode] : []).join(", ");
+      if (!a.findings.length) return [{ auditoria: a.title, integrada: a.integrated ? "SI" : "NO", normas, estado: a.status, planificada: rowDate(a.plannedDate ?? a.scheduledDate), hallazgo: "", tipo: "", severidad: "", normas_hallazgo: "", estado_hallazgo: "" }];
+      return a.findings.map(f => ({
+        auditoria: a.title, integrada: a.integrated ? "SI" : "NO", normas, estado: a.status,
+        planificada: rowDate(a.plannedDate ?? a.scheduledDate),
+        hallazgo: f.title, tipo: f.type, severidad: f.severity,
+        normas_hallazgo: f.standards.join(", ") || normas, estado_hallazgo: f.status,
+      }));
+    });
+  }
+  if (reportId === "sig-integrated-capa") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.cAPA.findMany({ where: { organizationId, createdAt: range }, orderBy: { code: "asc" } })).map(c => ({
+      codigo: c.code, titulo: c.title, origen: c.origin, etapa: c.stage,
+      normas: (c.standards.length ? c.standards : c.standardCode ? [c.standardCode] : []).join(", "),
+      comun: c.standards.length > 1 ? "SI" : "NO",
+      responsable: c.ownerId ? names.get(c.ownerId) ?? "" : "",
+      vence: rowDate(c.dueDate), avance: `${c.progress}%`,
+    }));
+  }
+  if (reportId === "sig-management-review") {
+    return (await prisma.managementReview.findMany({ where: { organizationId, createdAt: range }, orderBy: { scheduledDate: "desc" } })).map(r => ({
+      titulo: r.title, normas: r.standards.join(", "), integrada: r.standards.length > 1 ? "SI" : "NO",
+      estado: r.status, planificada: rowDate(r.scheduledDate), realizada: rowDate(r.heldAt),
+      conclusiones: r.summary ?? "",
+    }));
+  }
+  if (reportId === "sig-system-package") {
+    const sections: ReportId[] = [
+      "sig-scope-policy", "sig-interested-parties", "sig-objectives", "sig-crosswalk",
+      "sig-shared-elements", "sig-integrated-audit", "sig-integrated-capa", "sig-management-review",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
+
+  // ── Continuidad del negocio (ISO 22301) ──
+  if (reportId === "bcm-bia") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.businessImpactAnalysis.findMany({ where: { organizationId }, include: { _count: { select: { activities: true } } }, orderBy: { code: "asc" } })).map(b => ({
+      codigo: b.code, bia: b.title, alcance: b.scope ?? "", metodologia: b.methodology ?? "",
+      version: b.version, estado: b.status, actividades: b._count.activities,
+      responsable: b.ownerId ? names.get(b.ownerId) ?? "" : "",
+      aprobado_por: b.approvedById ? names.get(b.approvedById) ?? "" : "",
+      aprobado_el: rowDate(b.approvedAt), realizado_el: rowDate(b.performedAt), proxima_revision: rowDate(b.nextReviewDate),
+    }));
+  }
+  if (reportId === "bcm-critical-processes") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.criticalActivity.findMany({ where: { organizationId }, include: { bia: { select: { code: true } } }, orderBy: [{ priority: "asc" }, { code: "asc" }] })).map(a => ({
+      prioridad: a.priority, codigo: a.code, actividad: a.name, bia: a.bia.code,
+      criticidad: a.criticality, impacto: a.impactScore,
+      impacto_financiero: a.financialImpact, impacto_operacional: a.operationalImpact,
+      impacto_legal: a.legalImpact, impacto_reputacional: a.reputationalImpact, impacto_personas: a.peopleImpact,
+      nivel_minimo: a.minimumServiceLevel ?? "",
+      responsable: a.ownerId ? names.get(a.ownerId) ?? "" : "",
+    }));
+  }
+  if (reportId === "bcm-rto-rpo") {
+    return (await prisma.criticalActivity.findMany({ where: { organizationId }, orderBy: [{ priority: "asc" }] })).map(a => ({
+      codigo: a.code, actividad: a.name, criticidad: a.criticality,
+      mtpd_min: a.mtpdMinutes ?? "", rto_min: a.rtoMinutes ?? "", rpo_min: a.rpoMinutes ?? "",
+      nivel_minimo: a.minimumServiceLevel ?? "",
+      rto_valido: a.rtoMinutes != null && a.mtpdMinutes != null ? (a.rtoMinutes <= a.mtpdMinutes ? "SI" : "NO") : "",
+    }));
+  }
+  if (reportId === "bcm-dependencies") {
+    const rows = await prisma.businessDependency.findMany({ where: { organizationId }, include: { activity: { select: { code: true, name: true } } }, orderBy: [{ activityId: "asc" }, { type: "asc" }] });
+    const resources = await prisma.resourceRequirement.findMany({ where: { organizationId }, include: { activity: { select: { code: true, name: true } } } });
+    return [
+      ...rows.map(d => ({
+        clase: "DEPENDENCIA", actividad: `${d.activity.code} · ${d.activity.name}`, tipo: d.type, nombre: d.name,
+        criticidad: d.criticality, indisponibilidad_max_min: d.maxOutageMinutes ?? "",
+        recurso_alterno: d.alternative ?? "", punto_unico_fallo: d.singlePointOfFailure ? "SI" : "NO",
+        cantidad_minima: "", plazo_min: "",
+      })),
+      ...resources.map(r => ({
+        clase: "RECURSO", actividad: `${r.activity.code} · ${r.activity.name}`, tipo: r.type, nombre: r.name,
+        criticidad: "", indisponibilidad_max_min: "", recurso_alterno: r.alternativeResource ?? "", punto_unico_fallo: "",
+        cantidad_minima: r.minimumQuantity ?? "", plazo_min: r.leadTimeMinutes ?? "",
+      })),
+    ];
+  }
+  if (reportId === "bcm-strategies") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.continuityStrategy.findMany({ where: { organizationId }, include: { activity: { select: { code: true, name: true } } }, orderBy: { code: "asc" } })).map(s => ({
+      codigo: s.code, estrategia: s.title, tipo: s.type, estado: s.status,
+      actividad: s.activity ? `${s.activity.code} · ${s.activity.name}` : "",
+      rto_que_logra_min: s.achievesRtoMinutes ?? "", rpo_que_logra_min: s.achievesRpoMinutes ?? "",
+      coste: s.cost ?? "", recursos: s.resourcesNeeded ?? "",
+      responsable: s.ownerId ? names.get(s.ownerId) ?? "" : "",
+      aprobado_por: s.approvedById ? names.get(s.approvedById) ?? "" : "", aprobado_el: rowDate(s.approvedAt),
+    }));
+  }
+  if (reportId === "bcm-plans") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.businessContinuityPlan.findMany({ where: { organizationId }, include: { _count: { select: { recoveryProcedures: true, crisisTeams: true } } }, orderBy: { code: "asc" } })).map(p => ({
+      codigo: p.code, plan: p.title, version: p.version, estado: p.status,
+      alcance: p.scope ?? "", nivel_minimo: p.minimumServiceLevel ?? "",
+      criterio_activacion: p.invocationCriteria ?? "",
+      rto_min: p.rtoMinutes ?? "", rpo_min: p.rpoMinutes ?? "",
+      procedimientos: p._count.recoveryProcedures, equipos_crisis: p._count.crisisTeams,
+      aprobado_por: p.approvedById ? names.get(p.approvedById) ?? "" : "", aprobado_el: rowDate(p.approvedAt),
+      activado: p.activated ? "SI" : "NO", activado_el: rowDate(p.activatedAt),
+      proxima_revision: rowDate(p.nextReviewDate),
+    }));
+  }
+  if (reportId === "bcm-exercises") {
+    const names = await orgUserNames(organizationId);
+    const tests = await prisma.continuityTest.findMany({
+      where: { organizationId, createdAt: range },
+      include: { plan: { select: { code: true } }, scenario: { select: { title: true } }, results: { orderBy: { testedAt: "desc" }, include: { improvementActions: true } } },
+      orderBy: { plannedDate: "desc" },
+    });
+    return tests.map(t => {
+      const r = t.results[0];
+      return {
+        plan: t.plan.code, simulacro: t.title, tipo: t.type, estado: t.status,
+        escenario: t.scenario?.title ?? "", objetivo: t.objective ?? "",
+        planificado: rowDate(t.plannedDate), ejecutado: rowDate(t.executedDate),
+        responsable: t.responsibleId ? names.get(t.responsibleId) ?? "" : "",
+        rto_objetivo_min: t.targetRtoMinutes ?? "", rpo_objetivo_min: t.targetRpoMinutes ?? "",
+        resultado: r?.outcome ?? "", rto_logrado_min: r?.rtoAchievedMinutes ?? "", rpo_logrado_min: r?.rpoAchievedMinutes ?? "",
+        cumple_objetivos: r && t.targetRtoMinutes != null && r.rtoAchievedMinutes != null ? (r.rtoAchievedMinutes <= t.targetRtoMinutes ? "SI" : "NO") : "",
+        acciones_mejora: r ? r.improvementActions.length : 0,
+        mejoras_abiertas: r ? r.improvementActions.filter(a => a.status !== "DONE").length : 0,
+      };
+    });
+  }
+  if (reportId === "bcm-gaps") {
+    const { getContinuityGapRows } = await import("@/lib/continuity/report-data");
+    return getContinuityGapRows(organizationId);
+  }
+  if (reportId === "bcm-audit-package") {
+    const sections: ReportId[] = ["bcm-bia", "bcm-critical-processes", "bcm-rto-rpo", "bcm-dependencies", "bcm-strategies", "bcm-plans", "bcm-exercises", "bcm-gaps"];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
+  // ── ISO/IEC 42001 AI management reports ──
+  if (reportId === "ai-inventory") {
+    const { getAISystemInventoryRows } = await import("@/lib/aims/report-data");
+    return getAISystemInventoryRows(organizationId);
+  }
+  if (reportId === "ai-impact-assessment") {
+    const { getAIImpactAssessmentRows } = await import("@/lib/aims/report-data");
+    return getAIImpactAssessmentRows(organizationId);
+  }
+  if (reportId === "ai-risks") {
+    const { getAIRiskRows } = await import("@/lib/aims/report-data");
+    return getAIRiskRows(organizationId);
+  }
+  if (reportId === "ai-datasets") {
+    const { getAIDatasetRows } = await import("@/lib/aims/report-data");
+    return getAIDatasetRows(organizationId);
+  }
+  if (reportId === "ai-models") {
+    const { getAIModelRows } = await import("@/lib/aims/report-data");
+    return getAIModelRows(organizationId);
+  }
+  if (reportId === "ai-controls") {
+    const { getAIControlRows } = await import("@/lib/aims/report-data");
+    return getAIControlRows(organizationId);
+  }
+  if (reportId === "ai-incidents") {
+    const { getAIIncidentRows } = await import("@/lib/aims/report-data");
+    return getAIIncidentRows(organizationId, range);
+  }
+  if (reportId === "ai-transparency") {
+    const { getAITransparencyRows } = await import("@/lib/aims/report-data");
+    return getAITransparencyRows(organizationId);
+  }
+  if (reportId === "ai-human-review") {
+    const { getAIHumanReviewRows } = await import("@/lib/aims/report-data");
+    return getAIHumanReviewRows(organizationId, range);
+  }
+  if (reportId === "ai-audit-package") {
+    const sections: ReportId[] = ["ai-inventory", "ai-impact-assessment", "ai-risks", "ai-datasets", "ai-models", "ai-controls", "ai-transparency", "ai-incidents", "ai-human-review"];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
+  // ── ISO 37301 compliance management reports ──
+  if (reportId === "compliance-obligations") {
+    const { getComplianceObligationRows } = await import("@/lib/compliance/report-data");
+    return getComplianceObligationRows(organizationId);
+  }
+  if (reportId === "compliance-risks") {
+    const { getComplianceRiskRows } = await import("@/lib/compliance/report-data");
+    return getComplianceRiskRows(organizationId);
+  }
+  if (reportId === "compliance-evaluations") {
+    const { getComplianceEvaluationRows } = await import("@/lib/compliance/report-data");
+    return getComplianceEvaluationRows(organizationId);
+  }
+  if (reportId === "compliance-calendar") {
+    const { getComplianceCalendarRows } = await import("@/lib/compliance/report-data");
+    return getComplianceCalendarRows(organizationId);
+  }
+  if (reportId === "compliance-speak-up") {
+    const { getComplianceSpeakUpRows } = await import("@/lib/compliance/report-data");
+    return getComplianceSpeakUpRows(organizationId);
+  }
+  if (reportId === "compliance-investigations") {
+    const { getComplianceInvestigationRows } = await import("@/lib/compliance/report-data");
+    return getComplianceInvestigationRows(organizationId);
+  }
+  if (reportId === "compliance-breaches") {
+    const { getComplianceBreachRows } = await import("@/lib/compliance/report-data");
+    return getComplianceBreachRows(organizationId);
+  }
+  if (reportId === "compliance-remediation") {
+    const { getComplianceRemediationRows } = await import("@/lib/compliance/report-data");
+    return getComplianceRemediationRows(organizationId);
+  }
+  if (reportId === "compliance-management-review") {
+    const { getComplianceManagementReviewRows } = await import("@/lib/compliance/report-data");
+    return getComplianceManagementReviewRows(organizationId);
+  }
+  // ── ISO 37001 anti-bribery reports (extension of compliance) ──
+  if (reportId === "abms-risk-map") {
+    const { getBriberyRiskMapRows } = await import("@/lib/antibribery/report-data");
+    return getBriberyRiskMapRows(organizationId);
+  }
+  if (reportId === "abms-third-parties") {
+    const { getBusinessAssociateRows } = await import("@/lib/antibribery/report-data");
+    return getBusinessAssociateRows(organizationId);
+  }
+  if (reportId === "abms-due-diligence") {
+    const { getDueDiligenceRows } = await import("@/lib/antibribery/report-data");
+    return getDueDiligenceRows(organizationId);
+  }
+  if (reportId === "abms-beneficial-owners") {
+    const { getBeneficialOwnerRows } = await import("@/lib/antibribery/report-data");
+    return getBeneficialOwnerRows(organizationId);
+  }
+  if (reportId === "abms-gifts") {
+    const { getGiftHospitalityRows } = await import("@/lib/antibribery/report-data");
+    return getGiftHospitalityRows(organizationId);
+  }
+  if (reportId === "abms-donations") {
+    const { getDonationSponsorshipRows } = await import("@/lib/antibribery/report-data");
+    return getDonationSponsorshipRows(organizationId);
+  }
+  if (reportId === "abms-conflicts") {
+    const { getAbmsConflictRows } = await import("@/lib/antibribery/report-data");
+    return getAbmsConflictRows(organizationId);
+  }
+  if (reportId === "abms-high-risk-ops") {
+    const { getHighRiskTransactionRows } = await import("@/lib/antibribery/report-data");
+    return getHighRiskTransactionRows(organizationId);
+  }
+  if (reportId === "abms-controls") {
+    const { getAbmsControlTestRows } = await import("@/lib/antibribery/report-data");
+    return getAbmsControlTestRows(organizationId);
+  }
+  if (reportId === "abms-investigations") {
+    const { getAbmsInvestigationRows } = await import("@/lib/antibribery/report-data");
+    return getAbmsInvestigationRows(organizationId);
+  }
+  // ── ISO 50001 energy management reports ──
+  if (reportId === "enms-energy-review") {
+    const { getEnergyReviewRows } = await import("@/lib/energy/report-data");
+    return getEnergyReviewRows(organizationId);
+  }
+  if (reportId === "enms-significant-uses") {
+    const { getSignificantEnergyUseRows } = await import("@/lib/energy/report-data");
+    return getSignificantEnergyUseRows(organizationId);
+  }
+  if (reportId === "enms-baseline") {
+    const { getEnergyBaselineRows } = await import("@/lib/energy/report-data");
+    return getEnergyBaselineRows(organizationId);
+  }
+  if (reportId === "enms-enpi") {
+    const { getEnpiRows } = await import("@/lib/energy/report-data");
+    return getEnpiRows(organizationId);
+  }
+  if (reportId === "enms-consumption") {
+    const { getEnergyConsumptionRows } = await import("@/lib/energy/report-data");
+    return getEnergyConsumptionRows(organizationId);
+  }
+  if (reportId === "enms-opportunities") {
+    const { getEnergyOpportunityRows } = await import("@/lib/energy/report-data");
+    return getEnergyOpportunityRows(organizationId);
+  }
+  if (reportId === "enms-actions") {
+    const { getEnergyActionRows } = await import("@/lib/energy/report-data");
+    return getEnergyActionRows(organizationId);
+  }
+  if (reportId === "enms-savings") {
+    const { getEnergySavingRows } = await import("@/lib/energy/report-data");
+    return getEnergySavingRows(organizationId);
+  }
+  if (reportId === "enms-audit-package") {
+    const sections: ReportId[] = [
+      "enms-energy-review", "enms-significant-uses", "enms-baseline", "enms-enpi",
+      "enms-consumption", "enms-opportunities", "enms-actions", "enms-savings",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
+  }
+  // ── ISO 22000 / HACCP food safety reports ──
+  if (reportId === "fsms-hazard-analysis") {
+    const { getFsmsHazardAnalysisRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsHazardAnalysisRows(organizationId);
+  }
+  if (reportId === "fsms-prp") {
+    const { getFsmsPrpRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsPrpRows(organizationId);
+  }
+  if (reportId === "fsms-oprp") {
+    const { getFsmsOprpRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsOprpRows(organizationId);
+  }
+  if (reportId === "fsms-ccp") {
+    const { getFsmsCcpRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsCcpRows(organizationId);
+  }
+  if (reportId === "fsms-monitoring") {
+    const { getFsmsMonitoringRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsMonitoringRows(organizationId);
+  }
+  if (reportId === "fsms-deviations") {
+    const { getFsmsDeviationRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsDeviationRows(organizationId);
+  }
+  if (reportId === "fsms-traceability") {
+    const { getFsmsTraceabilityRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsTraceabilityRows(organizationId);
+  }
+  if (reportId === "fsms-recalls") {
+    const { getFsmsRecallRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsRecallRows(organizationId);
+  }
+  if (reportId === "fsms-allergens") {
+    const { getFsmsAllergenRows } = await import("@/lib/food-safety/report-data");
+    return getFsmsAllergenRows(organizationId);
+  }
+  if (reportId === "fsms-audit-package") {
+    const sections: ReportId[] = [
+      "fsms-hazard-analysis", "fsms-prp", "fsms-oprp", "fsms-ccp", "fsms-monitoring",
+      "fsms-deviations", "fsms-traceability", "fsms-recalls", "fsms-allergens",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
+  }
+  // ── ISO/IEC 20000 ITSM reports ──
+  if (reportId === "itsm-sla") {
+    const { getItsmSlaRows } = await import("@/lib/itsm/report-data");
+    return getItsmSlaRows(organizationId);
+  }
+  if (reportId === "itsm-incidents") {
+    const { getItsmIncidentRows } = await import("@/lib/itsm/report-data");
+    return getItsmIncidentRows(organizationId);
+  }
+  if (reportId === "itsm-problems") {
+    const { getItsmProblemRows } = await import("@/lib/itsm/report-data");
+    return getItsmProblemRows(organizationId);
+  }
+  if (reportId === "itsm-changes") {
+    const { getItsmChangeRows } = await import("@/lib/itsm/report-data");
+    return getItsmChangeRows(organizationId);
+  }
+  if (reportId === "itsm-availability") {
+    const { getItsmAvailabilityRows } = await import("@/lib/itsm/report-data");
+    return getItsmAvailabilityRows(organizationId);
+  }
+  if (reportId === "itsm-capacity") {
+    const { getItsmCapacityRows } = await import("@/lib/itsm/report-data");
+    return getItsmCapacityRows(organizationId);
+  }
+  if (reportId === "itsm-continuity") {
+    const { getItsmContinuityRows } = await import("@/lib/itsm/report-data");
+    return getItsmContinuityRows(organizationId);
+  }
+  if (reportId === "itsm-suppliers") {
+    const { getItsmSupplierRows } = await import("@/lib/itsm/report-data");
+    return getItsmSupplierRows(organizationId);
+  }
+  if (reportId === "itsm-service-performance") {
+    const { getItsmServicePerformanceRows } = await import("@/lib/itsm/report-data");
+    return getItsmServicePerformanceRows(organizationId);
+  }
+  // ── ISO 13485 medical device QMS reports ──
+  if (reportId === "md-design-history") {
+    const { getMdDesignHistoryRows } = await import("@/lib/medical-devices/report-data");
+    return getMdDesignHistoryRows(organizationId);
+  }
+  if (reportId === "md-master-record") {
+    const { getMdMasterRecordRows } = await import("@/lib/medical-devices/report-data");
+    return getMdMasterRecordRows(organizationId);
+  }
+  if (reportId === "md-risks") {
+    const { getMdRiskRows } = await import("@/lib/medical-devices/report-data");
+    return getMdRiskRows(organizationId);
+  }
+  if (reportId === "md-validations") {
+    const { getMdValidationRows } = await import("@/lib/medical-devices/report-data");
+    return getMdValidationRows(organizationId);
+  }
+  if (reportId === "md-suppliers") {
+    const { getMdSupplierRows } = await import("@/lib/medical-devices/report-data");
+    return getMdSupplierRows(organizationId);
+  }
+  if (reportId === "md-batches") {
+    const { getMdBatchRows } = await import("@/lib/medical-devices/report-data");
+    return getMdBatchRows(organizationId);
+  }
+  if (reportId === "md-complaints") {
+    const { getMdComplaintRows } = await import("@/lib/medical-devices/report-data");
+    return getMdComplaintRows(organizationId);
+  }
+  if (reportId === "md-surveillance") {
+    const { getMdSurveillanceRows } = await import("@/lib/medical-devices/report-data");
+    return getMdSurveillanceRows(organizationId);
+  }
+  if (reportId === "md-events") {
+    const { getMdAdverseEventRows } = await import("@/lib/medical-devices/report-data");
+    return getMdAdverseEventRows(organizationId);
+  }
+  if (reportId === "md-recalls") {
+    const { getMdRecallRows } = await import("@/lib/medical-devices/report-data");
+    return getMdRecallRows(organizationId);
+  }
+  if (reportId === "md-audit-package") {
+    const sections: ReportId[] = [
+      "md-design-history", "md-master-record", "md-risks", "md-validations",
+      "md-suppliers", "md-batches", "md-complaints", "md-surveillance",
+      "md-events", "md-recalls",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
+  }
+
   return (await prisma.changeRequest.findMany({ where: ({ organizationId, createdAt: range, ...statusFilter(filters) }) as Prisma.ChangeRequestWhereInput })).map(item => ({ codigo: item.code, titulo: item.title, categoria: item.category, tipo: item.changeType, impacto: item.impact, estado: item.status, solicitante: item.requesterName ?? "" }));
 }
 
