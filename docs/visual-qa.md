@@ -71,7 +71,7 @@ corrección.
 | Cajón móvil tapado por la cabecera | ✅ corregido | Cajón elevado a `--nf-z-drawer` (400) sobre `--nf-z-topbar` (300) |
 | Botón "Crear" desbordaba la píldora en móvil | ✅ corregido | Medido: los dos SVG se comprimían a 3.1 × 15 px dentro de un botón de 36 px con 28 px de padding. Ahora 40 × 40 con icono de 15 px |
 | Sidebar: ~180 destinos en una columna plana | ✅ corregido | 8 grupos colapsables con filtro y fijados |
-| ~143 sub-enlaces de norma no navegaban | ✅ corregido | `useSearchParams` = 0 en los 11 clientes de norma; eliminados, una norma = un destino |
+| ~143 secciones de norma compitiendo en la columna global | ✅ corregido | Una norma = un destino; sus secciones se anidan solo cuando esa norma es la ruta activa (máx. 15 visibles en vez de 143) |
 | Selector de organización duplicado | ✅ corregido | Un solo `OrgSwitcher` en la cabecera |
 | Sin `<h1>` en ninguna ruta | 🟡 parcial | `PageHeader` creado y adoptado en el Dashboard; faltan 82 rutas |
 | Sin migas de pan | 🟡 parcial | `Breadcrumb` creado, se deriva de la ruta; se adopta con `PageHeader` |
@@ -89,6 +89,17 @@ corrección.
 | Gráfico principal sin ejes, leyenda ni unidades | ⬜ pendiente | Bloque de dashboard |
 | 0 regiones `aria-live` | ⬜ pendiente | Bloque de formularios |
 | Modales sin trampa de foco | ⬜ pendiente | Bloque de diálogos |
+
+### Errores propios corregidos durante el trabajo
+
+- **“143 enlaces muertos”.** Se afirmó que los subitems `?section=` de las
+  normas no navegaban, porque `useSearchParams` no aparece en ninguno de los 11
+  clientes de norma. Era falso: lo consumen a través del hook
+  `useModuleSection`. Los enlaces funcionaban y eran la **única** vía a esas
+  secciones. Al eliminarlos se dejaron 143 secciones inalcanzables; se
+  restauraron como sub-navegación contextual de la norma activa. La lección
+  operativa: buscar el símbolo directo no basta cuando el consumo es indirecto
+  a través de un hook.
 
 ### Falsos positivos descartados
 

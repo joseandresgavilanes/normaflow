@@ -220,6 +220,8 @@
   position: relative;
   display: flex;
   align-items: center;
+  /* La lista de secciones del módulo activo se coloca en su propia línea. */
+  flex-wrap: wrap;
 }
 
 .nf-nav__link {
@@ -304,6 +306,33 @@
 }
 .nf-nav__pin:hover { background: var(--nf-surface-sunken); color: var(--nf-text-secondary); }
 .nf-nav__pin[data-pinned] { color: var(--nf-primary); }
+
+/* Secciones del módulo activo */
+.nf-nav__sections {
+  list-style: none;
+  margin: 2px 0 var(--nf-space-2);
+  padding: 0 0 0 var(--nf-space-6);
+  width: 100%;
+  border-left: 1px solid var(--nf-border);
+  margin-left: var(--nf-space-4);
+}
+.nf-nav__section-link {
+  display: block;
+  padding: 5px var(--nf-space-2);
+  border-radius: var(--nf-radius-xs);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-nav__section-link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
+.nf-nav__section-link[data-active] {
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+  background: var(--nf-primary-subtle);
+}
 
 .nf-nav__empty {
   padding: var(--nf-space-4) var(--nf-space-2);

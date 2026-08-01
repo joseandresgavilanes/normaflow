@@ -70,6 +70,12 @@ import type { MessageKey } from "@/lib/i18n/messages";
  *     navegación intra-norma es responsabilidad de las pestañas de la página.
  */
 
+export type NavSection = {
+  /** Valor de `?section=` que consume `useModuleSection`. */
+  section: string;
+  label: string;
+};
+
 export type NavItem = {
   /** Ruta destino. Es también la clave de fijado. */
   href: string;
@@ -82,6 +88,12 @@ export type NavItem = {
   permission?: string;
   /** Segmento de módulo usado por el gating de plan (`planHasModule`). */
   module?: string;
+  /**
+   * Secciones internas del módulo. Solo se despliegan cuando esa ruta es la
+   * activa, de modo que como mucho hay un juego de secciones visible en vez de
+   * los ~143 subitems que antes convivían en la misma columna.
+   */
+  sections?: NavSection[];
 };
 
 export type NavGroup = {
@@ -93,6 +105,92 @@ export type NavGroup = {
 /** Deriva el segmento de módulo (`/app/<módulo>/...`) usado por el plan. */
 export function moduleForPath(href: string): string | null {
   return /^\/app\/([^/?]+)/.exec(href)?.[1] ?? null;
+}
+
+const s = (section: string, label: string): NavSection => ({ section, label });
+
+/**
+ * Secciones por norma. Alimentan `?section=`, que `useModuleSection` lee para
+ * cambiar la vista del módulo — no son anclas decorativas.
+ */
+const SECTIONS: Record<string, NavSection[]> = {
+  "/app/continuity": [
+    s("panel", "Panel"), s("plans", "Planes"), s("bia", "BIA y actividades"),
+    s("dependencies", "Dependencias y recursos"), s("strategies", "Estrategias"),
+    s("crisis", "Equipos de crisis"), s("tests", "Simulacros"), s("gaps", "Brechas"),
+  ],
+  "/app/environment": [
+    s("panel", "Panel"), s("matrix", "Aspectos e impactos"), s("compliance", "Cumplimiento legal"),
+    s("objectives", "Objetivos"), s("trends", "Indicadores"), s("waste", "Residuos"),
+    s("emergencies", "Emergencias"), s("biodiversity", "Biodiversidad"),
+  ],
+  "/app/energy": [
+    s("panel", "Panel"), s("sources", "Fuentes y usos"), s("review", "Revisión energética"),
+    s("seu", "Usos significativos"), s("baseline", "Línea base"), s("enpi", "EnPI"),
+    s("meters", "Medidores y lecturas"), s("variables", "Variables y factores"),
+    s("opportunities", "Oportunidades"), s("actions", "Acciones"), s("savings", "Ahorros"),
+    s("procurement", "Compras"), s("design", "Diseño"),
+  ],
+  "/app/food-safety": [
+    s("panel", "Panel"), s("products", "Productos y MP"), s("flows", "Flujos"),
+    s("hazards", "Peligros"), s("prp", "PRP / OPRP"), s("ccp", "PCC"),
+    s("monitoring", "Monitoreo"), s("deviations", "Desviaciones"),
+    s("traceability", "Trazabilidad"), s("recalls", "Retiros"), s("allergens", "Alérgenos"),
+    s("emergencies", "Emergencias"), s("communications", "Comunicación de cadena"),
+  ],
+  "/app/itsm": [
+    s("panel", "Panel"), s("catalog", "Catálogo"), s("sla", "SLA / OLA"),
+    s("requests", "Solicitudes"), s("incidents", "Incidentes"), s("problems", "Problemas"),
+    s("changes", "Cambios / Releases"), s("cmdb", "CMDB"),
+    s("availability", "Disp. / Cap. / Cont."), s("suppliers", "Proveedores"),
+    s("knowledge", "Conocimiento"),
+  ],
+  "/app/medical-devices": [
+    s("panel", "Panel"), s("devices", "Dispositivos"), s("dmr", "Expediente maestro"),
+    s("design", "Diseño (DHF)"), s("risks", "Riesgos"), s("suppliers", "Proveedores"),
+    s("validations", "Validaciones"), s("batches", "Lotes / traza"),
+    s("vigilance", "Vigilancia"), s("regulatory", "Regulatorio"),
+  ],
+  "/app/safety": [
+    s("panel", "Panel"), s("hazards", "Peligros y riesgos"),
+    s("consultations", "Consulta trabajadores"), s("incidents", "Incidentes"),
+    s("inspections", "Inspecciones"), s("ppe", "EPP"), s("permits", "Permisos"),
+    s("drills", "Emergencias"), s("contractors", "Contratistas"), s("health", "Vigilancia salud"),
+  ],
+  "/app/aims": [
+    s("panel", "Panel"), s("systems", "Inventario IA"), s("outputs", "Revisión humana"),
+    s("impact", "Evaluación de impacto"), s("risks", "Riesgos"), s("datasets", "Datos"),
+    s("models", "Modelos"), s("oversight", "Supervisión"), s("transparency", "Transparencia"),
+    s("incidents", "Incidentes"), s("suppliers", "Proveedores"), s("changes", "Cambios"),
+    s("monitoring", "Monitoreo"),
+  ],
+  "/app/compliance": [
+    s("panel", "Panel"), s("obligations", "Obligaciones"), s("sources", "Fuentes y jurisdicciones"),
+    s("risks", "Riesgos"), s("controls", "Controles"), s("evaluations", "Evaluaciones"),
+    s("calendar", "Calendario"), s("changes", "Cambios regulatorios"),
+    s("conflicts", "Conflictos de interés"), s("channel", "Canal de denuncias"),
+    s("investigations", "Investigaciones"), s("breaches", "Incumplimientos"),
+    s("remediation", "Remediación"), s("training", "Formación"), s("board", "Órgano de gobierno"),
+  ],
+  "/app/antibribery": [
+    s("panel", "Panel"), s("risks", "Riesgo de soborno"), s("associates", "Socios de negocio"),
+    s("due-diligence", "Debida diligencia"), s("owners", "Beneficiarios"), s("gifts", "Regalos"),
+    s("donations", "Donaciones"), s("conflicts", "Conflictos"), s("facilitation", "Facilitación"),
+    s("controls", "Controles"), s("approvals", "Aprobaciones"), s("commitments", "Compromisos"),
+    s("investigations", "Investigaciones"),
+  ],
+  "/app/integrated": [
+    s("panel", "Panel integrado"), s("scope", "Alcance y política"),
+    s("parties", "Partes interesadas"), s("objectives", "Objetivos"),
+    s("crosswalk", "Matriz de correspondencia"), s("audit", "Auditoría integrada"),
+    s("shared", "Elementos compartidos"),
+  ],
+};
+
+/** Adjunta las secciones declaradas arriba al elemento de navegación. */
+function withSections(item: NavItem): NavItem {
+  const sections = SECTIONS[item.href];
+  return sections ? { ...item, sections } : item;
 }
 
 export const NAV_GROUPS: NavGroup[] = [
@@ -168,7 +266,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     id: "standards",
     labelKey: "nav.group.standards",
-    items: [
+    items: ([
       { href: "/app/standards", Icon: Library, labelKey: "nav.standards" },
       { href: "/app/integrated", Icon: Layers, labelKey: "nav.integrated", permission: "integrated:read" },
       { href: "/app/environment", Icon: Leaf, labelKey: "nav.environment", permission: "environment:read" },
@@ -181,7 +279,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/app/food-safety", Icon: UtensilsCrossed, labelKey: "nav.foodSafety", permission: "food-safety:read" },
       { href: "/app/itsm", Icon: Server, labelKey: "nav.itsm", permission: "itsm:read" },
       { href: "/app/medical-devices", Icon: Cross, labelKey: "nav.medicalDevices", permission: "medical-devices:read" },
-    ],
+    ] satisfies NavItem[]).map(withSections),
   },
   {
     id: "admin",

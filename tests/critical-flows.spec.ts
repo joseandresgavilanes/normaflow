@@ -103,11 +103,14 @@ test.describe("flujos críticos de NormaFlow", () => {
     await page.goto("/app/documents");
     const sourceRow = page.locator("tbody tr").first();
     const sourceText = await sourceRow.innerText();
-    const orgSelector = page.locator(".nf-sidebar-org select");
+    // El selector de organización dejó de estar duplicado: hay un único
+    // control en la cabecera del sidebar (antes: marca truncada con chevron
+    // inerte + caja "Organización" con su propio select).
+    const orgSelector = page.locator(".nf-nav__org-control select");
     await expect(orgSelector).toBeVisible();
     await orgSelector.selectOption({ label: "Logística Norte S.L." });
     await expect(orgSelector).toHaveValue("org_logistica");
-    await expect(page.locator(".nf-sidebar-brand-name")).toContainText("Logística Norte");
+    await expect(orgSelector.locator("option:checked")).toContainText("Logística Norte");
 
     await expect(page.locator("tbody tr").first()).not.toContainText(sourceText);
   });

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, LogOut, Pin, PinOff, Search, Sparkles, X } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
@@ -75,6 +75,7 @@ export default function AppSidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const currentSection = useSearchParams().get("section");
   const ws = useWorkspaceOptional();
   const { t, tx } = useI18n();
   const permissions = useDemoPermission();
@@ -199,6 +200,36 @@ export default function AppSidebar({
         >
           {isPinned ? <PinOff size={13} aria-hidden /> : <Pin size={13} aria-hidden />}
         </button>
+
+        {/* Secciones del módulo: solo se muestran las de la norma abierta. Con
+            las 11 normas desplegadas a la vez eran ~143 enlaces compitiendo en
+            la misma columna. Alimentan `?section=`, que `useModuleSection` lee
+            para cambiar la vista. */}
+        {active && !locked && item.sections && item.sections.length > 0 && (
+          <ul className="nf-nav__sections">
+            {item.sections.map((section) => {
+              const sectionHref = section.section === "panel"
+                ? item.href
+                : `${item.href}?section=${section.section}`;
+              const sectionActive = currentSection === section.section
+                || (!currentSection && section.section === "panel");
+              return (
+                <li key={section.section}>
+                  <Link
+                    href={sectionHref}
+                    prefetch={false}
+                    aria-current={sectionActive ? "true" : undefined}
+                    onClick={() => onNavigate?.()}
+                    className="nf-nav__section-link"
+                    data-active={sectionActive || undefined}
+                  >
+                    {tx(section.label)}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </li>
     );
   };
