@@ -1,0 +1,483 @@
+/* ============================================================================
+ * NormaFlow — Design tokens
+ * ----------------------------------------------------------------------------
+ * FUENTE ÚNICA DE VERDAD para color, tipografía, espaciado, radios, elevación,
+ * foco, z-index y motion.
+ *
+ * Reglas:
+ *   1. Ningún componente declara un hex. Todo pasa por un token semántico.
+ *   2. Las primitivas (--nf-c-*) no se usan directamente en componentes:
+ *      solo alimentan a los tokens semánticos de la capa 2.
+ *   3. Los alias legacy (capa 6) existen para que las ~992 clases `.nf-*`
+ *      heredadas sigan funcionando durante la migración. No añadir alias nuevos.
+ *
+ * Contraste: cada token de texto lleva anotado su ratio WCAG sobre el fondo
+ * previsto. Objetivo: WCAG 2.2 AA (4.5:1 texto normal, 3:1 texto grande y
+ * objetos gráficos que identifican un componente).
+ * ========================================================================== */
+
+/* ----------------------------------------------------------------------------
+ * CAPA 1 — Primitivas
+ * -------------------------------------------------------------------------- */
+:root {
+  /* Neutrales */
+  --nf-c-neutral-0: #ffffff;
+  --nf-c-neutral-25: #fafafa;
+  --nf-c-neutral-50: #f7f7f5; /* lienzo de la app */
+  --nf-c-neutral-100: #f2f2f0;
+  --nf-c-neutral-150: #ebebe9;
+  --nf-c-neutral-200: #e4e4e2; /* borde por defecto */
+  --nf-c-neutral-300: #d0d0ce;
+  --nf-c-neutral-400: #8f8f8f; /* borde de control — 3.23:1 sobre blanco */
+  --nf-c-neutral-500: #6e7480; /* texto terciario — 4.69:1 */
+  --nf-c-neutral-600: #6a6a6a; /* texto secundario — 5.04:1 sobre lienzo */
+  --nf-c-neutral-700: #525252; /* 7.82:1 */
+  --nf-c-neutral-900: #1a1a1a; /* 16.0:1 */
+
+  /* Marca */
+  --nf-c-brand-50: #f0f2ff;
+  --nf-c-brand-100: #e4e7ff;
+  --nf-c-brand-200: #ccd2fd;
+  --nf-c-brand-500: #6b7af8;
+  --nf-c-brand-600: #5266f6; /* identidad NormaFlow — 4.57:1 sobre blanco */
+  --nf-c-brand-700: #4355e8; /* 5.41:1 */
+  --nf-c-brand-800: #3b4bd8; /* 6.61:1 — foco y texto de enlace denso */
+
+  /* Estado — éxito */
+  --nf-c-success-50: #f0fdf4;
+  --nf-c-success-100: #dcfce7;
+  --nf-c-success-500: #16a34a; /* relleno / gráfico — 3.30:1 */
+  --nf-c-success-700: #15803d; /* texto — 5.01:1 */
+
+  /* Estado — advertencia */
+  --nf-c-warning-50: #fffbeb;
+  --nf-c-warning-100: #fef3c7;
+  --nf-c-warning-500: #d97706; /* relleno / gráfico — 3.19:1 */
+  --nf-c-warning-700: #b45309; /* texto — 5.02:1 */
+
+  /* Estado — peligro */
+  --nf-c-danger-50: #fef2f2;
+  --nf-c-danger-100: #fee2e2;
+  --nf-c-danger-500: #dc2626; /* texto y relleno — 4.83:1 */
+  --nf-c-danger-700: #b91c1c; /* 6.24:1 */
+
+  /* Estado — información (deliberadamente distinto de la marca) */
+  --nf-c-info-50: #ecfeff;
+  --nf-c-info-100: #cffafe;
+  --nf-c-info-500: #0e7490; /* texto y relleno — 5.35:1 */
+  --nf-c-info-700: #155e75;
+
+  /* Acento cualitativo para series de datos y categorías (no es estado) */
+  --nf-c-violet-500: #7c3aed;
+  --nf-c-violet-50: #f5f3ff;
+  --nf-c-teal-500: #0f766e;
+  --nf-c-teal-50: #ecfdf5;
+  --nf-c-amber-500: #ca8a04;
+  --nf-c-slate-500: #475569;
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 2 — Tokens semánticos
+ * Estos son los únicos nombres que deben usar los componentes.
+ * -------------------------------------------------------------------------- */
+:root {
+  /* Superficies */
+  --nf-background: var(--nf-c-neutral-50);
+  --nf-surface: var(--nf-c-neutral-0);
+  --nf-surface-muted: var(--nf-c-neutral-25);
+  --nf-surface-sunken: var(--nf-c-neutral-100);
+  --nf-surface-hover: var(--nf-c-neutral-50);
+  --nf-surface-selected: var(--nf-c-brand-50);
+  --nf-overlay: rgba(23, 23, 26, 0.45);
+
+  /* Bordes */
+  --nf-border: var(--nf-c-neutral-200);
+  --nf-border-subtle: var(--nf-c-neutral-150);
+  --nf-border-strong: var(--nf-c-neutral-400);
+  --nf-border-focus: var(--nf-c-brand-600);
+
+  /* Texto */
+  --nf-text-primary: var(--nf-c-neutral-900);
+  --nf-text-secondary: var(--nf-c-neutral-700);
+  --nf-text-muted: var(--nf-c-neutral-600);
+  --nf-text-subtle: var(--nf-c-neutral-500);
+  --nf-text-on-primary: var(--nf-c-neutral-0);
+  --nf-text-link: var(--nf-c-brand-700);
+
+  /* Primario */
+  --nf-primary: var(--nf-c-brand-600);
+  --nf-primary-hover: var(--nf-c-brand-700);
+  --nf-primary-active: var(--nf-c-brand-800);
+  --nf-primary-subtle: var(--nf-c-brand-50);
+  --nf-primary-subtle-hover: var(--nf-c-brand-100);
+  --nf-primary-border: var(--nf-c-brand-200);
+  --nf-on-primary: var(--nf-c-neutral-0);
+
+  /* Estado — cada uno con trío superficie / borde / texto para que el estado
+     nunca dependa solo del color de relleno */
+  --nf-success: var(--nf-c-success-500);
+  --nf-success-text: var(--nf-c-success-700);
+  --nf-success-subtle: var(--nf-c-success-50);
+  --nf-success-border: var(--nf-c-success-100);
+
+  --nf-warning: var(--nf-c-warning-500);
+  --nf-warning-text: var(--nf-c-warning-700);
+  --nf-warning-subtle: var(--nf-c-warning-50);
+  --nf-warning-border: var(--nf-c-warning-100);
+
+  --nf-danger: var(--nf-c-danger-500);
+  --nf-danger-text: var(--nf-c-danger-700);
+  --nf-danger-subtle: var(--nf-c-danger-50);
+  --nf-danger-border: var(--nf-c-danger-100);
+
+  --nf-info: var(--nf-c-info-500);
+  --nf-info-text: var(--nf-c-info-500);
+  --nf-info-subtle: var(--nf-c-info-50);
+  --nf-info-border: var(--nf-c-info-100);
+
+  --nf-neutral-subtle: var(--nf-c-neutral-100);
+  --nf-neutral-text: var(--nf-c-neutral-700);
+
+  /* Foco — 6.61:1 sobre blanco, visible también sobre rellenos de marca */
+  --nf-focus-ring: var(--nf-c-brand-800);
+  --nf-focus-ring-width: 2px;
+  --nf-focus-ring-offset: 2px;
+
+  /* Deshabilitado */
+  --nf-disabled-bg: var(--nf-c-neutral-100);
+  --nf-disabled-border: var(--nf-c-neutral-200);
+  --nf-disabled-text: var(--nf-c-neutral-500);
+  --nf-disabled-opacity: 0.55;
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 3 — Tipografía
+ * Escala de 9 pasos. 11px se reserva a etiquetas en versalitas con tracking;
+ * el mínimo para texto corrido es 12px y para cuerpo de tabla 13px.
+ * -------------------------------------------------------------------------- */
+:root {
+  --nf-font-sans: var(--font-inter, Inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nf-font-display: var(--font-manrope, Manrope), var(--nf-font-sans);
+  --nf-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --nf-text-2xs: 0.6875rem; /* 11px — solo eyebrow/versalita */
+  --nf-text-xs: 0.75rem;    /* 12px */
+  --nf-text-sm: 0.8125rem;  /* 13px — cuerpo de tabla */
+  --nf-text-base: 0.875rem; /* 14px — cuerpo de la app */
+  --nf-text-md: 1rem;       /* 16px — cuerpo de lectura */
+  --nf-text-lg: 1.125rem;   /* 18px */
+  --nf-text-xl: 1.375rem;   /* 22px */
+  --nf-text-2xl: 1.75rem;   /* 28px */
+  --nf-text-3xl: 2.25rem;   /* 36px */
+
+  --nf-leading-tight: 1.2;
+  --nf-leading-snug: 1.35;
+  --nf-leading-normal: 1.5;
+  --nf-leading-relaxed: 1.65;
+
+  --nf-weight-regular: 400;
+  --nf-weight-medium: 500;
+  --nf-weight-semibold: 600;
+  --nf-weight-bold: 700;
+
+  --nf-tracking-tight: -0.02em;
+  --nf-tracking-normal: 0;
+  --nf-tracking-wide: 0.06em; /* versalitas */
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 4 — Espaciado, radios, elevación, motion, z-index
+ * Ritmo de 4px. Densidad alta (producto de datos), no marketing.
+ * -------------------------------------------------------------------------- */
+:root {
+  --nf-space-0: 0;
+  --nf-space-1: 0.25rem; /* 4 */
+  --nf-space-2: 0.5rem;  /* 8 */
+  --nf-space-3: 0.75rem; /* 12 */
+  --nf-space-4: 1rem;    /* 16 */
+  --nf-space-5: 1.25rem; /* 20 */
+  --nf-space-6: 1.5rem;  /* 24 */
+  --nf-space-8: 2rem;    /* 32 */
+  --nf-space-10: 2.5rem; /* 40 */
+  --nf-space-12: 3rem;   /* 48 */
+  --nf-space-16: 4rem;   /* 64 */
+
+  /* Radios — 4 pasos. `--nf-radius-*` legacy se alinea abajo. */
+  --nf-radius-xs: 4px;
+  --nf-radius-s: 6px;
+  --nf-radius-m: 8px;  /* radio base del producto */
+  --nf-radius-l: 12px;
+  --nf-radius-full: 999px;
+
+  /* Elevación — 4 niveles. Sustituye a 58 sombras ad-hoc. */
+  --nf-elevation-0: none;
+  --nf-elevation-1: 0 1px 2px rgba(16, 18, 28, 0.05);
+  --nf-elevation-2: 0 2px 8px rgba(16, 18, 28, 0.07), 0 1px 2px rgba(16, 18, 28, 0.04);
+  --nf-elevation-3: 0 8px 24px rgba(16, 18, 28, 0.10), 0 2px 6px rgba(16, 18, 28, 0.05);
+  --nf-elevation-4: 0 24px 56px rgba(16, 18, 28, 0.16);
+
+  /* Motion — corto y funcional. Toda transición pasa por estos tokens. */
+  --nf-duration-instant: 80ms;
+  --nf-duration-fast: 140ms;
+  --nf-duration-base: 200ms;
+  --nf-duration-slow: 280ms;
+  --nf-ease-standard: cubic-bezier(0.2, 0, 0.13, 1);
+  --nf-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --nf-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Capas — escala explícita, sin números mágicos */
+  --nf-z-base: 0;
+  --nf-z-sticky: 100;
+  --nf-z-sidebar: 200;
+  --nf-z-topbar: 300;
+  --nf-z-drawer: 400;
+  --nf-z-overlay: 500;
+  --nf-z-modal: 600;
+  --nf-z-popover: 700;
+  --nf-z-toast: 800;
+  --nf-z-tooltip: 900;
+
+  /* Layout */
+  --nf-sidebar-width: 264px;
+  --nf-sidebar-width-collapsed: 64px;
+  --nf-topbar-height: 56px;
+  --nf-content-max: 1440px;
+  --nf-content-gutter: var(--nf-space-6);
+
+  /* Densidad de tabla — conmutable por el usuario en la DataTable */
+  --nf-row-height-compact: 36px;
+  --nf-row-height-default: 44px;
+  --nf-row-height-comfortable: 56px;
+
+  /* Controles de formulario */
+  --nf-control-height: 40px;
+  --nf-control-height-sm: 32px;
+  --nf-control-padding-x: var(--nf-space-3);
+  --nf-control-radius: var(--nf-radius-m);
+  --nf-control-font-size: var(--nf-text-base);
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 5 — Dark mode (PREPARADO, NO ACTIVADO)
+ * Los tokens existen para que el refactor de componentes ya sea compatible.
+ * Se activa cambiando `data-theme` en <html>; hasta entonces nada lo aplica.
+ * -------------------------------------------------------------------------- */
+:root[data-theme="dark"] {
+  --nf-background: #121316;
+  --nf-surface: #1a1c20;
+  --nf-surface-muted: #212429;
+  --nf-surface-sunken: #0e0f12;
+  --nf-surface-hover: #24272d;
+  --nf-surface-selected: #232842;
+  --nf-overlay: rgba(0, 0, 0, 0.62);
+
+  --nf-border: #2e3238;
+  --nf-border-subtle: #26292e;
+  --nf-border-strong: #565c66;
+  --nf-border-focus: #8b98ff;
+
+  --nf-text-primary: #f2f3f5;
+  --nf-text-secondary: #c2c6cd;
+  --nf-text-muted: #9ba1ab;
+  --nf-text-subtle: #7d848f;
+  --nf-text-link: #93a1ff;
+
+  /* En oscuro la marca se desatura y aclara: nunca se invierte el hex claro. */
+  --nf-primary: #7b8bff;
+  --nf-primary-hover: #93a1ff;
+  --nf-primary-active: #b0baff;
+  --nf-primary-subtle: #1e2338;
+  --nf-primary-subtle-hover: #262d47;
+  --nf-primary-border: #39416b;
+  --nf-on-primary: #10121a;
+
+  --nf-success: #3fbf6d;
+  --nf-success-text: #6fd894;
+  --nf-success-subtle: #12241a;
+  --nf-success-border: #1d3b28;
+
+  --nf-warning: #e0952f;
+  --nf-warning-text: #f0b45f;
+  --nf-warning-subtle: #251c0e;
+  --nf-warning-border: #3d2e14;
+
+  --nf-danger: #f0574f;
+  --nf-danger-text: #ff847c;
+  --nf-danger-subtle: #2a1414;
+  --nf-danger-border: #4a1f1e;
+
+  --nf-info: #3aa8c4;
+  --nf-info-text: #6fc9e0;
+  --nf-info-subtle: #0f2429;
+  --nf-info-border: #1b3d47;
+
+  --nf-neutral-subtle: #24272d;
+  --nf-neutral-text: #c2c6cd;
+
+  --nf-focus-ring: #93a1ff;
+
+  --nf-disabled-bg: #24272d;
+  --nf-disabled-border: #2e3238;
+  --nf-disabled-text: #7d848f;
+
+  --nf-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --nf-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --nf-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --nf-elevation-4: 0 24px 56px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 6 — Alias legacy
+ * Mapea los nombres heredados a la capa semántica para que las clases `.nf-*`
+ * existentes sigan renderizando sin tocarlas. NO añadir entradas nuevas aquí:
+ * el código nuevo usa los tokens de la capa 2.
+ *
+ * Estos alias viven en :root a propósito. Antes se redeclaraban en
+ * `.nf-app-shell` y `.nf-modal-overlay` (portal fuera del shell), lo que
+ * desincronizaba los modales cada vez que se tocaba un token.
+ * -------------------------------------------------------------------------- */
+:root {
+  /* globals.css */
+  --primary: var(--nf-primary);
+  --primary-dark: var(--nf-primary-hover);
+  --accent: var(--nf-primary);
+  --bg: var(--nf-background);
+  --surface: var(--nf-surface);
+  --border: var(--nf-border);
+  --text-main: var(--nf-text-primary);
+  --text-muted: var(--nf-text-muted);
+  --danger: var(--nf-danger);
+  --warning: var(--nf-warning);
+  --success: var(--nf-success);
+
+  /* Tinta y líneas del shell (1.600+ referencias) */
+  --nf-ink: var(--nf-text-primary);
+  --nf-ink-2: var(--nf-text-secondary);
+  --nf-ink-3: var(--nf-text-muted);
+  --nf-ink-4: var(--nf-text-subtle);
+  --nf-line: var(--nf-border);
+  --nf-line-2: var(--nf-c-neutral-300);
+
+  --nf-app-surface-1: var(--nf-surface-sunken);
+  --nf-app-surface-2: var(--nf-surface-muted);
+  --nf-app-panel: var(--nf-surface-sunken);
+  --nf-app-accent: var(--nf-primary);
+  --nf-app-accent-soft: var(--nf-primary-subtle);
+  --nf-table-row-hover: var(--nf-surface-muted);
+  --nf-sidebar-w: var(--nf-sidebar-width);
+
+  /* Marketing (nf.css) */
+  --nf-bg-0: var(--nf-background);
+  --nf-bg-1: var(--nf-surface);
+  --nf-bg-2: var(--nf-surface-sunken);
+  --nf-glass: var(--nf-surface);
+  --nf-glass-2: var(--nf-surface-muted);
+  --nf-accent: var(--nf-primary);
+  --nf-accent-2: var(--nf-primary-hover);
+  --nf-accent-3: var(--nf-c-brand-500);
+  --nf-accent-soft: var(--nf-primary-subtle);
+  --nf-warn: var(--nf-warning);
+  --nf-success-strong: var(--nf-success-text);
+  --nf-success-soft: var(--nf-success-subtle);
+  --nf-success-mid: var(--nf-c-success-100);
+  --nf-success-bg: var(--nf-success-subtle);
+  /* `--nf-surface`, `--nf-primary`, `--nf-danger`, `--nf-success` y
+     `--nf-success-border` los define ya la capa 2 con el mismo nombre:
+     el código de marketing que los usa recibe el token semántico correcto. */
+
+  /* Radios legacy — antes globals.css y nf.css daban valores distintos al
+     mismo nombre (12/16 vs 16/20) según cuál cargara última. */
+  --nf-radius: var(--nf-radius-l);
+  --nf-radius-sm: var(--nf-radius-s);
+  --nf-radius-md: var(--nf-radius-m);
+  --nf-radius-lg: var(--nf-radius-l);
+  --nf-radius-xl: var(--nf-radius-l);
+  --nf-radius-pill: var(--nf-radius-full);
+
+  /* Sombras legacy */
+  --nf-shadow-1: var(--nf-elevation-1);
+  --nf-shadow-2: var(--nf-elevation-3);
+  --nf-shadow-glow: 0 8px 24px rgba(82, 102, 246, 0.18);
+
+  /* Controles legacy */
+  --nf-form-control-py: 9px;
+  --nf-form-control-px: var(--nf-control-padding-x);
+  --nf-form-control-font-size: var(--nf-control-font-size);
+  --nf-form-control-line-height: 1.4;
+  --nf-form-control-min-height: var(--nf-control-height);
+  --nf-form-control-radius: var(--nf-control-radius);
+
+  /* Fuentes legacy */
+  --font-display: var(--nf-font-display);
+  --font-body: var(--nf-font-sans);
+  --font-mono: var(--nf-font-mono);
+}
+
+/* ----------------------------------------------------------------------------
+ * CAPA 7 — Base transversal
+ * -------------------------------------------------------------------------- */
+
+/* Foco visible universal. Sustituye a los 15 `outline: none` sueltos.
+   Se aplica solo a :focus-visible para no molestar al puntero. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+  border-radius: var(--nf-radius-xs);
+}
+
+/* Enlace de salto — el usuario de teclado atravesaba ~180 enlaces de
+   navegación antes de llegar al contenido. */
+.nf-skip-link {
+  position: absolute;
+  left: var(--nf-space-2);
+  top: var(--nf-space-2);
+  z-index: var(--nf-z-tooltip);
+  padding: var(--nf-space-2) var(--nf-space-4);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+  box-shadow: var(--nf-elevation-3);
+  color: var(--nf-text-link);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-semibold);
+  transform: translateY(calc(-100% - var(--nf-space-4)));
+  transition: transform var(--nf-duration-fast) var(--nf-ease-out);
+}
+.nf-skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+/* Números tabulares en datos: evita el baile de columnas al ordenar/filtrar. */
+.nf-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --nf-duration-instant: 1ms;
+    --nf-duration-fast: 1ms;
+    --nf-duration-base: 1ms;
+    --nf-duration-slow: 1ms;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Modo de contraste alto del sistema: refuerza bordes que son decorativos
+   en el tema normal pero identifican componentes. */
+@media (prefers-contrast: more) {
+  :root {
+    --nf-border: var(--nf-c-neutral-400);
+    --nf-border-subtle: var(--nf-c-neutral-300);
+    --nf-text-muted: var(--nf-c-neutral-700);
+    --nf-text-subtle: var(--nf-c-neutral-600);
+  }
+}

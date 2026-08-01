@@ -2,32 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Los design tokens viven en `src/styles/tokens.css`, importado antes que este
+   fichero desde `src/app/layout.tsx`. No declarar tokens aquí. */
+
 @layer base {
-  :root {
-    /* Mercury-inspired tokens */
-    --primary: #5266F6;
-    --primary-dark: #4355E8;
-    --accent: #5266F6;
-    --bg: #F7F7F5;
-    --surface: #FFFFFF;
-    --border: #E8E8E8;
-    --text-main: #1A1A1A;
-    --text-muted: #707070;
-    --danger: #DC2626;
-    --warning: #D97706;
-    --success: #16A34A;
-    --nf-radius-sm: 8px;
-    --nf-radius-md: 10px;
-    --nf-radius-lg: 12px;
-    --nf-radius-xl: 16px;
-    --nf-radius-pill: 999px;
-    --nf-form-control-py: 10px;
-    --nf-form-control-px: 12px;
-    --nf-form-control-font-size: 14px;
-    --nf-form-control-line-height: 1.4;
-    --nf-form-control-min-height: 42px;
-    --nf-form-control-radius: var(--nf-radius-md);
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
@@ -55,30 +33,283 @@
 .nf-form-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .nf-form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .nf-acpm-verification-box { display: grid; gap: 10px; padding: 14px; border: 1px solid #F3C56B; border-radius: 10px; background: #FFF9EB; }
+
+/* Business continuity plan detail modal */
+.nf-continuity-plan-card {
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--surface);
+}
+.nf-continuity-plan-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.nf-continuity-plan-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.nf-continuity-plan-card-title strong { font-weight: 750; }
+.nf-continuity-plan-card-meta {
+  margin-top: 7px;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.nf-continuity-plan-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nf-continuity-detail {
+  display: grid;
+  gap: 16px;
+}
+.nf-continuity-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dfe5ff;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f7f8ff 0%, #ffffff 72%);
+}
+.nf-continuity-detail-hero-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  color: #5266f6;
+  background: #e9ecff;
+}
+.nf-continuity-detail-hero-copy { min-width: 0; flex: 1; }
+.nf-continuity-detail-eyebrow {
+  color: #5266f6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.nf-continuity-detail-hero-title {
+  margin: 3px 0 0;
+  color: var(--nf-ink);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+.nf-continuity-detail-hero-subtitle {
+  margin: 5px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+}
+.nf-continuity-detail-hero-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.nf-continuity-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+  align-items: start;
+  gap: 16px;
+}
+.nf-continuity-detail-column {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.nf-continuity-detail-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.nf-continuity-detail-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.nf-continuity-detail-section-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  color: #5266f6;
+  background: #eef0ff;
+}
+.nf-continuity-detail-section-title {
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.nf-continuity-detail-section-description {
+  margin: 3px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.nf-continuity-detail-section-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.nf-continuity-detail-copy {
+  margin: 0;
+  padding: 11px 12px;
+  border-left: 3px solid #5266f6;
+  border-radius: 0 8px 8px 0;
+  background: #f7f8ff;
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.nf-continuity-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.nf-continuity-detail-metric {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #eef2f6;
+  border-radius: 9px;
+  background: #f8fafc;
+}
+.nf-continuity-detail-metric-label {
+  margin-bottom: 4px;
+  color: var(--nf-ink-3);
+  font-size: 11px;
+}
+.nf-continuity-detail-metric-value {
+  color: var(--nf-ink);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.nf-continuity-detail-list {
+  display: grid;
+  gap: 8px;
+}
+.nf-continuity-detail-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid #eef2f6;
+  border-radius: 9px;
+  background: #fafbfc;
+  font-size: 12.5px;
+}
+.nf-continuity-detail-list-item > span { min-width: 0; }
+.nf-continuity-detail-empty {
+  color: var(--nf-ink-3);
+  font-size: 12.5px;
+}
+.nf-continuity-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.nf-continuity-detail-form-stack {
+  display: grid;
+  gap: 8px;
+}
+.nf-continuity-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #fafbfc;
+}
+.nf-continuity-filter-search {
+  position: relative;
+  display: flex;
+  flex: 1 1 280px;
+  align-items: center;
+  min-width: min(280px, 100%);
+  color: var(--nf-ink-3);
+}
+.nf-continuity-filter-search > svg {
+  position: absolute;
+  left: 11px;
+  pointer-events: none;
+}
+.nf-continuity-filter-search .nf-app-input {
+  width: 100%;
+  min-height: 38px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+.nf-continuity-filter-bar > .nf-app-input {
+  flex: 0 1 190px;
+  min-width: 160px;
+}
+.nf-continuity-filter-clear {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+}
+.nf-continuity-filter-clear:hover {
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
 @media (max-width: 720px) {
   .nf-detail-grid, .nf-form-grid-2, .nf-form-grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .nf-continuity-detail-grid { grid-template-columns: 1fr; }
+  .nf-continuity-detail-hero { flex-wrap: wrap; }
+  .nf-continuity-detail-hero-status { justify-content: flex-start; width: 100%; padding-left: 56px; }
+}
+@media (max-width: 520px) {
+  .nf-continuity-plan-card-head { flex-direction: column; }
+  .nf-continuity-plan-card-actions { justify-content: flex-start; }
+  .nf-continuity-detail-metrics { grid-template-columns: 1fr; }
+  .nf-continuity-detail-hero-status { padding-left: 0; }
 }
 
 /* —— App shell (Mercury-inspired) —— */
 .nf-app-shell {
   display: flex;
-  background: var(--bg);
+  background: var(--nf-background);
   min-height: 100vh;
   min-height: 100dvh;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color-scheme: light;
-  --nf-sidebar-w: 248px;
-  --nf-ink: #1a1a1a;
-  --nf-ink-2: #525252;
-  --nf-ink-3: #707070;
-  --nf-ink-4: #9ca3af;
-  --nf-line: #e8e8e8;
-  --nf-app-surface-1: #f5f5f5;
-  --nf-app-surface-2: #fafafa;
-  --nf-app-panel: #f0f0f0;
-  --nf-app-accent: #5266f6;
-  --nf-app-accent-soft: rgba(82, 102, 246, 0.1);
-  --nf-table-row-hover: #fafafa;
+  font-family: var(--nf-font-sans);
+  /* Los tokens se heredan de :root (src/styles/tokens.css). Antes se
+     redeclaraban aquí y en .nf-modal-overlay, lo que desincronizaba los
+     modales —que se renderizan en un portal fuera de este shell— cada vez
+     que se tocaba un valor. */
 }
 
 .nf-app-main {
@@ -889,6 +1120,51 @@ a.nf-app-btn-soft-success {
 
 .nf-app-btn-primary:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+/* Navegación interna de módulos ISO: misma jerarquía visual que el dashboard. */
+.nf-iso-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.nf-iso-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid var(--nf-line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--nf-ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-iso-tab:hover:not(:disabled):not([aria-selected="true"]) {
+  border-color: #cfd4df;
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+
+.nf-iso-tab[aria-selected="true"] {
+  border-color: var(--nf-app-accent);
+  background: var(--nf-app-accent-soft);
+  color: var(--nf-app-accent);
+  box-shadow: 0 1px 2px rgba(82, 102, 246, 0.08);
+}
+
+.nf-iso-tab:focus-visible {
+  outline: 2px solid var(--nf-app-accent);
+  outline-offset: 2px;
 }
 
 .nf-app-btn-primary:disabled {
@@ -2692,21 +2968,34 @@ button.nf-audit-card:focus-visible {
 
 /* App modals */
 .nf-modal-overlay {
-  --nf-ink: #1a1a1a;
-  --nf-ink-2: #525252;
-  --nf-ink-3: #707070;
-  --nf-ink-4: #9ca3af;
-  --nf-line: #e8e8e8;
-  --nf-app-surface-1: #f5f5f5;
-  --nf-app-surface-2: #fafafa;
-  --nf-app-accent: #5266f6;
-  --nf-app-accent-soft: rgba(82, 102, 246, 0.1);
-  --nf-radius-md: 10px;
-  --nf-radius-lg: 12px;
-  --nf-radius-xl: 16px;
-  --nf-radius-pill: 999px;
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color-scheme: light;
+  /* Tokens heredados de :root — ya no se redeclaran aquí. */
+  font-family: var(--nf-font-sans);
+  position: fixed;
+  inset: 0;
+  z-index: var(--nf-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nf-space-6);
+  background: var(--nf-overlay);
+}
+
+.nf-modal-panel {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-xl);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-height: min(88vh, 88dvh);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Compatibilidad visual para los modales heredados que todavía usan
+   `nf-modal-backdrop`/`nf-modal` en lugar del componente portal compartido. */
+.nf-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 5000;
@@ -2714,17 +3003,36 @@ button.nf-audit-card:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.24);
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
 }
 
-.nf-modal-panel {
-  background: #fff;
+.nf-modal-backdrop .nf-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: min(90vh, 90dvh);
+  overflow: auto;
+  box-sizing: border-box;
   border: 1px solid var(--nf-line);
   border-radius: var(--nf-radius-xl);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
-  width: 100%;
-  max-height: min(88vh, 88dvh);
-  overflow: auto;
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header > .nf-app-btn-ghost {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: var(--nf-radius-md);
 }
 
 .nf-modal-header {
@@ -2738,6 +3046,7 @@ button.nf-audit-card:focus-visible {
   position: sticky;
   top: 0;
   z-index: 1;
+  flex: 0 0 auto;
 }
 
 .nf-modal-header-title {
@@ -2773,6 +3082,8 @@ button.nf-audit-card:focus-visible {
 }
 
 .nf-modal-body {
+  min-height: 0;
+  overflow-y: auto;
   padding: 20px 24px 24px;
   color: var(--nf-ink-2);
   font-size: 14px;
@@ -2793,6 +3104,29 @@ button.nf-audit-card:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.nf-modal-form > :where(.nf-form-grid-2, .nf-form-grid-3, [class*="grid"]) {
+  min-width: 0;
+}
+
+/* Los formularios ISO más antiguos conservan un contenedor `grid` inline;
+   este ajuste les da el mismo ritmo vertical sin tocar su lógica. */
+.nf-modal-form > :first-child[style*="display: grid"] {
+  gap: 16px !important;
+}
+
+.nf-modal-form > :first-child > button:last-child {
+  align-self: flex-end;
+}
+
+.nf-modal-form > :first-child[style*="display: grid"] > :where(input, select, textarea),
+.nf-modal-body > div[style*="display: grid"] > :where(input, select, textarea) {
+  max-width: 100% !important;
+}
+
+.nf-modal-form > :where(input, select, textarea) {
+  max-width: 100% !important;
 }
 
 .nf-modal-field {
@@ -2829,14 +3163,39 @@ button.nf-audit-card:focus-visible {
   font-weight: 400;
 }
 
+.nf-modal-help {
+  padding: 12px 14px;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-md);
+  background: var(--nf-app-surface-2);
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nf-modal-checkbox {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .nf-modal-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
   justify-content: flex-end;
   flex-wrap: wrap;
   padding-top: 8px;
   margin-top: 4px;
   border-top: 1px solid var(--nf-line);
+}
+
+.nf-modal-actions > :where(button, a) {
+  flex: 0 0 auto;
 }
 
 .nf-modal-error {
@@ -2851,18 +3210,18 @@ button.nf-audit-card:focus-visible {
 
 .nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
   width: 100%;
-  padding: var(--nf-form-control-py) var(--nf-form-control-px);
-  min-height: var(--nf-form-control-min-height);
-  font-size: var(--nf-form-control-font-size);
-  line-height: var(--nf-form-control-line-height);
-  border: 1px solid var(--nf-line);
-  border-radius: var(--nf-form-control-radius);
+  padding: var(--nf-form-control-py) var(--nf-form-control-px) !important;
+  min-height: var(--nf-form-control-min-height) !important;
+  font-size: var(--nf-form-control-font-size) !important;
+  line-height: var(--nf-form-control-line-height) !important;
+  border: 1px solid var(--nf-line) !important;
+  border-radius: var(--nf-form-control-radius) !important;
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
-  background: #fff;
-  color: var(--nf-ink);
-  font-weight: 500;
+  background: #fff !important;
+  color: var(--nf-ink) !important;
+  font-weight: 500 !important;
   color-scheme: light;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -2872,8 +3231,320 @@ button.nf-audit-card:focus-visible {
 }
 
 .nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {
-  border-color: var(--nf-app-accent);
-  box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
+  border-color: var(--nf-app-accent) !important;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
+}
+
+/* Algunas pantallas ISO todavía reutilizan estilos inline antiguos. Dentro de
+   un modal prevalece el mismo control visual que usa el resto de la app. */
+.nf-modal-body :where(button, a):not(.nf-modal-close) {
+  min-height: var(--nf-form-control-min-height) !important;
+  padding: var(--nf-form-control-py) var(--nf-form-control-px) !important;
+  font-size: var(--nf-form-control-font-size) !important;
+  border-radius: var(--nf-form-control-radius) !important;
+  font-family: inherit;
+  line-height: var(--nf-form-control-line-height);
+}
+
+.nf-modal-body :where(div)[style*="justify-content: flex-end"] {
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--nf-line);
+}
+
+/* Formularios ISO heredados: dos columnas equilibradas en escritorio, sin
+   alterar las subrejillas internas que ya definen sus proporciones. */
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px !important;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(input, select),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(textarea, button, div, p),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(textarea, button, div, p),
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > label:has(> textarea),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+/* En los formularios antiguos, crear y cancelar comparten la última fila. */
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type {
+  grid-column: 2;
+  order: 2;
+  align-self: end;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+  grid-column: 1;
+  order: 1;
+  align-self: end;
+  justify-content: stretch;
+  width: 100%;
+  min-width: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button,
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button {
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-modal-body :where(input, select, textarea)::placeholder {
+  color: #98a2b3;
+  font-size: 13px;
+  opacity: 1;
+}
+
+/* Modales de creación compartidos por las nuevas ISO: el formulario conserva
+   sus subrejillas internas, pero las acciones quedan en una fila común y
+   siempre muestran una salida explícita para cancelar. */
+.nf-iso-create-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  gap: 16px !important;
+}
+
+.nf-modal-error {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nf-iso-create-fields,
+.nf-iso-edit-fields {
+  display: contents !important;
+}
+
+.nf-iso-create-fields > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-iso-create-fields > :where(textarea, div, p),
+.nf-iso-create-fields > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] {
+  display: contents !important;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] > button:last-child,
+.nf-iso-create-fields > button:last-of-type {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] > :where(div)[style*="display: grid"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.nf-iso-create-fields > button:last-of-type {
+  grid-column: auto;
+  align-self: end;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.nf-iso-create-form-actions {
+  display: contents !important;
+  grid-column: 1;
+}
+
+.nf-iso-create-form-actions > button {
+  grid-column: 2;
+  align-self: end;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-iso-create-form > .nf-iso-create-form-actions:has(> button + button) {
+  display: flex !important;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nf-line);
+}
+
+/* El editor compartido de Compliance usa la misma jerarquía que los nuevos. */
+.nf-iso-edit-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px !important;
+}
+
+.nf-iso-edit-fields > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-iso-edit-fields > :where(textarea, div, p),
+.nf-iso-edit-fields > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.nf-iso-edit-fields > :where(div)[style*="display: grid"] {
+  display: contents !important;
+}
+
+.nf-iso-edit-fields > :where(div)[style*="display: grid"] > :where(div)[style*="display: grid"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.nf-iso-edit-fields > button:last-of-type {
+  grid-column: auto;
+  align-self: end;
+  width: auto;
+  min-width: 132px;
+}
+
+.nf-iso-edit-form-actions {
+  grid-column: 1 / -1;
+  align-self: end;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.nf-iso-edit-form-actions > button {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Cuando el formulario ya contiene ambos botones en el mismo footer, se
+   mantienen juntos y en el orden Cancelar → acción principal. */
+.nf-iso-create-form > .nf-modal-actions:has(> button + button),
+.nf-iso-edit-form > .nf-modal-actions:has(> button + button) {
+  justify-content: flex-end;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) > button,
+.nf-iso-edit-form > .nf-modal-actions:has(> button + button) > button {
+  width: auto;
+  min-width: 128px;
+}
+
+@media (max-width: 640px) {
+  .nf-modal-body .nf-form-grid-2,
+  .nf-modal-body .nf-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label),
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+    grid-column: 1 / -1;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button {
+    width: 100%;
+  }
+
+  .nf-iso-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-create-fields,
+  .nf-iso-edit-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-create-fields > :where(input, select, textarea, label, div, p, button),
+  .nf-iso-create-form-actions {
+    grid-column: 1 / -1;
+  }
+
+  .nf-iso-create-fields > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-create-fields > button:last-of-type {
+    order: 2;
+  }
+
+  .nf-iso-create-form-actions {
+    order: 1;
+  }
+
+  .nf-iso-edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-edit-fields > :where(input, select, textarea, label, div, p, button),
+  .nf-iso-edit-form-actions {
+    grid-column: 1 / -1;
+  }
+
+  .nf-iso-edit-fields > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-edit-fields > button:last-of-type {
+    order: 2;
+  }
+
+  .nf-iso-edit-form-actions {
+    order: 1;
+  }
 }
 
 .nf-data-table :where(.nf-app-btn-outline, .nf-app-btn-ghost, .nf-app-btn-primary, .nf-app-btn-danger, .nf-app-btn-success, .nf-app-btn-soft-success) {
@@ -2892,8 +3563,39 @@ button.nf-audit-card:focus-visible {
   color: var(--nf-ink-4);
 }
 
+.nf-sidebar-group-title--collapsible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
 .nf-sidebar-group-title--active {
   color: var(--nf-ink-3);
+}
+
+.nf-sidebar-group-title--collapsible:hover {
+  color: var(--nf-ink);
+}
+
+.nf-sidebar-group-chevron {
+  flex-shrink: 0;
+  color: var(--nf-ink-4);
+  transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.nf-sidebar-group-title--collapsible:hover .nf-sidebar-group-chevron,
+.nf-sidebar-group-title--active .nf-sidebar-group-chevron {
+  color: var(--nf-ink-3);
+}
+
+.nf-sidebar-group-chevron--open {
+  transform: rotate(180deg);
 }
 
 /* Mercury-style dashboard */
@@ -3529,9 +4231,19 @@ button.nf-audit-card:focus-visible {
     align-items: flex-end !important;
   }
 
+  .nf-modal-backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
   .nf-modal-panel {
     border-radius: 16px 16px 0 0 !important;
     max-height: 92dvh !important;
+  }
+
+  .nf-modal-backdrop .nf-modal {
+    max-height: 92dvh;
+    border-radius: 16px 16px 0 0;
   }
 }
 
@@ -3833,6 +4545,34 @@ button.nf-audit-card:focus-visible {
   color: #15803D;
 }
 
+.nf-alert--dismissible {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nf-alert-close {
+  display: inline-grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  margin: -3px -4px -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+}
+
+.nf-alert-close:hover,
+.nf-alert-close:focus-visible {
+  background: rgba(185, 28, 28, 0.1);
+  outline: none;
+}
+
 .nf-panel {
   background: #fff;
   border: 1px solid var(--nf-line);
@@ -3880,6 +4620,1203 @@ button.nf-audit-card:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr));
   gap: 12px;
   margin-bottom: 20px;
+}
+
+/* Shared overview language for the ISO module dashboards.  The individual
+   modules keep their domain-specific data, while this layer keeps the shell
+   and hierarchy consistent with the rest of the application. */
+.nf-iso-dashboard {
+  display: grid;
+  gap: 16px;
+}
+
+.nf-iso-metric-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--nf-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.035);
+}
+
+.nf-iso-metric-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.nf-iso-metric-copy {
+  min-width: 0;
+}
+
+.nf-iso-metric-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-iso-metric-label {
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-iso-section-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 14px;
+}
+
+/* Shared visual language for every ISO submodule screen.  The module clients
+   intentionally keep their domain-specific markup, but tables, controls and
+   spacing should still feel like one product. */
+.nf-iso-module {
+  display: grid !important;
+  gap: 22px !important;
+  min-width: 0;
+}
+
+.nf-iso-module > header:not(.nf-section-title) {
+  align-items: flex-start !important;
+  gap: 14px !important;
+  min-height: 44px;
+  margin-bottom: 0;
+}
+
+.nf-iso-module > header:not(.nf-section-title) h1 {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+
+.nf-iso-module > header:not(.nf-section-title) p {
+  margin-top: 5px !important;
+  font-size: 14px !important;
+  line-height: 1.45;
+}
+
+.nf-iso-module > .nf-iso-section-metrics {
+  margin-bottom: 4px;
+}
+
+/* Panel común para las pestañas operativas de todas las ISO. Algunos módulos
+   ya tenían la tabla refinada, pero su contenedor seguía siendo transparente;
+   este selector cubre ambos patrones sin envolver las tarjetas del dashboard. */
+.nf-iso-module > div:has(> .nf-iso-subsection-header, > .nf-iso-section-header, > .nf-iso-table-card, > .nf-data-table-wrap) {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--nf-line, #e5eaf2);
+  border-radius: 16px;
+  background: var(--nf-surface, #fff) !important;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.045) !important;
+}
+
+.nf-iso-module > section:has(> .nf-iso-subsection-header, > .nf-iso-section-header, > .nf-iso-table-card, > .nf-data-table-wrap) {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--nf-line, #e5eaf2);
+  border-radius: 16px;
+  background: var(--nf-surface, #fff) !important;
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.045) !important;
+}
+
+.nf-iso-module :where(
+  .nf-data-table-wrap,
+  .nf-data-table-wrap--scroll,
+  .nf-iso-dashboard-table-wrap,
+  div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
+) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.nf-iso-module :where(table, .nf-data-table) {
+  width: 100%;
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0;
+}
+
+.nf-iso-module :where(table thead th, .nf-data-table thead th) {
+  padding: 12px 14px !important;
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .045em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nf-iso-module :where(table tbody td, .nf-data-table tbody td) {
+  padding: 13px 14px !important;
+  background: transparent !important;
+  border-bottom: 1px solid #eef2f6 !important;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.nf-iso-module :where(table tbody tr:last-child td, .nf-data-table tbody tr:last-child td) {
+  border-bottom: 0 !important;
+}
+
+.nf-iso-module :where(table tbody tr, .nf-data-table tbody tr) {
+  transition: background-color .14s ease;
+}
+
+.nf-iso-module :where(table tbody tr:hover td, .nf-data-table tbody tr:hover td) {
+  background: #fbfdff !important;
+}
+
+.nf-iso-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-height: 38px;
+  border: 1px solid #d9e1eb !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: var(--nf-ink) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
+}
+
+.nf-iso-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
+  border-color: var(--nf-app-accent) !important;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
+  outline: none;
+}
+
+.nf-iso-module button:not(.nf-quick-create-trigger):not(.nf-quick-create-item) {
+  min-height: 34px;
+  border-radius: 9px !important;
+  font-family: inherit;
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+}
+
+.nf-iso-module button:not(.nf-quick-create-trigger):not(.nf-quick-create-item):hover:not(:disabled) {
+  filter: brightness(.985);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+}
+
+.nf-iso-module button:disabled {
+  cursor: not-allowed;
+  opacity: .58;
+}
+
+.nf-iso-panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  background: var(--nf-app-surface-2);
+}
+
+.nf-iso-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 2px 0;
+}
+
+.nf-iso-section-header h2 {
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.nf-iso-section-header p {
+  max-width: 720px;
+  margin: 5px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.nf-iso-subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  padding: 5px 8px 16px;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-iso-subsection-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  outline: none;
+}
+
+.nf-iso-subsection-mark {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #5266f6;
+  border: 1px solid #e1e5ff;
+  border-radius: 9px;
+  background: #f1f3ff;
+}
+
+.nf-iso-subsection-copy {
+  min-width: 0;
+}
+
+.nf-iso-subsection-title {
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: clamp(15px, 1.3vw, 16px);
+  font-weight: 600;
+  letter-spacing: -.015em;
+  line-height: 1.2;
+}
+
+.nf-iso-subsection-info {
+  position: relative;
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  margin-left: -3px;
+  border-radius: 50%;
+  color: var(--nf-ink-3);
+  cursor: help;
+  outline: none;
+}
+
+.nf-iso-subsection-info:hover,
+.nf-iso-subsection-info:focus-visible {
+  color: var(--nf-app-accent);
+  background: var(--nf-app-accent-soft);
+}
+
+.nf-iso-subsection-info:focus-visible {
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
+}
+
+.nf-iso-subsection-tooltip {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: min(360px, calc(100vw - 48px));
+  padding: 9px 11px;
+  border: 1px solid var(--nf-line);
+  border-radius: 9px;
+  background: var(--nf-surface, #fff);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+  color: var(--nf-ink-2);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+  visibility: hidden;
+  transform: translate(-12px, -4px);
+}
+
+.nf-iso-subsection-tooltip::before {
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--nf-line);
+  border-left: 1px solid var(--nf-line);
+  background: var(--nf-surface, #fff);
+  content: "";
+  transform: rotate(45deg);
+}
+
+.nf-iso-subsection-info:hover .nf-iso-subsection-tooltip,
+.nf-iso-subsection-info:focus-visible .nf-iso-subsection-tooltip {
+  opacity: 1;
+  transform: translate(-12px, 0);
+  visibility: visible;
+}
+
+.nf-iso-subsection-action {
+  flex: 0 0 auto;
+}
+
+.nf-iso-subsection-action :where(button, a) {
+  min-height: 38px;
+  padding: 9px 15px;
+}
+
+/* Deja una pausa clara entre el título descriptivo y el contenido tabular. */
+.nf-iso-subsection-header ~ .nf-data-table-wrap,
+.nf-iso-subsection-header ~ .nf-iso-table-card {
+  margin-top: 14px;
+}
+
+/* Las tablas de las ISO comparten una densidad más cómoda y simétrica. */
+.nf-iso-module :where(table thead th, .nf-data-table thead th) {
+  padding: 14px 16px !important;
+}
+
+.nf-iso-module :where(table tbody td, .nf-data-table tbody td) {
+  padding: 15px 16px !important;
+}
+
+.nf-iso-module .nf-data-table-wrap,
+.nf-iso-module .nf-iso-table-card {
+  box-shadow: none !important;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-subsection-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 2px 14px;
+  }
+
+  .nf-iso-subsection-action {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .nf-iso-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nf-iso-section-header > :last-child {
+    align-self: flex-start;
+  }
+}
+
+/* Crisis communication tree */
+.nf-communication-tree {
+  margin-top: 12px;
+  overflow: hidden;
+  border: 1px solid #dfe5f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(15, 23, 42, .055);
+}
+
+.nf-communication-tree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 16px;
+  border-bottom: 1px solid #e9edf4;
+  background: linear-gradient(135deg, #fafbff 0%, #f5f7ff 100%);
+}
+
+.nf-communication-tree-heading,
+.nf-communication-tree-header-actions,
+.nf-communication-tree-meta,
+.nf-communication-tree-empty,
+.nf-communication-node-main,
+.nf-communication-node-meta,
+.nf-communication-node-delay {
+  display: flex;
+  align-items: center;
+}
+
+.nf-communication-tree-heading { gap: 10px; min-width: 0; }
+.nf-communication-tree-icon,
+.nf-communication-tree-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border: 1px solid #dbe1ff;
+  border-radius: 10px;
+  color: #5266f6;
+  background: #eef0ff;
+}
+.nf-communication-tree-title { color: var(--nf-ink); font-size: 14px; font-weight: 750; }
+.nf-communication-tree-subtitle { margin-top: 3px; color: var(--nf-ink-3); font-size: 12px; }
+.nf-communication-tree-header-actions { justify-content: flex-end; gap: 9px; flex-wrap: wrap; }
+.nf-communication-tree-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border: 1px solid #e1e6f0;
+  border-radius: 999px;
+  color: var(--nf-ink-2);
+  background: rgba(255, 255, 255, .76);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.nf-communication-tree-canvas {
+  padding: 16px;
+  overflow-x: auto;
+  background: radial-gradient(circle at 8% 0%, rgba(82, 102, 246, .065), transparent 34%), #fbfcfe;
+}
+.nf-communication-tree-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: var(--nf-ink-3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.nf-communication-tree-caption span:last-child { letter-spacing: 0; font-weight: 650; }
+.nf-communication-tree-roots { display: grid; gap: 14px; min-width: 300px; }
+
+.nf-communication-node { position: relative; min-width: 280px; }
+.nf-communication-node-card {
+  position: relative;
+  padding: 12px 13px 11px;
+  border: 1px solid #dfe5f0;
+  border-left: 3px solid #5266f6;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 16px rgba(15, 23, 42, .045);
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.nf-communication-node-card:hover {
+  border-color: #c5cdfd;
+  box-shadow: 0 9px 22px rgba(82, 102, 246, .12);
+  transform: translateY(-1px);
+}
+.nf-communication-node--depth-0 > .nf-communication-node-card {
+  border-color: #cdd5ff;
+  border-left-color: #5266f6;
+  background: linear-gradient(135deg, #f7f8ff 0%, #fff 66%);
+}
+.nf-communication-node-topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.nf-communication-node-level {
+  color: #5266f6;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.nf-communication-node-delay {
+  gap: 4px;
+  color: #9a6700;
+  font-size: 11px;
+  font-weight: 700;
+}
+.nf-communication-node-main { gap: 9px; min-width: 0; }
+.nf-communication-node-avatar {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  color: #5266f6;
+  background: #eef0ff;
+}
+.nf-communication-node-copy { display: grid; min-width: 0; flex: 1; gap: 2px; }
+.nf-communication-node-label { overflow: hidden; color: var(--nf-ink); font-size: 13px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.nf-communication-node-contact { overflow: hidden; color: var(--nf-ink-3); font-size: 11px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.nf-communication-node-edit {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border: 1px solid #e0e5ef;
+  border-radius: 7px;
+  color: var(--nf-ink-3);
+  background: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nf-communication-node-edit:hover { border-color: #c5cdfd; color: #5266f6; background: #f7f8ff; }
+.nf-communication-node-meta { gap: 6px; flex-wrap: wrap; margin: 10px 0 0 39px; }
+.nf-communication-node-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--nf-ink-3);
+  background: #f5f7fa;
+  font-size: 10.5px;
+  line-height: 1.2;
+}
+.nf-communication-node-children {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0 19px;
+  padding-left: 20px;
+  border-left: 1px solid #cfd6e4;
+}
+.nf-communication-node-children > .nf-communication-node::before {
+  position: absolute;
+  top: 25px;
+  left: -20px;
+  width: 20px;
+  border-top: 1px solid #cfd6e4;
+  content: "";
+}
+.nf-communication-node--depth-1 > .nf-communication-node-card { border-left-color: #7b86f8; }
+.nf-communication-node--depth-2 > .nf-communication-node-card { border-left-color: #9aa2fa; }
+.nf-communication-node--depth-3 > .nf-communication-node-card,
+.nf-communication-node--depth-4 > .nf-communication-node-card { border-left-color: #b5bbfb; }
+
+.nf-communication-tree-empty {
+  gap: 10px;
+  padding: 20px 16px;
+  color: var(--nf-ink-2);
+}
+.nf-communication-tree-empty-icon { width: 30px; height: 30px; flex-basis: 30px; }
+.nf-communication-tree-empty strong,
+.nf-communication-tree-empty span { display: block; }
+.nf-communication-tree-empty strong { font-size: 12.5px; }
+.nf-communication-tree-empty span { margin-top: 3px; color: var(--nf-ink-3); font-size: 12px; }
+
+@media (max-width: 640px) {
+  .nf-communication-tree-header { align-items: flex-start; flex-direction: column; }
+  .nf-communication-tree-header-actions { justify-content: flex-start; width: 100%; }
+  .nf-communication-tree-count { margin-right: auto; }
+  .nf-communication-tree-canvas { padding: 12px; }
+  .nf-communication-node { min-width: 260px; }
+}
+
+.nf-iso-table-card {
+  min-width: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.nf-iso-table-card-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  padding: 14px 2px;
+  border-bottom: 1px solid #e5eaf2;
+  background: transparent;
+}
+
+.nf-iso-table-card-toolbar--tools-only {
+  justify-content: flex-end;
+  min-height: 48px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.nf-iso-table-card-heading {
+  min-width: 0;
+}
+
+.nf-iso-table-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nf-iso-table-card-mark {
+  display: grid;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  color: #5266f6;
+  border: 1px solid #e1e5ff;
+  border-radius: 9px;
+  background: #f1f3ff;
+}
+
+.nf-iso-table-card-heading h3 {
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  line-height: 1.3;
+}
+
+.nf-iso-table-card-info {
+  position: relative;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--nf-ink-3);
+  cursor: help;
+  outline: none;
+}
+
+.nf-iso-table-card-info:hover,
+.nf-iso-table-card-info:focus-visible {
+  color: var(--nf-app-accent);
+  background: var(--nf-app-accent-soft);
+}
+
+.nf-iso-table-card-tooltip {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(340px, calc(100vw - 48px));
+  padding: 8px 10px;
+  border: 1px solid var(--nf-line);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+  color: var(--nf-ink-2);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+}
+
+.nf-iso-table-card-info:hover .nf-iso-table-card-tooltip,
+.nf-iso-table-card-info:focus-visible .nf-iso-table-card-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.nf-iso-table-search {
+  position: relative;
+  display: flex;
+  flex: 0 1 280px;
+  align-items: center;
+  min-width: min(280px, 100%);
+  color: var(--nf-ink-3);
+}
+
+.nf-iso-table-card-tools {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nf-iso-table-card-tools > :where(button, a) {
+  flex: 0 0 auto;
+}
+
+.nf-iso-table-search > svg {
+  position: absolute;
+  left: 11px;
+  pointer-events: none;
+}
+
+.nf-iso-table-search .nf-app-input {
+  min-height: 36px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+.nf-iso-table-card-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 2px;
+  border-bottom: 1px solid #e5eaf2;
+  background: transparent;
+}
+
+.nf-iso-table-card-filters > .nf-iso-table-search {
+  min-width: min(320px, 100%);
+  flex: 0 1 360px;
+}
+
+.nf-iso-table-card-filters > * {
+  min-width: 150px;
+  flex: 1 1 150px;
+}
+
+.nf-iso-table-card-filters--inline-tools > .nf-iso-inline-filter {
+  min-width: min(320px, 100%);
+  flex: 1 1 auto;
+}
+
+.nf-iso-table-card-filters--inline-tools > :where(button, a) {
+  min-width: auto;
+  flex: 0 0 auto;
+}
+
+.nf-iso-table-card-filters--inline-tools .nf-iso-inline-filter {
+  min-height: 36px;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.nf-iso-table-search-clear {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 8px !important;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+}
+
+.nf-iso-table-search-clear:hover {
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+
+.nf-iso-table-scroll {
+  overflow: auto;
+  margin: 0 2px 2px;
+  border: 1px solid #e5eaf2;
+  border-radius: 14px;
+  background: var(--nf-surface, #fff);
+}
+
+.nf-iso-table-card .nf-iso-data-table {
+  min-width: 100%;
+  background: transparent !important;
+}
+
+.nf-iso-table-card .nf-iso-data-table tbody td {
+  background: transparent !important;
+}
+
+.nf-iso-table-empty-state {
+  display: grid;
+  min-height: 118px;
+  place-items: center;
+  padding: 28px 16px;
+  color: var(--nf-ink-3);
+  font-size: 13px;
+  text-align: center;
+}
+
+.nf-iso-table-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.nf-iso-table-filter-empty {
+  padding: 22px 16px;
+  border-top: 1px solid #eef2f6;
+  color: var(--nf-ink-3);
+  font-size: 13px;
+  text-align: center;
+}
+
+.nf-iso-inline-filter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 58px;
+  margin: 0;
+  padding: 10px 0 12px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.nf-iso-inline-filter-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(100%, 360px);
+  color: var(--nf-ink-3);
+}
+
+.nf-iso-inline-filter-search > svg {
+  position: absolute;
+  left: 11px;
+  pointer-events: none;
+}
+
+.nf-iso-inline-filter-search .nf-app-input {
+  width: 100%;
+  min-height: 38px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+.nf-iso-inline-filter-search input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.nf-iso-inline-filter-clear {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+}
+
+.nf-iso-inline-filter-clear:hover {
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+
+.nf-compliance-obligation-detail-cell {
+  padding: 0 !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  background: #f8fafc;
+}
+
+.nf-compliance-obligation-detail {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid #e5eaf2;
+  background: #f8fafc;
+}
+
+.nf-compliance-obligation-evaluation {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.nf-compliance-obligation-detail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--nf-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.nf-compliance-obligation-form-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) minmax(220px, 2fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.nf-compliance-obligation-form-grid > :where(input, select) {
+  min-width: 0;
+  width: 100%;
+}
+
+.nf-compliance-obligation-save,
+.nf-compliance-obligation-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--nf-app-accent);
+  border-radius: 8px;
+  background: var(--nf-app-accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nf-compliance-obligation-toggle {
+  border-color: var(--nf-line);
+  background: #fff;
+  color: var(--nf-ink);
+}
+
+.nf-compliance-obligation-save:disabled,
+.nf-compliance-obligation-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nf-compliance-obligation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.nf-iso-create-button {
+  justify-self: end;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-table-card-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nf-iso-table-card-tools {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .nf-iso-table-card-tools > :where(button, a) {
+    width: 100%;
+  }
+
+  .nf-iso-table-search {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .nf-iso-inline-filter {
+    justify-content: stretch;
+  }
+
+  .nf-iso-inline-filter-search {
+    width: 100%;
+  }
+
+  .nf-compliance-obligation-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-compliance-obligation-form-grid > button {
+    width: 100%;
+  }
+
+  .nf-iso-table-card-filters > * {
+    width: 100%;
+  }
+
+  .nf-iso-create-form > .nf-modal-actions:has(> button + button),
+  .nf-iso-edit-form > .nf-modal-actions:has(> button + button) {
+    flex-direction: row;
+  }
+
+  .nf-iso-create-form > .nf-modal-actions:has(> button + button) > button,
+  .nf-iso-edit-form > .nf-modal-actions:has(> button + button) > button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.nf-iso-panel-toolbar > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nf-iso-panel-toolbar strong {
+  color: var(--nf-ink);
+  font-size: 13px;
+}
+
+.nf-iso-panel-toolbar span {
+  color: var(--nf-ink-3);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-panel-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nf-iso-panel-toolbar .nf-quick-create {
+    margin-left: 0 !important;
+  }
+}
+
+.nf-iso-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-iso-dashboard-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--nf-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.045);
+}
+
+.nf-iso-dashboard-card--wide {
+  grid-column: 1 / -1;
+}
+
+.nf-iso-dashboard-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 13px;
+  border-bottom: 1px solid var(--nf-line);
+  background: linear-gradient(180deg, #fff 0%, var(--nf-app-surface-2) 100%);
+}
+
+.nf-iso-dashboard-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.nf-iso-dashboard-card-title svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}
+
+.nf-iso-dashboard-card-subtitle {
+  margin: 4px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nf-iso-dashboard-card-body {
+  padding: 16px 18px 18px;
+}
+
+.nf-iso-dashboard-card-body > :first-child {
+  margin-top: 0;
+}
+
+.nf-iso-dashboard-card-body > :last-child {
+  margin-bottom: 0;
+}
+
+.nf-iso-dashboard-card > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.nf-iso-dashboard-card > h3 svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}
+
+.nf-iso-dashboard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--nf-line);
+  border-radius: 10px;
+}
+
+.nf-iso-dashboard-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.nf-iso-dashboard-table th {
+  padding: 10px 12px;
+  color: var(--nf-ink-3);
+  background: var(--nf-app-surface-2);
+  border-bottom: 1px solid var(--nf-line);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.nf-iso-dashboard-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--nf-line);
+  vertical-align: top;
+}
+
+.nf-iso-dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.nf-iso-dashboard-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.nf-iso-dashboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 34px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f1f3f7;
+  font-size: 13px;
+}
+
+.nf-iso-dashboard-row:last-child {
+  border-bottom: 0;
+}
+
+.nf-iso-dashboard-row-label {
+  color: var(--nf-ink-3);
+}
+
+.nf-iso-dashboard-row-value {
+  color: var(--nf-ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .nf-iso-dashboard-card-head,
+  .nf-iso-dashboard-card-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
 }
 
 .nf-metric-cell-link {
@@ -4246,4 +6183,899 @@ button.nf-audit-card:focus-visible {
   .nf-app-main-inner button { cursor: default !important; box-shadow: none !important; }
 
   @page { margin: 14mm; }
+}
+
+/* Footer uniforme para todos los formularios modales con dos acciones. */
+.nf-modal-body .nf-modal-actions:has(> button + button),
+.nf-modal-body .nf-modal-actions:has(> button + a),
+.nf-modal-body .nf-modal-actions:has(> a + button) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+.nf-modal-body .nf-modal-actions:has(> button + button) > :where(button, a),
+.nf-modal-body .nf-modal-actions:has(> button + a) > :where(button, a),
+.nf-modal-body .nf-modal-actions:has(> a + button) > :where(button, a) {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+/* Contrato visual final de los modales ISO. Este bloque queda al final para
+   neutralizar estilos inline heredados y evitar que cada subtab tenga una
+   versión distinta del mismo patrón. */
+.nf-modal-overlay {
+  padding: 20px !important;
+  background: rgba(15, 23, 42, 0.46) !important;
+  backdrop-filter: blur(3px);
+}
+
+.nf-modal-panel {
+  width: min(760px, calc(100vw - 32px)) !important;
+  max-height: min(820px, calc(100vh - 32px)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24), 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.nf-modal-header {
+  min-height: 72px !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--nf-line) !important;
+  background: #fff !important;
+}
+
+.nf-modal-header-title {
+  font-size: 20px !important;
+  line-height: 1.25 !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--nf-ink) !important;
+}
+
+.nf-modal-close {
+  width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--nf-line) !important;
+  background: #fff !important;
+  color: var(--nf-ink-3) !important;
+}
+
+.nf-modal-close:hover {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  color: var(--nf-ink) !important;
+}
+
+.nf-modal-body {
+  padding: 24px !important;
+  background: #fff !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  border-color: #dbe3ee !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):hover {
+  border-color: #c5d0df !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {
+  border-color: var(--nf-app-accent) !important;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
+}
+
+.nf-modal-body :where(button, a):not(.nf-modal-close) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+.nf-modal-body .nf-app-btn-primary {
+  border: 1px solid var(--nf-app-accent) !important;
+  background: var(--nf-app-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 5px 12px rgba(79, 70, 229, 0.16) !important;
+}
+
+.nf-modal-body .nf-app-btn-primary:hover:not(:disabled) {
+  filter: brightness(0.96);
+  box-shadow: 0 7px 16px rgba(79, 70, 229, 0.2) !important;
+}
+
+.nf-modal-body .nf-app-btn-ghost {
+  border: 1px solid #dbe3ee !important;
+  background: #fff !important;
+  color: var(--nf-ink-2) !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-body .nf-app-btn-ghost:hover:not(:disabled) {
+  border-color: #c5d0df !important;
+  background: #f8fafc !important;
+}
+
+.nf-modal-body .nf-modal-actions:has(> :nth-child(2)):not(:has(> :nth-child(3))) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  padding-top: 16px !important;
+  margin-top: 8px !important;
+  border-top: 1px solid var(--nf-line) !important;
+}
+
+.nf-modal-body .nf-modal-actions:has(> :nth-child(2)):not(:has(> :nth-child(3))) > :where(button, a) {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+}
+
+.nf-energy-editor-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.nf-energy-editor-actions > button {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .nf-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .nf-modal-panel {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 16px !important;
+  }
+
+  .nf-modal-header,
+  .nf-modal-body {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .nf-iso-create-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Misma superficie para los modales legacy que todavía no usan Modal.tsx. */
+.nf-modal-backdrop {
+  padding: 20px !important;
+  background: rgba(15, 23, 42, 0.46) !important;
+}
+
+.nf-modal-backdrop .nf-modal {
+  max-height: min(820px, calc(100vh - 32px)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24), 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  overflow: auto !important;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header {
+  min-height: 72px !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--nf-line) !important;
+  background: #fff !important;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header > .nf-app-btn-ghost {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  border-radius: 10px !important;
+}
+
+.nf-modal-backdrop .nf-modal > :not(.nf-modal-header) {
+  box-sizing: border-box;
+}
+
+.nf-modal-backdrop .nf-modal :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  border-color: #dbe3ee !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-backdrop .nf-modal :where(button, a):not(.nf-modal-close) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+/* Acciones de filas ISO: icono, texto y baseline compartidos. */
+.nf-table-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  margin: 0 6px 0 0 !important;
+  padding: 0 10px !important;
+  border: 1px solid #dbe3ee !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: var(--nf-ink-2) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-table-action:hover:not(:disabled) {
+  border-color: #b9c6d8 !important;
+  background: #f8fafc !important;
+  color: var(--nf-ink) !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.nf-table-action--danger {
+  border-color: #fecaca !important;
+  background: #fffafa !important;
+  color: #b91c1c !important;
+}
+
+.nf-table-action--danger:hover:not(:disabled) {
+  border-color: #fca5a5 !important;
+  background: #fef2f2 !important;
+  color: #991b1b !important;
+}
+
+.nf-energy-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.nf-energy-table-actions .nf-table-action {
+  margin: 0 !important;
+}
+
+.nf-table-action--primary {
+  border-color: var(--nf-app-accent, #5266f6) !important;
+  background: var(--nf-app-accent, #5266f6) !important;
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, .18);
+}
+
+.nf-table-action--primary:hover:not(:disabled) {
+  border-color: #4053e6 !important;
+  background: #4053e6 !important;
+  color: #fff !important;
+}
+
+/* Todas las tablas ISO pasan por IsoTableCard. Las acciones de fila se
+   normalizan aquí para que los cinco módulos mantengan el mismo ritmo visual,
+   incluso cuando un registro expone varias operaciones. */
+.nf-iso-data-table td:has(.nf-table-action) {
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+
+.nf-iso-data-table td > :is(span, div):has(.nf-table-action) {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.nf-iso-data-table td > :is(span, div):has(.nf-table-action) .nf-table-action {
+  margin: 0 !important;
+}
+
+/* En los formularios de creación, la salida secundaria siempre queda a la
+   izquierda y la acción principal a la derecha. Ambos ocupan exactamente la
+   mitad del footer, sin superponerse. */
+.nf-iso-create-form .nf-iso-create-fields > :where(div)[style*="display: grid"] > button:last-child {
+  grid-column: 2 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-form-actions > button {
+  grid-column: 1 !important;
+}
+
+.nf-iso-create-form .nf-iso-create-fields > button.nf-iso-create-cancel {
+  grid-column: 1 !important;
+}
+
+.nf-table-action--secondary {
+  border-color: #dbe3ee !important;
+  background: #fff !important;
+  color: #64748b !important;
+}
+
+.nf-energy-review-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.nf-energy-review-status--draft { background: #f1f5f9; color: #64748b; }
+.nf-energy-review-status--in_progress { background: #fff7ed; color: #c2410c; }
+.nf-energy-review-status--under_review { background: #eff6ff; color: #2563eb; }
+.nf-energy-review-status--approved { background: #ecfdf5; color: #15803d; }
+.nf-energy-review-status--superseded { background: #f8fafc; color: #94a3b8; }
+
+/* Estados de ISO 50001: etiquetas legibles y consistentes en todas las tablas. */
+.nf-energy-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nf-energy-status--active,
+.nf-energy-status--approved,
+.nf-energy-status--verified,
+.nf-energy-status--completed,
+.nf-energy-status--selected,
+.nf-energy-status--preferred {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.nf-energy-status--in_progress,
+.nf-energy-status--under_analysis,
+.nf-energy-status--under_review,
+.nf-energy-status--in_review,
+.nf-energy-status--in_implementation,
+.nf-energy-status--identified,
+.nf-energy-status--planned,
+.nf-energy-status--calculated,
+.nf-energy-status--acceptable {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.nf-energy-status--draft,
+.nf-energy-status--archived,
+.nf-energy-status--superseded,
+.nf-energy-status--closed,
+.nf-energy-status--cancelled {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.nf-energy-status--delayed,
+.nf-energy-status--changes_required,
+.nf-energy-status--rejected,
+.nf-energy-status--not_recommended {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.nf-energy-empty-cell {
+  height: 116px;
+  padding: 28px 20px !important;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.nf-table-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nf-iso-data-table tbody td:last-child,
+.nf-data-table tbody td:last-child {
+  vertical-align: middle;
+}
+
+/* Los programas pertenecen al objetivo: se muestran en una fila anidada que
+   ocupa la tabla completa, en lugar de amontonarse dentro de una celda. */
+.nf-objective-programs-row > td {
+  padding: 14px 18px 18px !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  background: #fff;
+}
+
+.nf-objective-programs-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 2px;
+  padding: 16px;
+  border: 1px solid #e4eaf2;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.nf-objective-programs-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--nf-ink-2);
+  font-size: 12px;
+}
+
+.nf-objective-programs-heading > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nf-objective-programs-heading svg {
+  color: var(--nf-app-accent);
+}
+
+.nf-objective-programs-heading > span {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: var(--nf-app-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nf-objective-programs-list {
+  display: grid;
+  gap: 8px;
+}
+
+.nf-objective-program-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e4eaf2;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.nf-objective-program-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--nf-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.nf-objective-program-name > svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}
+
+.nf-objective-program-name > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-objective-program-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.nf-objective-program-item .nf-table-action {
+  flex: 0 0 auto;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 8px !important;
+}
+
+.nf-objective-program-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: var(--nf-app-accent);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.nf-objective-program-count--empty {
+  background: #f1f5f9;
+  color: var(--nf-ink-3);
+  font-weight: 500;
+}
+
+.nf-environment-trend-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, .95fr);
+  gap: 14px;
+  margin: 14px 0;
+}
+
+.nf-environment-trend-chart,
+.nf-environment-trend-latest {
+  border: 1px solid var(--nf-line, #e5eaf2);
+  border-radius: 14px;
+  background: var(--nf-surface, #fff);
+  padding: 16px;
+}
+
+.nf-environment-trend-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+}
+
+.nf-environment-trend-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.nf-environment-trend-heading strong {
+  color: var(--nf-ink, #172033);
+  font-size: 14px;
+}
+
+.nf-environment-trend-heading span {
+  font-size: 12px;
+}
+
+.nf-environment-trend-heading > svg {
+  color: #6478ff;
+}
+
+.nf-environment-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 16px 0 10px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.nf-environment-trend-legend span,
+.nf-environment-trend-stat > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nf-environment-trend-legend i,
+.nf-environment-trend-stat i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.nf-environment-trend-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.nf-environment-trend-period {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.nf-environment-trend-period-label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-environment-trend-period-bars {
+  display: grid;
+  gap: 3px;
+}
+
+.nf-environment-trend-bar-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.nf-environment-trend-bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .2s ease;
+}
+
+.nf-environment-trend-latest-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5 !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nf-environment-trend-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.nf-environment-trend-stat:last-child {
+  border-bottom: 0;
+}
+
+.nf-environment-trend-stat strong {
+  color: var(--nf-ink, #172033);
+  font-size: 14px;
+}
+
+.nf-environment-trend-stat small {
+  min-width: 42px;
+  text-align: right;
+  color: #94a3b8;
+}
+
+.nf-environment-trend-stat small.is-up {
+  color: #dc2626;
+}
+
+.nf-environment-trend-stat small.is-down {
+  color: #16a34a;
+}
+
+.nf-environment-trend-empty {
+  display: grid;
+  min-height: 112px;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .nf-environment-trend-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .nf-modal-backdrop {
+    padding: 10px !important;
+  }
+
+  .nf-modal-backdrop .nf-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 16px !important;
+  }
+
+  .nf-modal-backdrop .nf-modal > .nf-modal-header {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* ISO 50001: las acciones de creación forman una única fila real, dentro del
+   formulario. Esto anula las reglas heredadas que las colocaban de forma
+   absoluta y podían hacer que Cancelar se montara sobre Crear. */
+.nf-iso-create-form {
+  position: static !important;
+  display: block !important;
+  padding-bottom: 0 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+/* El primer hijo es el contenido del formulario de cada subtab. Al retirarlo
+   visualmente del wrapper, sus filas siguen siendo grupos completos y las dos
+   acciones quedan como los dos últimos elementos de la misma cuadrícula. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child {
+  display: contents !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :where(input, select, textarea, p, label),
+.nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="display"] {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="display"] {
+  display: grid !important;
+}
+
+/* Mayor especificidad que las cuadrículas heredadas: solo se desenvuelve el
+   wrapper raíz del formulario, no sus filas internas. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child:where(div)[style*="display"] {
+  display: contents !important;
+}
+
+/* Las filas definidas por cada formulario ocupan todo el ancho del modal;
+   sus columnas internas siguen controladas por el propio formulario. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > :where(input, select, textarea, p, label, div) {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > :where(div)[style*="display"] {
+  display: grid !important;
+  width: 100% !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > button,
+.nf-iso-create-form > .nf-iso-create-fields button:last-of-type,
+.nf-iso-create-form > .nf-iso-create-fields > * > button:last-child {
+  position: static !important;
+  inset: auto !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 4px 0 0 !important;
+  box-sizing: border-box !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > button:not(.nf-iso-create-cancel) {
+  order: 2;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > * > button:last-child {
+  order: 2;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel {
+  order: 1;
+  position: relative !important;
+  margin-top: 20px !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: calc(200% + 12px);
+  height: 1px;
+  background: var(--nf-line, #e5eaf2);
+  pointer-events: none;
+}
+
+.nf-iso-create-form :where(input, select, textarea) {
+  min-height: 46px !important;
+  padding: 11px 12px !important;
+  border-radius: 10px !important;
+}
+
+.nf-iso-create-form .nf-modal-field {
+  display: grid !important;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nf-iso-create-form .nf-modal-field-label {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Un estado desactivado debe comunicar claramente que aún faltan datos
+   obligatorios; evita que parezca posible enviar un formulario incompleto. */
+.nf-modal-body button:disabled {
+  cursor: not-allowed !important;
+  color: #94a3b8 !important;
+  border-color: #dbe3ee !important;
+  background: #e8edf5 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* Footer común de creación. El botón secundario y el principal ocupan la
+   misma fila, en el orden Cancelar → Crear, sin depender de la subpestaña. */
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel,
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > button:last-child {
+  align-self: end !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 20px !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  order: 90 !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > button:last-child {
+  grid-column: 2 !important;
+  grid-row: auto !important;
+  order: 91 !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-column: 1 / -1 !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding-top: 14px !important;
+  border-top: 1px solid var(--nf-line, #e5eaf2) !important;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) > button {
+  grid-column: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-create-form > .nf-iso-create-fields {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
 }
