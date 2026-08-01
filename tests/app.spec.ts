@@ -16,14 +16,18 @@ async function openGroup(page: Page, group: string) {
 
 /**
  * Abre un módulo normativo desde el grupo "Normas".
- * `standard` es la etiqueta del módulo en el sidebar (no el número de norma):
- * cada norma es ahora un único destino y sus secciones aparecen anidadas solo
- * cuando esa norma es la ruta activa.
+ *
+ * Se localiza por `href` y no por etiqueta: `I18nDomBridge` reescribe los
+ * nodos de texto del DOM ya renderizado (por ejemplo "Compliance" pasa a
+ * "Conformidad"), así que el nombre accesible no es estable.
+ *
+ * Cada norma es un único destino; sus secciones se anidan solo cuando esa
+ * norma es la ruta activa.
  */
-async function openIsoModule(page: Page, standard: string, section?: string) {
+async function openIsoModule(page: Page, href: string, section?: string) {
   await openGroup(page, "Normas");
-  await page.getByRole("link", { name: standard, exact: true }).click();
-  if (section) await page.getByRole("link", { name: section, exact: true }).click();
+  await page.locator(`.nf-nav__link[href="${href}"]`).click();
+  if (section) await page.locator(`.nf-nav__section-link[href*="${href}"]`).filter({ hasText: section }).first().click();
 }
 
 test.describe("SaaS Application", () => {
@@ -86,89 +90,89 @@ test.describe("SaaS Application", () => {
   });
 
   test("sidebar navigation to environmental management (ISO 14001)", async ({ page }) => {
-    await openIsoModule(page, "Gestión ambiental");
+    await openIsoModule(page, "/app/environment");
     await expect(page).toHaveURL(/\/app\/environment/);
     await expect(page.getByRole("heading", { name: "Gestión Ambiental" })).toBeVisible();
-    await page.getByRole("link", { name: "Biodiversidad", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Biodiversidad" }).first().click();
     await expect(page.getByRole("heading", { name: "Biodiversidad", level: 1 })).toBeVisible();
     await expect(page.getByText("Reserva Río Claro")).toBeVisible();
   });
 
   test("sidebar navigation to occupational health & safety (ISO 45001)", async ({ page }) => {
-    await openIsoModule(page, "Seguridad y salud");
+    await openIsoModule(page, "/app/safety");
     await expect(page).toHaveURL(/\/app\/safety/);
     await expect(page.getByRole("heading", { name: "Seguridad y Salud en el Trabajo" })).toBeVisible();
   });
 
   test("sidebar navigation to the Integrated Management System (SIG)", async ({ page }) => {
-    await openIsoModule(page, "Sistema integrado");
+    await openIsoModule(page, "/app/integrated");
     await expect(page).toHaveURL(/\/app\/integrated/);
     await expect(page.getByRole("heading", { name: "Sistema Integrado de Gestión" })).toBeVisible();
   });
 
   test("sidebar navigation to business continuity (ISO 22301)", async ({ page }) => {
-    await openIsoModule(page, "Continuidad de negocio");
+    await openIsoModule(page, "/app/continuity");
     await expect(page).toHaveURL(/\/app\/continuity/);
     await expect(page.getByRole("heading", { name: "Continuidad de negocio" })).toBeVisible();
-    await page.getByRole("link", { name: "BIA y actividades", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "BIA y actividades" }).first().click();
     await expect(page.getByText("Análisis de Impacto en el Negocio")).toBeVisible();
   });
 
   test("sidebar navigation to AI management (ISO/IEC 42001)", async ({ page }) => {
-    await openIsoModule(page, "Inteligencia artificial");
+    await openIsoModule(page, "/app/aims");
     await expect(page).toHaveURL(/\/app\/aims/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión de Inteligencia Artificial" })).toBeVisible();
-    await page.getByRole("link", { name: "Inventario IA", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Inventario IA" }).first().click();
     await expect(page.getByText("IA-0001").first()).toBeVisible();
   });
 
   test("sidebar navigation to compliance management (ISO 37301)", async ({ page }) => {
-    await openIsoModule(page, "Compliance");
+    await openIsoModule(page, "/app/compliance");
     await expect(page).toHaveURL(/\/app\/compliance/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión de Compliance" })).toBeVisible();
-    await page.getByRole("link", { name: "Obligaciones", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Obligaciones" }).first().click();
     await expect(page.getByText("OBL-0001").first()).toBeVisible();
-    await page.getByRole("link", { name: "Canal de denuncias", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Canal de denuncias" }).first().click();
     await expect(page.getByText("Configuración del canal")).toBeVisible();
   });
 
   test("sidebar navigation to energy management (ISO 50001)", async ({ page }) => {
-    await openIsoModule(page, "Gestión energética");
+    await openIsoModule(page, "/app/energy");
     await expect(page).toHaveURL(/\/app\/energy/);
     await expect(page.getByRole("heading", { name: "Gestión de la Energía" })).toBeVisible();
-    await page.getByRole("link", { name: "Fuentes y usos", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Fuentes y usos" }).first().click();
     await expect(page.getByText("FUE-0001").first()).toBeVisible();
   });
 
   test("sidebar navigation to food safety management (ISO 22000)", async ({ page }) => {
-    await openIsoModule(page, "Inocuidad alimentaria");
+    await openIsoModule(page, "/app/food-safety");
     await expect(page).toHaveURL(/\/app\/food-safety/);
     await expect(page.getByRole("heading", { name: "Inocuidad alimentaria (HACCP)" })).toBeVisible();
-    await page.getByRole("link", { name: "Trazabilidad", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Trazabilidad" }).first().click();
     await expect(page.getByText("LOT-0001").first()).toBeVisible();
   });
 
   test("sidebar navigation to IT service management (ISO/IEC 20000)", async ({ page }) => {
-    await openIsoModule(page, "Servicios TI (ITSM)");
+    await openIsoModule(page, "/app/itsm");
     await expect(page).toHaveURL(/\/app\/itsm/);
     await expect(page.getByRole("heading", { name: "Gestión de servicios TI (ITSM)" })).toBeVisible();
-    await page.getByRole("link", { name: "Incidentes", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Incidentes" }).first().click();
     await expect(page.getByText("INC-0001").first()).toBeVisible();
   });
 
   test("sidebar navigation to medical device QMS (ISO 13485)", async ({ page }) => {
-    await openIsoModule(page, "Dispositivos médicos");
+    await openIsoModule(page, "/app/medical-devices");
     await expect(page).toHaveURL(/\/app\/medical-devices/);
     await expect(page.getByRole("heading", { name: "Calidad de dispositivos médicos" })).toBeVisible();
-    await page.getByRole("link", { name: "Diseño (DHF)", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Diseño (DHF)" }).first().click();
     await expect(page.getByText("DHF-0001").first()).toBeVisible();
   });
 
   test("sidebar navigation to anti-bribery management (ISO 37001)", async ({ page }) => {
-    await openIsoModule(page, "Antisoborno");
+    await openIsoModule(page, "/app/antibribery");
     await expect(page).toHaveURL(/\/app\/antibribery/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión Antisoborno" })).toBeVisible();
-    await page.getByRole("link", { name: "Beneficiarios", exact: true }).click();
+    await page.locator(".nf-nav__section-link").filter({ hasText: "Beneficiarios" }).first().click();
     await expect(page.getByText("UBO-0001").first()).toBeVisible();
   });
 });
