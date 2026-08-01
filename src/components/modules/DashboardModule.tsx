@@ -15,6 +15,8 @@ import {
   Zap,
 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import PageHeader from "@/components/layout/PageHeader";
+import { useI18n } from "@/context/I18nProvider";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { DashboardPayload } from "@/lib/server-queries";
 import { useWorkspace } from "@/context/WorkspaceStore";
@@ -67,6 +69,7 @@ export default function DashboardModule({
   live?: DashboardPayload | null;
 }) {
   const router = useRouter();
+  const { t, tx } = useI18n();
   const { state } = useWorkspace();
   const isLive = live != null;
   const today = new Date().toISOString().slice(0, 10);
@@ -119,18 +122,23 @@ export default function DashboardModule({
 
   return (
     <div>
-      <div className="nf-dash-actions">
-        {quickActions.map((action, i) => (
+      {/* El dashboard no declaraba ningún `<h1>` ni indicaba de qué
+          organización eran los datos: la página abría directamente con una fila
+          de accesos rápidos. */}
+      <PageHeader
+        title={t("dashboard.title")}
+        subtitle={t("dashboard.subtitle", { org: orgName })}
+        actions={quickActions.map((action, i) => (
           <button
             key={action.href}
             type="button"
             className={i === 0 ? "nf-app-btn-primary" : "nf-app-btn-ghost"}
             onClick={() => router.push(action.href)}
           >
-            {action.label}
+            {tx(action.label)}
           </button>
         ))}
-      </div>
+      />
 
       <div className="nf-dash-hero-grid">
         <div className="nf-dash-card">

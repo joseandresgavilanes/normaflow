@@ -254,9 +254,11 @@ async function main() {
       process.stdout.write(`[${vp.name}] ${route} ${d.status}${flag}\n`);
     }
     await ctx.close();
+    // Se vuelca en cada viewport: una interrupción a mitad de barrido deja
+    // igualmente utilizable lo ya medido.
+    fs.writeFileSync(path.join(OUT, "diagnostics.json"), JSON.stringify(results, null, 2));
   }
   await browser.close();
-  fs.writeFileSync(path.join(OUT, "diagnostics.json"), JSON.stringify(results, null, 2));
   console.log("\nWrote", path.join(OUT, "diagnostics.json"));
 }
 
