@@ -272,6 +272,10 @@
 
 .nf-nav__badge {
   flex: 0 0 auto;
+  /* Fuera del enlace para no contaminar su nombre accesible; se superpone al
+     final de la fila, antes del botón de fijar. */
+  position: absolute;
+  right: 26px;
   padding: 1px 6px;
   border: 1px solid var(--nf-warning-border);
   border-radius: var(--nf-radius-full);

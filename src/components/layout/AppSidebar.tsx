@@ -167,6 +167,7 @@ export default function AppSidebar({
     const href = locked ? `/app/billing?upgrade=${navModule}` : item.href;
     const isPinned = pinned.includes(item.href);
     const label = labelFor(item);
+    const badgeId = locked ? `nf-nav-plan-${item.href.replace(/\W+/g, "-")}` : undefined;
 
     return (
       <li key={`${options.inPinned ? "pin:" : ""}${item.href}`} className="nf-nav__row">
@@ -174,6 +175,10 @@ export default function AppSidebar({
           href={href}
           prefetch={false}
           aria-current={active ? "page" : undefined}
+          /* El plan es una descripción, no parte del nombre del enlace: si el
+             badge entra en el nombre accesible, el enlace pasa a llamarse
+             "Compliance Growth". */
+          aria-describedby={badgeId}
           onPointerEnter={() => prefetchRoute(href)}
           onFocus={() => prefetchRoute(href)}
           onTouchStart={() => prefetchRoute(href)}
@@ -184,12 +189,14 @@ export default function AppSidebar({
         >
           <item.Icon className="nf-nav__icon" size={17} strokeWidth={active ? 2 : 1.75} aria-hidden />
           <span className="nf-nav__label">{label}</span>
-          {locked && (
-            /* El plan se comunica con texto, no solo con un icono: antes era un
-               candado con `title`, invisible para teclado y lectores. */
-            <span className="nf-nav__badge">{t("nav.lockedBadge")}</span>
-          )}
         </Link>
+        {locked && (
+          /* El plan se comunica con texto, no solo con un icono: antes era un
+             candado con `title`, invisible para teclado y lectores. */
+          <span className="nf-nav__badge" id={badgeId} title={t("nav.locked")}>
+            {t("nav.lockedBadge")}
+          </span>
+        )}
         <button
           type="button"
           className="nf-nav__pin"

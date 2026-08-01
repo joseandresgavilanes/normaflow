@@ -165,8 +165,11 @@ Mejora · Personas y terceros · Normas · Administración.
 
 Reglas:
 
-- **Una norma, un destino.** La navegación dentro de una norma pertenece a las
-  pestañas de la página, no al sidebar.
+- **Una norma, un destino.** Sus secciones se anidan bajo la norma **activa**,
+  nunca todas a la vez. Estado final previsto: una barra de pestañas dentro del
+  módulo, alimentada por `useModuleSection`; la sub-navegación de un módulo no
+  pertenece a la columna global. Hoy los módulos no renderizan pestañas, así
+  que el sidebar sigue siendo la vía y no puede retirarse hasta que existan.
 - El estado activo se marca con color, peso y barra lateral. Nunca solo color.
 - El bloqueo por plan se expresa con un badge textual, no con un icono mudo.
 - Grupos colapsables con estado persistido por navegador.
@@ -311,6 +314,7 @@ timeline y comentarios.
 | `WorkflowStepper` | ⬜ especificado |
 | Patrón de página de detalle | ⬜ especificado |
 | `CommandPalette` (⌘K real) | ⬜ especificado |
+| `ModuleTabs` (pestañas dentro de cada módulo normativo) | ⬜ especificado |
 | Consolidación de las 7 tarjetas y 10 botones | ⬜ pendiente |
 | Migración de los 4.475 `style={{}}` inline | ⬜ pendiente |
 | Partición de `globals.css` (7.125 líneas) | ⬜ pendiente |

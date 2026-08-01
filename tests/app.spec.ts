@@ -80,7 +80,9 @@ test.describe("SaaS Application", () => {
   test("billing page shows current plan", async ({ page }) => {
     await page.goto("/app/billing");
     await expect(page.getByRole("heading", { name: /Billing y suscripción/i })).toBeVisible();
-    await expect(page.getByText("Growth").first()).toBeVisible();
+    // Acotado al contenido: el sidebar también rotula "Growth" en el badge de
+    // los módulos bloqueados por plan.
+    await expect(page.locator("#nf-main").getByText("Growth").first()).toBeVisible();
   });
 
   test("sidebar navigation to environmental management (ISO 14001)", async ({ page }) => {
