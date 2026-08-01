@@ -146,8 +146,42 @@ barrido no eran un resultado limpio: eran ausencia de resultado.
 | `npx tsc --noEmit` | ✅ limpio |
 | `npx next lint` | ✅ sin errores (7 warnings preexistentes de `react-hooks/exhaustive-deps`) |
 | `npm run validate:i18n` | ✅ 266 claves × 3 locales |
-| `npm run build` | ver §5 |
-| Playwright `tests/` | ⬜ pendiente |
+| `npm run build` | ✅ limpio (`rm -rf .next && npm run build`) |
+| Playwright `tests/navigation.spec.ts` | ✅ **12/12** |
+| Playwright `tests/app.spec.ts` | ✅ 17/18 — ver abajo |
+| Playwright `tests/critical-flows.spec.ts` | ⬜ 2 fallos por confirmar |
+
+> `npm run build` y el servidor de desarrollo **no pueden correr a la vez**:
+> comparten `.next` y el build deja al servidor sirviendo 500.
+
+### `tests/navigation.spec.ts` (nuevo, 12 casos)
+
+Los ocho grupos, apertura automática del grupo activo, persistencia del estado,
+filtro con estado vacío, fijados, secciones visibles solo para la norma activa
+(13 para ISO 50001, 0 para el resto) y navegación real por `?section=`, skip
+link como primer tabulable que mueve el foco a `#nf-main`, `<h1>` único, cajón
+móvil cerrado y fuera del orden de tabulación, apertura por botón y cierre con
+`Escape`, y ausencia de scroll horizontal en tres rutas a 390 px.
+
+### Fallos abiertos
+
+| Test | Causa | ¿Lo introdujo el rediseño? |
+|---|---|---|
+| `app.spec.ts` › ISO 37001 (antisoborno) | El elemento se filtra por `permissions.can("antibribery:read")`, pero la matriz de permisos declara el recurso como `antibribery-sensitive`. La cadena es **idéntica** a la del sidebar anterior, así que el filtrado ya ocurría. | No — preexistente (verificado por comparación de la cadena, no reejecutando el código antiguo) |
+| `critical-flows.spec.ts` › cambio de organización | La primera fila de documentos no cambia tras conmutar de organización | Sin confirmar |
+| `critical-flows.spec.ts` › auditoría → CAPA | Estado esperado no visible en `/app/actions` | Sin confirmar |
+
+### Regresiones propias detectadas por los tests y corregidas
+
+1. **Nombre accesible contaminado.** El badge de plan dentro del `<a>` hacía que
+   el enlace se llamara “Compliance Growth”. Movido fuera y asociado con
+   `aria-describedby`.
+2. **Gating de plan extendido de más.** Se aplicó `planHasModule` a los módulos
+   normativos, que nunca lo tuvieron en el sidebar: los habría redirigido a
+   billing. Restringido a los módulos que ya lo tenían.
+3. **Localizadores frágiles.** `I18nDomBridge` reescribe el DOM renderizado
+   (“Compliance” → “Conformidad”), así que los tests de norma pasan a localizar
+   por `href`. Es otra manifestación del problema S6 de la auditoría.
 
 ---
 

@@ -163,7 +163,10 @@ export default function AppSidebar({
   const renderItem = (item: NavItem, options: { inPinned?: boolean } = {}) => {
     const active = isRouteActive(pathname, item.href);
     const navModule = item.module ?? moduleForPath(item.href);
-    const locked = Boolean(navModule && !planHasModule(plan, navModule, trialActive));
+    // El gating por plan se aplica solo donde ya se aplicaba. Los módulos
+    // normativos (los que declaran secciones) nunca pasaron por `planHasModule`
+    // en el sidebar anterior: extenderlo aquí los habría redirigido a billing.
+    const locked = Boolean(!item.sections && navModule && !planHasModule(plan, navModule, trialActive));
     const href = locked ? `/app/billing?upgrade=${navModule}` : item.href;
     const isPinned = pinned.includes(item.href);
     const label = labelFor(item);
