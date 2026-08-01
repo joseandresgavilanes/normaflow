@@ -92,12 +92,22 @@ test.describe("Navegación del workspace", () => {
     await expect(page).toHaveURL(/\/app\/energy$/);
   });
 
-  test("el enlace de salto al contenido lleva al main", async ({ page }) => {
-    await page.keyboard.press("Tab");
+  test("el enlace de salto al contenido es el primer tabulable y lleva al main", async ({ page }) => {
+    // Primer tabulable del shell: el usuario de teclado atravesaba ~180
+    // enlaces de navegación antes de llegar al contenido.
+    const firstTabbable = await page.evaluate(() => {
+      const candidates = Array.from(
+        document.querySelectorAll<HTMLElement>('a[href], button, input, select, [tabindex]:not([tabindex="-1"])'),
+      ).filter((el) => el.offsetParent !== null || el.classList.contains("nf-skip-link"));
+      return candidates[0]?.className ?? "";
+    });
+    expect(firstTabbable).toContain("nf-skip-link");
+
     const skip = page.locator(".nf-skip-link");
+    await skip.focus();
     await expect(skip).toBeFocused();
     await skip.press("Enter");
-    await expect(page).toHaveURL(/#nf-main$/);
+    await expect(page.locator("#nf-main")).toBeFocused();
   });
 
   test("el dashboard declara un único h1", async ({ page }) => {
