@@ -7,7 +7,7 @@ import { getSecurityControlsPayload } from "@/lib/actions/security-controls";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { SECURITY_CONTROL_CATALOG } from "@/lib/security-control-catalog";
 
-export const metadata = { title: "Controles ISO 27001 | NormaFlow" };
+export const metadata = { title: "Controles ISO 27001" };
 export const dynamic = "force-dynamic";
 
 export default async function SecurityControlsPage() {

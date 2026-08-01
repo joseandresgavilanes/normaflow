@@ -11,6 +11,9 @@ import { absoluteUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_PATH } from "@/lib/seo";
 // Los tokens deben cargarse antes que cualquier hoja que los consuma.
 import "@/styles/tokens.css";
 import "./globals.css";
+// Se carga después de globals.css: corrige el layout del shell sin editar el
+// monolito de 7k líneas.
+import "@/styles/app-shell.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });

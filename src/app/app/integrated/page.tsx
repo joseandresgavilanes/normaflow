@@ -8,7 +8,7 @@ import { isAuthorizationError } from "@/lib/permissions/server";
 import type { Discipline } from "@prisma/client";
 import { SIG_CROSSWALK } from "@/lib/standard-packs";
 
-export const metadata = { title: "Sistema Integrado de Gestión | NormaFlow" };
+export const metadata = { title: "Sistema Integrado de Gestión" };
 export const dynamic = "force-dynamic";
 
 export default async function IntegratedPage() {
@@ -45,6 +45,7 @@ function demoPayload(): IntegratedPayload {
       equivalencePercent: m.equivalencePercent ?? null,
     }],
     sharedDocuments: [], sharedEvidence: [], coverageCount: 0,
+    shareable: m.relationType === "EQUIVALENT" || m.relationType === "PARTIAL",
     responsibleId: null, responsibleName: null,
   }));
 
@@ -79,7 +80,7 @@ function demoPayload(): IntegratedPayload {
     reuseFactor: 2.4,
     multiNormEntities: [], processes: [], members: [],
     audits: [], integratedAuditCount: 0, multiNormFindings: [],
-    capas: [], risks: [], reviews: [],
+    capas: [], risks: [], reviews: [], changeRequests: [], suppliers: [],
     summary: {
       standards: 3, requirements: crosswalk.length,
       equivalent: crosswalk.filter((c) => c.kind === "EQUIVALENT").length,

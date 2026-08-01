@@ -1,173 +1,45 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
-import {
-  Activity,
-  AlertTriangle,
-  Archive,
-  BarChart3,
-  Bell,
-  Briefcase,
-  CalendarRange,
-  Building2,
-  ChevronDown,
-  ClipboardCheck,
-  CreditCard,
-  Factory,
-  FileText,
-  FolderTree,
-  GraduationCap,
-  LayoutDashboard,
-  Lightbulb,
-  LogOut,
-  MapPin,
-  Milestone,
-  Paperclip,
-  Plug,
-  RefreshCw,
-  ScrollText,
-  Shield,
-  Sparkles,
-  Target,
-  Timer,
-  UserCircle,
-  Users,
-  Workflow,
-  Zap,
-  CircleOff,
-  Gavel,
-  LockKeyhole,
-  FileCheck2,
-  ShieldAlert,
-  Boxes,
-  Siren,
-  Bug,
-  LifeBuoy,
-  Handshake,
-  HardHat,
-  Leaf,
-  Library,
-  Layers,
-  BrainCircuit,
-  Scale,
-  ShieldBan,
-  Flame,
-  UtensilsCrossed,
-  Server,
-  Cross,
-} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, LogOut, Pin, PinOff, Search, Sparkles, X } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import { getDemoOrg } from "@/lib/demo/organizations";
-import type { MessageKey } from "@/lib/i18n/messages";
 import { planHasModule } from "@/lib/constants";
+import { useDemoPermission } from "@/hooks/useDemoPermission";
+import {
+  CONTRIBUTOR_ROUTES,
+  NAV_GROUPS,
+  groupIdForPath,
+  isRouteActive,
+  moduleForPath,
+  type NavGroup,
+  type NavItem,
+} from "@/lib/navigation";
 
-const NAV: { href: string; Icon: LucideIcon; labelKey: MessageKey }[] = [
-  { href: "/app/dashboard", Icon: LayoutDashboard, labelKey: "nav.home" },
-  { href: "/app/setup", Icon: Milestone, labelKey: "nav.setup" },
-  { href: "/app/standards", Icon: Library, labelKey: "nav.standards" },
-  { href: "/app/integrated", Icon: Layers, labelKey: "nav.integrated" },
-  { href: "/app/gap", Icon: Target, labelKey: "nav.gap" },
-  { href: "/app/documents", Icon: FileText, labelKey: "nav.documents" },
-  { href: "/app/records", Icon: Archive, labelKey: "nav.records" },
-  { href: "/app/training", Icon: GraduationCap, labelKey: "nav.training" },
-  { href: "/app/changes", Icon: RefreshCw, labelKey: "nav.changes" },
-  { href: "/app/processes", Icon: Workflow, labelKey: "nav.processes" },
-  { href: "/app/risks", Icon: AlertTriangle, labelKey: "nav.risks" },
-  { href: "/app/opportunities", Icon: Lightbulb, labelKey: "nav.opportunities" },
-  { href: "/app/suppliers", Icon: Factory, labelKey: "nav.suppliers" },
-  { href: "/app/audit-program", Icon: CalendarRange, labelKey: "nav.auditProgram" },
-  { href: "/app/audits", Icon: ClipboardCheck, labelKey: "nav.audits" },
-  { href: "/app/management-review", Icon: Gavel, labelKey: "nav.managementReview" },
-  { href: "/app/nonconformities", Icon: CircleOff, labelKey: "nav.nonconformities" },
-  { href: "/app/actions", Icon: Zap, labelKey: "nav.actions" },
-  { href: "/app/indicators", Icon: BarChart3, labelKey: "nav.indicators" },
-  { href: "/app/evidence", Icon: Paperclip, labelKey: "nav.evidence" },
-  { href: "/app/security-controls", Icon: LockKeyhole, labelKey: "nav.securityControls" },
-  { href: "/app/assets", Icon: Boxes, labelKey: "nav.assets" },
-  { href: "/app/soa", Icon: FileCheck2, labelKey: "nav.soa" },
-  { href: "/app/risk-treatment", Icon: ShieldAlert, labelKey: "nav.riskTreatment" },
-  { href: "/app/incidents", Icon: Siren, labelKey: "nav.incidents" },
-  { href: "/app/vulnerabilities", Icon: Bug, labelKey: "nav.vulnerabilities" },
-  { href: "/app/continuity", Icon: LifeBuoy, labelKey: "nav.continuity" },
-  { href: "/app/environment", Icon: Leaf, labelKey: "nav.environment" },
-  { href: "/app/energy", Icon: Flame, labelKey: "nav.energy" },
-  { href: "/app/food-safety", Icon: UtensilsCrossed, labelKey: "nav.foodSafety" },
-  { href: "/app/itsm", Icon: Server, labelKey: "nav.itsm" },
-  { href: "/app/medical-devices", Icon: Cross, labelKey: "nav.medicalDevices" },
-  { href: "/app/safety", Icon: HardHat, labelKey: "nav.safety" },
-  { href: "/app/aims", Icon: BrainCircuit, labelKey: "nav.aims" },
-  { href: "/app/compliance", Icon: Scale, labelKey: "nav.compliance" },
-  { href: "/app/antibribery", Icon: ShieldBan, labelKey: "nav.antibribery" },
-  { href: "/app/suppliers/security", Icon: Handshake, labelKey: "nav.supplierSecurity" },
-  { href: "/app/integrations", Icon: Plug, labelKey: "nav.integrations" },
-  { href: "/app/reporting", Icon: ScrollText, labelKey: "nav.reporting" },
-  { href: "/app/activity", Icon: Activity, labelKey: "nav.activity" },
-  { href: "/app/notifications", Icon: Bell, labelKey: "nav.notifications" },
-  { href: "/app/billing", Icon: CreditCard, labelKey: "nav.billing" },
-  { href: "/app/settings", Icon: UserCircle, labelKey: "nav.settings" },
-];
+type Membership = { organizationId: string; organizationName: string; role: string };
 
-const ADMIN_GROUPS: {
-  labelKey: MessageKey;
-  items: { href: string; Icon: LucideIcon; labelKey: MessageKey }[];
-}[] = [
-  {
-    labelKey: "nav.generalInfo",
-    items: [
-      { href: "/app/info/positions", Icon: Briefcase, labelKey: "nav.positions" },
-      { href: "/app/info/personnel", Icon: Users, labelKey: "nav.personnel" },
-    ],
-  },
-  {
-    labelKey: "nav.catalogs",
-    items: [
-      { href: "/app/catalogs/locations", Icon: MapPin, labelKey: "nav.locations" },
-      { href: "/app/catalogs/retention", Icon: Timer, labelKey: "nav.retention" },
-      { href: "/app/catalogs/disposition", Icon: Archive, labelKey: "nav.disposition" },
-      {
-        href: "/app/catalogs/archive-method",
-        Icon: FolderTree,
-        labelKey: "nav.archiveMethod",
-      },
-      { href: "/app/catalogs/record-type", Icon: FileText, labelKey: "nav.recordType" },
-      { href: "/app/settings/catalogs", Icon: ClipboardCheck, labelKey: "nav.catalogs" },
-    ],
-  },
-  {
-    labelKey: "nav.admin",
-    items: [
-      { href: "/app/settings/organization", Icon: Building2, labelKey: "nav.orgSettings" },
-      { href: "/app/settings/users", Icon: Users, labelKey: "nav.usersRoles" },
-      { href: "/app/settings/groups", Icon: Shield, labelKey: "nav.groupsPermissions" },
-    ],
-  },
-];
+const PINNED_STORAGE_KEY = "nf.nav.pinned";
+const OPEN_GROUPS_STORAGE_KEY = "nf.nav.openGroups";
 
-type Membership = {
-  organizationId: string;
-  organizationName: string;
-  role: string;
-};
-
-function NavIcon({
-  Icon,
-  active,
-}: {
-  Icon: LucideIcon;
-  active: boolean;
-}) {
-  return (
-    <span className="nf-sidebar-nav-icon">
-      <Icon size={18} strokeWidth={active ? 2 : 1.75} aria-hidden />
-    </span>
-  );
+function readStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
-function moduleForPath(href: string) {
-  return /^\/app\/([^/]+)/.exec(href)?.[1] ?? null;
+function writeStorage(key: string, value: unknown) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* almacenamiento no disponible (modo privado): la navegación sigue usable */
+  }
 }
 
 export default function AppSidebar({
@@ -182,9 +54,9 @@ export default function AppSidebar({
   currentOrgId,
   onOrgChange,
   demoSession = false,
-  compact = false,
   drawerOpen = false,
   onNavigate,
+  onClose,
 }: {
   onAI: () => void;
   orgName: string;
@@ -197,172 +69,325 @@ export default function AppSidebar({
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
   demoSession?: boolean;
-  compact?: boolean;
   drawerOpen?: boolean;
   onNavigate?: () => void;
+  onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const ws = useWorkspaceOptional();
-  const { t } = useI18n();
+  const { t, tx } = useI18n();
+  const permissions = useDemoPermission();
+
+  const [query, setQuery] = useState("");
+  const [pinned, setPinned] = useState<string[]>([]);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean> | null>(null);
+  const prefetched = useRef(new Set<string>());
+
   const sidebarName = ws?.state.session.name ?? userName;
   const sidebarRole = ws?.state.session.roleLabel ?? roleLabel;
   const activeRoleKey = ws?.state.session.roleKey ?? roleKey;
-  const contributorNav = new Set([
-    "/app/dashboard", "/app/documents", "/app/records", "/app/training", "/app/changes",
-    "/app/processes", "/app/risks", "/app/opportunities", "/app/suppliers", "/app/audits",
-    "/app/nonconformities", "/app/actions", "/app/indicators", "/app/evidence", "/app/notifications", "/app/settings",
-  ]);
-  const visibleNav = activeRoleKey === "CONTRIBUTOR" ? NAV.filter((item) => contributorNav.has(item.href)) : NAV;
   const displayOrgName = ws?.state.session.orgName ?? orgName;
-  const demoAccent =
-    demoSession && ws
-      ? getDemoOrg(ws.state.session.activeOrgId)?.accent
-      : undefined;
+  const activeGroupId = groupIdForPath(pathname);
+
+  // El estado persistido se lee tras montar: leerlo durante el render rompería
+  // la hidratación, porque el servidor no tiene localStorage.
+  useEffect(() => {
+    setPinned(readStorage<string[]>(PINNED_STORAGE_KEY, []));
+    setOpenGroups(readStorage<Record<string, boolean>>(OPEN_GROUPS_STORAGE_KEY, {}));
+  }, []);
+
+  const prefetchRoute = useCallback(
+    (href: string) => {
+      if (prefetched.current.has(href)) return;
+      prefetched.current.add(href);
+      router.prefetch(href);
+    },
+    [router],
+  );
+
+  const togglePin = useCallback((href: string) => {
+    setPinned((current) => {
+      const next = current.includes(href)
+        ? current.filter((item) => item !== href)
+        : [...current, href];
+      writeStorage(PINNED_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const toggleGroup = useCallback((groupId: string, isOpen: boolean) => {
+    setOpenGroups((current) => {
+      const next = { ...(current ?? {}), [groupId]: !isOpen };
+      writeStorage(OPEN_GROUPS_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/login";
   }
 
-  return (
-    <aside
-      className="nf-sidebar"
-      style={{
-        width: compact ? "min(280px, 88vw)" : undefined,
-        zIndex: compact ? 160 : 100,
-        transform: compact
-          ? drawerOpen
-            ? "translateX(0)"
-            : "translateX(-100%)"
-          : "none",
-        transition: compact ? "transform 0.22s ease" : undefined,
-        boxShadow:
-          compact && drawerOpen ? "4px 0 24px rgba(0,0,0,0.08)" : undefined,
-      }}
-    >
-      <Link
-        href="/app/dashboard"
-        onClick={() => onNavigate?.()}
-        className="nf-sidebar-brand"
-      >
-        <div className="nf-sidebar-brand-mark">N</div>
-        <span className="nf-sidebar-brand-name">{displayOrgName}</span>
-        <ChevronDown size={16} strokeWidth={2} color="#9ca3af" aria-hidden />
-      </Link>
+  const labelFor = useCallback(
+    (item: NavItem) => (item.labelKey ? t(item.labelKey) : item.label ? tx(item.label) : ""),
+    [t, tx],
+  );
 
-      <div
-        className="nf-sidebar-org"
-        style={demoAccent ? { borderLeftColor: demoAccent, borderLeftWidth: 3 } : undefined}
-      >
-        <div className="nf-sidebar-org-label">{t("common.organization")}</div>
-        {demoSession && ws ? (
-          <select
-            value={ws.state.session.activeOrgId}
-            onChange={(e) => ws.switchDemoOrg(e.target.value)}
-          >
-            {ws.state.demoOrganizations.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        ) : memberships.length > 1 && onOrgChange ? (
-          <select
-            value={currentOrgId ?? ""}
-            onChange={(e) => onOrgChange(e.target.value)}
-          >
-            {memberships.map((m) => (
-              <option key={m.organizationId} value={m.organizationId}>
-                {m.organizationName}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <div className="nf-sidebar-org-name">{displayOrgName}</div>
-        )}
-      </div>
+  /** Grupos filtrados por rol, por permiso y por el filtro de texto. */
+  const visibleGroups = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    return NAV_GROUPS.map((group) => {
+      const items = group.items.filter((item) => {
+        if (activeRoleKey === "CONTRIBUTOR" && !CONTRIBUTOR_ROUTES.has(item.href)) return false;
+        if (item.permission && !permissions.can(item.permission)) return false;
+        if (needle && !labelFor(item).toLowerCase().includes(needle)) return false;
+        return true;
+      });
+      return { ...group, items } satisfies NavGroup;
+    }).filter((group) => group.items.length > 0);
+  }, [activeRoleKey, labelFor, permissions, query]);
 
-      <nav className="nf-sidebar-nav">
-        {visibleNav.map((item) => {
-          const active = pathname === item.href;
-          const navModule = moduleForPath(item.href);
-          const locked = Boolean(navModule && !planHasModule(plan, navModule, trialActive));
-          return (
-            <Link
-              key={item.href}
-              href={locked ? `/app/billing?upgrade=${navModule}` : item.href}
-              onClick={() => onNavigate?.()}
-              className={`nf-sidebar-nav-link${active ? " nf-sidebar-nav-link--active" : ""}`}
-              title={locked ? "Disponible desde Growth" : undefined}
-            >
-              <NavIcon Icon={item.Icon} active={active} />
-              {t(item.labelKey)}
-              {locked && <LockKeyhole size={13} style={{ marginLeft: "auto", color: "#9aa6b5" }} aria-label="Disponible desde Growth" />}
-            </Link>
-          );
-        })}
+  const pinnedItems = useMemo(() => {
+    if (query.trim()) return [];
+    const all = visibleGroups.flatMap((group) => group.items);
+    return pinned
+      .map((href) => all.find((item) => item.href === href))
+      .filter((item): item is NavItem => Boolean(item));
+  }, [pinned, query, visibleGroups]);
 
-        <button type="button" onClick={onAI} className="nf-sidebar-ai-btn">
-          <Sparkles size={16} strokeWidth={2} aria-hidden />
-          {t("nav.ai")}
-        </button>
+  const filtering = query.trim().length > 0;
+  const demoAccent = demoSession && ws ? getDemoOrg(ws.state.session.activeOrgId)?.accent : undefined;
 
-        {ADMIN_GROUPS.map((group) => {
-          const groupActive = group.items.some(
-            (it) => pathname === it.href || pathname?.startsWith(it.href + "/"),
-          );
-          return (
-            <div key={group.labelKey}>
-              <div
-                className={
-                  groupActive
-                    ? "nf-sidebar-group-title nf-sidebar-group-title--active"
-                    : "nf-sidebar-group-title"
-                }
-              >
-                {t(group.labelKey)}
-              </div>
-              {group.items.map((item) => {
-                const active = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => onNavigate?.()}
-                    className={`nf-sidebar-nav-link nf-sidebar-nav-link--admin${active ? " nf-sidebar-nav-link--active" : ""}`}
-                    >
-                      <NavIcon Icon={item.Icon} active={active} />
-                    {t(item.labelKey)}
-                  </Link>
-                );
-              })}
-            </div>
-          );
-        })}
-      </nav>
+  const renderItem = (item: NavItem, options: { inPinned?: boolean } = {}) => {
+    const active = isRouteActive(pathname, item.href);
+    const navModule = item.module ?? moduleForPath(item.href);
+    const locked = Boolean(navModule && !planHasModule(plan, navModule, trialActive));
+    const href = locked ? `/app/billing?upgrade=${navModule}` : item.href;
+    const isPinned = pinned.includes(item.href);
+    const label = labelFor(item);
 
-      <div className="nf-sidebar-footer">
+    return (
+      <li key={`${options.inPinned ? "pin:" : ""}${item.href}`} className="nf-nav__row">
         <Link
-          href="/app/settings"
+          href={href}
+          prefetch={false}
+          aria-current={active ? "page" : undefined}
+          onPointerEnter={() => prefetchRoute(href)}
+          onFocus={() => prefetchRoute(href)}
+          onTouchStart={() => prefetchRoute(href)}
           onClick={() => onNavigate?.()}
-          className="nf-sidebar-footer-profile"
+          className="nf-nav__link"
+          data-active={active || undefined}
+          data-locked={locked || undefined}
         >
-          <Avatar name={sidebarName} size={32} />
-          <div style={{ minWidth: 0 }}>
-            <div className="nf-sidebar-footer-name">{sidebarName}</div>
-            <div className="nf-sidebar-footer-role">{sidebarRole}</div>
-          </div>
+          <item.Icon className="nf-nav__icon" size={17} strokeWidth={active ? 2 : 1.75} aria-hidden />
+          <span className="nf-nav__label">{label}</span>
+          {locked && (
+            /* El plan se comunica con texto, no solo con un icono: antes era un
+               candado con `title`, invisible para teclado y lectores. */
+            <span className="nf-nav__badge">{t("nav.lockedBadge")}</span>
+          )}
         </Link>
         <button
           type="button"
-          onClick={() => logout()}
-          className="nf-sidebar-logout"
-          title={t("nav.logout")}
-          aria-label={t("nav.logout")}
+          className="nf-nav__pin"
+          data-pinned={isPinned || undefined}
+          aria-label={`${isPinned ? t("nav.unpin") : t("nav.pin")}: ${label}`}
+          aria-pressed={isPinned}
+          onClick={() => togglePin(item.href)}
         >
-          <LogOut size={17} strokeWidth={1.75} aria-hidden />
+          {isPinned ? <PinOff size={13} aria-hidden /> : <Pin size={13} aria-hidden />}
         </button>
+      </li>
+    );
+  };
+
+  const renderGroup = (group: NavGroup) => {
+    const groupLabel = t(group.labelKey);
+    // Mientras se filtra, todo abierto. Si no, manda la preferencia guardada y,
+    // a falta de ella, se abre el grupo que contiene la ruta activa.
+    const isOpen = filtering || (openGroups?.[group.id] ?? group.id === activeGroupId);
+    const panelId = `nf-nav-group-${group.id}`;
+
+    return (
+      <li key={group.id} className="nf-nav__group">
+        <button
+          type="button"
+          className="nf-nav__group-toggle"
+          aria-expanded={isOpen}
+          aria-controls={panelId}
+          aria-label={
+            isOpen
+              ? t("nav.collapseGroup", { group: groupLabel })
+              : t("nav.expandGroup", { group: groupLabel })
+          }
+          onClick={() => toggleGroup(group.id, isOpen)}
+          disabled={filtering}
+        >
+          <span className="nf-nav__group-title">{groupLabel}</span>
+          <ChevronDown
+            className="nf-nav__chevron"
+            data-open={isOpen || undefined}
+            size={14}
+            strokeWidth={2.25}
+            aria-hidden
+          />
+        </button>
+        <ul id={panelId} className="nf-nav__list" hidden={!isOpen}>
+          {group.items.map((item) => renderItem(item))}
+        </ul>
+      </li>
+    );
+  };
+
+  return (
+    <aside
+      className="nf-nav"
+      data-open={drawerOpen || undefined}
+      style={demoAccent ? ({ "--nf-nav-accent": demoAccent } as React.CSSProperties) : undefined}
+    >
+      <div className="nf-nav__head">
+        <Link
+          href="/app/dashboard"
+          prefetch={false}
+          className="nf-nav__brand"
+          onClick={() => onNavigate?.()}
+          aria-label="NormaFlow"
+        >
+          <span className="nf-nav__brand-mark" aria-hidden>N</span>
+        </Link>
+
+        {/* Un único selector de organización. Antes había dos controles para lo
+            mismo: la marca truncada con un chevron que no desplegaba nada, y
+            una caja "Organización" con un select justo debajo. */}
+        <OrgSwitcher
+          displayOrgName={displayOrgName}
+          demoSession={demoSession}
+          memberships={memberships}
+          currentOrgId={currentOrgId}
+          onOrgChange={onOrgChange}
+        />
+
+        {onClose && (
+          <button type="button" className="nf-nav__close" onClick={onClose} aria-label={t("common.close")}>
+            <X size={18} aria-hidden />
+          </button>
+        )}
+      </div>
+
+      <div className="nf-nav__filter">
+        <Search size={15} strokeWidth={2} aria-hidden />
+        <input
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t("nav.filter.placeholder")}
+          aria-label={t("nav.filter.label")}
+        />
+      </div>
+
+      <nav className="nf-nav__scroll" aria-label={t("nav.primaryLabel")}>
+        <ul className="nf-nav__groups">
+          {pinnedItems.length > 0 && (
+            <li className="nf-nav__group">
+              <p className="nf-nav__group-title nf-nav__group-title--static">{t("nav.pinned")}</p>
+              <ul className="nf-nav__list">
+                {pinnedItems.map((item) => renderItem(item, { inPinned: true }))}
+              </ul>
+            </li>
+          )}
+          {visibleGroups.map(renderGroup)}
+        </ul>
+
+        {filtering && visibleGroups.length === 0 && (
+          <p className="nf-nav__empty">{t("nav.filter.empty", { query: query.trim() })}</p>
+        )}
+      </nav>
+
+      <div className="nf-nav__foot">
+        <button type="button" onClick={onAI} className="nf-nav__ai">
+          <Sparkles size={15} strokeWidth={2} aria-hidden />
+          {t("nav.ai")}
+        </button>
+        <div className="nf-nav__account">
+          <Link
+            href="/app/settings"
+            prefetch={false}
+            onClick={() => onNavigate?.()}
+            className="nf-nav__profile"
+          >
+            <Avatar name={sidebarName} size={28} />
+            <span className="nf-nav__profile-text">
+              <span className="nf-nav__profile-name">{sidebarName}</span>
+              <span className="nf-nav__profile-role">{sidebarRole}</span>
+            </span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => logout()}
+            className="nf-nav__logout"
+            aria-label={t("nav.logout")}
+          >
+            <LogOut size={16} strokeWidth={1.75} aria-hidden />
+          </button>
+        </div>
       </div>
     </aside>
+  );
+}
+
+function OrgSwitcher({
+  displayOrgName,
+  demoSession,
+  memberships,
+  currentOrgId,
+  onOrgChange,
+}: {
+  displayOrgName: string;
+  demoSession: boolean;
+  memberships: Membership[];
+  currentOrgId?: string;
+  onOrgChange?: (organizationId: string) => void;
+}) {
+  const ws = useWorkspaceOptional();
+  const { t } = useI18n();
+
+  const options =
+    demoSession && ws
+      ? ws.state.demoOrganizations.map((org) => ({ id: org.id, name: org.name }))
+      : memberships.map((m) => ({ id: m.organizationId, name: m.organizationName }));
+
+  const value = demoSession && ws ? ws.state.session.activeOrgId : currentOrgId ?? "";
+  const canSwitch = options.length > 1 && (demoSession ? Boolean(ws) : Boolean(onOrgChange));
+
+  if (!canSwitch) {
+    return (
+      <span className="nf-nav__org">
+        <span className="nf-nav__org-label">{t("common.organization")}</span>
+        <span className="nf-nav__org-name" title={displayOrgName}>{displayOrgName}</span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="nf-nav__org nf-nav__org--switch">
+      <span className="nf-nav__org-label">{t("common.organization")}</span>
+      <span className="nf-nav__org-control">
+        <select
+          value={value}
+          aria-label={t("common.organization")}
+          onChange={(event) => {
+            if (demoSession && ws) ws.switchDemoOrg(event.target.value);
+            else onOrgChange?.(event.target.value);
+          }}
+        >
+          {options.map((org) => (
+            <option key={org.id} value={org.id}>{org.name}</option>
+          ))}
+        </select>
+        <ChevronDown size={14} strokeWidth={2} aria-hidden />
+      </span>
+    </span>
   );
 }

@@ -8,7 +8,7 @@ import { isAuthorizationError } from "@/lib/permissions/server";
 import { PlanLimitError } from "@/lib/plan-entitlements";
 import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
-export const metadata = { title: "Capacitación | NormaFlow" };
+export const metadata = { title: "Capacitación" };
 export const dynamic = "force-dynamic";
 
 export default async function TrainingPage() {

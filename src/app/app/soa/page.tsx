@@ -7,7 +7,7 @@ import { getSoAPayload, type SoAPayload } from "@/lib/actions/soa";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { SECURITY_CONTROL_CATALOG, securityControlCounts } from "@/lib/security-control-catalog";
 
-export const metadata = { title: "Declaración de Aplicabilidad | NormaFlow" };
+export const metadata = { title: "Declaración de Aplicabilidad" };
 export const dynamic = "force-dynamic";
 
 export default async function SoAPage() {

@@ -8,7 +8,7 @@ import { getSuppliersPayload } from "@/lib/server-queries";
 import { PlanLimitError } from "@/lib/plan-entitlements";
 import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
-export const metadata = { title: "Proveedores | NormaFlow" };
+export const metadata = { title: "Proveedores" };
 export const dynamic = "force-dynamic";
 
 export default async function SuppliersPage() {

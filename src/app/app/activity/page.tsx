@@ -5,8 +5,9 @@ import { getAppContext } from "@/lib/app-context";
 import { getActivityPayload } from "@/lib/server-queries";
 import AccessDenied from "@/components/app/AccessDenied";
 import { isAuthorizationError } from "@/lib/permissions/server";
+import AdminDataProvider from "@/components/admin/AdminDataProvider";
 
-export const metadata = { title: "Actividad y audit trail | NormaFlow" };
+export const metadata = { title: "Actividad y audit trail" };
 export const dynamic = "force-dynamic";
 
 export default async function ActivityPage() {
@@ -17,7 +18,7 @@ export default async function ActivityPage() {
       const { auditTrail } = await getActivityPayload();
       return (
         <ServerPermissionGate permission="activity:read">
-          <ActivityClient liveEntries={auditTrail} />
+          <AdminDataProvider><ActivityClient liveEntries={auditTrail} /></AdminDataProvider>
         </ServerPermissionGate>
       );
     } catch (err) {

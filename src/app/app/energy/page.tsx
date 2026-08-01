@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getEnergyPayload, type EnergyPayload } from "@/lib/energy/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Gestión energética | NormaFlow" };
+export const metadata = { title: "Gestión energética" };
 export const dynamic = "force-dynamic";
 
 export default async function EnergyPage() {
@@ -34,7 +34,7 @@ const stamps = { createdAt: ago(90), updatedAt: ago(3) };
 
 function demoPayload(): EnergyPayload {
   return {
-    can: { create: false, update: false, approve: false, export: false },
+    can: { create: false, update: false, delete: false, approve: false, export: false },
     members: [{ id: "demo-u1", name: "Ana Energía" }, { id: "demo-u2", name: "Luis Mantenimiento" }],
     sources: [{
       id: "d-s1", organizationId: "demo", code: "FUE-0001", name: "Red eléctrica",

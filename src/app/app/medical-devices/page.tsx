@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getMedicalDevicesPayload, type MedicalDevicesPayload } from "@/lib/medical-devices/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Dispositivos médicos | NormaFlow" };
+export const metadata = { title: "Dispositivos médicos" };
 export const dynamic = "force-dynamic";
 
 export default async function MedicalDevicesPage() {
@@ -36,10 +36,11 @@ function demoPayload(): MedicalDevicesPayload {
   return {
     can: {
       create: false, update: false, approve: false, export: false,
-      sensitiveRead: true, sensitiveCreate: false, sensitiveUpdate: false,
+      sensitiveRead: true, sensitiveCreate: false, sensitiveUpdate: false, sensitiveDelete: false,
     },
     disclaimer:
       "Este módulo es una herramienta de gestión de calidad configurable. No sustituye los requisitos regulatorios nacionales aplicables (p. ej. MDR, FDA QSR/QMSR u otros).",
+    retentionYears: 15,
     members: [{ id: "demo-u1", name: "Elena QA" }, { id: "demo-u2", name: "Marco RA" }],
     families: [{
       id: "d-fam1", organizationId: "demo", code: "FAM-0001", name: "Monitores portátiles",
@@ -149,6 +150,7 @@ function demoPayload(): MedicalDevicesPayload {
       source: "CUSTOMER", category: "Funcional", description: "Alarma no audible en entorno ruidoso",
       status: "INVESTIGATING", receivedAt: ago(3), anonymizedSubjectRef: "CASE-8841",
       investigationSummary: null, capaId: null, evidenceId: null, documentId: null, closedAt: null,
+      retentionUntil: null, purgedAt: null,
       createdById: "demo-u2", ...stamps,
       device: { code: "DEV-0001", name: "Monitor SpO2 NF-100" },
       batch: { code: "BAT-0001", lotNumber: "L2026-0042" },
@@ -159,6 +161,7 @@ function demoPayload(): MedicalDevicesPayload {
       description: "Retraso en detección de desaturación reportado por usuario",
       status: "UNDER_REVIEW", reportedAt: ago(2), anonymizedSubjectRef: "CASE-8841",
       capaId: null, evidenceId: null, documentId: null, closedAt: null,
+      retentionUntil: null, purgedAt: null,
       createdById: "demo-u2", ...stamps,
       device: { code: "DEV-0001", name: "Monitor SpO2 NF-100" },
       batch: { code: "BAT-0001", lotNumber: "L2026-0042" },

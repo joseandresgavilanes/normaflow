@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getVulnerabilitiesPayload, type VulnerabilitiesPayload } from "@/lib/actions/vulnerabilities";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Vulnerabilidades | NormaFlow" };
+export const metadata = { title: "Vulnerabilidades" };
 export const dynamic = "force-dynamic";
 
 export default async function VulnerabilitiesPage() {

@@ -1,0 +1,597 @@
+/* ============================================================================
+ * NormaFlow — Shell de aplicación
+ * Navegación lateral, cabecera de página y breadcrumb.
+ *
+ * Se carga DESPUÉS de globals.css para poder corregir el layout heredado sin
+ * tocar el monolito de 7k líneas.
+ *
+ * El responsive es puramente CSS. Antes dependía de `useMatchMedia` en
+ * cliente: el servidor pintaba el layout de escritorio y, al hidratar, la app
+ * saltaba al de móvil — un flash del sidebar abierto y un desplazamiento del
+ * contenido en CADA navegación.
+ * ========================================================================== */
+
+/* --------------------------------------------------------------------------
+ * Layout base
+ * ------------------------------------------------------------------------ */
+.nf-app-main {
+  margin-left: var(--nf-sidebar-width);
+}
+
+.nf-app-main-inner {
+  padding: var(--nf-space-6) var(--nf-space-8) var(--nf-space-12);
+  max-width: var(--nf-content-max);
+}
+
+/* --------------------------------------------------------------------------
+ * Navegación lateral
+ * ------------------------------------------------------------------------ */
+.nf-nav {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: var(--nf-z-sidebar);
+  display: flex;
+  flex-direction: column;
+  width: var(--nf-sidebar-width);
+  background: var(--nf-surface);
+  border-right: 1px solid var(--nf-border);
+}
+
+/* Cabecera: marca + selector de organización (un solo control) */
+.nf-nav__head {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-3);
+  border-bottom: 1px solid var(--nf-border-subtle);
+  min-height: var(--nf-topbar-height);
+}
+
+.nf-nav__brand {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-primary);
+  color: var(--nf-on-primary);
+}
+.nf-nav__brand-mark {
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-bold);
+  line-height: 1;
+}
+
+.nf-nav__org {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+  /* En sesiones demo cada organización tiene un acento; sin él la barra no se
+     dibuja. */
+  border-left: 3px solid var(--nf-nav-accent, transparent);
+  padding-left: 6px;
+  margin-left: -6px;
+}
+.nf-nav__org-label {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-wide);
+  text-transform: uppercase;
+}
+.nf-nav__org-name,
+.nf-nav__org-control select {
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-nav__org-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  min-width: 0;
+  color: var(--nf-text-subtle);
+}
+.nf-nav__org-control select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 2px var(--nf-space-1) 2px 0;
+  margin-left: -2px;
+  border-radius: var(--nf-radius-xs);
+  cursor: pointer;
+  max-width: 100%;
+}
+.nf-nav__org-control select:hover {
+  background: var(--nf-surface-hover);
+}
+
+.nf-nav__close {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--nf-radius-s);
+  background: transparent;
+  color: var(--nf-text-secondary);
+  cursor: pointer;
+}
+.nf-nav__close:hover { background: var(--nf-surface-hover); }
+
+/* Filtro de navegación */
+.nf-nav__filter {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  margin: var(--nf-space-3) var(--nf-space-3) var(--nf-space-2);
+  padding: 0 var(--nf-space-2);
+  height: 34px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface-muted);
+  color: var(--nf-text-subtle);
+}
+.nf-nav__filter:focus-within {
+  border-color: var(--nf-border-focus);
+  background: var(--nf-surface);
+}
+.nf-nav__filter input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-sm);
+  outline: none;
+}
+.nf-nav__filter input::placeholder { color: var(--nf-text-subtle); }
+
+/* Lista */
+.nf-nav__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 var(--nf-space-2) var(--nf-space-4);
+  /* Degradado en los bordes: indica que la lista continúa en lugar de dejar
+     un grupo cortado a media altura sin explicación. */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 10px,
+    #000 calc(100% - 12px),
+    transparent 100%
+  );
+}
+.nf-nav__groups,
+.nf-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nf-nav__group + .nf-nav__group { margin-top: var(--nf-space-1); }
+
+.nf-nav__group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-2);
+  width: 100%;
+  padding: var(--nf-space-2) var(--nf-space-2);
+  border: 0;
+  border-radius: var(--nf-radius-s);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+.nf-nav__group-toggle:hover:not(:disabled) { background: var(--nf-surface-hover); }
+.nf-nav__group-toggle:disabled { cursor: default; }
+
+.nf-nav__group-title {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-bold);
+  letter-spacing: var(--nf-tracking-wide);
+  text-transform: uppercase;
+}
+.nf-nav__group-title--static {
+  display: block;
+  padding: var(--nf-space-2);
+  margin: 0;
+}
+
+.nf-nav__chevron {
+  flex: 0 0 auto;
+  color: var(--nf-text-subtle);
+  transition: transform var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-nav__chevron[data-open] { transform: rotate(180deg); }
+
+.nf-nav__row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nf-nav__link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  min-width: 0;
+  min-height: 34px;
+  padding: var(--nf-space-2) var(--nf-space-2);
+  border-radius: var(--nf-radius-s);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-medium);
+  text-decoration: none;
+  transition: background-color var(--nf-duration-fast) var(--nf-ease-standard),
+    color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-nav__link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
+
+/* Estado activo: color + peso + barra lateral. Nunca solo color. */
+.nf-nav__link[data-active] {
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-nav__link[data-active]::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--nf-space-2) * -1);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  border-radius: 0 var(--nf-radius-xs) var(--nf-radius-xs) 0;
+  background: var(--nf-primary);
+}
+.nf-nav__link[data-locked] { color: var(--nf-text-subtle); }
+
+.nf-nav__icon { flex: 0 0 auto; }
+.nf-nav__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-nav__badge {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  border: 1px solid var(--nf-warning-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-warning-subtle);
+  color: var(--nf-warning-text);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+/* Fijar/desfijar: siempre en el DOM y alcanzable por teclado; solo se oculta
+   visualmente hasta hover o foco. */
+.nf-nav__pin {
+  position: absolute;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--nf-radius-xs);
+  background: transparent;
+  color: var(--nf-text-subtle);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-nav__row:hover .nf-nav__pin,
+.nf-nav__pin:focus-visible,
+.nf-nav__pin[data-pinned] {
+  opacity: 1;
+}
+.nf-nav__pin:hover { background: var(--nf-surface-sunken); color: var(--nf-text-secondary); }
+.nf-nav__pin[data-pinned] { color: var(--nf-primary); }
+
+.nf-nav__empty {
+  padding: var(--nf-space-4) var(--nf-space-2);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  line-height: var(--nf-leading-normal);
+}
+
+/* Pie */
+.nf-nav__foot {
+  padding: var(--nf-space-2) var(--nf-space-3) var(--nf-space-3);
+  border-top: 1px solid var(--nf-border-subtle);
+  display: grid;
+  gap: var(--nf-space-2);
+}
+.nf-nav__ai {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nf-space-2);
+  min-height: 34px;
+  border: 1px solid var(--nf-primary-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  cursor: pointer;
+}
+.nf-nav__ai:hover { background: var(--nf-primary-subtle-hover); }
+
+.nf-nav__account { display: flex; align-items: center; gap: var(--nf-space-1); }
+.nf-nav__profile {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  min-width: 0;
+  padding: var(--nf-space-1);
+  border-radius: var(--nf-radius-s);
+  text-decoration: none;
+}
+.nf-nav__profile:hover { background: var(--nf-surface-hover); }
+.nf-nav__profile-text { display: grid; min-width: 0; }
+.nf-nav__profile-name {
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-nav__profile-role {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-2xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-nav__logout {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: var(--nf-radius-s);
+  background: transparent;
+  color: var(--nf-text-muted);
+  cursor: pointer;
+}
+.nf-nav__logout:hover { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
+
+/* --------------------------------------------------------------------------
+ * Cabecera superior
+ * ------------------------------------------------------------------------ */
+.nf-topbar {
+  height: var(--nf-topbar-height);
+  padding: 0 var(--nf-space-6);
+  gap: var(--nf-space-3);
+  z-index: var(--nf-z-topbar);
+}
+
+/* El botón de menú se controla por CSS, no por una media query en JS. */
+.nf-topbar-menu { display: none; }
+
+/* Los iconos de los controles de la cabecera nunca se comprimen: con
+   `padding` fijo y ancho reducido acababan renderizando a 3px de ancho. */
+.nf-topbar button > svg,
+.nf-topbar a > svg { flex: 0 0 auto; }
+
+/* Velo del cajón en móvil */
+.nf-nav-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--nf-z-drawer) - 1);
+  border: 0;
+  padding: 0;
+  background: var(--nf-overlay);
+  cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+ * Cabecera de página + breadcrumb
+ * ------------------------------------------------------------------------ */
+.nf-page-header {
+  display: grid;
+  gap: var(--nf-space-3);
+  padding-bottom: var(--nf-space-4);
+  margin-bottom: var(--nf-space-5);
+  border-bottom: 1px solid var(--nf-border);
+}
+.nf-page-header__bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nf-space-4);
+  flex-wrap: wrap;
+}
+.nf-page-header__text { min-width: 0; flex: 1 1 320px; }
+.nf-page-header__eyebrow {
+  display: block;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-wide);
+  text-transform: uppercase;
+}
+.nf-page-header__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-2xl);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-tight);
+  line-height: var(--nf-leading-tight);
+}
+.nf-page-header__subtitle {
+  margin: var(--nf-space-1) 0 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-base);
+  line-height: var(--nf-leading-normal);
+  max-width: 68ch;
+}
+.nf-page-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nf-space-2);
+  margin-top: var(--nf-space-2);
+}
+.nf-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: 0 0 auto;
+}
+
+.nf-breadcrumb { min-width: 0; }
+.nf-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nf-space-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nf-breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+  min-width: 0;
+}
+.nf-breadcrumb__link {
+  color: var(--nf-text-muted);
+  text-decoration: none;
+  border-radius: var(--nf-radius-xs);
+  padding: 1px 2px;
+}
+.nf-breadcrumb__link:hover { color: var(--nf-text-link); text-decoration: underline; }
+.nf-breadcrumb__current {
+  color: var(--nf-text-secondary);
+  font-weight: var(--nf-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-breadcrumb__sep { color: var(--nf-text-subtle); }
+
+/* --------------------------------------------------------------------------
+ * Responsive — el layout deja de depender de JavaScript
+ * ------------------------------------------------------------------------ */
+
+/* Tablet: barra lateral más estrecha */
+@media (max-width: 1279px) {
+  :root { --nf-sidebar-width: 232px; }
+  .nf-app-main-inner { padding: var(--nf-space-5) var(--nf-space-6) var(--nf-space-10); }
+}
+
+/* Móvil y tablet vertical: la barra pasa a cajón */
+@media (max-width: 1023px) {
+  .nf-app-main { margin-left: 0; }
+
+  .nf-topbar { padding: 0 var(--nf-space-4); }
+  .nf-topbar-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+  }
+  /* En móvil el botón "Crear" pasa a icono: su etiqueta desbordaba la píldora.
+     El nombre accesible lo mantiene `aria-label`. */
+  .nf-topbar .nf-quick-create-label { display: none; }
+  .nf-topbar .nf-quick-create-trigger {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+  /* Sin la etiqueta, el chevron solo compite con el icono por el espacio. */
+  .nf-topbar .nf-quick-create-trigger > svg:last-child { display: none; }
+
+  /* Cajón: `visibility` saca la barra cerrada del orden de tabulación —de lo
+     contrario el usuario de teclado recorrería un menú invisible— pero debe
+     conmutar de forma escalonada. Al abrir cambia en el instante 0 para que la
+     transición de `transform` tenga algo que animar; al cerrar se retrasa hasta
+     que la animación termina. Sin este escalonado la transición arranca sobre
+     un elemento aún no renderizado y se queda a medias. */
+  .nf-nav {
+    /* Por encima de la cabecera: en móvil el cajón es la capa activa y su
+       propia cabecera (marca, organización y cierre) no debe quedar tapada. */
+    z-index: var(--nf-z-drawer);
+    width: min(300px, 86vw);
+    transform: translateX(-100%);
+    visibility: hidden;
+    box-shadow: none;
+    transition:
+      transform var(--nf-duration-base) var(--nf-ease-standard),
+      visibility 0s linear var(--nf-duration-base);
+  }
+  .nf-nav[data-open] {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: var(--nf-elevation-4);
+    transition:
+      transform var(--nf-duration-base) var(--nf-ease-standard),
+      visibility 0s linear 0s;
+  }
+
+  .nf-nav__close { display: flex; }
+
+  .nf-app-main-inner { padding: var(--nf-space-4) var(--nf-space-4) var(--nf-space-10); }
+
+  .nf-page-header__actions { width: 100%; }
+}
+
+@media (max-width: 639px) {
+  .nf-page-header__title { font-size: var(--nf-text-xl); }
+  .nf-page-header__actions > * { flex: 1 1 auto; justify-content: center; }
+}
+
+/* Escritorio: el cajón nunca está "cerrado" */
+@media (min-width: 1024px) {
+  .nf-nav { transform: none !important; visibility: visible !important; }
+  .nf-nav-backdrop { display: none; }
+}
+
+/* --------------------------------------------------------------------------
+ * Impresión — los entregables del producto son informes de auditoría
+ * ------------------------------------------------------------------------ */
+@media print {
+  .nf-nav,
+  .nf-nav-backdrop,
+  .nf-topbar,
+  .nf-skip-link,
+  .nf-page-header__actions {
+    display: none !important;
+  }
+  .nf-app-main { margin-left: 0 !important; }
+  .nf-app-main-inner { padding: 0 !important; max-width: none !important; }
+  .nf-page-header { break-after: avoid; }
+  table { break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+}

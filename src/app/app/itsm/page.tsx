@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getItsmPayload, type ItsmPayload } from "@/lib/itsm/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Gestión de servicios TI | NormaFlow" };
+export const metadata = { title: "Gestión de servicios TI" };
 export const dynamic = "force-dynamic";
 
 export default async function ItsmPage() {
@@ -90,6 +90,18 @@ function demoPayload(): ItsmPayload {
       configurationItem: { code: "CI-0001", name: "CAS Cluster" },
       slaEval: { id: "d-inc1", responseMet: true, resolutionMet: null, overallMet: true },
     }],
+    crossLinks: [{
+      id: "d-link1", organizationId: "demo", itsmIncidentId: "d-inc1", targetDomain: "AI",
+      targetId: "d-ai1", relationType: "related", notes: "Mismo periodo de indisponibilidad del asistente interno.",
+      createdById: "demo-u1", createdAt: ago(0.1),
+      itsmIncident: { code: "INC-0001", title: "Caída de acceso OWA" },
+      targetLabel: "AII-0001 — Respuestas erráticas del asistente",
+    }],
+    crossLinkOptions: {
+      SECURITY: [{ id: "d-sec1", label: "SEC-0001 — Acceso no autorizado a VPN" }],
+      AI: [{ id: "d-ai1", label: "AII-0001 — Respuestas erráticas del asistente" }],
+      OCCUPATIONAL: [{ id: "d-occ1", label: "INC-LAB-0001 — Caída en almacén" }],
+    },
     problems: [{
       id: "d-prb1", organizationId: "demo", code: "PRB-0001", title: "Intermitencia proxy reverse",
       description: null, serviceId: "d-svc1", status: "ANALYSIS", rootCause: null,

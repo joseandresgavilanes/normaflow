@@ -8,7 +8,7 @@ import { getManagementReviewPayload } from "@/lib/server-queries";
 import { PlanLimitError } from "@/lib/plan-entitlements";
 import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
-export const metadata = { title: "Revisión por la dirección | NormaFlow" };
+export const metadata = { title: "Revisión por la dirección" };
 export const dynamic = "force-dynamic";
 
 export default async function ManagementReviewPage() {

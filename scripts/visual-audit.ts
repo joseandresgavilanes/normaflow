@@ -197,8 +197,11 @@ async function shoot(page: Page, route: string, vp: string, dir: string): Promis
   } catch {
     /* keep going */
   }
+  // `page.evaluate` con un string lo trata como EXPRESIÓN, así que hay que
+  // invocar la función: pasar `"() => {…}"` a secas devuelve la función, no
+  // su resultado, y falla al serializar.
   const probe = (await page
-    .evaluate(PROBE as unknown as string)
+    .evaluate(`(${PROBE})()`)
     .catch(() => null)) as ProbeResult | null;
   const file = path.join(dir, `${route.replace(/\//g, "_").replace(/^_/, "") || "root"}.png`);
   await page.screenshot({ path: file, fullPage: true }).catch(() => {});

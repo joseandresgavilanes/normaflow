@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getRiskTreatmentPayload, type RiskTreatmentPayload } from "@/lib/actions/risk-treatment";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Tratamiento de riesgos | NormaFlow" };
+export const metadata = { title: "Tratamiento de riesgos" };
 export const dynamic = "force-dynamic";
 
 export default async function RiskTreatmentPage() {

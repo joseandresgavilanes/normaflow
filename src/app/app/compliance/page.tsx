@@ -8,7 +8,7 @@ import { isAuthorizationError } from "@/lib/permissions/server";
 import { buildGoverningBodyDigest } from "@/lib/compliance/governing-body";
 import { DEFAULT_CHANNEL_CONFIG } from "@/lib/compliance/speak-up";
 
-export const metadata = { title: "Compliance | NormaFlow" };
+export const metadata = { title: "Compliance" };
 export const dynamic = "force-dynamic";
 
 export default async function CompliancePage() {

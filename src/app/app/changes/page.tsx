@@ -8,7 +8,7 @@ import { getChangesPayload } from "@/lib/server-queries";
 import { PlanLimitError } from "@/lib/plan-entitlements";
 import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
-export const metadata = { title: "Control de cambios | NormaFlow" };
+export const metadata = { title: "Control de cambios" };
 export const dynamic = "force-dynamic";
 
 export default async function ChangesPage() {

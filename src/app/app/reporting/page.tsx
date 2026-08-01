@@ -6,7 +6,7 @@ import { isAuthorizationError } from "@/lib/permissions/server";
 import { getReportingPayload } from "@/lib/server-queries";
 import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 
-export const metadata = { title: "Informes | NormaFlow" };
+export const metadata = { title: "Informes" };
 
 export default async function ReportingPage() {
   const ctx = await getAppContext();

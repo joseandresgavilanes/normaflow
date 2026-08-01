@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getFoodSafetyPayload, type FoodSafetyPayload } from "@/lib/food-safety/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Inocuidad alimentaria | NormaFlow" };
+export const metadata = { title: "Inocuidad alimentaria" };
 export const dynamic = "force-dynamic";
 
 export default async function FoodSafetyPage() {
@@ -191,6 +191,13 @@ function demoPayload(): FoodSafetyPayload {
       emergencyType: "CONTAMINATION", description: "Parada de línea y retención",
       status: "CONTAINED", activatedAt: ago(1), closedAt: null, recallId: "d-r1",
       capaId: null, documentId: null, evidenceId: null, createdById: "demo-u1", ...stamps,
+    }],
+    communications: [{
+      id: "d-com1", organizationId: "demo", code: "COM-0001", subject: "Retiro preventivo LOT-0003",
+      content: "[RET-0001] Se notifica el retiro preventivo del lote LOT-0003 por desviación en pasteurización.",
+      direction: "EXTERNAL", audience: "cliente: Distribuidora Norte", channel: "email",
+      standards: ["ISO_22000"], communicatedById: "demo-u1", communicatedAt: ago(1),
+      createdById: "demo-u1", ...stamps,
     }],
     lastTraceTest: {
       backward: {
