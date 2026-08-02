@@ -813,6 +813,35 @@ type KnownTextTranslation = Partial<Record<Locale, string>>;
 const SUPPORTED_MESSAGE_LOCALES = SUPPORTED_LOCALES;
 
 const knownTextTranslations: Record<string, KnownTextTranslation> = {
+  // Panel: "Requiere tu atención". Se registran como frases COMPLETAS; si no,
+  // el traductor por fragmentos las deja a medias ("Nonconformities abiertas").
+  "Requiere tu atención": { en: "Needs your attention", "pt-BR": "Requer sua atenção" },
+  "No hay asuntos vencidos ni críticos. El sistema está al día.": { en: "Nothing overdue or critical. The system is up to date.", "pt-BR": "Nada vencido ou crítico. O sistema está em dia." },
+  "asunto": { en: "item", "pt-BR": "assunto" },
+  "asuntos": { en: "items", "pt-BR": "assuntos" },
+  "Acciones críticas vencidas": { en: "Overdue critical actions", "pt-BR": "Ações críticas vencidas" },
+  "Pasaron su fecha compromiso y siguen abiertas.": { en: "Past their committed date and still open.", "pt-BR": "Passaram do prazo e continuam abertas." },
+  "Riesgos críticos": { en: "Critical risks", "pt-BR": "Riscos críticos" },
+  "Superan el umbral aceptado y necesitan tratamiento.": { en: "Above the accepted threshold and need treatment.", "pt-BR": "Acima do limite aceito e precisam de tratamento." },
+  "No conformidades abiertas": { en: "Open nonconformities", "pt-BR": "Não conformidades abertas" },
+  "Sin cerrar: requieren causa raíz y acción correctiva.": { en: "Unclosed: they need root cause and corrective action.", "pt-BR": "Em aberto: exigem causa raiz e ação corretiva." },
+  "Formación vencida": { en: "Overdue training", "pt-BR": "Formação vencida" },
+  "Personas con capacitación caducada o sin completar.": { en: "People with expired or incomplete training.", "pt-BR": "Pessoas com treinamento vencido ou incompleto." },
+  "Indicadores fuera de meta": { en: "Indicators off target", "pt-BR": "Indicadores fora da meta" },
+  "Su último valor no alcanza el objetivo fijado.": { en: "Their latest value falls short of the set target.", "pt-BR": "Seu último valor não atinge a meta definida." },
+  "Documentos en revisión": { en: "Documents under review", "pt-BR": "Documentos em revisão" },
+  "Esperan aprobación para pasar a vigentes.": { en: "Awaiting approval to become effective.", "pt-BR": "Aguardando aprovação para entrar em vigor." },
+  "Documentos por revisar pronto": { en: "Documents due for review soon", "pt-BR": "Documentos a revisar em breve" },
+  "Su fecha de revisión vence en los próximos 60 días.": { en: "Their review date falls within the next 60 days.", "pt-BR": "A data de revisão vence nos próximos 60 dias." },
+  "Auditorías planificadas": { en: "Planned audits", "pt-BR": "Auditorias planejadas" },
+  "Programadas y pendientes de ejecutar.": { en: "Scheduled and pending execution.", "pt-BR": "Agendadas e pendentes de execução." },
+  // Gráfico de cumplimiento por norma
+  "Cumplimiento actual": { en: "Current compliance", "pt-BR": "Conformidade atual" },
+  "Meta": { en: "Target", "pt-BR": "Meta" },
+  "Cumplimiento por norma": { en: "Compliance by standard", "pt-BR": "Conformidade por norma" },
+  "Nivel de cumplimiento por norma, en porcentaje, frente a la meta.": { en: "Compliance level per standard, as a percentage, against the target.", "pt-BR": "Nível de conformidade por norma, em porcentagem, frente à meta." },
+  "Todavía no hay evaluación GAP de ninguna norma. Complétala para ver el nivel de cumplimiento.": { en: "No GAP assessment has been completed for any standard yet. Complete one to see the compliance level.", "pt-BR": "Ainda não há avaliação GAP de nenhuma norma. Conclua uma para ver o nível de conformidade." },
+  "Media de las normas con evaluación GAP completada.": { en: "Average across standards with a completed GAP assessment.", "pt-BR": "Média das normas com avaliação GAP concluída." },
   "Asistente IA · Anexo A 2022 actualizado": {
     en: "AI assistant · Annex A 2022 updated",
     "pt-BR": "Assistente IA · Anexo A 2022 atualizado",

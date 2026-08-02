@@ -37,11 +37,17 @@ test.describe("Accesibilidad de diálogos", () => {
 
   test("el foco entra en el diálogo al abrir", async ({ authenticatedPage: page }) => {
     await openRiskModal(page);
-    const inside = await page.evaluate(() => {
-      const dialog = document.querySelector('[role="dialog"]');
-      return Boolean(dialog && document.activeElement && dialog.contains(document.activeElement));
-    });
-    expect(inside, "el foco debe quedar dentro del diálogo").toBe(true);
+    // El foco se aplica en el siguiente frame (el panel puede no estar aún en
+    // el layout), así que se espera en vez de leerlo una sola vez: bajo carga
+    // la aserción inmediata gana la carrera al frame.
+    await expect
+      .poll(() =>
+        page.evaluate(() => {
+          const dialog = document.querySelector('[role="dialog"]');
+          return Boolean(dialog && document.activeElement && dialog.contains(document.activeElement));
+        }),
+      )
+      .toBe(true);
   });
 
   test("el foco queda atrapado: Tab no escapa al fondo", async ({ authenticatedPage: page }) => {

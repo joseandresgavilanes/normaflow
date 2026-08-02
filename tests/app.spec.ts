@@ -45,7 +45,11 @@ test.describe("SaaS Application", () => {
   });
 
   test("dashboard shows KPIs and modules", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Módulos" })).toBeVisible();
+    // La tarjeta "Módulos" mezclaba porcentajes con conteos accionables. Ahora
+    // "Progreso" solo lleva porcentajes y los conteos viven en "Requiere tu
+    // atención".
+    await expect(page.getByRole("heading", { name: /Progreso|Progress/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Requiere tu atención|Needs your attention/ })).toBeVisible();
     await expect(page.getByText("Actividad reciente")).toBeVisible();
     // Al menos un KPI porcentual visible (score de cumplimiento)
     await expect(page.locator("text=/\\d+%/").first()).toBeVisible();
