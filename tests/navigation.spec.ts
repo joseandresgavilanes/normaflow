@@ -72,37 +72,23 @@ test.describe("Navegación del workspace", () => {
     await expect(page.getByRole("link", { name: "Riesgos", exact: true })).toHaveCount(2);
   });
 
-  test("cada norma es un único destino: la sub-navegación vive en el módulo", async ({ authenticatedPage: page }) => {
+  test("las secciones solo se muestran para la norma activa", async ({ authenticatedPage: page }) => {
     await openGroup(page, "Normas");
-    // El sidebar ya no contiene secciones: llegaron a convivir ~143 enlaces de
-    // sub-navegación de módulo en la columna global del producto.
+    // Con ninguna norma abierta no hay subenlaces de sección compitiendo en la
+    // columna: antes podían convivir ~143.
     await expect(page.locator(".nf-sidenav__section-link")).toHaveCount(0);
-    await expect(page.locator('.nf-sidenav a[href*="?section="]')).toHaveCount(0);
 
     await page.locator('.nf-sidenav__link[href="/app/energy"]').click();
     await expect(page).toHaveURL(/\/app\/energy$/);
 
-    // Ahora las 13 secciones de ISO 50001 son pestañas del módulo.
-    const tabs = page.getByRole("tab");
-    await expect(tabs).toHaveCount(13);
-    await expect(page.getByRole("tab", { name: "Panel", exact: true })).toHaveAttribute("aria-selected", "true");
+    // Ahora sí: las 13 secciones de ISO 50001, y solo esas.
+    const sections = page.locator(".nf-sidenav__section-link");
+    await expect(sections).toHaveCount(13);
+    await expect(page.locator('.nf-sidenav__section-link[href*="/app/compliance"]')).toHaveCount(0);
 
-    // Y siguen siendo direccionables: `useModuleSection` escribe `?section=`.
-    await page.getByRole("tab", { name: "Medidores y lecturas", exact: true }).click();
+    // Y siguen navegando: `useModuleSection` lee `?section=`.
+    await sections.filter({ hasText: "Medidores" }).first().click();
     await expect(page).toHaveURL(/section=meters/);
-  });
-
-  test("las pestañas del módulo se manejan con flechas (patrón tablist)", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/energy");
-    const first = page.getByRole("tab", { name: "Panel", exact: true });
-    await first.focus();
-    await page.keyboard.press("ArrowRight");
-    // Roving tabindex: solo la activa entra en el orden de tabulación.
-    const selected = page.locator('[role="tab"][aria-selected="true"]');
-    await expect(selected).toHaveCount(1);
-    await expect(selected).not.toHaveText("Panel");
-    await page.keyboard.press("Home");
-    await expect(page.getByRole("tab", { name: "Panel", exact: true })).toHaveAttribute("aria-selected", "true");
   });
 
   test("el enlace de salto al contenido es el primer tabulable y lleva al main", async ({ authenticatedPage: page }) => {

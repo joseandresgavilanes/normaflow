@@ -61,9 +61,13 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
 
       {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "#b91c1c", marginBottom: 16 }}>{error}</div>}
 
-      <nav className="nf-iso-tabs" role="tablist" aria-label="Secciones del motor de normas" style={{ marginBottom: 20 }}>
+      <nav style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20, borderBottom: "1px solid var(--nf-line, #e5eaf2)" }}>
         {tabs.map(({ id, label, Icon }) => (
-          <button key={id} type="button" role="tab" className="nf-iso-tab" aria-selected={tab === id} onClick={() => setTab(id)}><Icon size={16} /> {label}</button>
+          <button key={id} onClick={() => setTab(id)} style={{
+            display: "flex", alignItems: "center", gap: 7, padding: "10px 14px", border: "none", background: "none",
+            borderBottom: tab === id ? "2px solid #5266F6" : "2px solid transparent", color: tab === id ? "#5266F6" : "var(--nf-ink-2, #5e6b7a)",
+            fontWeight: 700, fontSize: 13.5, cursor: "pointer", marginBottom: -1,
+          }}><Icon size={16} /> {label}</button>
         ))}
       </nav>
 

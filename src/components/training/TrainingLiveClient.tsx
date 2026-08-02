@@ -271,7 +271,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
           <Card style={{ padding: 0, overflow: "hidden" }}>
             <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
               <table className="nf-data-table" style={{ fontSize: 13 }}>
-                <thead><tr><th>Persona</th><th>Curso</th><th>Estado</th><th>Vence</th><th>Proceso</th><th>Origen</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Persona</th><th>Curso</th><th>Estado</th><th>Vence</th><th>Proceso</th><th>Origen</th><th /></tr></thead>
                 <tbody>
                   {assignments.map((assignment) => (
                     <tr key={assignment.id}>
