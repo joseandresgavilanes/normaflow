@@ -408,3 +408,82 @@
   .nf-dt { border: 0; }
   .nf-dt__scroll { display: block !important; overflow: visible !important; }
 }
+
+/* ============================================================================
+ * IsoTableCard — mejoras en sitio
+ *
+ * Lo usan los 11 módulos normativos (14 tablas) y recibe `<tr>` ya
+ * renderizados, así que no puede mapearse al modelo de columnas de DataTable.
+ * Se le añaden aquí las capacidades que le faltaban.
+ * ========================================================================== */
+
+/* Cabecera fija: en tablas largas se perdía la referencia de columna. */
+.nf-iso-table-scroll {
+  max-height: 68vh;
+  border-color: var(--nf-border) !important;
+  border-radius: var(--nf-radius-l) !important;
+  scrollbar-width: thin;
+}
+.nf-iso-data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--nf-surface-muted);
+}
+
+/* Cabecera ordenable */
+.nf-iso-th-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+  border-radius: var(--nf-radius-xs);
+}
+.nf-iso-th-sort:hover { color: var(--nf-text-primary); }
+.nf-iso-th-sort > span {
+  color: var(--nf-text-subtle);
+  font-size: var(--nf-text-2xs);
+  opacity: 0;
+  transition: opacity var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-iso-th-sort:hover > span,
+.nf-iso-th-sort:focus-visible > span,
+[aria-sort="ascending"] .nf-iso-th-sort > span,
+[aria-sort="descending"] .nf-iso-th-sort > span { opacity: 1; }
+[aria-sort="ascending"] .nf-iso-th-sort,
+[aria-sort="descending"] .nf-iso-th-sort { color: var(--nf-text-primary); }
+
+/* Paginación */
+.nf-iso-table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-2) var(--nf-space-3);
+  margin: 0 2px 2px;
+  border: 1px solid var(--nf-border);
+  border-top: 0;
+  border-radius: 0 0 var(--nf-radius-l) var(--nf-radius-l);
+  background: var(--nf-surface-muted);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+}
+.nf-iso-table-pagination-controls { display: flex; gap: var(--nf-space-2); }
+.nf-iso-table-scroll:has(+ .nf-iso-table-pagination) {
+  border-radius: var(--nf-radius-l) var(--nf-radius-l) 0 0 !important;
+}
+
+/* Los filtros van en línea, no apilados a ancho completo. */
+.nf-iso-table-card-filters {
+  border-color: var(--nf-border) !important;
+  gap: var(--nf-space-2) !important;
+}
+.nf-iso-table-card-filters > * { flex: 0 1 auto; min-width: 0; }
+.nf-iso-table-card-filters :where(select, input) { max-width: 220px; }
