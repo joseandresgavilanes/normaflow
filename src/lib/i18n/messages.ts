@@ -2968,9 +2968,39 @@ export function translate(locale: Locale, key: MessageKey, params?: Params) {
   });
 }
 
+/**
+ * Textos que YA son la forma correcta en `locale`.
+ *
+ * Sin esta comprobación, la búsqueda inversa por valor reescribe cadenas que
+ * ya estaban bien: `nav.compliance` vale "Compliance" en español, pero
+ * `commonWordTranslations` declara `"Conformidad": { en: "Compliance" }`, así
+ * que "Compliance" se encontraba como valor inglés y se "reparaba" a
+ * "Conformidad" — en la propia interfaz en español.
+ */
+const localeValueSets = new Map<Locale, Set<string>>();
+
+function valuesForLocale(locale: Locale): Set<string> {
+  let set = localeValueSets.get(locale);
+  if (set) return set;
+  set = new Set<string>();
+  for (const key of Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[]) {
+    const value = messages[locale][key];
+    if (value) set.add(value.trim());
+  }
+  for (const catalog of [knownTextTranslations, domainUiTranslations, commonWordTranslations]) {
+    for (const [base, values] of Object.entries(catalog)) {
+      set.add((locale === DEFAULT_LOCALE ? base : values[locale] ?? base).trim());
+    }
+  }
+  localeValueSets.set(locale, set);
+  return set;
+}
+
 export function translateKnownText(locale: Locale, text: string) {
   const clean = text.trim();
   if (!clean) return text;
+  // Ya está en la forma correcta para este idioma: no tocarlo.
+  if (valuesForLocale(locale).has(clean)) return text;
   const catalogs = [knownTextTranslations, domainUiTranslations, commonWordTranslations];
   for (const catalog of catalogs) {
     const directKnown = catalog[clean];
@@ -2999,6 +3029,11 @@ export function translateKnownText(locale: Locale, text: string) {
 export function translateText(locale: Locale, text: string) {
   const exact = translateKnownText(locale, text);
   if (exact !== text) return exact;
+  // La sustitución por fragmentos no es idempotente: aplicada dos veces sobre
+  // el mismo nodo produce texto duplicado ("Política de Information
+  // Información"). Si el texto ya contiene una forma válida del idioma actual,
+  // se deja intacto.
+  if (valuesForLocale(locale).has(text.trim())) return text;
 
   let entries = fragmentEntriesByLocale.get(locale);
   if (!entries) {

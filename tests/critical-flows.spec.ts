@@ -76,7 +76,11 @@ test.describe("flujos críticos de NormaFlow", () => {
 
     await page.goto("/app/actions");
     await expect(page.getByRole("heading", { name: /Plan de acción/i })).toBeVisible();
-    await expect(page.getByText(/Solicitud|Análisis|Implementación|Verificación|Cerrada/).first()).toBeVisible();
+    // Acotado al contenido: "Implementación" es también un elemento del
+    // sidebar, y ahí vive dentro de un grupo plegado (oculto).
+    await expect(
+      page.locator("#nf-main").getByText(/Solicitud|Análisis|Implementación|Verificación|Cerrada/).first(),
+    ).toBeVisible();
   });
 
   test("recorre KPI, reportes y exportes disponibles", async ({ authenticatedPage: page }) => {
