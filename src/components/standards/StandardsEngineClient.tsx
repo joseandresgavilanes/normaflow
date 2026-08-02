@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import PageHeader from "@/components/layout/PageHeader";
 import { Library, ShieldCheck, GitCompareArrows, Grid3x3, LayoutDashboard, Check, Download } from "lucide-react";
 import type { StandardsEnginePayload } from "@/lib/standards-engine";
 import { activateStandard } from "@/lib/actions/standards";
@@ -50,15 +51,11 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
 
   return (
     <div style={{ padding: "clamp(16px, 3vw, 32px)", maxWidth: 1180, margin: "0 auto" }}>
-      <header style={{ marginBottom: 20 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
-          <Library size={26} /> Motor de Normas ISO
-        </h1>
-        <p style={{ color: "var(--nf-ink-2, #5e6b7a)", margin: "6px 0 0", fontSize: 14 }}>
-          Instala paquetes normativos, actívalos por organización y gestiona requisitos, correspondencias y evidencia compartida entre normas.
-          {demo && <strong style={{ color: "#5266F6" }}> · Vista demo (solo lectura).</strong>}
-        </p>
-      </header>
+      <PageHeader
+        title="Motor de Normas ISO"
+        subtitle="Instala paquetes normativos, actívalos por organización y gestiona requisitos, correspondencias y evidencia compartida entre normas."
+        meta={demo ? <span style={{ color: "#5266F6", fontWeight: 600, fontSize: 13 }}>Vista demo (solo lectura)</span> : undefined}
+      />
 
       {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "#b91c1c", marginBottom: 16 }}>{error}</div>}
 

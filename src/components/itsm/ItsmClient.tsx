@@ -168,7 +168,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <IsoSectionHeader icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
+      <IsoSectionHeader headingLevel={1} icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
       {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}

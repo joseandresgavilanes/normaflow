@@ -6,9 +6,16 @@ type IsoSectionHeaderProps = {
   title: ReactNode;
   description?: string;
   action?: ReactNode;
+  /**
+   * Nivel del encabezado. Cuando este componente encabeza la PÁGINA debe ser 1:
+   * seis módulos normativos no declaraban ningún `<h1>` porque aquí siempre se
+   * pintaba un `<h2>`, así que su jerarquía de documento empezaba en el nivel 2.
+   */
+  headingLevel?: 1 | 2 | 3;
 };
 
-export default function IsoSectionHeader({ icon: Icon, title, description, action }: IsoSectionHeaderProps) {
+export default function IsoSectionHeader({ icon: Icon, title, description, action, headingLevel = 2 }: IsoSectionHeaderProps) {
+  const Heading = `h${headingLevel}` as "h1" | "h2" | "h3";
   const tooltipId = useId();
 
   return (
@@ -18,7 +25,7 @@ export default function IsoSectionHeader({ icon: Icon, title, description, actio
           <Icon size={16} strokeWidth={1.9} />
         </span>
         <div className="nf-iso-subsection-copy">
-          <h2 className="nf-iso-subsection-title">{title}</h2>
+          <Heading className="nf-iso-subsection-title">{title}</Heading>
         </div>
         {description && (
           <span className="nf-iso-subsection-info" tabIndex={0} aria-label="Ver descripción" aria-describedby={tooltipId}>

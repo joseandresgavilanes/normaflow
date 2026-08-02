@@ -151,7 +151,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <IsoSectionHeader icon={Cross} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
+      <IsoSectionHeader headingLevel={1} icon={Cross} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
       <div style={{ ...card, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e", fontSize: 13 }}>

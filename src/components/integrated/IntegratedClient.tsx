@@ -78,7 +78,7 @@ export default function IntegratedClient({ initial, demo = false }: { initial: I
 
   return (
     <div className="nf-iso-module" style={{ padding: "clamp(16px, 3vw, 32px)", maxWidth: 1240, margin: "0 auto" }}>
-      <IsoSectionHeader icon={Layers} title={SECTION_META[tab].title}
+      <IsoSectionHeader headingLevel={1} icon={Layers} title={SECTION_META[tab].title}
         description={`${SECTION_META[tab].sub}${demo ? " Vista demo (solo lectura)." : ""}`} />
 
       {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "#b91c1c", marginBottom: 16 }}>{error}</div>}
