@@ -39,7 +39,9 @@ export default function PageHeader({
 
   return (
     <header className="nf-page-header">
-      {!hideBreadcrumb && <Breadcrumb items={breadcrumb} />}
+      {/* Las migas las pinta el shell (AppRoot). Aquí solo se sobreescriben
+          cuando la página aporta una ruta propia, como un detalle. */}
+      {breadcrumb && !hideBreadcrumb && <Breadcrumb items={breadcrumb} />}
       <div className="nf-page-header__bar">
         <div className="nf-page-header__text">
           {eyebrow && <span className="nf-page-header__eyebrow">{tx(eyebrow)}</span>}

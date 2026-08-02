@@ -117,27 +117,62 @@ corrección.
 
 ## 3. Baseline instrumentado
 
-**Estado: pendiente de re-ejecución.**
+Barrido de 83 rutas en escritorio (1440 px), con el probe corregido.
+`docs` recoge aquí los números; las capturas quedan en el directorio de salida.
 
-El barrido con el probe corregido capturó 224 de 249 pantallas (desktop 83/83,
-tablet 83/83, mobile 58/83) antes de interrumpirse: se lanzó `npm run build` en
-paralelo y el build y el servidor de desarrollo comparten el directorio
-`.next`, lo que tiró el servidor a mitad de barrido.
+| Métrica | App (57 rutas) | Públicas (26) |
+|---|---:|---:|
+| Rutas sin `<h1>` | **0** | 1 (`/pricing`) |
+| Rutas con varios `<h1>` | **0** | 0 |
+| Rutas sin landmark `main` | **0** | 3 |
+| Desbordamiento horizontal | **0** | 1 (`/home`) |
+| Saltos de jerarquía de encabezado | 23 | 23 |
+| Botones sin nombre accesible | 9 | 0 |
+| Campos sin etiqueta | 26 | 1 |
+| Objetivos táctiles < 24 px | 454 | 643 |
+| Tamaños de fuente distintos por página | máx. 11, media 8.2 | — |
 
-Correcciones aplicadas para que no vuelva a ocurrir:
+Los tres primeros bloques del rediseño se ven en la columna de la app: cero
+rutas sin `<h1>`, cero sin `main` y cero con desbordamiento. Las públicas
+siguen sin tocar (bloque 12).
 
-1. `scripts/visual-audit.ts` vuelca `diagnostics.json` **al terminar cada
-   viewport**, de modo que una interrupción deja utilizable lo ya medido.
-2. Queda documentado arriba que no debe ejecutarse `npm run build` mientras el
-   servidor de desarrollo esté levantado.
+### Contraste: lo que el barrido midió
 
-Un barrido previo devolvió todo a cero por un fallo del propio probe:
-`page.evaluate` trata un string como **expresión**, así que pasarle
-`"() => {…}"` devolvía la función en lugar de invocarla y fallaba al
-serializar. Corregido con `page.evaluate(\`(${PROBE})()\`)`. Los ceros de aquel
-barrido no eran un resultado limpio: eran ausencia de resultado.
+77 de 83 rutas tenían al menos un par por debajo del mínimo. Los más
+frecuentes, y su causa real:
 
----
+| Par | Ratio | Veces | Causa |
+|---|---:|---:|---|
+| `#ffffff` sobre `#6366f1` | 4.47 | 130 | Índigo heredado, no es token del sistema |
+| `#16a34a` sobre `#f0fdf4` | 3.15 | 89 | **`Badge` usaba el token de relleno como color de texto** |
+| `#5266f6` sobre `#f0f2ff` | 4.11 | 79 | Ídem con la marca |
+| `#6e7480` sobre `#f2f2f0` | 4.19 | 57 | **`--nf-text-subtle` sobre superficie rehundida** |
+| `#d97706` sobre `#fffbeb` | 3.07 | 27 | Ídem con el ámbar |
+
+Dos de esas causas eran **errores propios**, y el barrido los destapó:
+
+1. **Los ratios documentados se verificaron contra blanco, no contra las
+   superficies rehundidas.** `--nf-text-subtle` daba 4.69:1 sobre blanco pero
+   4.19:1 sobre `--nf-surface-sunken`. Corregido a `#63697a`: 5.48:1 sobre
+   blanco, 5.11:1 sobre el lienzo y 4.89:1 sobre la superficie rehundida.
+2. **`Badge` pintaba texto con el token de relleno.** El sistema distingue
+   `--nf-success` (relleno, 3.3:1, válido para barras e iconos) de
+   `--nf-success-text` (5.0:1, para texto), pero el mapa de `Badge` tenía los
+   hex del relleno escritos a mano. Migrado: aprobado 4.79, en revisión 4.84,
+   borrador 5.90, abierta 5.91.
+
+Comprobado que el resto de tonos `-text` sí pasan sobre su superficie sutil:
+éxito 4.79, aviso 4.84, peligro 5.91, marca 5.92, información 5.15.
+
+### Lo que sigue abierto
+
+- **23 saltos de jerarquía** dentro de la app (por ejemplo `h1 → h3`): quedan
+  para cuando se unifiquen los encabezados de sección.
+- **26 campos sin etiqueta** y **9 botones sin nombre**: bloque 9 (formularios).
+- **454 objetivos táctiles < 24 px** en la app: la mayoría son acciones de
+  tabla y iconos; entra en el bloque de responsive/accesibilidad final.
+- **`/pricing` sin `<h1>`** y **`/home` con desbordamiento**: bloque 12.
+
 
 ## 4. Comprobaciones ejecutadas
 

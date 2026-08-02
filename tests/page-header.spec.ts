@@ -71,9 +71,9 @@ test.describe("Cabecera de página", () => {
     expect(fallos, `rutas sin un único <h1> con texto:\n${fallos.join("\n")}`).toEqual([]);
   });
 
-  test("cada ruta tiene el landmark main y migas fuera del panel", async () => {
+  test("todas las rutas tienen landmark main y migas", async () => {
     const fallos: string[] = [];
-    for (const ruta of RUTAS.slice(0, 20)) {
+    for (const ruta of RUTAS) {
       const r = await sondear(page, ruta);
       if (r.main !== 1) fallos.push(`${ruta}: main#nf-main = ${r.main}`);
       if (ruta !== "/app/dashboard" && r.migas !== 1) fallos.push(`${ruta}: migas = ${r.migas}`);

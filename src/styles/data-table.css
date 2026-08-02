@@ -100,7 +100,20 @@
   overflow-y: visible;
   max-width: 100%;
   /* El desbordamiento se resuelve aquí. La página nunca desplaza en horizontal;
-     antes la tabla se recortaba y la última columna era invisible. */
+     antes la tabla se recortaba y la última columna era invisible.
+
+     La sombra en el borde avisa de que hay más columnas: sin ella el contenido
+     se corta sin más y el usuario no sabe que puede desplazarse. Se pinta con
+     `background-attachment: local` sobre `scroll`, así que aparece y desaparece
+     sola según la posición del scroll, sin JavaScript. */
+  background:
+    linear-gradient(to right, var(--nf-surface) 30%, transparent) left center,
+    linear-gradient(to left, var(--nf-surface) 30%, transparent) right center,
+    radial-gradient(farthest-side at 0 50%, rgba(16, 18, 28, 0.14), transparent) left center,
+    radial-gradient(farthest-side at 100% 50%, rgba(16, 18, 28, 0.14), transparent) right center;
+  background-repeat: no-repeat;
+  background-size: 32px 100%, 32px 100%, 14px 100%, 14px 100%;
+  background-attachment: local, local, scroll, scroll;
 }
 .nf-dt__scroll:focus-visible {
   outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);

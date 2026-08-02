@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useMatchMedia } from "@/hooks/useMatchMedia";
 import AppSidebar from "@/components/layout/AppSidebar";
 import AppTopbar from "@/components/layout/AppTopbar";
+import Breadcrumb from "@/components/layout/Breadcrumb";
 import WorkspaceToast from "@/components/workspace/WorkspaceToast";
 import { WorkspaceProvider } from "@/context/WorkspaceStore";
 import { AdminMockProvider } from "@/context/AdminMockStore";
@@ -240,6 +241,11 @@ export default function AppRoot({
           onMenuClick={() => setNavOpen(true)}
         />
         <main id="nf-main" className="nf-app-main-inner" tabIndex={-1}>
+          {/* Las migas viven en el shell, no en cada página: puestas en
+              PageHeader solo llegaban a las rutas que lo usan, y los 11 módulos
+              normativos —que encabezan con IsoSectionHeader o con un <h1>
+              propio— se quedaban sin ellas. */}
+          <Breadcrumb />
           {children}
         </main>
       </div>

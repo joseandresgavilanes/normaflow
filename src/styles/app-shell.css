@@ -687,3 +687,6 @@
   thead { display: table-header-group; }
   tr { break-inside: avoid; }
 }
+
+/* Las migas viven en el shell, encima del contenido de la página. */
+.nf-app-main-inner > .nf-breadcrumb { margin-bottom: var(--nf-space-3); }

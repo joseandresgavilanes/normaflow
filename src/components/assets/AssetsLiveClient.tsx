@@ -68,7 +68,7 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
   }
 
   const columns = useMemo<DataTableColumn<Asset>[]>(() => [
-    { id: "asset", header: "Activo", primary: true, minWidth: 210, hideable: false, sortValue: (a) => a.code,
+    { id: "asset", header: "Activo de información", primary: true, minWidth: 210, hideable: false, sortValue: (a) => a.code,
       cell: (a) => <><strong>{a.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{a.name}</div></> },
     { id: "category", header: "Categoría", minWidth: 140, sortValue: (a) => a.category, cell: (a) => CATEGORY_LABEL[a.category] },
     { id: "criticality", header: "Criticidad", minWidth: 120, sortValue: (a) => a.criticality,

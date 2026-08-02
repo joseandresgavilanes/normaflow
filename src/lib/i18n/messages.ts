@@ -838,6 +838,9 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
   // Gráfico de cumplimiento por norma
   "Cumplimiento actual": { en: "Current compliance", "pt-BR": "Conformidade atual" },
   "Meta": { en: "Target", "pt-BR": "Meta" },
+  // "Activo" como SUSTANTIVO. El diccionario de palabras sueltas lo traducía
+  // como adjetivo ("Active"), que en una cabecera de inventario es incorrecto.
+  "Activo de información": { en: "Information asset", "pt-BR": "Ativo de informação" },
   "Cumplimiento por norma": { en: "Compliance by standard", "pt-BR": "Conformidade por norma" },
   "Nivel de cumplimiento por norma, en porcentaje, frente a la meta.": { en: "Compliance level per standard, as a percentage, against the target.", "pt-BR": "Nível de conformidade por norma, em porcentagem, frente à meta." },
   "Todavía no hay evaluación GAP de ninguna norma. Complétala para ver el nivel de cumplimiento.": { en: "No GAP assessment has been completed for any standard yet. Complete one to see the compliance level.", "pt-BR": "Ainda não há avaliação GAP de nenhuma norma. Conclua uma para ver o nível de conformidade." },
