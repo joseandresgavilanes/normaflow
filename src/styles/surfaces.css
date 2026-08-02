@@ -304,3 +304,59 @@
     to { transform: none; opacity: 1; }
   }
 }
+
+/* ============================================================================
+ * ModuleTabs — sub-navegación dentro de un módulo normativo
+ * ========================================================================== */
+.nf-module-tabs {
+  display: flex;
+  gap: var(--nf-space-1);
+  margin-bottom: var(--nf-space-4);
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--nf-border);
+  /* Con 15 secciones no caben en una línea: se desplaza, no se apila. */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+.nf-module-tabs::-webkit-scrollbar { height: 4px; }
+.nf-module-tabs::-webkit-scrollbar-thumb {
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-c-neutral-300);
+}
+
+.nf-module-tabs__tab {
+  flex: 0 0 auto;
+  position: relative;
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border: 0;
+  border-radius: var(--nf-radius-s) var(--nf-radius-s) 0 0;
+  background: transparent;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-module-tabs__tab:hover { color: var(--nf-text-primary); background: var(--nf-surface-hover); }
+
+/* Activa: color, peso Y subrayado. Nunca solo color. */
+.nf-module-tabs__tab[data-active] {
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-module-tabs__tab[data-active]::after {
+  content: "";
+  position: absolute;
+  left: var(--nf-space-2);
+  right: var(--nf-space-2);
+  bottom: -3px;
+  height: 2px;
+  border-radius: var(--nf-radius-full) var(--nf-radius-full) 0 0;
+  background: var(--nf-primary);
+}
+
+@media (max-width: 767px) {
+  .nf-module-tabs { margin-inline: calc(var(--nf-space-4) * -1); padding-inline: var(--nf-space-4); }
+}
