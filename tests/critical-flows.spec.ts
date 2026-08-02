@@ -43,7 +43,7 @@ test.describe("flujos críticos de NormaFlow", () => {
   });
 
   test("crea un riesgo y conserva su puntuación", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/documents");
+    await page.goto("/app/risks");
     await page.getByRole("button", { name: /Nuevo Riesgo/i }).click();
     const dialog = page.getByRole("dialog");
     await dialog.locator("input").first().fill("Riesgo E2E QA");
@@ -52,7 +52,7 @@ test.describe("flujos críticos de NormaFlow", () => {
   });
 
   test("crea documento, evidencia y verifica superficies de aprobación", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/risks");
+    await page.goto("/app/documents");
     await expect(page.getByRole("heading", { name: "Control de Documentos" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Nuevo documento/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Aprobados/i }).first()).toBeVisible();
@@ -98,9 +98,9 @@ test.describe("flujos críticos de NormaFlow", () => {
     await expect(pdf).toBeVisible();
     await expect(xlsx).toBeVisible();
     await pdf.click();
-    await expect(page.getByText(/Generado: Informe GAP Assessment \(PDF, demo\)/i)).toBeVisible();
+    await expect(page.locator(".nf-toast").filter({ hasText: /Generado: Informe GAP Assessment \(PDF, demo\)/i })).toBeVisible();
     await xlsx.click();
-    await expect(page.getByText(/Generado: Informe GAP Assessment \(EXCEL, demo\)/i)).toBeVisible();
+    await expect(page.locator(".nf-toast").filter({ hasText: /Generado: Informe GAP Assessment \(EXCEL, demo\)/i })).toBeVisible();
   });
 
   test("cambia de organización y no mezcla datos del workspace", async ({ authenticatedPage: page }) => {
@@ -110,7 +110,7 @@ test.describe("flujos críticos de NormaFlow", () => {
     // El selector de organización dejó de estar duplicado: hay un único
     // control en la cabecera del sidebar (antes: marca truncada con chevron
     // inerte + caja "Organización" con su propio select).
-    const orgSelector = page.locator(".nf-nav__org-control select");
+    const orgSelector = page.locator(".nf-sidenav__org-control select");
     await expect(orgSelector).toBeVisible();
     await orgSelector.selectOption({ label: "Logística Norte S.L." });
     await expect(orgSelector).toHaveValue("org_logistica");

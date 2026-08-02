@@ -130,7 +130,7 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 12, color: "var(--nf-ink-3)" }}><span>{filtered.length} de {initial.evidence.length} evidencias</span><span>Vencimientos y revisiones controlados por fecha</span></div>
         <div className="nf-data-table-wrap">
           <table className="nf-data-table" style={{ minWidth: 920 }}>
-            <thead><tr><th>Título</th><th>Tipo</th><th>Norma / cláusula</th><th>Proceso</th><th>Responsable</th><th>Estado</th><th>Vence</th><th /></tr></thead>
+            <thead><tr><th>Título</th><th>Tipo</th><th>Norma / cláusula</th><th>Proceso</th><th>Responsable</th><th>Estado</th><th>Vence</th><th>Acciones</th></tr></thead>
             <tbody>
               {filtered.map((row) => <tr key={row.id} onClick={() => setDetail(row)} style={{ cursor: "pointer" }}>
                 <td><strong>{row.title}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>{row.fileSize ? `${Math.ceil(row.fileSize / 1024)} KB` : "Archivo"} · cargada {formatDate(row.createdAt)}</div></td>

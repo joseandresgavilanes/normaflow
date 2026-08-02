@@ -210,36 +210,6 @@ export default function AppSidebar({
         >
           {isPinned ? <PinOff size={13} aria-hidden /> : <Pin size={13} aria-hidden />}
         </button>
-
-        {/* Secciones del módulo: solo se muestran las de la norma abierta. Con
-            las 11 normas desplegadas a la vez eran ~143 enlaces compitiendo en
-            la misma columna. Alimentan `?section=`, que `useModuleSection` lee
-            para cambiar la vista. */}
-        {active && !locked && item.sections && item.sections.length > 0 && (
-          <ul className="nf-sidenav__sections">
-            {item.sections.map((section) => {
-              const sectionHref = section.section === "panel"
-                ? item.href
-                : `${item.href}?section=${section.section}`;
-              const sectionActive = currentSection === section.section
-                || (!currentSection && section.section === "panel");
-              return (
-                <li key={section.section}>
-                  <Link
-                    href={sectionHref}
-                    prefetch={false}
-                    aria-current={sectionActive ? "true" : undefined}
-                    onClick={() => onNavigate?.()}
-                    className="nf-sidenav__section-link"
-                    data-active={sectionActive || undefined}
-                  >
-                    {tx(section.label)}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )}
       </li>
     );
   };
