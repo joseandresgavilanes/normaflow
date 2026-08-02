@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, Download, FileText, Loader2, Paperclip, Plus, Search, ShieldCheck, XCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { NF_INPUT_CLASS, ModalField, modalInputStyle } from "@/components/ui/ModalForm";
 import { useServerAction } from "@/hooks/useServerAction";
@@ -52,6 +54,21 @@ export function ACPMLiveClient({ initial }: { initial: CAPAPayload }) {
     try { const result = await exportCAPAIndex({ format }); await downloadQueuedReport(result.id); } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo exportar el índice."); } finally { setExportBusy(false); }
   }
 
+  const columns = useMemo<DataTableColumn<Row>[]>(() => [
+    { id: "code", header: "Código / no conformidad", primary: true, minWidth: 210, hideable: false, sortValue: (r) => r.code,
+      cell: (r) => <><strong>{r.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-2)", marginTop: 3 }}>{r.title}</div></> },
+    { id: "origin", header: "Origen", minWidth: 130, sortValue: (r) => r.origin,
+      cell: (r) => <>{ORIGIN_LABEL.get(r.origin) ?? r.origin}<div style={{ fontSize: 11, color: r.severity === "CRITICAL" ? "#B91C1C" : "var(--nf-ink-3)", marginTop: 3 }}>{r.severity === "CRITICAL" ? "Crítica" : r.severity === "MAJOR" ? "Mayor" : "Menor"}</div></> },
+    { id: "standard", header: "Norma / cláusula", minWidth: 170, sortValue: (r) => r.standardCode ?? r.clause?.standard.code ?? "",
+      cell: (r) => <>{r.standardCode ?? r.clause?.standard.code ?? "—"}<div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{r.clause ? `${r.clause.code} · ${r.clause.title}` : "Sin cláusula"}</div></> },
+    { id: "owner", header: "Responsable", minWidth: 140, sortValue: (r) => r.owner?.name ?? "", cell: (r) => r.owner?.name ?? "Sin asignar" },
+    { id: "stage", header: "Etapa", minWidth: 120, sortValue: (r) => r.stage, cell: (r) => <StageBadge stage={r.stage as Stage} /> },
+    { id: "due", header: "Vence", minWidth: 110, numeric: true, sortValue: (r) => (r.dueDate ? new Date(r.dueDate).getTime() : null),
+      cell: (r) => <span style={{ color: r.dueDate && new Date(r.dueDate) < new Date() && r.stage !== "CLOSED" ? "#B91C1C" : undefined }}>{r.dueDate ? formatDate(r.dueDate) : "—"}</span> },
+    { id: "progress", header: "Avance", minWidth: 110, numeric: true, sortValue: (r) => r.progress,
+      cell: (r) => <div style={{ minWidth: 90 }}><div style={{ fontSize: 11, marginBottom: 4 }}>{r.progress}%</div><div style={{ height: 5, background: "var(--nf-line)", borderRadius: 99 }}><div style={{ width: `${r.progress}%`, height: "100%", background: "#5266F6", borderRadius: 99 }} /></div></div> },
+  ], []);
+
   return <div>
     <SectionTitle title="ACPM / CAPA" sub="No conformidades, acciones correctivas y verificación de eficacia con trazabilidad ISO." action={initial.access.canCreate ? <><Plus size={16} /> Nueva CAPA</> : undefined} onAction={initial.access.canCreate ? () => setCreating(true) : undefined} />
     <div className="nf-metric-strip"><Metric label="Abiertas" value={open.length} /><Metric label="En implementación" value={initial.capas.filter((row) => row.stage === "IMPLEMENTATION").length} color="#5266F6" /><Metric label="Por verificar" value={initial.capas.filter((row) => row.stage === "VERIFICATION").length} color="#B45309" /><Metric label="Vencidas" value={overdue} color="#B91C1C" /><Metric label="Cerradas" value={initial.capas.filter((row) => row.stage === "CLOSED").length} color="#15803D" /></div>
@@ -59,7 +76,15 @@ export function ACPMLiveClient({ initial }: { initial: CAPAPayload }) {
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}><div style={{ position: "relative", flex: 1, minWidth: 240 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input aria-label="Buscar CAPA" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar código, título, proceso…" className={NF_INPUT_CLASS} style={{ ...modalInputStyle, paddingLeft: 32 }} /></div><Filter label="Etapa" value={stage} onChange={(value) => setStage(value as Stage | "ALL")} options={[{ value: "ALL", label: "Todas las etapas" }, ...STAGES.map((item) => ({ value: item.value, label: item.label }))]} /><Filter label="Severidad" value={severity} onChange={(value) => setSeverity(value as Severity | "ALL")} options={[{ value: "ALL", label: "Todas las severidades" }, ...SEVERITIES]} />{initial.access.canExport && <><button type="button" className="nf-app-btn-ghost" disabled={exportBusy} onClick={() => void exportIndex("EXCEL")}><Download size={14} /> Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exportBusy} onClick={() => void exportIndex("PDF")}><Download size={14} /> PDF</button></>}</div>
       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.capas.length} CAPA · cierre bloqueado hasta verificar eficacia y adjuntar evidencia</div>
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 980 }}><thead><tr><th>Código / no conformidad</th><th>Origen</th><th>Norma / cláusula</th><th>Responsable</th><th>Etapa</th><th>Vence</th><th>Avance</th></tr></thead><tbody>{filtered.map((row) => <tr key={row.id} onClick={() => setSelectedId(row.id)} style={{ cursor: "pointer" }}><td><strong>{row.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-2)", marginTop: 3 }}>{row.title}</div></td><td>{ORIGIN_LABEL.get(row.origin) ?? row.origin}<div style={{ fontSize: 11, color: row.severity === "CRITICAL" ? "#B91C1C" : "var(--nf-ink-3)", marginTop: 3 }}>{row.severity === "CRITICAL" ? "Crítica" : row.severity === "MAJOR" ? "Mayor" : "Menor"}</div></td><td>{row.standardCode ?? row.clause?.standard.code ?? "—"}<div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{row.clause ? `${row.clause.code} · ${row.clause.title}` : "Sin cláusula"}</div></td><td>{row.owner?.name ?? "Sin asignar"}</td><td><StageBadge stage={row.stage as Stage} /></td><td style={{ color: row.dueDate && new Date(row.dueDate) < new Date() && row.stage !== "CLOSED" ? "#B91C1C" : undefined }}>{row.dueDate ? formatDate(row.dueDate) : "—"}</td><td><div style={{ minWidth: 90 }}><div style={{ fontSize: 11, marginBottom: 4 }}>{row.progress}%</div><div style={{ height: 5, background: "var(--nf-line)", borderRadius: 99 }}><div style={{ width: `${row.progress}%`, height: "100%", background: "#5266F6", borderRadius: 99 }} /></div></div></td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay CAPA para los filtros seleccionados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(r) => r.id}
+        rowAction={(r) => setSelectedId(r.id)}
+        caption="Acciones correctivas y preventivas: código, origen, norma y cláusula, responsable, etapa del flujo, vencimiento y avance."
+        storageKey="acpm"
+        empty={<EmptyState kind="no-results" title="No hay CAPA para los filtros seleccionados." description="Las acciones correctivas y preventivas nacen de no conformidades, auditorías o incidentes, y registran causa raíz, plan y verificación de eficacia." />}
+      />
     </Card>
     <CreateModal initial={initial} open={creating} pending={isPending} onClose={() => setCreating(false)} onSubmit={(input) => run(() => createCAPA(input), { onSuccess: () => setCreating(false), successMessage: "CAPA registrada." })} />
     <DetailModal initial={initial} row={selected} pending={isPending} onClose={() => setSelectedId(null)} canUpdate={initial.access.canUpdate} canApprove={initial.access.canApprove} onRun={(operation, message) => run(operation, { successMessage: message })} />

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Handshake } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -20,6 +22,42 @@ export default function SupplierSecurityLiveClient({ initial }: { initial: Suppl
 
   async function exportReport(format: "PDF" | "EXCEL") { setExporting(true); try { const r = await exportSupplierSecurity({ format }); await downloadQueuedReport(r.id); } finally { setExporting(false); } }
 
+  const columns = useMemo<DataTableColumn<Supplier>[]>(() => [
+    {
+      id: "supplier", header: "Proveedor", primary: true, minWidth: 190, hideable: false,
+      sortValue: (s) => s.code,
+      cell: (s) => <><strong>{s.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{s.name}</div></>,
+    },
+    {
+      id: "criticality", header: "Criticidad seguridad", minWidth: 150,
+      sortValue: (s) => s.profile?.securityCriticality ?? "",
+      cell: (s) => s.profile
+        ? <Badge value={CRIT_LABEL[s.profile.securityCriticality]} tone={critTone(s.profile.securityCriticality)} />
+        : <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Sin perfil</span>,
+    },
+    {
+      id: "data", header: "Datos tratados", minWidth: 200,
+      sortValue: (s) => s.profile?.dataProcessed ?? "",
+      cell: (s) => <span style={{ fontSize: 12 }}>{s.profile?.dataProcessed ?? "—"}</span>,
+    },
+    {
+      id: "risk", header: "Riesgo", minWidth: 110,
+      sortValue: (s) => s.profile?.riskLevel ?? "",
+      cell: (s) => <span style={{ fontSize: 12 }}>{s.profile?.riskLevel ?? "—"}</span>,
+    },
+    {
+      id: "review", header: "Revisión", minWidth: 120, numeric: true,
+      sortValue: (s) => s.profile?.nextReviewDate ?? "",
+      // El rojo señala la revisión vencida, pero el dato ya lo dice: no es el único canal.
+      cell: (s) => <span style={{ color: s.profile?.reviewOverdue ? "#B91C1C" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</span>,
+    },
+    {
+      id: "contract", header: "Vencimiento contrato", minWidth: 150, numeric: true,
+      sortValue: (s) => s.profile?.contractExpiry ?? "",
+      cell: (s) => <span style={{ color: s.profile?.contractExpiringSoon ? "#B45309" : undefined }}>{s.profile?.contractExpiry ?? "—"}</span>,
+    },
+  ], []);
+
   return <div>
     <SectionTitle title="Proveedores de seguridad" sub="Perfil de seguridad de proveedores: criticidad, datos tratados, accesos, obligaciones, controles, riesgo, revisión y vencimiento contractual." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -33,7 +71,15 @@ export default function SupplierSecurityLiveClient({ initial }: { initial: Suppl
     {initial.summary.reviewOverdue > 0 && <div className="nf-alert nf-alert--warning" style={{ marginBottom: 14 }}>{initial.summary.reviewOverdue} proveedor(es) con revisión de seguridad vencida.</div>}
     <Card>
       {initial.canExport && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 12 }}><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></div>}
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 940 }}><thead><tr><th>Proveedor</th><th>Criticidad seguridad</th><th>Datos tratados</th><th>Riesgo</th><th>Revisión</th><th>Vencimiento contrato</th></tr></thead><tbody>{initial.suppliers.map((s) => <tr key={s.id} onClick={() => setSelected(s)} style={{ cursor: "pointer" }}><td><strong>{s.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{s.name}</div></td><td>{s.profile ? <Badge value={CRIT_LABEL[s.profile.securityCriticality]} tone={critTone(s.profile.securityCriticality)} /> : <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Sin perfil</span>}</td><td style={{ fontSize: 12, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.profile?.dataProcessed ?? "—"}</td><td style={{ fontSize: 12 }}>{s.profile?.riskLevel ?? "—"}</td><td style={{ color: s.profile?.reviewOverdue ? "#B91C1C" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</td><td style={{ color: s.profile?.contractExpiringSoon ? "#B45309" : undefined }}>{s.profile?.contractExpiry ?? "—"}</td></tr>)}</tbody></table>{!initial.suppliers.length && <div className="nf-data-table-empty">No hay proveedores registrados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={initial.suppliers}
+        rowKey={(s) => s.id}
+        rowAction={(s) => setSelected(s)}
+        caption="Perfil de seguridad de proveedores: criticidad, datos tratados, nivel de riesgo, próxima revisión y vencimiento contractual."
+        storageKey="supplier-security"
+        empty={<EmptyState kind="empty" title="No hay proveedores registrados." description="Aquí se registra el perfil de seguridad de cada proveedor: qué datos trata, qué accesos tiene y cuándo vence su contrato." />}
+      />
     </Card>
     {selected && <ProfileForm supplier={selected} pending={isPending} canUpdate={initial.canUpdate} onClose={() => setSelected(null)} onRun={run} />}
   </div>;

@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Download, Link2, Plus, Search, Siren, Trash2 } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -30,6 +32,17 @@ export default function IncidentsLiveClient({ initial }: { initial: IncidentsPay
 
   async function exportReport(format: "PDF" | "EXCEL") { setExporting(true); try { const r = await exportIncidents({ reportType: reportType as never, format }); await downloadQueuedReport(r.id); } finally { setExporting(false); } }
 
+  const columns = useMemo<DataTableColumn<Incident>[]>(() => [
+    { id: "code", header: "Incidente", primary: true, minWidth: 220, hideable: false, sortValue: (i) => i.code,
+      cell: (i) => <><strong>{i.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{i.description}</div></> },
+    { id: "detected", header: "Detectado", minWidth: 120, numeric: true, sortValue: (i) => i.detectedAt ?? "", cell: (i) => i.detectedAt ?? "—" },
+    { id: "severity", header: "Severidad", minWidth: 120, sortValue: (i) => i.severity, cell: (i) => <Badge value={SEV_LABEL[i.severity]} tone={sevTone(i.severity)} /> },
+    { id: "category", header: "Categoría", minWidth: 140, sortValue: (i) => i.category, cell: (i) => CAT_LABEL[i.category] },
+    { id: "status", header: "Estado", minWidth: 120, sortValue: (i) => i.status, cell: (i) => <Badge value={STATUS_LABEL[i.status]} tone={i.status === "CLOSED" ? "gray" : "blue"} /> },
+    { id: "owner", header: "Responsable", minWidth: 140, sortValue: (i) => i.responsible?.name ?? "", cell: (i) => i.responsible?.name ?? "—" },
+    { id: "assets", header: "Activos", align: "end", numeric: true, minWidth: 90, sortValue: (i) => i.assets.length, cell: (i) => i.assets.length },
+  ], []);
+
   return <div>
     <SectionTitle title="Incidentes de seguridad" sub="Gestión ISO 27001 de incidentes con flujo secuencial: detección, clasificación, investigación, contención, erradicación, recuperación y cierre." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -48,7 +61,15 @@ export default function IncidentsLiveClient({ initial }: { initial: IncidentsPay
         {initial.canCreate && <button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Registrar incidente</button>}
         {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}><option value="incident-log">Registro</option><option value="incident-report">Informe</option></select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 940 }}><thead><tr><th>Incidente</th><th>Detectado</th><th>Severidad</th><th>Categoría</th><th>Estado</th><th>Responsable</th><th>Activos</th></tr></thead><tbody>{filtered.map((i) => <tr key={i.id} onClick={() => setSelected(i)} style={{ cursor: "pointer" }}><td><strong>{i.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.description}</div></td><td>{i.detectedAt ?? "—"}</td><td><Badge value={SEV_LABEL[i.severity]} tone={sevTone(i.severity)} /></td><td>{CAT_LABEL[i.category]}</td><td><Badge value={STATUS_LABEL[i.status]} tone={i.status === "CLOSED" ? "gray" : "blue"} /></td><td>{i.responsible?.name ?? "—"}</td><td>{i.assets.length}</td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay incidentes para los filtros seleccionados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(i) => i.id}
+        rowAction={(i) => setSelected(i)}
+        caption="Incidentes de seguridad: código, fecha de detección, severidad, categoría, estado, responsable y activos afectados."
+        storageKey="incidents"
+        empty={<EmptyState kind="no-results" title="No hay incidentes para los filtros seleccionados." description="Aquí se registran los incidentes de seguridad con su severidad, los activos afectados y el responsable de la respuesta." />}
+      />
     </Card>
     {creating && <IncidentForm initial={initial} pending={isPending} onClose={() => setCreating(false)} onRun={run} />}
     {selected && <IncidentDetail incident={selected} initial={initial} pending={isPending} onClose={() => setSelected(null)} onRun={run} />}

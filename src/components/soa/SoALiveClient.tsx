@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { CheckCircle2, Download, FileCheck2, FilePlus2, Search, Send, ShieldCheck } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -42,6 +44,20 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
 
   const current = initial.current;
   const editable = current?.editable ?? false;
+
+  const columns = useMemo<DataTableColumn<Entry>[]>(() => [
+    { id: "code", header: "Control", primary: true, minWidth: 200, hideable: false, sortValue: (r) => r.code,
+      cell: (r) => <><strong>{r.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{r.title}</div></> },
+    { id: "domain", header: "Dominio", minWidth: 150, sortValue: (r) => r.domain, cell: (r) => DOMAIN_LABEL[r.domain] },
+    { id: "applicability", header: "Aplicabilidad", minWidth: 130, sortValue: (r) => r.applicability,
+      cell: (r) => <Badge value={APPLICABILITY_LABEL[r.applicability]} tone={r.applicability === "INCLUDED" ? "green" : r.applicability === "EXCLUDED" ? "gray" : "amber"} /> },
+    { id: "justification", header: "Justificación", minWidth: 220, sortValue: (r) => r.justification ?? "",
+      cell: (r) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.applicability === "EXCLUDED" ? (r.justification || <span style={{ color: "#B91C1C" }}>Falta justificación</span>) : "—"}</span> },
+    { id: "implementation", header: "Implementación", minWidth: 140, sortValue: (r) => r.implementationStatus,
+      cell: (r) => <Badge value={STATUS_LABEL[r.implementationStatus]} tone={r.implementationStatus === "EFFECTIVE" ? "green" : r.implementationStatus === "NOT_EFFECTIVE" ? "red" : "blue"} /> },
+    { id: "owner", header: "Responsable", minWidth: 140, sortValue: (r) => r.responsible?.name ?? "", cell: (r) => r.responsible?.name ?? "—" },
+    { id: "risk", header: "Riesgo", minWidth: 120, sortValue: (r) => r.relatedRiskItem?.reference ?? "", cell: (r) => r.relatedRiskItem?.reference ?? "—" },
+  ], []);
 
   return <div>
     <SectionTitle title="Declaración de Aplicabilidad (SoA)" sub="Declaración versionada del Anexo A ISO 27001: inclusión/exclusión justificada, estado, riesgo y evidencia de cada control." />
@@ -85,7 +101,17 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
         </div>
 
         <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.summary.total} controles · catálogo ISO 27001 v{initial.catalogVersion?.version ?? "—"}</div>
-        <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 940 }}><thead><tr><th>Control</th><th>Dominio</th><th>Aplicabilidad</th><th>Justificación</th><th>Implementación</th><th>Responsable</th><th>Riesgo</th></tr></thead><tbody>{filtered.map((row) => <tr key={row.id} onClick={() => editable && initial.canUpdate ? setSelected(row) : undefined} style={{ cursor: editable && initial.canUpdate ? "pointer" : "default" }}><td><strong>{row.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{row.title}</div></td><td>{DOMAIN_LABEL[row.domain]}</td><td><Badge value={APPLICABILITY_LABEL[row.applicability]} tone={row.applicability === "INCLUDED" ? "green" : row.applicability === "EXCLUDED" ? "gray" : "amber"} /></td><td style={{ maxWidth: 240, fontSize: 12, color: "var(--nf-ink-3)" }}>{row.applicability === "EXCLUDED" ? (row.justification || <span style={{ color: "#B91C1C" }}>Falta justificación</span>) : "—"}</td><td><Badge value={STATUS_LABEL[row.implementationStatus]} tone={row.implementationStatus === "EFFECTIVE" ? "green" : row.implementationStatus === "NOT_EFFECTIVE" ? "red" : "blue"} /></td><td>{row.responsible?.name ?? "—"}</td><td>{row.relatedRiskItem?.reference ?? "—"}</td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay entradas para los filtros seleccionados.</div>}</div>
+          <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(r) => r.id}
+          /* La fila solo abre el editor si la declaración es editable y hay
+             permiso: se conserva exactamente la condición anterior. */
+          rowAction={editable && initial.canUpdate ? (r) => setSelected(r) : undefined}
+          caption="Declaración de aplicabilidad: control, dominio, aplicabilidad, justificación de exclusión, estado de implementación, responsable y riesgo relacionado."
+          storageKey="soa"
+          empty={<EmptyState kind="no-results" title="No hay entradas para los filtros seleccionados." description="La declaración de aplicabilidad justifica, control a control, por qué se incluye o se excluye del alcance." />}
+        />
         {!editable && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 10 }}>Esta versión está {SOA_STATUS_LABEL[current.status].toLowerCase()} y es inmutable. Crea una nueva versión para introducir cambios.</div>}
       </Card>
     </>}

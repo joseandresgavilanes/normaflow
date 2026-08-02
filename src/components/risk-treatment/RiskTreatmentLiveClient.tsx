@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Download, FilePlus2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -38,6 +40,69 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
 
   const plan = initial.plan;
   const planEditable = plan?.editable ?? false;
+
+  const columns = useMemo<DataTableColumn<Item>[]>(() => [
+    {
+      id: "reference",
+      header: "Ref.",
+      primary: true,
+      hideable: false,
+      minWidth: 110,
+      sortValue: (row) => row.reference,
+      cell: (row) => <strong>{row.reference}</strong>,
+    },
+    {
+      id: "title",
+      header: "Riesgo",
+      minWidth: 240,
+      sortValue: (row) => row.title,
+      cell: (row) => <>{row.title}<div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.threat ?? ""}</div></>,
+    },
+    {
+      id: "asset",
+      header: "Activo",
+      minWidth: 140,
+      sortValue: (row) => row.asset,
+      cell: (row) => <span style={{ fontSize: 12 }}>{row.asset ?? "—"}</span>,
+    },
+    {
+      id: "inherentRisk",
+      header: "Inherente",
+      align: "end",
+      numeric: true,
+      sortValue: (row) => row.inherentRisk,
+      cell: (row) => <Badge value={String(row.inherentRisk)} tone={riskTone(row.inherentRisk)} />,
+    },
+    {
+      id: "treatment",
+      header: "Tratamiento",
+      minWidth: 120,
+      sortValue: (row) => TREATMENT_LABEL[row.treatment] ?? row.treatment,
+      cell: (row) => TREATMENT_LABEL[row.treatment],
+    },
+    {
+      id: "residualRisk",
+      header: "Residual",
+      align: "end",
+      numeric: true,
+      sortValue: (row) => row.residualRisk,
+      cell: (row) => (row.residualRisk != null ? <Badge value={String(row.residualRisk)} tone={riskTone(row.residualRisk)} /> : "—"),
+    },
+    {
+      id: "owner",
+      header: "Propietario",
+      minWidth: 140,
+      sortValue: (row) => row.owner?.name ?? null,
+      cell: (row) => row.owner?.name ?? "—",
+    },
+    {
+      id: "status",
+      header: "Estado",
+      minWidth: 140,
+      sortValue: (row) => ITEM_STATUS_LABEL[row.status] ?? row.status,
+      cell: (row) => <Badge value={ITEM_STATUS_LABEL[row.status]} tone={row.status === "CLOSED" ? "gray" : row.status === "ACCEPTED" ? "green" : "blue"} />,
+    },
+  ], []);
 
   async function exportReport(format: "PDF" | "EXCEL") {
     setExporting(true);
@@ -84,7 +149,16 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
           </div>
         </div>
 
-        <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 980 }}><thead><tr><th>Ref.</th><th>Riesgo</th><th>Activo</th><th>Inherente</th><th>Tratamiento</th><th>Residual</th><th>Propietario</th><th>Estado</th></tr></thead><tbody>{initial.items.map((row) => <tr key={row.id} onClick={() => setSelected(row)} style={{ cursor: "pointer" }}><td><strong>{row.reference}</strong></td><td>{row.title}<div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.threat ?? ""}</div></td><td style={{ fontSize: 12 }}>{row.asset ?? "—"}</td><td><Badge value={String(row.inherentRisk)} tone={riskTone(row.inherentRisk)} /></td><td>{TREATMENT_LABEL[row.treatment]}</td><td>{row.residualRisk != null ? <Badge value={String(row.residualRisk)} tone={riskTone(row.residualRisk)} /> : "—"}</td><td>{row.owner?.name ?? "—"}</td><td><Badge value={ITEM_STATUS_LABEL[row.status]} tone={row.status === "CLOSED" ? "gray" : row.status === "ACCEPTED" ? "green" : "blue"} /></td></tr>)}</tbody></table>{!initial.items.length && <div className="nf-data-table-empty">Sin riesgos registrados todavía.</div>}</div>
+        <DataTable
+          columns={columns}
+          rows={initial.items}
+          rowKey={(row) => row.id}
+          rowAction={(row) => setSelected(row)}
+          caption="Registro de riesgos del plan de tratamiento: referencia, riesgo, activo, riesgo inherente, tratamiento, riesgo residual, propietario y estado."
+          storageKey="risk-treatment-items"
+          empty={<EmptyState kind="empty" title="Sin riesgos registrados todavía." description="Aquí se registran los riesgos del plan: activo, amenaza y vulnerabilidad, con su riesgo inherente, el tratamiento elegido y el riesgo residual aceptado." />}
+          pageSize={25}
+        />
       </Card>
     </>}
 
