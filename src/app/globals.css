@@ -639,12 +639,12 @@
   color: var(--nf-app-accent);
 }
 
-.nf-private-mode :where(.nf-app-main-inner, .nf-nav__org-name, .nf-nav__org-control, .nf-nav__profile) {
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidenav__org-name, .nf-sidenav__org-control, .nf-sidenav__profile) {
   filter: blur(6px);
   user-select: none;
 }
 
-.nf-private-mode :where(.nf-app-main-inner, .nf-nav__org-name, .nf-nav__org-control, .nf-nav__profile) :where(a, button, input, textarea, select) {
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidenav__org-name, .nf-sidenav__org-control, .nf-sidenav__profile) :where(a, button, input, textarea, select) {
   pointer-events: none;
 }
 

@@ -43,16 +43,16 @@ test.describe("flujos críticos de NormaFlow", () => {
   });
 
   test("crea un riesgo y conserva su puntuación", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/risks");
+    await page.goto("/app/documents");
     await page.getByRole("button", { name: /Nuevo Riesgo/i }).click();
     const dialog = page.getByRole("dialog");
     await dialog.locator("input").first().fill("Riesgo E2E QA");
     await dialog.getByRole("button", { name: "Guardar" }).click();
-    await expect(page.getByText("Riesgo E2E QA", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Listado").getByText("Riesgo E2E QA", { exact: true })).toBeVisible();
   });
 
   test("crea documento, evidencia y verifica superficies de aprobación", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/documents");
+    await page.goto("/app/risks");
     await expect(page.getByRole("heading", { name: "Control de Documentos" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Nuevo documento/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Aprobados/i }).first()).toBeVisible();
@@ -104,7 +104,7 @@ test.describe("flujos críticos de NormaFlow", () => {
   });
 
   test("cambia de organización y no mezcla datos del workspace", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/documents");
+    await page.goto("/app/risks");
     const sourceRow = page.locator("tbody tr").first();
     const sourceText = await sourceRow.innerText();
     // El selector de organización dejó de estar duplicado: hay un único

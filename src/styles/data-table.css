@@ -1,0 +1,418 @@
+/* ============================================================================
+ * NormaFlow — DataTable, FilterBar y estados
+ * ========================================================================== */
+
+.nf-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Contenedor
+ * ------------------------------------------------------------------------ */
+.nf-dt {
+  --nf-dt-row-h: var(--nf-row-height-default);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-l);
+  background: var(--nf-surface);
+  overflow: hidden; /* recorta el scroll interno a las esquinas redondeadas */
+}
+.nf-dt[data-density="compact"] { --nf-dt-row-h: var(--nf-row-height-compact); }
+.nf-dt[data-density="comfortable"] { --nf-dt-row-h: var(--nf-row-height-comfortable); }
+
+/* Barra superior: filtros + herramientas. Un solo contenedor, no una tarjeta
+   de filtros flotando sobre otra tarjeta de tabla. */
+.nf-dt__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-3);
+  border-bottom: 1px solid var(--nf-border);
+  background: var(--nf-surface);
+}
+.nf-dt__toolbar-main { flex: 1; min-width: 0; }
+.nf-dt__toolbar-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: 0 0 auto;
+}
+
+.nf-dt__tool {
+  display: grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  cursor: pointer;
+}
+.nf-dt__tool:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
+
+.nf-dt__bulk {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: 3px var(--nf-space-2) 3px var(--nf-space-3);
+  border: 1px solid var(--nf-primary-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-primary-subtle);
+}
+.nf-dt__bulk-count {
+  color: var(--nf-primary-active);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  white-space: nowrap;
+}
+
+.nf-dt__columns { position: relative; }
+.nf-dt__columns-menu {
+  position: absolute;
+  right: 0; top: calc(100% + 4px);
+  z-index: var(--nf-z-popover);
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  padding: var(--nf-space-2);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+  box-shadow: var(--nf-elevation-3);
+}
+.nf-dt__columns-item {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-1) var(--nf-space-2);
+  border-radius: var(--nf-radius-xs);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-sm);
+  cursor: pointer;
+}
+.nf-dt__columns-item:hover { background: var(--nf-surface-hover); }
+
+/* --------------------------------------------------------------------------
+ * Tabla
+ * ------------------------------------------------------------------------ */
+.nf-dt__scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  max-width: 100%;
+  /* El desbordamiento se resuelve aquí. La página nunca desplaza en horizontal;
+     antes la tabla se recortaba y la última columna era invisible. */
+}
+.nf-dt__scroll:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: -2px;
+}
+
+.nf-dt__table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--nf-text-sm);
+}
+
+.nf-dt__th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0 var(--nf-space-3);
+  height: 38px;
+  background: var(--nf-surface-muted);
+  border-bottom: 1px solid var(--nf-border);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+}
+.nf-dt__th[data-align="end"] { text-align: right; }
+.nf-dt__th--select { width: 40px; padding-right: 0; }
+
+.nf-dt__sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--nf-radius-xs);
+}
+.nf-dt__sort:hover { color: var(--nf-text-primary); }
+.nf-dt__sort-idle { opacity: 0; transition: opacity var(--nf-duration-fast) var(--nf-ease-standard); }
+.nf-dt__sort:hover .nf-dt__sort-idle { opacity: 0.6; }
+
+.nf-dt__td {
+  padding: 0 var(--nf-space-3);
+  height: var(--nf-dt-row-h);
+  border-bottom: 1px solid var(--nf-border-subtle);
+  color: var(--nf-text-secondary);
+  vertical-align: middle;
+}
+.nf-dt__td[data-align="end"] { text-align: right; }
+.nf-dt__td[data-numeric] { font-variant-numeric: tabular-nums; }
+.nf-dt__td--select { width: 40px; padding-right: 0; }
+.nf-dt__table tbody tr:last-child .nf-dt__td { border-bottom: 0; }
+.nf-dt__table tbody tr:hover .nf-dt__td { background: var(--nf-surface-muted); }
+.nf-dt__table tbody tr[data-selected] .nf-dt__td { background: var(--nf-primary-subtle); }
+
+.nf-dt__row-link {
+  color: var(--nf-text-primary);
+  font-weight: var(--nf-weight-medium);
+  text-decoration: none;
+  border-radius: var(--nf-radius-xs);
+}
+.nf-dt__row-link:hover { color: var(--nf-text-link); text-decoration: underline; }
+
+/* --------------------------------------------------------------------------
+ * Estados
+ * ------------------------------------------------------------------------ */
+.nf-dt__empty { padding: var(--nf-space-8) var(--nf-space-4); }
+
+.nf-dt__skeleton { padding: var(--nf-space-3); display: grid; gap: var(--nf-space-2); }
+.nf-dt__skeleton-row {
+  height: var(--nf-row-height-default);
+  border-radius: var(--nf-radius-s);
+  background: linear-gradient(90deg, var(--nf-surface-muted) 25%, var(--nf-surface-sunken) 37%, var(--nf-surface-muted) 63%);
+  background-size: 400% 100%;
+  animation: nf-dt-shimmer 1.4s ease infinite;
+}
+@keyframes nf-dt-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+.nf-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--nf-space-2);
+  text-align: center;
+  padding: var(--nf-space-6) var(--nf-space-4);
+  max-width: 46ch;
+  margin-inline: auto;
+}
+.nf-empty[data-compact] { padding: var(--nf-space-4) var(--nf-space-3); }
+.nf-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-neutral-subtle);
+  color: var(--nf-text-muted);
+}
+.nf-empty[data-tone="warning"] .nf-empty__icon { background: var(--nf-warning-subtle); color: var(--nf-warning-text); }
+.nf-empty[data-tone="danger"] .nf-empty__icon { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
+.nf-empty__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-empty__desc {
+  margin: 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  line-height: var(--nf-leading-normal);
+}
+.nf-empty__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--nf-space-2);
+  margin-top: var(--nf-space-1);
+}
+
+/* --------------------------------------------------------------------------
+ * Paginación
+ * ------------------------------------------------------------------------ */
+.nf-dt__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border-top: 1px solid var(--nf-border);
+  background: var(--nf-surface-muted);
+}
+.nf-dt__pagination-info { color: var(--nf-text-muted); font-size: var(--nf-text-xs); }
+.nf-dt__pagination-controls { display: flex; gap: var(--nf-space-2); }
+
+/* --------------------------------------------------------------------------
+ * FilterBar
+ * ------------------------------------------------------------------------ */
+.nf-filterbar { display: grid; gap: var(--nf-space-2); min-width: 0; }
+.nf-filterbar__row {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.nf-filterbar__search {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 360px;
+  height: var(--nf-control-height-sm);
+  padding: 0 var(--nf-space-2);
+  border: 1px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+  color: var(--nf-text-subtle);
+}
+.nf-filterbar__search:focus-within { border-color: var(--nf-border-focus); }
+.nf-filterbar__search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-sm);
+  outline: none;
+}
+
+.nf-filterbar__select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: 0 0 auto;
+  height: var(--nf-control-height-sm);
+  padding: 0 var(--nf-space-2);
+  border: 1px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+}
+.nf-filterbar__select-label {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  white-space: nowrap;
+}
+.nf-filterbar__select select {
+  border: 0;
+  background: transparent;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-sm);
+  max-width: 180px;
+  cursor: pointer;
+}
+
+.nf-filterbar__clear {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  height: var(--nf-control-height-sm);
+  padding: 0 var(--nf-space-2);
+  border: 0;
+  border-radius: var(--nf-radius-m);
+  background: transparent;
+  color: var(--nf-text-link);
+  font-size: var(--nf-text-sm);
+  cursor: pointer;
+}
+.nf-filterbar__clear:hover { background: var(--nf-surface-hover); }
+
+.nf-filterbar__chips { display: flex; flex-wrap: wrap; gap: var(--nf-space-1); }
+.nf-chip-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  min-height: 26px;
+  padding: 0 var(--nf-space-2);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  cursor: pointer;
+}
+.nf-chip-filter:hover { background: var(--nf-surface-hover); }
+.nf-chip-filter[data-active] {
+  border-color: var(--nf-primary);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-chip-filter__count {
+  padding: 0 5px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-neutral-subtle);
+  font-size: var(--nf-text-2xs);
+}
+
+/* --------------------------------------------------------------------------
+ * Móvil: la tabla se convierte en tarjetas
+ * ------------------------------------------------------------------------ */
+.nf-dt__cards { display: none; }
+
+@media (max-width: 767px) {
+  .nf-dt__scroll { display: none; }
+
+  .nf-dt__cards {
+    display: grid;
+    gap: var(--nf-space-2);
+    list-style: none;
+    margin: 0;
+    padding: var(--nf-space-2);
+  }
+  .nf-dt__card {
+    display: grid;
+    gap: var(--nf-space-2);
+    padding: var(--nf-space-3);
+    border: 1px solid var(--nf-border);
+    border-radius: var(--nf-radius-m);
+    background: var(--nf-surface);
+  }
+  .nf-dt__card-title {
+    color: var(--nf-text-primary);
+    font-size: var(--nf-text-base);
+    font-weight: var(--nf-weight-semibold);
+    line-height: var(--nf-leading-snug);
+  }
+  .nf-dt__card-title a { color: inherit; text-decoration: none; }
+  .nf-dt__card-fields {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--nf-space-1) var(--nf-space-3);
+    margin: 0;
+  }
+  .nf-dt__card-field { display: contents; }
+  .nf-dt__card-field dt {
+    color: var(--nf-text-muted);
+    font-size: var(--nf-text-xs);
+  }
+  .nf-dt__card-field dd {
+    margin: 0;
+    color: var(--nf-text-secondary);
+    font-size: var(--nf-text-xs);
+    text-align: right;
+  }
+  .nf-dt__card-field dd[data-numeric] { font-variant-numeric: tabular-nums; }
+
+  .nf-dt__toolbar { flex-direction: column; align-items: stretch; }
+  .nf-dt__toolbar-tools { justify-content: flex-end; }
+  .nf-filterbar__search { max-width: none; }
+  .nf-filterbar__select { flex: 1 1 auto; justify-content: space-between; }
+}
+
+@media print {
+  .nf-dt__toolbar,
+  .nf-dt__pagination,
+  .nf-dt__cards { display: none !important; }
+  .nf-dt { border: 0; }
+  .nf-dt__scroll { display: block !important; overflow: visible !important; }
+}

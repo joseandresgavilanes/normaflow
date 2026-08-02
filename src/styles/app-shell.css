@@ -38,7 +38,7 @@
 /* --------------------------------------------------------------------------
  * Navegación lateral
  * ------------------------------------------------------------------------ */
-.nf-nav {
+.nf-sidenav {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: var(--nf-z-sidebar);
@@ -50,7 +50,7 @@
 }
 
 /* Cabecera: marca + selector de organización (un solo control) */
-.nf-nav__head {
+.nf-sidenav__head {
   display: flex;
   align-items: center;
   gap: var(--nf-space-2);
@@ -59,7 +59,7 @@
   min-height: var(--nf-topbar-height);
 }
 
-.nf-nav__brand {
+.nf-sidenav__brand {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -69,13 +69,13 @@
   background: var(--nf-primary);
   color: var(--nf-on-primary);
 }
-.nf-nav__brand-mark {
+.nf-sidenav__brand-mark {
   font-size: var(--nf-text-base);
   font-weight: var(--nf-weight-bold);
   line-height: 1;
 }
 
-.nf-nav__org {
+.nf-sidenav__org {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -87,15 +87,15 @@
   padding-left: 6px;
   margin-left: -6px;
 }
-.nf-nav__org-label {
+.nf-sidenav__org-label {
   color: var(--nf-text-muted);
   font-size: var(--nf-text-2xs);
   font-weight: var(--nf-weight-semibold);
   letter-spacing: var(--nf-tracking-wide);
   text-transform: uppercase;
 }
-.nf-nav__org-name,
-.nf-nav__org-control select {
+.nf-sidenav__org-name,
+.nf-sidenav__org-control select {
   color: var(--nf-text-primary);
   font-size: var(--nf-text-base);
   font-weight: var(--nf-weight-semibold);
@@ -103,7 +103,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.nf-nav__org-control {
+.nf-sidenav__org-control {
   position: relative;
   display: flex;
   align-items: center;
@@ -111,7 +111,7 @@
   min-width: 0;
   color: var(--nf-text-subtle);
 }
-.nf-nav__org-control select {
+.nf-sidenav__org-control select {
   appearance: none;
   border: 0;
   background: transparent;
@@ -121,11 +121,11 @@
   cursor: pointer;
   max-width: 100%;
 }
-.nf-nav__org-control select:hover {
+.nf-sidenav__org-control select:hover {
   background: var(--nf-surface-hover);
 }
 
-.nf-nav__close {
+.nf-sidenav__close {
   display: none;
   flex: 0 0 auto;
   align-items: center;
@@ -138,10 +138,10 @@
   color: var(--nf-text-secondary);
   cursor: pointer;
 }
-.nf-nav__close:hover { background: var(--nf-surface-hover); }
+.nf-sidenav__close:hover { background: var(--nf-surface-hover); }
 
 /* Filtro de navegación */
-.nf-nav__filter {
+.nf-sidenav__filter {
   display: flex;
   align-items: center;
   gap: var(--nf-space-2);
@@ -153,11 +153,11 @@
   background: var(--nf-surface-muted);
   color: var(--nf-text-subtle);
 }
-.nf-nav__filter:focus-within {
+.nf-sidenav__filter:focus-within {
   border-color: var(--nf-border-focus);
   background: var(--nf-surface);
 }
-.nf-nav__filter input {
+.nf-sidenav__filter input {
   flex: 1;
   min-width: 0;
   border: 0;
@@ -166,10 +166,10 @@
   font-size: var(--nf-text-sm);
   outline: none;
 }
-.nf-nav__filter input::placeholder { color: var(--nf-text-subtle); }
+.nf-sidenav__filter input::placeholder { color: var(--nf-text-subtle); }
 
 /* Lista */
-.nf-nav__scroll {
+.nf-sidenav__scroll {
   flex: 1;
   min-height: 0; /* sin esto un hijo flex no encoge y el scroll nunca aparece */
   overflow-y: auto;
@@ -188,15 +188,15 @@
     transparent 100%
   );
 }
-.nf-nav__groups,
-.nf-nav__list {
+.nf-sidenav__groups,
+.nf-sidenav__list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
-.nf-nav__group + .nf-nav__group { margin-top: var(--nf-space-1); }
+.nf-sidenav__group + .nf-sidenav__group { margin-top: var(--nf-space-1); }
 
-.nf-nav__group-toggle {
+.nf-sidenav__group-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -209,30 +209,30 @@
   cursor: pointer;
   text-align: left;
 }
-.nf-nav__group-toggle:hover:not(:disabled) { background: var(--nf-surface-hover); }
-.nf-nav__group-toggle:disabled { cursor: default; }
+.nf-sidenav__group-toggle:hover:not(:disabled) { background: var(--nf-surface-hover); }
+.nf-sidenav__group-toggle:disabled { cursor: default; }
 
-.nf-nav__group-title {
+.nf-sidenav__group-title {
   color: var(--nf-text-muted);
   font-size: var(--nf-text-2xs);
   font-weight: var(--nf-weight-bold);
   letter-spacing: var(--nf-tracking-wide);
   text-transform: uppercase;
 }
-.nf-nav__group-title--static {
+.nf-sidenav__group-title--static {
   display: block;
   padding: var(--nf-space-2);
   margin: 0;
 }
 
-.nf-nav__chevron {
+.nf-sidenav__chevron {
   flex: 0 0 auto;
   color: var(--nf-text-subtle);
   transition: transform var(--nf-duration-fast) var(--nf-ease-standard);
 }
-.nf-nav__chevron[data-open] { transform: rotate(180deg); }
+.nf-sidenav__chevron[data-open] { transform: rotate(180deg); }
 
-.nf-nav__row {
+.nf-sidenav__row {
   position: relative;
   display: flex;
   align-items: center;
@@ -240,7 +240,7 @@
   flex-wrap: wrap;
 }
 
-.nf-nav__link {
+.nf-sidenav__link {
   flex: 1;
   display: flex;
   align-items: center;
@@ -256,15 +256,15 @@
   transition: background-color var(--nf-duration-fast) var(--nf-ease-standard),
     color var(--nf-duration-fast) var(--nf-ease-standard);
 }
-.nf-nav__link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
+.nf-sidenav__link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
 
 /* Estado activo: color + peso + barra lateral. Nunca solo color. */
-.nf-nav__link[data-active] {
+.nf-sidenav__link[data-active] {
   background: var(--nf-primary-subtle);
   color: var(--nf-primary-active);
   font-weight: var(--nf-weight-semibold);
 }
-.nf-nav__link[data-active]::before {
+.nf-sidenav__link[data-active]::before {
   content: "";
   position: absolute;
   left: calc(var(--nf-space-2) * -1);
@@ -275,10 +275,10 @@
   border-radius: 0 var(--nf-radius-xs) var(--nf-radius-xs) 0;
   background: var(--nf-primary);
 }
-.nf-nav__link[data-locked] { color: var(--nf-text-subtle); }
+.nf-sidenav__link[data-locked] { color: var(--nf-text-subtle); }
 
-.nf-nav__icon { flex: 0 0 auto; }
-.nf-nav__label {
+.nf-sidenav__icon { flex: 0 0 auto; }
+.nf-sidenav__label {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -286,7 +286,7 @@
   white-space: nowrap;
 }
 
-.nf-nav__badge {
+.nf-sidenav__badge {
   flex: 0 0 auto;
   /* Fuera del enlace para no contaminar su nombre accesible; se superpone al
      final de la fila, antes del botón de fijar. */
@@ -304,7 +304,7 @@
 
 /* Fijar/desfijar: siempre en el DOM y alcanzable por teclado; solo se oculta
    visualmente hasta hover o foco. */
-.nf-nav__pin {
+.nf-sidenav__pin {
   position: absolute;
   right: 2px;
   display: grid;
@@ -319,16 +319,16 @@
   opacity: 0;
   transition: opacity var(--nf-duration-fast) var(--nf-ease-standard);
 }
-.nf-nav__row:hover .nf-nav__pin,
-.nf-nav__pin:focus-visible,
-.nf-nav__pin[data-pinned] {
+.nf-sidenav__row:hover .nf-sidenav__pin,
+.nf-sidenav__pin:focus-visible,
+.nf-sidenav__pin[data-pinned] {
   opacity: 1;
 }
-.nf-nav__pin:hover { background: var(--nf-surface-sunken); color: var(--nf-text-secondary); }
-.nf-nav__pin[data-pinned] { color: var(--nf-primary); }
+.nf-sidenav__pin:hover { background: var(--nf-surface-sunken); color: var(--nf-text-secondary); }
+.nf-sidenav__pin[data-pinned] { color: var(--nf-primary); }
 
 /* Secciones del módulo activo */
-.nf-nav__sections {
+.nf-sidenav__sections {
   list-style: none;
   margin: 2px 0 var(--nf-space-2);
   padding: 0 0 0 var(--nf-space-6);
@@ -336,7 +336,7 @@
   border-left: 1px solid var(--nf-border);
   margin-left: var(--nf-space-4);
 }
-.nf-nav__section-link {
+.nf-sidenav__section-link {
   display: block;
   padding: 5px var(--nf-space-2);
   border-radius: var(--nf-radius-xs);
@@ -347,26 +347,26 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.nf-nav__section-link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
-.nf-nav__section-link[data-active] {
+.nf-sidenav__section-link:hover { background: var(--nf-surface-hover); color: var(--nf-text-primary); }
+.nf-sidenav__section-link[data-active] {
   color: var(--nf-primary-active);
   font-weight: var(--nf-weight-semibold);
   background: var(--nf-primary-subtle);
 }
 
 /* Barra de scroll fina en WebKit; sin `scrollbar-width` no hay equivalente. */
-.nf-nav__scroll::-webkit-scrollbar { width: 8px; }
-.nf-nav__scroll::-webkit-scrollbar-track { background: transparent; }
-.nf-nav__scroll::-webkit-scrollbar-thumb {
+.nf-sidenav__scroll::-webkit-scrollbar { width: 8px; }
+.nf-sidenav__scroll::-webkit-scrollbar-track { background: transparent; }
+.nf-sidenav__scroll::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: var(--nf-radius-full);
   background-clip: padding-box;
   background-color: transparent;
 }
-.nf-nav__scroll:hover::-webkit-scrollbar-thumb { background-color: var(--nf-c-neutral-300); }
-.nf-nav__scroll::-webkit-scrollbar-thumb:hover { background-color: var(--nf-border-strong); }
+.nf-sidenav__scroll:hover::-webkit-scrollbar-thumb { background-color: var(--nf-c-neutral-300); }
+.nf-sidenav__scroll::-webkit-scrollbar-thumb:hover { background-color: var(--nf-border-strong); }
 
-.nf-nav__empty {
+.nf-sidenav__empty {
   padding: var(--nf-space-4) var(--nf-space-2);
   color: var(--nf-text-muted);
   font-size: var(--nf-text-sm);
@@ -374,13 +374,13 @@
 }
 
 /* Pie */
-.nf-nav__foot {
+.nf-sidenav__foot {
   padding: var(--nf-space-2) var(--nf-space-3) var(--nf-space-3);
   border-top: 1px solid var(--nf-border-subtle);
   display: grid;
   gap: var(--nf-space-2);
 }
-.nf-nav__ai {
+.nf-sidenav__ai {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -394,10 +394,10 @@
   font-weight: var(--nf-weight-semibold);
   cursor: pointer;
 }
-.nf-nav__ai:hover { background: var(--nf-primary-subtle-hover); }
+.nf-sidenav__ai:hover { background: var(--nf-primary-subtle-hover); }
 
-.nf-nav__account { display: flex; align-items: center; gap: var(--nf-space-1); }
-.nf-nav__profile {
+.nf-sidenav__account { display: flex; align-items: center; gap: var(--nf-space-1); }
+.nf-sidenav__profile {
   flex: 1;
   display: flex;
   align-items: center;
@@ -407,9 +407,9 @@
   border-radius: var(--nf-radius-s);
   text-decoration: none;
 }
-.nf-nav__profile:hover { background: var(--nf-surface-hover); }
-.nf-nav__profile-text { display: grid; min-width: 0; }
-.nf-nav__profile-name {
+.nf-sidenav__profile:hover { background: var(--nf-surface-hover); }
+.nf-sidenav__profile-text { display: grid; min-width: 0; }
+.nf-sidenav__profile-name {
   color: var(--nf-text-primary);
   font-size: var(--nf-text-sm);
   font-weight: var(--nf-weight-semibold);
@@ -417,14 +417,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.nf-nav__profile-role {
+.nf-sidenav__profile-role {
   color: var(--nf-text-muted);
   font-size: var(--nf-text-2xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.nf-nav__logout {
+.nf-sidenav__logout {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
@@ -436,7 +436,7 @@
   color: var(--nf-text-muted);
   cursor: pointer;
 }
-.nf-nav__logout:hover { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
+.nf-sidenav__logout:hover { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
 
 /* --------------------------------------------------------------------------
  * Cabecera superior
@@ -457,7 +457,7 @@
 .nf-topbar a > svg { flex: 0 0 auto; }
 
 /* Velo del cajón en móvil */
-.nf-nav-backdrop {
+.nf-sidenav-backdrop {
   position: fixed;
   inset: 0;
   z-index: calc(var(--nf-z-drawer) - 1);
@@ -599,7 +599,7 @@
      transición de `transform` tenga algo que animar; al cerrar se retrasa hasta
      que la animación termina. Sin este escalonado la transición arranca sobre
      un elemento aún no renderizado y se queda a medias. */
-  .nf-nav {
+  .nf-sidenav {
     /* Por encima de la cabecera: en móvil el cajón es la capa activa y su
        propia cabecera (marca, organización y cierre) no debe quedar tapada. */
     z-index: var(--nf-z-drawer);
@@ -611,7 +611,7 @@
       transform var(--nf-duration-base) var(--nf-ease-standard),
       visibility 0s linear var(--nf-duration-base);
   }
-  .nf-nav[data-open] {
+  .nf-sidenav[data-open] {
     transform: translateX(0);
     visibility: visible;
     box-shadow: var(--nf-elevation-4);
@@ -620,7 +620,7 @@
       visibility 0s linear 0s;
   }
 
-  .nf-nav__close { display: flex; }
+  .nf-sidenav__close { display: flex; }
 
   .nf-app-main-inner { padding: var(--nf-space-4) var(--nf-space-4) var(--nf-space-10); }
 
@@ -634,16 +634,16 @@
 
 /* Escritorio: el cajón nunca está "cerrado" */
 @media (min-width: 1024px) {
-  .nf-nav { transform: none !important; visibility: visible !important; }
-  .nf-nav-backdrop { display: none; }
+  .nf-sidenav { transform: none !important; visibility: visible !important; }
+  .nf-sidenav-backdrop { display: none; }
 }
 
 /* --------------------------------------------------------------------------
  * Impresión — los entregables del producto son informes de auditoría
  * ------------------------------------------------------------------------ */
 @media print {
-  .nf-nav,
-  .nf-nav-backdrop,
+  .nf-sidenav,
+  .nf-sidenav-backdrop,
   .nf-topbar,
   .nf-skip-link,
   .nf-page-header__actions {

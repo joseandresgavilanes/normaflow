@@ -173,7 +173,7 @@ export default function AppSidebar({
     const badgeId = locked ? `nf-nav-plan-${item.href.replace(/\W+/g, "-")}` : undefined;
 
     return (
-      <li key={`${options.inPinned ? "pin:" : ""}${item.href}`} className="nf-nav__row">
+      <li key={`${options.inPinned ? "pin:" : ""}${item.href}`} className="nf-sidenav__row">
         <Link
           href={href}
           prefetch={false}
@@ -186,23 +186,23 @@ export default function AppSidebar({
           onFocus={() => prefetchRoute(href)}
           onTouchStart={() => prefetchRoute(href)}
           onClick={() => onNavigate?.()}
-          className="nf-nav__link"
+          className="nf-sidenav__link"
           data-active={active || undefined}
           data-locked={locked || undefined}
         >
-          <item.Icon className="nf-nav__icon" size={17} strokeWidth={active ? 2 : 1.75} aria-hidden />
-          <span className="nf-nav__label">{label}</span>
+          <item.Icon className="nf-sidenav__icon" size={17} strokeWidth={active ? 2 : 1.75} aria-hidden />
+          <span className="nf-sidenav__label">{label}</span>
         </Link>
         {locked && (
           /* El plan se comunica con texto, no solo con un icono: antes era un
              candado con `title`, invisible para teclado y lectores. */
-          <span className="nf-nav__badge" id={badgeId} title={t("nav.locked")}>
+          <span className="nf-sidenav__badge" id={badgeId} title={t("nav.locked")}>
             {t("nav.lockedBadge")}
           </span>
         )}
         <button
           type="button"
-          className="nf-nav__pin"
+          className="nf-sidenav__pin"
           data-pinned={isPinned || undefined}
           aria-label={`${isPinned ? t("nav.unpin") : t("nav.pin")}: ${label}`}
           aria-pressed={isPinned}
@@ -216,7 +216,7 @@ export default function AppSidebar({
             la misma columna. Alimentan `?section=`, que `useModuleSection` lee
             para cambiar la vista. */}
         {active && !locked && item.sections && item.sections.length > 0 && (
-          <ul className="nf-nav__sections">
+          <ul className="nf-sidenav__sections">
             {item.sections.map((section) => {
               const sectionHref = section.section === "panel"
                 ? item.href
@@ -230,7 +230,7 @@ export default function AppSidebar({
                     prefetch={false}
                     aria-current={sectionActive ? "true" : undefined}
                     onClick={() => onNavigate?.()}
-                    className="nf-nav__section-link"
+                    className="nf-sidenav__section-link"
                     data-active={sectionActive || undefined}
                   >
                     {tx(section.label)}
@@ -252,10 +252,10 @@ export default function AppSidebar({
     const panelId = `nf-nav-group-${group.id}`;
 
     return (
-      <li key={group.id} className="nf-nav__group">
+      <li key={group.id} className="nf-sidenav__group">
         <button
           type="button"
-          className="nf-nav__group-toggle"
+          className="nf-sidenav__group-toggle"
           aria-expanded={isOpen}
           aria-controls={panelId}
           aria-label={
@@ -266,16 +266,16 @@ export default function AppSidebar({
           onClick={() => toggleGroup(group.id, isOpen)}
           disabled={filtering}
         >
-          <span className="nf-nav__group-title">{groupLabel}</span>
+          <span className="nf-sidenav__group-title">{groupLabel}</span>
           <ChevronDown
-            className="nf-nav__chevron"
+            className="nf-sidenav__chevron"
             data-open={isOpen || undefined}
             size={14}
             strokeWidth={2.25}
             aria-hidden
           />
         </button>
-        <ul id={panelId} className="nf-nav__list" hidden={!isOpen}>
+        <ul id={panelId} className="nf-sidenav__list" hidden={!isOpen}>
           {group.items.map((item) => renderItem(item))}
         </ul>
       </li>
@@ -284,19 +284,19 @@ export default function AppSidebar({
 
   return (
     <aside
-      className="nf-nav"
+      className="nf-sidenav"
       data-open={drawerOpen || undefined}
       style={demoAccent ? ({ "--nf-nav-accent": demoAccent } as React.CSSProperties) : undefined}
     >
-      <div className="nf-nav__head">
+      <div className="nf-sidenav__head">
         <Link
           href="/app/dashboard"
           prefetch={false}
-          className="nf-nav__brand"
+          className="nf-sidenav__brand"
           onClick={() => onNavigate?.()}
           aria-label="NormaFlow"
         >
-          <span className="nf-nav__brand-mark" aria-hidden>N</span>
+          <span className="nf-sidenav__brand-mark" aria-hidden>N</span>
         </Link>
 
         {/* Un único selector de organización. Antes había dos controles para lo
@@ -311,13 +311,13 @@ export default function AppSidebar({
         />
 
         {onClose && (
-          <button type="button" className="nf-nav__close" onClick={onClose} aria-label={t("common.close")}>
+          <button type="button" className="nf-sidenav__close" onClick={onClose} aria-label={t("common.close")}>
             <X size={18} aria-hidden />
           </button>
         )}
       </div>
 
-      <div className="nf-nav__filter">
+      <div className="nf-sidenav__filter">
         <Search size={15} strokeWidth={2} aria-hidden />
         <input
           type="search"
@@ -328,12 +328,12 @@ export default function AppSidebar({
         />
       </div>
 
-      <nav className="nf-nav__scroll" aria-label={t("nav.primaryLabel")}>
-        <ul className="nf-nav__groups">
+      <nav className="nf-sidenav__scroll" aria-label={t("nav.primaryLabel")}>
+        <ul className="nf-sidenav__groups">
           {pinnedItems.length > 0 && (
-            <li className="nf-nav__group">
-              <p className="nf-nav__group-title nf-nav__group-title--static">{t("nav.pinned")}</p>
-              <ul className="nf-nav__list">
+            <li className="nf-sidenav__group">
+              <p className="nf-sidenav__group-title nf-sidenav__group-title--static">{t("nav.pinned")}</p>
+              <ul className="nf-sidenav__list">
                 {pinnedItems.map((item) => renderItem(item, { inPinned: true }))}
               </ul>
             </li>
@@ -342,32 +342,32 @@ export default function AppSidebar({
         </ul>
 
         {filtering && visibleGroups.length === 0 && (
-          <p className="nf-nav__empty">{t("nav.filter.empty", { query: query.trim() })}</p>
+          <p className="nf-sidenav__empty">{t("nav.filter.empty", { query: query.trim() })}</p>
         )}
       </nav>
 
-      <div className="nf-nav__foot">
-        <button type="button" onClick={onAI} className="nf-nav__ai">
+      <div className="nf-sidenav__foot">
+        <button type="button" onClick={onAI} className="nf-sidenav__ai">
           <Sparkles size={15} strokeWidth={2} aria-hidden />
           {t("nav.ai")}
         </button>
-        <div className="nf-nav__account">
+        <div className="nf-sidenav__account">
           <Link
             href="/app/settings"
             prefetch={false}
             onClick={() => onNavigate?.()}
-            className="nf-nav__profile"
+            className="nf-sidenav__profile"
           >
             <Avatar name={sidebarName} size={28} />
-            <span className="nf-nav__profile-text">
-              <span className="nf-nav__profile-name">{sidebarName}</span>
-              <span className="nf-nav__profile-role">{sidebarRole}</span>
+            <span className="nf-sidenav__profile-text">
+              <span className="nf-sidenav__profile-name">{sidebarName}</span>
+              <span className="nf-sidenav__profile-role">{sidebarRole}</span>
             </span>
           </Link>
           <button
             type="button"
             onClick={() => logout()}
-            className="nf-nav__logout"
+            className="nf-sidenav__logout"
             aria-label={t("nav.logout")}
           >
             <LogOut size={16} strokeWidth={1.75} aria-hidden />
@@ -404,17 +404,17 @@ function OrgSwitcher({
 
   if (!canSwitch) {
     return (
-      <span className="nf-nav__org">
-        <span className="nf-nav__org-label">{t("common.organization")}</span>
-        <span className="nf-nav__org-name" title={displayOrgName}>{displayOrgName}</span>
+      <span className="nf-sidenav__org">
+        <span className="nf-sidenav__org-label">{t("common.organization")}</span>
+        <span className="nf-sidenav__org-name" title={displayOrgName}>{displayOrgName}</span>
       </span>
     );
   }
 
   return (
-    <span className="nf-nav__org nf-nav__org--switch">
-      <span className="nf-nav__org-label">{t("common.organization")}</span>
-      <span className="nf-nav__org-control">
+    <span className="nf-sidenav__org nf-sidenav__org--switch">
+      <span className="nf-sidenav__org-label">{t("common.organization")}</span>
+      <span className="nf-sidenav__org-control">
         <select
           value={value}
           aria-label={t("common.organization")}

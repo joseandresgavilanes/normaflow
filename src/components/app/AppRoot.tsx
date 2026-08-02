@@ -197,7 +197,7 @@ export default function AppRoot({
       {isCompactNav && navOpen && (
         <button
           type="button"
-          className="nf-nav-backdrop"
+          className="nf-sidenav-backdrop"
           aria-label={t("marketing.closeMenu")}
           onClick={() => setNavOpen(false)}
         />

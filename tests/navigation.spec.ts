@@ -9,7 +9,7 @@ import { test } from "./fixtures/normaflow";
 
 /** Despliega un grupo del sidebar si está plegado. */
 async function openGroup(page: Page, group: string) {
-  const toggle = page.locator(".nf-nav__group-toggle", { hasText: group }).first();
+  const toggle = page.locator(".nf-sidenav__group-toggle", { hasText: group }).first();
   if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
 }
@@ -27,13 +27,13 @@ test.describe("Navegación del workspace", () => {
       "Administración",
     ];
     for (const group of groups) {
-      await expect(page.locator(".nf-nav__group-toggle", { hasText: group }).first()).toBeVisible();
+      await expect(page.locator(".nf-sidenav__group-toggle", { hasText: group }).first()).toBeVisible();
     }
   });
 
   test("el grupo que contiene la ruta activa se abre solo", async ({ authenticatedPage: page }) => {
     await page.goto("/app/documents");
-    const toggle = page.locator(".nf-nav__group-toggle", { hasText: "Sistema de gestión" }).first();
+    const toggle = page.locator(".nf-sidenav__group-toggle", { hasText: "Sistema de gestión" }).first();
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByRole("link", { name: "Documentos", exact: true })).toHaveAttribute(
       "aria-current",
@@ -51,7 +51,7 @@ test.describe("Navegación del workspace", () => {
     await openGroup(page, "Evaluación");
     await page.goto("/app/documents");
     await expect(
-      page.locator(".nf-nav__group-toggle", { hasText: "Evaluación" }).first(),
+      page.locator(".nf-sidenav__group-toggle", { hasText: "Evaluación" }).first(),
     ).toHaveAttribute("aria-expanded", "true");
   });
 
@@ -62,7 +62,7 @@ test.describe("Navegación del workspace", () => {
     await expect(page.getByRole("link", { name: "Documentos", exact: true })).toHaveCount(0);
 
     await filter.fill("zzzz-no-existe");
-    await expect(page.locator(".nf-nav__empty")).toBeVisible();
+    await expect(page.locator(".nf-sidenav__empty")).toBeVisible();
   });
 
   test("fijar un módulo lo eleva al bloque Fijados", async ({ authenticatedPage: page }) => {
@@ -76,15 +76,15 @@ test.describe("Navegación del workspace", () => {
     await openGroup(page, "Normas");
     // Con ninguna norma abierta no hay subenlaces de sección compitiendo en la
     // columna: antes podían convivir ~143.
-    await expect(page.locator(".nf-nav__section-link")).toHaveCount(0);
+    await expect(page.locator(".nf-sidenav__section-link")).toHaveCount(0);
 
-    await page.locator('.nf-nav__link[href="/app/energy"]').click();
+    await page.locator('.nf-sidenav__link[href="/app/energy"]').click();
     await expect(page).toHaveURL(/\/app\/energy$/);
 
     // Ahora sí: las 13 secciones de ISO 50001, y solo esas.
-    const sections = page.locator(".nf-nav__section-link");
+    const sections = page.locator(".nf-sidenav__section-link");
     await expect(sections).toHaveCount(13);
-    await expect(page.locator('.nf-nav__section-link[href*="/app/compliance"]')).toHaveCount(0);
+    await expect(page.locator('.nf-sidenav__section-link[href*="/app/compliance"]')).toHaveCount(0);
 
     // Y siguen navegando: `useModuleSection` lee `?section=`.
     await sections.filter({ hasText: "Medidores" }).first().click();
@@ -141,7 +141,7 @@ test.describe("Navegación en móvil", () => {
 
   test("el cajón arranca cerrado y no captura el foco", async () => {
     await page.goto("/app/dashboard");
-    const nav = page.locator(".nf-nav");
+    const nav = page.locator(".nf-sidenav");
     await expect(nav).not.toHaveAttribute("data-open", "true");
     // `visibility: hidden` lo saca del orden de tabulación.
     await expect(page.getByRole("link", { name: "Documentos", exact: true })).toBeHidden();
@@ -150,11 +150,11 @@ test.describe("Navegación en móvil", () => {
   test("el botón de menú abre el cajón y Escape lo cierra", async () => {
     await page.goto("/app/dashboard");
     await page.locator(".nf-topbar-menu").click();
-    await expect(page.locator(".nf-nav")).toHaveAttribute("data-open", "true");
-    await expect(page.locator(".nf-nav-backdrop")).toBeVisible();
+    await expect(page.locator(".nf-sidenav")).toHaveAttribute("data-open", "true");
+    await expect(page.locator(".nf-sidenav-backdrop")).toBeVisible();
 
     await page.keyboard.press("Escape");
-    await expect(page.locator(".nf-nav")).not.toHaveAttribute("data-open", "true");
+    await expect(page.locator(".nf-sidenav")).not.toHaveAttribute("data-open", "true");
   });
 
   test("no hay desplazamiento horizontal de página", async () => {

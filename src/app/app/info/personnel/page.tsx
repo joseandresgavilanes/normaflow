@@ -1,12 +1,13 @@
 import ServerPermissionGate from "@/components/admin/ServerPermissionGate";
 import PersonnelClient from "@/components/admin/PersonnelClient";
+import AdminDataProvider from "@/components/admin/AdminDataProvider";
 
-export const metadata = { title: "Personal — NormaFlow" };
+export const metadata = { title: "Personal" };
 
 export default function PersonnelPage() {
   return (
     <ServerPermissionGate permission="personnel:read">
-      <PersonnelClient />
+      <AdminDataProvider><PersonnelClient /></AdminDataProvider>
     </ServerPermissionGate>
   );
 }
