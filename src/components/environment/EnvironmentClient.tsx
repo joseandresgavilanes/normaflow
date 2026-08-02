@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import { Leaf, Grid3x3, Scale, Target, BarChart3, Trash2, Siren, LayoutDashboard, Trees, Search, X, Pencil, ClipboardCheck, Plus, FolderPlus, ListChecks } from "lucide-react";
 import type { EnvironmentPayload } from "@/lib/environmental/queries";
@@ -100,7 +99,6 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
           <Leaf size={22} color="#16a34a" />
         </div>
         <div>
-          <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
           <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>{SECTION_META[tab].sub}</p>
         </div>

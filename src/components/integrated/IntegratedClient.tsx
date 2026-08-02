@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, ScrollText, Users, Target, GitCompareArrows,
@@ -79,7 +78,6 @@ export default function IntegratedClient({ initial, demo = false }: { initial: I
 
   return (
     <div className="nf-iso-module" style={{ padding: "clamp(16px, 3vw, 32px)", maxWidth: 1240, margin: "0 auto" }}>
-      <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
       <IsoSectionHeader icon={Layers} title={SECTION_META[tab].title}
         description={`${SECTION_META[tab].sub}${demo ? " Vista demo (solo lectura)." : ""}`} />
 

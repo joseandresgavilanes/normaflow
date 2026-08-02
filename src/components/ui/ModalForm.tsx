@@ -17,8 +17,17 @@ export function ModalForm({
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
   style?: React.CSSProperties;
 }) {
+  function submit(event: FormEvent<HTMLFormElement>) {
+    if (!event.currentTarget.checkValidity()) {
+      event.preventDefault();
+      event.currentTarget.reportValidity();
+      return;
+    }
+    onSubmit?.(event);
+  }
+
   return (
-    <form className={cn("nf-modal-form", className)} onSubmit={onSubmit} style={style}>
+    <form className={cn("nf-modal-form", className)} onSubmit={submit} style={style}>
       {children}
     </form>
   );

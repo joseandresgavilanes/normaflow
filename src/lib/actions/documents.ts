@@ -23,6 +23,7 @@ import { canPublishApprovedDocument, hasPendingAssignedApproval } from "@/lib/do
 import { persistWithStorageCompensation } from "@/lib/storage-compensation";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { documentContentSchema, documentInputSchema, documentReviewSchema } from "@/lib/validation/workflows";
+import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
 
 /**
  * Server actions para Control de Documentos (Phase 1.2).
@@ -247,8 +248,32 @@ export async function createDocumentFromTemplate(
   input: CreateDocumentFromTemplateInput,
 ): Promise<{ id: string; version: string }> {
   const ctx = await requirePermission("documents:create");
-  const template = await prisma.documentTemplate.findFirst({ where: { id: templateId, isActive: true } });
-  if (!template) throw new Error("La plantilla no existe o está inactiva.");
+  const catalogTemplate = templateId.startsWith("pack:")
+    ? null
+    : await prisma.documentTemplate.findFirst({ where: { id: templateId, isActive: true } });
+  const packTemplate = !catalogTemplate && templateId.startsWith("pack:")
+    ? await prisma.standardTemplate.findFirst({
+        where: {
+          id: templateId.slice(5),
+          active: true,
+          edition: { orgStandards: { some: { organizationId: ctx.organization.id } } },
+        },
+        include: { edition: { select: { code: true } } },
+      })
+    : null;
+  if (!catalogTemplate && !packTemplate) throw new Error("La plantilla no existe, está inactiva o no pertenece a una norma activa de la organización.");
+  const template = catalogTemplate ?? {
+    id: packTemplate!.id,
+    title: packTemplate!.name.replace(/\s*\(plantilla\)\s*$/i, ""),
+    documentType: packTemplateDocumentType(packTemplate!.templateType),
+    clauseId: packTemplate!.requirementId,
+    standardCode: packTemplate!.edition?.code ?? "PACK",
+    fieldSchema: [] as Prisma.JsonArray,
+    content: packTemplate!.content,
+    tags: ["standard-pack", (packTemplate!.edition?.code ?? "pack").toLowerCase()],
+    code: `${packTemplate!.edition?.code ?? "PACK"}-${packTemplate!.requirementId ?? packTemplate!.templateType}`.replace(/[^A-Za-z0-9.-]+/g, "-"),
+  };
+  const sourceTemplateId = catalogTemplate ? catalogTemplate.id : null;
 
   const code = input.code.trim();
   const title = (input.title?.trim() || template.title).trim();
@@ -293,7 +318,7 @@ export async function createDocumentFromTemplate(
         ownerId,
         reviewDate: dateOrNull(input.reviewDate),
         content,
-        templateId: template.id,
+        templateId: sourceTemplateId,
         currentVersion: "1.0",
         tags: template.tags,
         observations: `Creado desde la plantilla ${template.code}. Edita el contenido antes de enviarlo a revisión.`,
@@ -318,7 +343,7 @@ export async function createDocumentFromTemplate(
     action: "create_from_template",
     module: "document",
     recordId: created.id,
-    after: { code, title, templateId: template.id, templateCode: template.code, version: "1.0", status: "DRAFT" },
+    after: { code, title, templateId: sourceTemplateId, packTemplateId: packTemplate?.id ?? null, templateCode: template.code, version: "1.0", status: "DRAFT" },
   });
   revalidatePath(PATH);
   return { id: created.id, version: "1.0" };

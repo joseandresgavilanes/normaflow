@@ -12,7 +12,7 @@ export async function getItsmPayload() {
   const [
     services, catalog, owners, slas, olas, requests, incidents, problems,
     knownErrors, changes, releases, deployments, cis, relationships,
-    availability, capacity, continuity, suppliers, reports, articles, members,
+    availability, capacity, continuity, suppliers, reports, articles, members, crossLinks,
   ] = await Promise.all([
     prisma.iTService.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.serviceCatalogEntry.findMany({
@@ -148,7 +148,59 @@ export async function getItsmPayload() {
       where: { memberships: { some: { organizationId } } },
       select: { id: true, name: true },
     }),
+    prisma.incidentCrossLink.findMany({
+      where: { organizationId },
+      include: { itsmIncident: { select: { code: true, title: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
+
+  const linkedIds = {
+    SECURITY: crossLinks.filter((l) => l.targetDomain === "SECURITY").map((l) => l.targetId),
+    AI: crossLinks.filter((l) => l.targetDomain === "AI").map((l) => l.targetId),
+    OCCUPATIONAL: crossLinks.filter((l) => l.targetDomain === "OCCUPATIONAL").map((l) => l.targetId),
+  };
+  const [securityOptions, aiOptions, occupationalOptions] = await Promise.all([
+    prisma.securityIncident.findMany({
+      where: { organizationId },
+      select: { id: true, code: true, description: true },
+      orderBy: { detectedAt: "desc" },
+      take: 50,
+    }),
+    prisma.aIIncident.findMany({
+      where: { organizationId },
+      select: { id: true, code: true, title: true },
+      orderBy: { detectedAt: "desc" },
+      take: 50,
+    }),
+    prisma.occupationalIncident.findMany({
+      where: { organizationId },
+      select: { id: true, code: true, title: true },
+      orderBy: { occurredAt: "desc" },
+      take: 50,
+    }),
+  ]);
+  const securityTargets = securityOptions.filter((t) => linkedIds.SECURITY.includes(t.id));
+  const aiTargets = aiOptions.filter((t) => linkedIds.AI.includes(t.id));
+  const occupationalTargets = occupationalOptions.filter((t) => linkedIds.OCCUPATIONAL.includes(t.id));
+  const targetLabel = (domain: string, targetId: string): string => {
+    if (domain === "SECURITY") {
+      const t = securityTargets.find((x) => x.id === targetId);
+      return t ? `${t.code} — ${t.description.slice(0, 60)}` : targetId;
+    }
+    if (domain === "AI") {
+      const t = aiTargets.find((x) => x.id === targetId);
+      return t ? `${t.code} — ${t.title}` : targetId;
+    }
+    const t = occupationalTargets.find((x) => x.id === targetId);
+    return t ? `${t.code} — ${t.title}` : targetId;
+  };
+  const crossLinksResolved = crossLinks.map((link) => ({ ...link, targetLabel: targetLabel(link.targetDomain, link.targetId) }));
+  const crossLinkOptions = {
+    SECURITY: securityOptions.map((t) => ({ id: t.id, label: `${t.code} — ${t.description.slice(0, 60)}` })),
+    AI: aiOptions.map((t) => ({ id: t.id, label: `${t.code} — ${t.title}` })),
+    OCCUPATIONAL: occupationalOptions.map((t) => ({ id: t.id, label: `${t.code} — ${t.title}` })),
+  };
 
   const openIncidents = incidents.filter((i) => i.status !== "CLOSED").length;
   const openProblems = problems.filter((p) => p.status !== "CLOSED").length;
@@ -208,6 +260,8 @@ export async function getItsmPayload() {
       ...inc,
       slaEval: incidentSla.find((s) => s.id === inc.id),
     })),
+    crossLinks: crossLinksResolved,
+    crossLinkOptions,
     problems,
     knownErrors,
     changes,

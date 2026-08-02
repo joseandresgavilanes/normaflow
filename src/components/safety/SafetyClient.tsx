@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import { HardHat, Grid3x3, AlertOctagon, BarChart3, ClipboardList, ShieldCheck, FileWarning, Siren, Users, Stethoscope, LayoutDashboard, ArrowRight, Lock, Plus } from "lucide-react";
 import type { HealthSurveillancePayload, SafetyPayload } from "@/lib/safety/queries";
@@ -137,7 +136,6 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
       <IsoSectionHeader icon={HardHat} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 

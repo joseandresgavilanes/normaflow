@@ -29,7 +29,7 @@ export async function getAimsPayload() {
       prisma.aIRisk.findMany({ where: { organizationId }, orderBy: [{ residualScore: "desc" }, { code: "asc" }] }),
       prisma.dataset.findMany({
         where: { organizationId },
-        include: { _count: { select: { sources: true, lineage: true } } },
+        include: { _count: { select: { sources: true, lineage: true } }, sources: true, lineage: true },
         orderBy: { code: "asc" },
       }),
       prisma.modelVersion.findMany({
@@ -62,6 +62,7 @@ export async function getAimsPayload() {
       hasTransparencyRecord: system.transparency.length > 0,
     });
     return {
+      ...system,
       id: system.id,
       code: system.code,
       name: system.name,
@@ -95,6 +96,7 @@ export async function getAimsPayload() {
   });
 
   const datasetRows = datasets.map((dataset) => ({
+    ...dataset,
     id: dataset.id,
     code: dataset.code,
     name: dataset.name,
@@ -108,7 +110,9 @@ export async function getAimsPayload() {
     qualityScore: dataset.qualityScore,
     qualityLevel: dataset.qualityLevel,
     sources: dataset._count.sources,
+    dataSources: dataset.sources,
     lineageSteps: dataset._count.lineage,
+    dataLineage: dataset.lineage,
     biasReviewed: dataset.biasReviewed,
     biasFlags: biasFlags({
       representativeness: dataset.representativeness,
@@ -125,6 +129,7 @@ export async function getAimsPayload() {
   const modelRows = models.map((model) => {
     const latest = model.evaluations[0] ?? null;
     return {
+      ...model,
       id: model.id,
       code: model.code,
       systemId: model.systemId,
@@ -149,6 +154,7 @@ export async function getAimsPayload() {
             evaluatedAt: latest.evaluatedAt,
           }
         : null,
+      evaluations: model.evaluations.map((evaluation) => ({ ...evaluation })),
     };
   });
 
@@ -179,12 +185,32 @@ export async function getAimsPayload() {
 
   const openIncidents = incidents.filter((incident) => incident.status !== "CLOSED");
 
+  const useCaseRows = systems.flatMap((system) =>
+    system.useCases.map((u) => ({
+      ...u,
+      id: u.id, code: u.code, systemId: system.id, title: u.title, objective: u.objective,
+      decisionAutonomy: u.decisionAutonomy, affectedCount: u.affectedCount,
+    })),
+  );
+  const assessmentRows = systems.flatMap((system) =>
+    system.impactAssessments.map((a) => ({
+      ...a,
+      id: a.id, code: a.code, systemId: system.id, version: a.version, overallSeverity: a.overallSeverity,
+      classification: a.classification, reviewStatus: a.reviewStatus, reviewerId: a.reviewerId, reviewedAt: a.reviewedAt,
+      assessorId: a.assessorId,
+    })),
+  );
+
   return {
     canManage: auth.can("aims:create"),
+    canUpdate: auth.can("aims:update"),
     canApprove: auth.can("aims:approve"),
     members,
     systems: systemRows,
+    useCases: useCaseRows,
+    assessments: assessmentRows,
     risks: risks.map((risk) => ({
+      ...risk,
       id: risk.id,
       code: risk.code,
       systemId: risk.systemId,
@@ -205,6 +231,7 @@ export async function getAimsPayload() {
     datasets: datasetRows,
     models: modelRows,
     controls: controls.map((control) => ({
+      ...control,
       id: control.id,
       code: control.code,
       systemId: control.systemId,
@@ -218,6 +245,7 @@ export async function getAimsPayload() {
       active: control.active,
     })),
     transparency: transparency.map((record) => ({
+      ...record,
       id: record.id,
       code: record.code,
       systemId: record.systemId,
@@ -230,6 +258,7 @@ export async function getAimsPayload() {
       version: record.version,
     })),
     incidents: incidents.map((incident) => ({
+      ...incident,
       id: incident.id,
       code: incident.code,
       systemId: incident.systemId,
@@ -244,6 +273,7 @@ export async function getAimsPayload() {
       closedAt: incident.closedAt,
     })),
     suppliers: suppliers.map((supplier) => ({
+      ...supplier,
       id: supplier.id,
       code: supplier.code,
       supplierName: supplier.supplierName,
@@ -255,6 +285,7 @@ export async function getAimsPayload() {
       nextReviewDate: supplier.nextReviewDate,
     })),
     changes: changes.map((change) => ({
+      ...change,
       id: change.id,
       code: change.code,
       systemId: change.systemId,
@@ -267,6 +298,7 @@ export async function getAimsPayload() {
       reviewedAt: change.reviewedAt,
     })),
     metrics: metrics.slice(0, 60).map((metric) => ({
+      ...metric,
       id: metric.id,
       systemId: metric.systemId,
       period: metric.period,

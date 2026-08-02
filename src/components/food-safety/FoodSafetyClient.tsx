@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Package, FlaskConical, GitBranch, AlertTriangle, Shield,
@@ -133,7 +132,6 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
           <Shield size={22} color="#0f766e" />
         </div>
         <div>
-          <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
           <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
             {SECTION_META[tab].sub}

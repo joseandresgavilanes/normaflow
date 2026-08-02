@@ -18,6 +18,7 @@ import type {
   StandardEditionStatus,
   TemplateType,
 } from "@prisma/client";
+import { PACK_LIFECYCLE_STATUSES, type PackLifecycleStatus } from "./lifecycle";
 
 const evidenceType: z.ZodType<EvidenceType> = z.enum([
   "POLICY", "PROCEDURE", "RECORD", "REPORT", "CERTIFICATE", "LOG", "PHOTO", "SCREENSHOT", "MINUTES", "OTHER",
@@ -34,6 +35,9 @@ const relationType: z.ZodType<RequirementRelationType> = z.enum([
 const editionStatus: z.ZodType<StandardEditionStatus> = z.enum([
   "DRAFT", "ACTIVE", "SUPERSEDED", "WITHDRAWN",
 ]);
+const lifecycleStatus: z.ZodType<PackLifecycleStatus> = z.enum(
+  PACK_LIFECYCLE_STATUSES as unknown as [PackLifecycleStatus, ...PackLifecycleStatus[]],
+);
 
 export const packRequirementSchema = z.object({
   code: z.string().min(1),
@@ -116,6 +120,8 @@ export const standardPackSchema = z.object({
   name: z.string().min(1),
   version: z.string().min(1),
   description: z.string().optional(),
+  /** Ciclo comercial. Objetivo de producto: LIVE. */
+  lifecycleStatus: lifecycleStatus.default("DEVELOPMENT"),
   requiredModules: z.array(z.string()).default([]),
   featureFlags: z.record(z.union([z.boolean(), z.string(), z.number()])).default({}),
   editions: z.array(packEditionSchema).min(1),

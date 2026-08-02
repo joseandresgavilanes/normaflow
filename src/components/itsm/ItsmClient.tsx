@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard, Server, BookOpen, FileClock, Ticket, AlertOctagon,
@@ -169,7 +168,6 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
       <IsoSectionHeader icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 

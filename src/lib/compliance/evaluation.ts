@@ -45,7 +45,7 @@ export function assertReviewerPresent(input: {
 }): void {
   if (input.reviewStatus === "DRAFT" || input.reviewStatus === "UNDER_REVIEW") return;
   if (!input.reviewerId || !input.reviewedAt) {
-    throw new Error("Una evaluación decidida debe registrar quién decidió y cuándo.");
+    throw new Error("Una evaluación decidida debe registrar el revisor y la fecha de la decisión.");
   }
 }
 

@@ -17,8 +17,15 @@ import { iso50001Pack } from "./iso-50001-2018.pack";
 import { iso22000Pack } from "./iso-22000-2018.pack";
 import { iso20000Pack } from "./iso-20000-2018.pack";
 import { iso13485Pack } from "./iso-13485-2016.pack";
+import { iso22301Pack } from "./iso-22301-2019.pack";
+import { sigPack } from "./sig-9001-14001-45001.pack";
+import { materializePackTemplateContent } from "./template-content";
 
 export * from "./pack-schema";
+export * from "./lifecycle";
+export * from "./readiness";
+export * from "./entitlements";
+export * from "./promotion";
 export { SIG_CROSSWALK } from "./sig-crosswalk";
 
 type Db = PrismaClient | Prisma.TransactionClient;
@@ -27,8 +34,13 @@ type Db = PrismaClient | Prisma.TransactionClient;
  * Order matters for cross-standard mappings: a pack's mappings only install
  * when both endpoints already exist, so packs that map to ISO 9001 come after it. */
 export const STANDARD_PACKS: StandardPackInput[] = [
-  iso9001Pack, iso27001Pack, iso14001Pack, iso45001Pack, iso42001Pack, iso37301Pack, iso37001Pack, iso50001Pack, iso22000Pack, iso20000Pack, iso13485Pack,
+  iso9001Pack, iso27001Pack, iso14001Pack, iso45001Pack, iso42001Pack, iso37301Pack,
+  iso37001Pack, iso50001Pack, iso22000Pack, iso20000Pack, iso22301Pack, iso13485Pack,
+  sigPack,
 ];
+
+/** Familias cuya activación debe (re)instalar la matriz de correspondencia del SIG. */
+export const SIG_CROSSWALK_FAMILIES = new Set(["ISO_9001", "ISO_14001", "ISO_45001", "SIG_9001_14001_45001"]);
 
 export function getPack(code: string): StandardPackInput | null {
   return STANDARD_PACKS.find((p) => p.code === code) ?? null;
@@ -41,6 +53,7 @@ export function getPackForFamily(familyCode: string): StandardPackInput | null {
 
 export type InstallPackResult = {
   packCode: string;
+  lifecycleStatus: string;
   editions: number;
   requirements: number;
   evidenceRules: number;
@@ -48,22 +61,30 @@ export type InstallPackResult = {
   auditChecklist: number;
   templates: number;
   mappings: number;
+  frozenActiveEditions: number;
 };
 
 const levelFromCode = (code: string) => code.split(".").length;
 
 /**
- * Install (or update) a pack — idempotent. Upserts the pack, its families,
- * editions and requirements by deterministic keys so existing production rows
- * (and their `cl-…` ids) are preserved. Catalog-only artifacts (evidence rules,
- * GAP questions, audit checklist, templates) are replaced per edition; ORG data
- * (assessments, coverage, OrganizationStandard) is never touched.
+ * Install (or update) a pack — idempotent.
+ *
+ * Reglas de historial:
+ * - Datos de organización (assessments, coverage, OrganizationStandard) NUNCA se tocan.
+ * - Una edición ACTIVE con la misma catalogVersion NO muta títulos/resúmenes de requisitos
+ *   (solo refresca artefactos de catálogo: evidence/GAP/checklist/templates).
+ * - Para cambiar requisitos de una edición ACTIVE: publicar nueva editionCode en el manifest
+ *   (la edición anterior permanece; márquela SUPERSEDED en un paso explícito posterior).
+ * - Si el manifest trae catalogVersion distinta sobre la misma editionCode ACTIVE → error
+ *   (fuerza bump de editionCode, no silent overwrite).
  */
 export async function installPack(input: unknown, db: Db = prisma): Promise<InstallPackResult> {
   const manifest = parsePackManifest(input);
   const result: InstallPackResult = {
     packCode: manifest.code,
+    lifecycleStatus: manifest.lifecycleStatus,
     editions: 0, requirements: 0, evidenceRules: 0, gapQuestions: 0, auditChecklist: 0, templates: 0, mappings: 0,
+    frozenActiveEditions: 0,
   };
 
   const pack = await db.standardPack.upsert({
@@ -71,10 +92,14 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
     update: {
       name: manifest.name, version: manifest.version, description: manifest.description ?? null,
       requiredModules: manifest.requiredModules, featureFlags: manifest.featureFlags,
+      // El lifecycle comercial es gobernado exclusivamente por
+      // promotePackLifecycle(). Una reinstalación del catálogo nunca puede
+      // degradar un pack LIVE al estado editorial del manifiesto.
     },
     create: {
       code: manifest.code, name: manifest.name, version: manifest.version, description: manifest.description ?? null,
       requiredModules: manifest.requiredModules, featureFlags: manifest.featureFlags,
+      lifecycleStatus: manifest.lifecycleStatus,
     },
   });
 
@@ -88,13 +113,38 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
       },
     });
 
+    const existing = await db.standardEdition.findUnique({
+      where: { familyId_editionCode: { familyId: family.id, editionCode: ed.editionCode } },
+    });
+
+    if (
+      existing
+      && existing.status === "ACTIVE"
+      && existing.catalogVersion
+      && ed.catalogVersion
+      && existing.catalogVersion !== ed.catalogVersion
+    ) {
+      throw new Error(
+        `No se puede mutar la edición ACTIVE ${ed.familyCode}/${ed.editionCode} ` +
+        `(catalogVersion ${existing.catalogVersion} → ${ed.catalogVersion}). ` +
+        `Crea una nueva editionCode en el manifest (p. ej. "${ed.editionCode}b") y deja la anterior intacta.`,
+      );
+    }
+
+    const freezeRequirements = Boolean(existing && existing.status === "ACTIVE");
+
     const edition = await db.standardEdition.upsert({
       where: { familyId_editionCode: { familyId: family.id, editionCode: ed.editionCode } },
-      update: {
-        code: ed.familyCode, name: ed.name, version: ed.version,
-        year: ed.year ?? null, description: ed.description ?? null, catalogVersion: ed.catalogVersion ?? null,
-        status: ed.status ?? "ACTIVE", publishedAt: ed.publishedAt ? new Date(ed.publishedAt) : null,
-      },
+      update: freezeRequirements
+        ? {
+            // Metadatos de presentación OK; no tocar status ni forzar reescritura de requisitos.
+            name: ed.name, version: ed.version, year: ed.year ?? null, description: ed.description ?? null,
+          }
+        : {
+            code: ed.familyCode, name: ed.name, version: ed.version,
+            year: ed.year ?? null, description: ed.description ?? null, catalogVersion: ed.catalogVersion ?? null,
+            status: ed.status ?? "ACTIVE", publishedAt: ed.publishedAt ? new Date(ed.publishedAt) : null,
+          },
       create: {
         familyId: family.id, code: ed.familyCode, editionCode: ed.editionCode, name: ed.name, version: ed.version,
         year: ed.year ?? null, description: ed.description ?? null, catalogVersion: ed.catalogVersion ?? null,
@@ -102,6 +152,7 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
       },
     });
     result.editions += 1;
+    if (freezeRequirements) result.frozenActiveEditions += 1;
 
     await db.standardPackEdition.upsert({
       where: { packId_editionId: { packId: pack.id, editionId: edition.id } },
@@ -109,10 +160,26 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
       create: { packId: pack.id, editionId: edition.id },
     });
 
-    // Requirements: parents first (so parentId FKs resolve), preserving deterministic ids.
     const ordered = [...ed.requirements].sort((a, b) => (a.parent ? 1 : 0) - (b.parent ? 1 : 0));
     for (const [index, req] of ordered.entries()) {
       const id = requirementIdFor(ed.familyCode, req.code);
+      if (freezeRequirements) {
+        // Solo asegura existencia (idempotente); no sobrescribe título/resumen de ACTIVE.
+        const found = await db.standardRequirement.findUnique({ where: { id }, select: { id: true } });
+        if (!found) {
+          await db.standardRequirement.create({
+            data: {
+              id, standardId: edition.id, code: req.code, title: req.title, summary: req.summary ?? null,
+              description: req.description ?? null, mandatory: req.mandatory,
+              level: req.level ?? levelFromCode(req.code), order: index,
+              parentId: req.parent ? requirementIdFor(ed.familyCode, req.parent) : null,
+            },
+          });
+        }
+        result.requirements += 1;
+        continue;
+      }
+
       await db.standardRequirement.upsert({
         where: { id },
         update: {
@@ -132,7 +199,7 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
 
     const reqIds = ed.requirements.map((r) => requirementIdFor(ed.familyCode, r.code));
 
-    // Catalog artifacts: replace per edition (no org data involved).
+    // Catalog artifacts: replace per edition (no org data).
     await db.requirementEvidenceRule.deleteMany({ where: { requirementId: { in: reqIds } } });
     if (ed.evidenceRules?.length) {
       await db.requirementEvidenceRule.createMany({
@@ -175,14 +242,22 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
         data: ed.templates.map((t) => ({
           editionId: edition.id,
           requirementId: t.requirementCode ? requirementIdFor(ed.familyCode, t.requirementCode) : null,
-          templateType: t.templateType, name: t.name, content: t.content, version: t.version,
+          templateType: t.templateType,
+          name: t.name,
+          content: materializePackTemplateContent({
+            familyCode: ed.familyCode,
+            requirementCode: t.requirementCode,
+            templateType: t.templateType,
+            name: t.name,
+            content: t.content,
+          }),
+          version: t.version,
         })),
       });
       result.templates += ed.templates.length;
     }
   }
 
-  // Cross-standard mappings — endpoints must already exist (skip otherwise).
   for (const m of manifest.mappings) {
     const sourceId = requirementIdFor(m.sourceFamily, m.sourceCode);
     const targetId = requirementIdFor(m.targetFamily, m.targetCode);

@@ -8,6 +8,7 @@ import { roleOrGroupCan } from "@/lib/permissions/matrix";
 import { planEntitlements, isTrialActive, assertPlanModule } from "@/lib/plan-entitlements";
 import { ensureDocumentTemplates } from "@/lib/document-templates";
 import { memberPayload } from "@/lib/payload-privacy";
+import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
 
 export async function getDashboardPayload() {
   const ctx = await requirePermission("dashboard:read");
@@ -244,7 +245,7 @@ export async function getDocumentsPayload() {
   const canCreate = can("documents:create");
   const canReadProcesses = can("processes:read");
   const canReadMembers = can("members:*");
-  const [documents, locations, personnel, members, processes, clauses, standards, templates] = await Promise.all([
+  const [documents, locations, personnel, members, processes, clauses, standards, templates, packTemplates] = await Promise.all([
     prisma.document.findMany({
       where: {
         organizationId,
@@ -290,6 +291,17 @@ export async function getDocumentsPayload() {
       where: { isActive: true },
       include: { clause: { select: { code: true, title: true } } },
       orderBy: [{ standardCode: "asc" }, { sortOrder: "asc" }],
+    }),
+    prisma.standardTemplate.findMany({
+      where: {
+        active: true,
+        edition: { orgStandards: { some: { organizationId } } },
+      },
+      include: {
+        edition: { select: { code: true, name: true } },
+        requirement: { select: { code: true, title: true } },
+      },
+      orderBy: [{ edition: { code: "asc" } }, { name: "asc" }],
     }),
   ]);
   const memberGroupPermissions = canReadMembers ? await prisma.groupMembership.findMany({
@@ -391,20 +403,36 @@ export async function getDocumentsPayload() {
       role: m.role,
       canApprove: roleOrGroupCan(m.role, groupPermissionsByUser.get(m.userId) ?? [], "documents:approve"),
     }))),
-    templates: templates.map((template) => ({
-      id: template.id,
-      code: template.code,
-      standardCode: template.standardCode,
-      title: template.title,
-      description: template.description,
-      documentType: template.documentType,
-      clauseId: template.clauseId,
-      clauseCode: template.clause?.code ?? null,
-      clauseTitle: template.clause?.title ?? null,
-      content: template.content,
-      fields: template.fieldSchema,
-      tags: template.tags,
-    })),
+    templates: [
+      ...templates.map((template) => ({
+        id: template.id,
+        code: template.code,
+        standardCode: template.standardCode,
+        title: template.title,
+        description: template.description,
+        documentType: template.documentType,
+        clauseId: template.clauseId,
+        clauseCode: template.clause?.code ?? null,
+        clauseTitle: template.clause?.title ?? null,
+        content: template.content,
+        fields: template.fieldSchema,
+        tags: template.tags,
+      })),
+      ...packTemplates.map((template) => ({
+        id: `pack:${template.id}`,
+        code: `${template.edition?.code ?? "PACK"}-${template.requirement?.code ?? template.templateType}`.replace(/[^A-Za-z0-9.-]+/g, "-"),
+        standardCode: template.edition?.code ?? "PACK",
+        title: template.name.replace(/\s*\(plantilla\)\s*$/i, ""),
+        description: `Plantilla del Standard Pack${template.requirement ? ` · requisito ${template.requirement.code}` : ""}`,
+        documentType: packTemplateDocumentType(template.templateType),
+        clauseId: template.requirementId,
+        clauseCode: template.requirement?.code ?? null,
+        clauseTitle: template.requirement?.title ?? null,
+        content: template.content,
+        fields: [],
+        tags: ["standard-pack", (template.edition?.code ?? "pack").toLowerCase()],
+      })),
+    ],
   };
 }
 

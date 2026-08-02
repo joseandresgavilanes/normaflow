@@ -374,7 +374,7 @@ export default function TrainingModule() {
                   <th>Vence</th>
                   <th>Proceso</th>
                   <th>Origen</th>
-                  <th />
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>

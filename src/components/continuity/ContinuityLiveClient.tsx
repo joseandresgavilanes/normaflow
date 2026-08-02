@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { AlertTriangle, CheckCircle2, ClipboardCheck, Clock3, Download, Eye, FileText, FlaskConical, GitBranch, History, Layers3, LifeBuoy, Lightbulb, Link2, Mail, Pencil, Phone, PlayCircle, Plus, Radio, Search, ShieldCheck, UserRound, UsersRound, X, type LucideIcon } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -155,7 +154,6 @@ export default function ContinuityLiveClient({ initial }: { initial: ContinuityP
   const reportOptions = REPORT_OPTIONS_BY_TAB[tab] ?? REPORT_OPTIONS_BY_TAB.panel;
 
   return <div className="nf-iso-module">
-    <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
     <SectionTitle title={SECTION_META[tab]?.title ?? SECTION_META.panel.title} sub={SECTION_META[tab]?.sub ?? SECTION_META.panel.sub} />
     {error && <div className="nf-alert nf-alert--error nf-alert--dismissible" role="alert"><span>{error}</span><button type="button" className="nf-alert-close" onClick={() => setError("")} aria-label="Cerrar mensaje de error"><X size={15} aria-hidden /></button></div>}
     {success && <div className="nf-alert nf-alert--success">{success}</div>}

@@ -16,9 +16,10 @@ export const iso37301Pack: StandardPackInput = {
   code: "PACK_ISO_37301",
   name: "ISO 37301 — Compliance",
   version: "2021.1",
+  lifecycleStatus: "PILOT",
   description: "Paquete normativo ISO 37301:2021 (Sistema de Gestión de Compliance).",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "training", "suppliers", "risks",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "training", "suppliers", "risks",
     "compliance", "speakup",
   ],
   featureFlags: { complianceManagement: true, speakUpChannel: true, obligationRegister: true },

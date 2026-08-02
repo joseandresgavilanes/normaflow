@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import { BrainCircuit, LayoutDashboard, Boxes, Scale, AlertTriangle, Database, Cpu, UserCheck, Megaphone, Siren, Handshake, GitCompare, Activity, ArrowRight, Check, X, Send, Plus } from "lucide-react";
 import type { AimsPayload } from "@/lib/aims/queries";
@@ -106,7 +105,6 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
       <IsoSectionHeader icon={BrainCircuit} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 

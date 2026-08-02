@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import ModuleTabs from "@/components/ui/ModuleTabs";
 import { useRouter } from "next/navigation";
 import {
   Flame, LayoutDashboard, Search, Grid3x3, LineChart, Gauge, Activity,
@@ -221,7 +220,6 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
           <Flame size={22} color="#ca8a04" />
         </div>
         <div>
-          <ModuleTabs meta={SECTION_META} value={tab} onChange={setTab} />
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
           <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
             {SECTION_META[tab].sub}

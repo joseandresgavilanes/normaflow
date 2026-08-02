@@ -21,18 +21,17 @@ async function openGroup(page: Page, group: string) {
  * nodos de texto del DOM ya renderizado (por ejemplo "Compliance" pasa a
  * "Conformidad"), así que el nombre accesible no es estable.
  *
- * Cada norma es un único destino en el sidebar. La sub-navegación vive ahora
- * en las pestañas del propio módulo (`ModuleTabs`), no en la columna global.
+ * Las secciones de la norma se anidan bajo ella en el sidebar y solo aparecen
+ * cuando esa norma es la ruta activa.
  */
 async function openIsoModule(page: Page, href: string) {
   await openGroup(page, "Normas");
   await page.locator(`.nf-sidenav__link[href="${href}"]`).click();
 }
 
-/** Cambia de sección usando las pestañas del módulo. */
+/** Cambia de sección desde los enlaces anidados del sidebar. */
 async function openSection(page: Page, section: string) {
-  await page.getByRole("tab", { name: section, exact: true }).click();
-  await expect(page.getByRole("tab", { name: section, exact: true })).toHaveAttribute("aria-selected", "true");
+  await page.locator(".nf-sidenav__section-link").filter({ hasText: section }).first().click();
 }
 
 test.describe("SaaS Application", () => {
@@ -127,7 +126,7 @@ test.describe("SaaS Application", () => {
     await openIsoModule(page, "/app/aims");
     await expect(page).toHaveURL(/\/app\/aims/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión de Inteligencia Artificial" })).toBeVisible();
-    await openSection(page, "Sistemas y casos de uso");
+    await openSection(page, "Inventario IA");
     await expect(page.getByText("IA-0001").first()).toBeVisible();
   });
 
@@ -135,7 +134,7 @@ test.describe("SaaS Application", () => {
     await openIsoModule(page, "/app/compliance");
     await expect(page).toHaveURL(/\/app\/compliance/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión de Compliance" })).toBeVisible();
-    await openSection(page, "Obligaciones de compliance");
+    await openSection(page, "Obligaciones");
     await expect(page.getByText("OBL-0001").first()).toBeVisible();
     await openSection(page, "Canal de denuncias");
     await expect(page.getByText("Configuración del canal")).toBeVisible();
@@ -161,7 +160,7 @@ test.describe("SaaS Application", () => {
     await openIsoModule(page, "/app/itsm");
     await expect(page).toHaveURL(/\/app\/itsm/);
     await expect(page.getByRole("heading", { name: "Gestión de servicios TI (ITSM)" })).toBeVisible();
-    await openSection(page, "Incidentes de servicio");
+    await openSection(page, "Incidentes");
     await expect(page.getByText("INC-0001").first()).toBeVisible();
   });
 
@@ -169,7 +168,7 @@ test.describe("SaaS Application", () => {
     await openIsoModule(page, "/app/medical-devices");
     await expect(page).toHaveURL(/\/app\/medical-devices/);
     await expect(page.getByRole("heading", { name: "Calidad de dispositivos médicos" })).toBeVisible();
-    await openSection(page, "Expedientes de diseño (DHF)");
+    await openSection(page, "Diseño (DHF)");
     await expect(page.getByText("DHF-0001").first()).toBeVisible();
   });
 
@@ -177,7 +176,7 @@ test.describe("SaaS Application", () => {
     await openIsoModule(page, "/app/antibribery");
     await expect(page).toHaveURL(/\/app\/antibribery/);
     await expect(page.getByRole("heading", { name: "Sistema de Gestión Antisoborno" })).toBeVisible();
-    await openSection(page, "Beneficiarios finales");
+    await openSection(page, "Beneficiarios");
     await expect(page.getByText("UBO-0001").first()).toBeVisible();
   });
 });

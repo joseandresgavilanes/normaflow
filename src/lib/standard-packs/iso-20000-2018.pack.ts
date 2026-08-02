@@ -9,9 +9,10 @@ export const iso20000Pack: StandardPackInput = {
   code: "PACK_ISO_20000",
   name: "ISO/IEC 20000 — Gestión de servicios TI",
   version: "2018.1",
+  lifecycleStatus: "DEVELOPMENT",
   description: "Paquete normativo ISO/IEC 20000-1:2018 (ITSM): catálogo, SLA, incidentes, problemas, cambios, CMDB, disponibilidad, capacidad y continuidad de servicio.",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "suppliers", "itsm",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "suppliers", "itsm",
   ],
   featureFlags: { itsm: true, serviceCatalog: true, cmdb: true },
   editions: [

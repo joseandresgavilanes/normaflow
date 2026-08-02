@@ -274,7 +274,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/app/continuity", Icon: ShieldBan, labelKey: "nav.continuity", permission: "continuity:read" },
       { href: "/app/aims", Icon: BrainCircuit, labelKey: "nav.aims", permission: "aims:read" },
       { href: "/app/compliance", Icon: Scale, labelKey: "nav.compliance", permission: "compliance:read" },
-      { href: "/app/antibribery", Icon: Gavel, labelKey: "nav.antibribery", permission: "antibribery:read" },
+      { href: "/app/antibribery", Icon: Gavel, labelKey: "nav.antibribery", permission: "compliance:read" },
       { href: "/app/energy", Icon: Gauge, labelKey: "nav.energy", permission: "energy:read" },
       { href: "/app/food-safety", Icon: UtensilsCrossed, labelKey: "nav.foodSafety", permission: "food-safety:read" },
       { href: "/app/itsm", Icon: Server, labelKey: "nav.itsm", permission: "itsm:read" },

@@ -74,9 +74,17 @@ export function FormModal({ open, title, pending, error, onClose, onSubmit, chil
   submitLabel?: string;
 }) {
   const { tx } = useI18n();
+  function submit(event: FormEvent<HTMLFormElement>) {
+    if (!event.currentTarget.checkValidity()) {
+      event.preventDefault();
+      event.currentTarget.reportValidity();
+      return;
+    }
+    onSubmit(event);
+  }
   return (
     <Modal open={open} onClose={onClose} title={title} width={620}>
-      <form onSubmit={onSubmit} className="nf-modal-form">
+      <form onSubmit={submit} className="nf-modal-form">
         {children}
         {error && <div className="nf-modal-error">{error}</div>}
         <div className="nf-modal-actions">

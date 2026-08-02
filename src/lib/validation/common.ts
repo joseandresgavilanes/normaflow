@@ -30,3 +30,41 @@ export function parseInput<T>(schema: z.ZodType<T>, input: unknown): T {
 export function parseId(input: unknown): string {
   return parseInput(idSchema, input);
 }
+
+/** Uppercase machine codes: pack codes (PACK_ISO_9001), family codes (ISO_9001), edition codes. */
+export const codeSchema = z.string().trim().toUpperCase().regex(
+  /^[A-Z0-9][A-Z0-9_.-]{1,79}$/,
+  "El código debe usar mayúsculas, números, guiones y guiones bajos.",
+);
+
+/** A single-line status/enum-ish token validated against an explicit allowlist. */
+export function statusSchema<T extends [string, ...string[]]>(values: T) {
+  return z.enum(values, { errorMap: () => ({ message: "Estado no válido." }) });
+}
+
+export const commentSchema = z.string().trim().min(1, "El comentario no puede estar vacío.").max(4000);
+
+export const paginationSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(200).default(25),
+}).strict();
+export type Pagination = z.infer<typeof paginationSchema>;
+
+/** Free-text search + date range, the shape almost every list/report filter needs. */
+export const baseFiltersSchema = z.object({
+  query: z.string().trim().max(200).optional(),
+  from: optionalDateInputSchema,
+  to: optionalDateInputSchema,
+}).strict();
+
+/** Merge a domain-specific filters shape with pagination + the common query/date range. */
+export function withPagination<T extends z.ZodRawShape>(shape: T) {
+  return z.object({ ...shape, ...paginationSchema.shape }).strict();
+}
+
+export const fileMetaSchema = z.object({
+  name: z.string().trim().min(1, "El nombre de archivo es obligatorio.").max(255),
+  size: z.number().int().min(1, "El archivo está vacío.").max(50 * 1024 * 1024, "El archivo supera 50 MB."),
+  mimeType: z.string().trim().min(1).max(120).optional(),
+}).strict();
+export type FileMeta = z.infer<typeof fileMetaSchema>;

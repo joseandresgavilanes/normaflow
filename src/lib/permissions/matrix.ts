@@ -40,6 +40,7 @@ export const PERMISSION_MODULES = [
   // `speakup` es un módulo aparte de `compliance` a propósito: quien gestiona el
   // programa de cumplimiento no accede por ello al canal de denuncias.
   "compliance", "speakup", "energy", "food-safety", "itsm", "medical-devices", "md-sensitive",
+  "quality-ops", "design-dev", "safety-sensitive", "antibribery-sensitive",
 ] as const;
 
 export function normalizePermission(permission: string): string {
@@ -110,6 +111,10 @@ const ADMIN_PERMS = [
   "itsm:*",
   "medical-devices:*",
   "md-sensitive:*",
+  "quality-ops:*",
+  "design-dev:*",
+  "safety-sensitive:*",
+  "antibribery-sensitive:*",
 ];
 
 const MANAGER_PERMS = [
@@ -159,6 +164,10 @@ const MANAGER_PERMS = [
   "itsm:*",
   "medical-devices:*",
   "md-sensitive:*",
+  "quality-ops:*",
+  "design-dev:*",
+  "safety-sensitive:*",
+  "antibribery-sensitive:*",
 ];
 
 export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
@@ -220,6 +229,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "itsm:*",
     "medical-devices:*",
     "md-sensitive:*",
+    "quality-ops:*",
+    "design-dev:*",
+    "safety-sensitive:*",
+    "antibribery-sensitive:*",
   ],
   AUDITOR: [
     "dashboard:read",
@@ -296,6 +309,14 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "medical-devices:export",
     "md-sensitive:read",
     "md-sensitive:export",
+    "quality-ops:read",
+    "quality-ops:export",
+    "design-dev:read",
+    "design-dev:export",
+    "safety-sensitive:read",
+    "safety-sensitive:export",
+    "antibribery-sensitive:read",
+    "antibribery-sensitive:export",
   ],
   CONTRIBUTOR: [
     "dashboard:read",
@@ -333,6 +354,7 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "incidents:create",
     "vulnerabilities:read",
     "continuity:read",
+    "continuity:create",
     "standards:read",
     "environment:read",
     "environment:create",
@@ -354,6 +376,10 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "itsm:create",
     "medical-devices:read",
     "medical-devices:create",
+    "quality-ops:read",
+    "quality-ops:create",
+    "design-dev:read",
+    "design-dev:create",
   ],
   VIEWER: [
     "dashboard:read",
@@ -393,6 +419,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "food-safety:read",
     "itsm:read",
     "medical-devices:read",
+    "quality-ops:read",
+    "design-dev:read",
   ],
 };
 

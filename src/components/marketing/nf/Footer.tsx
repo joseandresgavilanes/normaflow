@@ -5,13 +5,13 @@ import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 const COLS: { h: MessageKey; l: [MessageKey | string, string][] }[] = [
-  { h: "marketing.product", l: [["marketing.features", "/features"], ["nav.gap", "/solutions/gap-assessment"], ["ISO 9001", "/iso9001"], ["ISO 27001", "/iso27001"], ["marketing.pricing", "/pricing"]] },
+  { h: "marketing.product", l: [["marketing.features", "/features"], ["nav.gap", "/solutions/gap-assessment"], ["ISO 9001", "/iso9001"], ["ISO 27001", "/iso27001"], ["ISO 14001", "/iso14001"], ["ISO 45001", "/iso45001"], ["Sistema Integrado", "/sig"], ["ISO 22301", "/iso22301"], ["ISO/IEC 42001", "/iso42001"], ["ISO 37301", "/iso37301"], ["ISO 50001", "/iso50001"], ["ISO 22000", "/iso22000"], ["ISO/IEC 20000", "/iso20000"], ["ISO 13485", "/iso13485"], ["ISO 37001", "/iso37001"], ["marketing.pricing", "/pricing"]] },
   { h: "marketing.company", l: [["marketing.cases", "/cases"], ["marketing.blog", "/blog"], ["marketing.contact", "/demo"], ["marketing.signIn", "/login"], ["marketing.createAccount", "/signup"]] },
   { h: "marketing.legal", l: [["marketing.privacy", "/legal/privacy"], ["marketing.terms", "/legal/terms"], ["marketing.security", "/legal/security"]] },
 ];
 
 export function NfFooter() {
-  const { t } = useI18n();
+  const { t, tx } = useI18n();
 
   return (
     <footer className="nf-footer">
@@ -34,7 +34,7 @@ export function NfFooter() {
           {COLS.map((c) => (
             <div key={c.h}>
               <h4>{t(c.h)}</h4>
-              <ul>{c.l.map(([label, href]) => <li key={label}><Link href={href}>{label.startsWith("marketing.") || label.startsWith("nav.") ? t(label as MessageKey) : label}</Link></li>)}</ul>
+              <ul>{c.l.map(([label, href]) => <li key={label}><Link href={href}>{label.startsWith("marketing.") || label.startsWith("nav.") ? t(label as MessageKey) : tx(label)}</Link></li>)}</ul>
             </div>
           ))}
         </div>

@@ -8,9 +8,10 @@ export const iso22000Pack: StandardPackInput = {
   code: "PACK_ISO_22000",
   name: "ISO 22000 — Inocuidad alimentaria",
   version: "2018.1",
+  lifecycleStatus: "DEVELOPMENT",
   description: "Paquete normativo ISO 22000:2018 (SGIA) con PRP, OPRP, PCC, monitoreo, trazabilidad y retiro.",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "suppliers", "food-safety",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "suppliers", "food-safety",
   ],
   featureFlags: { foodSafetyManagement: true, haccp: true, traceability: true },
   editions: [

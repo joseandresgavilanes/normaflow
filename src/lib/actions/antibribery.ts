@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { writeAuditLog } from "@/lib/audit-log";
 import { notifyUser } from "@/lib/notify";
 import {
   assertDueDiligenceApproval,
@@ -28,6 +28,7 @@ import {
 import type { DueDiligenceStatus, GiftHospitalityStatus, HighRiskApprovalStatus } from "@prisma/client";
 
 const MODULE = "compliance";
+const SENSITIVE_MODULE = "antibribery-sensitive";
 const revalidate = () => {
   revalidatePath("/app/antibribery");
   revalidatePath("/app/compliance");
@@ -113,24 +114,27 @@ export async function createBriberyRiskAssessment(input: z.infer<typeof assessme
   });
   const computed = computeBriberyRisk(data);
   const code = data.code ?? await nextCode("BRR", prisma.briberyRiskAssessment.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.briberyRiskAssessment.create({
-    data: tenantData(ctx, {
-      code, title: data.title, scope: data.scope ?? null, processId: data.processId ?? null,
-      jurisdictionId: data.jurisdictionId ?? null, obligationId: data.obligationId ?? null,
-      complianceRiskId: data.complianceRiskId ?? null, riskId: data.riskId ?? null,
-      inherentLikelihood: data.inherentLikelihood, inherentImpact: data.inherentImpact,
-      inherentScore: computed.inherentScore, inherentLevel: computed.inherentLevel,
-      residualLikelihood: data.residualLikelihood ?? null, residualImpact: data.residualImpact ?? null,
-      residualScore: computed.residualScore, residualLevel: computed.residualLevel,
-      publicOfficialRisk: data.publicOfficialRisk, thirdPartyRisk: data.thirdPartyRisk,
-      countryRisk: data.countryRisk, sectorRisk: data.sectorRisk, treatment: data.treatment,
-      treatmentPlan: data.treatmentPlan ?? null, ownerId: data.ownerId ?? null,
-      nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.briberyRiskAssessment.create({
+      data: tenantData(ctx, {
+        code, title: data.title, scope: data.scope ?? null, processId: data.processId ?? null,
+        jurisdictionId: data.jurisdictionId ?? null, obligationId: data.obligationId ?? null,
+        complianceRiskId: data.complianceRiskId ?? null, riskId: data.riskId ?? null,
+        inherentLikelihood: data.inherentLikelihood, inherentImpact: data.inherentImpact,
+        inherentScore: computed.inherentScore, inherentLevel: computed.inherentLevel,
+        residualLikelihood: data.residualLikelihood ?? null, residualImpact: data.residualImpact ?? null,
+        residualScore: computed.residualScore, residualLevel: computed.residualLevel,
+        publicOfficialRisk: data.publicOfficialRisk, thirdPartyRisk: data.thirdPartyRisk,
+        countryRisk: data.countryRisk, sectorRisk: data.sectorRisk, treatment: data.treatment,
+        treatmentPlan: data.treatmentPlan ?? null, ownerId: data.ownerId ?? null,
+        nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, residualLevel: computed.residualLevel }, extra: { event: "create_bribery_risk_assessment" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, residualLevel: computed.residualLevel }, extra: { event: "create_bribery_risk_assessment" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -140,11 +144,13 @@ export async function approveBriberyRiskAssessment(id: string, note?: string) {
   const row = await prisma.briberyRiskAssessment.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!row) throw new Error("Evaluación de riesgo de soborno no encontrada.");
   assertBriberyAssessmentApproval({ approvedById: ctx.user.id });
-  await prisma.briberyRiskAssessment.update({
-    where: { id },
-    data: { status: "APPROVED", approvedById: ctx.user.id, approvedAt: new Date() },
+  await prisma.$transaction(async (tx) => {
+    await tx.briberyRiskAssessment.update({
+      where: { id },
+      data: { status: "APPROVED", approvedById: ctx.user.id, approvedAt: new Date() },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status: "APPROVED" }, extra: { event: "approve_bribery_risk_assessment", note } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status: "APPROVED" }, extra: { event: "approve_bribery_risk_assessment", note } });
   revalidate();
   return { id, status: "APPROVED" as const };
 }
@@ -173,17 +179,20 @@ export async function createBusinessAssociate(input: z.infer<typeof associateSch
   const data = associateSchema.parse(input);
   await assertRefInOrg(ctx.organization.id, { supplierId: data.supplierId, documentId: data.documentId });
   const code = data.code ?? await nextCode("ASC", prisma.businessAssociate.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.businessAssociate.create({
-    data: tenantData(ctx, {
-      code, name: data.name, associateType: data.associateType, country: data.country ?? null,
-      registrationNumber: data.registrationNumber ?? null, industry: data.industry ?? null,
-      supplierId: data.supplierId ?? null, riskTier: data.riskTier, isPublicOfficial: data.isPublicOfficial,
-      interactsWithPEPs: data.interactsWithPEPs, ownershipKnown: data.ownershipKnown,
-      ownerId: data.ownerId ?? null, notes: data.notes ?? null, documentId: data.documentId ?? null,
-      onboardingDate: new Date(), createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.businessAssociate.create({
+      data: tenantData(ctx, {
+        code, name: data.name, associateType: data.associateType, country: data.country ?? null,
+        registrationNumber: data.registrationNumber ?? null, industry: data.industry ?? null,
+        supplierId: data.supplierId ?? null, riskTier: data.riskTier, isPublicOfficial: data.isPublicOfficial,
+        interactsWithPEPs: data.interactsWithPEPs, ownershipKnown: data.ownershipKnown,
+        ownerId: data.ownerId ?? null, notes: data.notes ?? null, documentId: data.documentId ?? null,
+        onboardingDate: new Date(), createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, riskTier: data.riskTier }, extra: { event: "create_business_associate" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, riskTier: data.riskTier }, extra: { event: "create_business_associate" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -212,14 +221,17 @@ export async function createDueDiligenceCase(input: z.infer<typeof ddSchema>) {
   });
   const level = requiresEnhancedReview(associate) ? "ENHANCED" : data.level;
   const code = data.code ?? await nextCode("DD", prisma.dueDiligenceCase.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.dueDiligenceCase.create({
-    data: tenantData(ctx, {
-      code, associateId: data.associateId, level, purpose: data.purpose ?? null,
-      obligationId: data.obligationId ?? null, complianceRiskId: data.complianceRiskId ?? null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.dueDiligenceCase.create({
+      data: tenantData(ctx, {
+        code, associateId: data.associateId, level, purpose: data.purpose ?? null,
+        obligationId: data.obligationId ?? null, complianceRiskId: data.complianceRiskId ?? null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, level }, extra: { event: "create_due_diligence_case" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, level }, extra: { event: "create_due_diligence_case" } });
   revalidate();
   return { id: created.id, code, level };
 }
@@ -256,26 +268,29 @@ export async function transitionDueDiligence(
   }
 
   const now = new Date();
-  const updated = await prisma.dueDiligenceCase.update({
-    where: { id },
-    data: {
-      status: input.to,
-      ...(input.screeningResult ? { screeningResult: input.screeningResult } : {}),
-      ...(input.findings !== undefined ? { findings: input.findings } : {}),
-      ...(input.residualRisk ? { residualRisk: input.residualRisk } : {}),
-      ...(input.conditions !== undefined ? { conditions: input.conditions } : {}),
-      ...(input.to === "REVIEW" || input.to === "ENHANCED_REVIEW"
-        ? { reviewerId: ctx.user.id, reviewedAt: now }
-        : {}),
-      ...(input.to === "APPROVED"
-        ? { approvedById: ctx.user.id, approvedAt: now, nextReviewDate: input.nextReviewDate ? new Date(input.nextReviewDate) : null }
-        : {}),
-      ...(input.to === "REJECTED"
-        ? { rejectedById: ctx.user.id, rejectedAt: now, rejectionReason: input.rejectionReason ?? null }
-        : {}),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const row2 = await tx.dueDiligenceCase.update({
+      where: { id },
+      data: {
+        status: input.to,
+        ...(input.screeningResult ? { screeningResult: input.screeningResult } : {}),
+        ...(input.findings !== undefined ? { findings: input.findings } : {}),
+        ...(input.residualRisk ? { residualRisk: input.residualRisk } : {}),
+        ...(input.conditions !== undefined ? { conditions: input.conditions } : {}),
+        ...(input.to === "REVIEW" || input.to === "ENHANCED_REVIEW"
+          ? { reviewerId: ctx.user.id, reviewedAt: now }
+          : {}),
+        ...(input.to === "APPROVED"
+          ? { approvedById: ctx.user.id, approvedAt: now, nextReviewDate: input.nextReviewDate ? new Date(input.nextReviewDate) : null }
+          : {}),
+        ...(input.to === "REJECTED"
+          ? { rejectedById: ctx.user.id, rejectedAt: now, rejectionReason: input.rejectionReason ?? null }
+          : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: needsApprove ? "approve" : "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.to }, extra: { event: "transition_due_diligence" } });
+    return row2;
   });
-  await logAuditEvent({ ctx, action: needsApprove ? "approve" : "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.to }, extra: { event: "transition_due_diligence" } });
   if (row.associate.ownerId && row.associate.ownerId !== ctx.user.id) {
     await safeNotify({
       organizationId: ctx.organization.id, userId: row.associate.ownerId,
@@ -306,37 +321,42 @@ const ownerSchema = z.object({
 });
 
 export async function createBeneficialOwner(input: z.infer<typeof ownerSchema>) {
-  const ctx = await requirePermission("compliance:create");
+  const ctx = await requirePermission("antibribery-sensitive:create");
   const data = ownerSchema.parse(input);
   const associate = await prisma.businessAssociate.findFirst({ where: tenantWhere(ctx, { id: data.associateId }) });
   if (!associate) throw new Error("Socio de negocio no encontrado.");
   await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId });
   const code = data.code ?? await nextCode("UBO", prisma.beneficialOwner.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.beneficialOwner.create({
-    data: tenantData(ctx, {
-      code, associateId: data.associateId, fullName: data.fullName, nationality: data.nationality ?? null,
-      countryOfResidence: data.countryOfResidence ?? null, ownershipPercent: data.ownershipPercent ?? null,
-      controlType: data.controlType, isPep: data.isPep, pepRole: data.pepRole ?? null,
-      evidenceId: data.evidenceId ?? null, notes: data.notes ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.beneficialOwner.create({
+      data: tenantData(ctx, {
+        code, associateId: data.associateId, fullName: data.fullName, nationality: data.nationality ?? null,
+        countryOfResidence: data.countryOfResidence ?? null, ownershipPercent: data.ownershipPercent ?? null,
+        controlType: data.controlType, isPep: data.isPep, pepRole: data.pepRole ?? null,
+        evidenceId: data.evidenceId ?? null, notes: data.notes ?? null,
+      }),
+    });
+    if (!associate.ownershipKnown) {
+      await tx.businessAssociate.update({ where: { id: associate.id }, data: { ownershipKnown: true } });
+    }
+    await writeAuditLog(tx, { ctx, action: "create", module: SENSITIVE_MODULE, recordId: row.id, after: { code, isPep: data.isPep }, extra: { event: "create_beneficial_owner" } });
+    return row;
   });
-  if (!associate.ownershipKnown) {
-    await prisma.businessAssociate.update({ where: { id: associate.id }, data: { ownershipKnown: true } });
-  }
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, isPep: data.isPep }, extra: { event: "create_beneficial_owner" } });
   revalidate();
   return { id: created.id, code };
 }
 
 export async function verifyBeneficialOwner(id: string) {
-  const ctx = await requirePermission("compliance:update");
+  const ctx = await requirePermission("antibribery-sensitive:update");
   const row = await prisma.beneficialOwner.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!row) throw new Error("Beneficiario final no encontrado.");
-  await prisma.beneficialOwner.update({
-    where: { id },
-    data: { verifiedAt: new Date(), verifiedById: ctx.user.id },
+  await prisma.$transaction(async (tx) => {
+    await tx.beneficialOwner.update({
+      where: { id },
+      data: { verifiedAt: new Date(), verifiedById: ctx.user.id },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: SENSITIVE_MODULE, recordId: id, extra: { event: "verify_beneficial_owner" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, extra: { event: "verify_beneficial_owner" } });
   revalidate();
   return { id };
 }
@@ -378,19 +398,22 @@ export async function submitGiftHospitality(input: z.infer<typeof giftSchema>) {
     data.estimatedValue > data.policyThreshold,
   );
   const code = data.code ?? await nextCode("GH", prisma.giftHospitalityRecord.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.giftHospitalityRecord.create({
-    data: tenantData(ctx, {
-      code, recordType: data.recordType, direction: data.direction, description: data.description,
-      estimatedValue: data.estimatedValue ?? null, currency: data.currency ?? null,
-      occurredAt: data.occurredAt ? new Date(data.occurredAt) : new Date(),
-      counterpartyName: data.counterpartyName ?? null, associateId: data.associateId ?? null,
-      involvesPublicOfficial: data.involvesPublicOfficial, publicOfficialRole: data.publicOfficialRole ?? null,
-      submittedById: ctx.user.id, policyThreshold: data.policyThreshold ?? null, aboveThreshold,
-      conflictDeclarationId: data.conflictOfInterestDeclarationId ?? null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.giftHospitalityRecord.create({
+      data: tenantData(ctx, {
+        code, recordType: data.recordType, direction: data.direction, description: data.description,
+        estimatedValue: data.estimatedValue ?? null, currency: data.currency ?? null,
+        occurredAt: data.occurredAt ? new Date(data.occurredAt) : new Date(),
+        counterpartyName: data.counterpartyName ?? null, associateId: data.associateId ?? null,
+        involvesPublicOfficial: data.involvesPublicOfficial, publicOfficialRole: data.publicOfficialRole ?? null,
+        submittedById: ctx.user.id, policyThreshold: data.policyThreshold ?? null, aboveThreshold,
+        conflictDeclarationId: data.conflictOfInterestDeclarationId ?? null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, aboveThreshold, involvesPublicOfficial: data.involvesPublicOfficial }, extra: { event: "submit_gift_hospitality" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, aboveThreshold, involvesPublicOfficial: data.involvesPublicOfficial }, extra: { event: "submit_gift_hospitality" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -431,11 +454,13 @@ export async function transitionGiftHospitality(
     data.complianceReviewedAt = now;
   }
 
-  await prisma.giftHospitalityRecord.update({ where: { id }, data });
-  await logAuditEvent({
-    ctx, action: decision ? "approve" : "update", module: MODULE, recordId: id,
-    before: { status: row.status }, after: { status: input.to },
-    extra: { event: "transition_gift_hospitality", requiresCompliance: mustReachComplianceReview(row) },
+  await prisma.$transaction(async (tx) => {
+    await tx.giftHospitalityRecord.update({ where: { id }, data });
+    await writeAuditLog(tx, {
+      ctx, action: decision ? "approve" : "update", module: MODULE, recordId: id,
+      before: { status: row.status }, after: { status: input.to },
+      extra: { event: "transition_gift_hospitality", requiresCompliance: mustReachComplianceReview(row) },
+    });
   });
   revalidate();
   return { id, status: input.to };
@@ -468,16 +493,19 @@ export async function createDonationSponsorship(input: z.infer<typeof donationSc
   await assertRefInOrg(ctx.organization.id, { obligationId: data.obligationId, documentId: data.documentId, evidenceId: data.evidenceId });
   const political = data.politicalDonation || data.recordType === "POLITICAL_CONTRIBUTION";
   const code = data.code ?? await nextCode("DON", prisma.donationSponsorshipRecord.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.donationSponsorshipRecord.create({
-    data: tenantData(ctx, {
-      code, recordType: data.recordType, beneficiaryName: data.beneficiaryName, associateId: data.associateId ?? null,
-      purpose: data.purpose ?? null, amount: data.amount ?? null, currency: data.currency ?? null,
-      involvesPublicOfficial: data.involvesPublicOfficial, politicalDonation: political,
-      obligationId: data.obligationId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.donationSponsorshipRecord.create({
+      data: tenantData(ctx, {
+        code, recordType: data.recordType, beneficiaryName: data.beneficiaryName, associateId: data.associateId ?? null,
+        purpose: data.purpose ?? null, amount: data.amount ?? null, currency: data.currency ?? null,
+        involvesPublicOfficial: data.involvesPublicOfficial, politicalDonation: political,
+        obligationId: data.obligationId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, politicalDonation: political }, extra: { event: "create_donation_sponsorship" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, politicalDonation: political }, extra: { event: "create_donation_sponsorship" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -489,16 +517,18 @@ export async function decideDonationSponsorship(id: string, input: { decision: "
   if (input.decision === "REJECTED" && !input.rejectionReason) {
     throw new Error("Rechazar una donación o patrocinio exige un motivo.");
   }
-  await prisma.donationSponsorshipRecord.update({
-    where: { id },
-    data: {
-      status: input.decision,
-      approvedById: input.decision === "APPROVED" ? ctx.user.id : null,
-      approvedAt: input.decision === "APPROVED" ? new Date() : null,
-      rejectionReason: input.rejectionReason ?? null,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.donationSponsorshipRecord.update({
+      where: { id },
+      data: {
+        status: input.decision,
+        approvedById: input.decision === "APPROVED" ? ctx.user.id : null,
+        approvedAt: input.decision === "APPROVED" ? new Date() : null,
+        rejectionReason: input.rejectionReason ?? null,
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.decision }, extra: { event: "decide_donation_sponsorship" } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.decision }, extra: { event: "decide_donation_sponsorship" } });
   revalidate();
   return { id, status: input.decision };
 }
@@ -531,18 +561,21 @@ export async function declareAbmsConflict(input: z.infer<typeof conflictSchema>)
     conflictOfInterestDeclarationId: data.conflictOfInterestDeclarationId,
   });
   const code = data.code ?? await nextCode("ACD", prisma.conflictDeclaration.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.conflictDeclaration.create({
-    data: tenantData(ctx, {
-      code, declarantId: ctx.user.id, period: data.period, hasConflict: data.hasConflict,
-      conflictNature: data.conflictNature, description: data.description ?? null,
-      relatedAssociateId: data.relatedAssociateId ?? null, relatedParty: data.relatedParty ?? null,
-      estimatedValue: data.estimatedValue ?? null, currency: data.currency ?? null,
-      recusalRequired: data.recusalRequired,
-      conflictOfInterestDeclarationId: data.conflictOfInterestDeclarationId ?? null,
-      evidenceId: data.evidenceId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.conflictDeclaration.create({
+      data: tenantData(ctx, {
+        code, declarantId: ctx.user.id, period: data.period, hasConflict: data.hasConflict,
+        conflictNature: data.conflictNature, description: data.description ?? null,
+        relatedAssociateId: data.relatedAssociateId ?? null, relatedParty: data.relatedParty ?? null,
+        estimatedValue: data.estimatedValue ?? null, currency: data.currency ?? null,
+        recusalRequired: data.recusalRequired,
+        conflictOfInterestDeclarationId: data.conflictOfInterestDeclarationId ?? null,
+        evidenceId: data.evidenceId ?? null,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, period: data.period, hasConflict: data.hasConflict }, extra: { event: "declare_abms_conflict" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, period: data.period, hasConflict: data.hasConflict }, extra: { event: "declare_abms_conflict" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -555,15 +588,17 @@ export async function reviewAbmsConflict(id: string, input: { decision: "ACCEPTE
   if (input.decision === "MITIGATED" && !input.mitigationMeasures) {
     throw new Error("Mitigar un conflicto exige registrar las medidas.");
   }
-  await prisma.conflictDeclaration.update({
-    where: { id },
-    data: {
-      reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt: new Date(),
-      mitigationMeasures: input.mitigationMeasures ?? row.mitigationMeasures,
-      ...(input.recusalRequired !== undefined ? { recusalRequired: input.recusalRequired } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.conflictDeclaration.update({
+      where: { id },
+      data: {
+        reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt: new Date(),
+        mitigationMeasures: input.mitigationMeasures ?? row.mitigationMeasures,
+        ...(input.recusalRequired !== undefined ? { recusalRequired: input.recusalRequired } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "review_abms_conflict" } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "review_abms_conflict" } });
   revalidate();
   return { id, reviewStatus: input.decision };
 }
@@ -594,17 +629,20 @@ export async function reportFacilitationPayment(input: z.infer<typeof facilitati
     investigationId: data.investigationId, capaId: data.capaId, evidenceId: data.evidenceId,
   });
   const code = data.code ?? await nextCode("FP", prisma.facilitationPaymentReport.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.facilitationPaymentReport.create({
-    data: tenantData(ctx, {
-      code, description: data.description, amount: data.amount ?? null, currency: data.currency ?? null,
-      occurredAt: data.occurredAt ? new Date(data.occurredAt) : null, country: data.country ?? null,
-      publicOfficialRole: data.publicOfficialRole ?? null, coerced: data.coerced,
-      speakUpReportId: data.speakUpReportId ?? null, breachId: data.breachId ?? null,
-      investigationId: data.investigationId ?? null, capaId: data.capaId ?? null,
-      evidenceId: data.evidenceId ?? null, reportedById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.facilitationPaymentReport.create({
+      data: tenantData(ctx, {
+        code, description: data.description, amount: data.amount ?? null, currency: data.currency ?? null,
+        occurredAt: data.occurredAt ? new Date(data.occurredAt) : null, country: data.country ?? null,
+        publicOfficialRole: data.publicOfficialRole ?? null, coerced: data.coerced,
+        speakUpReportId: data.speakUpReportId ?? null, breachId: data.breachId ?? null,
+        investigationId: data.investigationId ?? null, capaId: data.capaId ?? null,
+        evidenceId: data.evidenceId ?? null, reportedById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, coerced: data.coerced }, extra: { event: "report_facilitation_payment" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, coerced: data.coerced }, extra: { event: "report_facilitation_payment" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -613,14 +651,16 @@ export async function reviewFacilitationPayment(id: string, input: { status: "UN
   const ctx = await requirePermission("compliance:update");
   const row = await prisma.facilitationPaymentReport.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!row) throw new Error("Informe de pago de facilitación no encontrado.");
-  await prisma.facilitationPaymentReport.update({
-    where: { id },
-    data: {
-      status: input.status, reviewedById: ctx.user.id, reviewedAt: new Date(),
-      outcome: input.outcome ?? row.outcome,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.facilitationPaymentReport.update({
+      where: { id },
+      data: {
+        status: input.status, reviewedById: ctx.user.id, reviewedAt: new Date(),
+        outcome: input.outcome ?? row.outcome,
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.status }, extra: { event: "review_facilitation_payment" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.status }, extra: { event: "review_facilitation_payment" } });
   revalidate();
   return { id, status: input.status };
 }
@@ -658,9 +698,31 @@ async function persistControlTest(kind: "financial" | "nonFinancial", input: z.i
   const status = failed ? "FAILED" : "COMPLETED";
   if (kind === "financial") {
     const code = data.code ?? await nextCode("FCT", prisma.financialControlTest.count({ where: { organizationId: ctx.organization.id } }));
-    const created = await prisma.financialControlTest.create({
+    const created = await prisma.$transaction(async (tx) => {
+      const row = await tx.financialControlTest.create({
+        data: tenantData(ctx, {
+          code, title: data.title, controlDescription: data.controlDescription ?? null,
+          complianceControlId: data.complianceControlId ?? null, organizationControlId: data.organizationControlId ?? null,
+          obligationId: data.obligationId ?? null, period: data.period, testedById: ctx.user.id,
+          designAdequate: data.designAdequate ?? null, operatingEffective: data.operatingEffective ?? null,
+          sampleSize: data.sampleSize ?? null, exceptionsFound: data.exceptionsFound,
+          findings: data.findings ?? null, effectiveness: data.effectiveness ?? null, status,
+          nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : null,
+          evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
+        }),
+      });
+      await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, status }, extra: { event: "create_financial_control_test" } });
+      return row;
+    });
+    revalidate();
+    return { id: created.id, code, status };
+  }
+  const code = data.code ?? await nextCode("NFT", prisma.nonFinancialControlTest.count({ where: { organizationId: ctx.organization.id } }));
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.nonFinancialControlTest.create({
       data: tenantData(ctx, {
         code, title: data.title, controlDescription: data.controlDescription ?? null,
+        controlArea: data.controlArea ?? "OTHER",
         complianceControlId: data.complianceControlId ?? null, organizationControlId: data.organizationControlId ?? null,
         obligationId: data.obligationId ?? null, period: data.period, testedById: ctx.user.id,
         designAdequate: data.designAdequate ?? null, operatingEffective: data.operatingEffective ?? null,
@@ -670,25 +732,9 @@ async function persistControlTest(kind: "financial" | "nonFinancial", input: z.i
         evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
       }),
     });
-    await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, status }, extra: { event: "create_financial_control_test" } });
-    revalidate();
-    return { id: created.id, code, status };
-  }
-  const code = data.code ?? await nextCode("NFT", prisma.nonFinancialControlTest.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.nonFinancialControlTest.create({
-    data: tenantData(ctx, {
-      code, title: data.title, controlDescription: data.controlDescription ?? null,
-      controlArea: data.controlArea ?? "OTHER",
-      complianceControlId: data.complianceControlId ?? null, organizationControlId: data.organizationControlId ?? null,
-      obligationId: data.obligationId ?? null, period: data.period, testedById: ctx.user.id,
-      designAdequate: data.designAdequate ?? null, operatingEffective: data.operatingEffective ?? null,
-      sampleSize: data.sampleSize ?? null, exceptionsFound: data.exceptionsFound,
-      findings: data.findings ?? null, effectiveness: data.effectiveness ?? null, status,
-      nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : null,
-      evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
-    }),
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, status }, extra: { event: "create_non_financial_control_test" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, status }, extra: { event: "create_non_financial_control_test" } });
   revalidate();
   return { id: created.id, code, status };
 }
@@ -738,18 +784,21 @@ export async function requestHighRiskApproval(input: z.infer<typeof highRiskSche
     documentId: data.documentId, evidenceId: data.evidenceId,
   });
   const code = data.code ?? await nextCode("HRT", prisma.highRiskTransactionApproval.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.highRiskTransactionApproval.create({
-    data: tenantData(ctx, {
-      code, title: data.title, transactionType: data.transactionType, description: data.description ?? null,
-      amount: data.amount ?? null, currency: data.currency ?? null, associateId: data.associateId ?? null,
-      counterpartyName: data.counterpartyName ?? null, country: data.country ?? null,
-      involvesPublicOfficial: data.involvesPublicOfficial, riskRationale: data.riskRationale ?? null,
-      requestedById: ctx.user.id, obligationId: data.obligationId ?? null,
-      complianceRiskId: data.complianceRiskId ?? null, dueDiligenceCaseId: data.dueDiligenceCaseId ?? null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.highRiskTransactionApproval.create({
+      data: tenantData(ctx, {
+        code, title: data.title, transactionType: data.transactionType, description: data.description ?? null,
+        amount: data.amount ?? null, currency: data.currency ?? null, associateId: data.associateId ?? null,
+        counterpartyName: data.counterpartyName ?? null, country: data.country ?? null,
+        involvesPublicOfficial: data.involvesPublicOfficial, riskRationale: data.riskRationale ?? null,
+        requestedById: ctx.user.id, obligationId: data.obligationId ?? null,
+        complianceRiskId: data.complianceRiskId ?? null, dueDiligenceCaseId: data.dueDiligenceCaseId ?? null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, transactionType: data.transactionType }, extra: { event: "request_high_risk_approval" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, transactionType: data.transactionType }, extra: { event: "request_high_risk_approval" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -774,15 +823,17 @@ export async function transitionHighRiskApproval(
   }
   if (input.to === "REJECTED") assertHighRiskRejection(input.rejectionReason);
 
-  await prisma.highRiskTransactionApproval.update({
-    where: { id },
-    data: {
-      status: input.to,
-      ...(input.to === "APPROVED" ? { approvedById: ctx.user.id, approvedAt: new Date(), conditions: input.conditions ?? row.conditions } : {}),
-      ...(input.to === "REJECTED" ? { rejectionReason: input.rejectionReason ?? null } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.highRiskTransactionApproval.update({
+      where: { id },
+      data: {
+        status: input.to,
+        ...(input.to === "APPROVED" ? { approvedById: ctx.user.id, approvedAt: new Date(), conditions: input.conditions ?? row.conditions } : {}),
+        ...(input.to === "REJECTED" ? { rejectionReason: input.rejectionReason ?? null } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: needsApprove ? "approve" : "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.to }, extra: { event: "transition_high_risk_approval" } });
   });
-  await logAuditEvent({ ctx, action: needsApprove ? "approve" : "update", module: MODULE, recordId: id, before: { status: row.status }, after: { status: input.to }, extra: { event: "transition_high_risk_approval" } });
   revalidate();
   return { id, status: input.to };
 }
@@ -811,15 +862,18 @@ export async function recordAntiBriberyCommitment(input: z.infer<typeof commitme
   }
   await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, evidenceId: data.evidenceId });
   const code = data.code ?? await nextCode("ABC", prisma.antiBriberyCommitment.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.antiBriberyCommitment.create({
-    data: tenantData(ctx, {
-      code, commitmentType: data.commitmentType, subjectUserId: data.subjectUserId ?? null,
-      associateId: data.associateId ?? null, subjectName: data.subjectName ?? null, version: data.version,
-      expiresAt: data.expiresAt ? new Date(data.expiresAt) : null, documentId: data.documentId ?? null,
-      evidenceId: data.evidenceId ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.antiBriberyCommitment.create({
+      data: tenantData(ctx, {
+        code, commitmentType: data.commitmentType, subjectUserId: data.subjectUserId ?? null,
+        associateId: data.associateId ?? null, subjectName: data.subjectName ?? null, version: data.version,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null, documentId: data.documentId ?? null,
+        evidenceId: data.evidenceId ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, commitmentType: data.commitmentType }, extra: { event: "record_anti_bribery_commitment" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, commitmentType: data.commitmentType }, extra: { event: "record_anti_bribery_commitment" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -854,17 +908,20 @@ export async function linkAntiBriberyInvestigation(input: z.infer<typeof abInves
     if (!ok) throw new Error("Socio de negocio no encontrado.");
   }
   const code = data.code ?? await nextCode("ABI", prisma.antiBriberyInvestigation.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.antiBriberyInvestigation.create({
-    data: tenantData(ctx, {
-      code, investigationId: data.investigationId, speakUpReportId: data.speakUpReportId ?? null,
-      breachId: data.breachId ?? null, allegationType: data.allegationType,
-      involvesPublicOfficial: data.involvesPublicOfficial, estimatedValue: data.estimatedValue ?? null,
-      currency: data.currency ?? null, jurisdictionId: data.jurisdictionId ?? null,
-      associateId: data.associateId ?? null, remediationPlanId: data.remediationPlanId ?? null,
-      capaId: data.capaId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.antiBriberyInvestigation.create({
+      data: tenantData(ctx, {
+        code, investigationId: data.investigationId, speakUpReportId: data.speakUpReportId ?? null,
+        breachId: data.breachId ?? null, allegationType: data.allegationType,
+        involvesPublicOfficial: data.involvesPublicOfficial, estimatedValue: data.estimatedValue ?? null,
+        currency: data.currency ?? null, jurisdictionId: data.jurisdictionId ?? null,
+        associateId: data.associateId ?? null, remediationPlanId: data.remediationPlanId ?? null,
+        capaId: data.capaId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, investigationId: data.investigationId }, extra: { event: "link_anti_bribery_investigation" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, investigationId: data.investigationId }, extra: { event: "link_anti_bribery_investigation" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -881,14 +938,16 @@ export async function closeAntiBriberyInvestigation(
   const row = await prisma.antiBriberyInvestigation.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!row) throw new Error("Investigación antisoborno no encontrada.");
   const status = input.status ?? "CLOSED";
-  await prisma.antiBriberyInvestigation.update({
-    where: { id },
-    data: {
-      status, outcome: input.outcome, sanctionsImposed: input.sanctionsImposed ?? row.sanctionsImposed,
-      closedAt: new Date(),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.antiBriberyInvestigation.update({
+      where: { id },
+      data: {
+        status, outcome: input.outcome, sanctionsImposed: input.sanctionsImposed ?? row.sanctionsImposed,
+        closedAt: new Date(),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status, outcome: input.outcome }, extra: { event: "close_anti_bribery_investigation" } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: row.status }, after: { status, outcome: input.outcome }, extra: { event: "close_anti_bribery_investigation" } });
   revalidate();
   return { id, status, outcome: input.outcome };
 }

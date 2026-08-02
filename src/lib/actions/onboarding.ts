@@ -10,6 +10,7 @@ import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/stand
 import { getStandardSpec } from "@/lib/standards-catalog";
 import { parseInput } from "@/lib/validation/common";
 import { onboardingSetupSchema } from "@/lib/validation/workflows";
+import { installAllPacks, syncCommercialPackEntitlements } from "@/lib/standard-packs";
 
 const STANDARD_CODES = ["ISO_9001", "ISO_27001"] as const;
 type StandardCode = (typeof STANDARD_CODES)[number];
@@ -103,6 +104,14 @@ export async function saveOnboardingSetup(input: {
   });
 
   await ensureOrganizationDefaults(ctx.organization.id);
+  await installAllPacks();
+
+  const entitlementSync = await syncCommercialPackEntitlements({
+    organizationId: ctx.organization.id,
+    plan: ctx.organization.plan,
+    trialEndsAt: ctx.organization.trialEndsAt,
+    grantedById: ctx.user.id,
+  });
 
   for (const code of standards) {
     const spec = getStandardSpec(code);
@@ -139,13 +148,13 @@ export async function saveOnboardingSetup(input: {
     }),
   ));
 
-  await track(ctx.organization.id, ctx.user.id, "onboarding_setup_saved", 4, { standards, goal });
+  await track(ctx.organization.id, ctx.user.id, "onboarding_setup_saved", 4, { standards, goal, packEntitlements: entitlementSync.enabledCodes });
   await logAuditEvent({
     ctx,
     action: "update",
     module: "onboarding",
     recordId: ctx.organization.id,
-    after: { organizationName, standards, goal, onboardingStatus: OnboardingStatus.IN_PROGRESS },
+    after: { organizationName, standards, goal, onboardingStatus: OnboardingStatus.IN_PROGRESS, packEntitlements: entitlementSync.enabledCodes },
   });
 
   revalidatePath("/app/onboarding");

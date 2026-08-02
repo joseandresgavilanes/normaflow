@@ -15,9 +15,10 @@ export const iso37001Pack: StandardPackInput = {
   code: "PACK_ISO_37001",
   name: "ISO 37001 — Antisoborno",
   version: "2016.1",
+  lifecycleStatus: "DEVELOPMENT",
   description: "Paquete normativo ISO 37001:2016 (Sistema de Gestión Antisoborno), extensión del SGC ISO 37301.",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "training", "suppliers", "risks",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "training", "suppliers", "risks",
     "compliance", "speakup", "antibribery",
   ],
   featureFlags: {

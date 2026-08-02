@@ -10,8 +10,9 @@ export const iso9001Pack: StandardPackInput = {
   code: "PACK_ISO_9001",
   name: "ISO 9001 — Calidad",
   version: "2015.1",
+  lifecycleStatus: "LIVE",
   description: "Paquete normativo ISO 9001:2015 (Gestión de la Calidad).",
-  requiredModules: ["gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review"],
+  requiredModules: ["gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review"],
   featureFlags: { qualityManagement: true },
   editions: [
     {

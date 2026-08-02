@@ -47,7 +47,7 @@ export async function getEnergyPayload() {
       take: 200,
     }),
     prisma.relevantVariable.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
-    prisma.staticFactor.findMany({ where: { organizationId, active: true }, orderBy: { code: "asc" } }),
+    prisma.staticFactor.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.energyOpportunity.findMany({
       where: { organizationId },
       include: { seu: { select: { code: true } }, _count: { select: { actionPlans: true } } },
@@ -112,6 +112,7 @@ export async function getEnergyPayload() {
     can: {
       create: auth.can("energy:create"),
       update: auth.can("energy:update"),
+      delete: auth.can("energy:delete"),
       approve: auth.can("energy:approve") || auth.can("energy:update"),
       export: auth.can("energy:export"),
     },

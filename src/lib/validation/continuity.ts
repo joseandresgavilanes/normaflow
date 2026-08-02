@@ -1,8 +1,13 @@
 import { z } from "zod";
 import { ContinuityPlanStatus, ContinuityTestOutcome, ContinuityTestStatus, ContinuityTestType, ImprovementActionStatus } from "@prisma/client";
-import { idSchema, optionalDateInputSchema, optionalText, shortText } from "./common";
+import { idSchema, optionalDateInputSchema, optionalNullableText, optionalText, shortText } from "./common";
 
-export const CONTINUITY_REPORT_TYPES = ["continuity-plans", "bcp-dr-tests"] as const;
+export const CONTINUITY_REPORT_TYPES = [
+  "continuity-plans", "bcp-dr-tests",
+  "bcm-bia", "bcm-critical-processes", "bcm-rto-rpo", "bcm-priority-products", "bcm-dependencies",
+  "bcm-strategies", "bcm-plans", "bcm-plan-versions", "bcm-crisis-teams", "bcm-activations",
+  "bcm-exercises", "bcm-gaps", "bcm-audit-package",
+] as const;
 
 const minutes = z.number().int().min(0).max(1_000_000).optional().nullable();
 
@@ -17,7 +22,7 @@ export const bcpSchema = z.object({
   dependencies: optionalText(8000),
   nextReviewDate: optionalDateInputSchema,
 }).strict();
-export const bcpUpdateSchema = bcpSchema.extend({ id: idSchema });
+export const bcpUpdateSchema = bcpSchema.partial().extend({ id: idSchema });
 
 export const drpSchema = z.object({
   code: shortText(60),
@@ -31,7 +36,7 @@ export const drpSchema = z.object({
   dependencies: optionalText(8000),
   nextReviewDate: optionalDateInputSchema,
 }).strict();
-export const drpUpdateSchema = drpSchema.extend({ id: idSchema });
+export const drpUpdateSchema = drpSchema.partial().extend({ id: idSchema });
 
 export const bcpProcessSchema = z.object({ planId: idSchema, processId: idSchema, rtoMinutes: minutes, rpoMinutes: minutes }).strict();
 export const scenarioSchema = z.object({ planId: idSchema, title: shortText(200), description: optionalText(8000), type: optionalText(120) }).strict();
@@ -81,6 +86,7 @@ export const biaSchema = z.object({
   methodology: optionalText(8000),
   version: shortText(20).default("1.0"),
   ownerId: idSchema.optional().nullable(),
+  evidenceId: idSchema.optional().nullable(),
   performedAt: optionalDateInputSchema,
   nextReviewDate: optionalDateInputSchema,
 }).strict();
@@ -120,12 +126,13 @@ export const productPrioritySchema = z.object({
   customersAffected: z.number().int().min(0).optional().nullable(),
   notes: optionalText(4000),
 }).strict();
+export const productPriorityUpdateSchema = productPrioritySchema.partial().extend({ id: idSchema });
 
 export const dependencySchema = z.object({
   activityId: idSchema,
   type: z.enum(["PEOPLE", "FACILITY", "TECHNOLOGY", "SUPPLIER", "DATA", "EQUIPMENT", "UTILITY", "PROCESS", "OTHER"]),
   name: shortText(200),
-  description: optionalText(4000),
+  description: optionalNullableText(4000),
   processId: idSchema.optional().nullable(),
   assetId: idSchema.optional().nullable(),
   supplierId: idSchema.optional().nullable(),
@@ -133,26 +140,28 @@ export const dependencySchema = z.object({
   locationId: idSchema.optional().nullable(),
   criticality: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
   maxOutageMinutes: minutes,
-  alternative: optionalText(4000),
+  alternative: optionalNullableText(4000),
   singlePointOfFailure: z.boolean().default(false),
-  notes: optionalText(4000),
+  notes: optionalNullableText(4000),
 }).strict();
+export const dependencyUpdateSchema = dependencySchema.partial().extend({ id: idSchema });
 
 export const resourceSchema = z.object({
   activityId: idSchema,
   type: z.enum(["PEOPLE", "FACILITY", "TECHNOLOGY", "EQUIPMENT", "DATA", "SUPPLIER", "FINANCIAL", "TRANSPORT", "OTHER"]),
   name: shortText(200),
-  description: optionalText(4000),
+  description: optionalNullableText(4000),
   normalQuantity: z.number().int().min(0).optional().nullable(),
   minimumQuantity: z.number().int().min(0).optional().nullable(),
   unit: optionalText(40),
   availableAt: optionalText(400),
-  alternativeResource: optionalText(4000),
+  alternativeResource: optionalNullableText(4000),
   leadTimeMinutes: minutes,
   supplierId: idSchema.optional().nullable(),
   assetId: idSchema.optional().nullable(),
-  notes: optionalText(4000),
+  notes: optionalNullableText(4000),
 }).strict();
+export const resourceUpdateSchema = resourceSchema.partial().extend({ id: idSchema });
 
 export const strategySchema = z.object({
   code: shortText(60),
@@ -168,6 +177,7 @@ export const strategySchema = z.object({
   resourcesNeeded: optionalText(4000),
   notes: optionalText(4000),
 }).strict();
+export const strategyUpdateSchema = strategySchema.partial().extend({ id: idSchema });
 export const strategyStatusSchema = z.object({
   id: idSchema,
   status: z.enum(["PROPOSED", "APPROVED", "IMPLEMENTED", "REJECTED", "RETIRED"]),
@@ -187,6 +197,7 @@ export const recoveryProcedureSchema = z.object({
   order: z.number().int().min(0).default(0),
   version: shortText(20).default("1.0"),
 }).strict();
+export const recoveryProcedureUpdateSchema = recoveryProcedureSchema.partial().extend({ id: idSchema });
 
 export const crisisTeamSchema = z.object({
   code: shortText(60),
@@ -198,6 +209,7 @@ export const crisisTeamSchema = z.object({
   activationRule: optionalText(4000),
   meetingPoint: optionalText(400),
 }).strict();
+export const crisisTeamUpdateSchema = crisisTeamSchema.partial().extend({ id: idSchema });
 
 export const crisisContactSchema = z.object({
   teamId: idSchema,
@@ -215,6 +227,7 @@ export const crisisContactSchema = z.object({
   availability: optionalText(400),
   notes: optionalText(2000),
 }).strict();
+export const crisisContactUpdateSchema = crisisContactSchema.partial().extend({ id: idSchema });
 
 export const communicationNodeSchema = z.object({
   teamId: idSchema,
@@ -227,6 +240,7 @@ export const communicationNodeSchema = z.object({
   order: z.number().int().min(0).default(0),
   maxDelayMinutes: minutes,
 }).strict();
+export const communicationNodeUpdateSchema = communicationNodeSchema.partial().extend({ id: idSchema });
 
 export const planVersionSchema = z.object({
   planId: idSchema,

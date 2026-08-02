@@ -3,25 +3,40 @@ import { prisma } from "@/lib/prisma";
 import { requireAuthorization } from "@/lib/permissions/server";
 import { computeSafetyIndicators } from "@/lib/safety/indicators";
 import { INCIDENT_FLOW } from "@/lib/safety/incident-workflow";
+import { decryptHealthField } from "@/lib/crypto/field-encryption";
 
 export type SafetyPayload = Awaited<ReturnType<typeof getSafetyPayload>>;
+export type HealthSurveillancePayload = Awaited<ReturnType<typeof getHealthSurveillancePayload>>;
 
-/** Live payload for the /app/safety module (ISO 45001). `hoursWorked` scopes the rate indices. */
+/**
+ * Live payload for the /app/safety module (ISO 45001). `hoursWorked` scopes
+ * the rate indices. Deliberately does NOT include per-worker health
+ * surveillance rows — that data is health/medical information about named
+ * individuals and requires `safety-sensitive:read`, not the generic
+ * `safety:read` every CONTRIBUTOR has. Call `getHealthSurveillancePayload`
+ * separately, gated on its own permission. Only the count (never the
+ * fitness/content of any specific worker) surfaces here, and only when the
+ * caller actually holds the sensitive permission.
+ */
 export async function getSafetyPayload(hoursWorked = 0) {
   const auth = await requireAuthorization("safety:read");
   const organizationId = auth.ctx.organization.id;
   const now = new Date();
   const periodStart = new Date(now.getFullYear(), 0, 1);
+  const canSeeSensitive = auth.can("safety-sensitive:read");
 
-  const [hazards, incidents, inspections, ppeItems, permits, drills, surveillance, contractors, members,
+  const [hazards, assessments, consultations, incidents, inspections, ppeItems, ppeAssignments, permits, drills, surveillanceCount, contractors, members,
     accidents, accidentsLostTime, nearMisses, lostDaysAgg, inspectionsInYear, overdue] = await Promise.all([
     prisma.occupationalHazard.findMany({ where: { organizationId }, include: { assessments: { orderBy: { assessedAt: "desc" }, take: 1 } }, orderBy: { code: "asc" } }),
+    prisma.occupationalRiskAssessment.findMany({ where: { organizationId }, include: { hazard: { select: { code: true, activity: true, hazard: true } } }, orderBy: { assessedAt: "desc" }, take: 200 }),
+    prisma.workerConsultation.findMany({ where: { organizationId }, orderBy: { heldAt: "desc" }, take: 100 }),
     prisma.occupationalIncident.findMany({ where: { organizationId }, orderBy: { occurredAt: "desc" }, take: 200 }),
     prisma.safetyInspection.findMany({ where: { organizationId }, orderBy: { inspectedAt: "desc" }, take: 100 }),
     prisma.pPEItem.findMany({ where: { organizationId }, include: { _count: { select: { assignments: true } } }, orderBy: { code: "asc" } }),
+    prisma.pPEAssignment.findMany({ where: { organizationId }, include: { ppeItem: { select: { code: true, name: true } } }, orderBy: { deliveredAt: "desc" }, take: 200 }),
     prisma.permitToWork.findMany({ where: { organizationId }, orderBy: { createdAt: "desc" }, take: 100 }),
     prisma.emergencyDrill.findMany({ where: { organizationId }, orderBy: { drillDate: "desc" }, take: 50 }),
-    prisma.occupationalHealthSurveillance.findMany({ where: { organizationId }, orderBy: { nextReviewDate: "asc" }, take: 100 }),
+    canSeeSensitive ? prisma.occupationalHealthSurveillance.count({ where: { organizationId } }) : Promise.resolve(null),
     prisma.contractorSafetyAssessment.findMany({ where: { organizationId }, orderBy: { code: "asc" }, take: 100 }),
     prisma.user.findMany({ where: { memberships: { some: { organizationId } } }, select: { id: true, name: true } }),
     prisma.occupationalIncident.count({ where: { organizationId, occurredAt: { gte: periodStart }, type: "ACCIDENT" } }),
@@ -42,18 +57,25 @@ export async function getSafetyPayload(hoursWorked = 0) {
 
   return {
     canManage: auth.can("safety:create"),
+    canUpdate: auth.can("safety:update"),
+    canSeeSensitive,
+    canSensitiveCreate: auth.can("safety-sensitive:create"),
+    canSensitiveUpdate: auth.can("safety-sensitive:update"),
+    canSensitiveDelete: auth.can("safety-sensitive:delete"),
     members,
     indicators,
-    hazards: hazards.map((h) => { const a = h.assessments[0]; return { id: h.id, code: h.code, activity: h.activity, task: h.task, hazard: h.hazard, category: h.category, exposedWorkers: h.exposedWorkers, inherentLevel: a?.inherentLevel ?? null, residualLevel: a?.residualLevel ?? null, acceptability: a?.acceptability ?? null }; }),
-    incidents: incidents.map((i) => ({ id: i.id, code: i.code, type: i.type, severity: i.severity, title: i.title, occurredAt: i.occurredAt, status: i.status, lostDays: i.lostDays, responsibleId: i.responsibleId })),
+    hazards: hazards.map((h) => { const a = h.assessments[0]; return { ...h, assessment: a ?? null, inherentLevel: a?.inherentLevel ?? null, residualLevel: a?.residualLevel ?? null, acceptability: a?.acceptability ?? null }; }),
+    assessments: assessments.map((a) => ({ ...a })),
+    consultations: consultations.map((c) => ({ ...c })),
+    incidents: incidents.map((i) => ({ ...i })),
     incidentFlow: INCIDENT_FLOW,
     incidentsByStatus: byStatus,
-    inspections: inspections.map((i) => ({ id: i.id, code: i.code, type: i.type, area: i.area, inspectedAt: i.inspectedAt, findings: i.findings })),
-    ppeItems: ppeItems.map((p) => ({ id: p.id, code: p.code, name: p.name, ppeType: p.ppeType, technicalStandard: p.technicalStandard, lifespanMonths: p.lifespanMonths, assignments: p._count.assignments })),
-    permits: permits.map((p) => ({ id: p.id, code: p.code, workType: p.workType, area: p.area, status: p.status, validTo: p.validTo })),
-    drills: drills.map((d) => ({ id: d.id, code: d.code, scenario: d.scenario, outcome: d.outcome, responseTimeMinutes: d.responseTimeMinutes, drillDate: d.drillDate })),
-    surveillance: surveillance.map((s) => ({ id: s.id, code: s.code, workerName: s.workerName, fitness: s.fitness, nextReviewDate: s.nextReviewDate })),
-    contractors: contractors.map((c) => ({ id: c.id, code: c.code, contractorName: c.contractorName, outcome: c.outcome, incidents: c.incidents, nextReviewDate: c.nextReviewDate })),
+    inspections: inspections.map((i) => ({ ...i })),
+    ppeItems: ppeItems.map((p) => ({ ...p, assignments: p._count.assignments })),
+    ppeAssignments: ppeAssignments.map((a) => ({ ...a })),
+    permits: permits.map((p) => ({ ...p })),
+    drills: drills.map((d) => ({ ...d })),
+    contractors: contractors.map((c) => ({ ...c })),
     summary: {
       hazards: hazards.length,
       criticalRisks: hazards.filter((h) => { const a = h.assessments[0]; return a && (a.residualLevel === "HIGH" || a.residualLevel === "CRITICAL" || a.acceptability === "NOT_ACCEPTABLE"); }).length,
@@ -61,6 +83,35 @@ export async function getSafetyPayload(hoursWorked = 0) {
       nearMisses,
       permits: permits.filter((p) => p.status === "ACTIVE").length,
       overdueActions: overdue,
+      surveillance: surveillanceCount,
     },
+  };
+}
+
+/**
+ * Sensitive: health/medical surveillance data about named workers.
+ * Requires `safety-sensitive:read` — never folded into `getSafetyPayload`.
+ * Decrypts `exposure`/`protocol`/`restrictions` on read.
+ */
+export async function getHealthSurveillancePayload() {
+  const auth = await requireAuthorization("safety-sensitive:read");
+  const organizationId = auth.ctx.organization.id;
+
+  const rows = await prisma.occupationalHealthSurveillance.findMany({
+    where: { organizationId },
+    orderBy: { nextReviewDate: "asc" },
+    take: 200,
+  });
+
+  return {
+    canManage: auth.can("safety-sensitive:create"),
+    canUpdate: auth.can("safety-sensitive:update"),
+    canDelete: auth.can("safety-sensitive:delete"),
+    records: rows.map((s) => ({
+      id: s.id, code: s.code, workerName: s.workerName, personnelId: s.personnelId, positionId: s.positionId,
+      exposure: decryptHealthField(s.exposure), protocol: decryptHealthField(s.protocol),
+      fitness: s.fitness, restrictions: decryptHealthField(s.restrictions),
+      examinedAt: s.examinedAt, nextReviewDate: s.nextReviewDate,
+    })),
   };
 }

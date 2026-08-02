@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { writeAuditLog } from "@/lib/audit-log";
 import { notifyUser } from "@/lib/notify";
 import { assessImpact, classifySystem } from "@/lib/aims/classification";
 import { computeDataQuality, isDatasetFitForTraining } from "@/lib/aims/data-quality";
@@ -18,7 +18,7 @@ import { assertProductionApproval, assertRetirement, assertSystemTransition } fr
 import { defaultHigherIsBetter, evaluateMetric } from "@/lib/aims/monitoring";
 import { computeAIRisk, assertRiskAcceptance } from "@/lib/aims/risk";
 import { nextLineageStep } from "@/lib/aims/lineage";
-import type { AIHumanReviewStatus, AIIncidentStatus, AISystemStatus } from "@prisma/client";
+import type { AIHumanReviewStatus, AIIncidentStatus, AISystemStatus, Prisma } from "@prisma/client";
 
 const MODULE = "aims";
 const revalidate = () => {
@@ -89,17 +89,20 @@ export async function createAISystem(input: z.infer<typeof systemSchema>) {
   const data = systemSchema.parse(input);
   await assertRefInOrg(ctx.organization.id, { processId: data.processId, documentId: data.documentId, supplierId: data.supplierId });
   const code = data.code ?? await nextCode("IA", prisma.aISystem.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aISystem.create({
-    data: tenantData(ctx, {
-      code, name: data.name, ownerId: data.ownerId ?? null, provider: data.provider ?? null, providerType: data.providerType,
-      supplierId: data.supplierId ?? null, purpose: data.purpose, users: data.users ?? null, affectedGroups: data.affectedGroups ?? null,
-      context: data.context ?? null, criticality: data.criticality, autonomy: data.autonomy, status: "PLANNED",
-      classification: classifySystem(data.criticality, "NOT_CLASSIFIED"),
-      processId: data.processId ?? null, documentId: data.documentId ?? null,
-      nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const system = await tx.aISystem.create({
+      data: tenantData(ctx, {
+        code, name: data.name, ownerId: data.ownerId ?? null, provider: data.provider ?? null, providerType: data.providerType,
+        supplierId: data.supplierId ?? null, purpose: data.purpose, users: data.users ?? null, affectedGroups: data.affectedGroups ?? null,
+        context: data.context ?? null, criticality: data.criticality, autonomy: data.autonomy, status: "PLANNED",
+        classification: classifySystem(data.criticality, "NOT_CLASSIFIED"),
+        processId: data.processId ?? null, documentId: data.documentId ?? null,
+        nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: system.id, after: { code, name: data.name, criticality: data.criticality }, extra: { event: "create_ai_system" } });
+    return system;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, name: data.name, criticality: data.criticality }, extra: { event: "create_ai_system" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -110,24 +113,26 @@ export async function updateAISystem(id: string, input: Partial<z.infer<typeof s
   if (!existing) throw new Error("Sistema de IA no encontrado.");
   const data = systemSchema.partial().parse(input);
   await assertRefInOrg(ctx.organization.id, { processId: data.processId, documentId: data.documentId, supplierId: data.supplierId });
-  await prisma.aISystem.update({ where: { id }, data: {
-    ...(data.name !== undefined ? { name: data.name } : {}),
-    ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
-    ...(data.provider !== undefined ? { provider: data.provider } : {}),
-    ...(data.providerType !== undefined ? { providerType: data.providerType } : {}),
-    ...(data.supplierId !== undefined ? { supplierId: data.supplierId } : {}),
-    ...(data.purpose !== undefined ? { purpose: data.purpose } : {}),
-    ...(data.users !== undefined ? { users: data.users } : {}),
-    ...(data.affectedGroups !== undefined ? { affectedGroups: data.affectedGroups } : {}),
-    ...(data.context !== undefined ? { context: data.context } : {}),
-    // La criticidad puede elevar la clasificación vigente, nunca rebajarla.
-    ...(data.criticality !== undefined ? { criticality: data.criticality, classification: classifySystem(data.criticality, existing.classification) } : {}),
-    ...(data.autonomy !== undefined ? { autonomy: data.autonomy } : {}),
-    ...(data.processId !== undefined ? { processId: data.processId } : {}),
-    ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
-    ...(data.nextReviewDate !== undefined ? { nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null } : {}),
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: data, extra: { event: "update_ai_system" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aISystem.update({ where: { id }, data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+      ...(data.provider !== undefined ? { provider: data.provider } : {}),
+      ...(data.providerType !== undefined ? { providerType: data.providerType } : {}),
+      ...(data.supplierId !== undefined ? { supplierId: data.supplierId } : {}),
+      ...(data.purpose !== undefined ? { purpose: data.purpose } : {}),
+      ...(data.users !== undefined ? { users: data.users } : {}),
+      ...(data.affectedGroups !== undefined ? { affectedGroups: data.affectedGroups } : {}),
+      ...(data.context !== undefined ? { context: data.context } : {}),
+      // La criticidad puede elevar la clasificación vigente, nunca rebajarla.
+      ...(data.criticality !== undefined ? { criticality: data.criticality, classification: classifySystem(data.criticality, existing.classification) } : {}),
+      ...(data.autonomy !== undefined ? { autonomy: data.autonomy } : {}),
+      ...(data.processId !== undefined ? { processId: data.processId } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
+      ...(data.nextReviewDate !== undefined ? { nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: data, extra: { event: "update_ai_system" } });
+  });
   revalidate();
   return { id };
 }
@@ -151,8 +156,10 @@ export async function approveAISystem(id: string, note?: string) {
   if (classification === "UNACCEPTABLE") throw new Error("Un sistema clasificado como riesgo inaceptable no puede aprobarse: debe descartarse o rediseñarse.");
   if (classification === "HIGH" && !oversight) throw new Error("Un sistema de riesgo alto requiere al menos un control de supervisión humana activo.");
 
-  await prisma.aISystem.update({ where: { id }, data: { status: "APPROVED", classification, approvedById: ctx.user.id, approvedAt: new Date() } });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: system.status }, after: { status: "APPROVED", classification }, extra: { event: "approve_ai_system", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aISystem.update({ where: { id }, data: { status: "APPROVED", classification, approvedById: ctx.user.id, approvedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: system.status }, after: { status: "APPROVED", classification }, extra: { event: "approve_ai_system", note } });
+  });
   if (system.ownerId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: system.ownerId, title: `Sistema de IA aprobado: ${system.code}`, body: `"${system.name}" fue aprobado (clase ${classification}).`, type: "SUCCESS", link: "/app/aims", idempotencyKey: `ai-system:${id}:approved` });
   }
@@ -183,22 +190,24 @@ export async function setAISystemStatus(id: string, input: z.infer<typeof system
     assertRetirement({ reason: data.retirementReason ?? system.retirementReason, plan: data.retirementPlan ?? system.retirementPlan });
   }
 
-  await prisma.aISystem.update({ where: { id }, data: {
-    status: data.to,
-    ...(data.to === "IN_PRODUCTION" ? { deployedAt: system.deployedAt ?? new Date() } : {}),
-    ...(data.to === "RETIRED"
-      ? {
-          retiredAt: new Date(), active: false,
-          ...(data.retirementReason !== undefined ? { retirementReason: data.retirementReason } : {}),
-          ...(data.retirementPlan !== undefined ? { retirementPlan: data.retirementPlan } : {}),
-        }
-      : {}),
-  } });
-  // El retiro del sistema arrastra sus modelos: ninguno puede quedar en producción.
-  if (data.to === "RETIRED") {
-    await prisma.modelVersion.updateMany({ where: { organizationId: ctx.organization.id, systemId: id, stage: { notIn: ["RETIRED"] } }, data: { stage: "RETIRED", retiredAt: new Date() } });
-  }
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { status: system.status }, after: { status: data.to }, extra: { event: "ai_system_status", note: data.note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aISystem.update({ where: { id }, data: {
+      status: data.to,
+      ...(data.to === "IN_PRODUCTION" ? { deployedAt: system.deployedAt ?? new Date() } : {}),
+      ...(data.to === "RETIRED"
+        ? {
+            retiredAt: new Date(), active: false,
+            ...(data.retirementReason !== undefined ? { retirementReason: data.retirementReason } : {}),
+            ...(data.retirementPlan !== undefined ? { retirementPlan: data.retirementPlan } : {}),
+          }
+        : {}),
+    } });
+    // El retiro del sistema arrastra sus modelos: ninguno puede quedar en producción.
+    if (data.to === "RETIRED") {
+      await tx.modelVersion.updateMany({ where: { organizationId: ctx.organization.id, systemId: id, stage: { notIn: ["RETIRED"] } }, data: { stage: "RETIRED", retiredAt: new Date() } });
+    }
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { status: system.status }, after: { status: data.to }, extra: { event: "ai_system_status", note: data.note } });
+  });
   revalidate();
   return { id, status: data.to };
 }
@@ -229,16 +238,19 @@ export async function createAIUseCase(input: z.infer<typeof useCaseSchema>) {
   if (!system) throw new Error("El sistema de IA no pertenece a la organización.");
   await assertRefInOrg(ctx.organization.id, { processId: data.processId });
   const code = data.code ?? await nextCode("IAU", prisma.aIUseCase.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIUseCase.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId, title: data.title, objective: data.objective,
-      supportedDecisions: data.supportedDecisions ?? null, decisionAutonomy: data.decisionAutonomy,
-      affectedPeople: data.affectedPeople ?? null, affectedCount: data.affectedCount ?? null,
-      impact: data.impact ?? null, constraints: data.constraints ?? null, prohibitedUses: data.prohibitedUses ?? null,
-      processId: data.processId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const useCase = await tx.aIUseCase.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId, title: data.title, objective: data.objective,
+        supportedDecisions: data.supportedDecisions ?? null, decisionAutonomy: data.decisionAutonomy,
+        affectedPeople: data.affectedPeople ?? null, affectedCount: data.affectedCount ?? null,
+        impact: data.impact ?? null, constraints: data.constraints ?? null, prohibitedUses: data.prohibitedUses ?? null,
+        processId: data.processId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: useCase.id, after: { code, title: data.title }, extra: { event: "create_ai_use_case" } });
+    return useCase;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title }, extra: { event: "create_ai_use_case" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -292,25 +304,28 @@ export async function createImpactAssessment(input: z.infer<typeof assessmentSch
 
   const result = aggregate(data);
   const code = data.code ?? await nextCode("EIA", prisma.aIImpactAssessment.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIImpactAssessment.create({
-    data: tenantData(ctx, {
-      code, version: data.version, systemId: data.systemId, useCaseId: data.useCaseId ?? null, methodology: data.methodology ?? null,
-      rightsImpact: data.rightsImpact, rightsNote: data.rightsNote ?? null,
-      safetyImpact: data.safetyImpact, safetyNote: data.safetyNote ?? null,
-      privacyImpact: data.privacyImpact, privacyNote: data.privacyNote ?? null,
-      biasImpact: data.biasImpact, biasNote: data.biasNote ?? null,
-      transparencyImpact: data.transparencyImpact, transparencyNote: data.transparencyNote ?? null,
-      explainabilityImpact: data.explainabilityImpact, explainabilityNote: data.explainabilityNote ?? null,
-      oversightImpact: data.oversightImpact, oversightNote: data.oversightNote ?? null,
-      overallScore: result.overallScore, overallSeverity: result.overallSeverity,
-      classification: classifySystem(system.criticality, result.classification),
-      safeguards: data.safeguards ?? null, residualImpact: data.residualImpact ?? null,
-      assessorId: data.assessorId ?? ctx.user.id, assessedAt: new Date(), reviewStatus: "DRAFT",
-      evidenceId: data.evidenceId ?? null, documentId: data.documentId ?? null,
-      nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const assessment = await tx.aIImpactAssessment.create({
+      data: tenantData(ctx, {
+        code, version: data.version, systemId: data.systemId, useCaseId: data.useCaseId ?? null, methodology: data.methodology ?? null,
+        rightsImpact: data.rightsImpact, rightsNote: data.rightsNote ?? null,
+        safetyImpact: data.safetyImpact, safetyNote: data.safetyNote ?? null,
+        privacyImpact: data.privacyImpact, privacyNote: data.privacyNote ?? null,
+        biasImpact: data.biasImpact, biasNote: data.biasNote ?? null,
+        transparencyImpact: data.transparencyImpact, transparencyNote: data.transparencyNote ?? null,
+        explainabilityImpact: data.explainabilityImpact, explainabilityNote: data.explainabilityNote ?? null,
+        oversightImpact: data.oversightImpact, oversightNote: data.oversightNote ?? null,
+        overallScore: result.overallScore, overallSeverity: result.overallSeverity,
+        classification: classifySystem(system.criticality, result.classification),
+        safeguards: data.safeguards ?? null, residualImpact: data.residualImpact ?? null,
+        assessorId: data.assessorId ?? ctx.user.id, assessedAt: new Date(), reviewStatus: "DRAFT",
+        evidenceId: data.evidenceId ?? null, documentId: data.documentId ?? null,
+        nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: assessment.id, after: { code, severity: result.overallSeverity, classification: result.classification }, extra: { event: "create_impact_assessment" } });
+    return assessment;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, severity: result.overallSeverity, classification: result.classification }, extra: { event: "create_impact_assessment" } });
   revalidate();
   return { id: created.id, code, ...result };
 }
@@ -334,26 +349,28 @@ export async function updateImpactAssessment(id: string, input: Partial<z.infer<
     oversightImpact: data.oversightImpact ?? existing.oversightImpact,
   };
   const result = aggregate(merged);
-  await prisma.aIImpactAssessment.update({ where: { id }, data: {
-    ...merged,
-    ...(data.methodology !== undefined ? { methodology: data.methodology } : {}),
-    ...(data.rightsNote !== undefined ? { rightsNote: data.rightsNote } : {}),
-    ...(data.safetyNote !== undefined ? { safetyNote: data.safetyNote } : {}),
-    ...(data.privacyNote !== undefined ? { privacyNote: data.privacyNote } : {}),
-    ...(data.biasNote !== undefined ? { biasNote: data.biasNote } : {}),
-    ...(data.transparencyNote !== undefined ? { transparencyNote: data.transparencyNote } : {}),
-    ...(data.explainabilityNote !== undefined ? { explainabilityNote: data.explainabilityNote } : {}),
-    ...(data.oversightNote !== undefined ? { oversightNote: data.oversightNote } : {}),
-    ...(data.safeguards !== undefined ? { safeguards: data.safeguards } : {}),
-    ...(data.residualImpact !== undefined ? { residualImpact: data.residualImpact } : {}),
-    ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
-    ...(data.nextReviewDate !== undefined ? { nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null } : {}),
-    overallScore: result.overallScore, overallSeverity: result.overallSeverity,
-    classification: classifySystem(existing.system.criticality, result.classification),
-    assessedAt: new Date(),
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { severity: result.overallSeverity, classification: result.classification }, extra: { event: "update_impact_assessment" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIImpactAssessment.update({ where: { id }, data: {
+      ...merged,
+      ...(data.methodology !== undefined ? { methodology: data.methodology } : {}),
+      ...(data.rightsNote !== undefined ? { rightsNote: data.rightsNote } : {}),
+      ...(data.safetyNote !== undefined ? { safetyNote: data.safetyNote } : {}),
+      ...(data.privacyNote !== undefined ? { privacyNote: data.privacyNote } : {}),
+      ...(data.biasNote !== undefined ? { biasNote: data.biasNote } : {}),
+      ...(data.transparencyNote !== undefined ? { transparencyNote: data.transparencyNote } : {}),
+      ...(data.explainabilityNote !== undefined ? { explainabilityNote: data.explainabilityNote } : {}),
+      ...(data.oversightNote !== undefined ? { oversightNote: data.oversightNote } : {}),
+      ...(data.safeguards !== undefined ? { safeguards: data.safeguards } : {}),
+      ...(data.residualImpact !== undefined ? { residualImpact: data.residualImpact } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
+      ...(data.nextReviewDate !== undefined ? { nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null } : {}),
+      overallScore: result.overallScore, overallSeverity: result.overallSeverity,
+      classification: classifySystem(existing.system.criticality, result.classification),
+      assessedAt: new Date(),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { severity: result.overallSeverity, classification: result.classification }, extra: { event: "update_impact_assessment" } });
+  });
   revalidate();
   return { id, ...result };
 }
@@ -395,19 +412,22 @@ export async function createAIRisk(input: z.infer<typeof riskSchema>) {
 
   const r = computeAIRisk({ likelihood: data.likelihood, impact: data.impact, controlEffectiveness: data.controlEffectiveness });
   const code = data.code ?? await nextCode("IAR", prisma.aIRisk.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIRisk.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId ?? null, title: data.title, category: data.category, source: data.source ?? null,
-      description: data.description ?? null, affectedParties: data.affectedParties ?? null,
-      likelihood: data.likelihood, impact: data.impact, inherentScore: r.inherentScore, inherentLevel: r.inherentLevel,
-      existingControls: data.existingControls ?? null, controlEffectiveness: data.controlEffectiveness ?? null,
-      residualScore: r.residualScore, residualLevel: r.residualLevel, acceptability: r.acceptability,
-      treatment: data.treatment, treatmentPlan: data.treatmentPlan ?? null, ownerId: data.ownerId ?? null,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null, riskId: data.riskId ?? null, controlId: data.controlId ?? null,
-      capaId: data.capaId ?? null, evidenceId: data.evidenceId ?? null, status: "OPEN", createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const risk = await tx.aIRisk.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId ?? null, title: data.title, category: data.category, source: data.source ?? null,
+        description: data.description ?? null, affectedParties: data.affectedParties ?? null,
+        likelihood: data.likelihood, impact: data.impact, inherentScore: r.inherentScore, inherentLevel: r.inherentLevel,
+        existingControls: data.existingControls ?? null, controlEffectiveness: data.controlEffectiveness ?? null,
+        residualScore: r.residualScore, residualLevel: r.residualLevel, acceptability: r.acceptability,
+        treatment: data.treatment, treatmentPlan: data.treatmentPlan ?? null, ownerId: data.ownerId ?? null,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null, riskId: data.riskId ?? null, controlId: data.controlId ?? null,
+        capaId: data.capaId ?? null, evidenceId: data.evidenceId ?? null, status: "OPEN", createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: risk.id, after: { code, residualLevel: r.residualLevel, acceptability: r.acceptability }, extra: { event: "create_ai_risk" } });
+    return risk;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, residualLevel: r.residualLevel, acceptability: r.acceptability }, extra: { event: "create_ai_risk" } });
   revalidate();
   return { id: created.id, code, ...r };
 }
@@ -424,28 +444,30 @@ export async function updateAIRisk(id: string, input: Partial<z.infer<typeof ris
     impact: data.impact ?? existing.impact,
     controlEffectiveness: data.controlEffectiveness ?? existing.controlEffectiveness,
   });
-  await prisma.aIRisk.update({ where: { id }, data: {
-    ...(data.title !== undefined ? { title: data.title } : {}),
-    ...(data.category !== undefined ? { category: data.category } : {}),
-    ...(data.source !== undefined ? { source: data.source } : {}),
-    ...(data.description !== undefined ? { description: data.description } : {}),
-    ...(data.affectedParties !== undefined ? { affectedParties: data.affectedParties } : {}),
-    ...(data.likelihood !== undefined ? { likelihood: data.likelihood } : {}),
-    ...(data.impact !== undefined ? { impact: data.impact } : {}),
-    ...(data.existingControls !== undefined ? { existingControls: data.existingControls } : {}),
-    ...(data.controlEffectiveness !== undefined ? { controlEffectiveness: data.controlEffectiveness } : {}),
-    ...(data.treatment !== undefined ? { treatment: data.treatment } : {}),
-    ...(data.treatmentPlan !== undefined ? { treatmentPlan: data.treatmentPlan } : {}),
-    ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
-    ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
-    ...(data.riskId !== undefined ? { riskId: data.riskId } : {}),
-    ...(data.controlId !== undefined ? { controlId: data.controlId } : {}),
-    ...(data.capaId !== undefined ? { capaId: data.capaId } : {}),
-    ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    inherentScore: r.inherentScore, inherentLevel: r.inherentLevel,
-    residualScore: r.residualScore, residualLevel: r.residualLevel, acceptability: r.acceptability,
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { residualLevel: r.residualLevel, acceptability: r.acceptability }, extra: { event: "update_ai_risk" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIRisk.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.category !== undefined ? { category: data.category } : {}),
+      ...(data.source !== undefined ? { source: data.source } : {}),
+      ...(data.description !== undefined ? { description: data.description } : {}),
+      ...(data.affectedParties !== undefined ? { affectedParties: data.affectedParties } : {}),
+      ...(data.likelihood !== undefined ? { likelihood: data.likelihood } : {}),
+      ...(data.impact !== undefined ? { impact: data.impact } : {}),
+      ...(data.existingControls !== undefined ? { existingControls: data.existingControls } : {}),
+      ...(data.controlEffectiveness !== undefined ? { controlEffectiveness: data.controlEffectiveness } : {}),
+      ...(data.treatment !== undefined ? { treatment: data.treatment } : {}),
+      ...(data.treatmentPlan !== undefined ? { treatmentPlan: data.treatmentPlan } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+      ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
+      ...(data.riskId !== undefined ? { riskId: data.riskId } : {}),
+      ...(data.controlId !== undefined ? { controlId: data.controlId } : {}),
+      ...(data.capaId !== undefined ? { capaId: data.capaId } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      inherentScore: r.inherentScore, inherentLevel: r.inherentLevel,
+      residualScore: r.residualScore, residualLevel: r.residualLevel, acceptability: r.acceptability,
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { residualLevel: r.residualLevel, acceptability: r.acceptability }, extra: { event: "update_ai_risk" } });
+  });
   revalidate();
   return { id, ...r };
 }
@@ -456,8 +478,10 @@ export async function acceptAIRisk(id: string, rationale: string) {
   const risk = await prisma.aIRisk.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!risk) throw new Error("Riesgo de IA no encontrado.");
   assertRiskAcceptance(risk.acceptability, rationale, ctx.user.id);
-  await prisma.aIRisk.update({ where: { id }, data: { status: "ACCEPTED", treatment: "ACCEPT", acceptedById: ctx.user.id, acceptedAt: new Date(), acceptanceRationale: rationale } });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: risk.status }, after: { status: "ACCEPTED" }, extra: { event: "accept_ai_risk", rationale } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIRisk.update({ where: { id }, data: { status: "ACCEPTED", treatment: "ACCEPT", acceptedById: ctx.user.id, acceptedAt: new Date(), acceptanceRationale: rationale } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: risk.status }, after: { status: "ACCEPTED" }, extra: { event: "accept_ai_risk", rationale } });
+  });
   revalidate();
   return { id, status: "ACCEPTED" };
 }
@@ -496,18 +520,21 @@ export async function createDataset(input: z.infer<typeof datasetSchema>) {
     throw new Error("Un dataset con datos personales requiere declarar la base legal de tratamiento.");
   }
   const code = data.code ?? await nextCode("DS", prisma.dataset.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.dataset.create({
-    data: tenantData(ctx, {
-      code, name: data.name, purpose: data.purpose ?? null, ownerId: data.ownerId ?? null, stewardId: data.stewardId ?? null,
-      classification: data.classification, containsPersonalData: data.containsPersonalData,
-      personalDataCategories: data.personalDataCategories ?? null, containsSpecialCategories: data.containsSpecialCategories,
-      legalBasis: data.legalBasis, anonymization: data.anonymization ?? null, recordCount: data.recordCount ?? null,
-      featureCount: data.featureCount ?? null, periodCovered: data.periodCovered ?? null,
-      retentionMonths: data.retentionMonths ?? null, storageLocation: data.storageLocation ?? null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const dataset = await tx.dataset.create({
+      data: tenantData(ctx, {
+        code, name: data.name, purpose: data.purpose ?? null, ownerId: data.ownerId ?? null, stewardId: data.stewardId ?? null,
+        classification: data.classification, containsPersonalData: data.containsPersonalData,
+        personalDataCategories: data.personalDataCategories ?? null, containsSpecialCategories: data.containsSpecialCategories,
+        legalBasis: data.legalBasis, anonymization: data.anonymization ?? null, recordCount: data.recordCount ?? null,
+        featureCount: data.featureCount ?? null, periodCovered: data.periodCovered ?? null,
+        retentionMonths: data.retentionMonths ?? null, storageLocation: data.storageLocation ?? null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: dataset.id, after: { code, name: data.name, containsPersonalData: data.containsPersonalData }, extra: { event: "create_dataset" } });
+    return dataset;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, name: data.name, containsPersonalData: data.containsPersonalData }, extra: { event: "create_dataset" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -534,8 +561,10 @@ export async function assessDatasetQuality(datasetId: string, input: z.infer<typ
     representativeness: data.representativeness ?? dataset.representativeness,
   };
   const result = computeDataQuality(merged);
-  await prisma.dataset.update({ where: { id: datasetId }, data: { ...merged, qualityScore: result.qualityScore, qualityLevel: result.qualityLevel } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: datasetId, after: { qualityScore: result.qualityScore, qualityLevel: result.qualityLevel }, extra: { event: "assess_dataset_quality" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.dataset.update({ where: { id: datasetId }, data: { ...merged, qualityScore: result.qualityScore, qualityLevel: result.qualityLevel } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: datasetId, after: { qualityScore: result.qualityScore, qualityLevel: result.qualityLevel }, extra: { event: "assess_dataset_quality" } });
+  });
   revalidate();
   return { id: datasetId, ...result };
 }
@@ -559,14 +588,16 @@ export async function reviewDatasetBias(datasetId: string, input: z.infer<typeof
     completeness: dataset.completeness, accuracy: dataset.accuracy, consistency: dataset.consistency,
     timeliness: dataset.timeliness, representativeness,
   });
-  await prisma.dataset.update({ where: { id: datasetId }, data: {
-    biasReviewed: true, biasFindings: data.biasFindings ?? null,
-    underrepresentedGroups: data.underrepresentedGroups ?? null,
-    ...(data.representativeness !== undefined ? { representativeness: data.representativeness } : {}),
-    ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    qualityScore: quality.qualityScore, qualityLevel: quality.qualityLevel,
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: datasetId, after: { biasReviewed: true, representativeness }, extra: { event: "review_dataset_bias" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.dataset.update({ where: { id: datasetId }, data: {
+      biasReviewed: true, biasFindings: data.biasFindings ?? null,
+      underrepresentedGroups: data.underrepresentedGroups ?? null,
+      ...(data.representativeness !== undefined ? { representativeness: data.representativeness } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      qualityScore: quality.qualityScore, qualityLevel: quality.qualityLevel,
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: datasetId, after: { biasReviewed: true, representativeness }, extra: { event: "review_dataset_bias" } });
+  });
   revalidate();
   return { id: datasetId, fitForTraining: isDatasetFitForTraining({ qualityLevel: quality.qualityLevel, biasReviewed: true }) };
 }
@@ -597,17 +628,20 @@ export async function createDataSource(input: z.infer<typeof dataSourceSchema>) 
   if (!dataset) throw new Error("El dataset no pertenece a la organización.");
   await assertRefInOrg(ctx.organization.id, { supplierId: data.supplierId, evidenceId: data.evidenceId });
   const code = data.code ?? await nextCode("FTE", prisma.dataSource.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.dataSource.create({
-    data: tenantData(ctx, {
-      code, datasetId: data.datasetId, name: data.name, type: data.type, origin: data.origin ?? null,
-      provider: data.provider ?? null, supplierId: data.supplierId ?? null, license: data.license ?? null,
-      licenseVerified: data.licenseVerified, legalBasis: data.legalBasis, consentEvidence: data.consentEvidence ?? null,
-      collectedFrom: data.collectedFrom ? new Date(data.collectedFrom) : null,
-      collectedTo: data.collectedTo ? new Date(data.collectedTo) : null,
-      restrictions: data.restrictions ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const source = await tx.dataSource.create({
+      data: tenantData(ctx, {
+        code, datasetId: data.datasetId, name: data.name, type: data.type, origin: data.origin ?? null,
+        provider: data.provider ?? null, supplierId: data.supplierId ?? null, license: data.license ?? null,
+        licenseVerified: data.licenseVerified, legalBasis: data.legalBasis, consentEvidence: data.consentEvidence ?? null,
+        collectedFrom: data.collectedFrom ? new Date(data.collectedFrom) : null,
+        collectedTo: data.collectedTo ? new Date(data.collectedTo) : null,
+        restrictions: data.restrictions ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: source.id, after: { code, type: data.type }, extra: { event: "create_data_source" } });
+    return source;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, type: data.type }, extra: { event: "create_data_source" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -634,15 +668,18 @@ export async function addDataLineageStep(input: z.infer<typeof lineageSchema>) {
   await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId });
   const existing = await prisma.dataLineage.findMany({ where: { organizationId: ctx.organization.id, datasetId: data.datasetId }, select: { step: true } });
   const step = data.step ?? nextLineageStep(existing);
-  const created = await prisma.dataLineage.create({
-    data: tenantData(ctx, {
-      datasetId: data.datasetId, step, operation: data.operation, description: data.description ?? null,
-      inputRef: data.inputRef ?? null, outputRef: data.outputRef ?? null, tool: data.tool ?? null,
-      performedById: ctx.user.id, performedAt: data.performedAt ? new Date(data.performedAt) : new Date(),
-      reversible: data.reversible, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.dataLineage.create({
+      data: tenantData(ctx, {
+        datasetId: data.datasetId, step, operation: data.operation, description: data.description ?? null,
+        inputRef: data.inputRef ?? null, outputRef: data.outputRef ?? null, tool: data.tool ?? null,
+        performedById: ctx.user.id, performedAt: data.performedAt ? new Date(data.performedAt) : new Date(),
+        reversible: data.reversible, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { datasetId: data.datasetId, step, operation: data.operation }, extra: { event: "add_data_lineage" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { datasetId: data.datasetId, step, operation: data.operation }, extra: { event: "add_data_lineage" } });
   revalidate();
   return { id: created.id, step };
 }
@@ -682,18 +719,21 @@ export async function createModelVersion(input: z.infer<typeof modelSchema>) {
   }
   await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, evidenceId: data.evidenceId });
   const code = data.code ?? await nextCode("MOD", prisma.modelVersion.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.modelVersion.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId, modelName: data.modelName, version: data.version, algorithm: data.algorithm ?? null,
-      framework: data.framework ?? null, baseModel: data.baseModel ?? null, provider: data.provider ?? null,
-      trainingDatasetId: data.trainingDatasetId ?? null, trainingSummary: data.trainingSummary ?? null,
-      hyperparameters: data.hyperparameters ?? undefined, explainabilityMethod: data.explainabilityMethod ?? null,
-      explainabilityNote: data.explainabilityNote ?? null, limitations: data.limitations ?? null,
-      intendedUse: data.intendedUse ?? null, stage: "DEVELOPMENT", reviewStatus: "DRAFT",
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const model = await tx.modelVersion.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId, modelName: data.modelName, version: data.version, algorithm: data.algorithm ?? null,
+        framework: data.framework ?? null, baseModel: data.baseModel ?? null, provider: data.provider ?? null,
+        trainingDatasetId: data.trainingDatasetId ?? null, trainingSummary: data.trainingSummary ?? null,
+        hyperparameters: data.hyperparameters ?? undefined, explainabilityMethod: data.explainabilityMethod ?? null,
+        explainabilityNote: data.explainabilityNote ?? null, limitations: data.limitations ?? null,
+        intendedUse: data.intendedUse ?? null, stage: "DEVELOPMENT", reviewStatus: "DRAFT",
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: model.id, after: { code, modelName: data.modelName, version: data.version }, extra: { event: "create_model_version" } });
+    return model;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, modelName: data.modelName, version: data.version }, extra: { event: "create_model_version" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -742,26 +782,29 @@ export async function createModelEvaluation(input: z.infer<typeof evaluationSche
     throw new Error("Una evaluación aprobada con condiciones debe documentar cuáles son.");
   }
   const code = data.code ?? await nextCode("EVM", prisma.modelEvaluation.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.modelEvaluation.create({
-    data: tenantData(ctx, {
-      code, modelVersionId: data.modelVersionId, datasetId: data.datasetId ?? null, evaluatorId: ctx.user.id,
-      evaluatedAt: data.evaluatedAt ? new Date(data.evaluatedAt) : new Date(),
-      accuracy: data.accuracy ?? null, precision: data.precision ?? null, recall: data.recall ?? null,
-      f1Score: data.f1Score ?? null, aucRoc: data.aucRoc ?? null, errorRate: data.errorRate ?? null,
-      fairnessMetric: data.fairnessMetric ?? null, fairnessScore: data.fairnessScore ?? null,
-      biasDetected: data.biasDetected, biasGroups: data.biasGroups ?? null, disparityRatio: data.disparityRatio ?? null,
-      robustness: data.robustness ?? null, adversarialTested: data.adversarialTested,
-      explainabilityAssessed: data.explainabilityAssessed, explainabilityNote: data.explainabilityNote ?? null,
-      thresholds: data.thresholds ?? undefined, outcome: data.outcome, findings: data.findings ?? null,
-      conditions: data.conditions ?? null, capaId: data.capaId ?? null, evidenceId: data.evidenceId ?? null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const evaluation = await tx.modelEvaluation.create({
+      data: tenantData(ctx, {
+        code, modelVersionId: data.modelVersionId, datasetId: data.datasetId ?? null, evaluatorId: ctx.user.id,
+        evaluatedAt: data.evaluatedAt ? new Date(data.evaluatedAt) : new Date(),
+        accuracy: data.accuracy ?? null, precision: data.precision ?? null, recall: data.recall ?? null,
+        f1Score: data.f1Score ?? null, aucRoc: data.aucRoc ?? null, errorRate: data.errorRate ?? null,
+        fairnessMetric: data.fairnessMetric ?? null, fairnessScore: data.fairnessScore ?? null,
+        biasDetected: data.biasDetected, biasGroups: data.biasGroups ?? null, disparityRatio: data.disparityRatio ?? null,
+        robustness: data.robustness ?? null, adversarialTested: data.adversarialTested,
+        explainabilityAssessed: data.explainabilityAssessed, explainabilityNote: data.explainabilityNote ?? null,
+        thresholds: data.thresholds ?? undefined, outcome: data.outcome, findings: data.findings ?? null,
+        conditions: data.conditions ?? null, capaId: data.capaId ?? null, evidenceId: data.evidenceId ?? null,
+        createdById: ctx.user.id,
+      }),
+    });
+    // Evaluar un modelo lo mueve a la etapa de evaluación sin tocar los ya desplegados.
+    if (data.outcome !== "NOT_EVALUATED") {
+      await tx.modelVersion.updateMany({ where: { id: data.modelVersionId, organizationId: ctx.organization.id, stage: "DEVELOPMENT" }, data: { stage: "EVALUATION" } });
+    }
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: evaluation.id, after: { code, outcome: data.outcome, biasDetected: data.biasDetected }, extra: { event: "create_model_evaluation" } });
+    return evaluation;
   });
-  // Evaluar un modelo lo mueve a la etapa de evaluación sin tocar los ya desplegados.
-  if (data.outcome !== "NOT_EVALUATED") {
-    await prisma.modelVersion.updateMany({ where: { id: data.modelVersionId, organizationId: ctx.organization.id, stage: "DEVELOPMENT" }, data: { stage: "EVALUATION" } });
-  }
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, outcome: data.outcome, biasDetected: data.biasDetected }, extra: { event: "create_model_evaluation" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -786,12 +829,12 @@ export async function promoteModelToProduction(id: string, note?: string) {
     throw new Error(`El dataset de entrenamiento ${model.trainingDataset.code} no es apto: requiere revisión de sesgo y calidad suficiente.`);
   }
 
-  await prisma.$transaction([
+  await prisma.$transaction(async (tx) => {
     // Un solo modelo por sistema en producción: el anterior queda obsoleto.
-    prisma.modelVersion.updateMany({ where: { organizationId: ctx.organization.id, systemId: model.systemId, stage: "PRODUCTION", id: { not: id } }, data: { stage: "DEPRECATED" } }),
-    prisma.modelVersion.update({ where: { id }, data: { stage: "PRODUCTION", deployedAt: new Date() } }),
-  ]);
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { stage: model.stage }, after: { stage: "PRODUCTION" }, extra: { event: "promote_model", note } });
+    await tx.modelVersion.updateMany({ where: { organizationId: ctx.organization.id, systemId: model.systemId, stage: "PRODUCTION", id: { not: id } }, data: { stage: "DEPRECATED" } });
+    await tx.modelVersion.update({ where: { id }, data: { stage: "PRODUCTION", deployedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { stage: model.stage }, after: { stage: "PRODUCTION" }, extra: { event: "promote_model", note } });
+  });
   revalidate();
   return { id, stage: "PRODUCTION" };
 }
@@ -829,17 +872,20 @@ export async function createOversightControl(input: z.infer<typeof oversightSche
     throw new Error("Un control de supervisión humana debe permitir al menos anular la decisión o detener el sistema.");
   }
   const code = data.code ?? await nextCode("SUP", prisma.humanOversightControl.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.humanOversightControl.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId, name: data.name, type: data.type, description: data.description ?? null,
-      responsibleId: data.responsibleId ?? null, competence: data.competence ?? null,
-      trainingCourseId: data.trainingCourseId ?? null, canOverride: data.canOverride, canStop: data.canStop,
-      escalationPath: data.escalationPath ?? null, frequency: data.frequency ?? null, controlId: data.controlId ?? null,
-      documentId: data.documentId ?? null, nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const control = await tx.humanOversightControl.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId, name: data.name, type: data.type, description: data.description ?? null,
+        responsibleId: data.responsibleId ?? null, competence: data.competence ?? null,
+        trainingCourseId: data.trainingCourseId ?? null, canOverride: data.canOverride, canStop: data.canStop,
+        escalationPath: data.escalationPath ?? null, frequency: data.frequency ?? null, controlId: data.controlId ?? null,
+        documentId: data.documentId ?? null, nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: control.id, after: { code, type: data.type }, extra: { event: "create_oversight_control" } });
+    return control;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, type: data.type }, extra: { event: "create_oversight_control" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -851,8 +897,10 @@ export async function verifyOversightControl(id: string, effectiveness: number, 
   if (!control) throw new Error("Control de supervisión no encontrado.");
   const value = z.number().int().min(0).max(100).parse(effectiveness);
   await assertRefInOrg(ctx.organization.id, { evidenceId });
-  await prisma.humanOversightControl.update({ where: { id }, data: { effectiveness: value, lastVerifiedAt: new Date(), ...(evidenceId ? { evidenceId } : {}) } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { effectiveness: value }, extra: { event: "verify_oversight_control" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.humanOversightControl.update({ where: { id }, data: { effectiveness: value, lastVerifiedAt: new Date(), ...(evidenceId ? { evidenceId } : {}) } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { effectiveness: value }, extra: { event: "verify_oversight_control" } });
+  });
   revalidate();
   return { id, effectiveness: value };
 }
@@ -887,18 +935,21 @@ export async function createTransparencyRecord(input: z.infer<typeof transparenc
     throw new Error("La información dirigida a usuarios o personas afectadas debe declarar el uso de IA.");
   }
   const code = data.code ?? await nextCode("TRA", prisma.aITransparencyRecord.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aITransparencyRecord.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId, audience: data.audience, disclosure: data.disclosure,
-      aiUseDisclosed: data.aiUseDisclosed, limitationsDisclosed: data.limitationsDisclosed,
-      dataUseDisclosed: data.dataUseDisclosed, humanContactOffered: data.humanContactOffered,
-      channel: data.channel ?? null, language: data.language ?? null, version: data.version,
-      responsibleId: data.responsibleId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-      publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
-      nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const record = await tx.aITransparencyRecord.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId, audience: data.audience, disclosure: data.disclosure,
+        aiUseDisclosed: data.aiUseDisclosed, limitationsDisclosed: data.limitationsDisclosed,
+        dataUseDisclosed: data.dataUseDisclosed, humanContactOffered: data.humanContactOffered,
+        channel: data.channel ?? null, language: data.language ?? null, version: data.version,
+        responsibleId: data.responsibleId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+        publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
+        nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: record.id, after: { code, audience: data.audience }, extra: { event: "create_transparency_record" } });
+    return record;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, audience: data.audience }, extra: { event: "create_transparency_record" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -937,20 +988,23 @@ export async function reportAIIncident(input: z.infer<typeof incidentSchema>) {
     if (!model) throw new Error("La versión del modelo no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("IAI", prisma.aIIncident.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIIncident.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId ?? null, modelVersionId: data.modelVersionId ?? null, type: data.type,
-      severity: data.severity, title: data.title, description: data.description ?? null,
-      detectedAt: data.detectedAt ? new Date(data.detectedAt) : new Date(),
-      occurredAt: data.occurredAt ? new Date(data.occurredAt) : null, detectedBy: data.detectedBy ?? null,
-      reporterId: ctx.user.id, affectedParties: data.affectedParties ?? null, affectedCount: data.affectedCount ?? null,
-      harmDescription: data.harmDescription ?? null, status: "REPORTED",
-      notificationRequired: requiresNotificationDecision(data.type, data.affectedCount),
-      responsibleId: data.responsibleId ?? null, dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const incident = await tx.aIIncident.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId ?? null, modelVersionId: data.modelVersionId ?? null, type: data.type,
+        severity: data.severity, title: data.title, description: data.description ?? null,
+        detectedAt: data.detectedAt ? new Date(data.detectedAt) : new Date(),
+        occurredAt: data.occurredAt ? new Date(data.occurredAt) : null, detectedBy: data.detectedBy ?? null,
+        reporterId: ctx.user.id, affectedParties: data.affectedParties ?? null, affectedCount: data.affectedCount ?? null,
+        harmDescription: data.harmDescription ?? null, status: "REPORTED",
+        notificationRequired: requiresNotificationDecision(data.type, data.affectedCount),
+        responsibleId: data.responsibleId ?? null, dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: incident.id, after: { code, type: data.type, severity: data.severity }, extra: { event: "report_ai_incident" } });
+    return incident;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, type: data.type, severity: data.severity }, extra: { event: "report_ai_incident" } });
   if (data.responsibleId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: data.responsibleId, title: `Incidente de IA: ${code}`, body: `${data.title} (${data.type}, severidad ${data.severity}).`, type: data.severity === "CRITICAL" || data.severity === "HIGH" ? "ALERT" : "WARNING", link: "/app/aims", idempotencyKey: `ai-incident:${created.id}:reported` });
   }
@@ -991,22 +1045,24 @@ export async function transitionAIIncident(id: string, input: z.infer<typeof inc
     throw new Error("El incidente exige notificación: registre la comunicación antes de cerrarlo.");
   }
 
-  await prisma.aIIncident.update({ where: { id }, data: {
-    status: data.to,
-    ...(data.investigation !== undefined ? { investigation: data.investigation } : {}),
-    ...(data.rootCause !== undefined ? { rootCause: data.rootCause } : {}),
-    ...(data.rootCauseMethod !== undefined ? { rootCauseMethod: data.rootCauseMethod } : {}),
-    ...(data.containment !== undefined ? { containment: data.containment } : {}),
-    ...(data.correctiveActions !== undefined ? { correctiveActions: data.correctiveActions } : {}),
-    ...(data.notificationRequired !== undefined ? { notificationRequired: data.notificationRequired } : {}),
-    ...(data.notificationDetails !== undefined ? { notificationDetails: data.notificationDetails } : {}),
-    ...(data.notified ? { notifiedAt: incident.notifiedAt ?? new Date() } : {}),
-    ...(data.lessonsLearned !== undefined ? { lessonsLearned: data.lessonsLearned } : {}),
-    ...(data.capaId !== undefined ? { capaId: data.capaId } : {}),
-    ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    ...(data.to === "CLOSED" ? { closedAt: new Date() } : {}),
-  } });
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { status: incident.status }, after: { status: data.to }, extra: { event: "transition_ai_incident", note: data.note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIIncident.update({ where: { id }, data: {
+      status: data.to,
+      ...(data.investigation !== undefined ? { investigation: data.investigation } : {}),
+      ...(data.rootCause !== undefined ? { rootCause: data.rootCause } : {}),
+      ...(data.rootCauseMethod !== undefined ? { rootCauseMethod: data.rootCauseMethod } : {}),
+      ...(data.containment !== undefined ? { containment: data.containment } : {}),
+      ...(data.correctiveActions !== undefined ? { correctiveActions: data.correctiveActions } : {}),
+      ...(data.notificationRequired !== undefined ? { notificationRequired: data.notificationRequired } : {}),
+      ...(data.notificationDetails !== undefined ? { notificationDetails: data.notificationDetails } : {}),
+      ...(data.notified ? { notifiedAt: incident.notifiedAt ?? new Date() } : {}),
+      ...(data.lessonsLearned !== undefined ? { lessonsLearned: data.lessonsLearned } : {}),
+      ...(data.capaId !== undefined ? { capaId: data.capaId } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      ...(data.to === "CLOSED" ? { closedAt: new Date() } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { status: incident.status }, after: { status: data.to }, extra: { event: "transition_ai_incident", note: data.note } });
+  });
   if (incident.responsibleId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: incident.responsibleId, title: `Incidente de IA ${incident.code}: ${data.to}`, body: `"${incident.title}" avanzó a ${data.to}.`, type: data.to === "CLOSED" ? "SUCCESS" : "INFO", link: "/app/aims", idempotencyKey: `ai-incident:${id}:${data.to}` });
   }
@@ -1055,23 +1111,26 @@ export async function createSupplierAssessment(input: z.infer<typeof supplierSch
     if (!system) throw new Error("El sistema de IA no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("PIA", prisma.aISupplierAssessment.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aISupplierAssessment.create({
-    data: tenantData(ctx, {
-      code, supplierId: data.supplierId ?? null, systemId: data.systemId ?? null, supplierName: data.supplierName,
-      serviceType: data.serviceType, modelDocumentation: data.modelDocumentation, trainingDataDisclosed: data.trainingDataDisclosed,
-      evaluationResultsShared: data.evaluationResultsShared, biasTestingEvidence: data.biasTestingEvidence,
-      securityCertification: data.securityCertification ?? null, dataProcessingTerms: data.dataProcessingTerms ?? null,
-      subprocessors: data.subprocessors ?? null, dataResidency: data.dataResidency ?? null,
-      usesCustomerDataForTraining: data.usesCustomerDataForTraining, incidentNotificationSla: data.incidentNotificationSla ?? null,
-      exitPlan: data.exitPlan ?? null, risks: data.risks ?? null, requirements: data.requirements ?? null,
-      outcome: data.outcome, score: data.score ?? null, assessorId: ctx.user.id,
-      assessedAt: data.assessedAt ? new Date(data.assessedAt) : new Date(),
-      nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
-      contractExpiry: data.contractExpiry ? new Date(data.contractExpiry) : null,
-      evidenceId: data.evidenceId ?? null, documentId: data.documentId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const assessment = await tx.aISupplierAssessment.create({
+      data: tenantData(ctx, {
+        code, supplierId: data.supplierId ?? null, systemId: data.systemId ?? null, supplierName: data.supplierName,
+        serviceType: data.serviceType, modelDocumentation: data.modelDocumentation, trainingDataDisclosed: data.trainingDataDisclosed,
+        evaluationResultsShared: data.evaluationResultsShared, biasTestingEvidence: data.biasTestingEvidence,
+        securityCertification: data.securityCertification ?? null, dataProcessingTerms: data.dataProcessingTerms ?? null,
+        subprocessors: data.subprocessors ?? null, dataResidency: data.dataResidency ?? null,
+        usesCustomerDataForTraining: data.usesCustomerDataForTraining, incidentNotificationSla: data.incidentNotificationSla ?? null,
+        exitPlan: data.exitPlan ?? null, risks: data.risks ?? null, requirements: data.requirements ?? null,
+        outcome: data.outcome, score: data.score ?? null, assessorId: ctx.user.id,
+        assessedAt: data.assessedAt ? new Date(data.assessedAt) : new Date(),
+        nextReviewDate: data.nextReviewDate ? new Date(data.nextReviewDate) : null,
+        contractExpiry: data.contractExpiry ? new Date(data.contractExpiry) : null,
+        evidenceId: data.evidenceId ?? null, documentId: data.documentId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: assessment.id, after: { code, supplierName: data.supplierName, outcome: data.outcome }, extra: { event: "create_ai_supplier_assessment" } });
+    return assessment;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, supplierName: data.supplierName, outcome: data.outcome }, extra: { event: "create_ai_supplier_assessment" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -1109,19 +1168,22 @@ export async function createAIChangeRequest(input: z.infer<typeof changeSchema>)
   }
   await assertRefInOrg(ctx.organization.id, { changeRequestId: data.changeRequestId, evidenceId: data.evidenceId });
   const code = data.code ?? await nextCode("CIA", prisma.aIChangeRequest.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIChangeRequest.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId, modelVersionId: data.modelVersionId ?? null, title: data.title,
-      changeType: data.changeType, description: data.description ?? null, justification: data.justification ?? null,
-      impactAnalysis: data.impactAnalysis ?? null, affectsImpactAssessment: data.affectsImpactAssessment,
-      // Un cambio que toca la evaluación de impacto obliga a reevaluar.
-      requiresReassessment: data.requiresReassessment || data.affectsImpactAssessment,
-      requiresRetraining: data.requiresRetraining, requiresRevalidation: data.requiresRevalidation,
-      rollbackPlan: data.rollbackPlan ?? null, requesterId: ctx.user.id, reviewStatus: "DRAFT",
-      changeRequestId: data.changeRequestId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const change = await tx.aIChangeRequest.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId, modelVersionId: data.modelVersionId ?? null, title: data.title,
+        changeType: data.changeType, description: data.description ?? null, justification: data.justification ?? null,
+        impactAnalysis: data.impactAnalysis ?? null, affectsImpactAssessment: data.affectsImpactAssessment,
+        // Un cambio que toca la evaluación de impacto obliga a reevaluar.
+        requiresReassessment: data.requiresReassessment || data.affectsImpactAssessment,
+        requiresRetraining: data.requiresRetraining, requiresRevalidation: data.requiresRevalidation,
+        rollbackPlan: data.rollbackPlan ?? null, requesterId: ctx.user.id, reviewStatus: "DRAFT",
+        changeRequestId: data.changeRequestId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: change.id, after: { code, changeType: data.changeType }, extra: { event: "create_ai_change_request" } });
+    return change;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, changeType: data.changeType }, extra: { event: "create_ai_change_request" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -1139,8 +1201,10 @@ export async function implementAIChangeRequest(id: string, note?: string) {
     });
     if (!assessment) throw new Error("El cambio exige reevaluar el impacto: registre y apruebe una evaluación posterior a la decisión.");
   }
-  await prisma.aIChangeRequest.update({ where: { id }, data: { implementedAt: new Date() } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { implementedAt: new Date().toISOString() }, extra: { event: "implement_ai_change", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIChangeRequest.update({ where: { id }, data: { implementedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { implementedAt: new Date().toISOString() }, extra: { event: "implement_ai_change", note } });
+  });
   revalidate();
   return { id };
 }
@@ -1185,24 +1249,27 @@ export async function recordPerformanceMetric(input: z.infer<typeof metricSchema
 
   const higherIsBetter = data.higherIsBetter ?? defaultHigherIsBetter(data.kind);
   const evaluation = evaluateMetric({ value: data.value, threshold: data.threshold, baseline: data.baseline, higherIsBetter });
-  const record = await prisma.aIPerformanceMetric.upsert({
-    where: { organizationId_systemId_period_name: { organizationId: ctx.organization.id, systemId: data.systemId, period: data.period, name: data.name } },
-    create: tenantData(ctx, {
-      systemId: data.systemId, modelVersionId: data.modelVersionId ?? null, period: data.period,
-      periodStart: data.periodStart ? new Date(data.periodStart) : null, kind: data.kind, name: data.name,
-      value: data.value, unit: data.unit ?? null, baseline: data.baseline ?? null, threshold: data.threshold ?? null,
-      higherIsBetter, breached: evaluation.breached, driftDetected: evaluation.driftDetected,
-      sampleSize: data.sampleSize ?? null, humanOverrides: data.humanOverrides ?? null, note: data.note ?? null,
-      indicatorId: data.indicatorId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
-    }),
-    update: {
-      modelVersionId: data.modelVersionId ?? null, kind: data.kind, value: data.value, unit: data.unit ?? null,
-      baseline: data.baseline ?? null, threshold: data.threshold ?? null, higherIsBetter,
-      breached: evaluation.breached, driftDetected: evaluation.driftDetected,
-      sampleSize: data.sampleSize ?? null, humanOverrides: data.humanOverrides ?? null, note: data.note ?? null,
-    },
+  const record = await prisma.$transaction(async (tx) => {
+    const row = await tx.aIPerformanceMetric.upsert({
+      where: { organizationId_systemId_period_name: { organizationId: ctx.organization.id, systemId: data.systemId, period: data.period, name: data.name } },
+      create: tenantData(ctx, {
+        systemId: data.systemId, modelVersionId: data.modelVersionId ?? null, period: data.period,
+        periodStart: data.periodStart ? new Date(data.periodStart) : null, kind: data.kind, name: data.name,
+        value: data.value, unit: data.unit ?? null, baseline: data.baseline ?? null, threshold: data.threshold ?? null,
+        higherIsBetter, breached: evaluation.breached, driftDetected: evaluation.driftDetected,
+        sampleSize: data.sampleSize ?? null, humanOverrides: data.humanOverrides ?? null, note: data.note ?? null,
+        indicatorId: data.indicatorId ?? null, evidenceId: data.evidenceId ?? null, createdById: ctx.user.id,
+      }),
+      update: {
+        modelVersionId: data.modelVersionId ?? null, kind: data.kind, value: data.value, unit: data.unit ?? null,
+        baseline: data.baseline ?? null, threshold: data.threshold ?? null, higherIsBetter,
+        breached: evaluation.breached, driftDetected: evaluation.driftDetected,
+        sampleSize: data.sampleSize ?? null, humanOverrides: data.humanOverrides ?? null, note: data.note ?? null,
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { systemId: data.systemId, period: data.period, name: data.name, value: data.value, breached: evaluation.breached, driftDetected: evaluation.driftDetected }, extra: { event: "record_performance_metric" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: record.id, after: { systemId: data.systemId, period: data.period, name: data.name, value: data.value, breached: evaluation.breached, driftDetected: evaluation.driftDetected }, extra: { event: "record_performance_metric" } });
   if ((evaluation.breached || evaluation.driftDetected) && system.ownerId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: system.ownerId, title: `Monitoreo de IA: ${system.code}`, body: `${data.name} = ${data.value}${data.unit ? ` ${data.unit}` : ""} en ${data.period}${evaluation.breached ? " incumple el umbral" : ""}${evaluation.driftDetected ? " y muestra deriva frente a la línea base" : ""}.`, type: "WARNING", link: "/app/aims", idempotencyKey: `ai-metric:${record.id}:${data.value}` });
   }
@@ -1246,16 +1313,19 @@ export async function recordAIOutput(input: z.infer<typeof outputSchema>) {
     if (!model) throw new Error("La versión del modelo no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("IAO", prisma.aIGeneratedOutput.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.aIGeneratedOutput.create({
-    data: tenantData(ctx, {
-      code, systemId: data.systemId ?? null, modelVersionId: data.modelVersionId ?? null, purpose: data.purpose ?? null,
-      targetType: data.targetType, prompt: data.prompt, model: data.model, modelVersionLabel: data.modelVersionLabel,
-      parameters: data.parameters ?? undefined, output: data.output, tokensUsed: data.tokensUsed ?? null,
-      requestedById: ctx.user.id, generatedAt: new Date(), containsPersonalData: data.containsPersonalData,
-      redacted: data.redacted, reviewStatus: "DRAFT", createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const output = await tx.aIGeneratedOutput.create({
+      data: tenantData(ctx, {
+        code, systemId: data.systemId ?? null, modelVersionId: data.modelVersionId ?? null, purpose: data.purpose ?? null,
+        targetType: data.targetType, prompt: data.prompt, model: data.model, modelVersionLabel: data.modelVersionLabel,
+        parameters: data.parameters ?? undefined, output: data.output, tokensUsed: data.tokensUsed ?? null,
+        requestedById: ctx.user.id, generatedAt: new Date(), containsPersonalData: data.containsPersonalData,
+        redacted: data.redacted, reviewStatus: "DRAFT", createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: output.id, after: { code, model: data.model, modelVersionLabel: data.modelVersionLabel, reviewStatus: "DRAFT" }, extra: { event: "record_ai_output" } });
+    return output;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, model: data.model, modelVersionLabel: data.modelVersionLabel, reviewStatus: "DRAFT" }, extra: { event: "record_ai_output" } });
   revalidate();
   return { id: created.id, code, reviewStatus: "DRAFT" as AIHumanReviewStatus };
 }
@@ -1267,10 +1337,12 @@ export async function editAIOutput(id: string, humanEdits: string, editSummary?:
   if (!output) throw new Error("Salida de IA no encontrada.");
   if (output.reviewStatus === "APPROVED") throw new Error("La salida ya fue aprobada; registre una nueva salida para modificarla.");
   const text = z.string().min(1).max(100000).parse(humanEdits);
-  await prisma.aIGeneratedOutput.update({ where: { id }, data: {
-    edited: true, humanEdits: text, editSummary: editSummary ?? null, editedById: ctx.user.id, editedAt: new Date(),
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { edited: true, editSummary }, extra: { event: "edit_ai_output" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIGeneratedOutput.update({ where: { id }, data: {
+      edited: true, humanEdits: text, editSummary: editSummary ?? null, editedById: ctx.user.id, editedAt: new Date(),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { edited: true, editSummary }, extra: { event: "edit_ai_output" } });
+  });
   revalidate();
   return { id, edited: true };
 }
@@ -1315,11 +1387,11 @@ async function loadReviewable(organizationId: string, kind: ReviewableKind, id: 
   return found;
 }
 
-async function writeReviewable(kind: ReviewableKind, id: string, data: Record<string, unknown>) {
-  if (kind === "output") return prisma.aIGeneratedOutput.update({ where: { id }, data });
-  if (kind === "impactAssessment") return prisma.aIImpactAssessment.update({ where: { id }, data });
-  if (kind === "modelVersion") return prisma.modelVersion.update({ where: { id }, data });
-  return prisma.aIChangeRequest.update({ where: { id }, data });
+async function writeReviewable(tx: Prisma.TransactionClient, kind: ReviewableKind, id: string, data: Record<string, unknown>) {
+  if (kind === "output") return tx.aIGeneratedOutput.update({ where: { id }, data });
+  if (kind === "impactAssessment") return tx.aIImpactAssessment.update({ where: { id }, data });
+  if (kind === "modelVersion") return tx.modelVersion.update({ where: { id }, data });
+  return tx.aIChangeRequest.update({ where: { id }, data });
 }
 
 /**
@@ -1330,8 +1402,10 @@ export async function submitForHumanReview(kind: ReviewableKind, id: string) {
   const ctx = await requirePermission("aims:update");
   const row = await loadReviewable(ctx.organization.id, kind, id);
   assertHumanReviewTransition(row.reviewStatus, "HUMAN_REVIEW");
-  await writeReviewable(kind, id, { reviewStatus: "HUMAN_REVIEW", submittedAt: new Date() });
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: "HUMAN_REVIEW" }, extra: { event: "submit_human_review", kind } });
+  await prisma.$transaction(async (tx) => {
+    await writeReviewable(tx, kind, id, { reviewStatus: "HUMAN_REVIEW", submittedAt: new Date() });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: "HUMAN_REVIEW" }, extra: { event: "submit_human_review", kind } });
+  });
   revalidate();
   return { id, reviewStatus: "HUMAN_REVIEW" as AIHumanReviewStatus };
 }
@@ -1353,8 +1427,10 @@ export async function decideHumanReview(kind: ReviewableKind, id: string, input:
   assertReviewerPresent(data.to, ctx.user.id);
   if (data.to === "REJECTED" && !data.note) throw new Error("Un rechazo debe motivarse para que la persona responsable pueda corregirlo.");
 
-  await writeReviewable(kind, id, { reviewStatus: data.to, reviewerId: ctx.user.id, reviewedAt: new Date(), decisionNote: data.note ?? null });
-  await logAuditEvent({ ctx, action: data.to === "APPROVED" ? "approve" : "reject", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: data.to, reviewerId: ctx.user.id }, extra: { event: "decide_human_review", kind, note: data.note } });
+  await prisma.$transaction(async (tx) => {
+    await writeReviewable(tx, kind, id, { reviewStatus: data.to, reviewerId: ctx.user.id, reviewedAt: new Date(), decisionNote: data.note ?? null });
+    await writeAuditLog(tx, { ctx, action: data.to === "APPROVED" ? "approve" : "reject", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: data.to, reviewerId: ctx.user.id }, extra: { event: "decide_human_review", kind, note: data.note } });
+  });
   if (row.ownerId && row.ownerId !== ctx.user.id) {
     await safeNotify({ organizationId: ctx.organization.id, userId: row.ownerId, title: `${LABELS[kind]} ${row.code}: ${data.to === "APPROVED" ? "aprobada" : "rechazada"}`, body: data.note ?? `Decisión humana registrada por ${ctx.user.name ?? "el revisor"}.`, type: data.to === "APPROVED" ? "SUCCESS" : "WARNING", link: "/app/aims", idempotencyKey: `aims:${kind}:${id}:${data.to}` });
   }
@@ -1367,8 +1443,10 @@ export async function reopenForCorrection(kind: ReviewableKind, id: string) {
   const ctx = await requirePermission("aims:update");
   const row = await loadReviewable(ctx.organization.id, kind, id);
   assertHumanReviewTransition(row.reviewStatus, "DRAFT");
-  await writeReviewable(kind, id, { reviewStatus: "DRAFT", submittedAt: null, reviewerId: null, reviewedAt: null });
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: "DRAFT" }, extra: { event: "reopen_human_review", kind } });
+  await prisma.$transaction(async (tx) => {
+    await writeReviewable(tx, kind, id, { reviewStatus: "DRAFT", submittedAt: null, reviewerId: null, reviewedAt: null });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { reviewStatus: row.reviewStatus }, after: { reviewStatus: "DRAFT" }, extra: { event: "reopen_human_review", kind } });
+  });
   revalidate();
   return { id, reviewStatus: "DRAFT" as AIHumanReviewStatus };
 }
@@ -1390,8 +1468,75 @@ export async function promoteAIOutput(id: string, input: z.infer<typeof promotio
   if (!output) throw new Error("Salida de IA no encontrada.");
   if (output.promotedAt) throw new Error("La salida ya se promovió a un registro oficial.");
   assertPromotable(output.reviewStatus);
-  await prisma.aIGeneratedOutput.update({ where: { id }, data: { promotedEntityType: data.entityType, promotedEntityId: data.entityId, promotedAt: new Date() } });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, after: { promotedEntityType: data.entityType, promotedEntityId: data.entityId }, extra: { event: "promote_ai_output" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.aIGeneratedOutput.update({ where: { id }, data: { promotedEntityType: data.entityType, promotedEntityId: data.entityId, promotedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, after: { promotedEntityType: data.entityType, promotedEntityId: data.entityId }, extra: { event: "promote_ai_output" } });
+  });
   revalidate();
   return { id, promotedEntityType: data.entityType, promotedEntityId: data.entityId };
+}
+
+// ─────────────────────────────────────────────────────
+// Edición transversal desde la UI AIMS
+// ─────────────────────────────────────────────────────
+
+export type AimsRecordKind = "system" | "useCase" | "impactAssessment" | "risk" | "dataset" | "dataSource" | "dataLineage" | "modelVersion" | "modelEvaluation" | "oversight" | "transparency" | "incident" | "supplier" | "change" | "metric";
+
+const aimsUpdateSchemas: Record<Exclude<AimsRecordKind, "system" | "impactAssessment" | "risk">, z.ZodTypeAny> = {
+  useCase: z.object({ systemId: z.string().min(1).optional(), title: z.string().min(1).max(300).optional(), objective: z.string().min(1).max(2000).optional(), supportedDecisions: z.string().max(2000).nullable().optional(), decisionAutonomy: z.enum(["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "FULLY_AUTOMATED"]).optional(), affectedPeople: z.string().max(2000).nullable().optional(), affectedCount: z.number().int().min(0).nullable().optional(), impact: z.string().max(2000).nullable().optional(), constraints: z.string().max(2000).nullable().optional(), prohibitedUses: z.string().max(2000).nullable().optional(), processId: z.string().nullable().optional(), active: z.boolean().optional() }),
+  dataset: z.object({ name: z.string().min(1).max(200).optional(), purpose: z.string().max(2000).nullable().optional(), ownerId: z.string().nullable().optional(), stewardId: z.string().nullable().optional(), classification: z.enum(["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"]).optional(), containsPersonalData: z.boolean().optional(), personalDataCategories: z.string().max(2000).nullable().optional(), containsSpecialCategories: z.boolean().optional(), legalBasis: z.enum(["NOT_APPLICABLE", "CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"]).optional(), anonymization: z.string().max(2000).nullable().optional(), recordCount: z.number().int().min(0).nullable().optional(), featureCount: z.number().int().min(0).nullable().optional(), periodCovered: z.string().max(200).nullable().optional(), retentionMonths: z.number().int().min(0).nullable().optional(), storageLocation: z.string().max(500).nullable().optional(), documentId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional(), active: z.boolean().optional() }),
+  dataSource: z.object({ datasetId: z.string().min(1).optional(), name: z.string().min(1).max(200).optional(), type: z.enum(["INTERNAL_SYSTEM", "PUBLIC_DATASET", "THIRD_PARTY_PROVIDER", "WEB_SCRAPING", "USER_GENERATED", "SYNTHETIC", "SENSOR", "PURCHASED", "OTHER"]).optional(), origin: z.string().max(1000).nullable().optional(), provider: z.string().max(300).nullable().optional(), supplierId: z.string().nullable().optional(), license: z.string().max(2000).nullable().optional(), licenseVerified: z.boolean().optional(), legalBasis: z.enum(["NOT_APPLICABLE", "CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"]).optional(), consentEvidence: z.string().max(2000).nullable().optional(), collectedFrom: z.string().nullable().optional(), collectedTo: z.string().nullable().optional(), restrictions: z.string().max(2000).nullable().optional(), evidenceId: z.string().nullable().optional() }),
+  dataLineage: z.object({ datasetId: z.string().min(1).optional(), step: z.number().int().min(1).optional(), operation: z.enum(["INGESTION", "CLEANING", "TRANSFORMATION", "LABELING", "AUGMENTATION", "ANONYMIZATION", "AGGREGATION", "SPLIT", "MERGE", "DERIVATION", "DELETION"]).optional(), description: z.string().max(2000).nullable().optional(), inputRef: z.string().max(500).nullable().optional(), outputRef: z.string().max(500).nullable().optional(), tool: z.string().max(300).nullable().optional(), performedById: z.string().nullable().optional(), performedAt: z.string().nullable().optional(), reversible: z.boolean().optional(), evidenceId: z.string().nullable().optional() }),
+  modelVersion: z.object({ systemId: z.string().min(1).optional(), modelName: z.string().min(1).max(200).optional(), version: z.string().min(1).max(80).optional(), algorithm: z.string().max(300).nullable().optional(), framework: z.string().max(200).nullable().optional(), baseModel: z.string().max(300).nullable().optional(), provider: z.string().max(300).nullable().optional(), trainingDatasetId: z.string().nullable().optional(), trainingSummary: z.string().max(4000).nullable().optional(), explainabilityMethod: z.string().max(300).nullable().optional(), explainabilityNote: z.string().max(2000).nullable().optional(), limitations: z.string().max(4000).nullable().optional(), intendedUse: z.string().max(2000).nullable().optional(), documentId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional() }),
+  modelEvaluation: z.object({ modelVersionId: z.string().min(1).optional(), datasetId: z.string().nullable().optional(), evaluatedAt: z.string().nullable().optional(), evaluatorId: z.string().nullable().optional(), accuracy: z.number().min(0).max(1).nullable().optional(), precision: z.number().min(0).max(1).nullable().optional(), recall: z.number().min(0).max(1).nullable().optional(), f1Score: z.number().min(0).max(1).nullable().optional(), aucRoc: z.number().min(0).max(1).nullable().optional(), errorRate: z.number().min(0).max(1).nullable().optional(), fairnessMetric: z.string().max(500).nullable().optional(), fairnessScore: z.number().min(0).max(1).nullable().optional(), biasDetected: z.boolean().optional(), biasGroups: z.string().max(2000).nullable().optional(), disparityRatio: z.number().nullable().optional(), robustness: z.string().max(2000).nullable().optional(), adversarialTested: z.boolean().optional(), explainabilityAssessed: z.boolean().optional(), explainabilityNote: z.string().max(2000).nullable().optional(), outcome: z.enum(["NOT_EVALUATED", "PASSED", "PASSED_WITH_CONDITIONS", "FAILED"]).optional(), findings: z.string().max(4000).nullable().optional(), conditions: z.string().max(4000).nullable().optional(), capaId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional() }),
+  oversight: z.object({ systemId: z.string().min(1).optional(), name: z.string().min(1).max(300).optional(), type: z.enum(["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "DUAL_CONTROL", "SAMPLING_REVIEW", "APPEAL_CHANNEL"]).optional(), description: z.string().max(3000).nullable().optional(), responsibleId: z.string().nullable().optional(), competence: z.string().max(2000).nullable().optional(), trainingCourseId: z.string().nullable().optional(), canOverride: z.boolean().optional(), canStop: z.boolean().optional(), escalationPath: z.string().max(2000).nullable().optional(), frequency: z.string().max(300).nullable().optional(), effectiveness: z.number().int().min(0).max(100).nullable().optional(), nextReviewDate: z.string().nullable().optional(), controlId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional(), documentId: z.string().nullable().optional(), active: z.boolean().optional() }),
+  transparency: z.object({ systemId: z.string().min(1).optional(), audience: z.enum(["END_USER", "DATA_SUBJECT", "CUSTOMER", "WORKER", "REGULATOR", "PUBLIC", "INTERNAL"]).optional(), disclosure: z.string().min(1).max(8000).optional(), aiUseDisclosed: z.boolean().optional(), limitationsDisclosed: z.boolean().optional(), dataUseDisclosed: z.boolean().optional(), humanContactOffered: z.boolean().optional(), channel: z.string().max(300).nullable().optional(), language: z.string().max(20).nullable().optional(), version: z.string().max(20).optional(), responsibleId: z.string().nullable().optional(), documentId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional(), publishedAt: z.string().nullable().optional(), nextReviewDate: z.string().nullable().optional() }),
+  incident: z.object({ systemId: z.string().nullable().optional(), modelVersionId: z.string().nullable().optional(), type: z.enum(["HARMFUL_OUTPUT", "BIAS_DISCRIMINATION", "PRIVACY_BREACH", "SECURITY_BREACH", "HALLUCINATION", "PERFORMANCE_DEGRADATION", "DATA_DRIFT", "MISUSE", "UNAVAILABILITY", "UNAPPROVED_AUTOMATION", "OTHER"]).optional(), severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(), title: z.string().min(1).max(300).optional(), description: z.string().max(4000).nullable().optional(), occurredAt: z.string().nullable().optional(), detectedBy: z.string().max(200).nullable().optional(), affectedParties: z.string().max(2000).nullable().optional(), affectedCount: z.number().int().min(0).nullable().optional(), harmDescription: z.string().max(4000).nullable().optional(), responsibleId: z.string().nullable().optional(), dueDate: z.string().nullable().optional() }),
+  supplier: z.object({ supplierId: z.string().nullable().optional(), systemId: z.string().nullable().optional(), supplierName: z.string().min(1).max(200).optional(), serviceType: z.enum(["FOUNDATION_MODEL", "MODEL_API", "DATASET", "ANNOTATION", "MLOPS_PLATFORM", "EMBEDDED_FEATURE", "CONSULTING", "OTHER"]).optional(), modelDocumentation: z.boolean().optional(), trainingDataDisclosed: z.boolean().optional(), evaluationResultsShared: z.boolean().optional(), biasTestingEvidence: z.boolean().optional(), securityCertification: z.string().max(300).nullable().optional(), dataProcessingTerms: z.string().max(2000).nullable().optional(), subprocessors: z.string().max(2000).nullable().optional(), dataResidency: z.string().max(300).nullable().optional(), usesCustomerDataForTraining: z.boolean().optional(), incidentNotificationSla: z.string().max(300).nullable().optional(), exitPlan: z.string().max(2000).nullable().optional(), risks: z.string().max(2000).nullable().optional(), requirements: z.string().max(2000).nullable().optional(), outcome: z.enum(["UNDER_REVIEW", "APPROVED", "CONDITIONAL", "REJECTED"]).optional(), score: z.number().int().min(0).max(100).nullable().optional(), assessedAt: z.string().nullable().optional(), nextReviewDate: z.string().nullable().optional(), contractExpiry: z.string().nullable().optional(), evidenceId: z.string().nullable().optional(), documentId: z.string().nullable().optional() }),
+  change: z.object({ systemId: z.string().min(1).optional(), modelVersionId: z.string().nullable().optional(), title: z.string().min(1).max(300).optional(), changeType: z.enum(["MODEL_UPDATE", "RETRAINING", "DATA_CHANGE", "PROMPT_CHANGE", "SCOPE_CHANGE", "INTEGRATION", "CONFIGURATION", "THRESHOLD_CHANGE", "DECOMMISSION", "OTHER"]).optional(), description: z.string().max(4000).nullable().optional(), justification: z.string().max(4000).nullable().optional(), impactAnalysis: z.string().max(4000).nullable().optional(), affectsImpactAssessment: z.boolean().optional(), requiresReassessment: z.boolean().optional(), requiresRetraining: z.boolean().optional(), requiresRevalidation: z.boolean().optional(), rollbackPlan: z.string().max(4000).nullable().optional(), changeRequestId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional() }),
+  metric: z.object({ systemId: z.string().min(1).optional(), modelVersionId: z.string().nullable().optional(), period: z.string().min(4).max(20).optional(), periodStart: z.string().nullable().optional(), kind: z.enum(["ACCURACY", "PRECISION", "RECALL", "F1", "ERROR_RATE", "LATENCY", "THROUGHPUT", "DRIFT", "FAIRNESS", "TOXICITY", "HALLUCINATION_RATE", "HUMAN_OVERRIDE_RATE", "REJECTION_RATE", "COST", "AVAILABILITY", "OTHER"]).optional(), name: z.string().min(1).max(200).optional(), value: z.number().optional(), unit: z.string().max(40).nullable().optional(), baseline: z.number().nullable().optional(), threshold: z.number().nullable().optional(), higherIsBetter: z.boolean().optional(), sampleSize: z.number().int().min(0).nullable().optional(), humanOverrides: z.number().int().min(0).nullable().optional(), note: z.string().max(2000).nullable().optional(), indicatorId: z.string().nullable().optional(), evidenceId: z.string().nullable().optional() }),
+};
+
+const aimsModelForKind: Record<Exclude<AimsRecordKind, "system" | "impactAssessment" | "risk">, string> = {
+  useCase: "aIUseCase", dataset: "dataset", dataSource: "dataSource", dataLineage: "dataLineage", modelVersion: "modelVersion", modelEvaluation: "modelEvaluation", oversight: "humanOversightControl", transparency: "aITransparencyRecord", incident: "aIIncident", supplier: "aISupplierAssessment", change: "aIChangeRequest", metric: "aIPerformanceMetric",
+};
+
+export async function updateAimsRecord(id: string, kind: Exclude<AimsRecordKind, "system" | "impactAssessment" | "risk">, input: Record<string, unknown>) {
+  const ctx = await requirePermission("aims:update");
+  const data = aimsUpdateSchemas[kind].parse(input) as Record<string, unknown>;
+  const refs: Record<string, string> = { systemId: "aISystem", datasetId: "dataset", modelVersionId: "modelVersion", trainingDatasetId: "dataset" };
+  for (const key of Object.keys(refs)) {
+    if (typeof data[key] !== "string" || !data[key]) continue;
+    const delegate = (prisma as unknown as Record<string, { findFirst: Function }>)[refs[key]];
+    if (!await delegate.findFirst({ where: tenantWhere(ctx, { id: data[key] }), select: { id: true } })) throw new Error("La referencia seleccionada no pertenece a la organización.");
+  }
+  await assertRefInOrg(ctx.organization.id, {
+    processId: typeof data.processId === "string" ? data.processId : undefined,
+    evidenceId: typeof data.evidenceId === "string" ? data.evidenceId : undefined,
+    documentId: typeof data.documentId === "string" ? data.documentId : undefined,
+    supplierId: typeof data.supplierId === "string" ? data.supplierId : undefined,
+    controlId: typeof data.controlId === "string" ? data.controlId : undefined,
+    trainingCourseId: typeof data.trainingCourseId === "string" ? data.trainingCourseId : undefined,
+    changeRequestId: typeof data.changeRequestId === "string" ? data.changeRequestId : undefined,
+    indicatorId: typeof data.indicatorId === "string" ? data.indicatorId : undefined,
+    capaId: typeof data.capaId === "string" ? data.capaId : undefined,
+  });
+  const delegate = (prisma as unknown as Record<string, { findFirst: Function; update: Function }>)[aimsModelForKind[kind]];
+  const existing = await delegate.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!existing) throw new Error("Registro AIMS no encontrado.");
+  const dateFields = new Set(["collectedFrom", "collectedTo", "performedAt", "evaluatedAt", "nextReviewDate", "publishedAt", "occurredAt", "dueDate", "assessedAt", "contractExpiry", "periodStart"]);
+  const updateData = Object.fromEntries(Object.entries(data).map(([key, value]) => [key, dateFields.has(key) ? (value == null || value === "" ? null : new Date(String(value))) : value]));
+  if (kind === "metric") {
+    const higherIsBetter = typeof data.higherIsBetter === "boolean" ? data.higherIsBetter : existing.higherIsBetter;
+    const evaluation = evaluateMetric({ value: Number(data.value ?? existing.value), threshold: typeof data.threshold === "number" ? data.threshold : existing.threshold, baseline: typeof data.baseline === "number" ? data.baseline : existing.baseline, higherIsBetter });
+    Object.assign(updateData, { higherIsBetter, breached: evaluation.breached, driftDetected: evaluation.driftDetected });
+  }
+  const updated = await prisma.$transaction(async (tx) => {
+    const txDelegate = (tx as unknown as Record<string, { update: Function }>)[aimsModelForKind[kind]];
+    const row = await txDelegate.update({ where: { id }, data: updateData });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { kind, id }, after: { kind, fields: Object.keys(updateData) }, extra: { event: "update_aims_record" } });
+    return row;
+  });
+  revalidate();
+  return updated;
 }

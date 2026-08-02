@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { writeAuditLog } from "@/lib/audit-log";
 
 const MODULE = "integrated";
 const revalidate = () => {
   revalidatePath("/app/integrated");
+  revalidatePath("/app/context");
   revalidatePath("/app/activity");
 };
 
@@ -54,34 +55,37 @@ export async function upsertIntegratedSystem(input: z.infer<typeof systemSchema>
   const data = systemSchema.parse(input);
   const organizationId = ctx.organization.id;
 
-  const saved = await prisma.integratedSystem.upsert({
-    where: { organizationId },
-    update: {
-      ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.scope !== undefined ? { scope: data.scope } : {}),
-      ...(data.scopeExclusions !== undefined ? { scopeExclusions: data.scopeExclusions } : {}),
-      ...(data.policy !== undefined ? { policy: data.policy } : {}),
-      ...(data.policyVersion !== undefined ? { policyVersion: data.policyVersion } : {}),
-      ...(data.boundaries !== undefined ? { boundaries: data.boundaries } : {}),
-      ...(data.contextNotes !== undefined ? { contextNotes: data.contextNotes } : {}),
-    },
-    create: tenantData(ctx, {
-      name: data.name ?? "Sistema Integrado de Gestión",
-      scope: data.scope ?? null,
-      scopeExclusions: data.scopeExclusions ?? null,
-      policy: data.policy ?? null,
-      policyVersion: data.policyVersion ?? "1.0",
-      boundaries: data.boundaries ?? null,
-      contextNotes: data.contextNotes ?? null,
-      createdById: ctx.user.id,
-    }),
+  const saved = await prisma.$transaction(async (tx) => {
+    const system = await tx.integratedSystem.upsert({
+      where: { organizationId },
+      update: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.scope !== undefined ? { scope: data.scope } : {}),
+        ...(data.scopeExclusions !== undefined ? { scopeExclusions: data.scopeExclusions } : {}),
+        ...(data.policy !== undefined ? { policy: data.policy } : {}),
+        ...(data.policyVersion !== undefined ? { policyVersion: data.policyVersion } : {}),
+        ...(data.boundaries !== undefined ? { boundaries: data.boundaries } : {}),
+        ...(data.contextNotes !== undefined ? { contextNotes: data.contextNotes } : {}),
+      },
+      create: tenantData(ctx, {
+        name: data.name ?? "Sistema Integrado de Gestión",
+        scope: data.scope ?? null,
+        scopeExclusions: data.scopeExclusions ?? null,
+        policy: data.policy ?? null,
+        policyVersion: data.policyVersion ?? "1.0",
+        boundaries: data.boundaries ?? null,
+        contextNotes: data.contextNotes ?? null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: system.id,
+      after: { policyVersion: system.policyVersion, hasScope: Boolean(system.scope), hasPolicy: Boolean(system.policy) },
+      extra: { event: "upsert_integrated_system" },
+    });
+    return system;
   });
 
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: saved.id,
-    after: { policyVersion: saved.policyVersion, hasScope: Boolean(saved.scope), hasPolicy: Boolean(saved.policy) },
-    extra: { event: "upsert_integrated_system" },
-  });
   revalidate();
   return { id: saved.id };
 }
@@ -93,14 +97,18 @@ export async function approveIntegratedPolicy(policyVersion?: string) {
   const existing = await prisma.integratedSystem.findUnique({ where: { organizationId: ctx.organization.id }, select: { id: true } });
   if (!existing) throw new Error("Define primero el alcance y la política del sistema integrado.");
 
-  const saved = await prisma.integratedSystem.update({
-    where: { id: existing.id },
-    data: { policyApprovedAt: new Date(), policyApprovedById: ctx.user.id, ...(version ? { policyVersion: version } : {}) },
+  const saved = await prisma.$transaction(async (tx) => {
+    const system = await tx.integratedSystem.update({
+      where: { id: existing.id },
+      data: { policyApprovedAt: new Date(), policyApprovedById: ctx.user.id, ...(version ? { policyVersion: version } : {}) },
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "approve", module: MODULE, recordId: system.id,
+      after: { policyVersion: system.policyVersion }, extra: { event: "approve_integrated_policy" },
+    });
+    return system;
   });
-  await logAuditEvent({
-    ctx, action: "approve", module: MODULE, recordId: saved.id,
-    after: { policyVersion: saved.policyVersion }, extra: { event: "approve_integrated_policy" },
-  });
+
   revalidate();
   return { id: saved.id, policyVersion: saved.policyVersion };
 }
@@ -120,31 +128,35 @@ export async function upsertSystemStandard(input: z.infer<typeof systemStandardS
   const organizationId = ctx.organization.id;
   await assertRefInOrg(organizationId, { userId: data.responsibleId });
 
-  const system = await prisma.integratedSystem.upsert({
-    where: { organizationId },
-    update: {},
-    create: tenantData(ctx, { createdById: ctx.user.id }),
+  const saved = await prisma.$transaction(async (tx) => {
+    const system = await tx.integratedSystem.upsert({
+      where: { organizationId },
+      update: {},
+      create: tenantData(ctx, { createdById: ctx.user.id }),
+    });
+
+    const systemStandard = await tx.integratedSystemStandard.upsert({
+      where: { integratedSystemId_standardCode: { integratedSystemId: system.id, standardCode: data.standardCode } },
+      update: {
+        discipline: data.discipline,
+        scopeNote: data.scopeNote ?? null,
+        exclusions: data.exclusions ?? null,
+        responsibleId: data.responsibleId ?? null,
+      },
+      create: tenantData(ctx, {
+        integratedSystemId: system.id, standardCode: data.standardCode, discipline: data.discipline,
+        scopeNote: data.scopeNote ?? null, exclusions: data.exclusions ?? null, responsibleId: data.responsibleId ?? null,
+      }),
+    });
+
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: systemStandard.id,
+      after: { standardCode: data.standardCode, discipline: data.discipline },
+      extra: { event: "upsert_system_standard" },
+    });
+    return systemStandard;
   });
 
-  const saved = await prisma.integratedSystemStandard.upsert({
-    where: { integratedSystemId_standardCode: { integratedSystemId: system.id, standardCode: data.standardCode } },
-    update: {
-      discipline: data.discipline,
-      scopeNote: data.scopeNote ?? null,
-      exclusions: data.exclusions ?? null,
-      responsibleId: data.responsibleId ?? null,
-    },
-    create: tenantData(ctx, {
-      integratedSystemId: system.id, standardCode: data.standardCode, discipline: data.discipline,
-      scopeNote: data.scopeNote ?? null, exclusions: data.exclusions ?? null, responsibleId: data.responsibleId ?? null,
-    }),
-  });
-
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: saved.id,
-    after: { standardCode: data.standardCode, discipline: data.discipline },
-    extra: { event: "upsert_system_standard" },
-  });
   revalidate();
   return { id: saved.id };
 }
@@ -177,22 +189,25 @@ export async function createInterestedParty(input: z.infer<typeof partySchema>) 
     await prisma.interestedParty.count({ where: { organizationId: ctx.organization.id } }),
   );
 
-  const created = await prisma.interestedParty.create({
-    data: tenantData(ctx, {
-      code, name: data.name, type: data.type ?? null, needs: data.needs ?? null,
-      requirements: data.requirements ?? null,
-      influence: data.influence ?? 3, dependency: data.dependency ?? 3,
-      isRelevant: data.isRelevant ?? true, communication: data.communication ?? null,
-      disciplines: data.disciplines ?? [], standards: data.standards ?? [],
-      responsibleId: data.responsibleId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const party = await tx.interestedParty.create({
+      data: tenantData(ctx, {
+        code, name: data.name, type: data.type ?? null, needs: data.needs ?? null,
+        requirements: data.requirements ?? null,
+        influence: data.influence ?? 3, dependency: data.dependency ?? 3,
+        isRelevant: data.isRelevant ?? true, communication: data.communication ?? null,
+        disciplines: data.disciplines ?? [], standards: data.standards ?? [],
+        responsibleId: data.responsibleId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "create", module: MODULE, recordId: party.id,
+      after: { code, name: data.name, disciplines: party.disciplines },
+      extra: { event: "create_interested_party" },
+    });
+    return party;
   });
 
-  await logAuditEvent({
-    ctx, action: "create", module: MODULE, recordId: created.id,
-    after: { code, name: data.name, disciplines: created.disciplines },
-    extra: { event: "create_interested_party" },
-  });
   revalidate();
   return { id: created.id, code };
 }
@@ -206,23 +221,27 @@ export async function updateInterestedParty(id: string, input: z.infer<typeof pa
   const existing = await prisma.interestedParty.findFirst({ where: tenantWhere(ctx, { id: partyId }), select: { id: true } });
   if (!existing) throw new Error("Parte interesada no encontrada.");
 
-  const updated = await prisma.interestedParty.update({
-    where: { id: existing.id },
-    data: {
-      ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.type !== undefined ? { type: data.type } : {}),
-      ...(data.needs !== undefined ? { needs: data.needs } : {}),
-      ...(data.requirements !== undefined ? { requirements: data.requirements } : {}),
-      ...(data.influence !== undefined ? { influence: data.influence } : {}),
-      ...(data.dependency !== undefined ? { dependency: data.dependency } : {}),
-      ...(data.isRelevant !== undefined ? { isRelevant: data.isRelevant } : {}),
-      ...(data.communication !== undefined ? { communication: data.communication } : {}),
-      ...(data.disciplines !== undefined ? { disciplines: data.disciplines } : {}),
-      ...(data.standards !== undefined ? { standards: data.standards } : {}),
-      ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId } : {}),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const party = await tx.interestedParty.update({
+      where: { id: existing.id },
+      data: {
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.type !== undefined ? { type: data.type } : {}),
+        ...(data.needs !== undefined ? { needs: data.needs } : {}),
+        ...(data.requirements !== undefined ? { requirements: data.requirements } : {}),
+        ...(data.influence !== undefined ? { influence: data.influence } : {}),
+        ...(data.dependency !== undefined ? { dependency: data.dependency } : {}),
+        ...(data.isRelevant !== undefined ? { isRelevant: data.isRelevant } : {}),
+        ...(data.communication !== undefined ? { communication: data.communication } : {}),
+        ...(data.disciplines !== undefined ? { disciplines: data.disciplines } : {}),
+        ...(data.standards !== undefined ? { standards: data.standards } : {}),
+        ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: party.id, after: { name: party.name }, extra: { event: "update_interested_party" } });
+    return party;
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: updated.id, after: { name: updated.name }, extra: { event: "update_interested_party" } });
+
   revalidate();
   return { id: updated.id };
 }
@@ -232,8 +251,12 @@ export async function deleteInterestedParty(id: string) {
   const partyId = z.string().min(1).parse(id);
   const existing = await prisma.interestedParty.findFirst({ where: tenantWhere(ctx, { id: partyId }), select: { id: true, code: true } });
   if (!existing) throw new Error("Parte interesada no encontrada.");
-  await prisma.interestedParty.delete({ where: { id: existing.id } });
-  await logAuditEvent({ ctx, action: "delete", module: MODULE, recordId: existing.id, before: { code: existing.code }, extra: { event: "delete_interested_party" } });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.interestedParty.delete({ where: { id: existing.id } });
+    await writeAuditLog(tx, { ctx, action: "delete", module: MODULE, recordId: existing.id, before: { code: existing.code }, extra: { event: "delete_interested_party" } });
+  });
+
   revalidate();
   return { id: existing.id };
 }
@@ -273,25 +296,28 @@ export async function createIntegratedObjective(input: z.infer<typeof objectiveS
     await prisma.integratedObjective.count({ where: { organizationId: ctx.organization.id } }),
   );
 
-  const created = await prisma.integratedObjective.create({
-    data: tenantData(ctx, {
-      code, title: data.title, description: data.description ?? null,
-      disciplines: data.disciplines ?? [], standards: data.standards ?? [],
-      target: data.target ?? null, baseline: data.baseline ?? null, unit: data.unit ?? null,
-      targetValue: data.targetValue ?? null, currentValue: data.currentValue ?? null,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      status: data.status ?? "PLANNED",
-      ownerId: data.ownerId ?? null, processId: data.processId ?? null,
-      indicatorId: data.indicatorId ?? null, resources: data.resources ?? null,
-      createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const objective = await tx.integratedObjective.create({
+      data: tenantData(ctx, {
+        code, title: data.title, description: data.description ?? null,
+        disciplines: data.disciplines ?? [], standards: data.standards ?? [],
+        target: data.target ?? null, baseline: data.baseline ?? null, unit: data.unit ?? null,
+        targetValue: data.targetValue ?? null, currentValue: data.currentValue ?? null,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        status: data.status ?? "PLANNED",
+        ownerId: data.ownerId ?? null, processId: data.processId ?? null,
+        indicatorId: data.indicatorId ?? null, resources: data.resources ?? null,
+        createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "create", module: MODULE, recordId: objective.id,
+      after: { code, title: data.title, disciplines: objective.disciplines, shared: objective.disciplines.length > 1 },
+      extra: { event: "create_integrated_objective" },
+    });
+    return objective;
   });
 
-  await logAuditEvent({
-    ctx, action: "create", module: MODULE, recordId: created.id,
-    after: { code, title: data.title, disciplines: created.disciplines, shared: created.disciplines.length > 1 },
-    extra: { event: "create_integrated_objective" },
-  });
   revalidate();
   return { id: created.id, code };
 }
@@ -305,27 +331,31 @@ export async function updateIntegratedObjective(id: string, input: z.infer<typeo
   const existing = await prisma.integratedObjective.findFirst({ where: tenantWhere(ctx, { id: objectiveId }), select: { id: true } });
   if (!existing) throw new Error("Objetivo no encontrado.");
 
-  const updated = await prisma.integratedObjective.update({
-    where: { id: existing.id },
-    data: {
-      ...(data.title !== undefined ? { title: data.title } : {}),
-      ...(data.description !== undefined ? { description: data.description } : {}),
-      ...(data.disciplines !== undefined ? { disciplines: data.disciplines } : {}),
-      ...(data.standards !== undefined ? { standards: data.standards } : {}),
-      ...(data.target !== undefined ? { target: data.target } : {}),
-      ...(data.baseline !== undefined ? { baseline: data.baseline } : {}),
-      ...(data.unit !== undefined ? { unit: data.unit } : {}),
-      ...(data.targetValue !== undefined ? { targetValue: data.targetValue } : {}),
-      ...(data.currentValue !== undefined ? { currentValue: data.currentValue } : {}),
-      ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
-      ...(data.status !== undefined ? { status: data.status } : {}),
-      ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
-      ...(data.processId !== undefined ? { processId: data.processId } : {}),
-      ...(data.indicatorId !== undefined ? { indicatorId: data.indicatorId } : {}),
-      ...(data.resources !== undefined ? { resources: data.resources } : {}),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const objective = await tx.integratedObjective.update({
+      where: { id: existing.id },
+      data: {
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.disciplines !== undefined ? { disciplines: data.disciplines } : {}),
+        ...(data.standards !== undefined ? { standards: data.standards } : {}),
+        ...(data.target !== undefined ? { target: data.target } : {}),
+        ...(data.baseline !== undefined ? { baseline: data.baseline } : {}),
+        ...(data.unit !== undefined ? { unit: data.unit } : {}),
+        ...(data.targetValue !== undefined ? { targetValue: data.targetValue } : {}),
+        ...(data.currentValue !== undefined ? { currentValue: data.currentValue } : {}),
+        ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
+        ...(data.status !== undefined ? { status: data.status } : {}),
+        ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+        ...(data.processId !== undefined ? { processId: data.processId } : {}),
+        ...(data.indicatorId !== undefined ? { indicatorId: data.indicatorId } : {}),
+        ...(data.resources !== undefined ? { resources: data.resources } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: objective.id, after: { status: objective.status }, extra: { event: "update_integrated_objective" } });
+    return objective;
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: updated.id, after: { status: updated.status }, extra: { event: "update_integrated_objective" } });
+
   revalidate();
   return { id: updated.id };
 }
@@ -335,8 +365,12 @@ export async function deleteIntegratedObjective(id: string) {
   const objectiveId = z.string().min(1).parse(id);
   const existing = await prisma.integratedObjective.findFirst({ where: tenantWhere(ctx, { id: objectiveId }), select: { id: true, code: true } });
   if (!existing) throw new Error("Objetivo no encontrado.");
-  await prisma.integratedObjective.delete({ where: { id: existing.id } });
-  await logAuditEvent({ ctx, action: "delete", module: MODULE, recordId: existing.id, before: { code: existing.code }, extra: { event: "delete_integrated_objective" } });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.integratedObjective.delete({ where: { id: existing.id } });
+    await writeAuditLog(tx, { ctx, action: "delete", module: MODULE, recordId: existing.id, before: { code: existing.code }, extra: { event: "delete_integrated_objective" } });
+  });
+
   revalidate();
   return { id: existing.id };
 }
@@ -363,17 +397,20 @@ export async function assignRequirementOwner(input: z.infer<typeof assignmentSch
   });
   if (!requirement) throw new Error("El requisito no pertenece a una norma activa de la organización.");
 
-  const saved = await prisma.requirementAssignment.upsert({
-    where: { organizationId_requirementId: { organizationId, requirementId: data.requirementId } },
-    update: { responsibleId: data.responsibleId ?? null, notes: data.notes ?? null },
-    create: tenantData(ctx, { requirementId: data.requirementId, responsibleId: data.responsibleId ?? null, notes: data.notes ?? null }),
+  const saved = await prisma.$transaction(async (tx) => {
+    const assignment = await tx.requirementAssignment.upsert({
+      where: { organizationId_requirementId: { organizationId, requirementId: data.requirementId } },
+      update: { responsibleId: data.responsibleId ?? null, notes: data.notes ?? null },
+      create: tenantData(ctx, { requirementId: data.requirementId, responsibleId: data.responsibleId ?? null, notes: data.notes ?? null }),
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: assignment.id,
+      after: { requirementId: data.requirementId, responsibleId: data.responsibleId ?? null },
+      extra: { event: "assign_requirement_owner" },
+    });
+    return assignment;
   });
 
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: saved.id,
-    after: { requirementId: data.requirementId, responsibleId: data.responsibleId ?? null },
-    extra: { event: "assign_requirement_owner" },
-  });
   revalidate();
   return { id: saved.id };
 }
@@ -396,20 +433,23 @@ export async function setAuditStandards(input: z.infer<typeof auditScopeSchema>)
   const existing = await prisma.audit.findFirst({ where: tenantWhere(ctx, { id: data.auditId }), select: { id: true, standards: true } });
   if (!existing) throw new Error("Auditoría no encontrada.");
 
-  const updated = await prisma.audit.update({
-    where: { id: existing.id },
-    data: {
-      standards: data.standards,
-      integrated: data.standards.length > 1,
-      ...(data.standards.length === 1 ? { standardCode: data.standards[0] } : {}),
-    },
+  const updated = await prisma.$transaction(async (tx) => {
+    const audit = await tx.audit.update({
+      where: { id: existing.id },
+      data: {
+        standards: data.standards,
+        integrated: data.standards.length > 1,
+        ...(data.standards.length === 1 ? { standardCode: data.standards[0] } : {}),
+      },
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: audit.id,
+      before: { standards: existing.standards }, after: { standards: audit.standards, integrated: audit.integrated },
+      extra: { event: "set_audit_standards" },
+    });
+    return audit;
   });
 
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { standards: existing.standards }, after: { standards: updated.standards, integrated: updated.integrated },
-    extra: { event: "set_audit_standards" },
-  });
   revalidate();
   revalidatePath("/app/audits");
   return { id: updated.id, integrated: updated.integrated };
@@ -432,12 +472,16 @@ export async function setFindingStandards(input: z.infer<typeof findingScopeSche
   });
   if (!existing) throw new Error("Hallazgo no encontrado.");
 
-  const updated = await prisma.auditFinding.update({ where: { id: existing.id }, data: { standards: data.standards } });
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { standards: existing.standards }, after: { standards: updated.standards },
-    extra: { event: "set_finding_standards" },
+  const updated = await prisma.$transaction(async (tx) => {
+    const finding = await tx.auditFinding.update({ where: { id: existing.id }, data: { standards: data.standards } });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: finding.id,
+      before: { standards: existing.standards }, after: { standards: finding.standards },
+      extra: { event: "set_finding_standards" },
+    });
+    return finding;
   });
+
   revalidate();
   return { id: updated.id };
 }
@@ -455,15 +499,19 @@ export async function setCapaStandards(input: z.infer<typeof capaScopeSchema>) {
   const existing = await prisma.cAPA.findFirst({ where: tenantWhere(ctx, { id: data.capaId }), select: { id: true, standards: true } });
   if (!existing) throw new Error("CAPA no encontrada.");
 
-  const updated = await prisma.cAPA.update({
-    where: { id: existing.id },
-    data: { standards: data.standards, ...(data.standards.length === 1 ? { standardCode: data.standards[0] } : {}) },
+  const updated = await prisma.$transaction(async (tx) => {
+    const capa = await tx.cAPA.update({
+      where: { id: existing.id },
+      data: { standards: data.standards, ...(data.standards.length === 1 ? { standardCode: data.standards[0] } : {}) },
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: capa.id,
+      before: { standards: existing.standards }, after: { standards: capa.standards },
+      extra: { event: "set_capa_standards" },
+    });
+    return capa;
   });
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { standards: existing.standards }, after: { standards: updated.standards },
-    extra: { event: "set_capa_standards" },
-  });
+
   revalidate();
   return { id: updated.id };
 }
@@ -484,15 +532,19 @@ export async function setRiskDisciplines(input: z.infer<typeof riskScopeSchema>)
   const existing = await prisma.risk.findFirst({ where: tenantWhere(ctx, { id: data.riskId }), select: { id: true, disciplines: true } });
   if (!existing) throw new Error("Riesgo no encontrado.");
 
-  const updated = await prisma.risk.update({
-    where: { id: existing.id },
-    data: { disciplines: data.disciplines, ...(data.standards ? { standards: data.standards } : {}) },
+  const updated = await prisma.$transaction(async (tx) => {
+    const risk = await tx.risk.update({
+      where: { id: existing.id },
+      data: { disciplines: data.disciplines, ...(data.standards ? { standards: data.standards } : {}) },
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: risk.id,
+      before: { disciplines: existing.disciplines }, after: { disciplines: risk.disciplines },
+      extra: { event: "set_risk_disciplines" },
+    });
+    return risk;
   });
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { disciplines: existing.disciplines }, after: { disciplines: updated.disciplines },
-    extra: { event: "set_risk_disciplines" },
-  });
+
   revalidate();
   revalidatePath("/app/risks");
   return { id: updated.id };
@@ -513,15 +565,19 @@ export async function setChangeDisciplines(input: z.infer<typeof changeScopeSche
   const existing = await prisma.changeRequest.findFirst({ where: tenantWhere(ctx, { id: data.changeRequestId }), select: { id: true, disciplines: true } });
   if (!existing) throw new Error("Solicitud de cambio no encontrada.");
 
-  const updated = await prisma.changeRequest.update({
-    where: { id: existing.id },
-    data: { disciplines: data.disciplines, ...(data.standards ? { standards: data.standards } : {}) },
+  const updated = await prisma.$transaction(async (tx) => {
+    const change = await tx.changeRequest.update({
+      where: { id: existing.id },
+      data: { disciplines: data.disciplines, ...(data.standards ? { standards: data.standards } : {}) },
+    });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: change.id,
+      before: { disciplines: existing.disciplines }, after: { disciplines: change.disciplines },
+      extra: { event: "set_change_disciplines" },
+    });
+    return change;
   });
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { disciplines: existing.disciplines }, after: { disciplines: updated.disciplines },
-    extra: { event: "set_change_disciplines" },
-  });
+
   revalidate();
   revalidatePath("/app/changes");
   return { id: updated.id };
@@ -559,27 +615,30 @@ export async function evaluateSupplierIntegrated(input: z.infer<typeof supplierE
   if (!present.length) throw new Error("Informa al menos una dimensión (calidad, ambiente o SST).");
   const score = Math.round(present.reduce((s, d) => s + (d.value as number), 0) / present.length);
 
-  const created = await prisma.supplierEvaluation.create({
-    data: {
-      supplierId: supplier.id,
-      score,
-      qualityScore: data.qualityScore ?? null,
-      environmentScore: data.environmentScore ?? null,
-      safetyScore: data.safetyScore ?? null,
-      disciplines: present.map((d) => d.key),
-      outcome: data.outcome ?? (score >= 80 ? "APPROVED" : score >= 60 ? "CONDITIONAL" : "REJECTED"),
-      notes: data.notes ?? null,
-      evaluatedById: ctx.user.id,
-      nextReviewDue: data.nextReviewDue ? new Date(data.nextReviewDue) : null,
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    const evaluation = await tx.supplierEvaluation.create({
+      data: {
+        supplierId: supplier.id,
+        score,
+        qualityScore: data.qualityScore ?? null,
+        environmentScore: data.environmentScore ?? null,
+        safetyScore: data.safetyScore ?? null,
+        disciplines: present.map((d) => d.key),
+        outcome: data.outcome ?? (score >= 80 ? "APPROVED" : score >= 60 ? "CONDITIONAL" : "REJECTED"),
+        notes: data.notes ?? null,
+        evaluatedById: ctx.user.id,
+        nextReviewDue: data.nextReviewDue ? new Date(data.nextReviewDue) : null,
+      },
+    });
+    await tx.supplier.update({ where: { id: supplier.id }, data: { lastEvaluationAt: new Date() } });
+    await writeAuditLog(tx, {
+      ctx, action: "create", module: MODULE, recordId: evaluation.id,
+      after: { supplierId: supplier.id, score, disciplines: evaluation.disciplines },
+      extra: { event: "evaluate_supplier_integrated" },
+    });
+    return evaluation;
   });
-  await prisma.supplier.update({ where: { id: supplier.id }, data: { lastEvaluationAt: new Date() } });
 
-  await logAuditEvent({
-    ctx, action: "create", module: MODULE, recordId: created.id,
-    after: { supplierId: supplier.id, score, disciplines: created.disciplines },
-    extra: { event: "evaluate_supplier_integrated" },
-  });
   revalidate();
   revalidatePath("/app/suppliers");
   return { id: created.id, score };
@@ -600,12 +659,16 @@ export async function setReviewStandards(input: z.infer<typeof reviewScopeSchema
   const existing = await prisma.managementReview.findFirst({ where: tenantWhere(ctx, { id: data.reviewId }), select: { id: true, standards: true } });
   if (!existing) throw new Error("Revisión por la dirección no encontrada.");
 
-  const updated = await prisma.managementReview.update({ where: { id: existing.id }, data: { standards: data.standards } });
-  await logAuditEvent({
-    ctx, action: "update", module: MODULE, recordId: updated.id,
-    before: { standards: existing.standards }, after: { standards: updated.standards },
-    extra: { event: "set_review_standards" },
+  const updated = await prisma.$transaction(async (tx) => {
+    const review = await tx.managementReview.update({ where: { id: existing.id }, data: { standards: data.standards } });
+    await writeAuditLog(tx, {
+      ctx, action: "update", module: MODULE, recordId: review.id,
+      before: { standards: existing.standards }, after: { standards: review.standards },
+      extra: { event: "set_review_standards" },
+    });
+    return review;
   });
+
   revalidate();
   revalidatePath("/app/management-review");
   return { id: updated.id };

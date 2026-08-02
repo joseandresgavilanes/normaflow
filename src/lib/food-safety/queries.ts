@@ -13,7 +13,7 @@ export async function getFoodSafetyPayload() {
   const [
     products, materials, intendedUses, flows, steps, hazards, assessments,
     prps, oprps, ccps, limits, plans, records, deviations, corrections,
-    validations, verifications, lots, recalls, allergens, emergencies, members,
+    validations, verifications, lots, recalls, allergens, emergencies, communications, members,
   ] = await Promise.all([
     prisma.foodProduct.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.rawMaterial.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
@@ -105,6 +105,10 @@ export async function getFoodSafetyPayload() {
     prisma.withdrawalRecall.findMany({ where: { organizationId }, orderBy: { initiatedAt: "desc" } }),
     prisma.allergen.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.foodSafetyEmergency.findMany({ where: { organizationId }, orderBy: { activatedAt: "desc" } }),
+    prisma.communicationRecord.findMany({
+      where: { organizationId, standards: { has: "ISO_22000" } },
+      orderBy: { communicatedAt: "desc" },
+    }),
     prisma.user.findMany({
       where: { memberships: { some: { organizationId } } },
       select: { id: true, name: true },
@@ -171,6 +175,7 @@ export async function getFoodSafetyPayload() {
     recalls,
     allergens,
     emergencies,
+    communications,
     lastTraceTest,
     summary: {
       products: products.filter((p) => p.active).length,

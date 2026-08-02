@@ -1,7 +1,10 @@
 /**
  * Workflows y reglas de expediente para QMS de dispositivos médicos.
  */
-import type { MdComplaintStatus, MdRecallStatus, MdRecordStatus, MdTestResult } from "@prisma/client";
+import type {
+  MdAdverseEventStatus, MdComplaintStatus, MdFsaStatus, MdPmsStatus,
+  MdRecallStatus, MdRecordStatus, MdTestResult,
+} from "@prisma/client";
 
 const COMPLAINT: Record<MdComplaintStatus, MdComplaintStatus[]> = {
   RECEIVED: ["TRIAGED"],
@@ -9,6 +12,28 @@ const COMPLAINT: Record<MdComplaintStatus, MdComplaintStatus[]> = {
   INVESTIGATING: ["CAPA_LINKED", "CLOSED", "TRIAGED"],
   CAPA_LINKED: ["CLOSED", "INVESTIGATING"],
   CLOSED: [],
+};
+
+const ADVERSE_EVENT: Record<MdAdverseEventStatus, MdAdverseEventStatus[]> = {
+  REPORTED: ["UNDER_REVIEW"],
+  UNDER_REVIEW: ["REPORTED_TO_AUTHORITY", "CLOSED", "REPORTED"],
+  REPORTED_TO_AUTHORITY: ["CLOSED", "UNDER_REVIEW"],
+  CLOSED: [],
+};
+
+const FSA: Record<MdFsaStatus, MdFsaStatus[]> = {
+  DRAFT: ["INITIATED"],
+  INITIATED: ["IN_PROGRESS", "DRAFT"],
+  IN_PROGRESS: ["COMPLETED", "INITIATED"],
+  COMPLETED: ["CLOSED", "IN_PROGRESS"],
+  CLOSED: [],
+};
+
+const PMS: Record<MdPmsStatus, MdPmsStatus[]> = {
+  PLANNED: ["IN_PROGRESS"],
+  IN_PROGRESS: ["COMPLETED", "OVERDUE", "PLANNED"],
+  OVERDUE: ["IN_PROGRESS", "COMPLETED"],
+  COMPLETED: [],
 };
 
 const RECALL: Record<MdRecallStatus, MdRecallStatus[]> = {
@@ -36,6 +61,45 @@ export function assertComplaintTransition(from: MdComplaintStatus, to: MdComplai
   if (!nextComplaintStatuses(from).includes(to)) {
     throw new Error(
       `Transición de queja no permitida: de ${from} solo a ${nextComplaintStatuses(from).join(", ") || "ningún estado"}.`,
+    );
+  }
+}
+
+export function nextAdverseEventStatuses(status: MdAdverseEventStatus): MdAdverseEventStatus[] {
+  return ADVERSE_EVENT[status] ?? [];
+}
+
+export function assertAdverseEventTransition(from: MdAdverseEventStatus, to: MdAdverseEventStatus): void {
+  if (from === to) throw new Error(`El evento adverso ya está en estado ${from}.`);
+  if (!nextAdverseEventStatuses(from).includes(to)) {
+    throw new Error(
+      `Transición de evento adverso no permitida: de ${from} solo a ${nextAdverseEventStatuses(from).join(", ") || "ningún estado"}.`,
+    );
+  }
+}
+
+export function nextFsaStatuses(status: MdFsaStatus): MdFsaStatus[] {
+  return FSA[status] ?? [];
+}
+
+export function assertFsaTransition(from: MdFsaStatus, to: MdFsaStatus): void {
+  if (from === to) throw new Error(`La acción de campo ya está en estado ${from}.`);
+  if (!nextFsaStatuses(from).includes(to)) {
+    throw new Error(
+      `Transición de acción de campo no permitida: de ${from} solo a ${nextFsaStatuses(from).join(", ") || "ningún estado"}.`,
+    );
+  }
+}
+
+export function nextPmsStatuses(status: MdPmsStatus): MdPmsStatus[] {
+  return PMS[status] ?? [];
+}
+
+export function assertPmsTransition(from: MdPmsStatus, to: MdPmsStatus): void {
+  if (from === to) throw new Error(`La vigilancia post-comercialización ya está en estado ${from}.`);
+  if (!nextPmsStatuses(from).includes(to)) {
+    throw new Error(
+      `Transición de PMS no permitida: de ${from} solo a ${nextPmsStatuses(from).join(", ") || "ningún estado"}.`,
     );
   }
 }
@@ -95,4 +159,28 @@ export function designInputCoverage(input: {
     ? Math.round((covered.length / input.inputCodes.length) * 100)
     : 100;
   return { covered, uncovered, percent };
+}
+
+/** Fecha hasta la que se conserva la queja/evento adverso, contada desde su cierre. */
+export function mdRetentionUntil(closedAt: Date, retentionYears: number): Date {
+  const until = new Date(closedAt.getTime());
+  until.setUTCFullYear(until.getUTCFullYear() + Math.max(1, Math.trunc(retentionYears)));
+  return until;
+}
+
+/**
+ * La purga solo procede sobre un expediente cerrado cuya retención ya venció.
+ * Antes de eso es prueba de vigilancia; después es un riesgo innecesario conservarlo.
+ */
+export function assertMdRecordPurgeable(
+  row: { closedAt?: Date | null; retentionUntil?: Date | null; purgedAt?: Date | null },
+  today: Date,
+  label: string,
+): void {
+  if (row.purgedAt) throw new Error(`${label} ya fue purgado.`);
+  if (!row.closedAt) throw new Error(`Solo ${label.toLowerCase()} cerrado puede purgarse.`);
+  if (!row.retentionUntil) throw new Error(`${label} no tiene plazo de retención calculado.`);
+  if (row.retentionUntil > today) {
+    throw new Error(`El plazo de retención de ${label.toLowerCase()} vence el ${row.retentionUntil.toISOString().slice(0, 10)}; no puede purgarse antes.`);
+  }
 }
