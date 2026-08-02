@@ -1,0 +1,134 @@
+/* ============================================================================
+ * NormaFlow — Controles: Button
+ *
+ * Una sola geometría para todos los botones del producto. Antes había diez
+ * sistemas con alturas, radios, paddings y criterios de foco distintos.
+ * ========================================================================== */
+
+.nf-button {
+  --nf-btn-h: var(--nf-control-height);
+  --nf-btn-px: var(--nf-space-4);
+  --nf-btn-fs: var(--nf-text-base);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nf-space-2);
+  min-height: var(--nf-btn-h);
+  padding: 0 var(--nf-btn-px);
+  border: 1px solid transparent;
+  border-radius: var(--nf-radius-m);
+  font-family: inherit;
+  font-size: var(--nf-btn-fs);
+  font-weight: var(--nf-weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--nf-duration-fast) var(--nf-ease-standard),
+    border-color var(--nf-duration-fast) var(--nf-ease-standard),
+    color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+.nf-button--sm {
+  --nf-btn-h: var(--nf-control-height-sm);
+  --nf-btn-px: var(--nf-space-3);
+  --nf-btn-fs: var(--nf-text-sm);
+}
+
+/* Cuadrado exacto: un icono sin etiqueta no debe heredar el padding lateral. */
+.nf-button--icon {
+  --nf-btn-px: 0;
+  width: var(--nf-btn-h);
+  min-width: var(--nf-btn-h);
+}
+
+.nf-button--block { width: 100%; }
+
+.nf-button__label { display: inline-block; }
+
+/* --------------------------------------------------------------------------
+ * Variantes
+ * ------------------------------------------------------------------------ */
+.nf-button--primary {
+  background: var(--nf-primary);
+  color: var(--nf-on-primary);
+}
+.nf-button--primary:hover:not(:disabled):not([data-loading]) { background: var(--nf-primary-hover); }
+.nf-button--primary:active:not(:disabled) { background: var(--nf-primary-active); }
+
+.nf-button--secondary {
+  border-color: var(--nf-border-strong);
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+}
+.nf-button--secondary:hover:not(:disabled):not([data-loading]) { background: var(--nf-surface-hover); }
+.nf-button--secondary:active:not(:disabled) { background: var(--nf-surface-sunken); }
+
+.nf-button--ghost {
+  background: transparent;
+  color: var(--nf-text-secondary);
+}
+.nf-button--ghost:hover:not(:disabled):not([data-loading]) {
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-primary);
+}
+
+.nf-button--danger {
+  background: var(--nf-danger);
+  color: var(--nf-c-neutral-0);
+}
+.nf-button--danger:hover:not(:disabled):not([data-loading]) { background: var(--nf-danger-text); }
+
+.nf-button--success {
+  background: var(--nf-success-text);
+  color: var(--nf-c-neutral-0);
+}
+.nf-button--success:hover:not(:disabled):not([data-loading]) { background: var(--nf-success); }
+
+/* --------------------------------------------------------------------------
+ * Estados
+ * ------------------------------------------------------------------------ */
+
+/* Deshabilitado: opacidad + cursor + semántica. Nunca solo opacidad. */
+.nf-button:disabled,
+.nf-button[aria-disabled="true"] {
+  opacity: var(--nf-disabled-opacity);
+  cursor: not-allowed;
+}
+.nf-button--secondary:disabled,
+.nf-button--ghost:disabled {
+  background: var(--nf-disabled-bg);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-disabled-text);
+  opacity: 1; /* con relleno propio la opacidad sobra y empeora el contraste */
+}
+
+/* En carga el botón conserva su ancho: si el texto desapareciera, el botón
+   encogería bajo el cursor y el siguiente clic caería en otro sitio. */
+.nf-button[data-loading] { cursor: progress; }
+.nf-button__spinner { animation: nf-button-spin 640ms linear infinite; }
+@keyframes nf-button-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-button__spinner { animation-duration: 2s; }
+}
+
+/* --------------------------------------------------------------------------
+ * Grupo de acciones
+ * ------------------------------------------------------------------------ */
+.nf-button-group {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+}
+.nf-button-group--start { justify-content: flex-start; }
+.nf-button-group--end { justify-content: flex-end; }
+/* `between` separa lo destructivo de la acción primaria. */
+.nf-button-group--between { justify-content: space-between; width: 100%; }
+
+@media (max-width: 639px) {
+  .nf-button-group > .nf-button { flex: 1 1 auto; }
+}

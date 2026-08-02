@@ -15,6 +15,8 @@ import "./globals.css";
 // Se carga después de globals.css: corrige el layout del shell sin editar el
 // monolito de 7k líneas.
 import "@/styles/app-shell.css";
+import "@/styles/controls.css";
+import "@/styles/surfaces.css";
 import "@/styles/data-table.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
