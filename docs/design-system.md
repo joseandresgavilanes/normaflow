@@ -306,16 +306,19 @@ timeline y comentarios.
 | Responsive del shell por CSS | ✅ implementado |
 | `PageHeader` + `Breadcrumb` | ✅ implementado (falta adoptarlo en las 83 rutas) |
 | Tokens de dark mode | ✅ definidos, **no activados** |
-| `Button`, `Field`, `Input`, `Select`, `Checkbox`, `Switch` | ⬜ especificado |
-| `DataTable`, `FilterBar`, `Pagination` | ⬜ especificado |
+| `Button` (5 variantes × 2 tamaños, enlace, icono, carga) | ✅ implementado |
+| `Field`, `Input`, `Select`, `Checkbox`, `Switch` | ⬜ especificado |
+| `DataTable`, `FilterBar`, `EmptyState` | ✅ implementado (falta migrar 20 listados con markup propio) |
 | `StatusBadge` unificado | ⬜ especificado |
-| `EmptyState` y familia de estados | ⬜ especificado |
-| `Dialog` accesible, `Drawer` | ⬜ especificado |
+| Familia completa de estados (sin permisos, pack, red, servidor) | ✅ implementado |
+| `Dialog` accesible + `useDialogLayer` | ✅ implementado, 8/8 pruebas a11y |
+| `Drawer` | ⬜ especificado |
 | `WorkflowStepper` | ⬜ especificado |
 | Patrón de página de detalle | ⬜ especificado |
 | `CommandPalette` (⌘K real) | ⬜ especificado |
 | `ModuleTabs` (pestañas dentro de cada módulo normativo) | ⬜ especificado |
-| Consolidación de las 7 tarjetas y 10 botones | ⬜ pendiente |
+| `Card` / `SectionHeader` / `MetricCard` | ✅ implementado (falta migrar los 55 usos) |
+| Anunciador `aria-live` global | ✅ implementado |
 | Migración de los 4.475 `style={{}}` inline | ⬜ pendiente |
 | Partición de `globals.css` (7.125 líneas) | ⬜ pendiente |
 
