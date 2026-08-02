@@ -456,6 +456,37 @@
 .nf-topbar button > svg,
 .nf-topbar a > svg { flex: 0 0 auto; }
 
+/* --------------------------------------------------------------------------
+ * Toast
+ * ------------------------------------------------------------------------ */
+.nf-toast {
+  position: fixed;
+  bottom: var(--nf-space-6);
+  right: var(--nf-space-6);
+  z-index: var(--nf-z-toast);
+  max-width: 380px;
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-c-neutral-900);
+  color: var(--nf-c-neutral-0);
+  font-size: var(--nf-text-base);
+  line-height: var(--nf-leading-normal);
+  box-shadow: var(--nf-elevation-4);
+  animation: nf-toast-in var(--nf-duration-base) var(--nf-ease-out);
+}
+@keyframes nf-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (max-width: 639px) {
+  .nf-toast {
+    left: var(--nf-space-3);
+    right: var(--nf-space-3);
+    bottom: var(--nf-space-3);
+    max-width: none;
+  }
+}
+
 /* Velo del cajón en móvil */
 .nf-sidenav-backdrop {
   position: fixed;

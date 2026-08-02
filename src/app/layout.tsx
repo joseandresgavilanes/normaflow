@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Manrope } from "next/font/google";
 import AuthHashRedirect from "@/components/auth/AuthHashRedirect";
 import AppActionIcons from "@/components/ui/AppActionIcons";
+import { LiveRegionProvider } from "@/components/ui/LiveRegion";
 import I18nDomBridge from "@/components/i18n/I18nDomBridge";
 import { I18nProvider } from "@/context/I18nProvider";
 import { localeToOpenGraph } from "@/lib/i18n/config";
@@ -61,10 +62,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={`${inter.variable} ${manrope.variable}`} suppressHydrationWarning>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <I18nProvider initialLocale={locale}>
-          <AuthHashRedirect />
-          <I18nDomBridge />
-          <AppActionIcons />
-          {children}
+          {/* En la raíz para que también cubra login y registro: los errores de
+              autenticación tienen que anunciarse. */}
+          <LiveRegionProvider>
+            <AuthHashRedirect />
+            <I18nDomBridge />
+            <AppActionIcons />
+            {children}
+          </LiveRegionProvider>
         </I18nProvider>
       </body>
     </html>

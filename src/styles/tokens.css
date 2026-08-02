@@ -448,6 +448,20 @@
   transform: translateY(0);
 }
 
+/* Solo para lectores de pantalla: presente en el árbol de accesibilidad pero
+   fuera de la pantalla. Lo usan las regiones `aria-live` y los `<caption>`. */
+.nf-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Números tabulares en datos: evita el baile de columnas al ordenar/filtrar. */
 .nf-tabular {
   font-variant-numeric: tabular-nums;
