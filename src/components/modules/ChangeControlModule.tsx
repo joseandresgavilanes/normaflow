@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -70,6 +72,21 @@ export default function ChangeControlModule() {
   const [processCodesDraft, setProcessCodesDraft] = useState<string[]>([]);
 
   const filtered = filter === "ALL" ? changeRequests : changeRequests.filter(c => c.status === filter);
+
+  type ChangeRow = (typeof changeRequests)[number];
+  const columns = useMemo<DataTableColumn<ChangeRow>[]>(() => [
+    { id: "code", header: "Código", primary: true, minWidth: 120, hideable: false, sortValue: (c) => c.code,
+      cell: (c) => <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "#5266F6" }}>{c.code}</span> },
+    { id: "title", header: "Título", minWidth: 220, sortValue: (c) => c.title,
+      cell: (c) => <span style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{c.title}</span> },
+    { id: "impact", header: "Impacto", minWidth: 130, sortValue: (c) => c.impact,
+      cell: (c) => <span style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.impact}</span> },
+    { id: "status", header: "Estado", minWidth: 140, sortValue: (c) => c.status,
+      cell: (c) => <Badge status={c.status === "CLOSED" || c.status === "VERIFIED" ? "ON_TRACK" : c.status === "REJECTED" ? "OFF_TRACK" : "AT_RISK"} label={statusLabel(c.status)} /> },
+    { id: "requester", header: "Solicitante", minWidth: 150, sortValue: (c) => c.requesterName,
+      cell: (c) => <span style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.requesterName}</span> },
+  ], []);
+
   const detailLive = detail ? changeRequests.find(c => c.id === detail.id) ?? detail : null;
   const changeEvents = useMemo(() => auditEvents.filter(e => e.entityType === "CHANGE_REQUEST" || e.action === "CHANGE_STATUS"), [auditEvents]);
   const linkedProcesses = useMemo(
@@ -249,39 +266,15 @@ export default function ChangeControlModule() {
       </div>
 
       <Card style={{ padding: 0, marginBottom: 20, overflow: "hidden" }}>
-        <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
-          <table className="nf-data-table" style={{ fontSize: 14 }}>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Título</th>
-                <th>Impacto</th>
-                <th>Estado</th>
-                <th>Solicitante</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(c => (
-                <tr
-                  key={c.id}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setDetail(c)}
-                >
-                  <td style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "#5266F6" }}>{c.code}</td>
-                  <td style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{c.title}</td>
-                  <td style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.impact}</td>
-                  <td>
-                    <Badge
-                      status={c.status === "CLOSED" || c.status === "VERIFIED" ? "ON_TRACK" : c.status === "REJECTED" ? "OFF_TRACK" : "AT_RISK"}
-                      label={statusLabel(c.status)}
-                    />
-                  </td>
-                  <td style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{c.requesterName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(c) => c.id}
+          rowAction={(c) => setDetail(c)}
+          caption="Solicitudes de control de cambios: código, título, impacto, estado del flujo y solicitante."
+          storageKey="change-control"
+          empty={<EmptyState kind="no-results" title="No hay solicitudes de cambio." description="El control de cambios registra qué se modifica en el sistema de gestión, su impacto y quién lo aprueba." />}
+        />
       </Card>
 
       <Card>

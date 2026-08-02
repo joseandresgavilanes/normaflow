@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import { Library, ShieldCheck, GitCompareArrows, Grid3x3, LayoutDashboard, Check, Download } from "lucide-react";
 import type { StandardsEnginePayload } from "@/lib/standards-engine";
 import { activateStandard } from "@/lib/actions/standards";
@@ -159,26 +160,60 @@ function CatalogTab({ payload, onActivate, onInstall, pending, demo }: {
   );
 }
 
+type ActiveRow = StandardsEnginePayload["active"][number];
+type RequirementRow = StandardsEnginePayload["matrix"][number]["requirements"][number];
+type CorrespondenceRow = StandardsEnginePayload["correspondence"][number];
+
+const activeColumns: DataTableColumn<ActiveRow>[] = [
+  { id: "name", header: "Norma", primary: true, minWidth: 190, hideable: false, sortValue: (a) => `${a.name} ${a.editionCode}`,
+    cell: (a) => <strong>{a.name} {a.editionCode}</strong> },
+  { id: "scope", header: "Alcance", minWidth: 220, sortValue: (a) => a.scope ?? "",
+    cell: (a) => <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{a.scope ?? "—"}</span> },
+  { id: "responsible", header: "Responsable", minWidth: 150, sortValue: (a) => a.responsibleName ?? "", cell: (a) => a.responsibleName ?? "—" },
+  { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.implementationStatus,
+    cell: (a) => <span style={chip("#eef1fe", "#5266F6")}>{a.implementationStatus}</span> },
+  { id: "gap", header: "GAP", minWidth: 90, numeric: true, align: "end", sortValue: (a) => a.score ?? null,
+    cell: (a) => (a.score == null ? "—" : `${Math.round(a.score)}%`) },
+  { id: "audit", header: "Próx. auditoría", minWidth: 140, numeric: true, sortValue: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).getTime() : null),
+    cell: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).toLocaleDateString() : "—") },
+];
+
+const requirementColumns: DataTableColumn<RequirementRow>[] = [
+  { id: "code", header: "Código", primary: true, minWidth: 110, hideable: false, sortValue: (r) => r.code, cell: (r) => <strong>{r.code}</strong> },
+  // La sangría refleja el nivel jerárquico del requisito dentro de la norma.
+  { id: "title", header: "Requisito", minWidth: 280, sortValue: (r) => r.title,
+    cell: (r) => <span style={{ paddingLeft: (r.level - 1) * 14, display: "inline-block" }}>{r.title}</span> },
+  { id: "mandatory", header: "Oblig.", minWidth: 90, sortValue: (r) => (r.mandatory ? "Sí" : "No"), cell: (r) => (r.mandatory ? "Sí" : "No") },
+  { id: "gap", header: "Estado GAP", minWidth: 140, sortValue: (r) => r.gapStatus ?? "",
+    cell: (r) => <span style={chip((GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#c3ccd8") + "22", GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#8794a5")}>{r.gapStatus ?? "—"}</span> },
+  { id: "coverage", header: "Evidencia", minWidth: 140, numeric: true, sortValue: (r) => r.coverageCount,
+    cell: (r) => (r.coverageCount > 0 ? <span style={chip("#eafaf0", "#16a34a")}>{r.coverageCount} elemento(s)</span> : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>—</span>) },
+];
+
+const correspondenceColumns: DataTableColumn<CorrespondenceRow>[] = [
+  { id: "sourceFamily", header: "Norma origen", minWidth: 130, sortValue: (m) => m.sourceFamily,
+    cell: (m) => <span style={chip("#eef1fe", "#5266F6")}>{m.sourceFamily}</span> },
+  { id: "source", header: "Requisito", primary: true, minWidth: 220, hideable: false, sortValue: (m) => m.sourceCode,
+    cell: (m) => <><strong>{m.sourceCode}</strong> {m.sourceTitle}</> },
+  { id: "targetFamily", header: "Norma destino", minWidth: 130, sortValue: (m) => m.targetFamily,
+    cell: (m) => <span style={chip("#eef1fe", "#5266F6")}>{m.targetFamily}</span> },
+  { id: "target", header: "Requisito", minWidth: 220, sortValue: (m) => m.targetCode,
+    cell: (m) => <><strong>{m.targetCode}</strong> {m.targetTitle}</> },
+  { id: "relation", header: "Relación", minWidth: 130, sortValue: (m) => m.relationType, cell: (m) => m.relationType },
+  { id: "equivalence", header: "Equiv.", minWidth: 90, numeric: true, align: "end", sortValue: (m) => m.equivalencePercent ?? null,
+    cell: (m) => (m.equivalencePercent == null ? "—" : `${m.equivalencePercent}%`) },
+];
+
 function ActiveTab({ payload }: { payload: StandardsEnginePayload }) {
   if (!payload.active.length) return <Empty text="No hay normas activas para esta organización." />;
   return (
-    <div className="nf-data-table-wrap" style={{ overflowX: "auto" }}>
-      <table className="nf-data-table" style={{ width: "100%", minWidth: 720 }}>
-        <thead><tr><th>Norma</th><th>Alcance</th><th>Responsable</th><th>Estado</th><th>GAP</th><th>Próx. auditoría</th></tr></thead>
-        <tbody>
-          {payload.active.map((a) => (
-            <tr key={a.orgStandardId}>
-              <td><strong>{a.name} {a.editionCode}</strong></td>
-              <td style={{ maxWidth: 260, color: "var(--nf-ink-2,#5e6b7a)" }}>{a.scope ?? "—"}</td>
-              <td>{a.responsibleName ?? "—"}</td>
-              <td><span style={chip("#eef1fe", "#5266F6")}>{a.implementationStatus}</span></td>
-              <td>{a.score == null ? "—" : `${Math.round(a.score)}%`}</td>
-              <td>{a.nextAuditDate ? new Date(a.nextAuditDate).toLocaleDateString() : "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={activeColumns}
+      rows={payload.active}
+      rowKey={(a) => a.orgStandardId}
+      caption="Normas activas en la organización: nombre y edición, alcance, responsable, estado de implementación, puntuación GAP y próxima auditoría."
+      storageKey="standards-active"
+    />
   );
 }
 
@@ -201,22 +236,13 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
         </label>
         <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>{rows.length} requisitos</span>
       </div>
-      <div className="nf-data-table-wrap" style={{ overflowX: "auto" }}>
-        <table className="nf-data-table" style={{ width: "100%", minWidth: 640 }}>
-          <thead><tr><th>Código</th><th>Requisito</th><th>Oblig.</th><th>Estado GAP</th><th>Evidencia</th></tr></thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id}>
-                <td><strong>{r.code}</strong></td>
-                <td style={{ paddingLeft: (r.level - 1) * 14 }}>{r.title}</td>
-                <td>{r.mandatory ? "Sí" : "No"}</td>
-                <td><span style={chip((GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#c3ccd8") + "22", GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#8794a5")}>{r.gapStatus ?? "—"}</span></td>
-                <td>{r.coverageCount > 0 ? <span style={chip("#eafaf0", "#16a34a")}>{r.coverageCount} elemento(s)</span> : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>—</span>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={requirementColumns}
+        rows={rows}
+        rowKey={(r) => r.id}
+        caption="Requisitos de la norma: código, título, obligatoriedad, estado de la evaluación GAP y evidencia que lo cubre."
+        storageKey="standards-requirements"
+      />
       {currentMatrix && <p style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>Un mismo documento, riesgo o evidencia puede cubrir requisitos de varias normas: la columna Evidencia refleja la cobertura compartida.</p>}
     </div>
   );
@@ -225,24 +251,13 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
 function CorrespondenceTab({ payload }: { payload: StandardsEnginePayload }) {
   if (!payload.correspondence.length) return <Empty text="No hay correspondencias entre normas cargadas." />;
   return (
-    <div className="nf-data-table-wrap" style={{ overflowX: "auto" }}>
-      <table className="nf-data-table" style={{ width: "100%", minWidth: 760 }}>
-        <thead><tr><th>Norma origen</th><th>Requisito</th><th></th><th>Norma destino</th><th>Requisito</th><th>Relación</th><th>Equiv.</th></tr></thead>
-        <tbody>
-          {payload.correspondence.map((m) => (
-            <tr key={m.id}>
-              <td><span style={chip("#eef1fe", "#5266F6")}>{m.sourceFamily}</span></td>
-              <td><strong>{m.sourceCode}</strong> {m.sourceTitle}</td>
-              <td style={{ textAlign: "center", color: "#8794a5" }}>→</td>
-              <td><span style={chip("#eef1fe", "#5266F6")}>{m.targetFamily}</span></td>
-              <td><strong>{m.targetCode}</strong> {m.targetTitle}</td>
-              <td>{m.relationType}</td>
-              <td>{m.equivalencePercent == null ? "—" : `${m.equivalencePercent}%`}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable
+      columns={correspondenceColumns}
+      rows={payload.correspondence}
+      rowKey={(m) => m.id}
+      caption="Matriz de correspondencia entre normas: requisito de origen, requisito de destino, tipo de relación y porcentaje de equivalencia."
+      storageKey="standards-correspondence"
+    />
   );
 }
 

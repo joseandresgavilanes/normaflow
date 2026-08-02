@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -181,6 +183,29 @@ export default function TrainingModule() {
     });
     showToast("Asignaciones generadas por cambio documental");
   }
+
+
+  type AssignmentRow = (typeof trainingAssignments)[number];
+  const assignmentColumns = useMemo<DataTableColumn<AssignmentRow>[]>(() => [
+    { id: "person", header: "Persona", primary: true, minWidth: 190, hideable: false, sortValue: (a) => a.assigneeName,
+      cell: (a) => <><div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{a.assigneeName}</div><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeEmail}</div></> },
+    { id: "course", header: "Curso", minWidth: 130, sortValue: (a) => a.courseId,
+      cell: (a) => trainingCourses.find((c) => c.id === a.courseId)?.code ?? a.courseId },
+    { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.status,
+      cell: (a) => <Badge status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"} label={STATUS_LABEL[a.status] ?? a.status} /> },
+    { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
+    { id: "process", header: "Proceso", minWidth: 120, sortValue: (a) => a.processCode ?? "",
+      cell: (a) => a.processCode
+        ? <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "#5266F6", textDecoration: "none" }}>{a.processCode}</Link>
+        : <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span> },
+    { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
+      cell: (a) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}</span> },
+    { id: "actions", header: "Acciones", minWidth: 150, hideable: false,
+      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
+        {perm.training.manage && <button type="button" onClick={() => openEditProcess(a)} className="nf-text-action" style={{ marginRight: 10 }}>Proceso</button>}
+        {a.status !== "COMPLETED" && perm.training.manage && <button type="button" onClick={() => markComplete(a)} className="nf-text-action">Completar</button>}
+      </span> },
+  ], [perm.training.manage, trainingCourses, openEditProcess, markComplete]);
 
   return (
     <div>
@@ -364,70 +389,14 @@ export default function TrainingModule() {
 
       {tab === "assignments" && (
         <Card style={{ padding: 0, overflow: "hidden" }}>
-          <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
-            <table className="nf-data-table" style={{ fontSize: 13 }}>
-              <thead>
-                <tr>
-                  <th>Persona</th>
-                  <th>Curso</th>
-                  <th>Estado</th>
-                  <th>Vence</th>
-                  <th>Proceso</th>
-                  <th>Origen</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trainingAssignments.map(a => {
-                  const course = trainingCourses.find(c => c.id === a.courseId);
-                  return (
-                    <tr key={a.id}>
-                      <td>
-                        <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{a.assigneeName}</div>
-                        <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeEmail}</div>
-                      </td>
-                      <td>{course?.code ?? a.courseId}</td>
-                      <td>
-                        <Badge
-                          status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"}
-                          label={STATUS_LABEL[a.status] ?? a.status}
-                        />
-                      </td>
-                      <td>{formatDate(a.dueAt)}</td>
-                      <td>
-                        {a.processCode ? (
-                          <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "#5266F6", textDecoration: "none" }}>
-                            {a.processCode}
-                          </Link>
-                        ) : (
-                          <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
-                        {a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}
-                      </td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {perm.training.manage && (
-                          <button
-                            type="button"
-                            onClick={() => openEditProcess(a)}
-                            className="nf-text-action" style={{ marginRight: 10 }}
-                          >
-                            Proceso
-                          </button>
-                        )}
-                        {a.status !== "COMPLETED" && perm.training.manage && (
-                          <button type="button" onClick={() => markComplete(a)} className="nf-text-action">
-                            Completar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={assignmentColumns}
+            rows={trainingAssignments}
+            rowKey={(a) => a.id}
+            caption="Asignaciones de formación: persona, curso, estado, vencimiento, proceso asociado y origen de la asignación."
+            storageKey="training-assignments"
+            empty={<EmptyState kind="empty" title="No hay asignaciones de formación." description="Las asignaciones enlazan a cada persona con los cursos que debe completar y su fecha límite." />}
+          />
         </Card>
       )}
 

@@ -6,6 +6,7 @@ import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { TrainingAssignmentStatus } from "@prisma/client";
 import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -169,6 +170,31 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
     setError("");
   });
 
+
+  type AssignmentRow = (typeof assignments)[number];
+  const assignmentColumns = useMemo<DataTableColumn<AssignmentRow>[]>(() => [
+    { id: "person", header: "Persona", primary: true, minWidth: 190, hideable: false, sortValue: (a) => a.assigneeName,
+      cell: (a) => <><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{a.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{a.assigneeRole || a.assigneeEmail || "—"}</div></> },
+    { id: "course", header: "Curso", minWidth: 180, sortValue: (a) => a.courseCode,
+      cell: (a) => <><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)" }}>{a.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{a.courseTitle}</div></> },
+    { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.status,
+      cell: (a) => <Badge status={assignmentBadgeStatus(a.status)} label={STATUS_LABEL[a.status] ?? a.status} /> },
+    { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
+    { id: "process", header: "Proceso", minWidth: 130, sortValue: (a) => a.processCode ?? a.processName ?? "",
+      cell: (a) => a.processCode || a.processName || "—" },
+    { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
+      cell: (a) => a.triggeredByDocumentCode ? `${a.triggeredByDocumentCode} v${a.triggeredByVersion || "—"}` : "Manual" },
+    { id: "actions", header: "Acciones", minWidth: 230, hideable: false,
+      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
+        {canManage && a.status !== "COMPLETED" && a.status !== "CANCELLED" && (<>
+          {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(a.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
+          <button type="button" onClick={() => setEditingAssignment(a)} className="nf-text-action">Editar</button>
+          <button type="button" onClick={() => { setCompletingAssignment(a); setError(""); }} className="nf-text-action">Completar</button>
+          <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
+        </>)}
+      </span> },
+  ], [canManage, isPending, run]);
+
   return (
     <div>
       <SectionTitle
@@ -269,33 +295,13 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
           <EmptyState title="No hay asignaciones" text="Las asignaciones aparecerán aquí cuando vincules un curso con una persona." action={canManage && !blockers.length ? () => setCreatingAssignment(true) : undefined} actionLabel="Crear asignación" />
         ) : (
           <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
-              <table className="nf-data-table" style={{ fontSize: 13 }}>
-                <thead><tr><th>Persona</th><th>Curso</th><th>Estado</th><th>Vence</th><th>Proceso</th><th>Origen</th><th>Acciones</th></tr></thead>
-                <tbody>
-                  {assignments.map((assignment) => (
-                    <tr key={assignment.id}>
-                      <td><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{assignment.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{assignment.assigneeRole || assignment.assigneeEmail || "—"}</div></td>
-                      <td><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)" }}>{assignment.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{assignment.courseTitle}</div></td>
-                      <td><Badge status={assignmentBadgeStatus(assignment.status)} label={STATUS_LABEL[assignment.status] ?? assignment.status} /></td>
-                      <td>{formatDate(assignment.dueAt)}</td>
-                      <td>{assignment.processCode || assignment.processName || "—"}</td>
-                      <td>{assignment.triggeredByDocumentCode ? `${assignment.triggeredByDocumentCode} v${assignment.triggeredByVersion || "—"}` : "Manual"}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {canManage && assignment.status !== "COMPLETED" && assignment.status !== "CANCELLED" && (
-                          <>
-                            {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(assignment.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
-                            <button type="button" onClick={() => setEditingAssignment(assignment)} className="nf-text-action">Editar</button>
-                            <button type="button" onClick={() => { setCompletingAssignment(assignment); setError(""); }} className="nf-text-action">Completar</button>
-                            <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={assignmentColumns}
+              rows={assignments}
+              rowKey={(a) => a.id}
+              caption="Asignaciones de formación: persona, curso, estado, vencimiento, proceso y origen."
+              storageKey="training-live-assignments"
+            />
           </Card>
         )
       )}

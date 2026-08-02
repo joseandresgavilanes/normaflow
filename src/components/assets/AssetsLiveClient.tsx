@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Boxes, Download, Link2, Plus, Search, ShieldCheck, Trash2, Upload } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -65,6 +67,23 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
     } finally { setExporting(false); }
   }
 
+  const columns = useMemo<DataTableColumn<Asset>[]>(() => [
+    { id: "asset", header: "Activo", primary: true, minWidth: 210, hideable: false, sortValue: (a) => a.code,
+      cell: (a) => <><strong>{a.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{a.name}</div></> },
+    { id: "category", header: "Categoría", minWidth: 140, sortValue: (a) => a.category, cell: (a) => CATEGORY_LABEL[a.category] },
+    { id: "criticality", header: "Criticidad", minWidth: 120, sortValue: (a) => a.criticality,
+      cell: (a) => <Badge value={CRIT_LABEL[a.criticality]} tone={critTone(a.criticality)} /> },
+    { id: "classification", header: "Clasificación", minWidth: 140, sortValue: (a) => a.classification?.classification ?? "",
+      cell: (a) => a.classification ? CLASS_LABEL[a.classification.classification] : "—" },
+    { id: "cia", header: "CIA", minWidth: 90,
+      cell: (a) => <span style={{ fontSize: 12 }}>{a.classification ? `${a.classification.confidentiality[0]}/${a.classification.integrity[0]}/${a.classification.availability[0]}` : "—"}</span> },
+    { id: "owner", header: "Propietario", minWidth: 140, sortValue: (a) => a.owner?.name ?? "", cell: (a) => a.owner?.name ?? "—" },
+    { id: "review", header: "Próxima revisión", minWidth: 140, numeric: true, sortValue: (a) => a.nextReviewDate ?? "",
+      cell: (a) => <span style={{ color: a.overdue ? "#B91C1C" : undefined }}>{a.nextReviewDate ?? "—"}</span> },
+    { id: "status", header: "Estado", minWidth: 120, sortValue: (a) => a.status,
+      cell: (a) => <Badge value={STATUS_LABEL[a.status]} tone={a.status === "ACTIVE" ? "green" : a.status === "RETIRED" ? "gray" : "blue"} /> },
+  ], []);
+
   return <div>
     <SectionTitle title="Activos de información" sub="Inventario ISO 27001: propietario, custodio, clasificación CIA, dependencias, riesgos y controles del Anexo A por activo." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -91,7 +110,15 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
         {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.summary.total} activos</div>
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 980 }}><thead><tr><th>Activo</th><th>Categoría</th><th>Criticidad</th><th>Clasificación</th><th>CIA</th><th>Propietario</th><th>Próxima revisión</th><th>Estado</th></tr></thead><tbody>{filtered.map((a) => <tr key={a.id} onClick={() => setSelected(a)} style={{ cursor: "pointer" }}><td><strong>{a.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{a.name}</div></td><td>{CATEGORY_LABEL[a.category]}</td><td><Badge value={CRIT_LABEL[a.criticality]} tone={critTone(a.criticality)} /></td><td>{a.classification ? CLASS_LABEL[a.classification.classification] : "—"}</td><td style={{ fontSize: 12 }}>{a.classification ? `${a.classification.confidentiality[0]}/${a.classification.integrity[0]}/${a.classification.availability[0]}` : "—"}</td><td>{a.owner?.name ?? "—"}</td><td style={{ color: a.overdue ? "#B91C1C" : undefined }}>{a.nextReviewDate ?? "—"}</td><td><Badge value={STATUS_LABEL[a.status]} tone={a.status === "ACTIVE" ? "green" : a.status === "RETIRED" ? "gray" : "blue"} /></td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay activos para los filtros seleccionados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(a) => a.id}
+        rowAction={(a) => setSelected(a)}
+        caption="Inventario de activos de información: código, categoría, criticidad, clasificación, tríada CIA, propietario, próxima revisión y estado."
+        storageKey="assets"
+        empty={<EmptyState kind="no-results" title="No hay activos para los filtros seleccionados." description="El inventario de activos sostiene el análisis de riesgos: cada activo lleva propietario, criticidad y clasificación de confidencialidad, integridad y disponibilidad." />}
+      />
     </Card>
 
     {creating && <AssetForm initial={initial} pending={isPending} onClose={() => setCreating(false)} onRun={run} />}

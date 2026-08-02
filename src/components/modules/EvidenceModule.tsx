@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
 import FileImportArea from "@/components/ui/FileImportArea";
@@ -44,6 +46,20 @@ export default function EvidenceModule() {
   const [originFilter, setOriginFilter] = useState<"ALL" | "MANUAL" | "AUTOMATED" | "INTEGRATION">("ALL");
 
   const filtered = evidence.filter(ev => originFilter === "ALL" || (ev.origin ?? "MANUAL") === originFilter);
+
+  const columns = useMemo<DataTableColumn<EvidenceItem>[]>(() => [
+    { id: "title", header: "Título", primary: true, minWidth: 200, hideable: false, sortValue: (ev) => ev.title,
+      cell: (ev) => <span style={{ fontWeight: 600 }}>{ev.title}</span> },
+    { id: "origin", header: "Origen", minWidth: 120, sortValue: (ev) => ev.origin ?? "MANUAL",
+      cell: (ev) => <span style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{ev.origin ?? "MANUAL"}</span> },
+    { id: "link", header: "Vínculo", minWidth: 160, sortValue: (ev) => ev.relatedEntityType ?? ev.module ?? "",
+      cell: (ev) => <span style={{ fontWeight: 500, color: "var(--nf-ink-2)" }}>{ev.relatedEntityType && ev.relatedEntityId ? `${ev.relatedEntityType} ${ev.relatedEntityId}` : ev.module || "—"}</span> },
+    { id: "framework", header: "Marco", minWidth: 120, sortValue: (ev) => ev.framework ?? "",
+      cell: (ev) => <span style={{ fontWeight: 500, color: "var(--nf-ink-2)" }}>{ev.framework ?? "—"}</span> },
+    { id: "date", header: "Fecha", minWidth: 120, numeric: true, sortValue: (ev) => String(ev.createdAt ?? ""),
+      cell: (ev) => <span style={{ fontWeight: 600, color: "var(--nf-ink-2)" }}>{formatDate(ev.createdAt)}</span> },
+  ], []);
+
 
   function handleEvidencePick(file: File | null) {
     if (!file) return;
@@ -110,43 +126,15 @@ export default function EvidenceModule() {
       </div>
 
       <Card style={{ padding: 0 }}>
-        {filtered.length === 0 ? (
-          <div className="nf-data-table-wrap">
-            <div className="nf-data-table-empty">No hay evidencias. Sube un archivo para empezar a registrar soporte.</div>
-          </div>
-        ) : (
-          <div className="nf-data-table-wrap">
-            <table className="nf-data-table" style={{ minWidth: 560 }}>
-              <thead>
-                <tr>
-                  {["Título", "Origen", "Vínculo", "Marco", "Fecha", ""].map(h => (
-                    <th key={h}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map(ev => (
-                  <tr
-                    key={ev.id}
-                    onClick={() => setPreview(ev)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td style={{ fontWeight: 600 }}>{ev.title}</td>
-                    <td style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>{ev.origin ?? "MANUAL"}</td>
-                    <td style={{ fontSize: 13, fontWeight: 500, color: "var(--nf-ink-2)" }}>
-                      {ev.relatedEntityType && ev.relatedEntityId ? `${ev.relatedEntityType} ${ev.relatedEntityId}` : ev.module || "—"}
-                    </td>
-                    <td style={{ fontSize: 13, fontWeight: 500, color: "var(--nf-ink-2)" }}>{ev.framework ?? "—"}</td>
-                    <td style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink-2)" }}>{formatDate(ev.createdAt)}</td>
-                    <td>
-                      <span style={{ color: "#5266F6", fontWeight: 700 }}>Vista previa →</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(ev) => ev.id}
+          rowAction={(ev) => setPreview(ev)}
+          caption="Evidencias: título, origen, vínculo con la entidad, marco normativo y fecha de carga."
+          storageKey="evidence-module"
+          empty={<EmptyState kind="empty" title="No hay evidencias." description="Sube un archivo para empezar a registrar el soporte documental de cada requisito." />}
+        />
       </Card>
 
       <Modal open={!!preview} onClose={() => setPreview(null)} title={preview?.title ?? "Vista previa"} width={720}>
