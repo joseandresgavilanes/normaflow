@@ -19,10 +19,10 @@ export type NotificationRow = {
 };
 
 function typeAccent(type: string): { color: string; bg: string; Icon: typeof Bell } {
-  if (type === "ALERT") return { color: "#DC2626", bg: "rgba(201, 60, 55, 0.12)", Icon: AlertTriangle };
-  if (type === "WARNING") return { color: "#D97706", bg: "rgba(214, 138, 26, 0.14)", Icon: AlertTriangle };
-  if (type === "SUCCESS") return { color: "#16A34A", bg: "rgba(46, 139, 87, 0.12)", Icon: CheckCircle2 };
-  return { color: "#5266F6", bg: "rgba(82, 102, 246, 0.1)", Icon: Info };
+  if (type === "ALERT") return { color: "var(--nf-danger)", bg: "rgba(201, 60, 55, 0.12)", Icon: AlertTriangle };
+  if (type === "WARNING") return { color: "var(--nf-warning)", bg: "rgba(214, 138, 26, 0.14)", Icon: AlertTriangle };
+  if (type === "SUCCESS") return { color: "var(--nf-success)", bg: "rgba(46, 139, 87, 0.12)", Icon: CheckCircle2 };
+  return { color: "var(--nf-primary)", bg: "rgba(82, 102, 246, 0.1)", Icon: Info };
 }
 
 export default function NotificationsModule({ serverItems }: { serverItems?: NotificationRow[] }) {
@@ -115,7 +115,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary)",
             }}
           >
             <Bell size={22} strokeWidth={2.25} aria-hidden />
@@ -131,7 +131,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -141,7 +141,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
             <Sparkles size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Sin leer</div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -161,7 +161,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
             <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Leídas</div>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#5266F6",
+                color: "var(--nf-primary)",
               }}
             >
               <Bell size={26} strokeWidth={2} aria-hidden />

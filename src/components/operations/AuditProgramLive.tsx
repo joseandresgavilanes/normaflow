@@ -130,7 +130,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
             <OperationalCard key={row.id} onClick={() => setDetailId(row.id)}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "ui-monospace, monospace", color: "#5266F6", fontSize: 12, fontWeight: 600 }}>{row.year}</div>
+                  <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary)", fontSize: 12, fontWeight: 600 }}>{row.year}</div>
                   <h3 style={{ margin: "6px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{row.title}</h3>
                   <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.completedCount}/{row.auditCount} auditorías completadas</div>
                 </div>
@@ -140,7 +140,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>
                   <span>Avance del programa</span><span style={{ fontWeight: 700 }}>{row.avgProgress}%</span>
                 </div>
-                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "#16A34A" : row.avgProgress >= 40 ? "#D97706" : "#5266F6"} height={7} railColor="#eef2f9" />
+                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "var(--nf-success)" : row.avgProgress >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="#eef2f9" />
               </div>
               {canManage && (
                 <CardActions canUpdate canDelete pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
@@ -196,7 +196,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
             <section>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <strong style={{ fontSize: 14 }}>Auditorías del programa · {detail.auditCount}</strong>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}><button type="button" className={auditView === "list" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("list")}>Lista</button><button type="button" className={auditView === "calendar" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("calendar")}>Calendario</button>{canManage && <button type="button" className="nf-app-btn-ghost" onClick={() => setPlanningFor(detail)}>+ Planificar auditoría</button>}<Link href="/app/audits" style={{ fontSize: 12, color: "#5266F6", fontWeight: 700, textDecoration: "none" }}>Abrir módulo →</Link></div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}><button type="button" className={auditView === "list" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("list")}>Lista</button><button type="button" className={auditView === "calendar" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("calendar")}>Calendario</button>{canManage && <button type="button" className="nf-app-btn-ghost" onClick={() => setPlanningFor(detail)}>+ Planificar auditoría</button>}<Link href="/app/audits" style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 700, textDecoration: "none" }}>Abrir módulo →</Link></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: auditView === "calendar" ? "repeat(auto-fit,minmax(210px,1fr))" : "1fr", gap: 8, marginTop: 10 }}>
                 {detail.audits.length === 0 && <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin auditorías enlazadas. Asígnalas desde el módulo de Auditorías seleccionando este programa.</p>}

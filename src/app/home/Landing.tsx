@@ -15,7 +15,7 @@ import { HOME_FAQS } from "@/lib/seo-content";
 
 function riskHeatCellBg(lvl: number): string {
   if (lvl >= 7) return "var(--nf-danger)";
-  if (lvl >= 5) return "#d97706";
+  if (lvl >= 5) return "var(--nf-warning)";
   if (lvl >= 3) return "var(--nf-success-mid)";
   return "var(--nf-success-soft)";
 }
@@ -126,7 +126,7 @@ function HeroDashboard() {
               })}
             </div>
             <div style={{ fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--nf-ink-3)", letterSpacing: "0.04em" }}>
-              <span style={{ color: "var(--nf-success)" }}>●</span> 12 bajos · <span style={{ color: "#d97706" }}>●</span> 7 medios · <span style={{ color: "var(--nf-danger)" }}>●</span> 2 altos
+              <span style={{ color: "var(--nf-success)" }}>●</span> 12 bajos · <span style={{ color: "var(--nf-warning)" }}>●</span> 7 medios · <span style={{ color: "var(--nf-danger)" }}>●</span> 2 altos
             </div>
           </div>
 
@@ -138,7 +138,7 @@ function HeroDashboard() {
                 <span>Causa raíz</span><span style={{ color: "var(--nf-success-strong)" }}>14 ✓</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", color: "var(--nf-ink-2)" }}>
-                <span>Eficacia</span><span style={{ color: "#d97706" }}>4 ⧗</span>
+                <span>Eficacia</span><span style={{ color: "var(--nf-warning)" }}>4 ⧗</span>
               </div>
             </div>
           </div>
@@ -148,7 +148,7 @@ function HeroDashboard() {
             <div className="nf-flow" style={{ marginTop: 2 }}>
               <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Borrador</span>
               <span className="arr">→</span>
-              <span className="chip" style={{ background: "#d97706", color: "#92400e" }}>Pendiente</span>
+              <span className="chip" style={{ background: "var(--nf-warning)", color: "#92400e" }}>Pendiente</span>
               <span className="arr">→</span>
               <span className="chip nf-chip--ok">Aprobado</span>
               <span className="arr">→</span>
@@ -189,7 +189,7 @@ function HeroDashboard() {
           Sugiero CAPA para NC-118: revisar matriz de roles antes del 14 oct.
         </div>
         <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
-          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "#d97706", color: "#92400e", border: "1px solid #d97706", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
+          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "var(--nf-warning)", color: "#92400e", border: "1px solid var(--nf-warning)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
         </div>
       </div>
 
@@ -449,7 +449,7 @@ function MiniViz({ kind }: { kind: string }) {
           ["v3.0", "Archivado", "var(--nf-ink-3)"],
           ["v2.8", "Archivado", "var(--nf-ink-3)"],
         ] as [string, string, string][]).map(([v, s, c], i) => (
-          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 8px", borderRadius: 4, background: i === 0 ? "var(--nf-success-bg)" : "#fafafa", border: "1px solid var(--nf-line)" }}>
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "4px 8px", borderRadius: 4, background: i === 0 ? "var(--nf-success-bg)" : "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
             <span style={{ color: "var(--nf-ink-2)" }}>{v}</span>
             <span style={{ color: c }}>● {s}</span>
           </div>
@@ -523,7 +523,7 @@ function MiniViz({ kind }: { kind: string }) {
           ["Implantar 8.1.4", "A.R", "vencido", "danger"],
           ["Revisar 5×5", "L.C", "12 nov", "warn"],
         ] as [string, string, string, string][]).map(([t, w, d, st], i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "center", padding: "4px 6px", borderRadius: 4, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "center", padding: "4px 6px", borderRadius: 4, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
             <span style={{ color: "var(--nf-ink-2)" }}>{t}</span>
             <span style={{ color: "var(--nf-ink-3)" }}>{w}</span>
             <span style={{ color: st === "danger" ? "var(--nf-danger)" : st === "warn" ? "#92400e" : "var(--nf-accent)" }}>{d}</span>
@@ -549,7 +549,7 @@ function MiniViz({ kind }: { kind: string }) {
           <div>El acceso lógico se concederá según el principio de mínimo privilegio…</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ color: "#92400e", padding: "2px 6px", borderRadius: 99, border: "1px solid #d97706", background: "#d97706" }}>● Requiere aprobación</span>
+          <span style={{ color: "#92400e", padding: "2px 6px", borderRadius: 99, border: "1px solid var(--nf-warning)", background: "var(--nf-warning)" }}>● Requiere aprobación</span>
           <span style={{ color: "var(--nf-ink-3)" }}>+3 sugerencias</span>
         </div>
       </div>
@@ -627,7 +627,7 @@ function ScreenDoc() {
         <div style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 6 }}>Política de Seguridad de la Información</div>
         <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Vinculado a ISO 27001 · A.5.1 · Proceso “Gobierno”</div>
 
-        <div style={{ marginTop: 18, padding: 14, border: "1px solid var(--nf-line)", borderRadius: 10, background: "#fafafa" }}>
+        <div style={{ marginTop: 18, padding: 14, border: "1px solid var(--nf-line)", borderRadius: 10, background: "var(--nf-surface-muted)" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 10 }}>Flujo de aprobación</div>
           <div className="nf-flow">
             <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Borrador</span>
@@ -655,7 +655,7 @@ function ScreenDoc() {
             ["v2.7", "2024-11-04", "A. Ríos",   "Archivado", "var(--nf-ink-3)"],
             ["v2.6", "2024-06-10", "L. Castro", "Archivado", "var(--nf-ink-3)"],
           ] as [string, string, string, string, string][]).map(([v, d, p, s, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "8px 10px", borderRadius: 8, background: i === 0 ? "var(--nf-success-bg)" : "#fafafa", border: "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "8px 10px", borderRadius: 8, background: i === 0 ? "var(--nf-success-bg)" : "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700, color: "var(--nf-ink)" }}>{v}</span>
               <span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{d} · {p}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: c }}>● {s}</span>
@@ -691,7 +691,7 @@ function ScreenAudit() {
           <span><span style={{ color: "#92400e" }}>●</span> Planificación</span>
         </div>
 
-        <div style={{ marginTop: 18, padding: 14, borderRadius: 10, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
+        <div style={{ marginTop: 18, padding: 14, borderRadius: 10, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700 }}>Auditoría interna · 03 dic</span>
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>Programada</span>
@@ -704,7 +704,7 @@ function ScreenAudit() {
         <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>Hallazgos · YTD</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
           {([["NC mayores", 0, "var(--nf-success-strong)"], ["NC menores", 4, "#92400e"], ["Observaciones", 11, "var(--nf-ink-2)"]] as [string, number, string][]).map(([l, v, c]) => (
-            <div key={l} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
+            <div key={l} style={{ padding: 12, borderRadius: 8, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 800, color: c, letterSpacing: "-0.02em" }}>{v}</div>
               <div style={{ fontSize: 10, color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>{l}</div>
             </div>
@@ -719,7 +719,7 @@ function ScreenAudit() {
             ["10.2",  "NC y acción correctiva", "ok"],
             ["6.1.2", "Riesgos y oportunidades", "warn"],
           ] as [string, string, string][]).map(([c, t, st], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", borderRadius: 6, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 8, alignItems: "center", padding: "7px 10px", borderRadius: 6, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
               <span style={{ color: "var(--nf-accent-2)" }}>{c}</span>
               <span style={{ color: "var(--nf-ink-2)" }}>{t}</span>
               <span style={{ color: st === "warn" ? "#92400e" : "var(--nf-success-strong)" }}>● {st === "warn" ? "menor" : "ok"}</span>
@@ -763,11 +763,11 @@ function ScreenRisk() {
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {([
             ["R-021", "Acceso no autorizado a producción", "Mitigar", 16, "var(--nf-danger)"],
-            ["R-014", "Pérdida de evidencia digital",     "Mitigar", 12, "#d97706"],
-            ["R-008", "Proveedor crítico sin SLA",        "Transferir", 9, "#d97706"],
+            ["R-014", "Pérdida de evidencia digital",     "Mitigar", 12, "var(--nf-warning)"],
+            ["R-008", "Proveedor crítico sin SLA",        "Transferir", 9, "var(--nf-warning)"],
             ["R-033", "Cambios en marco regulatorio",      "Aceptar",  6, "var(--nf-success-strong)"],
           ] as [string, string, string, number, string][]).map(([id, t, tr, sc, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#fafafa", border: "1px solid var(--nf-line)", alignItems: "center" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto", gap: 8, padding: "8px 10px", borderRadius: 8, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)", alignItems: "center" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)" }}>{id}</span>
               <span style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>{t}</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "2px 6px", borderRadius: 4, background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>{tr}</span>
@@ -793,7 +793,7 @@ function ScreenCapa() {
             "El offboarding no actualizó la matriz de roles.",
             "El procedimiento no incluía revisión cruzada de alertas.",
           ].map((t, i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: 10, borderRadius: 8, background: i === 4 ? "var(--nf-success-bg)" : "#fafafa", border: i === 4 ? "1px solid var(--nf-success-border)" : "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: 10, borderRadius: 8, background: i === 4 ? "var(--nf-success-bg)" : "var(--nf-surface-muted)", border: i === 4 ? "1px solid var(--nf-success-border)" : "1px solid var(--nf-line)" }}>
               <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 4 ? "var(--nf-success)" : "var(--nf-glass-2)", color: i === 4 ? "#fff" : "var(--nf-ink-2)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
               <span style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.45 }}>{t}</span>
             </div>
@@ -807,10 +807,10 @@ function ScreenCapa() {
           {([
             ["CORR", "Reasignar regla de notificación", "L. Castro · 14 oct", "var(--nf-accent)"],
             ["CORR", "Revisión cruzada en cierre de turno", "A. Ríos · 22 oct", "var(--nf-accent-2)"],
-            ["PREV", "Procedimiento de offboarding actualizado", "M. Torres · 02 nov", "#d97706"],
-            ["PREV", "Validación de eficacia 30 días", "L. Castro · 02 dic", "#d97706"],
+            ["PREV", "Procedimiento de offboarding actualizado", "M. Torres · 02 nov", "var(--nf-warning)"],
+            ["PREV", "Validación de eficacia 30 días", "L. Castro · 02 dic", "var(--nf-warning)"],
           ] as [string, string, string, string][]).map(([k, t, w, c], i) => (
-            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: "10px 12px", borderRadius: 8, background: "#fafafa", border: "1px solid var(--nf-line)" }}>
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: "10px 12px", borderRadius: 8, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 7px", borderRadius: 4, background: "var(--nf-glass-2)", color: c, height: 22 }}>{k}</span>
               <div>
                 <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{t}</div>
@@ -851,7 +851,7 @@ function ScreenEvid() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
         {files.map((f, i) => (
-          <div key={i} style={{ padding: 12, borderRadius: 10, background: "#fafafa", border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", gap: 10 }}>
+          <div key={i} style={{ padding: 12, borderRadius: 10, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)", display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ aspectRatio: "1.4", borderRadius: 6, background: "linear-gradient(180deg, var(--nf-glass-2), transparent)", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 14, color: f.k === "VID" ? "oklch(0.78 0.13 25)" : f.k === "PNG" ? "var(--nf-accent-3)" : f.k === "XLS" ? "var(--nf-accent)" : "var(--nf-ink-2)" }}>{f.k}</div>
             <div>
               <div style={{ fontSize: 11, color: "var(--nf-ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.t}</div>
@@ -1031,15 +1031,15 @@ function NfApproval() {
           </div>
 
           <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Trazabilidad</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Cada cambio queda registrado con autor, fecha y diff exportable a PDF.</div>
             </div>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Vínculo ISO</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Cláusulas, controles del Anexo A y procesos enlazados al documento.</div>
             </div>
-            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "#fafafa" }}>
+            <div style={{ padding: 16, borderRadius: 12, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>Revisión periódica</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-2)" }}>Alertas automáticas antes de que cualquier política quede desactualizada.</div>
             </div>
@@ -1389,7 +1389,7 @@ function NfFAQ() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 32 }}>
           {HOME_FAQS.map((faq) => (
-            <details key={faq.question} className="nf-card" style={{ padding: "18px 22px" }}>
+            <details key={faq.question} className="nfm-card" style={{ padding: "18px 22px" }}>
               <summary style={{ cursor: "pointer", fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--nf-ink)", lineHeight: 1.4 }}>
                 {faq.question}
               </summary>

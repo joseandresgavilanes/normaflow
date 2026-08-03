@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createMarketingMetadata({
   title: "ISO 27001:2022 — NormaFlow",
   description: "Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con ISO 27001:2022.",
-};
+  path: "/iso27001",
+});
 
 const ITEMS: { icon: keyof typeof Ic; title: string; desc: string; control: string }[] = [
   { icon: "lock",   title: "Gestión de riesgos de SI",    desc: "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.",  control: "6.1.2" },

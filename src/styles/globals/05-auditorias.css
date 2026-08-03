@@ -1,0 +1,400 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 05-auditorias
+ *
+ * Programa y ejecución de auditorías.
+ *
+ * Trozo literal de las líneas 1579-1970 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-org-msg-ok {
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(46, 139, 87, 0.28);
+  color: #1f6f45;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Actividad: panel de filtros + KPIs secundarios */
+.nf-activity-panel {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  box-shadow: 0 14px 40px -28px rgba(82, 102, 246, 0.35), 0 1px 0 rgba(82, 102, 246, 0.05);
+  background: #fff;
+}
+
+.nf-activity-toolbar {
+  padding: 16px 20px 18px;
+  border-bottom: 1px solid var(--nf-line);
+  background: transparent;
+}
+
+.nf-activity-toolbar-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.nf-activity-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: min(100%, 220px);
+}
+
+.nf-activity-search-wrap .nf-app-input {
+  min-height: 44px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  border-radius: 12px;
+  border-color: rgba(82, 102, 246, 0.14);
+  box-shadow: inset 0 1px 2px rgba(82, 102, 246, 0.04);
+}
+
+.nf-activity-search-wrap .nf-app-input:focus {
+  border-color: var(--nf-app-accent);
+  box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.12), inset 0 1px 2px rgba(82, 102, 246, 0.03);
+}
+
+.nf-activity-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nf-ink-3);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.nf-activity-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--nf-ink-2);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  box-shadow: 0 1px 0 rgba(82, 102, 246, 0.05);
+  white-space: nowrap;
+}
+
+.nf-activity-counter strong {
+  font-weight: 800;
+  color: var(--nf-app-accent);
+}
+
+.nf-activity-chips-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.nf-activity-timeline-body {
+  padding: 20px 22px 24px;
+  background: #fff;
+}
+
+.nf-activity-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(82, 102, 246, 0.08);
+}
+
+.nf-activity-section-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--nf-app-accent);
+  background: #fff;
+  border: 1px solid rgba(82, 102, 246, 0.1);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+}
+
+.nf-activity-section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--nf-ink);
+  letter-spacing: -0.02em;
+  font-family: var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.nf-activity-section-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--nf-ink-3);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.nf-activity-kpi-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
+}
+
+.nf-activity-kpi-icon--navy {
+  background: #fff;
+  border-color: rgba(82, 102, 246, 0.1);
+  color: var(--nf-app-accent);
+}
+
+.nf-activity-kpi-icon--green {
+  background: #fff;
+  border-color: rgba(46, 139, 87, 0.14);
+  color: #1f6f45;
+}
+
+.nf-activity-kpi-icon--amber {
+  background: #fff;
+  border-color: rgba(214, 138, 26, 0.18);
+  color: #9a6510;
+}
+
+.nf-activity-kpi-icon--slate {
+  background: #fff;
+  border-color: rgba(82, 102, 246, 0.08);
+  color: #314456;
+}
+
+.nf-activity-kpi-icon--violet {
+  background: #fff;
+  border-color: rgba(88, 28, 135, 0.12);
+  color: #5b21b6;
+}
+
+.nf-activity-kpi-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-activity-kpi-value--navy {
+  color: var(--nf-app-accent);
+}
+
+.nf-activity-kpi-value--green {
+  color: #2e8b57;
+}
+
+.nf-activity-kpi-value--ink {
+  color: var(--nf-ink);
+}
+
+.nf-activity-kpi-value--slate {
+  color: var(--nf-ink-2);
+}
+
+.nf-activity-kpi-value--violet {
+  color: #5b21b6;
+}
+
+.nf-activity-kpi-icon--danger {
+  background: #fff;
+  border-color: rgba(201, 60, 55, 0.18);
+  color: #b91c1c;
+}
+
+.nf-activity-kpi-value--danger {
+  color: #c93c37;
+}
+
+.nf-activity-kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--nf-ink-3);
+  margin-top: 3px;
+  line-height: 1.25;
+}
+
+/* Tarjetas de evento (AuditTimeline) */
+.nf-audit-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.nf-audit-day-group {
+  min-width: 0;
+}
+
+.nf-audit-day-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(82, 102, 246, 0.1);
+  box-shadow: 0 1px 0 rgba(82, 102, 246, 0.04);
+}
+
+.nf-audit-day-head-marker {
+  width: 5px;
+  height: 22px;
+  border-radius: 99px;
+  background: #fff;
+  flex-shrink: 0;
+}
+
+.nf-audit-day-title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--nf-ink);
+  letter-spacing: -0.02em;
+  text-transform: capitalize;
+  font-family: var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.nf-audit-day-count {
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--nf-app-accent);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(82, 102, 246, 0.12);
+}
+
+.nf-audit-day-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nf-audit-slot {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  margin-bottom: 10px;
+}
+
+.nf-audit-slot:last-child {
+  margin-bottom: 0;
+}
+
+.nf-audit-slot-gutter {
+  width: 22px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.nf-audit-slot-gutter::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  border-radius: 2px;
+  background: #fff;
+}
+
+.nf-audit-slot:last-child .nf-audit-slot-gutter::after {
+  display: none;
+}
+
+.nf-audit-slot-node {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--nf-app-accent);
+  box-shadow: 0 0 0 4px rgba(82, 102, 246, 0.07);
+  margin-top: 20px;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.nf-audit-slot-node--view {
+  border-color: #314456;
+  box-shadow: 0 0 0 4px rgba(49, 68, 86, 0.1);
+}
+
+.nf-audit-slot-node--done {
+  border-color: #1f6f45;
+  box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.12);
+}
+
+.nf-audit-slot-node--write {
+  border-color: #d68a1a;
+  box-shadow: 0 0 0 4px rgba(214, 138, 26, 0.12);
+}
+
+.nf-audit-slot-node--export {
+  border-color: var(--nf-app-accent);
+}
+
+.nf-audit-slot-node--integration {
+  border-color: #5b21b6;
+  box-shadow: 0 0 0 4px rgba(88, 28, 135, 0.1);
+}
+
+.nf-audit-slot-node--default {
+  border-color: var(--nf-app-accent);
+}
+
+.nf-audit-slot-node--signed {
+  box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.18), 0 0 12px rgba(46, 139, 87, 0.15);
+  border-color: #2e8b57;
+}
+
+.nf-audit-card--in-rail {
+  flex: 1;
+  min-width: 0;
+}
+
+button.nf-audit-card {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: var(--nf-ink-2);
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+button.nf-audit-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.2), 0 10px 28px -18px rgba(82, 102, 246, 0.28);
+}

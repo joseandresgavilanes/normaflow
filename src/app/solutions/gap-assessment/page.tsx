@@ -51,7 +51,7 @@ export default function GapAssessmentLandingPage() {
             </ul>
           </div>
 
-          <div className="nf-card" style={{ padding: 28 }}>
+          <div className="nfm-card" style={{ padding: 28 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
               Solicitar evaluación de ejemplo
             </div>
@@ -64,11 +64,11 @@ export default function GapAssessmentLandingPage() {
               <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
                   <label className="nf-label">Empresa</label>
-                  <input aria-label="Tecnoserv Industrial" required value={company} onChange={e => setCompany(e.target.value)} className="nf-input" placeholder="Tecnoserv Industrial" />
+                  <input aria-label="Tecnoserv Industrial" required value={company} onChange={e => setCompany(e.target.value)} className="nfm-input" placeholder="Tecnoserv Industrial" />
                 </div>
                 <div>
                   <label className="nf-label">Email profesional</label>
-                  <input aria-label="maria@empresa.com" required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nf-input" placeholder="maria@empresa.com" />
+                  <input aria-label="maria@empresa.com" required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nfm-input" placeholder="maria@empresa.com" />
                 </div>
                 <button type="submit" className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar <Ic.arrow className="nf-arrow"/>
@@ -82,7 +82,7 @@ export default function GapAssessmentLandingPage() {
       <section className="nf-section nf-section--tight">
         <div className="nf-container" style={{ maxWidth: 920 }}>
           <h2 className="nf-h-3">Ejemplo de resultado <span style={{ color: "var(--nf-ink-3)" }}>(resumen)</span></h2>
-          <div className="nf-card" style={{ padding: 28, marginTop: 22 }}>
+          <div className="nfm-card" style={{ padding: 28, marginTop: 22 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               {rows.map((r) => (
                 <div key={r.c}>

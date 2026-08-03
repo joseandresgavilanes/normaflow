@@ -62,14 +62,14 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
   board: { title: "Informes al órgano de gobierno", sub: "Informes preparados, enviados y reconocidos por el órgano de gobierno." },
 };
 
-const LEVEL_COLORS: Record<string, string> = { LOW: "#16a34a", MINOR: "#16a34a", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", MAJOR: "#ea580c", CRITICAL: "#b91c1c", SEVERE: "#b91c1c" };
-const STATUS_COLORS: Record<string, string> = { COMPLIANT: "#16a34a", PARTIALLY_COMPLIANT: "#d68a1a", NON_COMPLIANT: "#b91c1c", NOT_EVALUATED: "#64748b", NOT_APPLICABLE: "#94a3b8" };
+const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MINOR: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", MAJOR: "#ea580c", CRITICAL: "var(--nf-danger-text)", SEVERE: "var(--nf-danger-text)" };
+const STATUS_COLORS: Record<string, string> = { COMPLIANT: "var(--nf-success)", PARTIALLY_COMPLIANT: "#d68a1a", NON_COMPLIANT: "var(--nf-danger-text)", NOT_EVALUATED: "#64748b", NOT_APPLICABLE: "#94a3b8" };
 const STATUS_LABEL: Record<string, string> = { COMPLIANT: "Cumple", PARTIALLY_COMPLIANT: "Cumple parcialmente", NON_COMPLIANT: "No cumple", NOT_EVALUATED: "Sin evaluar", NOT_APPLICABLE: "No aplicable" };
 const APPLICABILITY_LABEL: Record<string, string> = { APPLICABLE: "Aplicable", PARTIALLY_APPLICABLE: "Parcialmente aplicable", NOT_APPLICABLE: "No aplicable", UNDER_ASSESSMENT: "En evaluación" };
-const REVIEW_COLORS: Record<string, string> = { DRAFT: "#64748b", UNDER_REVIEW: "#d68a1a", APPROVED: "#16a34a", REJECTED: "#b91c1c", PENDING: "#d68a1a", ACCEPTED: "#16a34a", MITIGATED: "#0e7490" };
+const REVIEW_COLORS: Record<string, string> = { DRAFT: "#64748b", UNDER_REVIEW: "#d68a1a", APPROVED: "var(--nf-success)", REJECTED: "var(--nf-danger-text)", PENDING: "#d68a1a", ACCEPTED: "var(--nf-success)", MITIGATED: "var(--nf-info)" };
 const REVIEW_LABEL: Record<string, string> = { DRAFT: "Borrador", UNDER_REVIEW: "En revisión", APPROVED: "Aprobada", REJECTED: "Rechazada", PENDING: "Pendiente", ACCEPTED: "Aceptada", MITIGATED: "Mitigada" };
 const CALENDAR_LABEL: Record<string, string> = { SCHEDULED: "Programado", DUE_SOON: "Próximo", OVERDUE: "Vencido", COMPLETED: "Cumplido", CANCELLED: "Cancelado" };
-const CALENDAR_COLORS: Record<string, string> = { SCHEDULED: "#64748b", DUE_SOON: "#d68a1a", OVERDUE: "#b91c1c", COMPLETED: "#16a34a", CANCELLED: "#94a3b8" };
+const CALENDAR_COLORS: Record<string, string> = { SCHEDULED: "#64748b", DUE_SOON: "#d68a1a", OVERDUE: "var(--nf-danger-text)", COMPLETED: "var(--nf-success)", CANCELLED: "#94a3b8" };
 const CASE_LABEL: Record<string, string> = { RECEIVED: "Recibida", ACKNOWLEDGED: "Acuse enviado", UNDER_TRIAGE: "En triaje", ADMISSIBLE: "Admitida", INADMISSIBLE: "Inadmitida", UNDER_INVESTIGATION: "En investigación", RESOLVED: "Resuelta", CLOSED: "Cerrada" };
 const MODE_LABEL: Record<string, string> = { IDENTIFIED: "Identificada", CONFIDENTIAL: "Confidencial", ANONYMOUS: "Anónima" };
 const OUTCOME_LABEL: Record<string, string> = { SUBSTANTIATED: "Fundada", PARTIALLY_SUBSTANTIATED: "Parcialmente fundada", UNSUBSTANTIATED: "No fundada", INCONCLUSIVE: "Inconcluyente", WITHDRAWN: "Retirada", OUT_OF_SCOPE: "Fuera de ámbito", REFERRED_EXTERNALLY: "Derivada" };
@@ -82,8 +82,8 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)",
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #8c2f39", background: "#fef2f2", color: "#8c2f39", fontWeight: 600, fontSize: 12, cursor: "pointer" };
-const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "#16a34a", background: "#f0fdf4", color: "#15803d" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #8c2f39", background: "var(--nf-danger-subtle)", color: "#8c2f39", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined) => (typeof v === "number" ? v.toLocaleString("es-ES") : "—");
 const level = (value: string) => LEVEL_COLORS[value] ?? "#64748b";
@@ -269,10 +269,10 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
       <IsoSectionHeader headingLevel={1} icon={Scale} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {d.escalations.length > 0 && (
-        <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>
+        <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>
           <b>Para decisión del órgano de gobierno:</b>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>{d.escalations.map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
@@ -282,10 +282,10 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
         <Stat label="Obligaciones aplicables" value={initial.programme.applicable} />
         <Stat label="Cumplimiento" value={initial.programme.complianceRate ?? 0} suffix="%" />
         <Stat label="Sin evaluar" value={initial.programme.notEvaluated} accent={initial.programme.notEvaluated ? "#d68a1a" : undefined} />
-        <Stat label="Vencimientos fuera de plazo" value={initial.calendarSummary.overdue} accent={initial.calendarSummary.overdue ? "#b91c1c" : undefined} />
-        <Stat label="Riesgo no aceptable" value={d.risks.notAcceptable} accent={d.risks.notAcceptable ? "#b91c1c" : undefined} />
+        <Stat label="Vencimientos fuera de plazo" value={initial.calendarSummary.overdue} accent={initial.calendarSummary.overdue ? "var(--nf-danger-text)" : undefined} />
+        <Stat label="Riesgo no aceptable" value={d.risks.notAcceptable} accent={d.risks.notAcceptable ? "var(--nf-danger-text)" : undefined} />
         <Stat label="Incumplimientos abiertos" value={initial.breachSummary.open} accent={initial.breachSummary.open ? "#ea580c" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "obligations" ? [{ label: "Obligaciones aplicables", value: initial.programme.applicable }, { label: "Cumplimiento", value: initial.programme.complianceRate ?? 0, suffix: "%" }, { label: "Sin evaluar", value: initial.programme.notEvaluated, accent: initial.programme.notEvaluated ? "#d68a1a" : undefined }] : tab === "sources" ? [{ label: "Fuentes regulatorias", value: initial.sources.length }, { label: "Jurisdicciones", value: initial.jurisdictions.length }, { label: "Obligaciones", value: initial.obligations.length }] : tab === "risks" ? [{ label: "Riesgos", value: d.risks.total }, { label: "Alto o crítico", value: d.risks.highOrCritical, accent: d.risks.highOrCritical ? "#ea580c" : undefined }, { label: "No aceptables", value: d.risks.notAcceptable, accent: d.risks.notAcceptable ? "#b91c1c" : undefined }] : tab === "controls" ? [{ label: "Controles activos", value: initial.controls.filter((row) => row.active).length }, { label: "Sin probar", value: initial.controls.filter((row) => !row.lastTestedAt).length, accent: initial.controls.some((row) => !row.lastTestedAt) ? "#d68a1a" : undefined }, { label: "Obligaciones sin control", value: initial.obligations.filter((row) => row.uncontrolled).length, accent: initial.obligations.some((row) => row.uncontrolled) ? "#b91c1c" : undefined }] : tab === "evaluations" ? [{ label: "Evaluaciones", value: initial.evaluations.length }, { label: "Sin evaluar", value: initial.programme.notEvaluated, accent: initial.programme.notEvaluated ? "#d68a1a" : undefined }, { label: "Cumplimiento", value: initial.programme.complianceRate ?? 0, suffix: "%" }] : tab === "calendar" ? [{ label: "Vencidas", value: initial.calendarSummary.overdue, accent: initial.calendarSummary.overdue ? "#b91c1c" : undefined }, { label: "Próximas", value: initial.calendarSummary.dueSoon, accent: initial.calendarSummary.dueSoon ? "#d68a1a" : undefined }, { label: "A tiempo", value: initial.calendarSummary.onTimeRate ?? 0, suffix: "%" }] : tab === "changes" ? [{ label: "Cambios regulatorios", value: initial.changes.length }, { label: "Obligaciones", value: initial.obligations.length }, { label: "Fuentes", value: initial.sources.length }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.declarations.length }, { label: "Con conflicto", value: initial.declarationSummary.withConflict, accent: initial.declarationSummary.withConflict ? "#ea580c" : undefined }, { label: "Pendientes", value: initial.declarationSummary.pending, accent: initial.declarationSummary.pending ? "#d68a1a" : undefined }] : tab === "channel" ? [{ label: "Casos recibidos", value: d.speakUp.total }, { label: "Abiertos", value: d.speakUp.open, accent: d.speakUp.open ? "#ea580c" : undefined }, { label: "Fuera de plazo", value: d.speakUp.overdueFeedback + d.speakUp.overdueAcknowledgement, accent: d.speakUp.overdueFeedback + d.speakUp.overdueAcknowledgement ? "#b91c1c" : undefined }] : tab === "investigations" ? [{ label: "Investigaciones", value: investigations.length }, { label: "Activas", value: d.investigations.active, accent: d.investigations.active ? "#ea580c" : undefined }, { label: "Casos del canal", value: d.speakUp.total }] : tab === "breaches" ? [{ label: "Incumplimientos abiertos", value: initial.breachSummary.open, accent: initial.breachSummary.open ? "#ea580c" : undefined }, { label: "Incumplimientos", value: initial.breaches.length }, { label: "Vencidos", value: initial.breachSummary.overdueNotification, accent: initial.breachSummary.overdueNotification ? "#b91c1c" : undefined }] : tab === "remediation" ? [{ label: "Planes", value: initial.plans.length }, { label: "Vencidos", value: initial.remediationSummary.overdue, accent: initial.remediationSummary.overdue ? "#b91c1c" : undefined }, { label: "Por verificar", value: initial.remediationSummary.completedNotVerified, accent: initial.remediationSummary.completedNotVerified ? "#d68a1a" : undefined }] : tab === "training" ? [{ label: "Programas", value: initial.trainings.length }, { label: "Cobertura", value: initial.trainings.reduce((sum, row) => sum + (row.targetCount ? (row.completedCount ?? 0) / row.targetCount : 0), 0), suffix: "" }, { label: "Obligaciones", value: initial.programme.applicable }] : [{ label: "Informes", value: initial.governingBodyReports.length }, { label: "Incumplimientos abiertos", value: initial.breachSummary.open, accent: initial.breachSummary.open ? "#ea580c" : undefined }, { label: "Riesgos no aceptables", value: d.risks.notAcceptable, accent: d.risks.notAcceptable ? "#b91c1c" : undefined }]} />}
+      </div> : <IsoSectionMetrics items={tab === "obligations" ? [{ label: "Obligaciones aplicables", value: initial.programme.applicable }, { label: "Cumplimiento", value: initial.programme.complianceRate ?? 0, suffix: "%" }, { label: "Sin evaluar", value: initial.programme.notEvaluated, accent: initial.programme.notEvaluated ? "#d68a1a" : undefined }] : tab === "sources" ? [{ label: "Fuentes regulatorias", value: initial.sources.length }, { label: "Jurisdicciones", value: initial.jurisdictions.length }, { label: "Obligaciones", value: initial.obligations.length }] : tab === "risks" ? [{ label: "Riesgos", value: d.risks.total }, { label: "Alto o crítico", value: d.risks.highOrCritical, accent: d.risks.highOrCritical ? "#ea580c" : undefined }, { label: "No aceptables", value: d.risks.notAcceptable, accent: d.risks.notAcceptable ? "var(--nf-danger-text)" : undefined }] : tab === "controls" ? [{ label: "Controles activos", value: initial.controls.filter((row) => row.active).length }, { label: "Sin probar", value: initial.controls.filter((row) => !row.lastTestedAt).length, accent: initial.controls.some((row) => !row.lastTestedAt) ? "#d68a1a" : undefined }, { label: "Obligaciones sin control", value: initial.obligations.filter((row) => row.uncontrolled).length, accent: initial.obligations.some((row) => row.uncontrolled) ? "var(--nf-danger-text)" : undefined }] : tab === "evaluations" ? [{ label: "Evaluaciones", value: initial.evaluations.length }, { label: "Sin evaluar", value: initial.programme.notEvaluated, accent: initial.programme.notEvaluated ? "#d68a1a" : undefined }, { label: "Cumplimiento", value: initial.programme.complianceRate ?? 0, suffix: "%" }] : tab === "calendar" ? [{ label: "Vencidas", value: initial.calendarSummary.overdue, accent: initial.calendarSummary.overdue ? "var(--nf-danger-text)" : undefined }, { label: "Próximas", value: initial.calendarSummary.dueSoon, accent: initial.calendarSummary.dueSoon ? "#d68a1a" : undefined }, { label: "A tiempo", value: initial.calendarSummary.onTimeRate ?? 0, suffix: "%" }] : tab === "changes" ? [{ label: "Cambios regulatorios", value: initial.changes.length }, { label: "Obligaciones", value: initial.obligations.length }, { label: "Fuentes", value: initial.sources.length }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.declarations.length }, { label: "Con conflicto", value: initial.declarationSummary.withConflict, accent: initial.declarationSummary.withConflict ? "#ea580c" : undefined }, { label: "Pendientes", value: initial.declarationSummary.pending, accent: initial.declarationSummary.pending ? "#d68a1a" : undefined }] : tab === "channel" ? [{ label: "Casos recibidos", value: d.speakUp.total }, { label: "Abiertos", value: d.speakUp.open, accent: d.speakUp.open ? "#ea580c" : undefined }, { label: "Fuera de plazo", value: d.speakUp.overdueFeedback + d.speakUp.overdueAcknowledgement, accent: d.speakUp.overdueFeedback + d.speakUp.overdueAcknowledgement ? "var(--nf-danger-text)" : undefined }] : tab === "investigations" ? [{ label: "Investigaciones", value: investigations.length }, { label: "Activas", value: d.investigations.active, accent: d.investigations.active ? "#ea580c" : undefined }, { label: "Casos del canal", value: d.speakUp.total }] : tab === "breaches" ? [{ label: "Incumplimientos abiertos", value: initial.breachSummary.open, accent: initial.breachSummary.open ? "#ea580c" : undefined }, { label: "Incumplimientos", value: initial.breaches.length }, { label: "Vencidos", value: initial.breachSummary.overdueNotification, accent: initial.breachSummary.overdueNotification ? "var(--nf-danger-text)" : undefined }] : tab === "remediation" ? [{ label: "Planes", value: initial.plans.length }, { label: "Vencidos", value: initial.remediationSummary.overdue, accent: initial.remediationSummary.overdue ? "var(--nf-danger-text)" : undefined }, { label: "Por verificar", value: initial.remediationSummary.completedNotVerified, accent: initial.remediationSummary.completedNotVerified ? "#d68a1a" : undefined }] : tab === "training" ? [{ label: "Programas", value: initial.trainings.length }, { label: "Cobertura", value: initial.trainings.reduce((sum, row) => sum + (row.targetCount ? (row.completedCount ?? 0) / row.targetCount : 0), 0), suffix: "" }, { label: "Obligaciones", value: initial.programme.applicable }] : [{ label: "Informes", value: initial.governingBodyReports.length }, { label: "Incumplimientos abiertos", value: initial.breachSummary.open, accent: initial.breachSummary.open ? "#ea580c" : undefined }, { label: "Riesgos no aceptables", value: d.risks.notAcceptable, accent: d.risks.notAcceptable ? "var(--nf-danger-text)" : undefined }]} />}
 
       {tab === "panel" && (
         <>
@@ -388,7 +388,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.issuer ?? "—"}</td>
                 <td style={td}>{row.jurisdiction?.code ?? "—"}</td>
                 <td style={td}>{row.status}</td>
-                <td style={td}>{row.monitored ? `${row.monitoringFrequency}` : <span style={{ color: "#b91c1c" }}>No</span>}</td>
+                <td style={td}>{row.monitored ? `${row.monitoringFrequency}` : <span style={{ color: "var(--nf-danger-text)" }}>No</span>}</td>
                 <td style={td}>{fmt(row.lastCheckedAt)}</td>
                 <td style={td}>{fmt(row.nextCheckDate)}</td>
                 <td style={td}>{row._count.obligations} · {row._count.changes} cambio(s)</td>
@@ -437,7 +437,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}><span style={chip(level(row.inherentLevel) + "22", level(row.inherentLevel))}>{row.inherentScore}</span></td>
                 <td style={td}>{row.controlEffectiveness ?? "—"}{row._count.controls ? ` (${row._count.controls})` : ""}</td>
                 <td style={td}><span style={chip(level(row.residualLevel) + "22", level(row.residualLevel))}>{row.residualScore}</span></td>
-                <td style={td}>{row.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("#fee2e2", "#b91c1c")}>No aceptable</span> : row.acceptability === "ACCEPTABLE" ? "Aceptable" : "Tolerable"}</td>
+                <td style={td}>{row.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>No aceptable</span> : row.acceptability === "ACCEPTABLE" ? "Aceptable" : "Tolerable"}</td>
                 <td style={td}>{money(row.sanctionExposure)}</td>
                 <td style={td}>{row.treatment}{row.acceptedAt && <div style={{ color: "#64748b", fontSize: 11 }}>aceptado por {nameOf(row.acceptedById)}</div>}</td>
                 <td style={td}>{nameOf(row.ownerId)}</td>
@@ -558,7 +558,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.leadTimeDays} d</td>
                 <td style={td}>
                   <span style={chip(CALENDAR_COLORS[row.state.status] + "22", CALENDAR_COLORS[row.state.status])}>{CALENDAR_LABEL[row.state.status]}</span>
-                  {row.state.status === "OVERDUE" && <div style={{ color: "#b91c1c", fontSize: 11 }}>{row.state.overdueDays} día(s)</div>}
+                  {row.state.status === "OVERDUE" && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>{row.state.overdueDays} día(s)</div>}
                 </td>
                 <td style={td}>{nameOf(row.responsibleId)}</td>
                 {can.update && (
@@ -612,11 +612,11 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.code}</td>
                 <td style={td}>{nameOf(row.declarantId)}</td>
                 <td style={td}>{row.period}</td>
-                <td style={td}>{row.hasConflict ? <span style={chip("#fef3c7", "#92400e")}>Sí</span> : "No"}</td>
+                <td style={td}>{row.hasConflict ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sí</span> : "No"}</td>
                 <td style={td}>{row.conflictType ?? "—"}</td>
                 <td style={td}>{row.relatedParty ?? "—"}</td>
                 <td style={td}>{money(row.estimatedValue)}{row.currency ? ` ${row.currency}` : ""}</td>
-                <td style={td}>{row.recusalRequired ? <span style={chip("#fee2e2", "#b91c1c")}>Obligada</span> : "—"}</td>
+                <td style={td}>{row.recusalRequired ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Obligada</span> : "—"}</td>
                 <td style={td}><span style={chip((REVIEW_COLORS[row.reviewStatus] ?? "#64748b") + "22", REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
                 <td style={td}>{row.reviewerId ? `${nameOf(row.reviewerId)} · ${fmt(row.reviewedAt)}` : "—"}</td>
                 {can.approve && (
@@ -725,9 +725,9 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.code}</td>
                 <td style={td}>{row.caseCode}</td>
                 <td style={td}><b>{row.title}</b></td>
-                <td style={td}>{nameOf(row.leadInvestigatorId)}{row.reassignedToId && <div style={{ color: "#0e7490", fontSize: 11 }}>reasignada a {nameOf(row.reassignedToId)}</div>}</td>
-                <td style={td}>{row.independenceConfirmed ? <span style={{ color: "#16a34a" }}>confirmada</span> : <span style={{ color: "#b91c1c" }}>sin confirmar</span>}</td>
-                <td style={td}>{row.conflictDetected ? <span style={chip("#fee2e2", "#b91c1c")}>detectado</span> : row.conflictChecked ? "comprobado" : <span style={{ color: "#d68a1a" }}>sin comprobar</span>}</td>
+                <td style={td}>{nameOf(row.leadInvestigatorId)}{row.reassignedToId && <div style={{ color: "var(--nf-info)", fontSize: 11 }}>reasignada a {nameOf(row.reassignedToId)}</div>}</td>
+                <td style={td}>{row.independenceConfirmed ? <span style={{ color: "var(--nf-success)" }}>confirmada</span> : <span style={{ color: "var(--nf-danger-text)" }}>sin confirmar</span>}</td>
+                <td style={td}>{row.conflictDetected ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>detectado</span> : row.conflictChecked ? "comprobado" : <span style={{ color: "#d68a1a" }}>sin comprobar</span>}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{INVESTIGATION_LABEL[row.status] ?? row.status}</span></td>
                 <td style={td}>{fmt(row.startedAt)}</td>
                 <td style={td}>{fmt(row.dueDate)}</td>
@@ -778,12 +778,12 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                   <td style={td}><span style={chip(level(row.severity) + "22", level(row.severity))}>{row.severity}</span></td>
                   <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{BREACH_LABEL[row.status] ?? row.status}</span></td>
                   <td style={td}>{row.rootCause ? "Sí" : <span style={{ color: "#d68a1a" }}>pendiente</span>}</td>
-                  <td style={td}>{row.recurrence ? <span style={chip("#fee2e2", "#b91c1c")}>Sí</span> : "No"}</td>
+                  <td style={td}>{row.recurrence ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                   <td style={td}>
                     {row.notificationRequired
                       ? row.authorityNotifiedAt
                         ? fmt(row.authorityNotifiedAt)
-                        : <span style={chip(row.notificationOverdue ? "#fee2e2" : "#fef3c7", row.notificationOverdue ? "#b91c1c" : "#92400e")}>{row.notificationOverdue ? "fuera de plazo" : `hasta ${fmt(row.notificationDeadline)}`}</span>
+                        : <span style={chip(row.notificationOverdue ? "var(--nf-danger-border)" : "var(--nf-warning-border)", row.notificationOverdue ? "var(--nf-danger-text)" : "#92400e")}>{row.notificationOverdue ? "fuera de plazo" : `hasta ${fmt(row.notificationDeadline)}`}</span>
                       : "—"}
                   </td>
                   <td style={td}>{money(row.financialExposure)}</td>
@@ -827,9 +827,9 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{fmt(row.startDate)}</td>
                 <td style={td}>{fmt(row.dueDate)}</td>
                 <td style={td}>{row.progressPercent}%</td>
-                <td style={td}><span style={chip(row.effectiveStatus === "OVERDUE" ? "#fee2e2" : "#eef2ff", row.effectiveStatus === "OVERDUE" ? "#b91c1c" : "#4338ca")}>{PLAN_LABEL[row.effectiveStatus] ?? row.effectiveStatus}</span></td>
+                <td style={td}><span style={chip(row.effectiveStatus === "OVERDUE" ? "var(--nf-danger-border)" : "#eef2ff", row.effectiveStatus === "OVERDUE" ? "var(--nf-danger-text)" : "#4338ca")}>{PLAN_LABEL[row.effectiveStatus] ?? row.effectiveStatus}</span></td>
                 <td style={td}>{row.approvedAt ? `${nameOf(row.approvedById)} · ${fmt(row.approvedAt)}` : "—"}</td>
-                <td style={td}>{row.effectivenessVerified ? `${nameOf(row.effectivenessVerifiedById)}` : row.completedAt ? <span style={{ color: "#b91c1c" }}>sin verificar</span> : "—"}</td>
+                <td style={td}>{row.effectivenessVerified ? `${nameOf(row.effectivenessVerifiedById)}` : row.completedAt ? <span style={{ color: "var(--nf-danger-text)" }}>sin verificar</span> : "—"}</td>
                 <td style={td}>{money(row.cost)}</td>
                 {(can.update || can.approve) && (
                   <td style={td}>
@@ -919,7 +919,7 @@ function Row({ k, v, text, danger, suffix }: { k: string; v?: number; text?: str
   return (
     <div className="nf-iso-dashboard-row">
       <span className="nf-iso-dashboard-row-label">{k}</span>
-      <b className="nf-iso-dashboard-row-value" style={{ color: danger ? "#b91c1c" : undefined }}>{text ?? `${v}${suffix ?? ""}`}</b>
+      <b className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{text ?? `${v}${suffix ?? ""}`}</b>
     </div>
   );
 }
@@ -1024,7 +1024,7 @@ function ObligationRow({ row, nameOf, jurisdictions, members, can, live, pending
         <td style={td}><span style={chip(level(row.criticality) + "22", level(row.criticality))}>{row.criticality}</span></td>
         <td style={td}>{nameOf(row.ownerId)}</td>
         <td style={td}>{fmt(row.nextEvaluationDate)}</td>
-        <td style={td}>{row.counts.controls}{row.uncontrolled && <div style={{ color: "#b91c1c", fontSize: 11 }}>sin control</div>}</td>
+        <td style={td}>{row.counts.controls}{row.uncontrolled && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>sin control</div>}</td>
         {live && (can.update || can.create) && <td style={td}><button type="button" className="nf-compliance-obligation-toggle" onClick={() => setOpen((v) => !v)}><Wrench size={13} aria-hidden />{open ? "Ocultar" : "Gestionar"}</button></td>}
       </tr>
       {open && (
@@ -1109,14 +1109,14 @@ function ControlRow({ row, members, can, live, pending, run }: { row: Compliance
     <>
       <tr>
         <td style={td}>{row.code}</td>
-        <td style={td}><b>{row.name}</b>{row.organizationControlId && <div style={{ color: "#0e7490", fontSize: 11 }}>reutiliza control ISO 27001</div>}</td>
+        <td style={td}><b>{row.name}</b>{row.organizationControlId && <div style={{ color: "var(--nf-info)", fontSize: 11 }}>reutiliza control ISO 27001</div>}</td>
         <td style={td}>{row.obligation?.code ?? "—"}</td>
         <td style={td}>{row.risk?.code ?? "—"}</td>
         <td style={td}>{row.controlType}</td>
         <td style={td}>{row.nature}</td>
         <td style={td}>{row.frequency}</td>
-        <td style={td}>{row.designAdequate === null ? "—" : row.designAdequate ? "Adecuado" : <span style={{ color: "#b91c1c" }}>Inadecuado</span>}</td>
-        <td style={td}>{row.operatingEffective === null ? "—" : row.operatingEffective ? "Eficaz" : <span style={{ color: "#b91c1c" }}>Ineficaz</span>}</td>
+        <td style={td}>{row.designAdequate === null ? "—" : row.designAdequate ? "Adecuado" : <span style={{ color: "var(--nf-danger-text)" }}>Inadecuado</span>}</td>
+        <td style={td}>{row.operatingEffective === null ? "—" : row.operatingEffective ? "Eficaz" : <span style={{ color: "var(--nf-danger-text)" }}>Ineficaz</span>}</td>
         <td style={td}>{row.effectiveness ?? "—"}</td>
         <td style={td}>{fmt(row.lastTestedAt)}</td>
         <td style={td}>{fmt(row.nextTestDate)}</td>
@@ -1226,7 +1226,7 @@ function ChangeRow({ row, members, nameOf, can, live, pending, run }: {
         <td style={td}>{fmt(row.detectedAt)}</td>
         <td style={td}>{fmt(row.effectiveFrom)}</td>
         <td style={td}><span style={chip(level(row.impactLevel) + "22", level(row.impactLevel))}>{row.impactLevel}</span></td>
-        <td style={td}>{row.impactStatus === "PENDING_ASSESSMENT" ? <span style={chip("#fef3c7", "#92400e")}>Sin analizar</span> : row.impactStatus}</td>
+        <td style={td}>{row.impactStatus === "PENDING_ASSESSMENT" ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sin analizar</span> : row.impactStatus}</td>
         <td style={td}>{nameOf(row.responsibleId)}</td>
         <td style={td}>{fmt(row.dueDate)}</td>
         <td style={td}>{fmt(row.implementedAt)}</td>
@@ -1487,7 +1487,7 @@ function CaseCard({ row, members, can, live, pending, run }: {
     <div style={card}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
         <div>
-          <b>{row.code}</b> {!row.integrity.valid && <span style={{ color: "#b91c1c", fontSize: 11 }}>{row.integrity.problems.join("; ")}</span>}
+          <b>{row.code}</b> {!row.integrity.valid && <span style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>{row.integrity.problems.join("; ")}</span>}
           <div style={{ color: "#64748b", fontSize: 12 }}>
             {MODE_LABEL[row.identificationMode]} · {row.category} · <span style={chip(level(row.severity) + "22", level(row.severity))}>{row.severity}</span> · recibida {fmt(row.receivedAt)}
           </div>
@@ -1502,8 +1502,8 @@ function CaseCard({ row, members, can, live, pending, run }: {
         <span>Accesos: {row.access.length}</span>
         <span>Evidencia: {row.evidence.length}</span>
         <span>{row.purgedAt ? "Purgado" : `Retención hasta ${fmt(row.retentionUntil)}`}</span>
-        {row.deadlines.acknowledgementOverdue && <span style={{ color: "#b91c1c" }}>acuse vencido</span>}
-        {row.deadlines.feedbackOverdue && <span style={{ color: "#b91c1c" }}>respuesta vencida</span>}
+        {row.deadlines.acknowledgementOverdue && <span style={{ color: "var(--nf-danger-text)" }}>acuse vencido</span>}
+        {row.deadlines.feedbackOverdue && <span style={{ color: "var(--nf-danger-text)" }}>respuesta vencida</span>}
       </div>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         {live && can.channelHandle && row.status === "RECEIVED" && (

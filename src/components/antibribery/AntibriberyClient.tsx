@@ -66,7 +66,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  LOW: "#16a34a", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "#b91c1c",
+  LOW: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)",
 };
 const DD_LABEL: Record<string, string> = {
   DRAFT: "Borrador", SCREENING: "Screening", REVIEW: "Revisión", ENHANCED_REVIEW: "Revisión reforzada",
@@ -85,7 +85,7 @@ const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg,
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #9f1239", background: "#fff1f2", color: "#9f1239", fontWeight: 600, fontSize: 12, cursor: "pointer" };
-const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "#16a34a", background: "#f0fdf4", color: "#15803d" };
+const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined, c?: string | null) => (typeof v === "number" ? `${v.toLocaleString("es-ES")}${c ? ` ${c}` : ""}` : "—");
 const level = (value: string) => LEVEL_COLORS[value] ?? "#64748b";
@@ -166,16 +166,16 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Evaluaciones" value={s.assessments} />
-        <Stat label="Riesgo residual alto" value={s.highResidual} accent={s.highResidual ? "#b91c1c" : undefined} />
+        <Stat label="Riesgo residual alto" value={s.highResidual} accent={s.highResidual ? "var(--nf-danger-text)" : undefined} />
         <Stat label="Terceros" value={s.associates} />
         <Stat label="DD abiertas" value={s.dueDiligenceOpen} accent={s.dueDiligenceOpen ? "#d68a1a" : undefined} />
         <Stat label="Regalos pendientes" value={s.giftsPending} accent={s.giftsPending ? "#d68a1a" : undefined} />
         <Stat label="Investigaciones abiertas" value={s.investigationsOpen} accent={s.investigationsOpen ? "#ea580c" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "risks" ? [{ label: "Evaluaciones", value: s.assessments }, { label: "Riesgo residual alto", value: s.highResidual, accent: s.highResidual ? "#b91c1c" : undefined }, { label: "Aprobadas", value: s.assessmentsApproved }] : tab === "associates" ? [{ label: "Socios de negocio", value: s.associates }, { label: "Riesgo alto/crítico", value: s.highRiskAssociates, accent: s.highRiskAssociates ? "#ea580c" : undefined }, { label: "Debida diligencia abierta", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }] : tab === "due-diligence" ? [{ label: "Casos abiertos", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }, { label: "Vencidos", value: s.dueDiligenceOverdue, accent: s.dueDiligenceOverdue ? "#b91c1c" : undefined }, { label: "Socios evaluados", value: s.associates }] : tab === "owners" ? [{ label: "Beneficiarios finales", value: initial.owners.length }, { label: "PEP", value: s.pepOwners, accent: s.pepOwners ? "#ea580c" : undefined }, { label: "Socios de negocio", value: s.associates }] : tab === "gifts" ? [{ label: "Regalos pendientes", value: s.giftsPending, accent: s.giftsPending ? "#d68a1a" : undefined }, { label: "Regalos registrados", value: initial.gifts.length }, { label: "Socios relacionados", value: s.associates }] : tab === "donations" ? [{ label: "Donaciones", value: initial.donations.length }, { label: "Políticas", value: s.donationsPolitical, accent: s.donationsPolitical ? "#d68a1a" : undefined }, { label: "Pendientes", value: initial.donations.filter((row) => !["APPROVED", "REJECTED"].includes(row.status)).length, accent: "#d68a1a" }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.conflicts.length }, { label: "Pendientes", value: initial.conflicts.filter((row) => row.reviewStatus === "PENDING").length, accent: "#d68a1a" }, { label: "Socios relacionados", value: s.associates }] : tab === "facilitation" ? [{ label: "Pagos abiertos", value: s.facilitationOpen, accent: s.facilitationOpen ? "#b91c1c" : undefined }, { label: "Reportes", value: initial.facilitation.length }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : tab === "controls" ? [{ label: "Pruebas financieras", value: initial.financialTests.length }, { label: "Pruebas no financieras", value: initial.nonFinancialTests.length }, { label: "Fallos de control", value: s.controlFailures, accent: s.controlFailures ? "#b91c1c" : undefined }] : tab === "approvals" ? [{ label: "Aprobaciones pendientes", value: s.highRiskPending, accent: s.highRiskPending ? "#d68a1a" : undefined }, { label: "Operaciones alto riesgo", value: initial.highRisk.length }, { label: "Socios", value: s.associates }] : tab === "commitments" ? [{ label: "Compromisos", value: s.commitments }, { label: "Socios relacionados", value: s.associates }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : [{ label: "Investigaciones", value: initial.investigations.length }, { label: "Abiertas", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }, { label: "Socios relacionados", value: s.associates }]} />}
+      </div> : <IsoSectionMetrics items={tab === "risks" ? [{ label: "Evaluaciones", value: s.assessments }, { label: "Riesgo residual alto", value: s.highResidual, accent: s.highResidual ? "var(--nf-danger-text)" : undefined }, { label: "Aprobadas", value: s.assessmentsApproved }] : tab === "associates" ? [{ label: "Socios de negocio", value: s.associates }, { label: "Riesgo alto/crítico", value: s.highRiskAssociates, accent: s.highRiskAssociates ? "#ea580c" : undefined }, { label: "Debida diligencia abierta", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }] : tab === "due-diligence" ? [{ label: "Casos abiertos", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }, { label: "Vencidos", value: s.dueDiligenceOverdue, accent: s.dueDiligenceOverdue ? "var(--nf-danger-text)" : undefined }, { label: "Socios evaluados", value: s.associates }] : tab === "owners" ? [{ label: "Beneficiarios finales", value: initial.owners.length }, { label: "PEP", value: s.pepOwners, accent: s.pepOwners ? "#ea580c" : undefined }, { label: "Socios de negocio", value: s.associates }] : tab === "gifts" ? [{ label: "Regalos pendientes", value: s.giftsPending, accent: s.giftsPending ? "#d68a1a" : undefined }, { label: "Regalos registrados", value: initial.gifts.length }, { label: "Socios relacionados", value: s.associates }] : tab === "donations" ? [{ label: "Donaciones", value: initial.donations.length }, { label: "Políticas", value: s.donationsPolitical, accent: s.donationsPolitical ? "#d68a1a" : undefined }, { label: "Pendientes", value: initial.donations.filter((row) => !["APPROVED", "REJECTED"].includes(row.status)).length, accent: "#d68a1a" }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.conflicts.length }, { label: "Pendientes", value: initial.conflicts.filter((row) => row.reviewStatus === "PENDING").length, accent: "#d68a1a" }, { label: "Socios relacionados", value: s.associates }] : tab === "facilitation" ? [{ label: "Pagos abiertos", value: s.facilitationOpen, accent: s.facilitationOpen ? "var(--nf-danger-text)" : undefined }, { label: "Reportes", value: initial.facilitation.length }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : tab === "controls" ? [{ label: "Pruebas financieras", value: initial.financialTests.length }, { label: "Pruebas no financieras", value: initial.nonFinancialTests.length }, { label: "Fallos de control", value: s.controlFailures, accent: s.controlFailures ? "var(--nf-danger-text)" : undefined }] : tab === "approvals" ? [{ label: "Aprobaciones pendientes", value: s.highRiskPending, accent: s.highRiskPending ? "#d68a1a" : undefined }, { label: "Operaciones alto riesgo", value: initial.highRisk.length }, { label: "Socios", value: s.associates }] : tab === "commitments" ? [{ label: "Compromisos", value: s.commitments }, { label: "Socios relacionados", value: s.associates }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : [{ label: "Investigaciones", value: initial.investigations.length }, { label: "Abiertas", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }, { label: "Socios relacionados", value: s.associates }]} />}
 
       {tab === "panel" && (
         <>
@@ -301,7 +301,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
 
       {tab === "owners" && (
         s.sensitiveLocked ? (
-          <div style={{ ...card, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e" }}>
+          <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e" }}>
             Beneficiarios finales bloqueado: se requiere <strong>antibribery-sensitive:read</strong> para ver UBO y condición PEP de terceros.
           </div>
         ) : (
@@ -568,7 +568,7 @@ function Row({ k, v, suffix, danger }: { k: string; v: string | number; suffix?:
   return (
     <div className="nf-iso-dashboard-row">
       <span className="nf-iso-dashboard-row-label">{k}</span>
-      <b className="nf-iso-dashboard-row-value" style={{ color: danger ? "#b91c1c" : undefined }}>{v}{suffix ?? ""}</b>
+      <b className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{v}{suffix ?? ""}</b>
     </div>
   );
 }

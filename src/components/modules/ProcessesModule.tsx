@@ -28,12 +28,12 @@ import {
 
 function processTypeMeta(type: ProcessRow["type"]) {
   if (type === "support") {
-    return { label: "Soporte", color: "#D97706", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
+    return { label: "Soporte", color: "var(--nf-warning)", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
   }
   if (type === "strategic") {
     return { label: "Estratégico", color: "#5B3FA6", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
   }
-  return { label: "Core", color: "#5266F6", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "#16A34A" };
+  return { label: "Core", color: "var(--nf-primary)", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "var(--nf-success)" };
 }
 
 function getProcessLinkStats(
@@ -80,7 +80,7 @@ function linkBlock(title: string, href: string, children: ReactNode) {
           href={href}
           style={{
             fontSize: 12,
-            color: "#5266F6",
+            color: "var(--nf-primary)",
             fontWeight: 700,
             whiteSpace: "nowrap",
             textDecoration: "none",
@@ -244,7 +244,7 @@ function ProcessDetailBody({
               border: "1px solid rgba(82, 102, 246, 0.12)",
             }}
           >
-            <div style={{ fontWeight: 600, color: "#5266F6", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontWeight: 600, color: "var(--nf-primary)", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <ArrowDownToLine size={16} strokeWidth={2.25} aria-hidden />
               Entradas
             </div>
@@ -264,7 +264,7 @@ function ProcessDetailBody({
               border: "1px solid rgba(46, 139, 87, 0.2)",
             }}
           >
-            <div style={{ fontWeight: 600, color: "#16A34A", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ fontWeight: 600, color: "var(--nf-success)", fontSize: 11, letterSpacing: "-0.01em", textTransform: "none", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <ArrowUpFromLine size={16} strokeWidth={2.25} aria-hidden />
               Salidas
             </div>
@@ -532,13 +532,13 @@ export default function ProcessesModule() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#5266F6",
+                color: "var(--nf-primary)",
               }}
             >
               <GitBranch size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Procesos definidos</div>
             </div>
           </div>
@@ -548,7 +548,7 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "#F0FDF4",
+                background: "var(--nf-success-subtle)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -558,7 +558,7 @@ export default function ProcessesModule() {
               <Layers size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "core").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "core").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Tipo core</div>
             </div>
           </div>
@@ -568,7 +568,7 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "#FFFBEB",
+                background: "var(--nf-warning-subtle)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -578,7 +578,7 @@ export default function ProcessesModule() {
               <Layers size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "support").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "support").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Soporte</div>
             </div>
           </div>
@@ -616,7 +616,7 @@ export default function ProcessesModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary)",
             }}
           >
             <GitBranch size={28} strokeWidth={2} aria-hidden />
@@ -757,10 +757,10 @@ export default function ProcessesModule() {
                       borderBottom: "1px solid rgba(82, 102, 246, 0.07)",
                     }}
                   >
-                    {metricCell(FileText, "Docs", stats.docs, "#5266F6")}
-                    {metricCell(Shield, "Riesgos", stats.risks, "#DC2626")}
-                    {metricCell(BarChart3, "KPIs", stats.indicators, "#16A34A")}
-                    {metricCell(GitPullRequest, "Cambios", stats.changes, "#D97706")}
+                    {metricCell(FileText, "Docs", stats.docs, "var(--nf-primary)")}
+                    {metricCell(Shield, "Riesgos", stats.risks, "var(--nf-danger)")}
+                    {metricCell(BarChart3, "KPIs", stats.indicators, "var(--nf-success)")}
+                    {metricCell(GitPullRequest, "Cambios", stats.changes, "var(--nf-warning)")}
                     {metricCell(GraduationCap, "Formación", stats.training, "#6B3FB5")}
                   </div>
 
@@ -774,7 +774,7 @@ export default function ProcessesModule() {
                           marginBottom: 10,
                           fontSize: 11,
                           fontWeight: 600,
-                          color: "#5266F6",
+                          color: "var(--nf-primary)",
                           letterSpacing: "-0.01em",
                           textTransform: "none",
                         }}
@@ -831,7 +831,7 @@ export default function ProcessesModule() {
                           marginBottom: 10,
                           fontSize: 11,
                           fontWeight: 600,
-                          color: "#16A34A",
+                          color: "var(--nf-success)",
                           letterSpacing: "-0.01em",
                           textTransform: "none",
                         }}
@@ -897,7 +897,7 @@ export default function ProcessesModule() {
                       style={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: "#5266F6",
+                        color: "var(--nf-primary)",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 4,

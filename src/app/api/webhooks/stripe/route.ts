@@ -4,12 +4,13 @@ import { Prisma } from "@prisma/client";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { subscriptionPlan, subscriptionStatus } from "@/lib/stripe-webhook";
+import { syncCommercialPackEntitlements } from "@/lib/standard-packs";
 
 async function syncSubscription(subscription: Stripe.Subscription) {
   const existing = await prisma.subscription.findFirst({ where: { stripeSubscriptionId: subscription.id } });
   const organizationId = subscription.metadata.organizationId || existing?.organizationId;
   if (!organizationId) throw new Error(`Subscription ${subscription.id} has no organizationId metadata.`);
-  const organization = await prisma.organization.findUnique({ where: { id: organizationId }, select: { id: true } });
+  const organization = await prisma.organization.findUnique({ where: { id: organizationId }, select: { id: true, trialEndsAt: true } });
   if (!organization) throw new Error(`Organization ${organizationId} does not exist.`);
   const plan = subscriptionPlan(subscription);
   const rawStatus = subscriptionStatus(subscription.status);
@@ -30,7 +31,8 @@ async function syncSubscription(subscription: Stripe.Subscription) {
   await prisma.$transaction(async (tx) => {
     await tx.subscription.upsert({ where: { organizationId }, create: { organizationId, ...data }, update: data });
     await tx.organization.update({ where: { id: organizationId }, data: { plan } });
-    await tx.auditLog.create({ data: { organizationId, action: "subscription_sync", module: "billing", recordId: subscription.id, metadata: { before: { status: existing?.status ?? null, plan: existing?.plan ?? null }, after: { status: mappedStatus, plan, cancelAtPeriodEnd: subscription.cancel_at_period_end } } } });
+    const entitlementSync = await syncCommercialPackEntitlements({ organizationId, plan, trialEndsAt: organization.trialEndsAt }, tx);
+    await tx.auditLog.create({ data: { organizationId, action: "subscription_sync", module: "billing", recordId: subscription.id, metadata: { before: { status: existing?.status ?? null, plan: existing?.plan ?? null }, after: { status: mappedStatus, plan, cancelAtPeriodEnd: subscription.cancel_at_period_end, packEntitlements: entitlementSync.enabledCodes } } } });
   });
 }
 
@@ -122,10 +124,13 @@ export async function POST(req: NextRequest) {
     else if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object;
       const existing = await prisma.subscription.findFirst({ where: { stripeSubscriptionId: subscription.id }, select: { organizationId: true } });
-      await prisma.$transaction([
-        prisma.subscription.updateMany({ where: { stripeSubscriptionId: subscription.id }, data: { status: "CANCELLED", cancelAtPeriodEnd: false, stripeSubscriptionId: null } }),
-        ...(existing ? [prisma.organization.update({ where: { id: existing.organizationId }, data: { plan: "STARTER" } })] : []),
-      ]);
+      await prisma.$transaction(async (tx) => {
+        await tx.subscription.updateMany({ where: { stripeSubscriptionId: subscription.id }, data: { status: "CANCELLED", cancelAtPeriodEnd: false, stripeSubscriptionId: null } });
+        if (!existing) return;
+        const organization = await tx.organization.update({ where: { id: existing.organizationId }, data: { plan: "STARTER" }, select: { trialEndsAt: true } });
+        const entitlementSync = await syncCommercialPackEntitlements({ organizationId: existing.organizationId, plan: "STARTER", trialEndsAt: organization.trialEndsAt }, tx);
+        await tx.auditLog.create({ data: { organizationId: existing.organizationId, action: "subscription_cancelled", module: "billing", recordId: subscription.id, metadata: { after: { status: "CANCELLED", plan: "STARTER", packEntitlements: entitlementSync.enabledCodes }, disabledPackEntitlements: entitlementSync.disabledCount } } });
+      });
     } else if (["invoice.created", "invoice.finalized", "invoice.paid", "invoice.payment_failed"].includes(event.type)) {
       await syncInvoice(event.data.object as Stripe.Invoice, event.type);
     }

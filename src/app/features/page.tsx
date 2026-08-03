@@ -1,7 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Funcionalidades — NormaFlow" };
+export const metadata = createMarketingMetadata({
+  title: "Funcionalidades del software ISO | NormaFlow",
+  description: "Documentos, riesgos, auditorías, CAPA, indicadores, evidencias y asistente IA para gestionar tu sistema ISO.",
+  path: "/features",
+});
 
 const FEATURES: { icon: keyof typeof Ic; title: string; desc: string; bullets: string[] }[] = [
   { icon: "kpi",    title: "GAP Assessment", desc: "Evalúa el nivel de cumplimiento de tu organización frente a los requisitos de cada norma. Diagnóstico por cláusula, scoring automatizado y plan de acción sugerido por IA.", bullets: ["Plantillas por norma (ISO 9001, 27001, 14001, 45001)", "Scoring por cláusula y puntuación global", "Plan de acción sugerido automáticamente", "Exportación a PDF con portada y resumen ejecutivo", "Versión resumida gratuita para captación de leads"] },
@@ -36,7 +41,7 @@ export default function FeaturesPage() {
             return (
               <article
                 key={feat.title}
-                className="nf-card"
+                className="nfm-card"
                 style={{
                   display: "grid",
                   gridTemplateColumns: i % 2 === 0 ? "1.1fr 1fr" : "1fr 1.1fr",

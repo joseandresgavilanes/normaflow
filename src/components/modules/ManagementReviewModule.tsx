@@ -137,7 +137,7 @@ export default function ManagementReviewModule() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, marginTop: 13 }}>
               {[["Entradas", r.inputs.length], ["Decisiones", r.decisions.length], ["Acciones", r.decisions.length]].map(([l, v]) => (
                 <div key={String(l)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}>
-                  <strong style={{ display: "block", color: "#5266F6" }}>{v}</strong>
+                  <strong style={{ display: "block", color: "var(--nf-primary)" }}>{v}</strong>
                   <span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{l}</span>
                 </div>
               ))}
@@ -177,7 +177,7 @@ export default function ManagementReviewModule() {
                 {detail.inputs.length === 0 && <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin entradas.</p>}
                 {detail.inputs.map(i => (
                   <div key={i.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#5266F6" }}>{TOPIC_LABELS[i.topic]}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary)" }}>{TOPIC_LABELS[i.topic]}</span>
                     <p style={{ margin: "4px 0 0", fontSize: 13 }}>{i.content}</p>
                   </div>
                 ))}

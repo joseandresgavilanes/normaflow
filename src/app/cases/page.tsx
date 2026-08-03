@@ -37,7 +37,7 @@ export default function CasesPage() {
             {cases.map((c) => (
               <article
                 key={c.company}
-                className="nf-card"
+                className="nfm-card"
                 style={{
                   padding: "clamp(24px, 4vw, 40px)",
                   display: "grid",

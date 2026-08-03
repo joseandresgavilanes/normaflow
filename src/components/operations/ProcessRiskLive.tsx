@@ -101,7 +101,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
             <OperationalCard key={row.id} onClick={() => setDetail(row)}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "ui-monospace, monospace", color: "#5266F6", fontSize: 12, fontWeight: 600 }}>{row.code ?? "SIN CÓDIGO"}</div>
+                  <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary)", fontSize: 12, fontWeight: 600 }}>{row.code ?? "SIN CÓDIGO"}</div>
                   <h3 style={{ margin: "7px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{row.name}</h3>
                   <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.type ?? "Sin tipo"} · {row.ownerName ?? "Sin responsable"}</div>
                 </div>
@@ -110,7 +110,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
               {row.description && <p style={{ fontSize: 13, color: "var(--nf-ink-2)", lineHeight: 1.5 }}>{row.description}</p>}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 7, marginTop: 13 }}>
                 {[["Docs", row.counts.documents], ["Riesgos", row.counts.risks], ["KPIs", row.counts.indicators], ["Formación", row.counts.trainingAssignments]].map(([label, value]) => (
-                  <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}><strong style={{ display: "block", color: "#5266F6" }}>{value}</strong><span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{label}</span></div>
+                  <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}><strong style={{ display: "block", color: "var(--nf-primary)" }}>{value}</strong><span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{label}</span></div>
                 ))}
               </div>
               <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
@@ -171,10 +171,10 @@ function ProcessDocuments({ documents }: { documents: ProcessRow["documents"] })
   const Row = (d: ProcessRow["documents"][number], muted: boolean) => (
     <div key={d.id} style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 9, opacity: muted ? 0.75 : 1 }}>
       <div style={{ minWidth: 0 }}>
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{d.code}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 700 }}>{d.code}</span>
         <span style={{ fontSize: 13, marginLeft: 8 }}>{d.title}</span>
         <span style={{ fontSize: 11, color: "var(--nf-ink-3)", marginLeft: 6 }}>v{d.currentVersion}</span>
-        {d.supersededByCode && <div style={{ fontSize: 11, color: "#D97706", fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>}
+        {d.supersededByCode && <div style={{ fontSize: 11, color: "var(--nf-warning)", fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>}
       </div>
       <Badge status={d.status} />
     </div>

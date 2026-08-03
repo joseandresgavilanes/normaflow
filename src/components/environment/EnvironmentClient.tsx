@@ -26,7 +26,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  LOW: "#16a34a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "#b91c1c",
+  LOW: "var(--nf-success)", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)",
 };
 const CONDITION_LABEL: Record<string, string> = { NORMAL: "Normal", ABNORMAL: "Anormal", EMERGENCY: "Emergencia" };
 const WASTE_LABEL: Record<string, string> = { NON_HAZARDOUS: "No peligroso", HAZARDOUS: "Peligroso", RECYCLABLE: "Reciclable", INERT: "Inerte", SPECIAL: "Especial" };
@@ -95,7 +95,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#dcfce7", display: "grid", placeItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-success-border)", display: "grid", placeItems: "center" }}>
           <Leaf size={22} color="#16a34a" />
         </div>
         <div>
@@ -105,17 +105,17 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         <Stat label="Aspectos" value={s.aspects} />
         <Stat label="Impactos" value={s.impacts} />
-        <Stat label="Significativos" value={s.significant} accent="#b91c1c" />
+        <Stat label="Significativos" value={s.significant} accent="var(--nf-danger-text)" />
         <Stat label="Obligaciones" value={s.obligations} />
-        <Stat label="Vencidas" value={s.overdue} accent={s.overdue ? "#b91c1c" : undefined} />
+        <Stat label="Vencidas" value={s.overdue} accent={s.overdue ? "var(--nf-danger-text)" : undefined} />
         <Stat label="Objetivos" value={s.objectives} />
         <Stat label="Biodiversidad" value={s.biodiversity} />
-      </div> : <IsoSectionMetrics items={tab === "matrix" ? [{ label: "Aspectos", value: s.aspects }, { label: "Impactos", value: s.impacts }, { label: "Significativos", value: s.significant, accent: s.significant ? "#B91C1C" : undefined }] : tab === "compliance" ? [{ label: "Obligaciones", value: s.obligations }, { label: "Vencidas", value: s.overdue, accent: s.overdue ? "#B91C1C" : undefined }, { label: "No conformes", value: s.nonCompliant, accent: s.nonCompliant ? "#B91C1C" : undefined }] : tab === "objectives" ? [{ label: "Objetivos", value: s.objectives }, { label: "Aspectos significativos", value: s.significant }, { label: "Emergencias", value: s.emergencies }] : tab === "trends" ? [{ label: "Indicadores", value: s.metrics }, { label: "Periodos medidos", value: s.measuredPeriods }, { label: "Significativos", value: s.significant }] : tab === "waste" ? [{ label: "Flujos de residuos", value: s.waste }, { label: "Aspectos", value: s.aspects }, { label: "Emergencias", value: s.emergencies }] : tab === "emergencies" ? [{ label: "Emergencias", value: s.emergencies }, { label: "Vencimientos", value: s.overdue, accent: s.overdue ? "#B91C1C" : undefined }, { label: "Objetivos", value: s.objectives }] : [{ label: "Biodiversidad", value: s.biodiversity }, { label: "Aspectos", value: s.aspects }, { label: "Significativos", value: s.significant, accent: s.significant ? "#B91C1C" : undefined }]} />}
+      </div> : <IsoSectionMetrics items={tab === "matrix" ? [{ label: "Aspectos", value: s.aspects }, { label: "Impactos", value: s.impacts }, { label: "Significativos", value: s.significant, accent: s.significant ? "var(--nf-danger-text)" : undefined }] : tab === "compliance" ? [{ label: "Obligaciones", value: s.obligations }, { label: "Vencidas", value: s.overdue, accent: s.overdue ? "var(--nf-danger-text)" : undefined }, { label: "No conformes", value: s.nonCompliant, accent: s.nonCompliant ? "var(--nf-danger-text)" : undefined }] : tab === "objectives" ? [{ label: "Objetivos", value: s.objectives }, { label: "Aspectos significativos", value: s.significant }, { label: "Emergencias", value: s.emergencies }] : tab === "trends" ? [{ label: "Indicadores", value: s.metrics }, { label: "Periodos medidos", value: s.measuredPeriods }, { label: "Significativos", value: s.significant }] : tab === "waste" ? [{ label: "Flujos de residuos", value: s.waste }, { label: "Aspectos", value: s.aspects }, { label: "Emergencias", value: s.emergencies }] : tab === "emergencies" ? [{ label: "Emergencias", value: s.emergencies }, { label: "Vencimientos", value: s.overdue, accent: s.overdue ? "var(--nf-danger-text)" : undefined }, { label: "Objetivos", value: s.objectives }] : [{ label: "Biodiversidad", value: s.biodiversity }, { label: "Aspectos", value: s.aspects }, { label: "Significativos", value: s.significant, accent: s.significant ? "var(--nf-danger-text)" : undefined }]} />}
 
       {tab === "panel" && (
         <>
@@ -127,7 +127,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
             {initial.methods.map((m) => (
               <div key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9" }}>
                 <span>{m.name} <span style={{ color: "#94a3b8" }}>v{m.version}</span></span>
-                <span>{m.active ? <span style={chip("#dcfce7", "#166534")}>activa</span> : <span style={chip("#f1f5f9", "#64748b")}>histórico</span>}</span>
+                <span>{m.active ? <span style={chip("var(--nf-success-border)", "#166534")}>activa</span> : <span style={chip("#f1f5f9", "#64748b")}>histórico</span>}</span>
               </div>
             ))}
             {canManage && <>
@@ -147,8 +147,8 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Scale size={16} aria-hidden />Cumplimiento</h3>
-            <p style={{ margin: "4px 0" }}>Obligaciones vencidas: <b style={{ color: s.overdue ? "#b91c1c" : "#166534" }}>{s.overdue}</b></p>
-            <p style={{ margin: "4px 0" }}>No conformes / parciales: <b style={{ color: s.nonCompliant ? "#b91c1c" : "#166534" }}>{s.nonCompliant}</b></p>
+            <p style={{ margin: "4px 0" }}>Obligaciones vencidas: <b style={{ color: s.overdue ? "var(--nf-danger-text)" : "#166534" }}>{s.overdue}</b></p>
+            <p style={{ margin: "4px 0" }}>No conformes / parciales: <b style={{ color: s.nonCompliant ? "var(--nf-danger-text)" : "#166534" }}>{s.nonCompliant}</b></p>
             <p style={{ margin: "4px 0", color: "#64748b" }}>Residuos: {s.waste} · Escenarios de emergencia: {s.emergencies}</p>
           </div>
           </div>
@@ -181,7 +181,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                     <td style={td}>{i ? `${i.severity}/${i.frequency}/${i.scope}` : "—"}</td>
                     <td style={td}>{i?.score ?? "—"}</td>
                     <td style={td}>{i ? <span style={chip(LEVEL_COLORS[i.level] + "22", LEVEL_COLORS[i.level])}>{i.level}</span> : "—"}</td>
-                    <td style={td}>{i?.significant ? <span style={chip("#fee2e2", "#b91c1c")}>Sí</span> : "No"}</td>
+                    <td style={td}>{i?.significant ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                     {(canManage || canUpdate || canDelete) && <td style={td}>{i && canUpdate && <EnvTableAction icon={Pencil} onClick={() => setImpactEditor({ aspectId: a.id, impact: i })}>Editar</EnvTableAction>} {i && canDelete && <EnvTableAction icon={Trash2} danger disabled={pending} onClick={() => setConfirmAction({ title: "Eliminar impacto ambiental", message: "¿Quieres eliminar este impacto ambiental? Esta acción no se puede deshacer.", onConfirm: () => run(() => deleteImpact(i.id)) })}>Eliminar</EnvTableAction>} {!i && canManage && <EnvTableAction icon={Plus} onClick={() => setImpactEditor({ aspectId: a.id })}>Añadir</EnvTableAction>}</td>}{(canUpdate || canDelete) && k === 0 && <td style={td} rowSpan={a.impacts.length || 1}>{canUpdate && <EnvTableAction icon={Pencil} onClick={() => setAspectEditor(a)}>Editar</EnvTableAction>} {canDelete && <EnvTableAction icon={Trash2} danger disabled={pending} onClick={() => setConfirmAction({ title: "Eliminar aspecto ambiental", message: "Se eliminará el aspecto y sus impactos asociados. Esta acción no se puede deshacer.", onConfirm: () => run(() => deleteAspect(a.id)) })}>Eliminar</EnvTableAction>}</td>}
                   </tr>
                 )))}
@@ -215,9 +215,9 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                 <td style={td}>{o.lastResult ?? "Sin evaluar"}</td>
                 <td style={td}>{fmt(o.reviewDate)}</td>
                 <td style={td}>
-                  {o.overdue && <span style={{ ...chip("#fee2e2", "#b91c1c"), marginRight: 4 }}>Vencido</span>}
-                  {o.nonCompliant && <span style={chip("#fef3c7", "#92400e")}>Incumple</span>}
-                  {!o.overdue && !o.nonCompliant && <span style={chip("#dcfce7", "#166534")}>Al día</span>}
+                  {o.overdue && <span style={{ ...chip("var(--nf-danger-border)", "var(--nf-danger-text)"), marginRight: 4 }}>Vencido</span>}
+                  {o.nonCompliant && <span style={chip("var(--nf-warning-border)", "#92400e")}>Incumple</span>}
+                  {!o.overdue && !o.nonCompliant && <span style={chip("var(--nf-success-border)", "#166534")}>Al día</span>}
                 </td>
                 <td style={td}>{canUpdate && <EnvTableAction icon={Pencil} onClick={() => setObligationEditor(o)}>Editar</EnvTableAction>} {canManage && <EnvTableAction icon={ClipboardCheck} onClick={() => setEvaluationObligation(o)}>Evaluar</EnvTableAction>}</td>
               </tr>
@@ -377,7 +377,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                     <td style={td}>{b.code}</td>
                     <td style={td}>{b.site}</td>
                     <td style={td}>{b.ecosystemType ?? "—"}</td>
-                    <td style={td}>{b.protectedArea ? <span style={chip("#fef3c7", "#92400e")}>{b.protectedAreaName}</span> : "No"}</td>
+                    <td style={td}>{b.protectedArea ? <span style={chip("var(--nf-warning-border)", "#92400e")}>{b.protectedAreaName}</span> : "No"}</td>
                     <td style={td}>{b.speciesOrHabitat ?? "—"}</td>
                     <td style={td}>{BIODIVERSITY_STATUS_LABEL[b.status] ?? b.status}</td>
                     <td style={td}>{fmt(b.nextMonitoringAt)}</td>
@@ -400,7 +400,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
   );
 }
 
-const btn: React.CSSProperties = { marginTop: 12, padding: "8px 12px", borderRadius: 9, border: "1px solid #16a34a", background: "#f0fdf4", color: "#166534", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btn: React.CSSProperties = { marginTop: 12, padding: "8px 12px", borderRadius: 9, border: "1px solid var(--nf-success)", background: "var(--nf-success-subtle)", color: "#166534", fontWeight: 600, fontSize: 13, cursor: "pointer" };
 
 function EnvTableAction({ icon: Icon, children, danger = false, disabled = false, onClick }: {
   icon: typeof Pencil;
@@ -419,7 +419,7 @@ function EnvironmentTrendOverview({ trends }: { trends: EnvironmentPayload["tren
     { key: "fuel", label: "Combustible", color: "#f97316" },
     { key: "emissions", label: "Emisiones", color: "#8b5cf6" },
     { key: "discharges", label: "Vertidos", color: "#06b6d4" },
-    { key: "waste", label: "Residuos", color: "#16a34a" },
+    { key: "waste", label: "Residuos", color: "var(--nf-success)" },
     { key: "rawMaterials", label: "Materias primas", color: "#64748b" },
   ] as const;
   const latest = trends[trends.length - 1];

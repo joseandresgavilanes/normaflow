@@ -120,7 +120,7 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
     <MethodologyCard initial={initial} pending={isPending} onRun={run} />
 
     {!plan && <Card><div style={{ textAlign: "center", padding: 30 }}>
-      <ShieldAlert size={34} style={{ color: "#5266F6" }} />
+      <ShieldAlert size={34} style={{ color: "var(--nf-primary)" }} />
       <h3 style={{ margin: "12px 0 6px" }}>Sin plan de tratamiento de riesgos</h3>
       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 520, margin: "0 auto 16px" }}>Crea un plan para registrar los riesgos, su tratamiento y la aceptación del riesgo residual.</p>
       {initial.canUpdate && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => createRiskTreatmentPlan({ title: "Plan de tratamiento de riesgos" }), { successMessage: "Plan creado." })}><FilePlus2 size={15} /> Crear plan v1</button>}
@@ -176,7 +176,7 @@ function MethodologyCard({ initial, pending, onRun }: { initial: RiskTreatmentPa
 
   return <Card style={{ marginBottom: 16 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-      <div><strong>Metodología</strong> {m ? <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>· {m.title} (v{m.version}) · umbral de aceptación ≤ {m.acceptanceThreshold ?? "—"}</span> : <span style={{ fontSize: 12, color: "#B45309" }}>· sin definir</span>}</div>
+      <div><strong>Metodología</strong> {m ? <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>· {m.title} (v{m.version}) · umbral de aceptación ≤ {m.acceptanceThreshold ?? "—"}</span> : <span style={{ fontSize: 12, color: "var(--nf-warning-text)" }}>· sin definir</span>}</div>
       {initial.canUpdate && <button type="button" className="nf-app-btn-ghost" onClick={() => setOpen((v) => !v)}>{open ? "Cerrar" : m ? "Editar" : "Definir"}</button>}
     </div>
     {open && initial.canUpdate && <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -264,4 +264,4 @@ function ItemDetail({ row, initial, pending, onClose, onRun }: { row: Item; init
 }
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }

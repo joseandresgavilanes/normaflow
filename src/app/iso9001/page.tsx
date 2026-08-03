@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createMarketingMetadata({
   title: "ISO 9001:2015 — NormaFlow",
   description: "Implementa y mantén tu Sistema de Gestión de la Calidad con NormaFlow.",
-};
+  path: "/iso9001",
+});
 
 const ITEMS: { icon: keyof typeof Ic; title: string; desc: string; clause: string }[] = [
   { icon: "doc",    title: "Contexto y liderazgo",      desc: "Gestiona partes interesadas, alcance del SGC y política de calidad.",                clause: "4, 5" },

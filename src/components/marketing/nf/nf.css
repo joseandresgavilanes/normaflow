@@ -138,7 +138,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-btn:hover .nf-arrow { transform: translateX(3px); }
 
 /* Cards */
-.nf-card {
+.nfm-card {
   position: relative;
   background: var(--nf-bg-1);
   border: 1px solid var(--nf-line);
@@ -146,7 +146,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   box-shadow: var(--nf-shadow-1);
   overflow: hidden;
 }
-.nf-card--glow::after { display: none; }
+.nfm-card--glow::after { display: none; }
 
 /* Nav */
 .nf-nav {
@@ -363,13 +363,13 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 }
 .nf-tile:hover { transform: translateY(-2px); border-color: var(--nf-line-2); box-shadow: var(--nf-shadow-1); }
 
-.nf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.nfm-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .nf-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .nf-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 @media (max-width: 980px) { .nf-grid-3, .nf-grid-4 { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 640px) { .nf-grid-2, .nf-grid-3, .nf-grid-4 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .nfm-grid-2, .nf-grid-3, .nf-grid-4 { grid-template-columns: 1fr; } }
 
-.nf-input, .nf-textarea, .nf-select {
+.nfm-input, .nfm-textarea, .nfm-select {
   width: 100%;
   padding: var(--nf-form-control-py) var(--nf-form-control-px);
   min-height: var(--nf-form-control-min-height);
@@ -383,12 +383,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
 }
-.nf-input:focus, .nf-textarea:focus, .nf-select:focus {
+.nfm-input:focus, .nfm-textarea:focus, .nfm-select:focus {
   outline: none;
   border-color: var(--nf-accent);
   box-shadow: 0 0 0 3px var(--nf-accent-soft);
 }
-.nf-input::placeholder, .nf-textarea::placeholder { color: var(--nf-ink-4); }
+.nfm-input::placeholder, .nfm-textarea::placeholder { color: var(--nf-ink-4); }
 .nf-label {
   display: block;
   font-size: 13px;
@@ -398,8 +398,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   letter-spacing: 0;
   text-transform: none;
 }
-.nf-textarea { min-height: 120px; resize: vertical; }
-.nf-select {
+.nfm-textarea { min-height: 120px; resize: vertical; }
+.nfm-select {
   appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--nf-ink-3) 50%), linear-gradient(135deg, var(--nf-ink-3) 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;

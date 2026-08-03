@@ -1,0 +1,407 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 13-metricas
+ *
+ * Tarjetas de métrica y KPI.
+ *
+ * Trozo literal de las líneas 4729-5126 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-iso-inline-filter-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(100%, 360px);
+  color: var(--nf-ink-3);
+}
+
+.nf-iso-inline-filter-search > svg {
+  position: absolute;
+  left: 11px;
+  pointer-events: none;
+}
+
+.nf-iso-inline-filter-search .nf-app-input {
+  width: 100%;
+  min-height: 38px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+
+.nf-iso-inline-filter-search input[type="search"]::-webkit-search-cancel-button {
+  appearance: none;
+}
+
+.nf-iso-inline-filter-clear {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+}
+
+.nf-iso-inline-filter-clear:hover {
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+
+.nf-compliance-obligation-detail-cell {
+  padding: 0 !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  background: #f8fafc;
+}
+
+.nf-compliance-obligation-detail {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px 18px;
+  border-top: 1px solid #e5eaf2;
+  background: #f8fafc;
+}
+
+.nf-compliance-obligation-evaluation {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.nf-compliance-obligation-detail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--nf-ink);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.nf-compliance-obligation-form-grid {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(170px, 1fr) minmax(220px, 2fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.nf-compliance-obligation-form-grid > :where(input, select) {
+  min-width: 0;
+  width: 100%;
+}
+
+.nf-compliance-obligation-save,
+.nf-compliance-obligation-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--nf-app-accent);
+  border-radius: 8px;
+  background: var(--nf-app-accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nf-compliance-obligation-toggle {
+  border-color: var(--nf-line);
+  background: #fff;
+  color: var(--nf-ink);
+}
+
+.nf-compliance-obligation-save:disabled,
+.nf-compliance-obligation-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nf-compliance-obligation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.nf-iso-create-button {
+  justify-self: end;
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-table-card-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nf-iso-table-card-tools {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .nf-iso-table-card-tools > :where(button, a) {
+    width: 100%;
+  }
+
+  .nf-iso-table-search {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .nf-iso-inline-filter {
+    justify-content: stretch;
+  }
+
+  .nf-iso-inline-filter-search {
+    width: 100%;
+  }
+
+  .nf-compliance-obligation-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-compliance-obligation-form-grid > button {
+    width: 100%;
+  }
+
+  .nf-iso-table-card-filters > * {
+    width: 100%;
+  }
+
+  .nf-iso-create-form > .nf-modal-actions:has(> button + button),
+  .nf-iso-edit-form > .nf-modal-actions:has(> button + button) {
+    flex-direction: row;
+  }
+
+  .nf-iso-create-form > .nf-modal-actions:has(> button + button) > button,
+  .nf-iso-edit-form > .nf-modal-actions:has(> button + button) > button {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.nf-iso-panel-toolbar > div:first-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nf-iso-panel-toolbar strong {
+  color: var(--nf-ink);
+  font-size: 13px;
+}
+
+.nf-iso-panel-toolbar span {
+  color: var(--nf-ink-3);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-panel-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .nf-iso-panel-toolbar .nf-quick-create {
+    margin-left: 0 !important;
+  }
+}
+
+.nf-iso-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-iso-dashboard-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--nf-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.045);
+}
+
+.nf-iso-dashboard-card--wide {
+  grid-column: 1 / -1;
+}
+
+.nf-iso-dashboard-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 13px;
+  border-bottom: 1px solid var(--nf-line);
+  background: linear-gradient(180deg, #fff 0%, var(--nf-app-surface-2) 100%);
+}
+
+.nf-iso-dashboard-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.nf-iso-dashboard-card-title svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}
+
+.nf-iso-dashboard-card-subtitle {
+  margin: 4px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nf-iso-dashboard-card-body {
+  padding: 16px 18px 18px;
+}
+
+.nf-iso-dashboard-card-body > :first-child {
+  margin-top: 0;
+}
+
+.nf-iso-dashboard-card-body > :last-child {
+  margin-bottom: 0;
+}
+
+.nf-iso-dashboard-card > h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink);
+  font-size: 15px;
+  letter-spacing: -0.01em;
+}
+
+.nf-iso-dashboard-card > h3 svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}
+
+.nf-iso-dashboard-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--nf-line);
+  border-radius: 10px;
+}
+
+.nf-iso-dashboard-table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.nf-iso-dashboard-table th {
+  padding: 10px 12px;
+  color: var(--nf-ink-3);
+  background: var(--nf-app-surface-2);
+  border-bottom: 1px solid var(--nf-line);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.nf-iso-dashboard-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--nf-line);
+  vertical-align: top;
+}
+
+.nf-iso-dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.nf-iso-dashboard-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.nf-iso-dashboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 34px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f1f3f7;
+  font-size: 13px;
+}
+
+.nf-iso-dashboard-row:last-child {
+  border-bottom: 0;
+}
+
+.nf-iso-dashboard-row-label {
+  color: var(--nf-ink-3);
+}
+
+.nf-iso-dashboard-row-value {
+  color: var(--nf-ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .nf-iso-dashboard-card-head,
+  .nf-iso-dashboard-card-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+.nf-metric-cell-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  min-width: 0;
+}
+
+.nf-metric-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--nf-line);
+  min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-metric-cell-link:hover .nf-metric-cell,
+.nf-metric-cell:hover {
+  border-color: #d4d4d4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.nf-metric-cell-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}

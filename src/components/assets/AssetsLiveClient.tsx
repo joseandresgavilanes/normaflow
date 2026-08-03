@@ -79,7 +79,7 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
       cell: (a) => <span style={{ fontSize: 12 }}>{a.classification ? `${a.classification.confidentiality[0]}/${a.classification.integrity[0]}/${a.classification.availability[0]}` : "—"}</span> },
     { id: "owner", header: "Propietario", minWidth: 140, sortValue: (a) => a.owner?.name ?? "", cell: (a) => a.owner?.name ?? "—" },
     { id: "review", header: "Próxima revisión", minWidth: 140, numeric: true, sortValue: (a) => a.nextReviewDate ?? "",
-      cell: (a) => <span style={{ color: a.overdue ? "#B91C1C" : undefined }}>{a.nextReviewDate ?? "—"}</span> },
+      cell: (a) => <span style={{ color: a.overdue ? "var(--nf-danger-text)" : undefined }}>{a.nextReviewDate ?? "—"}</span> },
     { id: "status", header: "Estado", minWidth: 120, sortValue: (a) => a.status,
       cell: (a) => <Badge value={STATUS_LABEL[a.status]} tone={a.status === "ACTIVE" ? "green" : a.status === "RETIRED" ? "gray" : "blue"} /> },
   ], []);
@@ -196,12 +196,12 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         <div><strong>Proceso:</strong> {asset.process?.name ?? "—"}</div>
         <div><strong>Ubicación:</strong> {asset.location?.name ?? "—"}</div>
         <div><strong>Revisión:</strong> {asset.reviewDate ?? "—"}</div>
-        <div style={{ color: asset.overdue ? "#B91C1C" : undefined }}><strong>Próxima:</strong> {asset.nextReviewDate ?? "—"}{asset.overdue ? " (vencida)" : ""}</div>
+        <div style={{ color: asset.overdue ? "var(--nf-danger-text)" : undefined }}><strong>Próxima:</strong> {asset.nextReviewDate ?? "—"}{asset.overdue ? " (vencida)" : ""}</div>
       </div>
       {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" className="nf-app-btn-ghost" onClick={() => setEditing(true)}>Editar activo</button>
         <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={() => onRun(() => markAssetReviewed({ id: asset.id }), { successMessage: "Revisión registrada." })}><ShieldCheck size={14} /> Marcar revisado</button>
-        {initial.canDelete && <button type="button" className="nf-app-btn-ghost" disabled={pending} style={{ color: "#B91C1C" }} onClick={() => onRun(() => deleteAsset(asset.id), { onSuccess: onClose, successMessage: "Activo eliminado." })}><Trash2 size={14} /> Eliminar</button>}
+        {initial.canDelete && <button type="button" className="nf-app-btn-ghost" disabled={pending} style={{ color: "var(--nf-danger-text)" }} onClick={() => onRun(() => deleteAsset(asset.id), { onSuccess: onClose, successMessage: "Activo eliminado." })}><Trash2 size={14} /> Eliminar</button>}
       </div>}
 
       {/* Clasificación */}
@@ -262,4 +262,4 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ text, onRemove, pending }: { text: string; onRemove?: () => void; pending: boolean }) { return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13 }}><span>{text}</span>{onRemove && <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onRemove}><Trash2 size={13} /></button>}</div>; }
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

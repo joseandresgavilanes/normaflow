@@ -70,22 +70,22 @@ const ACTION_LABEL: Record<string, string> = {
 };
 
 const ACTION_TONE: Record<string, string> = {
-  create: "#16A34A",
-  update: "#5266F6",
-  delete: "#DC2626",
-  deactivate: "#DC2626",
-  approve: "#16A34A",
-  reject: "#DC2626",
+  create: "var(--nf-success)",
+  update: "var(--nf-primary)",
+  delete: "var(--nf-danger)",
+  deactivate: "var(--nf-danger)",
+  approve: "var(--nf-success)",
+  reject: "var(--nf-danger)",
   transition: "#6B3FB5",
-  submit_review: "#D97706",
+  submit_review: "var(--nf-warning)",
   obsolete: "#5E6B7A",
-  publish: "#16A34A",
-  invite: "#5266F6",
+  publish: "var(--nf-success)",
+  invite: "var(--nf-primary)",
   login: "#5E6B7A",
   logout: "#5E6B7A",
-  add_entry: "#16A34A",
-  close: "#16A34A",
-  complete: "#16A34A",
+  add_entry: "var(--nf-success)",
+  close: "var(--nf-success)",
+  complete: "var(--nf-success)",
 };
 
 function actionTone(action: string): string {

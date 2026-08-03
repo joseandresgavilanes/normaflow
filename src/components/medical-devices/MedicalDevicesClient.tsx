@@ -70,8 +70,8 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)",
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #0e7490", background: "#ecfeff", color: "#0e7490", fontWeight: 600, fontSize: 12, cursor: "pointer", marginRight: 4 };
-const dangerBtn: React.CSSProperties = { ...miniBtn, borderColor: "#dc2626", background: "#fef2f2", color: "#b91c1c" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info)", background: "var(--nf-info-subtle)", color: "var(--nf-info)", fontWeight: 600, fontSize: 12, cursor: "pointer", marginRight: 4 };
+const dangerBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
@@ -154,20 +154,20 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
       <IsoSectionHeader headingLevel={1} icon={Cross} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      <div style={{ ...card, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e", fontSize: 13 }}>
+      <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e", fontSize: 13 }}>
         {initial.disclaimer}
       </div>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Dispositivos" value={s.devices} />
         <Stat label="DMR aprobados" value={s.dmrsApproved} />
         <Stat label="Cobertura inputs %" value={s.inputCoveragePercent} />
-        <Stat label="Quejas abiertas" value={s.openComplaints} accent={s.openComplaints ? "#dc2626" : undefined} />
-        <Stat label="Eventos adversos" value={s.openAdverseEvents} accent={s.openAdverseEvents ? "#dc2626" : undefined} />
-        <Stat label="Retiros abiertos" value={s.openRecalls} accent={s.openRecalls ? "#dc2626" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "devices" ? [{ label: "Dispositivos activos", value: s.devices }, { label: "Familias", value: initial.families.length }, { label: "Lotes liberados", value: s.batchesReleased }] : tab === "dmr" ? [{ label: "DMR aprobados", value: s.dmrsApproved }, { label: "DMR registrados", value: initial.dmrs.length }, { label: "Dispositivos", value: s.devices }] : tab === "design" ? [{ label: "DHF abiertos", value: s.dhfsOpen, accent: s.dhfsOpen ? "#d68a1a" : undefined }, { label: "Cobertura inputs", value: s.inputCoveragePercent, suffix: "%" }, { label: "Dispositivos", value: s.devices }] : tab === "risks" ? [{ label: "Archivos de riesgo", value: initial.riskFiles.length }, { label: "Dispositivos", value: s.devices }, { label: "DHF abiertos", value: s.dhfsOpen, accent: s.dhfsOpen ? "#d68a1a" : undefined }] : tab === "suppliers" ? [{ label: "Proveedores críticos", value: s.criticalSuppliers }, { label: "Cualificaciones", value: initial.qualifications.length }, { label: "Dispositivos", value: s.devices }] : tab === "validations" ? [{ label: "Validaciones de proceso", value: initial.processVals.length }, { label: "Esterilización", value: initial.sterVals.length }, { label: "Dispositivos", value: s.devices }] : tab === "batches" ? [{ label: "Lotes registrados", value: initial.batches.length }, { label: "Lotes liberados", value: s.batchesReleased }, { label: "Trazas", value: initial.traces.length }] : tab === "vigilance" ? [{ label: "Quejas abiertas", value: s.openComplaints, accent: s.openComplaints ? "#dc2626" : undefined }, { label: "Eventos adversos", value: s.openAdverseEvents, accent: s.openAdverseEvents ? "#dc2626" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "#dc2626" : undefined }] : [{ label: "Requisitos activos", value: s.activeRequirements }, { label: "Presentaciones", value: initial.submissions.length }, { label: "Dispositivos", value: s.devices }]} />}
+        <Stat label="Quejas abiertas" value={s.openComplaints} accent={s.openComplaints ? "var(--nf-danger)" : undefined} />
+        <Stat label="Eventos adversos" value={s.openAdverseEvents} accent={s.openAdverseEvents ? "var(--nf-danger)" : undefined} />
+        <Stat label="Retiros abiertos" value={s.openRecalls} accent={s.openRecalls ? "var(--nf-danger)" : undefined} />
+      </div> : <IsoSectionMetrics items={tab === "devices" ? [{ label: "Dispositivos activos", value: s.devices }, { label: "Familias", value: initial.families.length }, { label: "Lotes liberados", value: s.batchesReleased }] : tab === "dmr" ? [{ label: "DMR aprobados", value: s.dmrsApproved }, { label: "DMR registrados", value: initial.dmrs.length }, { label: "Dispositivos", value: s.devices }] : tab === "design" ? [{ label: "DHF abiertos", value: s.dhfsOpen, accent: s.dhfsOpen ? "#d68a1a" : undefined }, { label: "Cobertura inputs", value: s.inputCoveragePercent, suffix: "%" }, { label: "Dispositivos", value: s.devices }] : tab === "risks" ? [{ label: "Archivos de riesgo", value: initial.riskFiles.length }, { label: "Dispositivos", value: s.devices }, { label: "DHF abiertos", value: s.dhfsOpen, accent: s.dhfsOpen ? "#d68a1a" : undefined }] : tab === "suppliers" ? [{ label: "Proveedores críticos", value: s.criticalSuppliers }, { label: "Cualificaciones", value: initial.qualifications.length }, { label: "Dispositivos", value: s.devices }] : tab === "validations" ? [{ label: "Validaciones de proceso", value: initial.processVals.length }, { label: "Esterilización", value: initial.sterVals.length }, { label: "Dispositivos", value: s.devices }] : tab === "batches" ? [{ label: "Lotes registrados", value: initial.batches.length }, { label: "Lotes liberados", value: s.batchesReleased }, { label: "Trazas", value: initial.traces.length }] : tab === "vigilance" ? [{ label: "Quejas abiertas", value: s.openComplaints, accent: s.openComplaints ? "var(--nf-danger)" : undefined }, { label: "Eventos adversos", value: s.openAdverseEvents, accent: s.openAdverseEvents ? "var(--nf-danger)" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }] : [{ label: "Requisitos activos", value: s.activeRequirements }, { label: "Presentaciones", value: initial.submissions.length }, { label: "Dispositivos", value: s.devices }]} />}
 
       {tab === "panel" && (
         <>
@@ -190,7 +190,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Eye size={16} aria-hidden />Vigilancia (§8.2–8.3)</h3>
             {s.sensitiveLocked ? (
-              <p style={{ margin: 0, color: "#b45309", fontSize: 13 }}>
+              <p style={{ margin: 0, color: "var(--nf-warning-text)", fontSize: 13 }}>
                 Datos de quejas, eventos adversos, PMS, FSCA y retiros requieren permiso <code>md-sensitive</code>.
               </p>
             ) : (
@@ -319,7 +319,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
             ))}
           </Table>
           {initial.coverage.uncovered.length > 0 && (
-            <div style={{ ...card, borderColor: "#fde68a", background: "#fffbeb" }}>
+            <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)" }}>
               Inputs sin output: {initial.coverage.uncovered.join(", ")}
             </div>
           )}
@@ -499,7 +499,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
 
       {tab === "vigilance" && (
         s.sensitiveLocked ? (
-          <div style={{ ...card, borderColor: "#fde68a", background: "#fffbeb", color: "#92400e" }}>
+          <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e" }}>
             <Eye size={18} style={{ marginRight: 8, verticalAlign: "middle" }} />
             Vigilancia bloqueada: se requiere <strong>md-sensitive:read</strong> para quejas, eventos adversos, PMS, acciones de campo y retiros.
           </div>
@@ -693,7 +693,7 @@ function Row({ k, v, danger }: { k: string; v: string | number; danger?: boolean
   return (
     <div className="nf-iso-dashboard-row">
       <span className="nf-iso-dashboard-row-label">{k}</span>
-      <strong className="nf-iso-dashboard-row-value" style={{ color: danger ? "#dc2626" : undefined }}>{v}</strong>
+      <strong className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger)" : undefined }}>{v}</strong>
     </div>
   );
 }

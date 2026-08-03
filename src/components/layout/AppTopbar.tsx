@@ -142,7 +142,7 @@ export default function AppTopbar({
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: "#5266F6",
+                background: "var(--nf-primary)",
                 border: "2px solid var(--bg)",
               }}
             />

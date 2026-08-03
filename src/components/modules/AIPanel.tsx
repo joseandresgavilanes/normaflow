@@ -201,7 +201,7 @@ export default function AIPanel({
                 style={{
                   height: "100%",
                   width: "50%",
-                  background: "#5266F6",
+                  background: "var(--nf-primary)",
                   borderRadius: 99,
                   animation: "slide 1.2s ease-in-out infinite alternate",
                 }}
@@ -259,7 +259,7 @@ export default function AIPanel({
                   borderRadius: 8,
                   padding: "10px 14px",
                   fontSize: 13,
-                  color: "#16A34A",
+                  color: "var(--nf-success)",
                   fontWeight: 500,
                 }}
               >

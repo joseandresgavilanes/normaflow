@@ -53,7 +53,7 @@ export async function sendOnboardingReminder(to: string, name: string, orgName: 
     from: process.env.RESEND_FROM_EMAIL!,
     to,
     subject: `${daysRemaining} días para activar ${orgName} en NormaFlow`,
-    html: `<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px"><h2 style="color:#142033">Tu workspace está listo para avanzar</h2><p style="color:#5E6B7A;line-height:1.6">Hola ${escapeHtml(name)}, todavía tienes ${daysRemaining} días de trial. Completa el checklist inicial: perfil, proceso, documento, GAP, riesgo y acción.</p><a href="${safeAppUrl("/app/onboarding")}" style="display:inline-block;background:#5266F6;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700">Continuar onboarding →</a></div>`,
+    html: `<div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px"><h2 style="color:#142033">Tu workspace está listo para avanzar</h2><p style="color:#5E6B7A;line-height:1.6">Hola ${escapeHtml(name)}, todavía tienes ${daysRemaining} días de trial. Completa el checklist inicial: perfil, proceso, documento, GAP, riesgo y acción.</p><a href="${safeAppUrl("/app/onboarding")}" style="display:inline-block;background:var(--nf-primary);color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:700">Continuar onboarding →</a></div>`,
   });
 }
 

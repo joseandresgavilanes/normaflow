@@ -52,7 +52,7 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
     { id: "applicability", header: "Aplicabilidad", minWidth: 130, sortValue: (r) => r.applicability,
       cell: (r) => <Badge value={APPLICABILITY_LABEL[r.applicability]} tone={r.applicability === "INCLUDED" ? "green" : r.applicability === "EXCLUDED" ? "gray" : "amber"} /> },
     { id: "justification", header: "Justificación", minWidth: 220, sortValue: (r) => r.justification ?? "",
-      cell: (r) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.applicability === "EXCLUDED" ? (r.justification || <span style={{ color: "#B91C1C" }}>Falta justificación</span>) : "—"}</span> },
+      cell: (r) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{r.applicability === "EXCLUDED" ? (r.justification || <span style={{ color: "var(--nf-danger-text)" }}>Falta justificación</span>) : "—"}</span> },
     { id: "implementation", header: "Implementación", minWidth: 140, sortValue: (r) => r.implementationStatus,
       cell: (r) => <Badge value={STATUS_LABEL[r.implementationStatus]} tone={r.implementationStatus === "EFFECTIVE" ? "green" : r.implementationStatus === "NOT_EFFECTIVE" ? "red" : "blue"} /> },
     { id: "owner", header: "Responsable", minWidth: 140, sortValue: (r) => r.responsible?.name ?? "", cell: (r) => r.responsible?.name ?? "—" },
@@ -65,7 +65,7 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
 
     {!current && <Card><div style={{ textAlign: "center", padding: 30 }}>
-      <FileCheck2 size={34} style={{ color: "#5266F6" }} />
+      <FileCheck2 size={34} style={{ color: "var(--nf-primary)" }} />
       <h3 style={{ margin: "12px 0 6px" }}>Aún no hay una Declaración de Aplicabilidad</h3>
       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 520, margin: "0 auto 16px" }}>Genera la primera versión: se crearán automáticamente las entradas de los {initial.catalogVersion?.version ? "93" : "93"} controles del catálogo ISO 27001, prellenadas con el estado operativo actual.</p>
       {initial.canCreate && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => createSoADraft({}))}><FilePlus2 size={15} /> Crear SoA v1 (93 controles)</button>}
@@ -138,7 +138,7 @@ function EntryDetail({ row, initial, pending, onClose, onRun }: { row: Entry; in
             <label>Aplicabilidad<select className="nf-app-input" value={app} onChange={(e) => setApp(e.target.value as typeof app)}>{Object.entries(APPLICABILITY_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label>Estado de implementación<select className="nf-app-input" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>{Object.entries(STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
           </div>
-          <label>Justificación {app === "EXCLUDED" && <span style={{ color: "#B91C1C" }}>· obligatoria para exclusiones</span>}<textarea className="nf-app-input" rows={3} value={justification} onChange={(e) => setJustification(e.target.value)} placeholder={app === "EXCLUDED" ? "Motivo de la exclusión del control…" : "Justificación de la decisión de aplicabilidad…"} /></label>
+          <label>Justificación {app === "EXCLUDED" && <span style={{ color: "var(--nf-danger-text)" }}>· obligatoria para exclusiones</span>}<textarea className="nf-app-input" rows={3} value={justification} onChange={(e) => setJustification(e.target.value)} placeholder={app === "EXCLUDED" ? "Motivo de la exclusión del control…" : "Justificación de la decisión de aplicabilidad…"} /></label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <label>Responsable<select className="nf-app-input" value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)}><option value="">Sin asignar</option>{initial.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
             <label>Riesgo relacionado<select className="nf-app-input" value={riskItemId} onChange={(e) => setRiskItemId(e.target.value)}><option value="">Ninguno</option>{initial.riskItemOptions.map((r) => <option key={r.id} value={r.id}>{r.reference} · {r.title}</option>)}</select></label>
@@ -154,4 +154,4 @@ function EntryDetail({ row, initial, pending, onClose, onRun }: { row: Entry; in
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }

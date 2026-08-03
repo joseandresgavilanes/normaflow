@@ -1,4 +1,4 @@
-const COLORS = ["#5266F6", "#16A34A", "#7C3AED", "#D97706", "#DC2626", "#6366F1"];
+const COLORS = ["var(--nf-primary)", "var(--nf-success)", "#7C3AED", "var(--nf-warning)", "var(--nf-danger)", "#6366F1"];
 
 interface AvatarProps { name: string; size?: number; className?: string; }
 

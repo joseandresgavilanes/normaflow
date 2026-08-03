@@ -141,17 +141,17 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
       {traceMsg && <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "#0f766e", fontSize: 13 }}>{traceMsg}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Productos" value={s.products} />
         <Stat label="Peligros sig." value={s.significantHazards} accent={s.significantHazards ? "#0f766e" : undefined} />
         <Stat label="PCC" value={s.ccps} />
-        <Stat label="Fuera de límite" value={s.outOfLimit} accent={s.outOfLimit ? "#dc2626" : undefined} />
+        <Stat label="Fuera de límite" value={s.outOfLimit} accent={s.outOfLimit ? "var(--nf-danger)" : undefined} />
         <Stat label="Desviaciones abiertas" value={s.openDeviations} accent={s.openDeviations ? "#d68a1a" : undefined} />
-        <Stat label="Retiros abiertos" value={s.openRecalls} accent={s.openRecalls ? "#dc2626" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "products" ? [{ label: "Productos activos", value: s.products }, { label: "Materias primas", value: s.materials }, { label: "Alérgenos", value: s.allergens }] : tab === "hazards" ? [{ label: "Peligros evaluados", value: s.hazards }, { label: "Significativos", value: s.significantHazards, accent: s.significantHazards ? "#0f766e" : undefined }, { label: "PCC definidos", value: s.ccps }] : tab === "flows" ? [{ label: "Flujos aprobados", value: s.flows }, { label: "Productos", value: s.products }, { label: "Peligros activos", value: s.hazards }] : tab === "prp" ? [{ label: "PRP activos", value: s.prps }, { label: "OPRP activos", value: s.oprps }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "ccp" ? [{ label: "PCC activos", value: s.ccps }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "#dc2626" : undefined }, { label: "Planes de monitoreo", value: initial.plans.length }] : tab === "monitoring" ? [{ label: "Planes de monitoreo", value: initial.plans.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "#dc2626" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "deviations" ? [{ label: "Desviaciones abiertas", value: s.openDeviations, accent: s.openDeviations ? "#d68a1a" : undefined }, { label: "Correcciones", value: initial.corrections.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "#dc2626" : undefined }] : tab === "traceability" ? [{ label: "Lotes registrados", value: s.lots }, { label: "Productos", value: s.products }, { label: "Pruebas pendientes", value: s.pendingVerifications, accent: s.pendingVerifications ? "#d68a1a" : undefined }] : tab === "recalls" ? [{ label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "#dc2626" : undefined }, { label: "Lotes trazables", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "#dc2626" : undefined }] : tab === "allergens" ? [{ label: "Alérgenos activos", value: s.allergens }, { label: "Productos", value: s.products }, { label: "Materias primas", value: s.materials }] : tab === "emergencies" ? [{ label: "Emergencias abiertas", value: s.openEmergencies, accent: s.openEmergencies ? "#dc2626" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "#dc2626" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : [{ label: "Comunicaciones", value: initial.communications.length }, { label: "Lotes", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "#dc2626" : undefined }]} />}
+        <Stat label="Retiros abiertos" value={s.openRecalls} accent={s.openRecalls ? "var(--nf-danger)" : undefined} />
+      </div> : <IsoSectionMetrics items={tab === "products" ? [{ label: "Productos activos", value: s.products }, { label: "Materias primas", value: s.materials }, { label: "Alérgenos", value: s.allergens }] : tab === "hazards" ? [{ label: "Peligros evaluados", value: s.hazards }, { label: "Significativos", value: s.significantHazards, accent: s.significantHazards ? "#0f766e" : undefined }, { label: "PCC definidos", value: s.ccps }] : tab === "flows" ? [{ label: "Flujos aprobados", value: s.flows }, { label: "Productos", value: s.products }, { label: "Peligros activos", value: s.hazards }] : tab === "prp" ? [{ label: "PRP activos", value: s.prps }, { label: "OPRP activos", value: s.oprps }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "ccp" ? [{ label: "PCC activos", value: s.ccps }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Planes de monitoreo", value: initial.plans.length }] : tab === "monitoring" ? [{ label: "Planes de monitoreo", value: initial.plans.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "deviations" ? [{ label: "Desviaciones abiertas", value: s.openDeviations, accent: s.openDeviations ? "#d68a1a" : undefined }, { label: "Correcciones", value: initial.corrections.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }] : tab === "traceability" ? [{ label: "Lotes registrados", value: s.lots }, { label: "Productos", value: s.products }, { label: "Pruebas pendientes", value: s.pendingVerifications, accent: s.pendingVerifications ? "#d68a1a" : undefined }] : tab === "recalls" ? [{ label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Lotes trazables", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }] : tab === "allergens" ? [{ label: "Alérgenos activos", value: s.allergens }, { label: "Productos", value: s.products }, { label: "Materias primas", value: s.materials }] : tab === "emergencies" ? [{ label: "Emergencias abiertas", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : [{ label: "Comunicaciones", value: initial.communications.length }, { label: "Lotes", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }]} />}
 
       {tab === "panel" && (
         <>
@@ -327,7 +327,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{a.step?.code ?? "—"}</td>
                 <td style={td}>{a.severity}×{a.likelihood}={a.score}</td>
                 <td style={td}>{a.significant ? "Sí" : "No"}</td>
-                <td style={td}><span style={chip(a.controlDecision === "CCP" ? "#fef3c7" : "#f1f5f9", a.controlDecision === "CCP" ? "#a16207" : "#334155")}>{a.controlDecision}</span></td>
+                <td style={td}><span style={chip(a.controlDecision === "CCP" ? "var(--nf-warning-border)" : "#f1f5f9", a.controlDecision === "CCP" ? "#a16207" : "#334155")}>{a.controlDecision}</span></td>
                 <td style={td}>{a.status}</td>
                 <td style={td}><FoodRowActions>
                   {live && can.update && a.status !== "APPROVED" && <FoodTableAction icon={Pencil} onClick={() => setEditor({ kind: "assessment", value: a })}>Editar</FoodTableAction>}
@@ -434,7 +434,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{v.code}</td>
                 <td style={td}>{v.title}</td>
                 <td style={td}>{v.targetType} {v.targetCode ?? ""}</td>
-                <td style={td}><span style={chip(v.result === "VALID" ? "#dcfce7" : v.result === "INVALID" ? "#fee2e2" : "#f1f5f9", v.result === "VALID" ? "#15803d" : v.result === "INVALID" ? "#b91c1c" : "#334155")}>{v.result}</span></td>
+                <td style={td}><span style={chip(v.result === "VALID" ? "var(--nf-success-border)" : v.result === "INVALID" ? "var(--nf-danger-border)" : "#f1f5f9", v.result === "VALID" ? "var(--nf-success-text)" : v.result === "INVALID" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
                 <td style={td}>{fmt(v.validatedAt)}</td>
               </tr>
             ))}
@@ -451,7 +451,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{v.code}</td>
                 <td style={td}>{v.title}</td>
                 <td style={td}>{v.activityType}</td>
-                <td style={td}><span style={chip(v.result === "CONFORMING" ? "#dcfce7" : v.result === "NONCONFORMING" ? "#fee2e2" : "#f1f5f9", v.result === "CONFORMING" ? "#15803d" : v.result === "NONCONFORMING" ? "#b91c1c" : "#334155")}>{v.result}</span></td>
+                <td style={td}><span style={chip(v.result === "CONFORMING" ? "var(--nf-success-border)" : v.result === "NONCONFORMING" ? "var(--nf-danger-border)" : "#f1f5f9", v.result === "CONFORMING" ? "var(--nf-success-text)" : v.result === "NONCONFORMING" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
                 <td style={td}>{fmt(v.scheduledFor)}</td>
               </tr>
             ))}
@@ -488,7 +488,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{fmt(r.recordedAt)}</td>
                 <td style={td}>{r.valueNumeric ?? r.valueText ?? "—"} {r.unit ?? ""}</td>
                 <td style={td}>
-                  <span style={chip(r.withinLimits ? "#dcfce7" : "#fee2e2", r.withinLimits ? "#15803d" : "#b91c1c")}>
+                  <span style={chip(r.withinLimits ? "var(--nf-success-border)" : "var(--nf-danger-border)", r.withinLimits ? "var(--nf-success-text)" : "var(--nf-danger-text)")}>
                     {r.withinLimits ? "Sí" : "No"}
                   </span>
                 </td>
@@ -688,7 +688,7 @@ function Row({ k, v, suffix = "", danger }: { k: string; v: number | string; suf
   return (
     <div className="nf-iso-dashboard-row">
       <span className="nf-iso-dashboard-row-label">{k}</span>
-      <span className="nf-iso-dashboard-row-value" style={{ color: danger ? "#b91c1c" : undefined }}>{v}{suffix}</span>
+      <span className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{v}{suffix}</span>
     </div>
   );
 }

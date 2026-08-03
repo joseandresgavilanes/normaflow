@@ -1,0 +1,404 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 07-modales
+ *
+ * Capas y formularios de modal. Incluye los selectores [style*=] que leen el atributo inline.
+ *
+ * Trozo literal de las líneas 2365-2759 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+.nf-acpm-progress-rail {
+  height: 3px;
+  background: rgba(82, 102, 246, 0.1);
+  border-radius: 99px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.nf-acpm-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.nf-acpm-view-switch {
+  display: inline-flex;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  background: rgba(82, 102, 246, 0.06);
+  gap: 4px;
+}
+
+.nf-acpm-view-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-acpm-view-btn--on {
+  background: #fff;
+  color: var(--nf-app-accent);
+  box-shadow: 0 1px 5px rgba(82, 102, 246, 0.12);
+}
+
+.nf-acpm-view-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(82, 102, 246, 0.2);
+}
+
+.nf-acpm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nf-acpm-list-row {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 102, 246, 0.1);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.nf-acpm-list-row:hover {
+  border-color: rgba(82, 102, 246, 0.18);
+  box-shadow: 0 8px 26px -18px rgba(82, 102, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+.nf-acpm-list-row:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.16);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-acpm-list-row:hover {
+    transform: none;
+  }
+}
+
+.nf-acpm-list-empty {
+  text-align: center;
+  padding: 48px 20px;
+  border-radius: 14px;
+  border: 1px dashed rgba(82, 102, 246, 0.2);
+  background: rgba(82, 102, 246, 0.03);
+}
+
+.nf-acpm-list-empty-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--nf-ink);
+}
+
+.nf-acpm-list-empty-sub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--nf-ink-3);
+  font-weight: 500;
+}
+
+.nf-acpm-history-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(82, 102, 246, 0.1);
+}
+
+.nf-acpm-history-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+
+/* Responsive 2-column grids (forms / detail blocks) */
+.nf-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 10px;
+}
+
+/* Stat / KPI rows: never force 4 tiny columns on phone */
+.nf-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 132px), 1fr));
+  gap: 10px;
+}
+
+/* AI drawer: full width on small screens */
+.nf-ai-panel {
+  width: min(100vw, 400px);
+}
+
+@media (max-width: 768px) {
+  .nf-ai-panel {
+    width: 100%;
+    max-width: 100vw;
+  }
+}
+
+#nf-modal-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5000; /* Z_INDEX.modalPortal — above sidebar (100), topbar (50), AI panel (900) */
+  isolation: isolate;
+}
+
+#nf-modal-root > * {
+  pointer-events: auto;
+}
+
+/* App modals */
+.nf-modal-overlay {
+  /* Tokens heredados de :root — ya no se redeclaran aquí. */
+  font-family: var(--nf-font-sans);
+  position: fixed;
+  inset: 0;
+  z-index: var(--nf-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nf-space-6);
+  background: var(--nf-overlay);
+}
+
+.nf-modal-panel {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-xl);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-height: min(88vh, 88dvh);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Compatibilidad visual para los modales heredados que todavía usan
+   `nf-modal-backdrop`/`nf-modal` en lugar del componente portal compartido. */
+.nf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.nf-modal-backdrop .nf-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: min(90vh, 90dvh);
+  overflow: auto;
+  box-sizing: border-box;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-xl);
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.18);
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header > .nf-app-btn-ghost {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: var(--nf-radius-md);
+}
+
+.nf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--nf-line);
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+
+.nf-modal-header-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--nf-radius-pill);
+  border: 1px solid var(--nf-line);
+  background: #fff;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nf-modal-close:hover {
+  background: var(--nf-app-surface-1);
+  border-color: #d4d4d4;
+  color: var(--nf-ink);
+}
+
+.nf-modal-body {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 24px 24px;
+  color: var(--nf-ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+}
+
+.nf-modal-body :where(p, li) {
+  color: inherit;
+}
+
+.nf-modal-body :where(strong) {
+  color: var(--nf-ink);
+  font-weight: 600;
+}
+
+.nf-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nf-modal-form > :where(.nf-form-grid-2, .nf-form-grid-3, [class*="grid"]) {
+  min-width: 0;
+}
+
+/* Los formularios ISO más antiguos conservan un contenedor `grid` inline;
+   este ajuste les da el mismo ritmo vertical sin tocar su lógica. */
+.nf-modal-form > :first-child[style*="display: grid"] {
+  gap: 16px !important;
+}
+
+.nf-modal-form > :first-child > button:last-child {
+  align-self: flex-end;
+}
+
+.nf-modal-form > :first-child[style*="display: grid"] > :where(input, select, textarea),
+.nf-modal-body > div[style*="display: grid"] > :where(input, select, textarea) {
+  max-width: 100% !important;
+}
+
+.nf-modal-form > :where(input, select, textarea) {
+  max-width: 100% !important;
+}
+
+.nf-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nf-modal-field-label,
+.nf-modal-body label:has(> .nf-app-input),
+.nf-modal-body label:has(> input:not([type="checkbox"]):not([type="radio"])),
+.nf-modal-body label:has(> textarea),
+.nf-modal-body label:has(> select) {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nf-ink-2);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.nf-modal-body label:has(> input:not([type="checkbox"]):not([type="radio"])),
+.nf-modal-body label:has(> textarea),
+.nf-modal-body label:has(> select) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nf-modal-field-hint {
+  font-size: 12px;
+  color: var(--nf-ink-3);
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.nf-modal-help {
+  padding: 12px 14px;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-md);
+  background: var(--nf-app-surface-2);
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.nf-modal-checkbox {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.nf-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--nf-line);
+}

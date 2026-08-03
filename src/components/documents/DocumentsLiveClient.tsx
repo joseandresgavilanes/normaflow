@@ -181,7 +181,7 @@ export default function DocumentsLiveClient({
       key: "code",
       label: "Código",
       render: (_, d) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 700 }}>
           {d.code}
         </span>
       ),
@@ -198,10 +198,10 @@ export default function DocumentsLiveClient({
             {d.isExternal && " · Externo"}
           </div>
           {d.supersededByCode && (
-            <div style={{ fontSize: 11, color: "#D97706", marginTop: 2, fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>
+            <div style={{ fontSize: 11, color: "var(--nf-warning)", marginTop: 2, fontWeight: 600 }}>↪ Reemplazado por {d.supersededByCode}</div>
           )}
           {d.supersedesCode && (
-            <div style={{ fontSize: 11, color: "#16A34A", marginTop: 2, fontWeight: 600 }}>Reemplaza a {d.supersedesCode}</div>
+            <div style={{ fontSize: 11, color: "var(--nf-success)", marginTop: 2, fontWeight: 600 }}>Reemplaza a {d.supersedesCode}</div>
           )}
         </div>
       ),
@@ -1183,10 +1183,10 @@ function DocumentDetailModal({
           <div style={{ display: "grid", gap: 6, padding: 12, borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 13 }}>
             <strong style={{ fontSize: 12, color: "var(--nf-ink-3)", textTransform: "none" }}>Trazabilidad de reemplazo</strong>
             {doc.supersedesCode && (
-              <div style={{ color: "#16A34A", fontWeight: 600 }}>Reemplaza a {doc.supersedesCode}{doc.supersedesTitle ? ` — ${doc.supersedesTitle}` : ""} (archivado como histórico)</div>
+              <div style={{ color: "var(--nf-success)", fontWeight: 600 }}>Reemplaza a {doc.supersedesCode}{doc.supersedesTitle ? ` — ${doc.supersedesTitle}` : ""} (archivado como histórico)</div>
             )}
             {doc.supersededByCode && (
-              <div style={{ color: "#D97706", fontWeight: 600 }}>↪ Reemplazado por {doc.supersededByCode}{doc.supersededByTitle ? ` — ${doc.supersededByTitle}` : ""}. Este documento es histórico (obsoleto).</div>
+              <div style={{ color: "var(--nf-warning)", fontWeight: 600 }}>↪ Reemplazado por {doc.supersededByCode}{doc.supersededByTitle ? ` — ${doc.supersededByTitle}` : ""}. Este documento es histórico (obsoleto).</div>
             )}
           </div>
         )}
@@ -1329,7 +1329,7 @@ function VersionRow({
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "60px minmax(0, 1fr) auto auto auto", gap: 12, alignItems: "center", padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "#5266F6" }}>v{v.version}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-primary)" }}>v{v.version}</span>
         <div>
           <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>
             {v.changeDescription ?? <span style={{ color: "var(--nf-ink-4)" }}>Sin descripción</span>}
@@ -1406,7 +1406,7 @@ function Stat({
   tone?: "ok" | "warn";
   muted?: boolean;
 }) {
-  const color = tone === "ok" ? "#16A34A" : tone === "warn" ? "#D97706" : muted ? "var(--nf-ink-3)" : "var(--nf-ink)";
+  const color = tone === "ok" ? "var(--nf-success)" : tone === "warn" ? "var(--nf-warning)" : muted ? "var(--nf-ink-3)" : "var(--nf-ink)";
   return (
     <div className="nf-metric-cell">
       <div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>

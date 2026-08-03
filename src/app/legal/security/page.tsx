@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Seguridad — NormaFlow",
+export const metadata = createMarketingMetadata({
+  title: "Seguridad de la plataforma | NormaFlow",
   description: "Prácticas de seguridad de la plataforma NormaFlow.",
-};
+  path: "/legal/security",
+});
 
 const PRACTICES: { icon: keyof typeof Ic; t: string; d: string }[] = [
   { icon: "lock",   t: "Cifrado en tránsito y reposo", d: "TLS para todas las comunicaciones. Datos en reposo cifrados en bases gestionadas con aislamiento por organización." },
@@ -26,7 +28,7 @@ export default function SecurityPage() {
             Resumen técnico para equipos de compliance e IT que evalúan NormaFlow.
           </p>
 
-          <div className="nf-grid-2" style={{ marginTop: 40 }}>
+          <div className="nfm-grid-2" style={{ marginTop: 40 }}>
             {PRACTICES.map((p) => {
               const Icon = Ic[p.icon];
               return (
@@ -41,7 +43,7 @@ export default function SecurityPage() {
             })}
           </div>
 
-          <div className="nf-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+          <div className="nfm-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
               <Ic.mail/>
             </span>

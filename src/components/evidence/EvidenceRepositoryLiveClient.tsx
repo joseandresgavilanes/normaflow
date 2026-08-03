@@ -33,7 +33,7 @@ const TYPES: { value: EvidenceType; label: string }[] = [
 ];
 const TYPE_LABEL = new Map(TYPES.map((item) => [item.value, item.label]));
 const STATUS_LABEL: Record<EvidenceStatus, string> = { VALID: "Vigente", EXPIRED: "Vencida", PENDING_REVIEW: "Pendiente de revisión" };
-const STATUS_COLOR: Record<EvidenceStatus, string> = { VALID: "#15803D", EXPIRED: "#B91C1C", PENDING_REVIEW: "#B45309" };
+const STATUS_COLOR: Record<EvidenceStatus, string> = { VALID: "var(--nf-success-text)", EXPIRED: "var(--nf-danger-text)", PENDING_REVIEW: "var(--nf-warning-text)" };
 
 export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePayload }) {
   const { run, isPending, error, setError, success } = useServerAction();
@@ -115,7 +115,7 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
     { id: "status", header: "Estado", minWidth: 130, sortValue: (r) => r.status,
       cell: (r) => <StatusBadge status={r.status as EvidenceStatus} /> },
     { id: "expires", header: "Vence", minWidth: 140, numeric: true, sortValue: (r) => r.expiresAt ?? "",
-      cell: (r) => <span style={{ color: r.status === "EXPIRED" ? "#B91C1C" : "var(--nf-ink-2)" }}>{r.expiresAt ? formatDate(r.expiresAt) : "Sin vencimiento"}</span> },
+      cell: (r) => <span style={{ color: r.status === "EXPIRED" ? "var(--nf-danger-text)" : "var(--nf-ink-2)" }}>{r.expiresAt ? formatDate(r.expiresAt) : "Sin vencimiento"}</span> },
     { id: "actions", header: "Acciones", minWidth: 90, hideable: false,
       cell: (r) => <button type="button" className="nf-app-btn-ghost" disabled={previewBusy === r.id} aria-label={`Previsualizar ${r.title}`} onClick={(event) => { event.stopPropagation(); void openPreview(r); }}>{previewBusy === r.id ? <Loader2 size={14} className="nf-icon-spin" /> : <Eye size={14} />}</button> },
   ], [previewBusy, openPreview]);

@@ -158,27 +158,27 @@ export default function ContinuityLiveClient({ initial }: { initial: ContinuityP
     {error && <div className="nf-alert nf-alert--error nf-alert--dismissible" role="alert"><span>{error}</span><button type="button" className="nf-alert-close" onClick={() => setError("")} aria-label="Cerrar mensaje de error"><X size={15} aria-hidden /></button></div>}
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
     {tab === "panel" && <div className="nf-metric-strip">
-      <Metric label="Preparación" value={`${initial.bcmSummary.readiness}%`} icon={<LifeBuoy size={19} />} color={initial.bcmSummary.readiness >= 70 ? "#15803D" : "#B45309"} />
+      <Metric label="Preparación" value={`${initial.bcmSummary.readiness}%`} icon={<LifeBuoy size={19} />} color={initial.bcmSummary.readiness >= 70 ? "var(--nf-success-text)" : "var(--nf-warning-text)"} />
       <Metric label="Actividades críticas" value={initial.bcmSummary.criticalActivities} icon={<ClipboardCheck size={19} />} color="#5266F6" />
-      <Metric label="Brechas" value={initial.bcmSummary.totalGaps} icon={<AlertTriangle size={19} />} color={initial.bcmSummary.totalGaps ? "#B91C1C" : "#15803D"} />
-      <Metric label="Planes activados" value={initial.bcmSummary.activePlans} icon={<FileText size={19} />} color={initial.bcmSummary.activePlans ? "#B91C1C" : undefined} />
+      <Metric label="Brechas" value={initial.bcmSummary.totalGaps} icon={<AlertTriangle size={19} />} color={initial.bcmSummary.totalGaps ? "var(--nf-danger-text)" : "var(--nf-success-text)"} />
+      <Metric label="Planes activados" value={initial.bcmSummary.activePlans} icon={<FileText size={19} />} color={initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined} />
       <Metric label="Pruebas" value={initial.summary.tests} icon={<ClipboardCheck size={19} />} color="#5266F6" />
       <Metric label="Mejoras abiertas" value={initial.summary.openImprovements} icon={<Lightbulb size={19} />} color="#B45309" />
     </div>}
     {tab !== "panel" && <IsoSectionMetrics items={tab === "plans" ? [
-      { label: "BCP registrados", value: initial.bcps.length }, { label: "DRP registrados", value: initial.drps.length }, { label: "Planes activados", value: initial.bcmSummary.activePlans, accent: initial.bcmSummary.activePlans ? "#B91C1C" : undefined },
+      { label: "BCP registrados", value: initial.bcps.length }, { label: "DRP registrados", value: initial.drps.length }, { label: "Planes activados", value: initial.bcmSummary.activePlans, accent: initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined },
     ] : tab === "bia" ? [
-      { label: "BIA registrados", value: initial.bias.length }, { label: "Actividades críticas", value: initial.bcmSummary.criticalActivities }, { label: "Brechas", value: initial.bcmSummary.totalGaps, accent: initial.bcmSummary.totalGaps ? "#B91C1C" : undefined },
+      { label: "BIA registrados", value: initial.bias.length }, { label: "Actividades críticas", value: initial.bcmSummary.criticalActivities }, { label: "Brechas", value: initial.bcmSummary.totalGaps, accent: initial.bcmSummary.totalGaps ? "var(--nf-danger-text)" : undefined },
     ] : tab === "dependencies" ? [
-      { label: "Dependencias", value: initial.bcmSummary.dependencies }, { label: "Puntos únicos de fallo", value: initial.bcmSummary.singlePointsOfFailure, accent: initial.bcmSummary.singlePointsOfFailure ? "#B91C1C" : undefined }, { label: "Actividades críticas", value: initial.bcmSummary.criticalActivities },
+      { label: "Dependencias", value: initial.bcmSummary.dependencies }, { label: "Puntos únicos de fallo", value: initial.bcmSummary.singlePointsOfFailure, accent: initial.bcmSummary.singlePointsOfFailure ? "var(--nf-danger-text)" : undefined }, { label: "Actividades críticas", value: initial.bcmSummary.criticalActivities },
     ] : tab === "strategies" ? [
-      { label: "Estrategias", value: initial.strategies.length }, { label: "Aprobadas / implementadas", value: initial.bcmSummary.approvedStrategies, accent: "#15803D" }, { label: "Procedimientos", value: initial.recoveryProcedures.length },
+      { label: "Estrategias", value: initial.strategies.length }, { label: "Aprobadas / implementadas", value: initial.bcmSummary.approvedStrategies, accent: "var(--nf-success-text)" }, { label: "Procedimientos", value: initial.recoveryProcedures.length },
     ] : tab === "crisis" ? [
       { label: "Equipos de crisis", value: initial.crisisTeams.length }, { label: "Contactos", value: initial.bcmSummary.crisisContacts }, { label: "Canales de comunicación", value: initial.crisisTeams.reduce((n, team) => n + team.communicationTree.length, 0) },
     ] : tab === "tests" ? [
-      { label: "Simulacros", value: initial.summary.tests }, { label: "Completados", value: initial.bcps.flatMap((plan) => plan.tests).filter((test) => test.status === "COMPLETED").length, accent: "#15803D" }, { label: "Mejoras abiertas", value: initial.summary.openImprovements, accent: initial.summary.openImprovements ? "#B45309" : undefined },
+      { label: "Simulacros", value: initial.summary.tests }, { label: "Completados", value: initial.bcps.flatMap((plan) => plan.tests).filter((test) => test.status === "COMPLETED").length, accent: "var(--nf-success-text)" }, { label: "Mejoras abiertas", value: initial.summary.openImprovements, accent: initial.summary.openImprovements ? "var(--nf-warning-text)" : undefined },
     ] : [
-      { label: "Brechas detectadas", value: initial.gaps.length, accent: initial.gaps.length ? "#B91C1C" : "#15803D" }, { label: "Preparación", value: `${initial.bcmSummary.readiness}%` }, { label: "Actividades evaluadas", value: initial.bcmSummary.activities },
+      { label: "Brechas detectadas", value: initial.gaps.length, accent: initial.gaps.length ? "var(--nf-danger-text)" : "var(--nf-success-text)" }, { label: "Preparación", value: `${initial.bcmSummary.readiness}%` }, { label: "Actividades evaluadas", value: initial.bcmSummary.activities },
     ]} />}
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
@@ -192,18 +192,18 @@ export default function ContinuityLiveClient({ initial }: { initial: ContinuityP
         <div className="nf-iso-dashboard-card" style={{ gridColumn: "span 1" }}>
           <div className="nf-iso-dashboard-card-head"><div><h3 className="nf-iso-dashboard-card-title"><LifeBuoy size={16} aria-hidden />Preparación de continuidad</h3><p className="nf-iso-dashboard-card-subtitle">Lectura ejecutiva de la capacidad de respuesta y recuperación.</p></div><Badge value={`${initial.bcmSummary.readiness}%`} tone={initial.bcmSummary.readiness >= 70 ? "green" : "amber"} /></div>
           <div className="nf-iso-dashboard-card-body">
-            <div style={{ height: 10, overflow: "hidden", borderRadius: 99, background: "#edf0f5" }}><div style={{ width: `${Math.min(100, Math.max(0, initial.bcmSummary.readiness))}%`, height: "100%", borderRadius: 99, background: initial.bcmSummary.readiness >= 70 ? "#15803D" : "#B45309" }} /></div>
+            <div style={{ height: 10, overflow: "hidden", borderRadius: 99, background: "#edf0f5" }}><div style={{ width: `${Math.min(100, Math.max(0, initial.bcmSummary.readiness))}%`, height: "100%", borderRadius: 99, background: initial.bcmSummary.readiness >= 70 ? "var(--nf-success-text)" : "var(--nf-warning-text)" }} /></div>
             <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Actividades críticas</span><strong className="nf-iso-dashboard-row-value">{initial.bcmSummary.criticalActivities}</strong></div>
-            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Puntos únicos de fallo</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.singlePointsOfFailure ? "#B91C1C" : undefined }}>{initial.bcmSummary.singlePointsOfFailure}</strong></div>
-            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Brechas abiertas</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.totalGaps ? "#B91C1C" : undefined }}>{initial.bcmSummary.totalGaps}</strong></div>
+            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Puntos únicos de fallo</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.singlePointsOfFailure ? "var(--nf-danger-text)" : undefined }}>{initial.bcmSummary.singlePointsOfFailure}</strong></div>
+            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Brechas abiertas</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.totalGaps ? "var(--nf-danger-text)" : undefined }}>{initial.bcmSummary.totalGaps}</strong></div>
           </div>
         </div>
         <div className="nf-iso-dashboard-card">
           <div className="nf-iso-dashboard-card-head"><div><h3 className="nf-iso-dashboard-card-title"><ClipboardCheck size={16} aria-hidden />Seguimiento de pruebas</h3><p className="nf-iso-dashboard-card-subtitle">Señales para priorizar la próxima revisión.</p></div></div>
           <div className="nf-iso-dashboard-card-body">
             <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Pruebas registradas</span><strong className="nf-iso-dashboard-row-value">{initial.summary.tests}</strong></div>
-            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Mejoras abiertas</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.summary.openImprovements ? "#B45309" : undefined }}>{initial.summary.openImprovements}</strong></div>
-            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Planes activados</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.activePlans ? "#B91C1C" : undefined }}>{initial.bcmSummary.activePlans}</strong></div>
+            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Mejoras abiertas</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.summary.openImprovements ? "var(--nf-warning-text)" : undefined }}>{initial.summary.openImprovements}</strong></div>
+            <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Planes activados</span><strong className="nf-iso-dashboard-row-value" style={{ color: initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined }}>{initial.bcmSummary.activePlans}</strong></div>
             <div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">Actividades evaluadas</span><strong className="nf-iso-dashboard-row-value">{initial.bcmSummary.activities}</strong></div>
           </div>
         </div>
@@ -376,7 +376,7 @@ function PlanCard({ bcp, initial, pending, onRun }: { bcp: Bcp; initial: Continu
                 {canUpdate && activeActivation && <button type="button" className="nf-app-btn-danger" disabled={pending} onClick={() => setShowDeactivate(true)}><AlertTriangle size={13} aria-hidden />Desactivar plan</button>}
               </div>
               {canUpdate && bcp.status === "APPROVED" && !activeActivation && <div className="nf-continuity-detail-form-stack"><label>Motivo de activación<input className="nf-app-input" maxLength={2000} placeholder="Interrupción real o ejercicio…" value={activationReason} onChange={(e) => setActivationReason(e.target.value)} /></label><label>Escenario<select className="nf-app-input" value={activationScenarioId} onChange={(e) => setActivationScenarioId(e.target.value)}><option value="">Sin escenario</option>{bcp.scenarios.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></div>}
-              {activeActivation && <div style={{ fontSize: 12, color: "#B91C1C", padding: "10px 12px", borderRadius: 8, background: "#fff1f2" }}>Activado {new Date(activeActivation.activatedAt).toLocaleString()} · {activeActivation.reason}</div>}
+              {activeActivation && <div style={{ fontSize: 12, color: "var(--nf-danger-text)", padding: "10px 12px", borderRadius: 8, background: "#fff1f2" }}>Activado {new Date(activeActivation.activatedAt).toLocaleString()} · {activeActivation.reason}</div>}
             </ContinuityDetailSection>
           </div>
         </div>
@@ -464,7 +464,7 @@ function Metric({ label, value, icon, color = "#5266F6" }: { label: string; valu
 function DetailMetric({ label, value }: { label: string; value: string }) {
   return <div className="nf-continuity-detail-metric"><div className="nf-continuity-detail-metric-label">{label}</div><strong className="nf-continuity-detail-metric-value">{value}</strong></div>;
 }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 6 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 6 }}>{value}</span>; }
 
 /* ─── Paquete de continuidad del negocio (ISO 22301) ─── */
 
@@ -770,7 +770,7 @@ function DependenciesTab({ p, pending, onRun }: { p: ContinuityPayload; pending:
           <td>{d.activity}</td><td>{DEP_TYPE[d.type] ?? d.type}</td><td><strong>{d.name}</strong></td>
           <td><Badge value={CRITICALITY[d.criticality]?.label ?? d.criticality} tone={CRITICALITY[d.criticality]?.tone ?? "blue"} /></td>
           <td>{mins(d.maxOutageMinutes)}</td>
-          <td style={{ fontSize: 12 }}>{d.alternative ?? <span style={{ color: "#B91C1C" }}>sin alterno</span>}</td>
+          <td style={{ fontSize: 12 }}>{d.alternative ?? <span style={{ color: "var(--nf-danger-text)" }}>sin alterno</span>}</td>
           <td>{d.singlePointOfFailure ? <Badge value="Sí" tone="red" /> : "—"}</td>
           <td>{p.canUpdate && <button type="button" className="nf-app-btn-ghost" onClick={() => { setEditingDependency(editingDependency === d.id ? null : d.id); setDependencyEdit({ type: d.type, name: d.name, criticality: d.criticality, maxOutageMinutes: d.maxOutageMinutes != null ? String(d.maxOutageMinutes) : "", alternative: d.alternative ?? "", singlePointOfFailure: d.singlePointOfFailure }); }}>Editar</button>}</td>
         </tr>)}</tbody></table>

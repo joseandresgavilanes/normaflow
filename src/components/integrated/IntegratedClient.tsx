@@ -44,14 +44,14 @@ const DISCIPLINE_COLOR: Record<string, string> = {
 const KIND_LABEL: Record<string, string> = {
   EQUIVALENT: "Equivalente", PARTIAL: "Parcialmente equivalente", SPECIFIC: "Específico",
 };
-const KIND_COLOR: Record<string, string> = { EQUIVALENT: "#16a34a", PARTIAL: "#d68a1a", SPECIFIC: "#5266F6" };
+const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success)", PARTIAL: "#d68a1a", SPECIFIC: "var(--nf-primary)" };
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 9, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { background: "#5266F6", color: "#fff", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { background: "#fff", color: "#5266F6", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
-const dangerBtn: React.CSSProperties = { background: "none", color: "#b91c1c", border: "1px solid #f2c4c4", borderRadius: 8, padding: "4px 9px", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "#fff", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const ghostBtn: React.CSSProperties = { background: "#fff", color: "var(--nf-primary)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const dangerBtn: React.CSSProperties = { background: "none", color: "var(--nf-danger-text)", border: "1px solid #f2c4c4", borderRadius: 8, padding: "4px 9px", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
 
 export default function IntegratedClient({ initial, demo = false }: { initial: IntegratedPayload; demo?: boolean }) {
   const router = useRouter();
@@ -81,9 +81,9 @@ export default function IntegratedClient({ initial, demo = false }: { initial: I
       <IsoSectionHeader headingLevel={1} icon={Layers} title={SECTION_META[tab].title}
         description={`${SECTION_META[tab].sub}${demo ? " Vista demo (solo lectura)." : ""}`} />
 
-      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "#b91c1c", marginBottom: 16 }}>{error}</div>}
+      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
 
-      {tab !== "panel" && <IsoSectionMetrics items={tab === "scope" ? [{ label: "Normas activas", value: initial.activeStandards.length }, { label: "Requisitos", value: initial.summary.requirements }, { label: "Cobertura global", value: initial.globalScore, suffix: "%" }] : tab === "parties" ? [{ label: "Partes interesadas", value: initial.interestedParties.length }, { label: "Relevantes", value: initial.interestedParties.filter((row) => row.isRelevant).length }, { label: "Normas activas", value: initial.activeStandards.length }] : tab === "objectives" ? [{ label: "Objetivos", value: initial.objectives.length }, { label: "Compartidos", value: initial.objectives.filter((row) => row.shared).length }, { label: "Vencidos", value: initial.objectives.filter((row) => row.dueDate && new Date(row.dueDate) < new Date() && row.status !== "ACHIEVED").length, accent: "#b91c1c" }] : tab === "crosswalk" ? [{ label: "Correspondencias", value: initial.crosswalk.length }, { label: "Equivalentes", value: initial.summary.equivalent }, { label: "Sin evidencia", value: initial.summary.missingEvidence, accent: initial.summary.missingEvidence ? "#b91c1c" : undefined }] : tab === "audit" ? [{ label: "Auditorías integradas", value: initial.integratedAuditCount }, { label: "Hallazgos multinorma", value: initial.multiNormFindings.length, accent: initial.multiNormFindings.length ? "#d68a1a" : undefined }, { label: "CAPA abiertas", value: initial.summary.openCapas, accent: initial.summary.openCapas ? "#b91c1c" : undefined }] : [{ label: "Elementos compartidos", value: initial.summary.sharedElements }, { label: "Riesgos críticos", value: initial.summary.criticalRisks, accent: initial.summary.criticalRisks ? "#b91c1c" : undefined }, { label: "Proveedores", value: initial.suppliers.length }]} />}
+      {tab !== "panel" && <IsoSectionMetrics items={tab === "scope" ? [{ label: "Normas activas", value: initial.activeStandards.length }, { label: "Requisitos", value: initial.summary.requirements }, { label: "Cobertura global", value: initial.globalScore, suffix: "%" }] : tab === "parties" ? [{ label: "Partes interesadas", value: initial.interestedParties.length }, { label: "Relevantes", value: initial.interestedParties.filter((row) => row.isRelevant).length }, { label: "Normas activas", value: initial.activeStandards.length }] : tab === "objectives" ? [{ label: "Objetivos", value: initial.objectives.length }, { label: "Compartidos", value: initial.objectives.filter((row) => row.shared).length }, { label: "Vencidos", value: initial.objectives.filter((row) => row.dueDate && new Date(row.dueDate) < new Date() && row.status !== "ACHIEVED").length, accent: "var(--nf-danger-text)" }] : tab === "crosswalk" ? [{ label: "Correspondencias", value: initial.crosswalk.length }, { label: "Equivalentes", value: initial.summary.equivalent }, { label: "Sin evidencia", value: initial.summary.missingEvidence, accent: initial.summary.missingEvidence ? "var(--nf-danger-text)" : undefined }] : tab === "audit" ? [{ label: "Auditorías integradas", value: initial.integratedAuditCount }, { label: "Hallazgos multinorma", value: initial.multiNormFindings.length, accent: initial.multiNormFindings.length ? "#d68a1a" : undefined }, { label: "CAPA abiertas", value: initial.summary.openCapas, accent: initial.summary.openCapas ? "var(--nf-danger-text)" : undefined }] : [{ label: "Elementos compartidos", value: initial.summary.sharedElements }, { label: "Riesgos críticos", value: initial.summary.criticalRisks, accent: initial.summary.criticalRisks ? "var(--nf-danger-text)" : undefined }, { label: "Proveedores", value: initial.suppliers.length }]} />}
 
       {tab === "panel" && <PanelTab p={initial} />}
       {tab === "scope" && <ScopeTab p={initial} canUpdate={canUpdate} pending={pending} run={run} />}
@@ -102,11 +102,11 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))", gap: 12 }}>
-        <Stat label="Cumplimiento global" value={`${p.globalScore}%`} accent="#5266F6" />
-        <Stat label="Grado de integración" value={`${p.integrationRate}%`} sub="requisitos compartidos" accent="#16a34a" />
+        <Stat label="Cumplimiento global" value={`${p.globalScore}%`} accent="var(--nf-primary)" />
+        <Stat label="Grado de integración" value={`${p.integrationRate}%`} sub="requisitos compartidos" accent="var(--nf-success)" />
         <Stat label="Factor de reutilización" value={`${p.reuseFactor}×`} sub="requisitos por elemento" accent="#6B3FB5" />
         <Stat label="Normas activas" value={String(s.standards)} />
-        <Stat label="Evidencias faltantes" value={String(s.missingEvidence)} accent={s.missingEvidence ? "#b91c1c" : undefined} />
+        <Stat label="Evidencias faltantes" value={String(s.missingEvidence)} accent={s.missingEvidence ? "var(--nf-danger-text)" : undefined} />
       </div>
 
       <section style={card}>
@@ -339,7 +339,7 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
         <Stat label="Objetivos totales" value={String(p.objectives.length)} />
-        <Stat label="Compartidos (multi-disciplina)" value={String(shared)} accent="#16a34a" />
+        <Stat label="Compartidos (multi-disciplina)" value={String(shared)} accent="var(--nf-success)" />
         <Stat label="Logrados" value={String(p.objectives.filter((o) => o.status === "ACHIEVED").length)} />
       </div>
       {canManage && (
@@ -378,12 +378,12 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
         head={["Código", "Objetivo", "Meta", "Disciplinas", "Estado", canManage ? "Acciones" : null]}
         rows={p.objectives.map((o) => [
           <strong key="c">{o.code}</strong>,
-          <span key="t">{o.title}{o.shared && <span style={{ ...chip("#eafaf0", "#16a34a"), marginLeft: 7 }}>compartido</span>}</span>,
+          <span key="t">{o.title}{o.shared && <span style={{ ...chip("#eafaf0", "var(--nf-success)"), marginLeft: 7 }}>compartido</span>}</span>,
           o.target ?? "—",
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {o.disciplines.map((d) => <span key={d} style={chip(DISCIPLINE_COLOR[d] + "1a", DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}
           </span>,
-          <span key="s" style={chip("#eef1fe", "#5266F6")}>{o.status}</span>,
+          <span key="s" style={chip("#eef1fe", "var(--nf-primary)")}>{o.status}</span>,
           canManage ? <span key="x"><EditObjectiveButton objective={o} pending={pending} run={run} /><button type="button" style={dangerBtn} disabled={pending} onClick={() => setObjectiveToDelete(o)}>Eliminar</button></span> : null,
         ])}
         empty="Aún no hay objetivos definidos."
@@ -508,13 +508,13 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
       >
             {rows.map((r) => (
               <tr key={r.requirementId}>
-                <td><span style={chip("#eef1fe", "#5266F6")}>{r.familyCode.replace("_", " ")}</span></td>
+                <td><span style={chip("#eef1fe", "var(--nf-primary)")}>{r.familyCode.replace("_", " ")}</span></td>
                 <td><strong>{r.code}</strong> {r.title}</td>
                 <td><span style={chip(KIND_COLOR[r.kind] + "1a", KIND_COLOR[r.kind])}>{KIND_LABEL[r.kind]}</span></td>
                 <td>
                   {r.shareable
-                    ? <span style={chip("#eafaf0", "#16a34a")}>Compartible</span>
-                    : <span style={chip("#fdf3f3", "#b91c1c")}>No compartible</span>}
+                    ? <span style={chip("#eafaf0", "var(--nf-success)")}>Compartible</span>
+                    : <span style={chip("#fdf3f3", "var(--nf-danger-text)")}>No compartible</span>}
                 </td>
                 <td>
                   {r.related.length ? r.related.map((rel) => (
@@ -525,7 +525,7 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
                   )) : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>— específico</span>}
                 </td>
                 <td>{r.sharedDocuments.length ? r.sharedDocuments.join(", ") : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>—</span>}</td>
-                <td>{r.sharedEvidence.length ? r.sharedEvidence.join(", ") : <span style={{ color: "#b91c1c" }}>falta</span>}</td>
+                <td>{r.sharedEvidence.length ? r.sharedEvidence.join(", ") : <span style={{ color: "var(--nf-danger-text)" }}>falta</span>}</td>
                 <td>
                   {canUpdate ? (
                     <select value={r.responsibleId ?? ""} disabled={pending} style={{ ...input, padding: "5px 7px", fontSize: 12, minWidth: 130 }}
@@ -556,9 +556,9 @@ function AuditTab({ p, canUpdate, canManage, pending, run }: {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
-        <Stat label="Auditorías integradas" value={String(p.integratedAuditCount)} accent="#5266F6" />
+        <Stat label="Auditorías integradas" value={String(p.integratedAuditCount)} accent="var(--nf-primary)" />
         <Stat label="Hallazgos multi-norma" value={String(p.multiNormFindings.length)} accent="#d68a1a" />
-        <Stat label="CAPA compartidas" value={String(p.capas.filter((c) => c.shared).length)} accent="#16a34a" />
+        <Stat label="CAPA compartidas" value={String(p.capas.filter((c) => c.shared).length)} accent="var(--nf-success)" />
         <Stat label="Revisiones integradas" value={String(p.reviews.filter((r) => r.integrated).length)} />
       </div>
 
@@ -568,7 +568,7 @@ function AuditTab({ p, canUpdate, canManage, pending, run }: {
         <Table
           head={["Auditoría", "Normas", "Estado", "Hallazgos", "Multi-norma"]}
           rows={p.audits.map((a) => [
-            <span key="t">{a.title}{a.integrated && <span style={{ ...chip("#eef1fe", "#5266F6"), marginLeft: 7 }}>integrada</span>}</span>,
+            <span key="t">{a.title}{a.integrated && <span style={{ ...chip("#eef1fe", "var(--nf-primary)"), marginLeft: 7 }}>integrada</span>}</span>,
             <StandardsToggle key="s" value={a.standards} options={standardOptions} disabled={!canUpdate || pending}
               onChange={(next) => run(() => setAuditStandards({ auditId: a.id, standards: next }))} />,
             a.status, String(a.findingCount), String(a.multiNormFindings),
@@ -634,7 +634,7 @@ function AuditTab({ p, canUpdate, canManage, pending, run }: {
         <Table
           head={["Revisión", "Estado", "Normas cubiertas"]}
           rows={p.reviews.map((r) => [
-            <span key="t">{r.title}{r.integrated && <span style={{ ...chip("#eef1fe", "#5266F6"), marginLeft: 7 }}>integrada</span>}</span>,
+            <span key="t">{r.title}{r.integrated && <span style={{ ...chip("#eef1fe", "var(--nf-primary)"), marginLeft: 7 }}>integrada</span>}</span>,
             r.status,
             <StandardsToggle key="s" value={r.standards} options={standardOptions} disabled={!canUpdate || pending}
               onChange={(next) => run(() => setReviewStandards({ reviewId: r.id, standards: next }))} />,
@@ -713,7 +713,7 @@ function StandardsToggle({ value, options, disabled, onChange }: { value: string
         return (
           <button key={code} type="button" disabled={disabled}
             onClick={() => onChange(active ? value.filter((c) => c !== code) : [...value, code])}
-            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? "#5266F6" : "#fff", color: active ? "#fff" : "#5266F6", borderColor: "#5266F6" }}>
+            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? "var(--nf-primary)" : "#fff", color: active ? "#fff" : "var(--nf-primary)", borderColor: "var(--nf-primary)" }}>
             {code.replace("_", " ")}
           </button>
         );
@@ -761,7 +761,7 @@ function SharedTab({ p }: { p: IntegratedPayload }) {
         rows={p.multiNormEntities.map((e) => [
           e.label, TYPE_LABEL[e.entityType] ?? e.entityType, String(e.requirements),
           <span key="f" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {e.families.map((f) => <span key={f} style={chip("#eafaf0", "#16a34a")}>{f.replace("_", " ")}</span>)}
+            {e.families.map((f) => <span key={f} style={chip("#eafaf0", "var(--nf-success)")}>{f.replace("_", " ")}</span>)}
           </span>,
         ])}
         empty="Aún no hay elementos que cubran requisitos de varias normas. Asócialos desde Documentos, Evidencias o la matriz de requisitos."

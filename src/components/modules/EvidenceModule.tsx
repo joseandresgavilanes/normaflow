@@ -31,7 +31,7 @@ function EvidencePreview({ ev }: { ev: EvidenceItem }) {
       <p className="nf-app-help">Tipo MIME: {mime || "desconocido"}</p>
       {ev.fileSize != null && <p className="nf-app-help">Tamaño: {(ev.fileSize / 1024).toFixed(1)} KB</p>}
       <p className="nf-app-help">En producción el archivo vendría de tu almacenamiento seguro. Aquí puedes abrir el enlace disponible en el workspace.</p>
-      <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "#5266F6", fontWeight: 600 }}>
+      <a href={url} target="_blank" rel="noopener noreferrer" download style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
         Abrir o descargar
       </a>
     </div>

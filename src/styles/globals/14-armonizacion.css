@@ -1,0 +1,400 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 14-armonizacion
+ *
+ * Capa de armonización: re-pinta clases definidas antes. Debe cargarse después de ellas.
+ *
+ * Trozo literal de las líneas 5127-5517 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-metric-cell-value {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-metric-cell-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nf-ink-3);
+  margin-top: 4px;
+}
+
+.nf-metric-cell-sub {
+  font-size: 12px;
+  color: var(--nf-ink-4);
+  margin-top: 2px;
+}
+
+.nf-kpi-summary-cell :where(strong) {
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+  color: var(--nf-ink);
+}
+
+.nf-operational-card {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.nf-operational-card :where(h3, h4) {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--nf-ink);
+}
+
+/* Suaviza KPI legacy con gradientes inline */
+.nf-app-main-inner .nf-kpi-summary-cell {
+  background: #fff;
+  border: 1px solid var(--nf-line);
+}
+
+.nf-app-main-inner .nf-kpi-card {
+  border-radius: 12px;
+  border: 1px solid var(--nf-line);
+  background: #fff;
+  box-shadow: none;
+}
+
+.nf-app-main-inner .nf-kpi-card > div:first-child[style*="height: 3"],
+.nf-app-main-inner .nf-kpi-card > div:first-child[style*="height: 4"],
+.nf-app-main-inner .nf-kpi-card > div:first-child[style*="height: 5"] {
+  display: none;
+}
+
+/* ============================================================
+   Responsive contract
+   Shared mobile rules for every app route.  Modules can keep their
+   desktop composition while the shell owns spacing, wrapping and
+   horizontal overflow behavior on narrow viewports.
+   ============================================================ */
+.nf-app-main-inner > * {
+  min-width: 0;
+}.nf-panel-head > * {
+  min-width: 0;
+}
+
+.nf-panel-head-text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.nf-data-table-wrap,
+.nf-dash-table-wrap {
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1100px) {
+  .nf-app-main-inner {
+    padding-left: 28px;
+    padding-right: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nf-app-main-inner {
+    padding-top: 20px;
+  }
+
+  .nf-topbar {
+    height: 56px;
+    min-height: 56px;
+    padding-top: env(safe-area-inset-top);
+    height: calc(56px + env(safe-area-inset-top));
+  }
+
+  .nf-panel-head,
+  .nf-panel-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .nf-panel-head {
+    flex-wrap: wrap;
+  }
+
+  .nf-action-bar {
+    width: 100%;
+  }
+
+  .nf-action-bar .nf-app-input {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  .nf-quick-create-menu {
+    min-width: min(280px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+  }
+
+  .nf-dash-actions {
+    margin-bottom: 16px;
+  }
+
+  .nf-dash-card {
+    padding: 18px;
+  }
+
+  .nf-dash-card-value {
+    font-size: 32px;
+  }
+
+  .nf-dash-table-head {
+    padding: 16px 18px 14px;
+  }
+
+  .nf-dash-table {
+    min-width: 600px;
+  }
+
+  .nf-dash-table th,
+  .nf-dash-table td {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .nf-modal-overlay {
+    padding: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right));
+  }
+
+  .nf-modal-header,
+  .nf-modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .nf-topbar {
+    padding-left: max(8px, env(safe-area-inset-left));
+    padding-right: max(8px, env(safe-area-inset-right));
+    gap: 6px;
+  }
+
+  .nf-topbar-actions {
+    gap: 3px;
+  }
+
+  .nf-topbar-actions .nf-lang-switcher {
+    display: none;
+  }
+
+  .nf-quick-create-trigger {
+    width: 36px;
+    min-width: 36px;
+    padding-left: 0;
+    padding-right: 0;
+    font-size: 0;
+    gap: 0;
+  }
+
+  .nf-topbar-icon-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .nf-dash-actions > * {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+  }
+
+  .nf-dash-card {
+    padding: 16px;
+  }
+
+  .nf-dash-bottom-grid {
+    gap: 12px;
+  }a) {
+    justify-content: center;
+  }
+
+  .nf-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .nf-modal-actions > * {
+    width: 100%;
+  }
+
+  /* Inline metric grids used by operational cards. */
+  .nf-app-main-inner [style*="repeat(4, 1fr)"],
+  .nf-app-main-inner [style*="repeat(3, 1fr)"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .nf-dash-actions > * {
+    flex-basis: 100%;
+  }
+
+  .nf-topbar-menu {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 360px) {
+  .nf-app-main-inner {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .nf-app-main-inner [style*="repeat(4, 1fr)"],
+  .nf-app-main-inner [style*="repeat(3, 1fr)"],
+  .nf-app-main-inner [style*="1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ============================================================
+   Impresión / Exportar a PDF (GAP Assessment y otros informes)
+   Oculta el chrome de la app y deja solo el contenido del módulo,
+   con colores y saltos de página adecuados.
+   ============================================================ */
+@media print {
+  /* Oculta barra lateral, topbar, panel IA, toasts y modales:
+     todo lo que no sea la columna principal y su contenido. */
+  .nf-app-shell > *:not(.nf-app-main) { display: none !important; }
+  .nf-app-main > *:not(.nf-app-main-inner) { display: none !important; }
+
+  /* Elementos marcados explícitamente como no imprimibles (controles). */
+  .nf-no-print { display: none !important; }
+
+  /* Layout a ancho completo, fondo blanco, sin sombras. */
+  html, body { background: #fff !important; }
+  .nf-app-shell { display: block !important; height: auto !important; min-height: 0 !important; }
+  .nf-app-main { margin: 0 !important; width: 100% !important; }
+  .nf-app-main-inner {
+    padding: 0 !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Conserva los colores de barras de progreso, badges, etc. */
+  .nf-app-main-inner * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }/* Evita cortar tarjetas/filas entre páginas. */
+  .nf-card,
+.nf-app-main-inner button { break-inside: avoid; page-break-inside: avoid; }
+
+  /* Las filas de cláusula son <button>: quítales apariencia de botón al imprimir. */
+  .nf-app-main-inner button { cursor: default !important; box-shadow: none !important; }
+
+  @page { margin: 14mm; }
+}
+
+/* Footer uniforme para todos los formularios modales con dos acciones. */
+.nf-modal-body .nf-modal-actions:has(> button + button),
+.nf-modal-body .nf-modal-actions:has(> button + a),
+.nf-modal-body .nf-modal-actions:has(> a + button) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 10px;
+}
+
+.nf-modal-body .nf-modal-actions:has(> button + button) > :where(button, a),
+.nf-modal-body .nf-modal-actions:has(> button + a) > :where(button, a),
+.nf-modal-body .nf-modal-actions:has(> a + button) > :where(button, a) {
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+/* Contrato visual final de los modales ISO. Este bloque queda al final para
+   neutralizar estilos inline heredados y evitar que cada subtab tenga una
+   versión distinta del mismo patrón. */
+.nf-modal-overlay {
+  padding: 20px !important;
+  background: rgba(15, 23, 42, 0.46) !important;
+  backdrop-filter: blur(3px);
+}
+
+.nf-modal-panel {
+  width: min(760px, calc(100vw - 32px)) !important;
+  max-height: min(820px, calc(100vh - 32px)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24), 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  overflow: hidden !important;
+}
+
+.nf-modal-header {
+  min-height: 72px !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--nf-line) !important;
+  background: #fff !important;
+}
+
+.nf-modal-header-title {
+  font-size: 20px !important;
+  line-height: 1.25 !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--nf-ink) !important;
+}
+
+.nf-modal-close {
+  width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--nf-line) !important;
+  background: #fff !important;
+  color: var(--nf-ink-3) !important;
+}
+
+.nf-modal-close:hover {
+  border-color: #cbd5e1 !important;
+  background: #f8fafc !important;
+  color: var(--nf-ink) !important;
+}
+
+.nf-modal-body {
+  padding: 24px !important;
+  background: #fff !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  border-color: #dbe3ee !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):hover {
+  border-color: #c5d0df !important;
+}
+
+.nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {
+  border-color: var(--nf-app-accent) !important;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
+}
+
+.nf-modal-body :where(button, a):not(.nf-modal-close) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  letter-spacing: 0 !important;
+}
+
+.nf-modal-body .nf-app-btn-primary {
+  border: 1px solid var(--nf-app-accent) !important;
+  background: var(--nf-app-accent) !important;
+  color: #fff !important;
+  box-shadow: 0 5px 12px rgba(79, 70, 229, 0.16) !important;
+}
+
+.nf-modal-body .nf-app-btn-primary:hover:not(:disabled) {
+  filter: brightness(0.96);
+  box-shadow: 0 7px 16px rgba(79, 70, 229, 0.2) !important;
+}

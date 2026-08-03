@@ -49,12 +49,12 @@ export default function SupplierSecurityLiveClient({ initial }: { initial: Suppl
       id: "review", header: "Revisión", minWidth: 120, numeric: true,
       sortValue: (s) => s.profile?.nextReviewDate ?? "",
       // El rojo señala la revisión vencida, pero el dato ya lo dice: no es el único canal.
-      cell: (s) => <span style={{ color: s.profile?.reviewOverdue ? "#B91C1C" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</span>,
+      cell: (s) => <span style={{ color: s.profile?.reviewOverdue ? "var(--nf-danger-text)" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</span>,
     },
     {
       id: "contract", header: "Vencimiento contrato", minWidth: 150, numeric: true,
       sortValue: (s) => s.profile?.contractExpiry ?? "",
-      cell: (s) => <span style={{ color: s.profile?.contractExpiringSoon ? "#B45309" : undefined }}>{s.profile?.contractExpiry ?? "—"}</span>,
+      cell: (s) => <span style={{ color: s.profile?.contractExpiringSoon ? "var(--nf-warning-text)" : undefined }}>{s.profile?.contractExpiry ?? "—"}</span>,
     },
   ], []);
 
@@ -113,4 +113,4 @@ function ProfileForm({ supplier, pending, canUpdate, onClose, onRun }: { supplie
 }
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

@@ -13,7 +13,7 @@ import { CrosswalkMatrix } from "@/components/standards/CrosswalkMatrix";
 type Tab = "panel" | "catalog" | "active" | "matrix" | "correspondence";
 
 const GAP_COLORS: Record<string, string> = {
-  COMPLIANT: "#16a34a", PARTIALLY_COMPLIANT: "#d68a1a", NON_COMPLIANT: "#b91c1c",
+  COMPLIANT: "var(--nf-success)", PARTIALLY_COMPLIANT: "#d68a1a", NON_COMPLIANT: "var(--nf-danger-text)",
   NOT_APPLICABLE: "#8794a5", NOT_EVALUATED: "#c3ccd8",
 };
 
@@ -57,10 +57,10 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
       <PageHeader
         title="Motor de Normas ISO"
         subtitle="Instala paquetes normativos, actívalos por organización y gestiona requisitos, correspondencias y evidencia compartida entre normas."
-        meta={demo ? <span style={{ color: "#5266F6", fontWeight: 600, fontSize: 13 }}>Vista demo (solo lectura)</span> : undefined}
+        meta={demo ? <span style={{ color: "var(--nf-primary)", fontWeight: 600, fontSize: 13 }}>Vista demo (solo lectura)</span> : undefined}
       />
 
-      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "#b91c1c", marginBottom: 16 }}>{error}</div>}
+      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
 
       <nav className="nf-iso-tabs" role="tablist" aria-label="Secciones del motor de normas" style={{ marginBottom: 20 }}>
         {tabs.map(({ id, label, Icon }) => (
@@ -101,7 +101,7 @@ function PanelTab({ payload }: { payload: StandardsEnginePayload }) {
           <div key={a.orgStandardId} style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div><strong style={{ fontSize: 16 }}>{a.name} {a.editionCode}</strong><span style={{ color: "var(--nf-ink-3,#8794a5)", marginLeft: 8, fontSize: 12 }}>{a.implementationStatus}</span></div>
-              <span style={chip("#eef1fe", "#5266F6")}>{a.score == null ? "Sin evaluar" : `${Math.round(a.score)}% GAP`}</span>
+              <span style={chip("#eef1fe", "var(--nf-primary)")}>{a.score == null ? "Sin evaluar" : `${Math.round(a.score)}% GAP`}</span>
             </div>
             <Bar pct={a.score ?? 0} />
             <div style={{ fontSize: 12, color: "var(--nf-ink-2,#5e6b7a)", marginTop: 8 }}>
@@ -148,7 +148,7 @@ function CatalogTab({ payload, onActivate, onInstall, pending, demo }: {
                     <span style={{ display: "block", fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)" }}>{e.requirementCount} requisitos · {e.status}</span>
                   </div>
                   {e.active
-                    ? <span style={chip("#eafaf0", "#16a34a")}><Check size={11} style={{ verticalAlign: -1 }} /> Activa</span>
+                    ? <span style={chip("#eafaf0", "var(--nf-success)")}><Check size={11} style={{ verticalAlign: -1 }} /> Activa</span>
                     : payload.canActivate && !demo
                       ? <button disabled={pending} onClick={() => onActivate(f.code, e.editionCode)} style={primaryBtn}>Activar</button>
                       : <span style={chip("#f0f3f8", "#8794a5")}>Inactiva</span>}
@@ -173,7 +173,7 @@ const activeColumns: DataTableColumn<ActiveRow>[] = [
     cell: (a) => <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{a.scope ?? "—"}</span> },
   { id: "responsible", header: "Responsable", minWidth: 150, sortValue: (a) => a.responsibleName ?? "", cell: (a) => a.responsibleName ?? "—" },
   { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.implementationStatus,
-    cell: (a) => <span style={chip("#eef1fe", "#5266F6")}>{a.implementationStatus}</span> },
+    cell: (a) => <span style={chip("#eef1fe", "var(--nf-primary)")}>{a.implementationStatus}</span> },
   { id: "gap", header: "GAP", minWidth: 90, numeric: true, align: "end", sortValue: (a) => a.score ?? null,
     cell: (a) => (a.score == null ? "—" : `${Math.round(a.score)}%`) },
   { id: "audit", header: "Próx. auditoría", minWidth: 140, numeric: true, sortValue: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).getTime() : null),
@@ -193,7 +193,7 @@ function requirementColumns(onCoverage: (row: RequirementRow) => void): DataTabl
       <button type="button" className="nf-coverage-cell" onClick={() => onCoverage(r)}
         aria-label={r.coverageCount > 0 ? `Ver los ${r.coverageCount} elementos que cubren ${r.code}` : `Vincular un elemento a ${r.code}`}>
         {r.coverageCount > 0
-          ? <span style={chip("#eafaf0", "#15803D")}>{r.coverageCount} elemento(s)</span>
+          ? <span style={chip("#eafaf0", "var(--nf-success-text)")}>{r.coverageCount} elemento(s)</span>
           : <span className="nf-coverage-cell__empty"><Link2 size={12} aria-hidden /> Vincular</span>}
       </button>
     ) },
@@ -201,11 +201,11 @@ function requirementColumns(onCoverage: (row: RequirementRow) => void): DataTabl
 
 const correspondenceColumns: DataTableColumn<CorrespondenceRow>[] = [
   { id: "sourceFamily", header: "Norma origen", minWidth: 130, sortValue: (m) => m.sourceFamily,
-    cell: (m) => <span style={chip("#eef1fe", "#5266F6")}>{m.sourceFamily}</span> },
+    cell: (m) => <span style={chip("#eef1fe", "var(--nf-primary)")}>{m.sourceFamily}</span> },
   { id: "source", header: "Requisito", primary: true, minWidth: 220, hideable: false, sortValue: (m) => m.sourceCode,
     cell: (m) => <><strong>{m.sourceCode}</strong> {m.sourceTitle}</> },
   { id: "targetFamily", header: "Norma destino", minWidth: 130, sortValue: (m) => m.targetFamily,
-    cell: (m) => <span style={chip("#eef1fe", "#5266F6")}>{m.targetFamily}</span> },
+    cell: (m) => <span style={chip("#eef1fe", "var(--nf-primary)")}>{m.targetFamily}</span> },
   { id: "target", header: "Requisito", minWidth: 220, sortValue: (m) => m.targetCode,
     cell: (m) => <><strong>{m.targetCode}</strong> {m.targetTitle}</> },
   { id: "relation", header: "Relación", minWidth: 130, sortValue: (m) => m.relationType, cell: (m) => m.relationType },
@@ -277,14 +277,14 @@ function CorrespondenceTab({ payload }: { payload: StandardsEnginePayload }) {
 }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return <div style={card}><div style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)", fontWeight: 600 }}>{label}</div><div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{value}{sub && <span style={{ fontSize: 13, color: "#5266F6", marginLeft: 6 }}>{sub}</span>}</div></div>;
+  return <div style={card}><div style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)", fontWeight: 600 }}>{label}</div><div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{value}{sub && <span style={{ fontSize: 13, color: "var(--nf-primary)", marginLeft: 6 }}>{sub}</span>}</div></div>;
 }
 function Bar({ pct }: { pct: number }) {
-  return <div style={{ height: 7, background: "var(--nf-line,#e8edf5)", borderRadius: 8, marginTop: 10, overflow: "hidden" }}><div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: pct >= 70 ? "#16a34a" : "#5266F6" }} /></div>;
+  return <div style={{ height: 7, background: "var(--nf-line,#e8edf5)", borderRadius: 8, marginTop: 10, overflow: "hidden" }}><div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: pct >= 70 ? "var(--nf-success)" : "var(--nf-primary)" }} /></div>;
 }
 function Empty({ text }: { text: string }) {
   return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3,#8794a5)", padding: 40 }}>{text}</div>;
 }
 
-const primaryBtn: React.CSSProperties = { background: "#5266F6", color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 7, background: "#fff", color: "#5266F6", border: "1px solid #cdd6f8", borderRadius: 9, padding: "8px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const ghostBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 7, background: "#fff", color: "var(--nf-primary)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "8px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };

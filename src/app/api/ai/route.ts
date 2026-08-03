@@ -3,7 +3,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getAppContext } from "@/lib/app-context";
 import { detectLocale, LOCALE_COOKIE, normalizeLocale, type Locale } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/messages";
-import { canUseAI } from "@/lib/plan-entitlements";
+import { assertAIBudget, canUseAI, PlanLimitError } from "@/lib/plan-entitlements";
+import { detectPII, detectPromptInjection, detectSecrets } from "@/lib/aims/ai-safety";
+import { recordAIOutput } from "@/lib/actions/aims";
+import { prisma } from "@/lib/prisma";
+import type { PlanKey } from "@/lib/constants";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -56,6 +60,28 @@ function isRateLimited(key: string): boolean {
   return false;
 }
 
+/**
+ * The general assistant (this route) is itself an AI system per ISO/IEC
+ * 42001 — it must appear in the inventory (checklist item 1) the moment it's
+ * actually used, not only when someone remembers to register it by hand.
+ * Created as PLANNED (never auto-approved — approving for production is a
+ * human decision, enforced by a DB CHECK on AISystem.status='IN_PRODUCTION').
+ */
+async function ensureAssistantSystem(organizationId: string, createdById: string): Promise<{ id: string }> {
+  const code = "IA-ASSISTANT";
+  const existing = await prisma.aISystem.findFirst({ where: { organizationId, code }, select: { id: true } });
+  if (existing) return existing;
+  return prisma.aISystem.create({
+    data: {
+      organizationId, code, name: "Asistente general NormaFlow", provider: "Anthropic", providerType: "THIRD_PARTY_API",
+      purpose: "Asistente conversacional embebido en GAP, riesgos, documentos, auditorías y no conformidades.",
+      criticality: "MEDIUM", autonomy: "HUMAN_IN_THE_LOOP", status: "PLANNED", classification: "NOT_CLASSIFIED",
+      createdById,
+    },
+    select: { id: true },
+  });
+}
+
 export async function POST(req: NextRequest) {
   const requestLocale = detectLocale(
     req.cookies.get(LOCALE_COOKIE)?.value,
@@ -91,16 +117,63 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: translate(locale, "ai.api.messageRequired") }, { status: 400 });
     }
 
+    const truncated = message.slice(0, MAX_MESSAGE_CHARS);
+
+    // Secretos: nunca se reenvían a un proveedor externo, ni siquiera redactados
+    // — se rechaza la llamada para que la persona retire la credencial.
+    if (detectSecrets(truncated).found) {
+      return NextResponse.json({ error: translate(locale, "ai.api.secretsDetected") }, { status: 400 });
+    }
+
+    // Presupuesto mensual de IA (independiente del rate limit por minuto).
+    if (ctx.mode === "live") {
+      try {
+        await assertAIBudget(ctx.organization.id, ctx.organization.plan as PlanKey);
+      } catch (e) {
+        if (e instanceof PlanLimitError) return NextResponse.json({ error: translate(locale, "ai.api.budgetExceeded") }, { status: 402 });
+        throw e;
+      }
+    }
+
+    const injection = detectPromptInjection(truncated);
     const systemPrompt = SYSTEM_PROMPTS[locale][context] || SYSTEM_PROMPTS[locale].gap;
 
     const response = await client.messages.create({
       model: "claude-sonnet-5",
       max_tokens: 800,
       system: systemPrompt,
-      messages: [{ role: "user", content: message.slice(0, MAX_MESSAGE_CHARS) }],
+      messages: [{ role: "user", content: truncated }],
     });
 
     const text = response.content.find(b => b.type === "text")?.text || "";
+
+    // Trazabilidad ISO/IEC 42001: toda salida real del asistente entra al
+    // registro de gobierno en DRAFT. Se espera (no fire-and-forget: en un
+    // entorno serverless la invocación puede terminar antes de que una
+    // promesa no esperada resuelva) pero un fallo aquí nunca rompe la
+    // respuesta ya generada para el usuario.
+    if (ctx.mode === "live") {
+      try {
+        const system = await ensureAssistantSystem(ctx.organization.id, ctx.user.id);
+        const pii = detectPII(`${truncated}\n${text}`);
+        await recordAIOutput({
+          systemId: system.id,
+          purpose: `Asistente — contexto ${context ?? "gap"}`,
+          targetType: "OTHER",
+          prompt: truncated,
+          model: "claude-sonnet-5",
+          modelVersionLabel: "claude-sonnet-5",
+          parameters: injection.suspicious ? { promptInjectionSuspected: true, reasons: injection.reasons } : undefined,
+          output: text,
+          tokensUsed: (response.usage?.input_tokens ?? 0) + (response.usage?.output_tokens ?? 0),
+          containsPersonalData: pii.found,
+          redacted: false,
+        });
+      } catch (e) {
+        console.error("[ai] failed to record AI output for governance ledger:", e instanceof Error ? e.message : e);
+      }
+    }
+
     return NextResponse.json({ text });
   } catch (error) {
     console.error("AI API error:", error);

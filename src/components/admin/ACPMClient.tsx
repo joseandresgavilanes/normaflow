@@ -52,15 +52,15 @@ const TYPE_LABEL: Record<ACPMType, string> = {
   IMPROVEMENT: "Mejora",
 };
 const TYPE_COLOR: Record<ACPMType, string> = {
-  CORRECTIVE: "#DC2626",
-  PREVENTIVE: "#D97706",
+  CORRECTIVE: "var(--nf-danger)",
+  PREVENTIVE: "var(--nf-warning)",
   IMPROVEMENT: "var(--nf-accent)",
 };
 const PRIORITY_LABEL: Record<ACPMPriority, string> = {
   CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja",
 };
 const PRIORITY_COLOR: Record<ACPMPriority, string> = {
-  CRITICAL: "#DC2626", HIGH: "#D97706", MEDIUM: "#5266F6", LOW: "var(--nf-ink-3)",
+  CRITICAL: "var(--nf-danger)", HIGH: "var(--nf-warning)", MEDIUM: "var(--nf-primary)", LOW: "var(--nf-ink-3)",
 };
 
 export default function ACPMClient() {
@@ -327,7 +327,7 @@ export default function ACPMClient() {
                               <div className="nf-acpm-card-meta">
                                 <span style={{ color: typeC }}>{TYPE_LABEL[a.type]}</span>
                                 {a.dueDate ? (
-                                  <span style={{ color: overdueCard ? "#DC2626" : undefined }}>
+                                  <span style={{ color: overdueCard ? "var(--nf-danger)" : undefined }}>
                                     {overdueCard ? "Vence " : ""}
                                     {formatDate(a.dueDate, "dd MMM")}
                                   </span>
@@ -337,7 +337,7 @@ export default function ACPMClient() {
                               </div>
                               {a.progress > 0 && a.stage !== "CLOSED" && (
                                 <div className="nf-acpm-progress-rail" aria-hidden>
-                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, #16A34A)" }} />
+                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, var(--nf-success))" }} />
                                 </div>
                               )}
                             </button>
@@ -364,7 +364,7 @@ export default function ACPMClient() {
                         justifyContent: "center",
                         background: "var(--nf-app-accent-soft)",
                         border: "1px solid rgba(82, 102, 246, 0.12)",
-                        color: "#5266F6",
+                        color: "var(--nf-primary)",
                       }}
                     >
                       <Sparkles size={24} strokeWidth={2.25} />
@@ -385,7 +385,7 @@ export default function ACPMClient() {
                         width: "100%",
                       }}
                     >
-                      <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
+                      <code style={{ fontSize: 11, color: "var(--nf-primary)", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
                       <div style={{ textAlign: "left", minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{a.title}</div>
                         {a.source && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4, fontWeight: 500 }}>Origen: {a.source}</div>}
@@ -604,7 +604,7 @@ function ACPMDetailModal({
             label="Fecha objetivo"
             value={
               acpm.dueDate ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "#DC2626" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "var(--nf-danger)" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
                   {formatDate(acpm.dueDate)}
                   {overdue ? <AlertTriangle size={15} strokeWidth={2.5} aria-label="Vencida" /> : null}
                 </span>
@@ -646,7 +646,7 @@ function ACPMDetailModal({
 
         {canEdit && (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "#DC2626" }}>
+            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "var(--nf-danger)" }}>
               Eliminar ACPM
             </button>
           </div>
@@ -660,7 +660,7 @@ function ACPMDetailModal({
               <p style={{ fontSize: 12, color: "var(--nf-ink-4)", margin: 0 }}>Sin historial.</p>
             ) : history.map((h) => {
               const iconBg =
-                h.kind === "transition" ? "var(--nf-accent, #16A34A)" : h.kind === "comment" ? "#5266F6" : "var(--nf-ink-3)";
+                h.kind === "transition" ? "var(--nf-accent, var(--nf-success))" : h.kind === "comment" ? "var(--nf-primary)" : "var(--nf-ink-3)";
               return (
                 <div key={h.id} className="nf-acpm-history-row">
                   <span className="nf-acpm-history-icon" style={{ background: iconBg }}>

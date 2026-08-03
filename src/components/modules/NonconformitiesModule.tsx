@@ -14,7 +14,7 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import type { Column } from "@/components/ui/Table";
 
-const SEV_COLORS: Record<string, string> = { CRITICAL: "#DC2626", MAJOR: "#D97706", MINOR: "var(--nf-ink-3)" };
+const SEV_COLORS: Record<string, string> = { CRITICAL: "var(--nf-danger)", MAJOR: "var(--nf-warning)", MINOR: "var(--nf-ink-3)" };
 
 export default function NonconformitiesModule() {
   const { state, dispatch, nextNcCode, nextActionCode, showToast } = useWorkspace();
@@ -175,13 +175,13 @@ export default function NonconformitiesModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary)",
             }}
           >
             <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{nonconformities.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>{nonconformities.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total NC</div>
           </div>
         </div>
@@ -191,17 +191,17 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FEF2F2",
+              background: "var(--nf-danger-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#DC2626",
+              color: "var(--nf-danger)",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger)", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "OPEN").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Abiertas</div>
@@ -213,7 +213,7 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -223,7 +223,7 @@ export default function NonconformitiesModule() {
             <Timer size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "IN_PROGRESS").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
@@ -235,7 +235,7 @@ export default function NonconformitiesModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -245,7 +245,7 @@ export default function NonconformitiesModule() {
             <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>
               {nonconformities.filter(n => n.status === "CLOSED").length}
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cerradas</div>
@@ -292,7 +292,7 @@ export default function NonconformitiesModule() {
               <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.rootCause}</div>
             </div>
             <div style={{ padding: "12px 14px", background: "#e8f5ee40", border: "1px solid #16A34A30", borderRadius: 8, marginBottom: 16 }}>
-              <div style={{ fontSize: 11, color: "#16A34A", marginBottom: 4, textTransform: "none", letterSpacing: "0.5px" }}>Acción Correctiva</div>
+              <div style={{ fontSize: 11, color: "var(--nf-success)", marginBottom: 4, textTransform: "none", letterSpacing: "0.5px" }}>Acción Correctiva</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.6 }}>{detailLive.correctiveAction}</div>
             </div>
             {detailLive.effectivenessCheck && (

@@ -1,9 +1,11 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Términos de uso — NormaFlow",
+export const metadata = createMarketingMetadata({
+  title: "Términos de uso | NormaFlow",
   description: "Condiciones de uso del servicio NormaFlow.",
-};
+  path: "/legal/terms",
+});
 
 export default function TermsPage() {
   return (

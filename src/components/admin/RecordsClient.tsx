@@ -130,7 +130,7 @@ export default function RecordsClient() {
       key: "code",
       label: "Código",
       render: (_, r) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 700 }}>{r.code}</span>
       ),
     },
     {
@@ -160,7 +160,7 @@ export default function RecordsClient() {
         if (!r.retentionTimeId) return <span style={{ color: "var(--nf-ink-4)" }}>—</span>;
         const st = retentionStatus(r);
         const label = retentionLabel.get(r.retentionTimeId)?.name ?? "—";
-        const color = st === "overdue" ? "#DC2626" : st === "due_soon" ? "#D97706" : "var(--nf-ink-3)";
+        const color = st === "overdue" ? "var(--nf-danger)" : st === "due_soon" ? "var(--nf-warning)" : "var(--nf-ink-3)";
         const hint =
           st === "overdue"
             ? "Disposición vencida"
@@ -240,7 +240,7 @@ export default function RecordsClient() {
                 <button
                   type="button"
                   className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "#DC2626", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
+                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger)", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
                   onClick={() => setConfirmDeactivate(r)}
                 >
                   Desactivar
@@ -325,7 +325,7 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -335,7 +335,7 @@ export default function RecordsClient() {
             <Archive size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Registros activos</div>
           </div>
         </div>
@@ -365,7 +365,7 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -375,7 +375,7 @@ export default function RecordsClient() {
             <Clock size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Próximos a vencer</div>
           </div>
         </div>
@@ -385,17 +385,17 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FEF2F2",
+              background: "var(--nf-danger-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#DC2626",
+              color: "var(--nf-danger)",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Disposición vencida</div>
           </div>
         </div>
@@ -717,7 +717,7 @@ function RecordFormModal({
               borderRadius: 12,
               background: "#fff0f0",
               border: "1px solid #f5c2c0",
-              color: "#DC2626",
+              color: "var(--nf-danger)",
               fontSize: 13,
               fontWeight: 600,
             }}
@@ -933,7 +933,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
             </>
           )}
         </div>
-        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
+        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "var(--nf-danger)", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
 
         {(record.physicalLocation || record.digitalLocation) && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
@@ -965,7 +965,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#5266F6",
+                  color: "var(--nf-primary)",
                 }}
               >
                 <ClipboardList size={20} strokeWidth={2.25} aria-hidden />
@@ -1035,7 +1035,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 </div>
               </div>
               {entryError && (
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "var(--nf-danger)", fontSize: 13, fontWeight: 600 }}>
                   {entryError}
                 </div>
               )}
@@ -1085,7 +1085,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                     border: "1px solid var(--nf-line)",
                   }}
                 >
-                  <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
+                  <code style={{ fontSize: 11, color: "var(--nf-primary)", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 700, lineHeight: 1.45 }}>{e.title ?? e.reference}</div><span className="nf-chip" style={{ fontSize: 10 }}>{e.status === "DRAFT" ? "Borrador" : e.status === "EXPIRED" ? "Vencido" : e.status === "ARCHIVED" ? "Archivado" : "Vigente"}</span></div>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
@@ -1160,7 +1160,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "#DC2626",
+                          color: "var(--nf-danger)",
                           borderColor: "#f0c4c2",
                           flexShrink: 0,
                           boxSizing: "border-box",

@@ -158,7 +158,7 @@ export const STANDARDS = {
   ISO_22000: { code: "ISO_22000", name: "ISO 22000", version: "2018", color: "#0F766E" },
   ISO_20000: { code: "ISO_20000", name: "ISO/IEC 20000", version: "2018", color: "#1D4ED8" },
   ISO_22301: { code: "ISO_22301", name: "ISO 22301", version: "2019", color: "#0F766E" },
-  ISO_13485: { code: "ISO_13485", name: "ISO 13485", version: "2016", color: "#0E7490" },
+  ISO_13485: { code: "ISO_13485", name: "ISO 13485", version: "2016", color: "var(--nf-info)" },
 } as const;
 
 export const COLORS = {

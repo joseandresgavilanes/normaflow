@@ -83,7 +83,7 @@ export default function CatalogManager({
     },
   ];
   if (fields.some((f) => f.key === "code")) {
-    columns.unshift({ key: "code", label: "Código", render: (_, r) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code ?? "—"}</span> });
+    columns.unshift({ key: "code", label: "Código", render: (_, r) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 700 }}>{r.code ?? "—"}</span> });
   }
   if (fields.some((f) => f.key === "months")) {
     columns.push({

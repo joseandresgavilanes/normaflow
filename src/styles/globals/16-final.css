@@ -1,0 +1,402 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 16-final
+ *
+ * Contrato responsive, impresión y últimos ajustes. Va al final por especificidad.
+ *
+ * Trozo literal de las líneas 5911-6304 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-objective-program-name > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-objective-program-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.nf-objective-program-item .nf-table-action {
+  flex: 0 0 auto;
+  height: 30px !important;
+  min-height: 30px !important;
+  padding: 0 8px !important;
+}
+
+.nf-objective-program-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #eef0ff;
+  color: var(--nf-app-accent);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.nf-objective-program-count--empty {
+  background: #f1f5f9;
+  color: var(--nf-ink-3);
+  font-weight: 500;
+}
+
+.nf-environment-trend-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, .95fr);
+  gap: 14px;
+  margin: 14px 0;
+}
+
+.nf-environment-trend-chart,
+.nf-environment-trend-latest {
+  border: 1px solid var(--nf-line, #e5eaf2);
+  border-radius: 14px;
+  background: var(--nf-surface, #fff);
+  padding: 16px;
+}
+
+.nf-environment-trend-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+}
+
+.nf-environment-trend-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.nf-environment-trend-heading strong {
+  color: var(--nf-ink, #172033);
+  font-size: 14px;
+}
+
+.nf-environment-trend-heading span {
+  font-size: 12px;
+}
+
+.nf-environment-trend-heading > svg {
+  color: #6478ff;
+}
+
+.nf-environment-trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 16px 0 10px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.nf-environment-trend-legend span,
+.nf-environment-trend-stat > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nf-environment-trend-legend i,
+.nf-environment-trend-stat i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.nf-environment-trend-bars {
+  display: grid;
+  gap: 10px;
+}
+
+.nf-environment-trend-period {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.nf-environment-trend-period-label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-environment-trend-period-bars {
+  display: grid;
+  gap: 3px;
+}
+
+.nf-environment-trend-bar-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f1f5f9;
+}
+
+.nf-environment-trend-bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .2s ease;
+}
+
+.nf-environment-trend-latest-badge {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5 !important;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nf-environment-trend-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.nf-environment-trend-stat:last-child {
+  border-bottom: 0;
+}
+
+.nf-environment-trend-stat strong {
+  color: var(--nf-ink, #172033);
+  font-size: 14px;
+}
+
+.nf-environment-trend-stat small {
+  min-width: 42px;
+  text-align: right;
+  color: #94a3b8;
+}
+
+.nf-environment-trend-stat small.is-up {
+  color: #dc2626;
+}
+
+.nf-environment-trend-stat small.is-down {
+  color: #16a34a;
+}
+
+.nf-environment-trend-empty {
+  display: grid;
+  min-height: 112px;
+  place-items: center;
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 820px) {
+  .nf-environment-trend-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .nf-modal-backdrop {
+    padding: 10px !important;
+  }
+
+  .nf-modal-backdrop .nf-modal {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 16px !important;
+  }
+
+  .nf-modal-backdrop .nf-modal > .nf-modal-header {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
+
+/* ISO 50001: las acciones de creación forman una única fila real, dentro del
+   formulario. Esto anula las reglas heredadas que las colocaban de forma
+   absoluta y podían hacer que Cancelar se montara sobre Crear. */
+.nf-iso-create-form {
+  position: static !important;
+  display: block !important;
+  padding-bottom: 0 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+/* El primer hijo es el contenido del formulario de cada subtab. Al retirarlo
+   visualmente del wrapper, sus filas siguen siendo grupos completos y las dos
+   acciones quedan como los dos últimos elementos de la misma cuadrícula. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child {
+  display: contents !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :where(input, select, textarea, p, label),
+.nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="display"] {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="display"] {
+  display: grid !important;
+}
+
+/* Mayor especificidad que las cuadrículas heredadas: solo se desenvuelve el
+   wrapper raíz del formulario, no sus filas internas. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child:where(div)[style*="display"] {
+  display: contents !important;
+}
+
+/* Las filas definidas por cada formulario ocupan todo el ancho del modal;
+   sus columnas internas siguen controladas por el propio formulario. */
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > :where(input, select, textarea, p, label, div) {
+  grid-column: 1 / -1 !important;
+  min-width: 0 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > :where(div)[style*="display"] {
+  display: grid !important;
+  width: 100% !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > button,
+.nf-iso-create-form > .nf-iso-create-fields button:last-of-type,
+.nf-iso-create-form > .nf-iso-create-fields > * > button:last-child {
+  position: static !important;
+  inset: auto !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 4px 0 0 !important;
+  box-sizing: border-box !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > button:not(.nf-iso-create-cancel) {
+  order: 2;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > * > button:last-child {
+  order: 2;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel {
+  order: 1;
+  position: relative !important;
+  margin-top: 20px !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel::before {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 0;
+  width: calc(200% + 12px);
+  height: 1px;
+  background: var(--nf-line, #e5eaf2);
+  pointer-events: none;
+}
+
+.nf-iso-create-form :where(input, select, textarea) {
+  min-height: 46px !important;
+  padding: 11px 12px !important;
+  border-radius: 10px !important;
+}
+
+.nf-iso-create-form .nf-modal-field {
+  display: grid !important;
+  gap: 6px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.nf-iso-create-form .nf-modal-field-label {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Un estado desactivado debe comunicar claramente que aún faltan datos
+   obligatorios; evita que parezca posible enviar un formulario incompleto. */
+.nf-modal-body button:disabled {
+  cursor: not-allowed !important;
+  color: #94a3b8 !important;
+  border-color: #dbe3ee !important;
+  background: #e8edf5 !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+}
+
+/* Footer común de creación. El botón secundario y el principal ocupan la
+   misma fila, en el orden Cancelar → Crear, sin depender de la subpestaña. */
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel,
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > button:last-child {
+  align-self: end !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 20px !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > .nf-iso-create-cancel {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+  order: 90 !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-fields > :first-child > button:last-child {
+  grid-column: 2 !important;
+  grid-row: auto !important;
+  order: 91 !important;
+  justify-self: stretch !important;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-column: 1 / -1 !important;
+  gap: 12px !important;
+  width: 100% !important;
+  padding-top: 14px !important;
+  border-top: 1px solid var(--nf-line, #e5eaf2) !important;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) > button {
+  grid-column: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 640px) {
+  .nf-iso-create-form > .nf-iso-create-fields {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-create-form > .nf-iso-create-fields > :where(div)[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}

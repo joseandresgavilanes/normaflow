@@ -225,7 +225,7 @@ export default function GroupsClient() {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#5266F6",
+                color: "var(--nf-primary)",
                 background: "rgba(255,255,255,0.75)",
                 padding: "3px 9px",
                 borderRadius: 99,
@@ -270,7 +270,7 @@ export default function GroupsClient() {
                         height: 40,
                         borderRadius: 11,
                         flexShrink: 0,
-                        background: "linear-gradient(135deg, #5266F6 0%, #1a5080 55%, #2563a8 100%)",
+                        background: "linear-gradient(135deg, var(--nf-primary) 0%, #1a5080 55%, #2563a8 100%)",
                         color: "#fff",
                         fontSize: 13,
                         fontWeight: 600,
@@ -404,7 +404,7 @@ export default function GroupsClient() {
                     padding: "10px 14px",
                     borderRadius: 10,
                     background: "#fff0f0",
-                    color: "#DC2626",
+                    color: "var(--nf-danger)",
                     fontSize: 13,
                     border: "1px solid #ffd6d6",
                   }}
@@ -558,7 +558,7 @@ export default function GroupsClient() {
                             alignItems: "center",
                             justifyContent: "center",
                             boxShadow: "0 4px 14px -8px rgba(82, 102, 246, 0.35)",
-                            color: "#5266F6",
+                            color: "var(--nf-primary)",
                           }}
                         >
                           <Icon size={18} strokeWidth={2.25} aria-hidden />
@@ -647,7 +647,7 @@ export default function GroupsClient() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#5266F6",
+                color: "var(--nf-primary)",
               }}
             >
               <KeyRound size={26} strokeWidth={2} aria-hidden />

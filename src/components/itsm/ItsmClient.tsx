@@ -171,16 +171,16 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
       <IsoSectionHeader headingLevel={1} icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "#fef2f2", color: "#b91c1c" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Servicios" value={s.services} />
         <Stat label="SLA activos" value={s.activeSlas} />
-        <Stat label="Incidentes abiertos" value={s.openIncidents} accent={s.openIncidents ? "#dc2626" : undefined} />
+        <Stat label="Incidentes abiertos" value={s.openIncidents} accent={s.openIncidents ? "var(--nf-danger)" : undefined} />
         <Stat label="Problemas abiertos" value={s.openProblems} accent={s.openProblems ? "#d68a1a" : undefined} />
         <Stat label="Cambios abiertos" value={s.openChanges} />
-        <Stat label="Incumplimientos SLA" value={s.slaBreaches} accent={s.slaBreaches ? "#dc2626" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "catalog" ? [{ label: "Servicios activos", value: s.services }, { label: "Entradas de catálogo", value: s.catalogEntries }, { label: "Solicitudes abiertas", value: s.openRequests, accent: s.openRequests ? "#dc2626" : undefined }] : tab === "sla" ? [{ label: "SLA activos", value: s.activeSlas }, { label: "Incumplimientos SLA", value: s.slaBreaches, accent: s.slaBreaches ? "#dc2626" : undefined }, { label: "Servicios", value: s.services }] : tab === "requests" ? [{ label: "Solicitudes abiertas", value: s.openRequests, accent: s.openRequests ? "#dc2626" : undefined }, { label: "Servicios", value: s.services }, { label: "SLA activos", value: s.activeSlas }] : tab === "incidents" ? [{ label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "#dc2626" : undefined }, { label: "Incumplimientos SLA", value: s.slaBreaches, accent: s.slaBreaches ? "#dc2626" : undefined }, { label: "Servicios", value: s.services }] : tab === "problems" ? [{ label: "Problemas abiertos", value: s.openProblems, accent: s.openProblems ? "#d68a1a" : undefined }, { label: "Errores conocidos", value: initial.knownErrors.length }, { label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "#dc2626" : undefined }] : tab === "changes" ? [{ label: "Cambios abiertos", value: s.openChanges }, { label: "Releases en curso", value: s.releasesOpen }, { label: "Despliegues", value: initial.deployments.length }] : tab === "cmdb" ? [{ label: "CIs en uso", value: s.cis }, { label: "Relaciones", value: initial.relationships.length }, { label: "Releases", value: s.releasesOpen }] : tab === "availability" ? [{ label: "Planes de disponibilidad", value: initial.availability.length }, { label: "Planes de capacidad", value: initial.capacity.length }, { label: "Continuidad", value: initial.continuity.length }] : tab === "suppliers" ? [{ label: "Proveedores", value: initial.suppliers.length }, { label: "Servicios", value: s.services }, { label: "SLA activos", value: s.activeSlas }] : [{ label: "Artículos publicados", value: s.publishedArticles }, { label: "Reportes", value: initial.reports.length }, { label: "Servicios", value: s.services }]} />}
+        <Stat label="Incumplimientos SLA" value={s.slaBreaches} accent={s.slaBreaches ? "var(--nf-danger)" : undefined} />
+      </div> : <IsoSectionMetrics items={tab === "catalog" ? [{ label: "Servicios activos", value: s.services }, { label: "Entradas de catálogo", value: s.catalogEntries }, { label: "Solicitudes abiertas", value: s.openRequests, accent: s.openRequests ? "var(--nf-danger)" : undefined }] : tab === "sla" ? [{ label: "SLA activos", value: s.activeSlas }, { label: "Incumplimientos SLA", value: s.slaBreaches, accent: s.slaBreaches ? "var(--nf-danger)" : undefined }, { label: "Servicios", value: s.services }] : tab === "requests" ? [{ label: "Solicitudes abiertas", value: s.openRequests, accent: s.openRequests ? "var(--nf-danger)" : undefined }, { label: "Servicios", value: s.services }, { label: "SLA activos", value: s.activeSlas }] : tab === "incidents" ? [{ label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "var(--nf-danger)" : undefined }, { label: "Incumplimientos SLA", value: s.slaBreaches, accent: s.slaBreaches ? "var(--nf-danger)" : undefined }, { label: "Servicios", value: s.services }] : tab === "problems" ? [{ label: "Problemas abiertos", value: s.openProblems, accent: s.openProblems ? "#d68a1a" : undefined }, { label: "Errores conocidos", value: initial.knownErrors.length }, { label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "var(--nf-danger)" : undefined }] : tab === "changes" ? [{ label: "Cambios abiertos", value: s.openChanges }, { label: "Releases en curso", value: s.releasesOpen }, { label: "Despliegues", value: initial.deployments.length }] : tab === "cmdb" ? [{ label: "CIs en uso", value: s.cis }, { label: "Relaciones", value: initial.relationships.length }, { label: "Releases", value: s.releasesOpen }] : tab === "availability" ? [{ label: "Planes de disponibilidad", value: initial.availability.length }, { label: "Planes de capacidad", value: initial.capacity.length }, { label: "Continuidad", value: initial.continuity.length }] : tab === "suppliers" ? [{ label: "Proveedores", value: initial.suppliers.length }, { label: "Servicios", value: s.services }, { label: "SLA activos", value: s.activeSlas }] : [{ label: "Artículos publicados", value: s.publishedArticles }, { label: "Reportes", value: initial.reports.length }, { label: "Servicios", value: s.services }]} />}
 
       {tab === "panel" && (
         <>
@@ -373,8 +373,8 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
                   <td style={td}>{inc.service?.code ?? "—"}</td>
                   <td style={td}>{itsmLabel(inc.priority)}</td>
                   <td style={td}>
-                    <span style={chip(inc.status === "CLOSED" ? "#dcfce7" : "#fee2e2", inc.status === "CLOSED" ? "#15803d" : "#b91c1c")}>{itsmLabel(inc.status)}</span>
-                    {inc.slaEval?.overallMet === false && <span style={{ ...chip("#fef3c7", "#a16207"), marginLeft: 6 }}>SLA</span>}
+                    <span style={chip(inc.status === "CLOSED" ? "var(--nf-success-border)" : "var(--nf-danger-border)", inc.status === "CLOSED" ? "var(--nf-success-text)" : "var(--nf-danger-text)")}>{itsmLabel(inc.status)}</span>
+                    {inc.slaEval?.overallMet === false && <span style={{ ...chip("var(--nf-warning-border)", "#a16207"), marginLeft: 6 }}>SLA</span>}
                   </td>
                   <td style={td}>{inc.sla?.code ?? "—"}</td>
                   <td style={actionTd}>
@@ -693,7 +693,7 @@ function Row({ k, v, danger }: { k: string; v: number | string; danger?: boolean
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
       <span style={{ color: "#64748b" }}>{k}</span>
-      <span style={{ fontWeight: 600, color: danger ? "#b91c1c" : "#0f172a" }}>{v}</span>
+      <span style={{ fontWeight: 600, color: danger ? "var(--nf-danger-text)" : "#0f172a" }}>{v}</span>
     </div>
   );
 }
