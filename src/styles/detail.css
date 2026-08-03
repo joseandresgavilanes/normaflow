@@ -1,0 +1,383 @@
+/* ============================================================================
+ * NormaFlow — Detalle de entidad
+ *
+ * Un solo aspecto para el detalle de las ~40 entidades con ciclo de vida.
+ * Antes cada módulo componía el suyo: anchos de 560, 700, 820 y 1040 px,
+ * metadatos como tabla en uno y como rejilla en otro, y el estado en un sitio
+ * distinto en cada pantalla.
+ * ========================================================================== */
+
+.nf-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-5);
+  min-width: 0;
+}
+
+.nf-detail__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nf-space-4);
+  flex-wrap: wrap;
+}
+
+.nf-detail__identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-1);
+  min-width: 0;
+}
+
+.nf-detail__code {
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-wide);
+  color: var(--nf-text-secondary);
+  text-transform: uppercase;
+}
+
+.nf-detail__title {
+  margin: 0;
+  font-size: var(--nf-text-xl);
+  font-weight: var(--nf-weight-semibold);
+  line-height: var(--nf-leading-tight);
+  letter-spacing: var(--nf-tracking-tight);
+  color: var(--nf-text-primary);
+}
+
+.nf-detail__subtitle {
+  margin: 0;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-secondary);
+  line-height: var(--nf-leading-normal);
+}
+
+.nf-detail__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+}
+
+/* --------------------------------------------------------------------------
+ * Metadatos
+ * ------------------------------------------------------------------------ */
+
+.nf-detail__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--nf-space-3) var(--nf-space-4);
+  margin: 0;
+  padding: var(--nf-space-4);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface-sunken);
+}
+
+.nf-detail__meta-item { min-width: 0; }
+
+.nf-detail__meta dt {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-subtle);
+  margin-bottom: 2px;
+}
+
+.nf-detail__meta dd {
+  margin: 0;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-primary);
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+ * Pestañas
+ * ------------------------------------------------------------------------ */
+
+.nf-detail__tablist {
+  display: flex;
+  gap: var(--nf-space-1);
+  border-bottom: 1px solid var(--nf-border);
+  /* En pantallas estrechas las pestañas se desplazan en horizontal en vez de
+     apilarse: apiladas empujan el contenido fuera de la primera pantalla. */
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nf-detail__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: none;
+  min-height: 40px;
+  padding: 0 var(--nf-space-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nf-detail__tab:hover { color: var(--nf-text-primary); }
+.nf-detail__tab:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: -2px;
+}
+/* Pestaña activa: subrayado más peso, no solo color. */
+.nf-detail__tab[aria-selected="true"] {
+  color: var(--nf-primary-active);
+  border-bottom-color: var(--nf-primary);
+  font-weight: var(--nf-weight-semibold);
+}
+
+.nf-detail__tab-count {
+  padding: 1px 6px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+  font-size: var(--nf-text-2xs);
+  color: var(--nf-text-secondary);
+}
+.nf-detail__tab[aria-selected="true"] .nf-detail__tab-count {
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+}
+
+.nf-detail__panel {
+  padding-top: var(--nf-space-4);
+  min-width: 0;
+}
+.nf-detail__panel:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+ * Riel de flujo
+ * ------------------------------------------------------------------------ */
+
+.nf-workflow { --nf-wf-size: 22px; }
+
+.nf-workflow__list {
+  display: flex;
+  align-items: stretch;
+  gap: var(--nf-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nf-workflow__step {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nf-space-2);
+  flex: 1 1 0;
+  min-width: 96px;
+  padding: var(--nf-space-2) var(--nf-space-2) var(--nf-space-2) 0;
+  position: relative;
+}
+
+/* La salida (rechazado, cancelado) se separa del camino con un corte: no es
+   un paso más por el que haya que pasar. */
+.nf-workflow__step[data-exit] {
+  margin-left: var(--nf-space-3);
+  padding-left: var(--nf-space-3);
+  border-left: 1px dashed var(--nf-border-strong);
+}
+
+.nf-workflow__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--nf-wf-size);
+  height: var(--nf-wf-size);
+  border: 1.5px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface);
+  color: var(--nf-text-subtle);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-workflow__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nf-workflow__label {
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-subtle);
+  line-height: var(--nf-leading-snug);
+  /* Una etiqueta de una sola palabra larga ("Implementación") desbordaba su
+     columna de 98 px y quedaba tapada por el marcador del paso siguiente.
+     Medido: 89 px de texto en 60 px visibles. */
+  overflow-wrap: anywhere;
+}
+
+.nf-workflow__hint {
+  font-size: var(--nf-text-2xs);
+  color: var(--nf-text-subtle);
+  line-height: var(--nf-leading-snug);
+}
+
+.nf-workflow__step[data-status="done"] .nf-workflow__marker {
+  border-color: var(--nf-success-text);
+  background: var(--nf-success-text);
+  color: var(--nf-c-neutral-0);
+}
+.nf-workflow__step[data-status="done"] .nf-workflow__label { color: var(--nf-text-secondary); }
+
+.nf-workflow__step[data-status="current"] .nf-workflow__marker {
+  border-color: var(--nf-primary);
+  background: var(--nf-primary);
+  color: var(--nf-on-primary);
+  box-shadow: 0 0 0 3px var(--nf-primary-subtle);
+}
+.nf-workflow__step[data-status="current"] .nf-workflow__label {
+  color: var(--nf-text-primary);
+  font-weight: var(--nf-weight-semibold);
+}
+
+.nf-workflow__step[data-status="error"] .nf-workflow__marker {
+  border-color: var(--nf-danger-text);
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
+}
+.nf-workflow__step[data-status="error"] .nf-workflow__label {
+  color: var(--nf-danger-text);
+  font-weight: var(--nf-weight-semibold);
+}
+
+.nf-workflow[data-compact] .nf-workflow__hint { display: none; }
+.nf-workflow[data-compact] { --nf-wf-size: 18px; }
+
+@media (max-width: 767px) {
+  /* Igual que el asistente de alta: solo el paso activo dice su nombre. */
+  .nf-workflow__step:not([aria-current]) .nf-workflow__text { display: none; }
+  .nf-workflow__step:not([aria-current]) { flex: 0 0 auto; min-width: 0; }
+  .nf-workflow__step[aria-current] { flex: 1 1 auto; }
+}
+
+/* Insignia de estado compacta */
+.nf-workflow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: 3px var(--nf-space-2) 3px 8px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-primary);
+}
+.nf-workflow-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-primary);
+}
+.nf-workflow-badge[data-status="error"] { border-color: var(--nf-danger-border); color: var(--nf-danger-text); }
+.nf-workflow-badge[data-status="error"] .nf-workflow-badge__dot { background: var(--nf-danger-text); }
+.nf-workflow-badge__position {
+  color: var(--nf-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * Línea de tiempo
+ * ------------------------------------------------------------------------ */
+
+.nf-timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nf-timeline__item {
+  display: flex;
+  gap: var(--nf-space-3);
+  padding-bottom: var(--nf-space-4);
+  position: relative;
+}
+/* Hilo que une los sucesos; el último no lo lleva. */
+.nf-timeline__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: 0;
+  width: 1px;
+  background: var(--nf-border);
+}
+
+.nf-timeline__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 23px;
+  height: 23px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  z-index: 1;
+}
+.nf-timeline__marker[data-action="create"] { border-color: var(--nf-success-border); color: var(--nf-success-text); }
+.nf-timeline__marker[data-action="approve"],
+.nf-timeline__marker[data-action="publish"] { border-color: var(--nf-success-border); color: var(--nf-success-text); }
+.nf-timeline__marker[data-action="reject"],
+.nf-timeline__marker[data-action="delete"],
+.nf-timeline__marker[data-action="obsolete"] { border-color: var(--nf-danger-border); color: var(--nf-danger-text); }
+.nf-timeline__marker[data-action="status_change"] { border-color: var(--nf-primary-border); color: var(--nf-primary-active); }
+
+.nf-timeline__body { min-width: 0; flex: 1; }
+
+.nf-timeline__head {
+  margin: 0;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-secondary);
+  line-height: var(--nf-leading-normal);
+}
+.nf-timeline__head strong { color: var(--nf-text-primary); font-weight: var(--nf-weight-semibold); }
+
+.nf-timeline__time {
+  display: block;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-timeline__changes {
+  margin: var(--nf-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nf-timeline__changes li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+.nf-timeline__field { font-weight: var(--nf-weight-medium); color: var(--nf-text-primary); }
+.nf-timeline__from { text-decoration: line-through; color: var(--nf-text-subtle); }
+.nf-timeline__to { color: var(--nf-text-primary); font-weight: var(--nf-weight-medium); }

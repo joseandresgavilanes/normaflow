@@ -32,6 +32,7 @@ import {
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { Field as UiField } from "@/components/ui/Field";
+import { WorkflowStepper } from "@/components/ui/WorkflowStepper";
 
 const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "REQUEST",           label: "Solicitud",             sub: "Apertura" },
@@ -43,7 +44,6 @@ const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "CLOSED",            label: "Cerrada",               sub: "Verificada" },
 ];
 
-const STAGE_INDEX = new Map(STAGES.map((s, i) => [s.key, i]));
 const STAGE_LABEL = new Map(STAGES.map((s) => [s.key, s.label]));
 
 const TYPE_LABEL: Record<ACPMType, string> = {
@@ -510,7 +510,6 @@ function ACPMDetailModal({
 
   if (!acpm) return null;
 
-  const stageIdx = STAGE_INDEX.get(acpm.stage) ?? 0;
 
   function patch(field: keyof ACPMRow, value: unknown) {
     if (!acpm || !canEdit) return;
@@ -590,22 +589,9 @@ function ACPMDetailModal({
   return (
     <Modal open onClose={onClose} title={`${acpm.code} — ${acpm.title}`} width={820}>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {/* Stage progress bar */}
-        <div className="nf-acpm-stage-rail" aria-label="Etapas del flujo ACPM">
-          {STAGES.map((s, i) => {
-            const done = i < stageIdx;
-            const active = i === stageIdx;
-            const barColor = active || done ? "var(--nf-accent, #16A34A)" : "rgba(82, 102, 246, 0.12)";
-            return (
-              <div key={s.key} className="nf-acpm-stage-node">
-                <div className="nf-acpm-stage-bar" style={{ background: barColor }} />
-                <div className={`nf-acpm-stage-label ${active ? "nf-acpm-stage-label--active" : ""}`}>
-                  {String(i + 1).padStart(2, "0")} · {s.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* El riel anterior marcaba lo hecho solo con color y no decía en qué
+            paso estabas de forma que un lector de pantalla lo anunciara. */}
+        <WorkflowStepper workflow="nonconformity" current={acpm.stage} />
 
         {/* Top meta */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>

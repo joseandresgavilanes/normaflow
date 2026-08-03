@@ -19,6 +19,7 @@ import "@/styles/controls.css";
 import "@/styles/forms.css";
 import "@/styles/surfaces.css";
 import "@/styles/data-table.css";
+import "@/styles/detail.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });

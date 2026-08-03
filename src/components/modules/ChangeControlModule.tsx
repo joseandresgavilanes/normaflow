@@ -15,6 +15,7 @@ import { processesLinkedToChange } from "@/lib/process-linking";
 import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import { WorkflowStepper } from "@/components/ui/WorkflowStepper";
 import {
   changeCategoryOptions,
   changeTypeOptions,
@@ -22,15 +23,6 @@ import {
   DEFAULT_CHANGE_TYPE,
 } from "@/lib/change-control-catalog";
 
-const FLOW: ChangeRequestRow["status"][] = [
-  "DRAFT",
-  "SUBMITTED",
-  "UNDER_REVIEW",
-  "APPROVED",
-  "IMPLEMENTED",
-  "VERIFIED",
-  "CLOSED",
-];
 
 function statusLabel(s: ChangeRequestRow["status"]) {
   const m: Record<string, string> = {
@@ -278,16 +270,10 @@ export default function ChangeControlModule() {
       </Card>
 
       <Card>
-        <h3 style={{ marginTop: 0, fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Flujo de estados (referencia)</h3>
-        <div className="nf-app-help" style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", fontWeight: 600 }}>
-          {FLOW.map((s, i) => (
-            <span key={s}>
-              {statusLabel(s)}
-              {i < FLOW.length - 1 ? " → " : ""}
-            </span>
-          ))}
-          <span style={{ color: "var(--nf-ink)" }}>· Rechazo desde revisión</span>
-        </div>
+        <h2 className="nf-card-title">Flujo de estados</h2>
+        {/* Antes era una fila de texto con flechas: el mismo concepto que el
+            riel de las no conformidades, dibujado de otra forma. */}
+        <WorkflowStepper workflow="change" current="" />
       </Card>
 
       <Modal open={!!detailLive} onClose={() => setDetail(null)} title={detailLive ? `${detailLive.code} · ${detailLive.title}` : ""} width={640}>
