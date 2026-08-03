@@ -265,3 +265,60 @@ Los 11 paquetes comparten el mismo patrón de deuda; se listan agregados.
 ## 7. Restricciones respetadas
 
 El rediseño **no** modifica: Server Actions, permisos, RLS, multi-tenancy, workflows de dominio, validaciones Zod, billing, generación de reportes, Storage, lifecycle de packs, entitlements ni AuditLog. No se renombran rutas, modelos ni acciones. Los componentes funcionales se conservan; se sustituye su capa de estilo.
+
+---
+
+## 8. Cierre: bloques 9 a 15
+
+Los siete bloques restantes se ejecutaron con un inventario medido previo. En
+cinco de ellos la medición contradijo el enunciado del plan, y esa corrección
+fue lo más valioso del proceso.
+
+| Bloque | Lo que decía el plan | Lo que la medición encontró |
+|---|---|---|
+| 9 · Formularios | «Field con label visible» | 1.210 campos **sin nombre accesible ninguno** en 46 ficheros. 652 sin nada —la mayoría de los 580 `<select>`— y 555 con solo placeholder. 9 `htmlFor` en toda la aplicación |
+| 10 · Detalle | «Páginas de detalle» | **0 rutas dinámicas** en las 58 del workspace. El detalle vive en 154 modales de 35 ficheros, con 3 rieles de etapa incompatibles para el mismo concepto |
+| 11 · Multi-norma | «Cobertura por requisito» | `RequirementCoverage` con **0 filas**, porque `linkRequirementCoverage` tenía **0 consumidores**: existía la acción, no la pantalla. El crosswalk sí tiene 170 correspondencias reales, pero 69 concentradas en el triángulo 9001/14001/45001 |
+| 12 · Landing | «Revisión de claims» | Un testimonio firmado con el nombre y la empresa de los **datos demo**, cinco «logos de clientes» que eran cuadrados de degradado, y cifras que se contradecían entre /home y /cases para el mismo cliente |
+| 13 · Deuda | «Partir globals.css» | El obstáculo no era el tamaño: 167 de 552 clases tienen bloques repartidos hasta 5.700 líneas de distancia, sostenidos por 325 `!important`. Y había una colisión de nombres **activa** (`.nf-card`, `.nf-grid-2`) cuyo ganador dependía del recorrido del usuario |
+| 14 · Dark mode | «Tokens ya listos» | `:root[data-theme="dark"]` era **código muerto**. Sin media query, sin conmutador, sin persistencia. Jamás había renderizado |
+| 15 · QA | «9 botones sin nombre» | **Un solo defecto**: `Table.tsx` volvía ordenable la columna de acciones sin etiqueta, y salía un botón con solo un icono `aria-hidden` |
+
+### Errores propios, y cómo salieron
+
+Tres se detectaron ejecutando la aplicación, no leyéndola:
+
+1. **Clave de flujo equivocada.** `ACPMLiveClient` usa `CAPAStage`
+   (REGISTERED→…), no `ACPMStage` (REQUEST→…). Con la clave equivocada el riel
+   no casaba ningún paso.
+2. **Token de relleno en posición de texto.** Se repitió DOS veces: primero en
+   `Badge`, después al tokenizar los hex. `color: var(--nf-primary)` da 4.11:1
+   sobre su propio fondo sutil. La lección quedó escrita en `src/lib/tone.ts`.
+3. **Regex sin frontera por la izquierda.** Un codemod que buscaba `color:`
+   atrapó también `border-color`, `accent-color` y `background-color`.
+
+Y dos, de la propia medición:
+
+4. **Corte en medio de una lista de selectores.** Al trocear `globals.css`, un
+   punto con profundidad de llaves 0 pero selector abierto tumbó /home con un
+   500. La regla de corte exige ahora que la línea anterior cierre algo.
+5. **La sonda de contraste trataba un `rgba` casi transparente como opaco.**
+   `rgba(82,102,246,0.06)` —que a la vista es blanco— daba 1.18:1 contra un
+   texto gris. El fallo era de la medición.
+
+### Verificación
+
+| Comprobación | Resultado |
+|---|---|
+| Campos sin nombre accesible (15 rutas) | **0** |
+| Etiquetas apuntando a un id inexistente | **0** |
+| Pares de contraste bajo el mínimo, tema claro (8 rutas) | **0** |
+| Pares de contraste bajo el mínimo, tema oscuro (8 rutas) | **0** |
+| Rutas sin `<h1>` / sin `main` (app) | **0** / **0** |
+| Rutas públicas sin `<h1>` / sin `main` | **0** / **0** |
+| Desbordamiento horizontal en /home a 1440 | **0** (era 44 px) |
+| Colisiones de clase entre las tres capas de hojas | **0** |
+| Concatenación de las 16 partes de globals vs. original | idéntica byte a byte |
+
+Lo que sigue abierto está medido y listado en
+[`docs/visual-qa.md`](visual-qa.md), sección 5.
