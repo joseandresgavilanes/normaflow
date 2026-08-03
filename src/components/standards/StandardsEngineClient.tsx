@@ -3,10 +3,12 @@
 import { useMemo, useState, useTransition } from "react";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import PageHeader from "@/components/layout/PageHeader";
-import { Library, ShieldCheck, GitCompareArrows, Grid3x3, LayoutDashboard, Check, Download } from "lucide-react";
+import { Library, ShieldCheck, GitCompareArrows, Grid3x3, LayoutDashboard, Check, Download , Link2} from "lucide-react";
 import type { StandardsEnginePayload } from "@/lib/standards-engine";
 import { activateStandard } from "@/lib/actions/standards";
 import { installStandardPack } from "@/lib/actions/standard-packs";
+import { CoverageDialog } from "@/components/standards/CoverageDialog";
+import { CrosswalkMatrix } from "@/components/standards/CrosswalkMatrix";
 
 type Tab = "panel" | "catalog" | "active" | "matrix" | "correspondence";
 
@@ -23,6 +25,7 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [matrixEdition, setMatrixEdition] = useState<string>(initial.matrix[0]?.editionId ?? "");
+  const [coverageFor, setCoverageFor] = useState<{ id: string; code: string; title: string; editionLabel: string } | null>(null);
   const [levelFilter, setLevelFilter] = useState<number | 0>(0);
   const [onlyGaps, setOnlyGaps] = useState(false);
 
@@ -72,10 +75,12 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
         <MatrixTab
           payload={initial} currentMatrix={currentMatrix} rows={filteredReqs}
           matrixEdition={matrixEdition} setMatrixEdition={setMatrixEdition}
+          onCoverage={(row) => setCoverageFor({ id: row.id, code: row.code, title: row.title, editionLabel: currentMatrix?.label ?? "" })}
           levelFilter={levelFilter} setLevelFilter={setLevelFilter} onlyGaps={onlyGaps} setOnlyGaps={setOnlyGaps}
         />
       )}
       {tab === "correspondence" && <CorrespondenceTab payload={initial} />}
+      <CoverageDialog requirement={coverageFor} canEdit={initial.canActivate} onClose={() => setCoverageFor(null)} />
     </div>
   );
 }
@@ -175,7 +180,7 @@ const activeColumns: DataTableColumn<ActiveRow>[] = [
     cell: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).toLocaleDateString() : "—") },
 ];
 
-const requirementColumns: DataTableColumn<RequirementRow>[] = [
+function requirementColumns(onCoverage: (row: RequirementRow) => void): DataTableColumn<RequirementRow>[] { return [
   { id: "code", header: "Código", primary: true, minWidth: 110, hideable: false, sortValue: (r) => r.code, cell: (r) => <strong>{r.code}</strong> },
   // La sangría refleja el nivel jerárquico del requisito dentro de la norma.
   { id: "title", header: "Requisito", minWidth: 280, sortValue: (r) => r.title,
@@ -183,9 +188,16 @@ const requirementColumns: DataTableColumn<RequirementRow>[] = [
   { id: "mandatory", header: "Oblig.", minWidth: 90, sortValue: (r) => (r.mandatory ? "Sí" : "No"), cell: (r) => (r.mandatory ? "Sí" : "No") },
   { id: "gap", header: "Estado GAP", minWidth: 140, sortValue: (r) => r.gapStatus ?? "",
     cell: (r) => <span style={chip((GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#c3ccd8") + "22", GAP_COLORS[r.gapStatus ?? "NOT_EVALUATED"] ?? "#8794a5")}>{r.gapStatus ?? "—"}</span> },
-  { id: "coverage", header: "Evidencia", minWidth: 140, numeric: true, sortValue: (r) => r.coverageCount,
-    cell: (r) => (r.coverageCount > 0 ? <span style={chip("#eafaf0", "#16a34a")}>{r.coverageCount} elemento(s)</span> : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>—</span>) },
-];
+  { id: "coverage", header: "Evidencia", minWidth: 160, sortValue: (r) => r.coverageCount,
+    cell: (r) => (
+      <button type="button" className="nf-coverage-cell" onClick={() => onCoverage(r)}
+        aria-label={r.coverageCount > 0 ? `Ver los ${r.coverageCount} elementos que cubren ${r.code}` : `Vincular un elemento a ${r.code}`}>
+        {r.coverageCount > 0
+          ? <span style={chip("#eafaf0", "#15803D")}>{r.coverageCount} elemento(s)</span>
+          : <span className="nf-coverage-cell__empty"><Link2 size={12} aria-hidden /> Vincular</span>}
+      </button>
+    ) },
+]; }
 
 const correspondenceColumns: DataTableColumn<CorrespondenceRow>[] = [
   { id: "sourceFamily", header: "Norma origen", minWidth: 130, sortValue: (m) => m.sourceFamily,
@@ -214,9 +226,10 @@ function ActiveTab({ payload }: { payload: StandardsEnginePayload }) {
   );
 }
 
-function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEdition, levelFilter, setLevelFilter, onlyGaps, setOnlyGaps }: {
+function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEdition, levelFilter, setLevelFilter, onlyGaps, setOnlyGaps, onCoverage }: {
   payload: StandardsEnginePayload; currentMatrix?: StandardsEnginePayload["matrix"][number]; rows: StandardsEnginePayload["matrix"][number]["requirements"];
   matrixEdition: string; setMatrixEdition: (v: string) => void; levelFilter: number; setLevelFilter: (v: number) => void; onlyGaps: boolean; setOnlyGaps: (v: boolean) => void;
+  onCoverage: (row: RequirementRow) => void;
 }) {
   if (!payload.matrix.length) return <Empty text="Activa al menos una norma para ver su matriz de requisitos." />;
   return (
@@ -234,13 +247,13 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
         <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>{rows.length} requisitos</span>
       </div>
       <DataTable
-        columns={requirementColumns}
+        columns={requirementColumns(onCoverage)}
         rows={rows}
         rowKey={(r) => r.id}
         caption="Requisitos de la norma: código, título, obligatoriedad, estado de la evaluación GAP y evidencia que lo cubre."
         storageKey="standards-requirements"
       />
-      {currentMatrix && <p style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>Un mismo documento, riesgo o evidencia puede cubrir requisitos de varias normas: la columna Evidencia refleja la cobertura compartida.</p>}
+      {currentMatrix && <p style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>Un mismo documento, riesgo o evidencia puede cubrir requisitos de varias normas. Pulsa en la columna Evidencia para vincular o revisar la cobertura de un requisito.</p>}
     </div>
   );
 }
@@ -248,13 +261,18 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
 function CorrespondenceTab({ payload }: { payload: StandardsEnginePayload }) {
   if (!payload.correspondence.length) return <Empty text="No hay correspondencias entre normas cargadas." />;
   return (
-    <DataTable
+    <div style={{ display: "grid", gap: 20 }}>
+      {/* La tabla plana de 170 filas no permitía ver dónde está la densidad.
+          La matriz sí, y solo pinta los pares que existen de verdad. */}
+      <CrosswalkMatrix correspondence={payload.correspondence} />
+      <DataTable
       columns={correspondenceColumns}
       rows={payload.correspondence}
       rowKey={(m) => m.id}
-      caption="Matriz de correspondencia entre normas: requisito de origen, requisito de destino, tipo de relación y porcentaje de equivalencia."
-      storageKey="standards-correspondence"
-    />
+        caption="Matriz de correspondencia entre normas: requisito de origen, requisito de destino, tipo de relación y porcentaje de equivalencia."
+        storageKey="standards-correspondence"
+      />
+    </div>
   );
 }
 
