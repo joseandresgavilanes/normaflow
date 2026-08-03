@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run validate:runtime-config && npm run validate:plans && prisma generate && next build",
+    "build": "npm run validate:runtime-config && npm run validate:plans && npm run check:css && prisma generate && next build",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
@@ -31,6 +31,7 @@
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
     "test": "npm run test:chromium && npm run test:firefox",
+    "check:css": "node scripts/check-css.cjs",
     "test:chromium": "playwright test --project=chromium --shard=1/2 && playwright test --project=chromium --shard=2/2",
     "test:firefox": "playwright test --project=firefox --shard=1/2 && playwright test --project=firefox --shard=2/2",
     "test:e2e": "playwright test --project=chromium --shard=1/2 && playwright test --project=chromium --shard=2/2 && playwright test --project=firefox --shard=1/2 && playwright test --project=firefox --shard=2/2",
