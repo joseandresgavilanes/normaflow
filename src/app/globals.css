@@ -1306,39 +1306,9 @@ a.nf-app-btn-soft-success {
   font-weight: 500;
 }
 
-.nf-app-input {
-  width: 100%;
-  padding: var(--nf-form-control-py) var(--nf-form-control-px);
-  min-height: var(--nf-form-control-min-height);
-  border-radius: var(--nf-form-control-radius);
-  border: 1px solid var(--nf-line);
-  background: #fff;
-  color: var(--nf-ink);
-  font-size: var(--nf-form-control-font-size);
-  font-weight: 500;
-  line-height: var(--nf-form-control-line-height);
-  color-scheme: light;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.nf-app-input:focus {
-  border-color: var(--nf-app-accent);
-  box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
-}
-
-.nf-app-input:disabled {
-  background: var(--nf-app-surface-2);
-  color: var(--nf-ink-4);
-  cursor: not-allowed;
-}
-
-textarea.nf-app-input {
-  min-height: 88px;
-  resize: vertical;
-}
-
+/* La geometría de `.nf-app-input` vive ahora en src/styles/forms.css, junto a
+   la del resto de controles. Aquí quedaba con `outline: none` y el foco
+   dibujado solo con box-shadow, que desaparecía sobre fondos de color. */
 select.nf-app-input {
   cursor: pointer;
 }
@@ -4236,11 +4206,6 @@ button.nf-audit-card:focus-visible {
 
 .nf-app-shell strong {
   font-weight: 600;
-}
-
-.nf-field {
-  display: grid;
-  gap: 6px;
 }
 
 .nf-field-label,

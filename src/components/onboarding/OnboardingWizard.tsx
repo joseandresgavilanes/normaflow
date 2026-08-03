@@ -7,6 +7,7 @@ import { ArrowRight, Check, ChevronLeft, CircleHelp, Clock3, Gauge, LockKeyhole,
 import { createCheckoutSession } from "@/lib/actions/billing";
 import { completeOnboarding, saveOnboardingSetup, skipOnboarding } from "@/lib/actions/onboarding";
 import type { OnboardingPayload } from "@/lib/server-queries";
+import { FormStepper } from "@/components/ui/FormStepper";
 
 type Props = { initial: OnboardingPayload | null; userName: string; needsOrganization: boolean };
 type Goal = "CERTIFY" | "MAINTAIN_CERTIFICATION" | "AUDIT_PREPARATION" | "ORGANIZE_DOCUMENTS_EVIDENCE";
@@ -30,6 +31,13 @@ function Card({ children, style }: { children: React.ReactNode; style?: React.CS
 function Choice({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: React.ReactNode }) {
   return <button type="button" onClick={onClick} style={{ textAlign: "left", border: `1px solid ${selected ? "#5266F6" : "#e5eaf2"}`, background: selected ? "#f3f5ff" : "#fff", borderRadius: 14, padding: 16, cursor: "pointer", color: "#142033", boxShadow: selected ? "0 0 0 3px rgba(82,102,246,.10)" : "none" }}>{children}</button>;
 }
+
+const PASOS = [
+  { id: "organizacion", label: "Organización", hint: "Datos básicos" },
+  { id: "normas", label: "Normas", hint: "Qué vas a gestionar" },
+  { id: "objetivo", label: "Objetivo", hint: "Por dónde empezar" },
+  { id: "listo", label: "Activación", hint: "Tu checklist" },
+];
 
 export default function OnboardingWizard({ initial, userName, needsOrganization }: Props) {
   const router = useRouter();
@@ -97,9 +105,20 @@ export default function OnboardingWizard({ initial, userName, needsOrganization 
         <Card style={{ padding: "30px clamp(20px,5vw,52px) 34px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", gap: 20, alignItems: "flex-start", marginBottom: 30 }}>
             <div><div style={{ fontSize: 12, fontWeight: 800, color: "#5266F6", textTransform: "uppercase", letterSpacing: ".09em" }}>Configuración inicial</div><h1 style={{ fontSize: "clamp(26px,4vw,38px)", lineHeight: 1.08, letterSpacing: "-.035em", margin: "8px 0 10px" }}>{userName ? `Hola, ${userName.split(" ")[0]}` : "Llega a valor en minutos"}</h1><p style={{ color: "#5e6b7a", margin: 0, lineHeight: 1.55, maxWidth: 560 }}>Configura tu sistema de gestión y empieza con una base usable en menos de 10 minutos.</p></div>
-            <div style={{ minWidth: 70, textAlign: "right", color: "#5266F6", fontWeight: 800, fontSize: 13 }}>{Math.min(step, 4)} / 4</div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, marginBottom: 30 }} aria-label="Progreso del onboarding">{[1,2,3,4].map((item) => <div key={item} style={{ height: 5, borderRadius: 8, background: item <= step ? "#5266F6" : "#e8edf5" }} />)}</div>
+          {/* Antes: cuatro barras de color y un "1 / 4". El color era el único
+              indicador de progreso y ningún paso decía su nombre, así que no
+              se sabía qué venía después ni a cuál se podía volver. */}
+          <FormStepper
+            className="nf-onboarding-stepper"
+            steps={PASOS.map((paso, index) => ({
+              id: paso.id,
+              label: paso.label,
+              hint: paso.hint,
+              status: index + 1 < step ? "done" : index + 1 === step ? "current" : "pending",
+            }))}
+            onStepClick={(_, index) => setStep(index + 1)}
+          />
 
           {step === 1 && <section><h2 style={{ fontSize: 22, margin: "0 0 6px" }}>Cuéntanos sobre tu organización</h2><p style={{ color: "#5e6b7a", fontSize: 14, margin: "0 0 22px" }}>Usaremos estos datos para personalizar tu workspace y tus reportes.</p><div style={{ display: "grid", gap: 15 }}><label style={{ fontSize: 13, fontWeight: 700 }}>Nombre de la organización<input value={orgName} onChange={(e) => setOrgName(e.target.value)} placeholder="Ej. Acme Components" style={inputStyle} /></label><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><label style={{ fontSize: 13, fontWeight: 700 }}>Sector<input value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Ej. Tecnología, manufactura…" style={inputStyle} /></label><label style={{ fontSize: 13, fontWeight: 700 }}>País<input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="ES" style={inputStyle} /></label></div><label style={{ fontSize: 13, fontWeight: 700 }}>Tamaño<select value={size} onChange={(e) => setSize(e.target.value)} style={inputStyle}><option value="">Selecciona una opción</option><option value="1-10">1–10 personas</option><option value="11-50">11–50 personas</option><option value="51-250">51–250 personas</option><option value="251+">Más de 250 personas</option></select></label></div><Footer onNext={nextFromCompany} next="Continuar" /></section>}
 

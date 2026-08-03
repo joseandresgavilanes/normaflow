@@ -30,6 +30,7 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoQuickCreate from "@/components/ui/IsoQuickCreate";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
+import { labelForKeyOrRaw } from "@/lib/field-labels";
 
 type Tab =
   | "panel" | "products" | "hazards" | "flows" | "prp" | "ccp"
@@ -729,8 +730,8 @@ function FoodSafetyRecordEditor({ kind, value, products, materials, flows, steps
   const optional = (key: string) => form[key]?.trim() ? form[key] : undefined;
   const number = (key: string) => form[key]?.trim() ? Number(form[key]) : undefined;
   const ref = (key: string, options: { id: string; label: string }[], placeholder: string) => <select style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}><option value="">{placeholder}</option>{options.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select>;
-  const select = (key: string, options: string[]) => <select style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select>;
-  const field = (key: string, placeholder: string, type = "text") => <input style={input} type={type} placeholder={placeholder} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)} />;
+  const select = (key: string, options: string[]) => <select aria-label={labelForKeyOrRaw(key)} style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select>;
+  const field = (key: string, placeholder: string, type = "text") => <input aria-label={placeholder} style={input} type={type} placeholder={placeholder} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)} />;
   const active = <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={form.active === "true"} onChange={(e) => set("active", String(e.target.checked))} /> Activo</label>;
   const save = () => {
     if (kind === "product") onSave({ name: form.name, description: optional("description"), category: optional("category"), shelfLifeDays: number("shelfLifeDays"), storageConditions: optional("storageConditions"), allergenCodes: form.allergenCodes ? form.allergenCodes.split(",").map((item) => item.trim()).filter(Boolean) : [], processId: optional("processId"), documentId: optional("documentId"), active: form.active === "true" });
@@ -775,13 +776,13 @@ function NewProductForm({ pending, run, onDone }: { pending: boolean; run: Runne
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <FoodModalField label="Nombre del producto"><input style={input} placeholder="Ej. Salsa de tomate" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Categoría"><input style={input} placeholder="Ej. Salsas" value={f.category} onChange={(e) => set("category", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Vida útil (días)"><input style={input} type="number" min={0} placeholder="Ej. 180" value={f.shelfLifeDays} onChange={(e) => set("shelfLifeDays", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Nombre del producto"><input aria-label="Nombre" style={input} placeholder="Ej. Salsa de tomate" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Categoría"><input aria-label="Categoría" style={input} placeholder="Ej. Salsas" value={f.category} onChange={(e) => set("category", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Vida útil (días)"><input aria-label="Vida útil (días)" style={input} type="number" min={0} placeholder="Ej. 180" value={f.shelfLifeDays} onChange={(e) => set("shelfLifeDays", e.target.value)} /></FoodModalField>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <FoodModalField label="Condiciones de almacenamiento"><input style={input} placeholder="Ej. Refrigerado entre 2 y 8 °C" value={f.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Códigos de alérgenos"><input style={input} placeholder="Separados por coma" value={f.allergenCodes} onChange={(e) => set("allergenCodes", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Condiciones de almacenamiento"><input aria-label="Condiciones de almacenamiento" style={input} placeholder="Ej. Refrigerado entre 2 y 8 °C" value={f.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Códigos de alérgenos"><input aria-label="Separados por coma" style={input} placeholder="Separados por coma" value={f.allergenCodes} onChange={(e) => set("allergenCodes", e.target.value)} /></FoodModalField>
       </div>
       <button className="nf-app-btn-primary" disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createFoodProduct({ name: f.name, category: f.category || undefined, shelfLifeDays: f.shelfLifeDays ? Number(f.shelfLifeDays) : undefined, storageConditions: f.storageConditions || undefined, allergenCodes: f.allergenCodes ? f.allergenCodes.split(",").map((s) => s.trim()).filter(Boolean) : [] })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -794,12 +795,12 @@ function NewMaterialForm({ pending, run, onDone }: { pending: boolean; run: Runn
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <FoodModalField label="Nombre de la materia prima"><input style={input} placeholder="Ej. Tomate triturado" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Especificación"><input style={input} placeholder="Ej. Grado alimentario" value={f.specification} onChange={(e) => set("specification", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Nombre de la materia prima"><input aria-label="Nombre" style={input} placeholder="Ej. Tomate triturado" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Especificación"><input aria-label="Material de envase" style={input} placeholder="Ej. Grado alimentario" value={f.specification} onChange={(e) => set("specification", e.target.value)} /></FoodModalField>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <FoodModalField label="Condiciones de almacenamiento"><input style={input} placeholder="Ej. Lugar seco y ventilado" value={f.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Códigos de alérgenos"><input style={input} placeholder="Separados por coma" value={f.allergenCodes} onChange={(e) => set("allergenCodes", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Condiciones de almacenamiento"><input aria-label="Condiciones de almacenamiento" style={input} placeholder="Ej. Lugar seco y ventilado" value={f.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Códigos de alérgenos"><input aria-label="Separados por coma" style={input} placeholder="Separados por coma" value={f.allergenCodes} onChange={(e) => set("allergenCodes", e.target.value)} /></FoodModalField>
       </div>
       <button className="nf-app-btn-primary" disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createRawMaterial({ name: f.name, specification: f.specification || undefined, storageConditions: f.storageConditions || undefined, allergenCodes: f.allergenCodes ? f.allergenCodes.split(",").map((s) => s.trim()).filter(Boolean) : [] })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -816,10 +817,10 @@ function NewAllergenForm({ pending, run, onDone }: { pending: boolean; run: Runn
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <FoodModalField label="Nombre del alérgeno"><input style={input} placeholder="Ej. Leche" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
-        <FoodModalField label="Categoría"><input style={input} placeholder="Ej. EU-14" value={f.category} onChange={(e) => set("category", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Nombre del alérgeno"><input aria-label="Nombre" style={input} placeholder="Ej. Leche" value={f.name} onChange={(e) => set("name", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Categoría"><input aria-label="Categoría" style={input} placeholder="Ej. EU-14" value={f.category} onChange={(e) => set("category", e.target.value)} /></FoodModalField>
       </div>
-      <FoodModalField label="Descripción"><input style={input} placeholder="Describe el alérgeno o su clasificación" value={f.description} onChange={(e) => set("description", e.target.value)} /></FoodModalField>
+      <FoodModalField label="Descripción"><input aria-label="Describe el alérgeno o su clasificación" style={input} placeholder="Describe el alérgeno o su clasificación" value={f.description} onChange={(e) => set("description", e.target.value)} /></FoodModalField>
       <button className="nf-app-btn-primary" disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createAllergen({ name: f.name, category: f.category || undefined, description: f.description || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -831,12 +832,12 @@ function NewIntendedUseForm({ products, pending, run, onDone }: { products: Food
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <FoodModalField label="Producto"><select style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Seleccionar producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select></FoodModalField>
-        <FoodModalField label="Grupo de consumidores"><input style={input} placeholder="Ej. Consumidor general" value={f.consumerGroup} onChange={(e) => set("consumerGroup", e.target.value)} /></FoodModalField>
+        <FoodModalField label="Producto"><select aria-label="Seleccionar producto" style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Seleccionar producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select></FoodModalField>
+        <FoodModalField label="Grupo de consumidores"><input aria-label="Consumidor previsto" style={input} placeholder="Ej. Consumidor general" value={f.consumerGroup} onChange={(e) => set("consumerGroup", e.target.value)} /></FoodModalField>
       </div>
-      <FoodModalField label="Método de preparación"><input style={input} placeholder="Ej. Listo para consumo" value={f.preparationMethod} onChange={(e) => set("preparationMethod", e.target.value)} /></FoodModalField>
+      <FoodModalField label="Método de preparación"><input aria-label="Uso previsto" style={input} placeholder="Ej. Listo para consumo" value={f.preparationMethod} onChange={(e) => set("preparationMethod", e.target.value)} /></FoodModalField>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.vulnerableConsumers} onChange={(e) => set("vulnerableConsumers", e.target.checked)} /> Incluye consumidores vulnerables</label>
-      <FoodModalField label="Mal uso previsible"><input style={input} placeholder="Describe posibles usos incorrectos" value={f.misusePotential} onChange={(e) => set("misusePotential", e.target.value)} /></FoodModalField>
+      <FoodModalField label="Mal uso previsible"><input aria-label="Describe posibles usos incorrectos" style={input} placeholder="Describe posibles usos incorrectos" value={f.misusePotential} onChange={(e) => set("misusePotential", e.target.value)} /></FoodModalField>
       <button className="nf-app-btn-primary" disabled={pending || !f.productId} style={primaryBtn} onClick={() => { run(() => createIntendedUse({ productId: f.productId, consumerGroup: f.consumerGroup || undefined, preparationMethod: f.preparationMethod || undefined, vulnerableConsumers: f.vulnerableConsumers, misusePotential: f.misusePotential || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -848,11 +849,11 @@ function NewFlowForm({ products, pending, run, onDone }: { products: FoodSafetyP
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
-        <input style={input} placeholder="Título del flujo" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
+        <select aria-label="Producto" style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.name}</option>)}</select>
+        <input aria-label="Título del flujo" style={input} placeholder="Título del flujo" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
       </div>
-      <input style={input} placeholder="Notas" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
+      <input aria-label="Notas" style={input} placeholder="Notas" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <button disabled={pending || !f.productId || !f.title} style={primaryBtn} onClick={() => { run(() => createProcessFlow({ productId: f.productId, title: f.title, version: f.version, notes: f.notes || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -864,14 +865,14 @@ function NewStepForm({ flows, pending, run, onDone }: { flows: FoodSafetyPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", gap: 8 }}>
-        <select style={input} value={f.flowId} onChange={(e) => set("flowId", e.target.value)}><option value="">Flujo…</option>{flows.map((fl) => <option key={fl.id} value={fl.id}>{fl.code} v{fl.version}</option>)}</select>
-        <input style={input} type="number" min={1} placeholder="Secuencia" value={f.sequence} onChange={(e) => set("sequence", e.target.value)} />
-        <input style={input} placeholder="Nombre de la etapa" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.stepType} onChange={(e) => set("stepType", e.target.value)}>{["RECEIPT", "STORAGE", "PREP", "PROCESS", "COOKING", "COOLING", "PACKAGING", "DISTRIBUTION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Flujo" style={input} value={f.flowId} onChange={(e) => set("flowId", e.target.value)}><option value="">Flujo…</option>{flows.map((fl) => <option key={fl.id} value={fl.id}>{fl.code} v{fl.version}</option>)}</select>
+        <input aria-label="Secuencia" style={input} type="number" min={1} placeholder="Secuencia" value={f.sequence} onChange={(e) => set("sequence", e.target.value)} />
+        <input aria-label="Nombre de la etapa" style={input} placeholder="Nombre de la etapa" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Tipo de paso" style={input} value={f.stepType} onChange={(e) => set("stepType", e.target.value)}>{["RECEIPT", "STORAGE", "PREP", "PROCESS", "COOKING", "COOLING", "PACKAGING", "DISTRIBUTION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Temperatura" value={f.temperature} onChange={(e) => set("temperature", e.target.value)} />
-        <input style={input} placeholder="Tiempo" value={f.timeParam} onChange={(e) => set("timeParam", e.target.value)} />
+        <input aria-label="Temperatura" style={input} placeholder="Temperatura" value={f.temperature} onChange={(e) => set("temperature", e.target.value)} />
+        <input aria-label="Tiempo" style={input} placeholder="Tiempo" value={f.timeParam} onChange={(e) => set("timeParam", e.target.value)} />
       </div>
       <button disabled={pending || !f.flowId || !f.name} style={primaryBtn} onClick={() => { run(() => createProcessStep({ flowId: f.flowId, sequence: Number(f.sequence), name: f.name, stepType: f.stepType as never, temperature: f.temperature || undefined, timeParam: f.timeParam || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -884,11 +885,11 @@ function NewHazardForm({ pending, run, onDone }: { pending: boolean; run: Runner
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del peligro" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.hazardType} onChange={(e) => set("hazardType", e.target.value)}>{["BIOLOGICAL", "CHEMICAL", "PHYSICAL", "ALLERGEN"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Nombre del peligro" style={input} placeholder="Nombre del peligro" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Tipo de peligro" style={input} value={f.hazardType} onChange={(e) => set("hazardType", e.target.value)}>{["BIOLOGICAL", "CHEMICAL", "PHYSICAL", "ALLERGEN"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Fuente" value={f.source} onChange={(e) => set("source", e.target.value)} />
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Fuente" style={input} placeholder="Fuente" value={f.source} onChange={(e) => set("source", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createFoodHazard({ name: f.name, hazardType: f.hazardType as never, source: f.source || undefined, description: f.description || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -903,16 +904,16 @@ function NewAssessmentForm({ hazards, steps, products, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.hazardId} onChange={(e) => set("hazardId", e.target.value)}><option value="">Peligro…</option>{hazards.map((h) => <option key={h.id} value={h.id}>{h.code} — {h.name}</option>)}</select>
-        <select style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code} — {st.name}</option>)}</select>
-        <select style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</select>
+        <select aria-label="Peligro" style={input} value={f.hazardId} onChange={(e) => set("hazardId", e.target.value)}><option value="">Peligro…</option>{hazards.map((h) => <option key={h.id} value={h.id}>{h.code} — {h.name}</option>)}</select>
+        <select aria-label="Etapa" style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code} — {st.name}</option>)}</select>
+        <select aria-label="Producto" style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.severity} onChange={(e) => set("severity", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Severidad {v}</option>)}</select>
-        <select style={input} value={f.likelihood} onChange={(e) => set("likelihood", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</select>
+        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Severidad {v}</option>)}</select>
+        <select aria-label="Probabilidad" style={input} value={f.likelihood} onChange={(e) => set("likelihood", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Justificación" value={f.justification} onChange={(e) => set("justification", e.target.value)} />
-      <input style={input} placeholder="Medidas existentes" value={f.existingMeasures} onChange={(e) => set("existingMeasures", e.target.value)} />
+      <input aria-label="Justificación" style={input} placeholder="Justificación" value={f.justification} onChange={(e) => set("justification", e.target.value)} />
+      <input aria-label="Medidas existentes" style={input} placeholder="Medidas existentes" value={f.existingMeasures} onChange={(e) => set("existingMeasures", e.target.value)} />
       <button disabled={pending || !f.hazardId} style={primaryBtn} onClick={() => { run(() => createHazardAssessment({ hazardId: f.hazardId, stepId: f.stepId || undefined, productId: f.productId || undefined, severity: f.severity, likelihood: f.likelihood, justification: f.justification || undefined, existingMeasures: f.existingMeasures || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -924,12 +925,12 @@ function NewPrpForm({ members, pending, run, onDone }: { members: Members; pendi
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del PRP" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["HYGIENE", "PEST_CONTROL", "WATER", "CLEANING", "MAINTENANCE", "PERSONNEL", "SUPPLIER", "WASTE", "ALLERGEN_CONTROL", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Nombre del PRP" style={input} placeholder="Nombre del PRP" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["HYGIENE", "PEST_CONTROL", "WATER", "CLEANING", "MAINTENANCE", "PERSONNEL", "SUPPLIER", "WASTE", "ALLERGEN_CONTROL", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Frecuencia" value={f.frequency} onChange={(e) => set("frequency", e.target.value)} />
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <input aria-label="Frecuencia" style={input} placeholder="Frecuencia" value={f.frequency} onChange={(e) => set("frequency", e.target.value)} />
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createPrerequisiteProgram({ name: f.name, category: f.category as never, frequency: f.frequency || undefined, responsibleId: f.responsibleId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -944,17 +945,17 @@ function NewOprpForm({ assessments, steps, members, pending, run, onDone }: {
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Nombre del OPRP" value={f.name} onChange={(e) => set("name", e.target.value)} />
+      <input aria-label="Nombre del OPRP" style={input} placeholder="Nombre del OPRP" value={f.name} onChange={(e) => set("name", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.hazardAssessmentId} onChange={(e) => set("hazardAssessmentId", e.target.value)}><option value="">Evaluación de peligro…</option>{assessments.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
-        <select style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code}</option>)}</select>
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Evaluación de peligro" style={input} value={f.hazardAssessmentId} onChange={(e) => set("hazardAssessmentId", e.target.value)}><option value="">Evaluación de peligro…</option>{assessments.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <select aria-label="Etapa" style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Método de monitoreo" value={f.monitoringMethod} onChange={(e) => set("monitoringMethod", e.target.value)} />
-        <input style={input} placeholder="Frecuencia de monitoreo" value={f.monitoringFrequency} onChange={(e) => set("monitoringFrequency", e.target.value)} />
+        <input aria-label="Método de monitoreo" style={input} placeholder="Método de monitoreo" value={f.monitoringMethod} onChange={(e) => set("monitoringMethod", e.target.value)} />
+        <input aria-label="Frecuencia de monitoreo" style={input} placeholder="Frecuencia de monitoreo" value={f.monitoringFrequency} onChange={(e) => set("monitoringFrequency", e.target.value)} />
       </div>
-      <input style={input} placeholder="Acción de corrección" value={f.correctionAction} onChange={(e) => set("correctionAction", e.target.value)} />
+      <input aria-label="Acción de corrección" style={input} placeholder="Acción de corrección" value={f.correctionAction} onChange={(e) => set("correctionAction", e.target.value)} />
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createOperationalPrp({ name: f.name, hazardAssessmentId: f.hazardAssessmentId || undefined, stepId: f.stepId || undefined, monitoringMethod: f.monitoringMethod || undefined, monitoringFrequency: f.monitoringFrequency || undefined, correctionAction: f.correctionAction || undefined, responsibleId: f.responsibleId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -966,12 +967,12 @@ function NewCcpForm({ steps, assessments, pending, run, onDone }: { steps: FoodS
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del PCC" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code} — {st.name}</option>)}</select>
-        <select style={input} value={f.hazardAssessmentId} onChange={(e) => set("hazardAssessmentId", e.target.value)}><option value="">Evaluación…</option>{assessments.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <input aria-label="Nombre del PCC" style={input} placeholder="Nombre del PCC" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Etapa" style={input} value={f.stepId} onChange={(e) => set("stepId", e.target.value)}><option value="">Etapa…</option>{steps.map((st) => <option key={st.id} value={st.id}>{st.code} — {st.name}</option>)}</select>
+        <select aria-label="Evaluación" style={input} value={f.hazardAssessmentId} onChange={(e) => set("hazardAssessmentId", e.target.value)}><option value="">Evaluación…</option>{assessments.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
       </div>
-      <input style={input} placeholder="Peligro controlado" value={f.hazardControlled} onChange={(e) => set("hazardControlled", e.target.value)} />
-      <input style={input} placeholder="Justificación (árbol de decisión)" value={f.justification} onChange={(e) => set("justification", e.target.value)} />
+      <input aria-label="Peligro controlado" style={input} placeholder="Peligro controlado" value={f.hazardControlled} onChange={(e) => set("hazardControlled", e.target.value)} />
+      <input aria-label="Justificación (árbol de decisión)" style={input} placeholder="Justificación (árbol de decisión)" value={f.justification} onChange={(e) => set("justification", e.target.value)} />
       <button disabled={pending || !f.name || !f.stepId} style={primaryBtn} onClick={() => { run(() => createCriticalControlPoint({ name: f.name, stepId: f.stepId, hazardAssessmentId: f.hazardAssessmentId || undefined, justification: f.justification || undefined, hazardControlled: f.hazardControlled || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -983,17 +984,17 @@ function NewLimitForm({ ccps, pending, run, onDone }: { ccps: FoodSafetyPayload[
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
-        <input style={input} placeholder="Parámetro" value={f.parameter} onChange={(e) => set("parameter", e.target.value)} />
-        <select style={input} value={f.operator} onChange={(e) => set("operator", e.target.value)}>{["LT", "LTE", "GT", "GTE", "EQ", "BETWEEN"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="PCC" style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+        <input aria-label="Parámetro" style={input} placeholder="Parámetro" value={f.parameter} onChange={(e) => set("parameter", e.target.value)} />
+        <select aria-label="Operador" style={input} value={f.operator} onChange={(e) => set("operator", e.target.value)}>{["LT", "LTE", "GT", "GTE", "EQ", "BETWEEN"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" step="any" placeholder="Mínimo" value={f.minValue} onChange={(e) => set("minValue", e.target.value)} />
-        <input style={input} type="number" step="any" placeholder="Máximo" value={f.maxValue} onChange={(e) => set("maxValue", e.target.value)} />
-        <input style={input} type="number" step="any" placeholder="Objetivo" value={f.targetValue} onChange={(e) => set("targetValue", e.target.value)} />
-        <input style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
+        <input aria-label="Mínimo" style={input} type="number" step="any" placeholder="Mínimo" value={f.minValue} onChange={(e) => set("minValue", e.target.value)} />
+        <input aria-label="Máximo" style={input} type="number" step="any" placeholder="Máximo" value={f.maxValue} onChange={(e) => set("maxValue", e.target.value)} />
+        <input aria-label="Objetivo" style={input} type="number" step="any" placeholder="Objetivo" value={f.targetValue} onChange={(e) => set("targetValue", e.target.value)} />
+        <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
       </div>
-      <input style={input} placeholder="Fundamento (referencia científica)" value={f.rationale} onChange={(e) => set("rationale", e.target.value)} />
+      <input aria-label="Fundamento (referencia científica)" style={input} placeholder="Fundamento (referencia científica)" value={f.rationale} onChange={(e) => set("rationale", e.target.value)} />
       <button disabled={pending || !f.ccpId || !f.parameter} style={primaryBtn} onClick={() => { run(() => createCriticalLimit({ ccpId: f.ccpId, parameter: f.parameter, operator: f.operator as never, minValue: f.minValue ? Number(f.minValue) : undefined, maxValue: f.maxValue ? Number(f.maxValue) : undefined, targetValue: f.targetValue ? Number(f.targetValue) : undefined, unit: f.unit || undefined, rationale: f.rationale || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1007,17 +1008,17 @@ function NewMonitoringPlanForm({ ccps, oprps, members, pending, run, onDone }: {
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título del plan" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Título del plan" style={input} placeholder="Título del plan" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
-        <select style={input} value={f.oprpId} onChange={(e) => set("oprpId", e.target.value)}><option value="">OPRP…</option>{oprps.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="PCC" style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+        <select aria-label="OPRP" style={input} value={f.oprpId} onChange={(e) => set("oprpId", e.target.value)}><option value="">OPRP…</option>{oprps.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
-        <input style={input} placeholder="Frecuencia" value={f.frequency} onChange={(e) => set("frequency", e.target.value)} />
-        <input style={input} placeholder="Parámetro" value={f.parameter} onChange={(e) => set("parameter", e.target.value)} />
+        <input aria-label="Método" style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
+        <input aria-label="Frecuencia" style={input} placeholder="Frecuencia" value={f.frequency} onChange={(e) => set("frequency", e.target.value)} />
+        <input aria-label="Parámetro" style={input} placeholder="Parámetro" value={f.parameter} onChange={(e) => set("parameter", e.target.value)} />
       </div>
-      <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+      <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       <button disabled={pending || !f.title || (!f.ccpId && !f.oprpId)} style={primaryBtn} onClick={() => { run(() => createMonitoringPlan({ title: f.title, ccpId: f.ccpId || undefined, oprpId: f.oprpId || undefined, method: f.method || undefined, frequency: f.frequency || undefined, parameter: f.parameter || undefined, responsibleId: f.responsibleId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1029,11 +1030,11 @@ function NewMonitoringRecordForm({ plans, pending, run, onDone }: { plans: FoodS
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.planId} onChange={(e) => set("planId", e.target.value)}><option value="">Plan de monitoreo…</option>{plans.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.title}</option>)}</select>
-        <input style={input} type="number" step="any" placeholder="Valor" value={f.valueNumeric} onChange={(e) => set("valueNumeric", e.target.value)} />
-        <input style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
+        <select aria-label="Plan de monitoreo" style={input} value={f.planId} onChange={(e) => set("planId", e.target.value)}><option value="">Plan de monitoreo…</option>{plans.map((p) => <option key={p.id} value={p.id}>{p.code} — {p.title}</option>)}</select>
+        <input aria-label="Valor" style={input} type="number" step="any" placeholder="Valor" value={f.valueNumeric} onChange={(e) => set("valueNumeric", e.target.value)} />
+        <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
       </div>
-      <input style={input} placeholder="Notas" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
+      <input aria-label="Notas" style={input} placeholder="Notas" value={f.notes} onChange={(e) => set("notes", e.target.value)} />
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.autoOpenDeviation} onChange={(e) => set("autoOpenDeviation", e.target.checked)} /> Abrir desviación automáticamente si está fuera de límite</label>
       <button disabled={pending || !f.planId} style={primaryBtn} onClick={() => { run(() => createMonitoringRecord({ planId: f.planId, valueNumeric: f.valueNumeric ? Number(f.valueNumeric) : undefined, unit: f.unit || undefined, notes: f.notes || undefined, autoOpenDeviation: f.autoOpenDeviation })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>
@@ -1045,12 +1046,12 @@ function NewDeviationForm({ ccps, pending, run, onDone }: { ccps: FoodSafetyPayl
   const set = (k: string, v: string | boolean) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título de la desviación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Título de la desviación" style={input} placeholder="Título de la desviación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
-        <select style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["MINOR", "MODERATE", "MAJOR", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Códigos de lote (coma)" value={f.lotCodes} onChange={(e) => set("lotCodes", e.target.value)} />
+        <select aria-label="PCC" style={input} value={f.ccpId} onChange={(e) => set("ccpId", e.target.value)}><option value="">PCC…</option>{ccps.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["MINOR", "MODERATE", "MAJOR", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Códigos de lote (coma)" style={input} placeholder="Códigos de lote (coma)" value={f.lotCodes} onChange={(e) => set("lotCodes", e.target.value)} />
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.productHold} onChange={(e) => set("productHold", e.target.checked)} /> Retener producto</label>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createDeviation({ title: f.title, description: f.description || undefined, ccpId: f.ccpId || undefined, severity: f.severity as never, productHold: f.productHold, lotCodes: f.lotCodes ? f.lotCodes.split(",").map((s) => s.trim()).filter(Boolean) : [] })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1063,8 +1064,8 @@ function NewCorrectionForm({ deviations, pending, run, onDone }: { deviations: F
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select style={input} value={f.deviationId} onChange={(e) => set("deviationId", e.target.value)}><option value="">Desviación…</option>{deviations.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.title}</option>)}</select>
-      <input style={input} placeholder="Acción tomada" value={f.actionTaken} onChange={(e) => set("actionTaken", e.target.value)} />
+      <select aria-label="Desviación" style={input} value={f.deviationId} onChange={(e) => set("deviationId", e.target.value)}><option value="">Desviación…</option>{deviations.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.title}</option>)}</select>
+      <input aria-label="Acción tomada" style={input} placeholder="Acción tomada" value={f.actionTaken} onChange={(e) => set("actionTaken", e.target.value)} />
       <button disabled={pending || !f.deviationId || !f.actionTaken} style={primaryBtn} onClick={() => { run(() => createFoodSafetyCorrection({ deviationId: f.deviationId, actionTaken: f.actionTaken })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1076,14 +1077,14 @@ function NewValidationForm({ pending, run, onDone }: { pending: boolean; run: Ru
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título de la validación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.targetType} onChange={(e) => set("targetType", e.target.value)}>{["CCP", "OPRP", "PRP", "PROCESS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Código objetivo" value={f.targetCode} onChange={(e) => set("targetCode", e.target.value)} />
+        <input aria-label="Título de la validación" style={input} placeholder="Título de la validación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de objetivo" style={input} value={f.targetType} onChange={(e) => set("targetType", e.target.value)}>{["CCP", "OPRP", "PRP", "PROCESS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Código objetivo" style={input} placeholder="Código objetivo" value={f.targetCode} onChange={(e) => set("targetCode", e.target.value)} />
       </div>
-      <input style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
+      <input aria-label="Método" style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["PENDING", "VALID", "INVALID", "CONDITIONAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
+        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["PENDING", "VALID", "INVALID", "CONDITIONAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createValidationRecord({ title: f.title, targetType: f.targetType as never, targetCode: f.targetCode || undefined, method: f.method || undefined, result: f.result as never, findings: f.findings || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1096,14 +1097,14 @@ function NewVerificationForm({ members, pending, run, onDone }: { members: Membe
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título de la actividad" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.activityType} onChange={(e) => set("activityType", e.target.value)}>{["INTERNAL_AUDIT", "RECORD_REVIEW", "CALIBRATION_CHECK", "SAMPLING", "SUPPLIER_AUDIT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} type="date" value={f.scheduledFor} onChange={(e) => set("scheduledFor", e.target.value)} />
+        <input aria-label="Título de la actividad" style={input} placeholder="Título de la actividad" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de actividad" style={input} value={f.activityType} onChange={(e) => set("activityType", e.target.value)}>{["INTERNAL_AUDIT", "RECORD_REVIEW", "CALIBRATION_CHECK", "SAMPLING", "SUPPLIER_AUDIT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Fecha prevista" style={input} type="date" value={f.scheduledFor} onChange={(e) => set("scheduledFor", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["PENDING", "CONFORMING", "NONCONFORMING", "PARTIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <input style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
+        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["PENDING", "CONFORMING", "NONCONFORMING", "PARTIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createVerificationActivity({ title: f.title, activityType: f.activityType as never, scheduledFor: f.scheduledFor || undefined, result: f.result as never, findings: f.findings || undefined, responsibleId: f.responsibleId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1120,14 +1121,14 @@ function NewLotForm({ products, materials, lots, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.lotType} onChange={(e) => set("lotType", e.target.value)}>{["RAW_MATERIAL", "INTERMEDIATE", "FINISHED", "DISTRIBUTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</select>
-        <select style={input} value={f.rawMaterialId} onChange={(e) => set("rawMaterialId", e.target.value)}><option value="">Materia prima…</option>{materials.map((m) => <option key={m.id} value={m.id}>{m.code}</option>)}</select>
+        <select aria-label="Tipo de lote" style={input} value={f.lotType} onChange={(e) => set("lotType", e.target.value)}>{["RAW_MATERIAL", "INTERMEDIATE", "FINISHED", "DISTRIBUTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Producto" style={input} value={f.productId} onChange={(e) => set("productId", e.target.value)}><option value="">Producto…</option>{products.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</select>
+        <select aria-label="Materia prima" style={input} value={f.rawMaterialId} onChange={(e) => set("rawMaterialId", e.target.value)}><option value="">Materia prima…</option>{materials.map((m) => <option key={m.id} value={m.id}>{m.code}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Cliente (si es distribución)" value={f.customerName} onChange={(e) => set("customerName", e.target.value)} />
-        <input style={input} type="number" step="any" placeholder="Cantidad" value={f.quantity} onChange={(e) => set("quantity", e.target.value)} />
-        <input style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
+        <input aria-label="Cliente (si es distribución)" style={input} placeholder="Cliente (si es distribución)" value={f.customerName} onChange={(e) => set("customerName", e.target.value)} />
+        <input aria-label="Cantidad" style={input} type="number" step="any" placeholder="Cantidad" value={f.quantity} onChange={(e) => set("quantity", e.target.value)} />
+        <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
       </div>
       <div>
         <label style={{ fontSize: 12, color: "#64748b" }}>Lotes previos (trazabilidad hacia atrás):</label>
@@ -1151,10 +1152,10 @@ function NewRecallForm({ lots, pending, run, onDone }: { lots: FoodSafetyPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del retiro" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.recallType} onChange={(e) => set("recallType", e.target.value)}>{["WITHDRAWAL", "RECALL", "STOCK_RECOVERY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Título del retiro" style={input} placeholder="Título del retiro" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de retirada" style={input} value={f.recallType} onChange={(e) => set("recallType", e.target.value)}>{["WITHDRAWAL", "RECALL", "STOCK_RECOVERY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Motivo" value={f.reason} onChange={(e) => set("reason", e.target.value)} />
+      <input aria-label="Motivo" style={input} placeholder="Motivo" value={f.reason} onChange={(e) => set("reason", e.target.value)} />
       <div>
         <label style={{ fontSize: 12, color: "#64748b" }}>Lotes afectados (la trazabilidad expande adelante/atrás automáticamente):</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
@@ -1177,10 +1178,10 @@ function NewEmergencyForm({ pending, run, onDone }: { pending: boolean; run: Run
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título de la emergencia" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.emergencyType} onChange={(e) => set("emergencyType", e.target.value)}>{["CONTAMINATION", "ALLERGEN_INCIDENT", "RECALL_EVENT", "SUPPLY_DISRUPTION", "FACILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Título de la emergencia" style={input} placeholder="Título de la emergencia" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de emergencia" style={input} value={f.emergencyType} onChange={(e) => set("emergencyType", e.target.value)}>{["CONTAMINATION", "ALLERGEN_INCIDENT", "RECALL_EVENT", "SUPPLY_DISRUPTION", "FACILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createFoodSafetyEmergency({ title: f.title, emergencyType: f.emergencyType as never, description: f.description || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1192,14 +1193,14 @@ function NewCommunicationForm({ pending, run, onDone }: { pending: boolean; run:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Asunto" value={f.subject} onChange={(e) => set("subject", e.target.value)} />
-        <select style={input} value={f.party} onChange={(e) => set("party", e.target.value)}>{["SUPPLIER", "CUSTOMER", "AUTHORITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Nombre de la parte" value={f.partyName} onChange={(e) => set("partyName", e.target.value)} />
+        <input aria-label="Asunto" style={input} placeholder="Asunto" value={f.subject} onChange={(e) => set("subject", e.target.value)} />
+        <select aria-label="Parte" style={input} value={f.party} onChange={(e) => set("party", e.target.value)}>{["SUPPLIER", "CUSTOMER", "AUTHORITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Nombre de la parte" style={input} placeholder="Nombre de la parte" value={f.partyName} onChange={(e) => set("partyName", e.target.value)} />
       </div>
-      <textarea style={{ ...input, minHeight: 70 }} placeholder="Contenido" value={f.content} onChange={(e) => set("content", e.target.value)} />
+      <textarea aria-label="Contenido" style={{ ...input, minHeight: 70 }} placeholder="Contenido" value={f.content} onChange={(e) => set("content", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Canal (email, llamada…)" value={f.channel} onChange={(e) => set("channel", e.target.value)} />
-        <input style={input} placeholder="Código relacionado (retiro, lote…)" value={f.relatedCode} onChange={(e) => set("relatedCode", e.target.value)} />
+        <input aria-label="Canal (email, llamada…)" style={input} placeholder="Canal (email, llamada…)" value={f.channel} onChange={(e) => set("channel", e.target.value)} />
+        <input aria-label="Código relacionado (retiro, lote…)" style={input} placeholder="Código relacionado (retiro, lote…)" value={f.relatedCode} onChange={(e) => set("relatedCode", e.target.value)} />
       </div>
       <button disabled={pending || !f.subject} style={primaryBtn} onClick={() => { run(() => recordChainCommunication({ subject: f.subject, content: f.content || undefined, party: f.party as never, partyName: f.partyName || undefined, channel: f.channel || undefined, relatedCode: f.relatedCode || undefined })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>

@@ -20,6 +20,7 @@ import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import Badge from "@/components/ui/Badge";
 import { useAdminMock, type GroupMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { Field as UiField } from "@/components/ui/Field";
 
 const PERMISSION_GROUPS: { label: string; permissions: { key: string; label: string }[] }[] = [
   {
@@ -666,10 +667,10 @@ export default function GroupsClient() {
       <Modal open={creating || editing != null} onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }} title={creating ? "Nuevo grupo" : "Editar grupo"} width={480}>
         <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} className="nf-modal-form">
           <Field label="Nombre *">
-            <input name="name" required defaultValue={editing?.name ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Auditores internos" />
+            <input aria-label="Nombre" name="name" required defaultValue={editing?.name ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Auditores internos" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} defaultValue={editing?.description ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <textarea aria-label="Descripción" name="description" rows={3} defaultValue={editing?.description ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           {error && <div className="nf-modal-error">{error}</div>}
           <div className="nf-modal-actions">
@@ -715,10 +716,7 @@ export default function GroupsClient() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }

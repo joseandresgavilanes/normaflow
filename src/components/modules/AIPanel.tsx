@@ -147,7 +147,7 @@ export default function AIPanel({
           >
             {t("ai.customPrompt")}
           </label>
-          <textarea
+          <textarea aria-label={t("ai.customPromptPlaceholder")}
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder={t("ai.customPromptPlaceholder")}

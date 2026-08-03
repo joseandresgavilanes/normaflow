@@ -55,11 +55,11 @@ export default function IncidentsLiveClient({ initial }: { initial: IncidentsPay
     </div>
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código o descripción…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input aria-label="Buscar código o descripción" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código o descripción…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
         <Filter label="Estado" value={status} onChange={setStatus} options={[{ value: "ALL", label: "Todos" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Severidad" value={severity} onChange={setSeverity} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(SEV_LABEL).map(([value, label]) => ({ value, label }))]} />
         {initial.canCreate && <button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Registrar incidente</button>}
-        {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}><option value="incident-log">Registro</option><option value="incident-report">Informe</option></select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+        {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}><option value="incident-log">Registro</option><option value="incident-report">Informe</option></select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
       <DataTable
         columns={columns}
@@ -114,17 +114,17 @@ function IncidentDetail({ incident, initial, pending, onClose, onRun }: { incide
 
       {initial.canUpdate && <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14 }}>
         <h4>Lecciones aprendidas</h4>
-        <textarea className="nf-app-input" rows={2} value={lessons} onChange={(e) => setLessons(e.target.value)} />
+        <textarea aria-label="Lecciones aprendidas" className="nf-app-input" rows={2} value={lessons} onChange={(e) => setLessons(e.target.value)} />
         <button type="button" className="nf-app-btn-ghost" style={{ marginTop: 8 }} disabled={pending} onClick={() => onRun(() => updateIncident({ id: incident.id, severity: incident.severity as never, category: incident.category as never, responsibleId: incident.responsible?.id ?? null, occurredAt: incident.occurredAt, impact: incident.impact ?? undefined, notificationRequired: incident.notificationRequired, notificationDetails: incident.notificationDetails ?? undefined, lessonsLearned: lessons || undefined }), { successMessage: "Guardado." })}>Guardar lecciones</button>
       </div>}
 
       <Section title="Activos afectados">
         {incident.assets.map((a) => <Row key={a.id} text={`${a.asset.code} · ${a.asset.name}`} onRemove={initial.canUpdate ? () => onRun(() => unlinkIncidentAsset(a.id)) : undefined} pending={pending} />)}
-        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select className="nf-app-input" value={assetId} onChange={(e) => setAssetId(e.target.value)}><option value="">Activo…</option>{initial.assetOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !assetId} onClick={() => onRun(() => linkIncidentAsset({ incidentId: incident.id, assetId }), { successMessage: "Activo vinculado." })}><Link2 size={14} /> Añadir</button></div>}
+        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select aria-label="Activo" className="nf-app-input" value={assetId} onChange={(e) => setAssetId(e.target.value)}><option value="">Activo…</option>{initial.assetOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !assetId} onClick={() => onRun(() => linkIncidentAsset({ incidentId: incident.id, assetId }), { successMessage: "Activo vinculado." })}><Link2 size={14} /> Añadir</button></div>}
       </Section>
       <Section title="Evidencias">
         {incident.evidence.map((e) => <Row key={e.id} text={e.evidence.title} onRemove={initial.canUpdate ? () => onRun(() => unlinkIncidentEvidence(e.id)) : undefined} pending={pending} />)}
-        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select className="nf-app-input" value={evidenceId} onChange={(e) => setEvidenceId(e.target.value)}><option value="">Evidencia…</option>{initial.evidenceOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !evidenceId} onClick={() => onRun(() => linkIncidentEvidence({ incidentId: incident.id, evidenceId }), { successMessage: "Evidencia vinculada." })}><Link2 size={14} /> Añadir</button></div>}
+        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select aria-label="Evidencia" className="nf-app-input" value={evidenceId} onChange={(e) => setEvidenceId(e.target.value)}><option value="">Evidencia…</option>{initial.evidenceOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !evidenceId} onClick={() => onRun(() => linkIncidentEvidence({ incidentId: incident.id, evidenceId }), { successMessage: "Evidencia vinculada." })}><Link2 size={14} /> Añadir</button></div>}
       </Section>
     </div>
   </div></div>;

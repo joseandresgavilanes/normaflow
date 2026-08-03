@@ -171,13 +171,13 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
           Un solo alcance para las tres normas; cada una puede añadir su nota y exclusiones.
         </p>
         <label style={{ fontSize: 12, fontWeight: 700 }}>Alcance</label>
-        <textarea value={scope} onChange={(e) => setScope(e.target.value)} disabled={!canUpdate} rows={3} style={{ ...input, marginBottom: 10 }} />
+        <textarea aria-label="Alcance" value={scope} onChange={(e) => setScope(e.target.value)} disabled={!canUpdate} rows={3} style={{ ...input, marginBottom: 10 }} />
         <label style={{ fontSize: 12, fontWeight: 700 }}>Exclusiones justificadas</label>
-        <textarea value={exclusions} onChange={(e) => setExclusions(e.target.value)} disabled={!canUpdate} rows={2} style={{ ...input, marginBottom: 10 }} />
+        <textarea aria-label="Exclusiones" value={exclusions} onChange={(e) => setExclusions(e.target.value)} disabled={!canUpdate} rows={2} style={{ ...input, marginBottom: 10 }} />
         <label style={{ fontSize: 12, fontWeight: 700 }}>Límites físicos y organizacionales</label>
-        <textarea value={boundaries} onChange={(e) => setBoundaries(e.target.value)} disabled={!canUpdate} rows={2} style={{ ...input, marginBottom: 10 }} />
+        <textarea aria-label="Límites" value={boundaries} onChange={(e) => setBoundaries(e.target.value)} disabled={!canUpdate} rows={2} style={{ ...input, marginBottom: 10 }} />
         <label style={{ fontSize: 12, fontWeight: 700 }}>Cuestiones internas y externas (contexto común 4.1)</label>
-        <textarea value={contextNotes} onChange={(e) => setContextNotes(e.target.value)} disabled={!canUpdate} rows={3} style={input} />
+        <textarea aria-label="Notas de contexto" value={contextNotes} onChange={(e) => setContextNotes(e.target.value)} disabled={!canUpdate} rows={3} style={input} />
       </section>
 
       <section style={card}>
@@ -186,7 +186,7 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
           Documento único que declara el compromiso de calidad, ambiente y SST.
           {p.system?.policyApprovedAt && <> · Aprobada el {new Date(p.system.policyApprovedAt).toLocaleDateString()} por {p.system.policyApprovedByName ?? "—"}.</>}
         </p>
-        <textarea value={policy} onChange={(e) => setPolicy(e.target.value)} disabled={!canUpdate} rows={8} style={input} />
+        <textarea aria-label="Política" value={policy} onChange={(e) => setPolicy(e.target.value)} disabled={!canUpdate} rows={8} style={input} />
         <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
           <button disabled={!canUpdate || pending} style={primaryBtn}
             onClick={() => run(() => upsertIntegratedSystem({ scope, policy, boundaries, contextNotes, scopeExclusions: exclusions }))}>
@@ -245,9 +245,9 @@ function SystemStandardRow({ standard, entry, members, canUpdate, pending, run }
         )}
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 8 }}>
-        <input placeholder="Nota de alcance específica" value={scopeNote} onChange={(e) => setScopeNote(e.target.value)} disabled={!canUpdate} style={input} />
-        <input placeholder="Exclusiones de esta norma" value={exclusions} onChange={(e) => setExclusions(e.target.value)} disabled={!canUpdate} style={input} />
-        <select value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)} disabled={!canUpdate} style={input}>
+        <input aria-label="Nota de alcance específica" placeholder="Nota de alcance específica" value={scopeNote} onChange={(e) => setScopeNote(e.target.value)} disabled={!canUpdate} style={input} />
+        <input aria-label="Exclusiones de esta norma" placeholder="Exclusiones de esta norma" value={exclusions} onChange={(e) => setExclusions(e.target.value)} disabled={!canUpdate} style={input} />
+        <select aria-label="Responsable sin asignar" value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)} disabled={!canUpdate} style={input}>
           <option value="">Responsable sin asignar</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
@@ -277,9 +277,9 @@ function PartiesTab({ p, canManage, pending, run }: { p: IntegratedPayload; canM
               <ModalError />
               <div className="nf-iso-create-fields" style={{ display: "grid", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 10 }}>
-                <input required placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} style={input} />
-                <input placeholder="Tipo (cliente, trabajador…)" value={type} onChange={(e) => setType(e.target.value)} style={input} />
-                <input placeholder="Necesidades y expectativas" value={needs} onChange={(e) => setNeeds(e.target.value)} style={input} />
+                <input aria-label="Nombre" required placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} style={input} />
+                <input aria-label="Tipo (cliente, trabajador…)" placeholder="Tipo (cliente, trabajador…)" value={type} onChange={(e) => setType(e.target.value)} style={input} />
+                <input aria-label="Necesidades y expectativas" placeholder="Necesidades y expectativas" value={needs} onChange={(e) => setNeeds(e.target.value)} style={input} />
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {["QUALITY", "ENVIRONMENT", "SAFETY"].map((d) => (
@@ -350,8 +350,8 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
               <ModalError />
               <div className="nf-iso-create-fields" style={{ display: "grid", gap: 12 }}>
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
-                <input required placeholder="Objetivo" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
-                <input placeholder="Meta" value={target} onChange={(e) => setTarget(e.target.value)} style={input} />
+                <input aria-label="Objetivo" required placeholder="Objetivo" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
+                <input aria-label="Meta" placeholder="Meta" value={target} onChange={(e) => setTarget(e.target.value)} style={input} />
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {["QUALITY", "ENVIRONMENT", "SAFETY"].map((d) => (
@@ -406,9 +406,9 @@ function EditPartyButton({ party, pending, run }: { party: IntegratedPayload["in
       <div className="nf-modal-form nf-iso-edit-form">
         <ModalError />
         <div className="nf-iso-edit-fields" style={{ display: "grid", gap: 12 }}>
-        <input required placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} style={input} />
-        <input placeholder="Tipo" value={type} onChange={(e) => setType(e.target.value)} style={input} />
-        <textarea placeholder="Necesidades y expectativas" value={needs} onChange={(e) => setNeeds(e.target.value)} style={input} rows={4} />
+        <input aria-label="Nombre" required placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} style={input} />
+        <input aria-label="Tipo" placeholder="Tipo" value={type} onChange={(e) => setType(e.target.value)} style={input} />
+        <textarea aria-label="Necesidades y expectativas" placeholder="Necesidades y expectativas" value={needs} onChange={(e) => setNeeds(e.target.value)} style={input} rows={4} />
         </div>
         <div className="nf-modal-actions nf-iso-edit-form-actions">
           <button type="button" style={ghostBtn} onClick={() => setOpen(false)}>Cancelar</button>
@@ -432,8 +432,8 @@ function EditObjectiveButton({ objective, pending, run }: { objective: Integrate
       <div className="nf-modal-form nf-iso-edit-form">
         <ModalError />
         <div className="nf-iso-edit-fields" style={{ display: "grid", gap: 12 }}>
-        <input required placeholder="Objetivo" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
-        <input placeholder="Meta" value={target} onChange={(e) => setTarget(e.target.value)} style={input} />
+        <input aria-label="Objetivo" required placeholder="Objetivo" value={title} onChange={(e) => setTitle(e.target.value)} style={input} />
+        <input aria-label="Meta" placeholder="Meta" value={target} onChange={(e) => setTarget(e.target.value)} style={input} />
         </div>
         <div className="nf-modal-actions nf-iso-edit-form-actions">
           <button type="button" style={ghostBtn} onClick={() => setOpen(false)}>Cancelar</button>
@@ -478,11 +478,11 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
           {query && <button type="button" className="nf-iso-table-search-clear" onClick={() => setQuery("")} aria-label="Limpiar búsqueda"><X size={14} aria-hidden /></button>}
         </label>
         <div style={{ display: "flex", gap: 10, flex: "1 1 100%", flexWrap: "wrap", alignItems: "center" }}>
-        <select value={family} onChange={(e) => setFamily(e.target.value)} style={{ ...input, maxWidth: 190 }}>
+        <select aria-label="Familia" value={family} onChange={(e) => setFamily(e.target.value)} style={{ ...input, maxWidth: 190 }}>
           <option value="">Todas las normas</option>
           {families.map((f) => <option key={f} value={f}>{f.replace("_", " ")}</option>)}
         </select>
-        <select value={kind} onChange={(e) => setKind(e.target.value)} style={{ ...input, maxWidth: 220 }}>
+        <select aria-label="Tipo" value={kind} onChange={(e) => setKind(e.target.value)} style={{ ...input, maxWidth: 220 }}>
           <option value="">Todos los tipos</option>
           <option value="EQUIVALENT">Equivalente</option>
           <option value="PARTIAL">Parcialmente equivalente</option>
@@ -668,13 +668,13 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
       {canManage && (
         <section style={{ ...card, background: "#f7f9fc", marginBottom: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 }}>
-            <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} style={input}>
+            <select aria-label="Selecciona proveedor" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} style={input}>
               <option value="">Selecciona proveedor…</option>
               {p.suppliers.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
             </select>
-            <input type="number" min={0} max={100} step="0.1" placeholder="Calidad (0-100)" value={qualityScore} onChange={(e) => setQualityScore(e.target.value)} style={input} />
-            <input type="number" min={0} max={100} step="0.1" placeholder="Ambiente (0-100)" value={environmentScore} onChange={(e) => setEnvironmentScore(e.target.value)} style={input} />
-            <input type="number" min={0} max={100} step="0.1" placeholder="SST (0-100)" value={safetyScore} onChange={(e) => setSafetyScore(e.target.value)} style={input} />
+            <input aria-label="Calidad (0-100)" type="number" min={0} max={100} step="0.1" placeholder="Calidad (0-100)" value={qualityScore} onChange={(e) => setQualityScore(e.target.value)} style={input} />
+            <input aria-label="Ambiente (0-100)" type="number" min={0} max={100} step="0.1" placeholder="Ambiente (0-100)" value={environmentScore} onChange={(e) => setEnvironmentScore(e.target.value)} style={input} />
+            <input aria-label="SST (0-100)" type="number" min={0} max={100} step="0.1" placeholder="SST (0-100)" value={safetyScore} onChange={(e) => setSafetyScore(e.target.value)} style={input} />
           </div>
           <button disabled={pending || !supplierId || !scoresValid} style={{ ...primaryBtn, marginTop: 10 }}
             onClick={() => run(async () => {

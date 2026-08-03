@@ -25,6 +25,7 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { exportRecordsMatrix } from "@/lib/actions/records";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
+import { Field as UiField } from "@/components/ui/Field";
 
 type Status = "ALL" | "ACTIVE" | "INACTIVE" | "DUE_SOON" | "OVERDUE";
 
@@ -409,7 +410,7 @@ export default function RecordsClient() {
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
-            <input
+            <input aria-label="Buscar por código, nombre, proceso"
               type="search"
               placeholder="Buscar por código, nombre, proceso…"
               value={search}
@@ -417,7 +418,7 @@ export default function RecordsClient() {
               className="nf-app-input"
               style={{ flex: 1, minWidth: 220, boxSizing: "border-box" }}
             />
-            <select
+            <select aria-label="Filtrar por tipo"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="nf-app-input"
@@ -430,11 +431,11 @@ export default function RecordsClient() {
                 </option>
               ))}
             </select>
-            <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            <select aria-label="Filtrar por proceso" value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todos los procesos</option>
               {processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}
             </select>
-            <select value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            <select aria-label="Filtrar por cláusula" value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todas las cláusulas ISO</option>
               {admin.state.clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code}</option>)}
             </select>
@@ -596,14 +597,14 @@ function RecordFormModal({
           <FormSection title="Identificación">
             <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12 }}>
               <Field label="Código *">
-                <input name="code" required defaultValue={editing?.code ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="REG-XXX-001" />
+                <input aria-label="REG-XXX-001" name="code" required defaultValue={editing?.code ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="REG-XXX-001" />
               </Field>
               <Field label="Nombre *">
-                <input name="name" required defaultValue={editing?.name ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Registro de…" />
+                <input aria-label="Registro de" name="name" required defaultValue={editing?.name ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Registro de…" />
               </Field>
             </div>
             <Field label="Proceso relacionado">
-              <select name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Sin proceso relacionado —</option>
                 {processes.map((process) => (
                   <option key={process.id} value={process.id}>
@@ -613,7 +614,7 @@ function RecordFormModal({
               </select>
             </Field>
             <Field label="Cláusula ISO relacionada">
-              <select name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Cláusula" name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Sin cláusula relacionada —</option>
                 {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code} — {clause.title}</option>)}
               </select>
@@ -623,7 +624,7 @@ function RecordFormModal({
           <FormSection title="Clasificación y custodio">
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <Field label="Tipo de registro">
-                <select name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Tipo de registro" name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">— Sin tipo —</option>
                   {recordTypes.filter((t) => t.active).map((t) => (
                     <option key={t.id} value={t.id}>
@@ -633,7 +634,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Custodio">
-                <select name="custodianId" defaultValue={editing?.custodianId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Custodio" name="custodianId" defaultValue={editing?.custodianId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">— Sin custodio asignado —</option>
                   {personnel
                     .filter((p) => p.active)
@@ -646,7 +647,7 @@ function RecordFormModal({
               </Field>
             </div>
             <Field label="Revisor asignado">
-              <select name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Revisor" name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Seleccionar revisor —</option>
                 {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER" || m.role === "AUDITOR").map((member) => (
                   <option key={member.userId} value={member.userId}>{member.name} · {member.role}</option>
@@ -658,7 +659,7 @@ function RecordFormModal({
           <FormSection title="Retención y archivo">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
               <Field label="Tiempo de retención">
-                <select name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Tiempo de retención" name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {retentionTimes.filter((r) => r.active).map((r) => (
                     <option key={r.id} value={r.id}>
@@ -668,7 +669,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Disposición">
-                <select name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Disposición" name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {dispositions.filter((d) => d.active).map((d) => (
                     <option key={d.id} value={d.id}>
@@ -678,7 +679,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Método de archivo">
-                <select name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Método de archivo" name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {archiveMethods.filter((a) => a.active).map((a) => (
                     <option key={a.id} value={a.id}>
@@ -693,17 +694,17 @@ function RecordFormModal({
           <FormSection title="Ubicaciones">
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <Field label="Ubicación física">
-                <input name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Archivador, estante…" />
+                <input aria-label="Archivador, estante" name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Archivador, estante…" />
               </Field>
               <Field label="Ubicación digital">
-                <input name="digitalLocation" defaultValue={editing?.digitalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="/ruta/del/registro" />
+                <input aria-label="/ruta/del/registro" name="digitalLocation" defaultValue={editing?.digitalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="/ruta/del/registro" />
               </Field>
             </div>
           </FormSection>
 
           <FormSection title="Observaciones">
             <Field label="Notas internas">
-              <textarea name="observations" rows={3} defaultValue={editing?.observations ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
+              <textarea aria-label="Observaciones" name="observations" rows={3} defaultValue={editing?.observations ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
             </Field>
           </FormSection>
         </div>
@@ -926,7 +927,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
           )}
           {canReview && record.reviewStatus === "IN_REVIEW" && (
             <>
-              <input value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Comentario (opcional)" className="nf-app-input" style={{ minWidth: 190, flex: 1 }} />
+              <input aria-label="Comentario (opcional)" value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Comentario (opcional)" className="nf-app-input" style={{ minWidth: 190, flex: 1 }} />
               <button type="button" className="nf-app-btn-success" disabled={isPending} onClick={() => review("approve")}>Aprobar</button>
               <button type="button" className="nf-app-btn-danger" disabled={isPending || !reviewComment.trim()} onClick={() => review("reject")}>Devolver</button>
             </>
@@ -1008,15 +1009,15 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Título *</label>
-                  <input name="title" required placeholder="Acta, inspección, certificado…" className="nf-app-input" style={inputFieldStyle} />
+                  <input aria-label="Acta, inspección, certificado" name="title" required placeholder="Acta, inspección, certificado…" className="nf-app-input" style={inputFieldStyle} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input aria-label="LOTE-…, INC-" name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input aria-label="Fecha de entrada" name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select aria-label="Responsable" name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select aria-label="Estado" name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
                 </div>
                 <FileImportArea
                   baseId={`record-entry-${recordId}`}
@@ -1030,7 +1031,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 />
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Descripción</label>
-                  <textarea name="description" rows={2} placeholder="Descripción u observaciones" className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
+                  <textarea aria-label="Descripción u observaciones" name="description" rows={2} placeholder="Descripción u observaciones" className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
                 </div>
               </div>
               {entryError && (
@@ -1212,12 +1213,8 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
 const inputFieldStyle: CSSProperties = { width: "100%", marginTop: 6, boxSizing: "border-box" };
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>{label}</label>
-      {children}
-    </div>
-  );
+  // Antes: <label> sin htmlFor, que no asocia con ningún control.
+  return <UiField label={label}>{children}</UiField>;
 }
 
 function MetaCell({ label, value }: { label: string; value: ReactNode }) {

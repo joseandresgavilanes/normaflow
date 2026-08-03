@@ -222,10 +222,10 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <select value={matrixEdition} onChange={(e) => setMatrixEdition(e.target.value)} className="nf-app-input" style={{ maxWidth: 260 }}>
+        <select aria-label="Edición de la matriz" value={matrixEdition} onChange={(e) => setMatrixEdition(e.target.value)} className="nf-app-input" style={{ maxWidth: 260 }}>
           {payload.matrix.map((m) => <option key={m.editionId} value={m.editionId}>{m.label}</option>)}
         </select>
-        <select value={levelFilter} onChange={(e) => setLevelFilter(Number(e.target.value))} className="nf-app-input" style={{ maxWidth: 160 }}>
+        <select aria-label="Filtrar por nivel" value={levelFilter} onChange={(e) => setLevelFilter(Number(e.target.value))} className="nf-app-input" style={{ maxWidth: 160 }}>
           <option value={0}>Todos los niveles</option><option value={1}>Nivel 1 (capítulo)</option><option value={2}>Nivel 2</option><option value={3}>Nivel 3</option>
         </select>
         <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2,#5e6b7a)" }}>

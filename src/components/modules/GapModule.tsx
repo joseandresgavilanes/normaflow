@@ -526,7 +526,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               <label className="nf-modal-field-label" htmlFor="gap-score">
                 Puntuación de cumplimiento · <strong>{editScore}%</strong>
               </label>
-              <input
+              <input aria-label="Puntuación"
                 id="gap-score"
                 type="range"
                 min={0}
@@ -547,7 +547,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
             <div>
               <label className="nf-modal-field-label" htmlFor="gap-status">Estado</label>
-              <select
+              <select aria-label="Estado"
                 id="gap-status"
                 value={editStatus}
                 disabled={isPending}
@@ -563,7 +563,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
             <div>
               <label className="nf-modal-field-label" htmlFor="gap-comment">Comentarios / evidencia</label>
-              <textarea
+              <textarea aria-label="Hallazgos, evidencia revisada, brechas identificadas"
                 id="gap-comment"
                 value={editComment}
                 onChange={e => setEditComment(e.target.value)}

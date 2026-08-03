@@ -385,14 +385,14 @@ export default function DocumentsModule() {
 
       <Card style={{ marginBottom: 18, padding: "14px 16px" }}>
         <div style={{ display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <input
+          <input aria-label="Buscar por título o código..."
             className="nf-app-input"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por título o código..."
             style={{ flex: "1 1 200px", minWidth: 160, maxWidth: 440, boxSizing: "border-box" }}
           />
-          <select
+          <select aria-label="Filtrar por carpeta"
             className="nf-app-input"
             value={folderFilter}
             onChange={e => setFolderFilter(e.target.value)}
@@ -509,7 +509,7 @@ export default function DocumentsModule() {
             </div>
             <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Proceso asociado</div>
-              <select
+              <select aria-label="Proceso vinculado"
                 className="nf-app-input"
                 value={processLinkDraft}
                 onChange={e => setProcessLinkDraft(e.target.value)}
@@ -780,13 +780,13 @@ export default function DocumentsModule() {
             </div>
             <div style={{ background: "var(--nf-app-surface-2)", padding: 14, borderRadius: 8 }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 8 }}>Registrar versión</div>
-              <input
+              <input aria-label="Número de versión (ej. 3.3)"
                 placeholder="Número de versión (ej. 3.3)"
                 value={nextVersion}
                 onChange={e => setNextVersion(e.target.value)}
                 style={{ width: "100%", marginBottom: 8, padding: "8px 12px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, boxSizing: "border-box" }}
               />
-              <textarea
+              <textarea aria-label="Nota de cambio"
                 placeholder="Nota de cambio"
                 value={versionNote}
                 onChange={e => setVersionNote(e.target.value)}

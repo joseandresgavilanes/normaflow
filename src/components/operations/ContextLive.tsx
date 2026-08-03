@@ -93,18 +93,18 @@ export function ContextLive({ initial }: { initial: OrganizationalContextPayload
       </OperationalGrid>}
 
       <FormModal open={creating && !editingObjective} title={editingParty ? "Editar parte interesada" : "Nueva parte interesada"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditingParty(null); setError(""); }} onSubmit={submitParty}>
-        <Field label="Nombre"><input name="name" required className="nf-app-input" style={inputStyle} defaultValue={editingParty?.name ?? ""} /></Field>
+        <Field label="Nombre"><input aria-label="Nombre" name="name" required className="nf-app-input" style={inputStyle} defaultValue={editingParty?.name ?? ""} /></Field>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Tipo"><input name="type" className="nf-app-input" style={inputStyle} placeholder="Cliente, trabajador, autoridad…" defaultValue={editingParty?.type ?? ""} /></Field>
-          <Field label="Responsable"><select name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editingParty?.responsibleId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+          <Field label="Tipo"><input aria-label="Cliente, trabajador, autoridad" name="type" className="nf-app-input" style={inputStyle} placeholder="Cliente, trabajador, autoridad…" defaultValue={editingParty?.type ?? ""} /></Field>
+          <Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editingParty?.responsibleId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
         </div>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Influencia (1-5)"><input name="influence" type="number" min={1} max={5} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.influence ?? 3} /></Field>
-          <Field label="Dependencia (1-5)"><input name="dependency" type="number" min={1} max={5} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.dependency ?? 3} /></Field>
+          <Field label="Influencia (1-5)"><input aria-label="Influencia" name="influence" type="number" min={1} max={5} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.influence ?? 3} /></Field>
+          <Field label="Dependencia (1-5)"><input aria-label="Dependencia" name="dependency" type="number" min={1} max={5} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.dependency ?? 3} /></Field>
         </div>
-        <Field label="Necesidades y expectativas"><textarea name="needs" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.needs ?? ""} /></Field>
-        <Field label="Requisitos aplicables"><textarea name="requirements" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.requirements ?? ""} /></Field>
-        <Field label="Cómo se comunica"><textarea name="communication" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.communication ?? ""} /></Field>
+        <Field label="Necesidades y expectativas"><textarea aria-label="Necesidades" name="needs" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.needs ?? ""} /></Field>
+        <Field label="Requisitos aplicables"><textarea aria-label="Requisitos" name="requirements" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.requirements ?? ""} /></Field>
+        <Field label="Cómo se comunica"><textarea aria-label="Comunicación" name="communication" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingParty?.communication ?? ""} /></Field>
       </FormModal>
 
       <Modal open={!!detailParty} onClose={() => setDetailParty(null)} title={detailParty?.name ?? "Parte interesada"} width={640}>{detailParty && <div style={{ display: "grid", gap: 12 }}>
@@ -127,25 +127,25 @@ export function ContextLive({ initial }: { initial: OrganizationalContextPayload
       </OperationalGrid>}
 
       <FormModal open={creating && !editingParty} title={editingObjective ? "Editar objetivo" : "Nuevo objetivo"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditingObjective(null); setError(""); }} onSubmit={submitObjective}>
-        <Field label="Título"><input name="title" required className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.title ?? ""} /></Field>
-        <Field label="Descripción"><textarea name="description" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.description ?? ""} /></Field>
+        <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.title ?? ""} /></Field>
+        <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.description ?? ""} /></Field>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Meta (texto)"><input name="target" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.target ?? ""} /></Field>
-          <Field label="Línea base"><input name="baseline" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.baseline ?? ""} /></Field>
+          <Field label="Meta (texto)"><input aria-label="Meta" name="target" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.target ?? ""} /></Field>
+          <Field label="Línea base"><input aria-label="Línea base" name="baseline" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.baseline ?? ""} /></Field>
         </div>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Valor meta"><input name="targetValue" type="number" step="any" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.targetValue ?? ""} /></Field>
-          <Field label="Valor actual"><input name="currentValue" type="number" step="any" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.currentValue ?? ""} /></Field>
+          <Field label="Valor meta"><input aria-label="Valor objetivo" name="targetValue" type="number" step="any" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.targetValue ?? ""} /></Field>
+          <Field label="Valor actual"><input aria-label="Valor actual" name="currentValue" type="number" step="any" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.currentValue ?? ""} /></Field>
         </div>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Unidad"><input name="unit" className="nf-app-input" style={inputStyle} placeholder="%, días, unidades…" defaultValue={editingObjective?.unit ?? ""} /></Field>
-          <Field label="Fecha objetivo"><input name="dueDate" type="date" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.dueDate?.slice(0, 10) ?? ""} /></Field>
+          <Field label="Unidad"><input aria-label="%, días, unidades" name="unit" className="nf-app-input" style={inputStyle} placeholder="%, días, unidades…" defaultValue={editingObjective?.unit ?? ""} /></Field>
+          <Field label="Fecha objetivo"><input aria-label="Fecha de vencimiento" name="dueDate" type="date" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.dueDate?.slice(0, 10) ?? ""} /></Field>
         </div>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Estado"><select name="status" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.status ?? "PLANNED"}><option value="PLANNED">Planificado</option><option value="IN_PROGRESS">En curso</option><option value="ACHIEVED">Alcanzado</option><option value="NOT_ACHIEVED">No alcanzado</option><option value="CANCELLED">Cancelado</option></select></Field>
-          <Field label="Responsable"><select name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+          <Field label="Estado"><select aria-label="Estado" name="status" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.status ?? "PLANNED"}><option value="PLANNED">Planificado</option><option value="IN_PROGRESS">En curso</option><option value="ACHIEVED">Alcanzado</option><option value="NOT_ACHIEVED">No alcanzado</option><option value="CANCELLED">Cancelado</option></select></Field>
+          <Field label="Responsable"><select aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
         </div>
-        <Field label="Recursos necesarios"><textarea name="resources" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.resources ?? ""} /></Field>
+        <Field label="Recursos necesarios"><textarea aria-label="Recursos" name="resources" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editingObjective?.resources ?? ""} /></Field>
       </FormModal>
 
       <Modal open={!!detailObjective} onClose={() => setDetailObjective(null)} title={detailObjective?.title ?? "Objetivo"} width={640}>{detailObjective && <div style={{ display: "grid", gap: 12 }}>

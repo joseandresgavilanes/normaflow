@@ -16,6 +16,7 @@ import "./globals.css";
 // monolito de 7k líneas.
 import "@/styles/app-shell.css";
 import "@/styles/controls.css";
+import "@/styles/forms.css";
 import "@/styles/surfaces.css";
 import "@/styles/data-table.css";
 

@@ -102,12 +102,12 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
 
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código, nombre o propietario…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input aria-label="Buscar código, nombre o propietario" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código, nombre o propietario…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
         <Filter label="Categoría" value={category} onChange={setCategory} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(CATEGORY_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Estado" value={status} onChange={setStatus} options={[{ value: "ALL", label: "Todos" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Criticidad" value={criticality} onChange={setCriticality} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(CRIT_LABEL).map(([value, label]) => ({ value, label }))]} />
         {initial.canCreate && <><button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Nuevo activo</button><button type="button" className="nf-app-btn-ghost" onClick={() => setImporting(true)}><Upload size={14} /> Importar CSV</button></>}
-        {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+        {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.summary.total} activos</div>
       <DataTable
@@ -168,7 +168,7 @@ function ImportModal({ pending, onClose, onRun }: { pending: boolean; onClose: (
     <div className="nf-modal-header"><h3>Importar activos (CSV)</h3><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cerrar</button></div>
     <div style={{ display: "grid", gap: 12, padding: 20 }}>
       <p style={{ fontSize: 12, color: "var(--nf-ink-3)", margin: 0 }}>Columnas requeridas: <code>code, name, category</code>. Opcionales: <code>criticality, description</code>. Categorías válidas: {Object.keys(CATEGORY_LABEL).join(", ")}.</p>
-      <textarea className="nf-app-input" rows={10} value={csv} onChange={(e) => setCsv(e.target.value)} style={{ fontFamily: "monospace", fontSize: 12 }} />
+      <textarea aria-label="Archivo CSV" className="nf-app-input" rows={10} value={csv} onChange={(e) => setCsv(e.target.value)} style={{ fontFamily: "monospace", fontSize: 12 }} />
       <button type="button" className="nf-app-btn-primary" disabled={pending} onClick={() => onRun(() => importAssetsCsv({ csv }), { onSuccess: onClose, successMessage: "Importación procesada." })}><Upload size={14} /> Importar</button>
     </div>
   </div></div>;
@@ -212,8 +212,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
             {(["confidentiality", "integrity", "availability"] as const).map((k) => <label key={k} style={{ fontSize: 11 }}>{k === "confidentiality" ? "Confidencialidad" : k === "integrity" ? "Integridad" : "Disponibilidad"}<select className="nf-app-input" value={cls[k]} onChange={(e) => setCls((p) => ({ ...p, [k]: e.target.value as never }))}>{Object.entries(CIA_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>)}
             <label style={{ fontSize: 11 }}>Clasificación<select className="nf-app-input" value={cls.classification} onChange={(e) => setCls((p) => ({ ...p, classification: e.target.value as never }))}>{Object.entries(CLASS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
           </div>
-          <input className="nf-app-input" placeholder="Requisitos legales" value={cls.legalRequirements} onChange={(e) => setCls((p) => ({ ...p, legalRequirements: e.target.value }))} />
-          <input className="nf-app-input" placeholder="Retención" value={cls.retention} onChange={(e) => setCls((p) => ({ ...p, retention: e.target.value }))} />
+          <input aria-label="Requisitos legales" className="nf-app-input" placeholder="Requisitos legales" value={cls.legalRequirements} onChange={(e) => setCls((p) => ({ ...p, legalRequirements: e.target.value }))} />
+          <input aria-label="Retención" className="nf-app-input" placeholder="Retención" value={cls.retention} onChange={(e) => setCls((p) => ({ ...p, retention: e.target.value }))} />
           <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={() => onRun(() => upsertAssetClassification({ assetId: asset.id, confidentiality: cls.confidentiality as never, integrity: cls.integrity as never, availability: cls.availability as never, classification: cls.classification as never, legalRequirements: cls.legalRequirements || undefined, retention: cls.retention || undefined }), { successMessage: "Clasificación guardada." })}>Guardar clasificación</button>
         </div> : <div style={{ fontSize: 13 }}>{c ? `${CLASS_LABEL[c.classification]} · CIA ${c.confidentiality}/${c.integrity}/${c.availability}` : "Sin clasificar"}</div>}
       </div>
@@ -222,9 +222,9 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Riesgos asociados">
         {asset.risks.map((r) => <Row key={r.id} text={`${r.riskTitle ?? r.threat ?? "Riesgo"}${r.vulnerability ? ` · ${r.vulnerability}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetRisk(r.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select>
-          <input className="nf-app-input" placeholder="Amenaza" value={threat} onChange={(e) => setThreat(e.target.value)} style={{ maxWidth: 150 }} />
-          <input className="nf-app-input" placeholder="Vulnerabilidad" value={vuln} onChange={(e) => setVuln(e.target.value)} style={{ maxWidth: 150 }} />
+          <select aria-label="Riesgo del registro" className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select>
+          <input aria-label="Amenaza" className="nf-app-input" placeholder="Amenaza" value={threat} onChange={(e) => setThreat(e.target.value)} style={{ maxWidth: 150 }} />
+          <input aria-label="Vulnerabilidad" className="nf-app-input" placeholder="Vulnerabilidad" value={vuln} onChange={(e) => setVuln(e.target.value)} style={{ maxWidth: 150 }} />
           <button type="button" className="nf-app-btn-ghost" disabled={pending || (!riskId && !threat.trim())} onClick={() => onRun(() => addAssetRisk({ assetId: asset.id, riskId: riskId || null, threat: threat || undefined, vulnerability: vuln || undefined }), { successMessage: "Riesgo asociado." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -233,8 +233,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Controles Anexo A asociados">
         {asset.controls.map((ct) => <Row key={ct.id} text={`${ct.code} · ${ct.title} · ${CTRL_STATUS_LABEL[ct.status]}${ct.evidence ? ` · ${ct.evidence.title}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetControl(ct.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</select>
-          <select className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          <select aria-label="Control" className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</select>
+          <select aria-label="Estado del control" className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !ctrlId} onClick={() => onRun(() => upsertAssetControl({ assetId: asset.id, organizationControlId: ctrlId, status: ctrlStatus as never }), { successMessage: "Control asociado." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -244,8 +244,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         {asset.dependencies.map((d) => <Row key={d.id} text={`${DEP_LABEL[d.type]} → ${d.asset.code} ${d.asset.name}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetDependency(d.id)) : undefined} pending={pending} />)}
         {asset.dependents.map((d) => <Row key={d.id} text={`${d.asset.code} ${d.asset.name} → ${DEP_LABEL[d.type]} este activo`} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-          <select className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select>
+          <select aria-label="Tipo de dependencia" className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          <select aria-label="Activo dependiente" className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !depId} onClick={() => onRun(() => addAssetDependency({ sourceAssetId: asset.id, dependentAssetId: depId, type: depType as never }), { successMessage: "Dependencia añadida." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>

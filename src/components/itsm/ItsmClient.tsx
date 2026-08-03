@@ -838,9 +838,9 @@ function NewServiceForm({ pending, run, onDone }: { pending: boolean; run: Runne
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del servicio" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} placeholder="Categoría" value={f.category} onChange={(e) => set("category", e.target.value)} />
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        <input aria-label="Nombre del servicio" style={input} placeholder="Nombre del servicio" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Categoría" style={input} placeholder="Categoría" value={f.category} onChange={(e) => set("category", e.target.value)} />
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
       </div>
@@ -851,7 +851,7 @@ function NewServiceForm({ pending, run, onDone }: { pending: boolean; run: Runne
 
 function ServiceSelect({ services, value, onChange }: { services: Services; value: string; onChange: (v: string) => void }) {
   return (
-    <select style={input} value={value} onChange={(e) => onChange(e.target.value)}>
+    <select aria-label="Servicio" style={input} value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">Servicio…</option>
       {services.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
     </select>
@@ -865,8 +865,8 @@ function NewCatalogEntryForm({ services, pending, run, onDone }: { services: Ser
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Nombre de la entrada" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} type="number" min={0} placeholder="Horas est." value={f.estimatedFulfillmentHours} onChange={(e) => set("estimatedFulfillmentHours", e.target.value)} />
+        <input aria-label="Nombre de la entrada" style={input} placeholder="Nombre de la entrada" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Horas est." style={input} type="number" min={0} placeholder="Horas est." value={f.estimatedFulfillmentHours} onChange={(e) => set("estimatedFulfillmentHours", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.name} style={primaryBtn} onClick={() => { run(() => createServiceCatalogEntry({ serviceId: f.serviceId, name: f.name, requestable: true, estimatedFulfillmentHours: f.estimatedFulfillmentHours ? Number(f.estimatedFulfillmentHours) : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -880,12 +880,12 @@ function NewOwnerForm({ services, members, pending, run, onDone }: { services: S
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.userId} onChange={(e) => set("userId", e.target.value)}>
+        <select aria-label="Miembro" style={input} value={f.userId} onChange={(e) => set("userId", e.target.value)}>
           <option value="">Miembro…</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <input style={input} placeholder="Nombre (si no es miembro)" value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} />
-        <select style={input} value={f.ownershipRole} onChange={(e) => set("ownershipRole", e.target.value)}>
+        <input aria-label="Nombre (si no es miembro)" style={input} placeholder="Nombre (si no es miembro)" value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} />
+        <select aria-label="Rol de propiedad" style={input} value={f.ownershipRole} onChange={(e) => set("ownershipRole", e.target.value)}>
           {["PRIMARY", "BACKUP", "DELEGATE"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
         </select>
       </div>
@@ -901,15 +901,15 @@ function NewSlaForm({ services, pending, run, onDone }: { services: Services; pe
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Nombre del SLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <input aria-label="Nombre del SLA" style={input} placeholder="Nombre del SLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>{itsmLabel(p)}</option>)}
         </select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={1} placeholder="Respuesta (min)" value={f.responseTimeMinutes} onChange={(e) => set("responseTimeMinutes", e.target.value)} />
-        <input style={input} type="number" min={1} placeholder="Resolución (min)" value={f.resolutionTimeMinutes} onChange={(e) => set("resolutionTimeMinutes", e.target.value)} />
-        <input style={input} type="number" min={0} max={100} placeholder="Disponibilidad objetivo %" value={f.availabilityTargetPct} onChange={(e) => set("availabilityTargetPct", e.target.value)} />
+        <input aria-label="Respuesta (min)" style={input} type="number" min={1} placeholder="Respuesta (min)" value={f.responseTimeMinutes} onChange={(e) => set("responseTimeMinutes", e.target.value)} />
+        <input aria-label="Resolución (min)" style={input} type="number" min={1} placeholder="Resolución (min)" value={f.resolutionTimeMinutes} onChange={(e) => set("resolutionTimeMinutes", e.target.value)} />
+        <input aria-label="Disponibilidad objetivo %" style={input} type="number" min={0} max={100} placeholder="Disponibilidad objetivo %" value={f.availabilityTargetPct} onChange={(e) => set("availabilityTargetPct", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.name} style={primaryBtn} onClick={() => { run(() => createServiceLevelAgreement({ serviceId: f.serviceId, name: f.name, priority: f.priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL", responseTimeMinutes: Number(f.responseTimeMinutes), resolutionTimeMinutes: Number(f.resolutionTimeMinutes), availabilityTargetPct: f.availabilityTargetPct ? Number(f.availabilityTargetPct) : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -923,12 +923,12 @@ function NewOlaForm({ services, slas, pending, run, onDone }: { services: Servic
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
+        <select aria-label="SLA (opcional)" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
           <option value="">SLA (opcional)…</option>
           {slas.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
         </select>
-        <input style={input} placeholder="Nombre del OLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} placeholder="Equipo de soporte" value={f.supportingTeam} onChange={(e) => set("supportingTeam", e.target.value)} />
+        <input aria-label="Nombre del OLA" style={input} placeholder="Nombre del OLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Equipo de soporte" style={input} placeholder="Equipo de soporte" value={f.supportingTeam} onChange={(e) => set("supportingTeam", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.name} style={primaryBtn} onClick={() => { run(() => createOperationalLevelAgreement({ serviceId: f.serviceId, slaId: f.slaId || undefined, name: f.name, supportingTeam: f.supportingTeam || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -941,19 +941,19 @@ function NewRequestForm({ services, catalog, members, pending, run, onDone }: { 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título de la solicitud" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Título de la solicitud" style={input} placeholder="Título de la solicitud" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.catalogEntryId} onChange={(e) => set("catalogEntryId", e.target.value)}>
+        <select aria-label="Entrada de catálogo" style={input} value={f.catalogEntryId} onChange={(e) => set("catalogEntryId", e.target.value)}>
           <option value="">Entrada de catálogo…</option>
           {catalog.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
         </select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
+        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
           <option value="">Asignar a…</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
-        <select style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>{itsmLabel(p)}</option>)}
         </select>
       </div>
@@ -967,27 +967,27 @@ function NewIncidentForm({ services, slas, members, pending, run, onDone }: { se
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título del incidente" value={f.title} onChange={(e) => set("title", e.target.value)} />
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Título del incidente" style={input} placeholder="Título del incidente" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
+        <select aria-label="SLA" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
           <option value="">SLA…</option>
           {slas.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
         </select>
-        <select style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
+        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
           <option value="">Asignar a…</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Prioridad: {p}</option>)}
         </select>
-        <select style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>
+        <select aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Impacto: {p}</option>)}
         </select>
-        <select style={input} value={f.urgency} onChange={(e) => set("urgency", e.target.value)}>
+        <select aria-label="Urgencia" style={input} value={f.urgency} onChange={(e) => set("urgency", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Urgencia: {p}</option>)}
         </select>
       </div>
@@ -1005,21 +1005,21 @@ function NewCrossLinkForm({ incidents, options, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.itsmIncidentId} onChange={(e) => set("itsmIncidentId", e.target.value)}>
+        <select aria-label="Incidente ITSM" style={input} value={f.itsmIncidentId} onChange={(e) => set("itsmIncidentId", e.target.value)}>
           <option value="">Incidente ITSM…</option>
           {incidents.map((i) => <option key={i.id} value={i.id}>{i.code}</option>)}
         </select>
-        <select style={input} value={f.targetDomain} onChange={(e) => { set("targetDomain", e.target.value as "SECURITY" | "AI" | "OCCUPATIONAL"); set("targetId", ""); }}>
+        <select aria-label="Dominio objetivo" style={input} value={f.targetDomain} onChange={(e) => { set("targetDomain", e.target.value as "SECURITY" | "AI" | "OCCUPATIONAL"); set("targetId", ""); }}>
           <option value="SECURITY">Seguridad (ISO 27001)</option>
           <option value="AI">IA (ISO/IEC 42001)</option>
           <option value="OCCUPATIONAL">Laboral (ISO 45001)</option>
         </select>
-        <select style={input} value={f.targetId} onChange={(e) => set("targetId", e.target.value)}>
+        <select aria-label="Incidente relacionado" style={input} value={f.targetId} onChange={(e) => set("targetId", e.target.value)}>
           <option value="">Incidente relacionado…</option>
           {domainOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
         </select>
       </div>
-      <input style={input} placeholder="Tipo de relación (opcional, ej. 'causado por')" value={f.relationType} onChange={(e) => set("relationType", e.target.value)} />
+      <input aria-label="Tipo de relación (opcional, ej. 'causado por')" style={input} placeholder="Tipo de relación (opcional, ej. 'causado por')" value={f.relationType} onChange={(e) => set("relationType", e.target.value)} />
       <button disabled={pending || !f.itsmIncidentId || !f.targetId} style={primaryBtn} onClick={() => { run(() => linkItsmIncidentCrossDomain({ itsmIncidentId: f.itsmIncidentId, targetDomain: f.targetDomain, targetId: f.targetId, relationType: f.relationType || undefined })); onDone(); }}><Plus size={12} /> Vincular</button>
     </div>
   );
@@ -1031,14 +1031,14 @@ function NewProblemForm({ services, members, pending, run, onDone }: { services:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del problema" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Título del problema" style={input} placeholder="Título del problema" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
+        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
           <option value="">Asignar a…</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
       </div>
-      <input style={input} placeholder="Workaround (opcional)" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
+      <input aria-label="Workaround (opcional)" style={input} placeholder="Workaround (opcional)" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createItsmProblem({ title: f.title, serviceId: f.serviceId || undefined, assigneeId: f.assigneeId || undefined, workaround: f.workaround || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1050,13 +1050,13 @@ function NewKnownErrorForm({ problems, pending, run, onDone }: { problems: ItsmP
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del error conocido" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.problemId} onChange={(e) => set("problemId", e.target.value)}>
+        <input aria-label="Título del error conocido" style={input} placeholder="Título del error conocido" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Problema (opcional)" style={input} value={f.problemId} onChange={(e) => set("problemId", e.target.value)}>
           <option value="">Problema (opcional)…</option>
           {problems.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}
         </select>
       </div>
-      <input style={input} placeholder="Workaround" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
+      <input aria-label="Workaround" style={input} placeholder="Workaround" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createKnownError({ title: f.title, problemId: f.problemId || undefined, workaround: f.workaround || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1068,12 +1068,12 @@ function NewChangeForm({ services, pending, run, onDone }: { services: Services;
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Título del cambio" style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>
+        <select aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>
           {["STANDARD", "NORMAL", "EMERGENCY"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
-        <select style={input} value={f.riskLevel} onChange={(e) => set("riskLevel", e.target.value)}>
+        <select aria-label="Nivel de riesgo" style={input} value={f.riskLevel} onChange={(e) => set("riskLevel", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>Riesgo: {itsmLabel(c)}</option>)}
         </select>
       </div>
@@ -1088,8 +1088,8 @@ function NewReleaseForm({ services, pending, run, onDone }: { services: Services
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del release" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
+        <input aria-label="Título del release" style={input} placeholder="Título del release" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
       </div>
       <button disabled={pending || !f.title || !f.version} style={primaryBtn} onClick={() => { run(() => createRelease({ title: f.title, version: f.version, serviceId: f.serviceId || undefined, changeCodes: [] })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1103,14 +1103,14 @@ function NewDeploymentForm({ releases, cis, pending, run, onDone }: { releases: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.releaseId} onChange={(e) => set("releaseId", e.target.value)}>
+        <select aria-label="Release" style={input} value={f.releaseId} onChange={(e) => set("releaseId", e.target.value)}>
           <option value="">Release…</option>
           {releases.map((r) => <option key={r.id} value={r.id}>{r.code} · {r.version}</option>)}
         </select>
-        <select style={input} value={f.environment} onChange={(e) => set("environment", e.target.value)}>
+        <select aria-label="Entorno" style={input} value={f.environment} onChange={(e) => set("environment", e.target.value)}>
           {["DEV", "TEST", "STAGING", "PROD"].map((e2) => <option key={e2} value={e2}>{itsmLabel(e2)}</option>)}
         </select>
-        <select style={input} value={f.configurationItemId} onChange={(e) => set("configurationItemId", e.target.value)}>
+        <select aria-label="CI (opcional)" style={input} value={f.configurationItemId} onChange={(e) => set("configurationItemId", e.target.value)}>
           <option value="">CI (opcional)…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
         </select>
@@ -1126,17 +1126,17 @@ function NewCiForm({ services, members, pending, run, onDone }: { services: Serv
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del CI" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.ciType} onChange={(e) => set("ciType", e.target.value)}>
+        <input aria-label="Nombre del CI" style={input} placeholder="Nombre del CI" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Tipo de elemento de configuración" style={input} value={f.ciType} onChange={(e) => set("ciType", e.target.value)}>
           {["APPLICATION", "SERVER", "DATABASE", "NETWORK", "SERVICE", "DOCUMENTATION", "OTHER"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}>
+        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}>
           <option value="">Propietario…</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
@@ -1152,14 +1152,14 @@ function NewCmdbRelForm({ cis, pending, run, onDone }: { cis: ItsmPayload["cis"]
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.sourceCiId} onChange={(e) => set("sourceCiId", e.target.value)}>
+        <select aria-label="CI origen" style={input} value={f.sourceCiId} onChange={(e) => set("sourceCiId", e.target.value)}>
           <option value="">CI origen…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
         </select>
-        <select style={input} value={f.relationType} onChange={(e) => set("relationType", e.target.value)}>
+        <select aria-label="Tipo de relación" style={input} value={f.relationType} onChange={(e) => set("relationType", e.target.value)}>
           {["DEPENDS_ON", "RUNS_ON", "CONNECTS_TO", "USES", "OWNED_BY", "OTHER"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
         </select>
-        <select style={input} value={f.targetCiId} onChange={(e) => set("targetCiId", e.target.value)}>
+        <select aria-label="CI destino" style={input} value={f.targetCiId} onChange={(e) => set("targetCiId", e.target.value)}>
           <option value="">CI destino…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
         </select>
@@ -1176,9 +1176,9 @@ function NewAvailabilityForm({ services, pending, run, onDone }: { services: Ser
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} type="number" min={0} max={100} step="0.01" placeholder="Objetivo %" value={f.targetPercent} onChange={(e) => set("targetPercent", e.target.value)} />
-        <input style={input} type="number" min={0} placeholder="Downtime acordado (min)" value={f.agreedDowntimeMinutes} onChange={(e) => set("agreedDowntimeMinutes", e.target.value)} />
+        <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Objetivo %" style={input} type="number" min={0} max={100} step="0.01" placeholder="Objetivo %" value={f.targetPercent} onChange={(e) => set("targetPercent", e.target.value)} />
+        <input aria-label="Downtime acordado (min)" style={input} type="number" min={0} placeholder="Downtime acordado (min)" value={f.agreedDowntimeMinutes} onChange={(e) => set("agreedDowntimeMinutes", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.title} style={primaryBtn} onClick={() => { run(() => createAvailabilityPlan({ serviceId: f.serviceId, title: f.title, targetPercent: Number(f.targetPercent), agreedDowntimeMinutes: f.agreedDowntimeMinutes ? Number(f.agreedDowntimeMinutes) : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1192,12 +1192,12 @@ function NewCapacityForm({ services, pending, run, onDone }: { services: Service
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Métrica (ej. buzones)" value={f.metric} onChange={(e) => set("metric", e.target.value)} />
+        <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Métrica (ej. buzones)" style={input} placeholder="Métrica (ej. buzones)" value={f.metric} onChange={(e) => set("metric", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={0} placeholder="Capacidad actual" value={f.currentCapacity} onChange={(e) => set("currentCapacity", e.target.value)} />
-        <input style={input} type="number" min={0} max={100} placeholder="Umbral %" value={f.thresholdPercent} onChange={(e) => set("thresholdPercent", e.target.value)} />
+        <input aria-label="Capacidad actual" style={input} type="number" min={0} placeholder="Capacidad actual" value={f.currentCapacity} onChange={(e) => set("currentCapacity", e.target.value)} />
+        <input aria-label="Umbral %" style={input} type="number" min={0} max={100} placeholder="Umbral %" value={f.thresholdPercent} onChange={(e) => set("thresholdPercent", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.title || !f.metric} style={primaryBtn} onClick={() => { run(() => createCapacityPlan({ serviceId: f.serviceId, title: f.title, metric: f.metric, currentCapacity: f.currentCapacity ? Number(f.currentCapacity) : undefined, thresholdPercent: f.thresholdPercent ? Number(f.thresholdPercent) : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1211,9 +1211,9 @@ function NewContinuityForm({ services, pending, run, onDone }: { services: Servi
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} type="number" min={0} placeholder="RTO (min)" value={f.rtoMinutes} onChange={(e) => set("rtoMinutes", e.target.value)} />
-        <input style={input} type="number" min={0} placeholder="RPO (min)" value={f.rpoMinutes} onChange={(e) => set("rpoMinutes", e.target.value)} />
+        <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="RTO (min)" style={input} type="number" min={0} placeholder="RTO (min)" value={f.rtoMinutes} onChange={(e) => set("rtoMinutes", e.target.value)} />
+        <input aria-label="RPO (min)" style={input} type="number" min={0} placeholder="RPO (min)" value={f.rpoMinutes} onChange={(e) => set("rpoMinutes", e.target.value)} />
       </div>
       <button disabled={pending || !f.serviceId || !f.title} style={primaryBtn} onClick={() => { run(() => createServiceContinuityPlan({ serviceId: f.serviceId, title: f.title, rtoMinutes: f.rtoMinutes ? Number(f.rtoMinutes) : undefined, rpoMinutes: f.rpoMinutes ? Number(f.rpoMinutes) : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1226,10 +1226,10 @@ function NewSupplierForm({ services, pending, run, onDone }: { services: Service
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del proveedor" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <input style={input} placeholder="Contrato" value={f.contractRef} onChange={(e) => set("contractRef", e.target.value)} />
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        <input aria-label="Contrato" style={input} placeholder="Contrato" value={f.contractRef} onChange={(e) => set("contractRef", e.target.value)} />
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
       </div>
@@ -1244,13 +1244,13 @@ function NewArticleForm({ services, pending, run, onDone }: { services: Services
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del artículo" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>
+        <input aria-label="Título del artículo" style={input} placeholder="Título del artículo" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>
           {["HOWTO", "KNOWN_ERROR", "FAQ", "RUNBOOK", "OTHER"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
         </select>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
       </div>
-      <textarea style={{ ...input, minHeight: 70 }} placeholder="Contenido" value={f.content} onChange={(e) => set("content", e.target.value)} />
+      <textarea aria-label="Contenido" style={{ ...input, minHeight: 70 }} placeholder="Contenido" value={f.content} onChange={(e) => set("content", e.target.value)} />
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}>
         <input type="checkbox" checked={f.publish} onChange={(e) => set("publish", e.target.checked)} /> Publicar de inmediato
       </label>
@@ -1266,17 +1266,17 @@ function NewReportForm({ services, pending, run, onDone }: { services: Services;
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del informe" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.reportType} onChange={(e) => set("reportType", e.target.value)}>
+        <input aria-label="Título del informe" style={input} placeholder="Título del informe" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de informe" style={input} value={f.reportType} onChange={(e) => set("reportType", e.target.value)}>
           {["SLA", "INCIDENTS", "AVAILABILITY", "CAPACITY", "CONTINUITY", "SUPPLIERS", "PERFORMANCE", "CUSTOM"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
         </select>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
       </div>
-      <input style={input} placeholder="Resumen (opcional)" value={f.summary} onChange={(e) => set("summary", e.target.value)} />
+      <input aria-label="Resumen (opcional)" style={input} placeholder="Resumen (opcional)" value={f.summary} onChange={(e) => set("summary", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createServiceReport({ title: f.title, reportType: f.reportType as "SLA" | "INCIDENTS" | "AVAILABILITY" | "CAPACITY" | "CONTINUITY" | "SUPPLIERS" | "PERFORMANCE" | "CUSTOM", serviceId: f.serviceId || undefined, periodStart: f.periodStart, periodEnd: f.periodEnd, summary: f.summary || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );

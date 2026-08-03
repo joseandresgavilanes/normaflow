@@ -11,6 +11,7 @@ import Avatar from "@/components/ui/Avatar";
 import { formatDate } from "@/lib/utils";
 import { useAdminMock, type PersonnelMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { Field as UiField } from "@/components/ui/Field";
 
 export default function PersonnelClient() {
   const admin = useAdminMock();
@@ -126,7 +127,7 @@ export default function PersonnelClient() {
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-          <input
+          <input aria-label="Buscar nombre, email, cargo"
             type="search"
             placeholder="Buscar nombre, email, cargo…"
             value={search}
@@ -152,25 +153,25 @@ export default function PersonnelClient() {
         <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} className="nf-modal-form">
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Nombre *">
-              <input name="firstName" required defaultValue={editing?.firstName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Nombre" name="firstName" required defaultValue={editing?.firstName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
             <Field label="Apellido *">
-              <input name="lastName" required defaultValue={editing?.lastName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Apellidos" name="lastName" required defaultValue={editing?.lastName ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Email">
-            <input type="email" name="email" defaultValue={editing?.email ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <input aria-label="Correo electrónico" type="email" name="email" defaultValue={editing?.email ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Identificación">
-              <input name="identification" defaultValue={editing?.identification ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Identificación" name="identification" defaultValue={editing?.identification ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
             <Field label="Fecha de alta">
-              <input type="date" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Fecha de alta" type="date" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Cargo">
-            <select name="positionId" defaultValue={editing?.positionId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <select aria-label="Puesto" name="positionId" defaultValue={editing?.positionId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin cargo —</option>
               {positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -219,11 +220,8 @@ export default function PersonnelClient() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }
 

@@ -589,13 +589,13 @@ function NewAssessmentForm({ pending, run, onDone }: { pending: boolean; run: Ru
   const set = (k: string, v: string | boolean) => setF((p) => ({ ...p, [k]: v as never }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título de la evaluación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-      <input style={input} placeholder="Alcance" value={f.scope} onChange={(e) => set("scope", e.target.value)} />
+      <input aria-label="Título de la evaluación" style={input} placeholder="Título de la evaluación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Alcance" style={input} placeholder="Alcance" value={f.scope} onChange={(e) => set("scope", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={1} max={5} placeholder="Probabilidad" value={f.inherentLikelihood} onChange={(e) => set("inherentLikelihood", e.target.value)} />
-        <input style={input} type="number" min={1} max={5} placeholder="Impacto" value={f.inherentImpact} onChange={(e) => set("inherentImpact", e.target.value)} />
-        <select style={input} value={f.countryRisk} onChange={(e) => set("countryRisk", e.target.value)}><option value="LOW">País: bajo</option><option value="MODERATE">País: moderado</option><option value="HIGH">País: alto</option><option value="CRITICAL">País: crítico</option></select>
-        <select style={input} value={f.sectorRisk} onChange={(e) => set("sectorRisk", e.target.value)}><option value="LOW">Sector: bajo</option><option value="MODERATE">Sector: moderado</option><option value="HIGH">Sector: alto</option><option value="CRITICAL">Sector: crítico</option></select>
+        <input aria-label="Probabilidad" style={input} type="number" min={1} max={5} placeholder="Probabilidad" value={f.inherentLikelihood} onChange={(e) => set("inherentLikelihood", e.target.value)} />
+        <input aria-label="Impacto" style={input} type="number" min={1} max={5} placeholder="Impacto" value={f.inherentImpact} onChange={(e) => set("inherentImpact", e.target.value)} />
+        <select aria-label="Riesgo país" style={input} value={f.countryRisk} onChange={(e) => set("countryRisk", e.target.value)}><option value="LOW">País: bajo</option><option value="MODERATE">País: moderado</option><option value="HIGH">País: alto</option><option value="CRITICAL">País: crítico</option></select>
+        <select aria-label="Riesgo sectorial" style={input} value={f.sectorRisk} onChange={(e) => set("sectorRisk", e.target.value)}><option value="LOW">Sector: bajo</option><option value="MODERATE">Sector: moderado</option><option value="HIGH">Sector: alto</option><option value="CRITICAL">Sector: crítico</option></select>
       </div>
       <div style={{ display: "flex", gap: 16 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.publicOfficialRisk} onChange={(e) => set("publicOfficialRisk", e.target.checked)} /> Involucra funcionario público</label>
@@ -615,15 +615,15 @@ function NewAssociateForm({ pending, run, onDone }: { pending: boolean; run: Run
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del socio" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.associateType} onChange={(e) => set("associateType", e.target.value)}>
+        <input aria-label="Nombre del socio" style={input} placeholder="Nombre del socio" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Tipo de asociado" style={input} value={f.associateType} onChange={(e) => set("associateType", e.target.value)}>
           <option value="SUPPLIER">Proveedor</option><option value="AGENT">Agente</option><option value="INTERMEDIARY">Intermediario</option>
           <option value="DISTRIBUTOR">Distribuidor</option><option value="JOINT_VENTURE">Joint venture</option><option value="CONSULTANT">Consultor</option>
           <option value="CUSTOMER">Cliente</option><option value="PUBLIC_BODY">Entidad pública</option><option value="NGO">ONG</option><option value="OTHER">Otro</option>
         </select>
-        <input style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
+        <input aria-label="País" style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
       </div>
-      <select style={input} value={f.riskTier} onChange={(e) => set("riskTier", e.target.value)}><option value="LOW">Riesgo bajo</option><option value="MEDIUM">Riesgo medio</option><option value="HIGH">Riesgo alto</option><option value="CRITICAL">Riesgo crítico</option></select>
+      <select aria-label="Nivel de riesgo" style={input} value={f.riskTier} onChange={(e) => set("riskTier", e.target.value)}><option value="LOW">Riesgo bajo</option><option value="MEDIUM">Riesgo medio</option><option value="HIGH">Riesgo alto</option><option value="CRITICAL">Riesgo crítico</option></select>
       <div style={{ display: "flex", gap: 16 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.isPublicOfficial} onChange={(e) => set("isPublicOfficial", e.target.checked)} /> Es funcionario público</label>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.interactsWithPEPs} onChange={(e) => set("interactsWithPEPs", e.target.checked)} /> Interactúa con PEP</label>
@@ -639,10 +639,10 @@ function NewDueDiligenceForm({ associates, pending, run, onDone }: { associates:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
-        <select style={input} value={f.level} onChange={(e) => set("level", e.target.value)}><option value="SIMPLIFIED">Simplificada</option><option value="STANDARD">Estándar</option><option value="ENHANCED">Reforzada</option></select>
+        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
+        <select aria-label="Nivel" style={input} value={f.level} onChange={(e) => set("level", e.target.value)}><option value="SIMPLIFIED">Simplificada</option><option value="STANDARD">Estándar</option><option value="ENHANCED">Reforzada</option></select>
       </div>
-      <input style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
+      <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       <button disabled={pending || !f.associateId} style={primaryBtn} onClick={() => { run(() => createDueDiligenceCase({ associateId: f.associateId, level: f.level, purpose: f.purpose || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -654,16 +654,16 @@ function NewOwnerForm({ associates, pending, run, onDone }: { associates: Associ
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
-        <input style={input} placeholder="Nombre completo del beneficiario" value={f.fullName} onChange={(e) => set("fullName", e.target.value)} />
+        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
+        <input aria-label="Nombre completo del beneficiario" style={input} placeholder="Nombre completo del beneficiario" value={f.fullName} onChange={(e) => set("fullName", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nacionalidad" value={f.nationality} onChange={(e) => set("nationality", e.target.value)} />
-        <input style={input} type="number" min={0} max={100} placeholder="% propiedad" value={f.ownershipPercent} onChange={(e) => set("ownershipPercent", e.target.value)} />
-        <select style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}><option value="OWNERSHIP">Propiedad</option><option value="VOTING_RIGHTS">Derechos de voto</option><option value="OTHER_MEANS">Otros medios</option><option value="SENIOR_MANAGING_OFFICIAL">Alto directivo</option></select>
+        <input aria-label="Nacionalidad" style={input} placeholder="Nacionalidad" value={f.nationality} onChange={(e) => set("nationality", e.target.value)} />
+        <input aria-label="% propiedad" style={input} type="number" min={0} max={100} placeholder="% propiedad" value={f.ownershipPercent} onChange={(e) => set("ownershipPercent", e.target.value)} />
+        <select aria-label="Tipo de control" style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}><option value="OWNERSHIP">Propiedad</option><option value="VOTING_RIGHTS">Derechos de voto</option><option value="OTHER_MEANS">Otros medios</option><option value="SENIOR_MANAGING_OFFICIAL">Alto directivo</option></select>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.isPep} onChange={(e) => set("isPep", e.target.checked)} /> Es persona expuesta políticamente (PEP)</label>
-      {f.isPep && <input style={input} placeholder="Cargo PEP" value={f.pepRole} onChange={(e) => set("pepRole", e.target.value)} />}
+      {f.isPep && <input aria-label="Cargo PEP" style={input} placeholder="Cargo PEP" value={f.pepRole} onChange={(e) => set("pepRole", e.target.value)} />}
       <button disabled={pending || !f.associateId || !f.fullName} style={primaryBtn} onClick={() => { run(() => createBeneficialOwner({ associateId: f.associateId, fullName: f.fullName, nationality: f.nationality || undefined, ownershipPercent: f.ownershipPercent ? Number(f.ownershipPercent) : undefined, controlType: f.controlType, isPep: f.isPep, pepRole: f.pepRole || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -679,16 +679,16 @@ function NewGiftForm({ associates, pending, run, onDone }: { associates: Associa
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="GIFT">Regalo</option><option value="HOSPITALITY">Hospitalidad</option><option value="TRAVEL">Viaje</option><option value="ENTERTAINMENT">Entretenimiento</option><option value="OTHER">Otro</option></select>
-        <select style={input} value={f.direction} onChange={(e) => set("direction", e.target.value)}><option value="GIVEN">Dado</option><option value="RECEIVED">Recibido</option></select>
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <select aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="GIFT">Regalo</option><option value="HOSPITALITY">Hospitalidad</option><option value="TRAVEL">Viaje</option><option value="ENTERTAINMENT">Entretenimiento</option><option value="OTHER">Otro</option></select>
+        <select aria-label="Sentido" style={input} value={f.direction} onChange={(e) => set("direction", e.target.value)}><option value="GIVEN">Dado</option><option value="RECEIVED">Recibido</option></select>
+        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
       </div>
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={0} placeholder="Valor estimado" value={f.estimatedValue} onChange={(e) => set("estimatedValue", e.target.value)} />
-        <input style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <input style={input} placeholder="Contraparte" value={f.counterpartyName} onChange={(e) => set("counterpartyName", e.target.value)} />
-        <input style={input} type="number" min={0} placeholder="Umbral de política" value={f.policyThreshold} onChange={(e) => set("policyThreshold", e.target.value)} />
+        <input aria-label="Valor estimado" style={input} type="number" min={0} placeholder="Valor estimado" value={f.estimatedValue} onChange={(e) => set("estimatedValue", e.target.value)} />
+        <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
+        <input aria-label="Contraparte" style={input} placeholder="Contraparte" value={f.counterpartyName} onChange={(e) => set("counterpartyName", e.target.value)} />
+        <input aria-label="Umbral de política" style={input} type="number" min={0} placeholder="Umbral de política" value={f.policyThreshold} onChange={(e) => set("policyThreshold", e.target.value)} />
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.description} style={primaryBtn} onClick={() => { run(() => submitGiftHospitality({ recordType: f.recordType, direction: f.direction, description: f.description, estimatedValue: f.estimatedValue ? Number(f.estimatedValue) : undefined, currency: f.currency || undefined, counterpartyName: f.counterpartyName || undefined, associateId: f.associateId || undefined, involvesPublicOfficial: f.involvesPublicOfficial, policyThreshold: f.policyThreshold ? Number(f.policyThreshold) : undefined })); onDone(); }}><Plus size={12} /> Enviar</button>
@@ -705,14 +705,14 @@ function NewDonationForm({ associates, pending, run, onDone }: { associates: Ass
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="DONATION">Donación</option><option value="SPONSORSHIP">Patrocinio</option><option value="COMMUNITY_INVESTMENT">Inversión comunitaria</option><option value="POLITICAL_CONTRIBUTION">Contribución política</option></select>
-        <input style={input} placeholder="Beneficiario" value={f.beneficiaryName} onChange={(e) => set("beneficiaryName", e.target.value)} />
+        <select aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="DONATION">Donación</option><option value="SPONSORSHIP">Patrocinio</option><option value="COMMUNITY_INVESTMENT">Inversión comunitaria</option><option value="POLITICAL_CONTRIBUTION">Contribución política</option></select>
+        <input aria-label="Beneficiario" style={input} placeholder="Beneficiario" value={f.beneficiaryName} onChange={(e) => set("beneficiaryName", e.target.value)} />
       </div>
-      <input style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
+      <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
-        <input style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <input aria-label="Importe" style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
+        <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
+        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.beneficiaryName} style={primaryBtn} onClick={() => { run(() => createDonationSponsorship({ recordType: f.recordType, beneficiaryName: f.beneficiaryName, associateId: f.associateId || undefined, purpose: f.purpose || undefined, amount: f.amount ? Number(f.amount) : undefined, currency: f.currency || undefined, involvesPublicOfficial: f.involvesPublicOfficial, politicalDonation: f.recordType === "POLITICAL_CONTRIBUTION" })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -730,16 +730,16 @@ function NewConflictForm({ associates, pending, run, onDone }: { associates: Ass
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Periodo (p. ej. 2026)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select style={input} value={f.conflictNature} onChange={(e) => set("conflictNature", e.target.value)}>
+        <input aria-label="Periodo (p. ej. 2026)" style={input} placeholder="Periodo (p. ej. 2026)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+        <select aria-label="Naturaleza del conflicto" style={input} value={f.conflictNature} onChange={(e) => set("conflictNature", e.target.value)}>
           <option value="PUBLIC_OFFICIAL_RELATIONSHIP">Relación con funcionario</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option>
           <option value="FAMILY_IN_COUNTERPARTY">Familiar en contraparte</option><option value="FINANCIAL_INTEREST">Interés financiero</option>
           <option value="OUTSIDE_EMPLOYMENT">Empleo externo</option><option value="GIFT_HOSPITALITY">Regalo/hospitalidad</option><option value="OTHER">Otro</option>
         </select>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.hasConflict} onChange={(e) => set("hasConflict", e.target.checked)} /> Declara un conflicto real</label>
-      {f.hasConflict && <input style={input} placeholder="Descripción del conflicto (obligatoria)" value={f.description} onChange={(e) => set("description", e.target.value)} />}
-      <select style={input} value={f.relatedAssociateId} onChange={(e) => set("relatedAssociateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+      {f.hasConflict && <input aria-label="Descripción del conflicto (obligatoria)" style={input} placeholder="Descripción del conflicto (obligatoria)" value={f.description} onChange={(e) => set("description", e.target.value)} />}
+      <select aria-label="Socio relacionado (opcional)" style={input} value={f.relatedAssociateId} onChange={(e) => set("relatedAssociateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
       <button disabled={pending || !f.period || (f.hasConflict && !f.description)} style={primaryBtn} onClick={() => { run(() => declareAbmsConflict({ period: f.period, hasConflict: f.hasConflict, conflictNature: f.conflictNature, description: f.description || undefined, relatedAssociateId: f.relatedAssociateId || undefined, recusalRequired: f.recusalRequired })); onDone(); }}><Plus size={12} /> Declarar</button>
     </div>
   );
@@ -750,12 +750,12 @@ function NewFacilitationForm({ pending, run, onDone }: { pending: boolean; run: 
   const set = (k: string, v: string | boolean) => setF((p) => ({ ...p, [k]: v as never }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
-        <input style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <input style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
-        <input style={input} placeholder="Cargo del funcionario" value={f.publicOfficialRole} onChange={(e) => set("publicOfficialRole", e.target.value)} />
+        <input aria-label="Importe" style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
+        <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
+        <input aria-label="País" style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
+        <input aria-label="Cargo del funcionario" style={input} placeholder="Cargo del funcionario" value={f.publicOfficialRole} onChange={(e) => set("publicOfficialRole", e.target.value)} />
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.coerced} onChange={(e) => set("coerced", e.target.checked)} /> Fue coaccionado (bajo amenaza)</label>
       <button disabled={pending || !f.description} style={primaryBtn} onClick={() => { run(() => reportFacilitationPayment({ description: f.description, amount: f.amount ? Number(f.amount) : undefined, currency: f.currency || undefined, country: f.country || undefined, publicOfficialRole: f.publicOfficialRole || undefined, coerced: f.coerced })); onDone(); }}><Plus size={12} /> Reportar</button>
@@ -773,23 +773,23 @@ function NewControlTestForm({ kind, pending, run, onDone }: { kind: "financial" 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del control" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Periodo (p. ej. 2026-Q3)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+        <input aria-label="Título del control" style={input} placeholder="Título del control" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Periodo (p. ej. 2026-Q3)" style={input} placeholder="Periodo (p. ej. 2026-Q3)" value={f.period} onChange={(e) => set("period", e.target.value)} />
       </div>
-      <input style={input} placeholder="Descripción del control" value={f.controlDescription} onChange={(e) => set("controlDescription", e.target.value)} />
+      <input aria-label="Descripción del control" style={input} placeholder="Descripción del control" value={f.controlDescription} onChange={(e) => set("controlDescription", e.target.value)} />
       {kind === "nonFinancial" && (
-        <select style={input} value={f.controlArea} onChange={(e) => set("controlArea", e.target.value)}>
+        <select aria-label="Área de control" style={input} value={f.controlArea} onChange={(e) => set("controlArea", e.target.value)}>
           <option value="PROCUREMENT">Compras</option><option value="HR_HIRING">Contratación</option><option value="SALES_TENDERS">Ventas/licitaciones</option>
           <option value="TRAVEL_EXPENSES">Viajes/gastos</option><option value="TRAINING_AWARENESS">Formación</option><option value="THIRD_PARTY_ONBOARDING">Alta de terceros</option>
           <option value="WHISTLEBLOWING">Canal de denuncias</option><option value="OTHER">Otro</option>
         </select>
       )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.designAdequate} onChange={(e) => set("designAdequate", e.target.value)}><option value="true">Diseño adecuado</option><option value="false">Diseño inadecuado</option></select>
-        <select style={input} value={f.operatingEffective} onChange={(e) => set("operatingEffective", e.target.value)}><option value="true">Operación eficaz</option><option value="false">Operación no eficaz</option></select>
-        <input style={input} type="number" min={0} placeholder="Excepciones" value={f.exceptionsFound} onChange={(e) => set("exceptionsFound", e.target.value)} />
+        <select aria-label="Diseño adecuado" style={input} value={f.designAdequate} onChange={(e) => set("designAdequate", e.target.value)}><option value="true">Diseño adecuado</option><option value="false">Diseño inadecuado</option></select>
+        <select aria-label="Operación eficaz" style={input} value={f.operatingEffective} onChange={(e) => set("operatingEffective", e.target.value)}><option value="true">Operación eficaz</option><option value="false">Operación no eficaz</option></select>
+        <input aria-label="Excepciones" style={input} type="number" min={0} placeholder="Excepciones" value={f.exceptionsFound} onChange={(e) => set("exceptionsFound", e.target.value)} />
       </div>
-      <input style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
+      <input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       <button disabled={pending || !f.title || !f.period} style={primaryBtn} onClick={() => {
         const payload = { title: f.title, controlDescription: f.controlDescription || undefined, period: f.period, designAdequate: f.designAdequate === "true", operatingEffective: f.operatingEffective === "true", exceptionsFound: Number(f.exceptionsFound), findings: f.findings || undefined };
         run(() => kind === "financial" ? recordFinancialControlTest(payload) : recordNonFinancialControlTest({ ...payload, controlArea: f.controlArea }));
@@ -810,21 +810,21 @@ function NewHighRiskForm({ associates, dueDiligence, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título de la operación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.transactionType} onChange={(e) => set("transactionType", e.target.value)}>
+        <input aria-label="Título de la operación" style={input} placeholder="Título de la operación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de transacción" style={input} value={f.transactionType} onChange={(e) => set("transactionType", e.target.value)}>
           <option value="AGENT_COMMISSION">Comisión de agente</option><option value="SUCCESS_FEE">Éxito/success fee</option><option value="CASH_PAYMENT">Pago en efectivo</option>
           <option value="CROSS_BORDER_TRANSFER">Transferencia internacional</option><option value="PUBLIC_TENDER">Licitación pública</option><option value="CUSTOMS_CLEARANCE">Despacho aduanero</option>
           <option value="LICENSE_PERMIT">Licencia/permiso</option><option value="OTHER">Otro</option>
         </select>
       </div>
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
-        <input style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
-        <select style={input} value={f.dueDiligenceCaseId} onChange={(e) => set("dueDiligenceCaseId", e.target.value)}><option value="">DD (opcional)…</option>{dueDiligence.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <input aria-label="Importe" style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
+        <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
+        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <select aria-label="DD (opcional)" style={input} value={f.dueDiligenceCaseId} onChange={(e) => set("dueDiligenceCaseId", e.target.value)}><option value="">DD (opcional)…</option>{dueDiligence.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
       </div>
-      <input style={input} placeholder="Justificación del riesgo" value={f.riskRationale} onChange={(e) => set("riskRationale", e.target.value)} />
+      <input aria-label="Justificación del riesgo" style={input} placeholder="Justificación del riesgo" value={f.riskRationale} onChange={(e) => set("riskRationale", e.target.value)} />
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => requestHighRiskApproval({ title: f.title, transactionType: f.transactionType, description: f.description || undefined, amount: f.amount ? Number(f.amount) : undefined, currency: f.currency || undefined, associateId: f.associateId || undefined, involvesPublicOfficial: f.involvesPublicOfficial, riskRationale: f.riskRationale || undefined, dueDiligenceCaseId: f.dueDiligenceCaseId || undefined })); onDone(); }}><Plus size={12} /> Solicitar</button>
     </div>
@@ -842,13 +842,13 @@ function NewCommitmentForm({ associates, members, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.commitmentType} onChange={(e) => set("commitmentType", e.target.value)}><option value="EMPLOYEE">Empleado</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option><option value="BOARD">Consejo</option><option value="SENIOR_MANAGEMENT">Alta dirección</option></select>
-        <input style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
+        <select aria-label="Tipo de compromiso" style={input} value={f.commitmentType} onChange={(e) => set("commitmentType", e.target.value)}><option value="EMPLOYEE">Empleado</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option><option value="BOARD">Consejo</option><option value="SENIOR_MANAGEMENT">Alta dirección</option></select>
+        <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
       </div>
       {f.commitmentType === "BUSINESS_ASSOCIATE" ? (
-        <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
+        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
       ) : (
-        <select style={input} value={f.subjectUserId} onChange={(e) => set("subjectUserId", e.target.value)}><option value="">Persona…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Persona" style={input} value={f.subjectUserId} onChange={(e) => set("subjectUserId", e.target.value)}><option value="">Persona…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       )}
       <button disabled={pending || !f.version.trim() || (f.commitmentType === "BUSINESS_ASSOCIATE" ? !f.associateId : !f.subjectUserId)} style={primaryBtn} onClick={() => { run(() => recordAntiBriberyCommitment({ commitmentType: f.commitmentType, subjectUserId: f.subjectUserId || undefined, associateId: f.associateId || undefined, subjectName: f.subjectName || undefined, version: f.version })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>
@@ -865,13 +865,13 @@ function NewInvestigationForm({ associates, pending, run, onDone }: { associates
     <div style={{ display: "grid", gap: 8 }}>
       <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>Puente a una Investigation ya abierta en el SGC — no crea una investigación nueva.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="ID de la Investigation del SGC" value={f.investigationId} onChange={(e) => set("investigationId", e.target.value)} />
-        <select style={input} value={f.allegationType} onChange={(e) => set("allegationType", e.target.value)}>
+        <input aria-label="ID de la Investigation del SGC" style={input} placeholder="ID de la Investigation del SGC" value={f.investigationId} onChange={(e) => set("investigationId", e.target.value)} />
+        <select aria-label="Tipo de denuncia" style={input} value={f.allegationType} onChange={(e) => set("allegationType", e.target.value)}>
           <option value="BRIBE_OFFER">Oferta de soborno</option><option value="BRIBE_ACCEPTANCE">Aceptación de soborno</option><option value="FACILITATION_PAYMENT">Pago de facilitación</option>
           <option value="KICKBACK">Comisión ilícita</option><option value="INFLUENCE_PEDDLING">Tráfico de influencias</option><option value="EMBEZZLEMENT_RELATED">Relacionado con malversación</option><option value="OTHER">Otro</option>
         </select>
       </div>
-      <select style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+      <select aria-label="Socio relacionado (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.investigationId} style={primaryBtn} onClick={() => { run(() => linkAntiBriberyInvestigation({ investigationId: f.investigationId, allegationType: f.allegationType, involvesPublicOfficial: f.involvesPublicOfficial, associateId: f.associateId || undefined })); onDone(); }}><Plus size={12} /> Vincular</button>
     </div>
@@ -882,7 +882,7 @@ function CloseInvestigationControl({ id, pending, run }: { id: string; pending: 
   const [outcome, setOutcome] = useState<"SUBSTANTIATED" | "PARTIALLY_SUBSTANTIATED" | "UNSUBSTANTIATED" | "INCONCLUSIVE" | "REFERRED_EXTERNALLY">("UNSUBSTANTIATED");
   return (
     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-      <select style={{ ...input, padding: "4px 6px", fontSize: 11.5 }} value={outcome} onChange={(e) => setOutcome(e.target.value as typeof outcome)}>
+      <select aria-label="Resultado" style={{ ...input, padding: "4px 6px", fontSize: 11.5 }} value={outcome} onChange={(e) => setOutcome(e.target.value as typeof outcome)}>
         <option value="SUBSTANTIATED">Fundada</option><option value="PARTIALLY_SUBSTANTIATED">Parcialmente fundada</option>
         <option value="UNSUBSTANTIATED">No fundada</option><option value="INCONCLUSIVE">Inconclusa</option><option value="REFERRED_EXTERNALLY">Derivada externamente</option>
       </select>

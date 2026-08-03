@@ -178,7 +178,7 @@ export default function CatalogManager({
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-          <input
+          <input aria-label="Buscar"
             type="search"
             placeholder="Buscar…"
             value={search}

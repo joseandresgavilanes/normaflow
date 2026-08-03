@@ -115,7 +115,7 @@ export default function SetPasswordPage() {
               <form onSubmit={handleSubmit} className="nf-auth-form">
                 <div>
                   <label className="nf-label" htmlFor="set-password">{t("auth.setPassword.newPassword")}</label>
-                  <input
+                  <input aria-label={t("auth.signup.passwordPlaceholder")}
                     id="set-password"
                     type="password"
                     value={password}
@@ -128,7 +128,7 @@ export default function SetPasswordPage() {
                 </div>
                 <div>
                   <label className="nf-label" htmlFor="set-password-confirm">{t("auth.setPassword.confirmPassword")}</label>
-                  <input
+                  <input aria-label={t("auth.setPassword.confirmPlaceholder")}
                     id="set-password-confirm"
                     type="password"
                     value={confirm}

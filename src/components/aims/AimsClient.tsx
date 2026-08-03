@@ -196,7 +196,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                         <button disabled={pending} style={{ ...miniBtn, borderColor: "#16a34a", background: "#f0fdf4", color: "#15803d" }} onClick={() => run(() => approveAISystem(system.id))}><Check size={12} /> Aprobar</button>
                       )}
                       {canManage && system.status !== "RETIRED" && (
-                        <select style={{ ...input, padding: "3px 6px", fontSize: 11 }} value="" onChange={(e) => {
+                        <select aria-label="Cambiar estado" style={{ ...input, padding: "3px 6px", fontSize: 11 }} value="" onChange={(e) => {
                           const to = e.target.value;
                           if (!to) return;
                           if (to === "RETIRED") {
@@ -596,14 +596,14 @@ function NewSystemForm({ members, pending, run, onDone }: { members: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del sistema" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
+        <input aria-label="Nombre del sistema" style={input} placeholder="Nombre del sistema" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <select style={input} value={f.providerType} onChange={(e) => set("providerType", e.target.value)}>{["INTERNAL", "THIRD_PARTY_API", "THIRD_PARTY_LICENSED", "OPEN_SOURCE", "EMBEDDED_IN_PRODUCT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.autonomy} onChange={(e) => set("autonomy", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "FULLY_AUTOMATED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Tipo de proveedor" style={input} value={f.providerType} onChange={(e) => set("providerType", e.target.value)}>{["INTERNAL", "THIRD_PARTY_API", "THIRD_PARTY_LICENSED", "OPEN_SOURCE", "EMBEDDED_IN_PRODUCT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Autonomía" style={input} value={f.autonomy} onChange={(e) => set("autonomy", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "FULLY_AUTOMATED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <button disabled={pending || !f.name.trim() || !f.purpose.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createAISystem({ name: f.name, purpose: f.purpose, ownerId: f.ownerId || undefined, providerType: f.providerType as never, criticality: f.criticality as never, autonomy: f.autonomy as never });
@@ -619,9 +619,9 @@ function NewUseCaseForm({ systems, pending, run, onDone }: { systems: AimsPayloa
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Título del caso de uso" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Objetivo" value={f.objective} onChange={(e) => set("objective", e.target.value)} />
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Título del caso de uso" style={input} placeholder="Título del caso de uso" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Objetivo" style={input} placeholder="Objetivo" value={f.objective} onChange={(e) => set("objective", e.target.value)} />
       </div>
       <button disabled={pending || !f.systemId || !f.title.trim() || !f.objective.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createAIUseCase({ systemId: f.systemId, title: f.title, objective: f.objective, decisionAutonomy: f.decisionAutonomy as never });
@@ -642,7 +642,7 @@ function NewAssessmentForm({ systems, pending, run, onDone }: { systems: AimsPay
   const [dims, setDims] = useState<Record<string, string>>(Object.fromEntries(IMPACT_DIMENSIONS.map(([k]) => [k, "NOT_ASSESSED"])));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select style={input} value={systemId} onChange={(e) => setSystemId(e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+      <select aria-label="Sistema" style={input} value={systemId} onChange={(e) => setSystemId(e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8 }}>
         {IMPACT_DIMENSIONS.map(([key, label]) => (
           <label key={key} style={{ fontSize: 11.5 }}>{label}
@@ -673,14 +673,14 @@ function NewRiskForm({ systems, members, pending, run, onDone }: { systems: Aims
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Título del riesgo" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Título del riesgo" style={input} placeholder="Título del riesgo" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{RISK_CATEGORIES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.likelihood} onChange={(e) => set("likelihood", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</select>
-        <select style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</select>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{RISK_CATEGORIES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Probabilidad" style={input} value={f.likelihood} onChange={(e) => set("likelihood", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</select>
+        <select aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createAIRisk({ systemId: f.systemId || undefined, title: f.title, category: f.category as never, likelihood: Number(f.likelihood), impact: Number(f.impact), ownerId: f.ownerId || undefined, treatment: "MITIGATE" });
@@ -696,13 +696,13 @@ function NewDatasetForm({ pending, run, onDone }: { pending: boolean; run: Runne
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del dataset" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
+        <input aria-label="Nombre del dataset" style={input} placeholder="Nombre del dataset" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, alignItems: "center" }}>
-        <select style={input} value={f.classification} onChange={(e) => set("classification", e.target.value)}>{["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Clasificación" style={input} value={f.classification} onChange={(e) => set("classification", e.target.value)}>{["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}><input type="checkbox" checked={f.containsPersonalData} onChange={(e) => set("containsPersonalData", e.target.checked)} /> Contiene datos personales</label>
-        {f.containsPersonalData && <select style={input} value={f.legalBasis} onChange={(e) => set("legalBasis", e.target.value)}>{["CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>}
+        {f.containsPersonalData && <select aria-label="Base legal" style={input} value={f.legalBasis} onChange={(e) => set("legalBasis", e.target.value)}>{["CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>}
       </div>
       <button disabled={pending || !f.name.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createDataset({ name: f.name, purpose: f.purpose || undefined, classification: f.classification as never, containsPersonalData: f.containsPersonalData, containsSpecialCategories: false, legalBasis: (f.containsPersonalData ? f.legalBasis : "NOT_APPLICABLE") as never });
@@ -743,7 +743,7 @@ function DatasetRow({ dataset, canManage, canUpdate, pending, run, openEditor }:
               <strong style={{ fontSize: 12 }}>Calidad de datos (0-100)</strong>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
                 {(["completeness", "accuracy", "consistency", "timeliness", "representativeness"] as const).map((k) => (
-                  <input key={k} style={{ ...input, maxWidth: 100 }} type="number" min={0} max={100} placeholder={k} value={quality[k]} onChange={(e) => setQuality((p) => ({ ...p, [k]: e.target.value }))} />
+                  <input aria-label={k} key={k} style={{ ...input, maxWidth: 100 }} type="number" min={0} max={100} placeholder={k} value={quality[k]} onChange={(e) => setQuality((p) => ({ ...p, [k]: e.target.value }))} />
                 ))}
                 <button disabled={pending} style={miniBtn} onClick={() => run(() => assessDatasetQuality(dataset.id, {
                   completeness: quality.completeness ? Number(quality.completeness) : undefined, accuracy: quality.accuracy ? Number(quality.accuracy) : undefined,
@@ -755,8 +755,8 @@ function DatasetRow({ dataset, canManage, canUpdate, pending, run, openEditor }:
             <div>
               <strong style={{ fontSize: 12 }}>Revisión de sesgo</strong>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
-                <input style={input} placeholder="Hallazgos de sesgo" value={bias.biasFindings} onChange={(e) => setBias((p) => ({ ...p, biasFindings: e.target.value }))} />
-                <input style={input} placeholder="Grupos subrepresentados" value={bias.underrepresentedGroups} onChange={(e) => setBias((p) => ({ ...p, underrepresentedGroups: e.target.value }))} />
+                <input aria-label="Hallazgos de sesgo" style={input} placeholder="Hallazgos de sesgo" value={bias.biasFindings} onChange={(e) => setBias((p) => ({ ...p, biasFindings: e.target.value }))} />
+                <input aria-label="Grupos subrepresentados" style={input} placeholder="Grupos subrepresentados" value={bias.underrepresentedGroups} onChange={(e) => setBias((p) => ({ ...p, underrepresentedGroups: e.target.value }))} />
                 <button disabled={pending} style={miniBtn} onClick={() => run(() => reviewDatasetBias(dataset.id, { biasFindings: bias.biasFindings || undefined, underrepresentedGroups: bias.underrepresentedGroups || undefined }))}>Guardar revisión</button>
               </div>
             </div>
@@ -799,12 +799,12 @@ function NewModelForm({ systems, datasets, pending, run, onDone }: { systems: Ai
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Nombre del modelo" value={f.modelName} onChange={(e) => set("modelName", e.target.value)} />
-        <input style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
-        <input style={input} placeholder="Técnica de explicabilidad" value={f.explainabilityMethod} onChange={(e) => set("explainabilityMethod", e.target.value)} />
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Nombre del modelo" style={input} placeholder="Nombre del modelo" value={f.modelName} onChange={(e) => set("modelName", e.target.value)} />
+        <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
+        <input aria-label="Técnica de explicabilidad" style={input} placeholder="Técnica de explicabilidad" value={f.explainabilityMethod} onChange={(e) => set("explainabilityMethod", e.target.value)} />
       </div>
-      <select style={input} value={f.trainingDatasetId} onChange={(e) => set("trainingDatasetId", e.target.value)}><option value="">Dataset de entrenamiento (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code} · {d.name}</option>)}</select>
+      <select aria-label="Dataset de entrenamiento (opcional)" style={input} value={f.trainingDatasetId} onChange={(e) => set("trainingDatasetId", e.target.value)}><option value="">Dataset de entrenamiento (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code} · {d.name}</option>)}</select>
       <button disabled={pending || !f.systemId || !f.modelName.trim() || !f.version.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createModelVersion({ systemId: f.systemId, modelName: f.modelName, version: f.version, trainingDatasetId: f.trainingDatasetId || undefined, explainabilityMethod: f.explainabilityMethod || undefined });
         onDone();
@@ -856,11 +856,11 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
       <Modal open={showEval} onClose={() => setShowEval(false)} title={`Evaluar modelo · ${model.modelName}`} width={700}>
           <div className="nf-modal-form nf-iso-create-form">
             <AimsModalError />
-            <select style={input} value={ev.datasetId} onChange={(e) => setEv((p) => ({ ...p, datasetId: e.target.value }))}><option value="">Dataset de evaluación (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-            <input style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Exactitud (0-1)" value={ev.accuracy} onChange={(e) => setEv((p) => ({ ...p, accuracy: e.target.value }))} />
-            <input style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Equidad (0-1)" value={ev.fairnessScore} onChange={(e) => setEv((p) => ({ ...p, fairnessScore: e.target.value }))} />
+            <select aria-label="Dataset de evaluación (opcional)" style={input} value={ev.datasetId} onChange={(e) => setEv((p) => ({ ...p, datasetId: e.target.value }))}><option value="">Dataset de evaluación (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+            <input aria-label="Exactitud (0-1)" style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Exactitud (0-1)" value={ev.accuracy} onChange={(e) => setEv((p) => ({ ...p, accuracy: e.target.value }))} />
+            <input aria-label="Equidad (0-1)" style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Equidad (0-1)" value={ev.fairnessScore} onChange={(e) => setEv((p) => ({ ...p, fairnessScore: e.target.value }))} />
             <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={ev.biasDetected} onChange={(e) => setEv((p) => ({ ...p, biasDetected: e.target.checked }))} /> Sesgo detectado</label>
-            <select style={input} value={ev.outcome} onChange={(e) => setEv((p) => ({ ...p, outcome: e.target.value }))}>{["NOT_EVALUATED", "PASSED", "PASSED_WITH_CONDITIONS", "FAILED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+            <select aria-label="Resultado" style={input} value={ev.outcome} onChange={(e) => setEv((p) => ({ ...p, outcome: e.target.value }))}>{["NOT_EVALUATED", "PASSED", "PASSED_WITH_CONDITIONS", "FAILED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
             <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={() => setShowEval(false)}>Cancelar</button><button disabled={pending} style={primaryBtn} onClick={() => {
               const save = (conditions?: string) => run(async () => {
                 await createModelEvaluation({
@@ -886,12 +886,12 @@ function NewOversightForm({ systems, members, pending, run, onDone }: { systems:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Nombre del control" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Nombre del control" style={input} placeholder="Nombre del control" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <select style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "DUAL_CONTROL", "SAMPLING_REVIEW", "APPEAL_CHANNEL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "DUAL_CONTROL", "SAMPLING_REVIEW", "APPEAL_CHANNEL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={f.canOverride} onChange={(e) => set("canOverride", e.target.checked)} /> Puede anular</label>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={f.canStop} onChange={(e) => set("canStop", e.target.checked)} /> Puede detener</label>
       </div>
@@ -951,7 +951,7 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
       {editing && (
         <tr><td colSpan={12} style={{ ...td, background: "#f8fafc" }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <input style={{ ...input, flex: 1, minWidth: 280 }} placeholder="Texto editado por una persona" value={edits} onChange={(e) => setEdits(e.target.value)} />
+            <input aria-label="Texto editado por una persona" style={{ ...input, flex: 1, minWidth: 280 }} placeholder="Texto editado por una persona" value={edits} onChange={(e) => setEdits(e.target.value)} />
             <button disabled={pending || !edits.trim()} style={primaryBtn} onClick={() => run(async () => { await editAIOutput(output.id, edits); setEditing(false); setEdits(""); })}>Guardar edición humana</button>
           </div>
         </td></tr>
@@ -966,12 +966,12 @@ function NewOutputForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Modelo (p.ej. claude-sonnet-5)" value={f.model} onChange={(e) => set("model", e.target.value)} />
-        <input style={input} placeholder="Versión del modelo" value={f.modelVersionLabel} onChange={(e) => set("modelVersionLabel", e.target.value)} />
+        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Modelo (p.ej. claude-sonnet-5)" style={input} placeholder="Modelo (p.ej. claude-sonnet-5)" value={f.model} onChange={(e) => set("model", e.target.value)} />
+        <input aria-label="Versión del modelo" style={input} placeholder="Versión del modelo" value={f.modelVersionLabel} onChange={(e) => set("modelVersionLabel", e.target.value)} />
       </div>
-      <textarea style={{ ...input, minHeight: 60 }} placeholder="Prompt" value={f.prompt} onChange={(e) => set("prompt", e.target.value)} />
-      <textarea style={{ ...input, minHeight: 60 }} placeholder="Salida generada" value={f.output} onChange={(e) => set("output", e.target.value)} />
+      <textarea aria-label="Prompt" style={{ ...input, minHeight: 60 }} placeholder="Prompt" value={f.prompt} onChange={(e) => set("prompt", e.target.value)} />
+      <textarea aria-label="Salida generada" style={{ ...input, minHeight: 60 }} placeholder="Salida generada" value={f.output} onChange={(e) => set("output", e.target.value)} />
       <button disabled={pending || !f.prompt.trim() || !f.model.trim() || !f.modelVersionLabel.trim() || !f.output.trim()} style={primaryBtn} onClick={() => run(async () => {
         await recordAIOutput({ systemId: f.systemId || undefined, prompt: f.prompt, model: f.model, modelVersionLabel: f.modelVersionLabel, output: f.output, containsPersonalData: false, targetType: "OTHER", redacted: false });
         onDone();
@@ -986,11 +986,11 @@ function NewTransparencyForm({ systems, pending, run, onDone }: { systems: AimsP
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <select style={input} value={f.audience} onChange={(e) => set("audience", e.target.value)}>{["END_USER", "DATA_SUBJECT", "CUSTOMER", "WORKER", "REGULATOR", "PUBLIC", "INTERNAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Canal (p.ej. portal, correo)" value={f.channel} onChange={(e) => set("channel", e.target.value)} />
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <select aria-label="Audiencia" style={input} value={f.audience} onChange={(e) => set("audience", e.target.value)}>{["END_USER", "DATA_SUBJECT", "CUSTOMER", "WORKER", "REGULATOR", "PUBLIC", "INTERNAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Canal (p.ej. portal, correo)" style={input} placeholder="Canal (p.ej. portal, correo)" value={f.channel} onChange={(e) => set("channel", e.target.value)} />
       </div>
-      <textarea style={{ ...input, minHeight: 60 }} placeholder="Texto de divulgación del uso de IA" value={f.disclosure} onChange={(e) => set("disclosure", e.target.value)} />
+      <textarea aria-label="Texto de divulgación del uso de IA" style={{ ...input, minHeight: 60 }} placeholder="Texto de divulgación del uso de IA" value={f.disclosure} onChange={(e) => set("disclosure", e.target.value)} />
       <button disabled={pending || !f.systemId || !f.disclosure.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createTransparencyRecord({ systemId: f.systemId, audience: f.audience as never, disclosure: f.disclosure, channel: f.channel || undefined, aiUseDisclosed: true, version: "1", limitationsDisclosed: false, dataUseDisclosed: false, humanContactOffered: false });
         onDone();
@@ -1007,13 +1007,13 @@ function NewIncidentForm({ systems, members, pending, run, onDone }: { systems: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Título del incidente" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Título del incidente" style={input} placeholder="Título del incidente" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-        <select style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{INCIDENT_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{INCIDENT_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
         await reportAIIncident({ systemId: f.systemId || undefined, title: f.title, type: f.type as never, severity: f.severity as never, responsibleId: f.responsibleId || undefined });
@@ -1029,9 +1029,9 @@ function NewSupplierForm({ systems, pending, run, onDone }: { systems: AimsPaylo
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre del proveedor" value={f.supplierName} onChange={(e) => set("supplierName", e.target.value)} />
-        <select style={input} value={f.serviceType} onChange={(e) => set("serviceType", e.target.value)}>{["FOUNDATION_MODEL", "MODEL_API", "DATASET", "ANNOTATION", "MLOPS_PLATFORM", "EMBEDDED_FEATURE", "CONSULTING", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.supplierName} onChange={(e) => set("supplierName", e.target.value)} />
+        <select aria-label="Tipo de servicio" style={input} value={f.serviceType} onChange={(e) => set("serviceType", e.target.value)}>{["FOUNDATION_MODEL", "MODEL_API", "DATASET", "ANNOTATION", "MLOPS_PLATFORM", "EMBEDDED_FEATURE", "CONSULTING", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.supplierName.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createSupplierAssessment({
@@ -1051,9 +1051,9 @@ function NewChangeForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["MODEL_UPDATE", "RETRAINING", "DATA_CHANGE", "PROMPT_CHANGE", "SCOPE_CHANGE", "INTEGRATION", "CONFIGURATION", "THRESHOLD_CHANGE", "DECOMMISSION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Título del cambio" style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["MODEL_UPDATE", "RETRAINING", "DATA_CHANGE", "PROMPT_CHANGE", "SCOPE_CHANGE", "INTEGRATION", "CONFIGURATION", "THRESHOLD_CHANGE", "DECOMMISSION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <button disabled={pending || !f.systemId || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
         await createAIChangeRequest({ systemId: f.systemId, title: f.title, changeType: f.changeType as never, affectsImpactAssessment: false, requiresReassessment: false, requiresRetraining: false, requiresRevalidation: false });
@@ -1069,14 +1069,14 @@ function NewMetricForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <input style={input} placeholder="Periodo (p.ej. 2026-07)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select style={input} value={f.kind} onChange={(e) => set("kind", e.target.value)}>{["ACCURACY", "PRECISION", "RECALL", "F1", "ERROR_RATE", "LATENCY", "THROUGHPUT", "DRIFT", "FAIRNESS", "TOXICITY", "HALLUCINATION_RATE", "HUMAN_OVERRIDE_RATE", "REJECTION_RATE", "COST", "AVAILABILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <input aria-label="Periodo (p.ej. 2026-07)" style={input} placeholder="Periodo (p.ej. 2026-07)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+        <select aria-label="Tipo" style={input} value={f.kind} onChange={(e) => set("kind", e.target.value)}>{["ACCURACY", "PRECISION", "RECALL", "F1", "ERROR_RATE", "LATENCY", "THROUGHPUT", "DRIFT", "FAIRNESS", "TOXICITY", "HALLUCINATION_RATE", "HUMAN_OVERRIDE_RATE", "REJECTION_RATE", "COST", "AVAILABILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre de la métrica" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <input style={input} type="number" placeholder="Valor" value={f.value} onChange={(e) => set("value", e.target.value)} />
-        <input style={input} type="number" placeholder="Umbral (opcional)" value={f.threshold} onChange={(e) => set("threshold", e.target.value)} />
+        <input aria-label="Nombre de la métrica" style={input} placeholder="Nombre de la métrica" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Valor" style={input} type="number" placeholder="Valor" value={f.value} onChange={(e) => set("value", e.target.value)} />
+        <input aria-label="Umbral (opcional)" style={input} type="number" placeholder="Umbral (opcional)" value={f.threshold} onChange={(e) => set("threshold", e.target.value)} />
       </div>
       <button disabled={pending || !f.systemId || !f.period.trim() || !f.name.trim() || !f.value} style={primaryBtn} onClick={() => run(async () => {
         await recordPerformanceMetric({ systemId: f.systemId, period: f.period, kind: f.kind as never, name: f.name, value: Number(f.value), threshold: f.threshold ? Number(f.threshold) : undefined });

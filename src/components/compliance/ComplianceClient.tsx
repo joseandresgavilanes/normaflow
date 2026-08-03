@@ -37,6 +37,7 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ActionDialogsProvider, useChoiceAction, usePromptAction, useNoticeAction } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
+import { labelForKeyOrRaw } from "@/lib/field-labels";
 
 type Tab =
   | "panel" | "obligations" | "sources" | "risks" | "controls" | "evaluations" | "calendar"
@@ -192,8 +193,8 @@ function EditRecordForm({ kind, row, members, pending, run, onDone }: { kind: Ed
   const set = (key: string, value: string | boolean | number) => setF((current) => ({ ...current, [key]: value }));
   const s = (key: string) => String(f[key] ?? "");
   const n = (key: string) => Number(f[key] ?? 0);
-  const memberSelect = (key: string, label: string) => <select style={input} value={s(key)} onChange={(e) => set(key, e.target.value)}><option value="">{label}</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>;
-  const select = (key: string, values: string[]) => <select style={input} value={s(key)} onChange={(e) => set(key, e.target.value)}>{values.map((v) => <option key={v} value={v}>{v}</option>)}</select>;
+  const memberSelect = (key: string, label: string) => <select aria-label={label.replace(/…$/, "")} style={input} value={s(key)} onChange={(e) => set(key, e.target.value)}><option value="">{label}</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>;
+  const select = (key: string, values: string[]) => <select aria-label={labelForKeyOrRaw(key)} style={input} value={s(key)} onChange={(e) => set(key, e.target.value)}>{values.map((v) => <option key={v} value={v}>{v}</option>)}</select>;
   function save() {
     const id = row.id;
     const date = (key: string) => s(key) ? new Date(s(key)).toISOString() : undefined;
@@ -217,19 +218,19 @@ function EditRecordForm({ kind, row, members, pending, run, onDone }: { kind: Ed
   const titleOnly = ["obligation", "risk", "change", "breach", "plan", "training", "board"].includes(kind);
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      {kind === "jurisdiction" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input style={input} placeholder="Nombre" value={s("name")} onChange={(e) => set("name", e.target.value)} />{select("country", [s("country") || "País", "ES", "EC", "MX", "CO", "US"])}</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input style={input} placeholder="Autoridad" value={s("authority")} onChange={(e) => set("authority", e.target.value)} /><input style={input} placeholder="Motivo de aplicabilidad" value={s("rationale")} onChange={(e) => set("rationale", e.target.value)} /></div><label><input type="checkbox" checked={Boolean(f.applicable)} onChange={(e) => set("applicable", e.target.checked)} /> Aplicable</label></>}
-      {kind === "source" && <><input style={input} placeholder="Nombre" value={s("name")} onChange={(e) => set("name", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input style={input} placeholder="Emisor" value={s("issuer")} onChange={(e) => set("issuer", e.target.value)} /><input style={input} placeholder="Referencia" value={s("reference")} onChange={(e) => set("reference", e.target.value)} /></div>{select("monitoringFrequency", ["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"])}{memberSelect("ownerId", "Responsable de vigilancia…")}<label><input type="checkbox" checked={Boolean(f.monitored)} onChange={(e) => set("monitored", e.target.checked)} /> Vigilancia activa</label></>}
-      {titleOnly && <input style={input} placeholder="Título" value={s("title")} onChange={(e) => set("title", e.target.value)} />}
-      {kind === "obligation" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>{select("category", ["ANTIBRIBERY", "DATA_PROTECTION", "LABOR", "ENVIRONMENTAL", "CORPORATE_GOVERNANCE", "OTHER"])}{select("criticality", ["LOW", "MEDIUM", "HIGH", "CRITICAL"])}{select("frequency", ["MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL"])} </div>{memberSelect("ownerId", "Propietario…")}{memberSelect("accountableId", "Accountable…")}<input style={input} placeholder="Texto de requisito" value={s("description")} onChange={(e) => set("description", e.target.value)} /></>}
+      {kind === "jurisdiction" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Nombre" style={input} placeholder="Nombre" value={s("name")} onChange={(e) => set("name", e.target.value)} />{select("country", [s("country") || "País", "ES", "EC", "MX", "CO", "US"])}</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Autoridad" style={input} placeholder="Autoridad" value={s("authority")} onChange={(e) => set("authority", e.target.value)} /><input aria-label="Motivo de aplicabilidad" style={input} placeholder="Motivo de aplicabilidad" value={s("rationale")} onChange={(e) => set("rationale", e.target.value)} /></div><label><input type="checkbox" checked={Boolean(f.applicable)} onChange={(e) => set("applicable", e.target.checked)} /> Aplicable</label></>}
+      {kind === "source" && <><input aria-label="Nombre" style={input} placeholder="Nombre" value={s("name")} onChange={(e) => set("name", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Emisor" style={input} placeholder="Emisor" value={s("issuer")} onChange={(e) => set("issuer", e.target.value)} /><input aria-label="Referencia" style={input} placeholder="Referencia" value={s("reference")} onChange={(e) => set("reference", e.target.value)} /></div>{select("monitoringFrequency", ["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"])}{memberSelect("ownerId", "Responsable de vigilancia…")}<label><input type="checkbox" checked={Boolean(f.monitored)} onChange={(e) => set("monitored", e.target.checked)} /> Vigilancia activa</label></>}
+      {titleOnly && <input aria-label="Título" style={input} placeholder="Título" value={s("title")} onChange={(e) => set("title", e.target.value)} />}
+      {kind === "obligation" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>{select("category", ["ANTIBRIBERY", "DATA_PROTECTION", "LABOR", "ENVIRONMENTAL", "CORPORATE_GOVERNANCE", "OTHER"])}{select("criticality", ["LOW", "MEDIUM", "HIGH", "CRITICAL"])}{select("frequency", ["MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL"])} </div>{memberSelect("ownerId", "Propietario…")}{memberSelect("accountableId", "Accountable…")}<input aria-label="Texto de requisito" style={input} placeholder="Texto de requisito" value={s("description")} onChange={(e) => set("description", e.target.value)} /></>}
       {kind === "risk" && <><div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>{select("category", ["ANTIBRIBERY", "DATA_PROTECTION", "LABOR", "ENVIRONMENTAL", "CORPORATE_GOVERNANCE", "OTHER"])}{select("likelihood", ["1", "2", "3", "4", "5"])}{select("impact", ["1", "2", "3", "4", "5"])}{select("treatment", ["AVOID", "MITIGATE", "TRANSFER", "ACCEPT"])}</div>{memberSelect("ownerId", "Propietario…")}</>}
       {kind === "control" && <><div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>{select("controlType", ["PREVENTIVE", "DETECTIVE", "CORRECTIVE", "DIRECTIVE"])}{select("nature", ["MANUAL", "AUTOMATED", "HYBRID"])}{select("frequency", ["CONTINUOUS", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL"])} </div>{memberSelect("ownerId", "Propietario…")}<label><input type="checkbox" checked={Boolean(f.active)} onChange={(e) => set("active", e.target.checked)} /> Control activo</label></>}
-      {kind === "evaluation" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}><input style={input} placeholder="Periodo" value={s("period")} onChange={(e) => set("period", e.target.value)} />{select("result", ["NOT_EVALUATED", "COMPLIANT", "PARTIALLY_COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE"])}<input style={input} type="number" min={0} max={100} placeholder="Puntaje" value={n("score")} onChange={(e) => set("score", Number(e.target.value))} /></div><input style={input} placeholder="Hallazgos" value={s("findings")} onChange={(e) => set("findings", e.target.value)} /></>}
-      {kind === "calendar" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}><input style={input} placeholder="Título" value={s("title")} onChange={(e) => set("title", e.target.value)} /><input style={input} type="date" value={s("dueDate")} onChange={(e) => set("dueDate", e.target.value)} /></div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input style={input} type="number" min={0} max={365} placeholder="Aviso previo" value={n("leadTimeDays")} onChange={(e) => set("leadTimeDays", Number(e.target.value))} />{memberSelect("ownerId", "Responsable…")}</div><input style={input} placeholder="Autoridad" value={s("authority")} onChange={(e) => set("authority", e.target.value)} /></>}
-      {kind === "change" && <><select style={input} value={s("changeType")} onChange={(e) => set("changeType", e.target.value)}>{["NEW_REQUIREMENT", "AMENDMENT", "REPEAL", "INTERPRETATION", "GUIDANCE", "CASE_LAW", "ENFORCEMENT_TREND"].map((v) => <option key={v}>{v}</option>)}</select><input style={input} placeholder="Resumen" value={s("summary")} onChange={(e) => set("summary", e.target.value)} /></>}
-      {kind === "breach" && <><input style={input} placeholder="Descripción" value={s("description")} onChange={(e) => set("description", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{select("severity", ["MINOR", "MODERATE", "MAJOR", "SEVERE"])}<input style={input} type="number" min={0} placeholder="Exposición financiera" value={n("financialExposure")} onChange={(e) => set("financialExposure", Number(e.target.value))} /></div><input style={input} placeholder="Causa raíz" value={s("rationale")} onChange={(e) => set("rationale", e.target.value)} /><label><input type="checkbox" checked={Boolean(f.recurrence)} onChange={(e) => set("recurrence", e.target.checked)} /> Recurrente</label></>}
-      {kind === "plan" && <><input style={input} placeholder="Objetivo" value={s("objective")} onChange={(e) => set("objective", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{memberSelect("ownerId", "Responsable…")}<input style={input} type="date" value={s("dueDate")} onChange={(e) => set("dueDate", e.target.value)} /></div></>}
-      {kind === "training" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{select("topic", ["CODE_OF_CONDUCT", "ANTIBRIBERY", "CONFLICT_OF_INTEREST", "SPEAK_UP_CHANNEL", "DATA_PROTECTION", "OTHER"])}{select("deliveryMode", ["ONLINE", "CLASSROOM", "BLENDED", "ON_THE_JOB", "SELF_STUDY"])}</div><input style={input} placeholder="Audiencia" value={s("audience")} onChange={(e) => set("audience", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input style={input} type="number" min={0} placeholder="Audiencia prevista" value={n("targetCount")} onChange={(e) => set("targetCount", Number(e.target.value))} /><input style={input} type="date" value={s("scheduledFor")} onChange={(e) => set("scheduledFor", e.target.value)} /></div><label><input type="checkbox" checked={Boolean(f.mandatory)} onChange={(e) => set("mandatory", e.target.checked)} /> Obligatoria</label></>}
-      {kind === "board" && <><input style={input} placeholder="Periodo" value={s("period")} onChange={(e) => set("period", e.target.value)} /><textarea style={{ ...input, minHeight: 80 }} placeholder="Resumen ejecutivo" value={s("executiveSummary")} onChange={(e) => set("executiveSummary", e.target.value)} /><textarea style={{ ...input, minHeight: 60 }} placeholder="Recursos solicitados" value={s("resourcesRequested")} onChange={(e) => set("resourcesRequested", e.target.value)} /><textarea style={{ ...input, minHeight: 60 }} placeholder="Decisiones solicitadas" value={s("decisionsRequested")} onChange={(e) => set("decisionsRequested", e.target.value)} /></>}
+      {kind === "evaluation" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}><input aria-label="Periodo" style={input} placeholder="Periodo" value={s("period")} onChange={(e) => set("period", e.target.value)} />{select("result", ["NOT_EVALUATED", "COMPLIANT", "PARTIALLY_COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE"])}<input aria-label="Puntaje" style={input} type="number" min={0} max={100} placeholder="Puntaje" value={n("score")} onChange={(e) => set("score", Number(e.target.value))} /></div><input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={s("findings")} onChange={(e) => set("findings", e.target.value)} /></>}
+      {kind === "calendar" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}><input aria-label="Título" style={input} placeholder="Título" value={s("title")} onChange={(e) => set("title", e.target.value)} /><input aria-label="Fecha de vencimiento" style={input} type="date" value={s("dueDate")} onChange={(e) => set("dueDate", e.target.value)} /></div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Aviso previo" style={input} type="number" min={0} max={365} placeholder="Aviso previo" value={n("leadTimeDays")} onChange={(e) => set("leadTimeDays", Number(e.target.value))} />{memberSelect("ownerId", "Responsable…")}</div><input aria-label="Autoridad" style={input} placeholder="Autoridad" value={s("authority")} onChange={(e) => set("authority", e.target.value)} /></>}
+      {kind === "change" && <><select aria-label="Tipo de cambio" style={input} value={s("changeType")} onChange={(e) => set("changeType", e.target.value)}>{["NEW_REQUIREMENT", "AMENDMENT", "REPEAL", "INTERPRETATION", "GUIDANCE", "CASE_LAW", "ENFORCEMENT_TREND"].map((v) => <option key={v}>{v}</option>)}</select><input aria-label="Resumen" style={input} placeholder="Resumen" value={s("summary")} onChange={(e) => set("summary", e.target.value)} /></>}
+      {kind === "breach" && <><input aria-label="Descripción" style={input} placeholder="Descripción" value={s("description")} onChange={(e) => set("description", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{select("severity", ["MINOR", "MODERATE", "MAJOR", "SEVERE"])}<input aria-label="Exposición financiera" style={input} type="number" min={0} placeholder="Exposición financiera" value={n("financialExposure")} onChange={(e) => set("financialExposure", Number(e.target.value))} /></div><input aria-label="Causa raíz" style={input} placeholder="Causa raíz" value={s("rationale")} onChange={(e) => set("rationale", e.target.value)} /><label><input type="checkbox" checked={Boolean(f.recurrence)} onChange={(e) => set("recurrence", e.target.checked)} /> Recurrente</label></>}
+      {kind === "plan" && <><input aria-label="Objetivo" style={input} placeholder="Objetivo" value={s("objective")} onChange={(e) => set("objective", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{memberSelect("ownerId", "Responsable…")}<input aria-label="Fecha de vencimiento" style={input} type="date" value={s("dueDate")} onChange={(e) => set("dueDate", e.target.value)} /></div></>}
+      {kind === "training" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{select("topic", ["CODE_OF_CONDUCT", "ANTIBRIBERY", "CONFLICT_OF_INTEREST", "SPEAK_UP_CHANNEL", "DATA_PROTECTION", "OTHER"])}{select("deliveryMode", ["ONLINE", "CLASSROOM", "BLENDED", "ON_THE_JOB", "SELF_STUDY"])}</div><input aria-label="Audiencia" style={input} placeholder="Audiencia" value={s("audience")} onChange={(e) => set("audience", e.target.value)} /><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Audiencia prevista" style={input} type="number" min={0} placeholder="Audiencia prevista" value={n("targetCount")} onChange={(e) => set("targetCount", Number(e.target.value))} /><input aria-label="Fecha prevista" style={input} type="date" value={s("scheduledFor")} onChange={(e) => set("scheduledFor", e.target.value)} /></div><label><input type="checkbox" checked={Boolean(f.mandatory)} onChange={(e) => set("mandatory", e.target.checked)} /> Obligatoria</label></>}
+      {kind === "board" && <><input aria-label="Periodo" style={input} placeholder="Periodo" value={s("period")} onChange={(e) => set("period", e.target.value)} /><textarea aria-label="Resumen ejecutivo" style={{ ...input, minHeight: 80 }} placeholder="Resumen ejecutivo" value={s("executiveSummary")} onChange={(e) => set("executiveSummary", e.target.value)} /><textarea aria-label="Recursos solicitados" style={{ ...input, minHeight: 60 }} placeholder="Recursos solicitados" value={s("resourcesRequested")} onChange={(e) => set("resourcesRequested", e.target.value)} /><textarea aria-label="Decisiones solicitadas" style={{ ...input, minHeight: 60 }} placeholder="Decisiones solicitadas" value={s("decisionsRequested")} onChange={(e) => set("decisionsRequested", e.target.value)} /></>}
       <button disabled={pending || (kind === "calendar" && !s("dueDate"))} style={primaryBtn} onClick={save}><Check size={13} /> Guardar cambios</button>
     </div>
   );
@@ -936,17 +937,17 @@ function NewJurisdictionForm({ jurisdictions, pending, run, onDone }: { jurisdic
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <input style={input} placeholder="Código (EU, ES, ES-MD…)" value={f.code} onChange={(e) => set("code", e.target.value)} />
-        <select style={input} value={f.level} onChange={(e) => set("level", e.target.value)}>{["SUPRANATIONAL", "NATIONAL", "REGIONAL", "LOCAL", "SECTORAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Nombre" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <input aria-label="Código (EU, ES, ES-MD…)" style={input} placeholder="Código (EU, ES, ES-MD…)" value={f.code} onChange={(e) => set("code", e.target.value)} />
+        <select aria-label="Nivel" style={input} value={f.level} onChange={(e) => set("level", e.target.value)}>{["SUPRANATIONAL", "NATIONAL", "REGIONAL", "LOCAL", "SECTORAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Nombre" style={input} placeholder="Nombre" value={f.name} onChange={(e) => set("name", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
-        <input style={input} placeholder="Autoridad competente" value={f.authority} onChange={(e) => set("authority", e.target.value)} />
-        <select style={input} value={f.parentId} onChange={(e) => set("parentId", e.target.value)}><option value="">Sin jurisdicción superior</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+        <input aria-label="País" style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
+        <input aria-label="Autoridad competente" style={input} placeholder="Autoridad competente" value={f.authority} onChange={(e) => set("authority", e.target.value)} />
+        <select aria-label="Elemento superior" style={input} value={f.parentId} onChange={(e) => set("parentId", e.target.value)}><option value="">Sin jurisdicción superior</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.applicable} onChange={(e) => set("applicable", e.target.checked)} /> Aplicable a la organización</label>
-      <input style={input} placeholder="Motivo (por qué aplica)" value={f.rationale} onChange={(e) => set("rationale", e.target.value)} />
+      <input aria-label="Motivo (por qué aplica)" style={input} placeholder="Motivo (por qué aplica)" value={f.rationale} onChange={(e) => set("rationale", e.target.value)} />
       <button disabled={pending || !f.code || !f.name} style={primaryBtn} onClick={() => { run(() => createJurisdiction({ code: f.code, name: f.name, level: f.level as never, country: f.country || undefined, authority: f.authority || undefined, applicable: f.applicable, rationale: f.rationale || undefined, parentId: f.parentId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -958,16 +959,16 @@ function NewSourceForm({ jurisdictions, members, pending, run, onDone }: { juris
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Nombre de la fuente" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["LAW", "DECREE", "REGULATION", "DIRECTIVE", "RESOLUTION", "ORDINANCE", "CASE_LAW", "STANDARD", "CODE_OF_CONDUCT", "CONTRACT", "LICENSE", "INTERNAL_POLICY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Nombre de la fuente" style={input} placeholder="Nombre de la fuente" value={f.name} onChange={(e) => set("name", e.target.value)} />
+        <select aria-label="Tipo de fuente" style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["LAW", "DECREE", "REGULATION", "DIRECTIVE", "RESOLUTION", "ORDINANCE", "CASE_LAW", "STANDARD", "CODE_OF_CONDUCT", "CONTRACT", "LICENSE", "INTERNAL_POLICY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Emisor" value={f.issuer} onChange={(e) => set("issuer", e.target.value)} />
-        <input style={input} placeholder="Referencia" value={f.reference} onChange={(e) => set("reference", e.target.value)} />
-        <select style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
-        <select style={input} value={f.monitoringFrequency} onChange={(e) => set("monitoringFrequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Emisor" style={input} placeholder="Emisor" value={f.issuer} onChange={(e) => set("issuer", e.target.value)} />
+        <input aria-label="Referencia" style={input} placeholder="Referencia" value={f.reference} onChange={(e) => set("reference", e.target.value)} />
+        <select aria-label="Jurisdicción" style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+        <select aria-label="Frecuencia de vigilancia" style={input} value={f.monitoringFrequency} onChange={(e) => set("monitoringFrequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable de la vigilancia…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+      <select aria-label="Responsable de la vigilancia" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable de la vigilancia…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createRegulatorySource({ name: f.name, sourceType: f.sourceType as never, issuer: f.issuer || undefined, reference: f.reference || undefined, jurisdictionId: f.jurisdictionId || undefined, monitored: true, monitoringFrequency: f.monitoringFrequency as never, ownerId: f.ownerId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -978,18 +979,18 @@ function NewObligationForm({ members, sources, jurisdictions, pending, run, onDo
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título de la obligación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Título de la obligación" style={input} placeholder="Título de la obligación" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "LABOR", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "TAX", "FINANCIAL_REPORTING", "CONSUMER_PROTECTION", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "SECTOR_SPECIFIC", "CORPORATE_GOVERNANCE", "HUMAN_RIGHTS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.obligationType} onChange={(e) => set("obligationType", e.target.value)}>{["LEGAL", "REGULATORY", "CONTRACTUAL", "VOLUNTARY_COMMITMENT", "STANDARD", "INTERNAL_POLICY", "LICENSE_CONDITION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.evaluationFrequency} onChange={(e) => set("evaluationFrequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "LABOR", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "TAX", "FINANCIAL_REPORTING", "CONSUMER_PROTECTION", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "SECTOR_SPECIFIC", "CORPORATE_GOVERNANCE", "HUMAN_RIGHTS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Tipo de obligación" style={input} value={f.obligationType} onChange={(e) => set("obligationType", e.target.value)}>{["LEGAL", "REGULATORY", "CONTRACTUAL", "VOLUNTARY_COMMITMENT", "STANDARD", "INTERNAL_POLICY", "LICENSE_CONDITION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Frecuencia de evaluación" style={input} value={f.evaluationFrequency} onChange={(e) => set("evaluationFrequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
-        <select style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <select style={input} value={f.accountableId} onChange={(e) => set("accountableId", e.target.value)}><option value="">Accountable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Fuente" style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
+        <select aria-label="Jurisdicción" style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Accountable" style={input} value={f.accountableId} onChange={(e) => set("accountableId", e.target.value)}><option value="">Accountable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createComplianceObligation({ title: f.title, category: f.category as never, obligationType: f.obligationType as never, criticality: f.criticality as never, evaluationFrequency: f.evaluationFrequency as never, sourceId: f.sourceId || undefined, jurisdictionId: f.jurisdictionId || undefined, ownerId: f.ownerId || undefined, accountableId: f.accountableId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1034,9 +1035,9 @@ function ObligationRow({ row, nameOf, jurisdictions, members, can, live, pending
                 <div className="nf-compliance-obligation-evaluation">
                   <div className="nf-compliance-obligation-detail-title"><ShieldCheck size={15} aria-hidden /> Evaluar aplicabilidad por jurisdicción</div>
                   <div className="nf-compliance-obligation-form-grid">
-                    <select style={input} value={jurisdictionId} onChange={(e) => setJurisdictionId(e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
-                    <select style={input} value={decision} onChange={(e) => setDecision(e.target.value)}>{["APPLICABLE", "PARTIALLY_APPLICABLE", "NOT_APPLICABLE", "UNDER_ASSESSMENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-                    <input style={input} placeholder="Motivo de la decisión" value={rationale} onChange={(e) => setRationale(e.target.value)} />
+                    <select aria-label="Jurisdicción" style={input} value={jurisdictionId} onChange={(e) => setJurisdictionId(e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+                    <select aria-label="Decisión" style={input} value={decision} onChange={(e) => setDecision(e.target.value)}>{["APPLICABLE", "PARTIALLY_APPLICABLE", "NOT_APPLICABLE", "UNDER_ASSESSMENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+                    <input aria-label="Motivo de la decisión" style={input} placeholder="Motivo de la decisión" value={rationale} onChange={(e) => setRationale(e.target.value)} />
                     <button type="button" disabled={pending || !jurisdictionId} className="nf-compliance-obligation-save" onClick={() => run(() => assessObligationApplicability({ obligationId: row.id, jurisdictionId, decision: decision as never, rationale: rationale || undefined }))}><Check size={13} aria-hidden /> Guardar</button>
                   </div>
                 </div>
@@ -1061,17 +1062,17 @@ function NewRiskForm({ obligations, members, pending, run, onDone }: { obligatio
   const set = (k: string, v: string | number) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título del riesgo" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Título del riesgo" style={input} placeholder="Título del riesgo" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "LABOR", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "TAX", "FINANCIAL_REPORTING", "CONSUMER_PROTECTION", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "SECTOR_SPECIFIC", "CORPORATE_GOVERNANCE", "HUMAN_RIGHTS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.likelihood} onChange={(e) => set("likelihood", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Prob. {v}</option>)}</select>
-        <select style={input} value={f.impact} onChange={(e) => set("impact", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</select>
-        <select style={input} value={f.reputationalImpact} onChange={(e) => set("reputationalImpact", e.target.value)}>{["NEGLIGIBLE", "MINOR", "MODERATE", "MAJOR", "SEVERE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.treatment} onChange={(e) => set("treatment", e.target.value)}>{["AVOID", "MITIGATE", "TRANSFER", "ACCEPT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "LABOR", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "TAX", "FINANCIAL_REPORTING", "CONSUMER_PROTECTION", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "SECTOR_SPECIFIC", "CORPORATE_GOVERNANCE", "HUMAN_RIGHTS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Probabilidad" style={input} value={f.likelihood} onChange={(e) => set("likelihood", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Prob. {v}</option>)}</select>
+        <select aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", Number(e.target.value))}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</select>
+        <select aria-label="Impacto reputacional" style={input} value={f.reputationalImpact} onChange={(e) => set("reputationalImpact", e.target.value)}>{["NEGLIGIBLE", "MINOR", "MODERATE", "MAJOR", "SEVERE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Tratamiento" style={input} value={f.treatment} onChange={(e) => set("treatment", e.target.value)}>{["AVOID", "MITIGATE", "TRANSFER", "ACCEPT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación asociada…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Obligación asociada" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación asociada…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createComplianceRisk({ title: f.title, category: f.category as never, likelihood: f.likelihood, impact: f.impact, reputationalImpact: f.reputationalImpact as never, treatment: f.treatment as never, obligationId: f.obligationId || undefined, ownerId: f.ownerId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1083,16 +1084,16 @@ function NewControlForm({ obligations, risks, members, pending, run, onDone }: {
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Nombre del control" value={f.name} onChange={(e) => set("name", e.target.value)} />
+      <input aria-label="Nombre del control" style={input} placeholder="Nombre del control" value={f.name} onChange={(e) => set("name", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-        <select style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}>{["PREVENTIVE", "DETECTIVE", "CORRECTIVE", "DIRECTIVE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.nature} onChange={(e) => set("nature", e.target.value)}>{["MANUAL", "AUTOMATED", "HYBRID"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.frequency} onChange={(e) => set("frequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Tipo de control" style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}>{["PREVENTIVE", "DETECTIVE", "CORRECTIVE", "DIRECTIVE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Naturaleza" style={input} value={f.nature} onChange={(e) => set("nature", e.target.value)}>{["MANUAL", "AUTOMATED", "HYBRID"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Frecuencia" style={input} value={f.frequency} onChange={(e) => set("frequency", e.target.value)}>{["CONTINUOUS", "WEEKLY", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL", "ON_EVENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select style={input} value={f.riskId} onChange={(e) => set("riskId", e.target.value)}><option value="">Riesgo…</option>{risks.map((r) => <option key={r.id} value={r.id}>{r.code}</option>)}</select>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Obligación" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Riesgo" style={input} value={f.riskId} onChange={(e) => set("riskId", e.target.value)}><option value="">Riesgo…</option>{risks.map((r) => <option key={r.id} value={r.id}>{r.code}</option>)}</select>
+        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createComplianceControl({ name: f.name, controlType: f.controlType as never, nature: f.nature as never, frequency: f.frequency as never, obligationId: f.obligationId || undefined, riskId: f.riskId || undefined, ownerId: f.ownerId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1129,7 +1130,7 @@ function ControlRow({ row, members, can, live, pending, run }: { row: Compliance
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, alignItems: "center" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={designAdequate} onChange={(e) => setDesignAdequate(e.target.checked)} /> Diseño adecuado</label>
               <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={operatingEffective} onChange={(e) => setOperatingEffective(e.target.checked)} /> Operación eficaz</label>
-              <input style={input} type="number" min={0} max={100} value={effectiveness} onChange={(e) => setEffectiveness(Number(e.target.value))} placeholder="Eficacia 0-100" />
+              <input aria-label="Eficacia 0-100" style={input} type="number" min={0} max={100} value={effectiveness} onChange={(e) => setEffectiveness(Number(e.target.value))} placeholder="Eficacia 0-100" />
               <button disabled={pending} style={primaryBtn} onClick={() => run(() => testComplianceControl(row.id, { designAdequate, operatingEffective, effectiveness }))}>Guardar prueba</button>
               </div>
             </div>
@@ -1146,16 +1147,16 @@ function NewEvaluationForm({ obligations, controls, pending, run, onDone }: { ob
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select style={input} value={f.controlId} onChange={(e) => set("controlId", e.target.value)}><option value="">Control…</option>{controls.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+        <select aria-label="Obligación" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Control" style={input} value={f.controlId} onChange={(e) => set("controlId", e.target.value)}><option value="">Control…</option>{controls.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.scope} onChange={(e) => set("scope", e.target.value)}>{["OBLIGATION", "CONTROL", "PROCESS", "PROGRAM", "THIRD_PARTY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.method} onChange={(e) => set("method", e.target.value)}>{["SELF_ASSESSMENT", "MONITORING", "CONTROL_TESTING", "INTERNAL_AUDIT", "EXTERNAL_AUDIT", "AUTHORITY_INSPECTION", "DUE_DILIGENCE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Periodo (2026-Q1)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["NOT_EVALUATED", "COMPLIANT", "PARTIALLY_COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Alcance" style={input} value={f.scope} onChange={(e) => set("scope", e.target.value)}>{["OBLIGATION", "CONTROL", "PROCESS", "PROGRAM", "THIRD_PARTY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Método" style={input} value={f.method} onChange={(e) => set("method", e.target.value)}>{["SELF_ASSESSMENT", "MONITORING", "CONTROL_TESTING", "INTERNAL_AUDIT", "EXTERNAL_AUDIT", "AUTHORITY_INSPECTION", "DUE_DILIGENCE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Periodo (2026-Q1)" style={input} placeholder="Periodo (2026-Q1)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}>{["NOT_EVALUATED", "COMPLIANT", "PARTIALLY_COMPLIANT", "NON_COMPLIANT", "NOT_APPLICABLE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Hallazgos (obligatorio si no cumple)" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
+      <input aria-label="Hallazgos (obligatorio si no cumple)" style={input} placeholder="Hallazgos (obligatorio si no cumple)" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       <button disabled={pending || !f.period} style={primaryBtn} onClick={() => { run(() => createComplianceEvaluation({ obligationId: f.obligationId || undefined, controlId: f.controlId || undefined, scope: f.scope as never, method: f.method as never, period: f.period, result: f.result as never, findings: f.findings || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -1167,19 +1168,19 @@ function NewCalendarForm({ obligations, jurisdictions, members, pending, run, on
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del vencimiento" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
+        <input aria-label="Título del vencimiento" style={input} placeholder="Título del vencimiento" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Fecha de vencimiento" style={input} type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.recurrence} onChange={(e) => set("recurrence", e.target.value)}>{["ONCE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} type="number" min={0} max={365} value={f.leadTimeDays} onChange={(e) => set("leadTimeDays", Number(e.target.value))} placeholder="Aviso previo (días)" />
-        <select style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <input style={input} placeholder="Autoridad" value={f.authority} onChange={(e) => set("authority", e.target.value)} />
+        <select aria-label="Recurrencia" style={input} value={f.recurrence} onChange={(e) => set("recurrence", e.target.value)}>{["ONCE", "MONTHLY", "QUARTERLY", "SEMIANNUAL", "ANNUAL", "BIENNIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Aviso previo (días)" style={input} type="number" min={0} max={365} value={f.leadTimeDays} onChange={(e) => set("leadTimeDays", Number(e.target.value))} placeholder="Aviso previo (días)" />
+        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Autoridad" style={input} placeholder="Autoridad" value={f.authority} onChange={(e) => set("authority", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
-        <select style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Obligación" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Jurisdicción" style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
       <button disabled={pending || !f.title || !f.dueDate} style={primaryBtn} onClick={() => { run(() => createCalendarItem({ title: f.title, dueDate: new Date(f.dueDate).toISOString(), recurrence: f.recurrence as never, leadTimeDays: f.leadTimeDays, criticality: f.criticality as never, obligationId: f.obligationId || undefined, jurisdictionId: f.jurisdictionId || undefined, responsibleId: f.responsibleId || undefined, authority: f.authority || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1192,14 +1193,14 @@ function NewChangeForm({ sources, jurisdictions, obligations, pending, run, onDo
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["NEW_REQUIREMENT", "AMENDMENT", "REPEAL", "INTERPRETATION", "GUIDANCE", "CASE_LAW", "ENFORCEMENT_TREND"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Título del cambio" style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <select aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["NEW_REQUIREMENT", "AMENDMENT", "REPEAL", "INTERPRETATION", "GUIDANCE", "CASE_LAW", "ENFORCEMENT_TREND"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Resumen" value={f.summary} onChange={(e) => set("summary", e.target.value)} />
+      <input aria-label="Resumen" style={input} placeholder="Resumen" value={f.summary} onChange={(e) => set("summary", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
-        <select style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación afectada…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Fuente" style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
+        <select aria-label="Jurisdicción" style={input} value={f.jurisdictionId} onChange={(e) => set("jurisdictionId", e.target.value)}><option value="">Jurisdicción…</option>{jurisdictions.map((j) => <option key={j.id} value={j.id}>{j.code}</option>)}</select>
+        <select aria-label="Obligación afectada" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación afectada…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => registerRegulatoryChange({ title: f.title, changeType: f.changeType as never, summary: f.summary || undefined, sourceId: f.sourceId || undefined, jurisdictionId: f.jurisdictionId || undefined, obligationId: f.obligationId || undefined })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>
@@ -1236,11 +1237,11 @@ function ChangeRow({ row, members, nameOf, can, live, pending, run }: {
           <td style={{ ...td, background: "#f8fafc" }} colSpan={12}>
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <select style={input} value={impactStatus} onChange={(e) => setImpactStatus(e.target.value)}>{["UNDER_ASSESSMENT", "ASSESSED", "NO_IMPACT", "IMPLEMENTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-                <select style={input} value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+                <select aria-label="Estado del impacto" style={input} value={impactStatus} onChange={(e) => setImpactStatus(e.target.value)}>{["UNDER_ASSESSMENT", "ASSESSED", "NO_IMPACT", "IMPLEMENTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+                <select aria-label="Responsable" style={input} value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
               </div>
-              <input style={input} placeholder="Análisis de impacto" value={impactAnalysis} onChange={(e) => setImpactAnalysis(e.target.value)} />
-              <input style={input} placeholder="Acciones requeridas" value={actionsRequired} onChange={(e) => setActionsRequired(e.target.value)} />
+              <input aria-label="Análisis de impacto" style={input} placeholder="Análisis de impacto" value={impactAnalysis} onChange={(e) => setImpactAnalysis(e.target.value)} />
+              <input aria-label="Acciones requeridas" style={input} placeholder="Acciones requeridas" value={actionsRequired} onChange={(e) => setActionsRequired(e.target.value)} />
               <button disabled={pending} style={primaryBtn} onClick={() => run(() => assessRegulatoryChange(row.id, { impactStatus: impactStatus as never, impactAnalysis: impactAnalysis || undefined, actionsRequired: actionsRequired || undefined, responsibleId: responsibleId || undefined }))}>Guardar evaluación</button>
             </div>
           </td>
@@ -1255,13 +1256,13 @@ function NewDeclarationForm({ pending, run, onDone }: { pending: boolean; run: R
   const set = (k: string, v: string | boolean) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Periodo (2026)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+      <input aria-label="Periodo (2026)" style={input} placeholder="Periodo (2026)" value={f.period} onChange={(e) => set("period", e.target.value)} />
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.hasConflict} onChange={(e) => set("hasConflict", e.target.checked)} /> Declaro tener un conflicto de interés</label>
       {f.hasConflict && (
         <>
-          <select style={input} value={f.conflictType} onChange={(e) => set("conflictType", e.target.value)}>{["FINANCIAL_INTEREST", "FAMILY_RELATIONSHIP", "GIFT_HOSPITALITY", "OUTSIDE_ACTIVITY", "SUPPLIER_RELATIONSHIP", "CUSTOMER_RELATIONSHIP", "PUBLIC_OFFICIAL", "POLITICAL_ACTIVITY", "FORMER_EMPLOYMENT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-          <input style={input} placeholder="Descripción del conflicto" value={f.description} onChange={(e) => set("description", e.target.value)} />
-          <input style={input} placeholder="Parte relacionada" value={f.relatedParty} onChange={(e) => set("relatedParty", e.target.value)} />
+          <select aria-label="Tipo de conflicto" style={input} value={f.conflictType} onChange={(e) => set("conflictType", e.target.value)}>{["FINANCIAL_INTEREST", "FAMILY_RELATIONSHIP", "GIFT_HOSPITALITY", "OUTSIDE_ACTIVITY", "SUPPLIER_RELATIONSHIP", "CUSTOMER_RELATIONSHIP", "PUBLIC_OFFICIAL", "POLITICAL_ACTIVITY", "FORMER_EMPLOYMENT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+          <input aria-label="Descripción del conflicto" style={input} placeholder="Descripción del conflicto" value={f.description} onChange={(e) => set("description", e.target.value)} />
+          <input aria-label="Parte relacionada" style={input} placeholder="Parte relacionada" value={f.relatedParty} onChange={(e) => set("relatedParty", e.target.value)} />
         </>
       )}
       <button disabled={pending || !f.period} style={primaryBtn} onClick={() => { run(() => declareConflictOfInterest({ period: f.period, hasConflict: f.hasConflict, conflictType: f.hasConflict ? (f.conflictType as never) : undefined, description: f.hasConflict ? f.description : undefined, relatedParty: f.relatedParty || undefined, recusalRequired: false })); onDone(); }}><Plus size={12} /> Declarar</button>
@@ -1274,12 +1275,12 @@ function NewBreachForm({ obligations, pending, run, onDone }: { obligations: Com
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título del incumplimiento" value={f.title} onChange={(e) => set("title", e.target.value)} />
-      <input style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <input aria-label="Título del incumplimiento" style={input} placeholder="Título del incumplimiento" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select style={input} value={f.detectionSource} onChange={(e) => set("detectionSource", e.target.value)}>{["SELF_DETECTED", "COMPLIANCE_EVALUATION", "INTERNAL_AUDIT", "EXTERNAL_AUDIT", "SPEAK_UP_REPORT", "INVESTIGATION", "AUTHORITY_INSPECTION", "CUSTOMER_COMPLAINT", "THIRD_PARTY", "MEDIA"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["MINOR", "MODERATE", "MAJOR", "SEVERE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Obligación" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <select aria-label="Origen de la detección" style={input} value={f.detectionSource} onChange={(e) => set("detectionSource", e.target.value)}>{["SELF_DETECTED", "COMPLIANCE_EVALUATION", "INTERNAL_AUDIT", "EXTERNAL_AUDIT", "SPEAK_UP_REPORT", "INVESTIGATION", "AUTHORITY_INSPECTION", "CUSTOMER_COMPLAINT", "THIRD_PARTY", "MEDIA"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["MINOR", "MODERATE", "MAJOR", "SEVERE"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => registerComplianceBreach({ title: f.title, description: f.description || undefined, obligationId: f.obligationId || undefined, detectionSource: f.detectionSource as never, severity: f.severity as never, recurrence: false })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>
@@ -1291,12 +1292,12 @@ function NewPlanForm({ breaches, members, pending, run, onDone }: { breaches: Co
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título del plan" value={f.title} onChange={(e) => set("title", e.target.value)} />
-      <input style={input} placeholder="Objetivo" value={f.objective} onChange={(e) => set("objective", e.target.value)} />
+      <input aria-label="Título del plan" style={input} placeholder="Título del plan" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Objetivo" style={input} placeholder="Objetivo" value={f.objective} onChange={(e) => set("objective", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.breachId} onChange={(e) => set("breachId", e.target.value)}><option value="">Incumplimiento…</option>{breaches.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}</select>
-        <select style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <input style={input} type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
+        <select aria-label="Incumplimiento" style={input} value={f.breachId} onChange={(e) => set("breachId", e.target.value)}><option value="">Incumplimiento…</option>{breaches.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}</select>
+        <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <input aria-label="Fecha de vencimiento" style={input} type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createRemediationPlan({ title: f.title, objective: f.objective || undefined, breachId: f.breachId || undefined, ownerId: f.ownerId || undefined, dueDate: f.dueDate ? new Date(f.dueDate).toISOString() : undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1308,12 +1309,12 @@ function NewTrainingForm({ obligations, pending, run, onDone }: { obligations: C
   const set = (k: string, v: string | boolean | number) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título de la formación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Título de la formación" style={input} placeholder="Título de la formación" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select style={input} value={f.topic} onChange={(e) => set("topic", e.target.value)}>{["CODE_OF_CONDUCT", "ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "CONFLICT_OF_INTEREST", "SPEAK_UP_CHANNEL", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "HUMAN_RIGHTS", "SECTOR_REGULATION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.deliveryMode} onChange={(e) => set("deliveryMode", e.target.value)}>{["ONLINE", "CLASSROOM", "BLENDED", "ON_THE_JOB", "SELF_STUDY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <input style={input} type="number" min={0} value={f.targetCount} onChange={(e) => set("targetCount", Number(e.target.value))} placeholder="Audiencia prevista" />
+        <select aria-label="Tema" style={input} value={f.topic} onChange={(e) => set("topic", e.target.value)}>{["CODE_OF_CONDUCT", "ANTIBRIBERY", "ANTI_MONEY_LAUNDERING", "DATA_PROTECTION", "COMPETITION", "CONFLICT_OF_INTEREST", "SPEAK_UP_CHANNEL", "TRADE_SANCTIONS", "INFORMATION_SECURITY", "HUMAN_RIGHTS", "SECTOR_REGULATION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Modalidad" style={input} value={f.deliveryMode} onChange={(e) => set("deliveryMode", e.target.value)}>{["ONLINE", "CLASSROOM", "BLENDED", "ON_THE_JOB", "SELF_STUDY"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Obligación" style={input} value={f.obligationId} onChange={(e) => set("obligationId", e.target.value)}><option value="">Obligación…</option>{obligations.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
+        <input aria-label="Audiencia prevista" style={input} type="number" min={0} value={f.targetCount} onChange={(e) => set("targetCount", Number(e.target.value))} placeholder="Audiencia prevista" />
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.mandatory} onChange={(e) => set("mandatory", e.target.checked)} /> Obligatoria</label>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createComplianceTraining({ title: f.title, topic: f.topic as never, deliveryMode: f.deliveryMode as never, mandatory: f.mandatory, obligationId: f.obligationId || undefined, targetCount: f.targetCount || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1348,8 +1349,8 @@ function TrainingRow({ row, members, can, live, pending, run }: { row: Complianc
             <div style={{ display: "grid", gap: 8 }}>
               <EditRecordButton title={`Editar formación ${row.code}`}>{(close) => <EditRecordForm kind="training" row={row as unknown as EditRow} members={members} pending={pending} run={run} onDone={close} />}</EditRecordButton>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8 }}>
-              <input style={input} type="number" min={0} value={completedCount} onChange={(e) => setCompletedCount(Number(e.target.value))} placeholder="Personas formadas" />
-              <input style={input} type="number" min={0} max={100} value={passRate} onChange={(e) => setPassRate(Number(e.target.value))} placeholder="Aprobados %" />
+              <input aria-label="Personas formadas" style={input} type="number" min={0} value={completedCount} onChange={(e) => setCompletedCount(Number(e.target.value))} placeholder="Personas formadas" />
+              <input aria-label="Aprobados %" style={input} type="number" min={0} max={100} value={passRate} onChange={(e) => setPassRate(Number(e.target.value))} placeholder="Aprobados %" />
               <button disabled={pending} style={primaryBtn} onClick={() => run(() => recordTrainingCompletion(row.id, { completedCount, passRate }))}>Guardar</button>
               </div>
             </div>
@@ -1365,11 +1366,11 @@ function NewInvestigationForm({ breaches, members, pending, run, onDone }: { bre
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <input style={input} placeholder="Título de la investigación" value={f.title} onChange={(e) => set("title", e.target.value)} />
+      <input aria-label="Título de la investigación" style={input} placeholder="Título de la investigación" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.breachId} onChange={(e) => set("breachId", e.target.value)}><option value="">Incumplimiento…</option>{breaches.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}</select>
-        <select style={input} value={f.leadInvestigatorId} onChange={(e) => set("leadInvestigatorId", e.target.value)}><option value="">Investigador principal…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <select style={input} value={f.confidentiality} onChange={(e) => set("confidentiality", e.target.value)}>{["INTERNAL", "RESTRICTED", "CONFIDENTIAL", "STRICTLY_CONFIDENTIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Incumplimiento" style={input} value={f.breachId} onChange={(e) => set("breachId", e.target.value)}><option value="">Incumplimiento…</option>{breaches.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}</select>
+        <select aria-label="Investigador principal" style={input} value={f.leadInvestigatorId} onChange={(e) => set("leadInvestigatorId", e.target.value)}><option value="">Investigador principal…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Confidencialidad" style={input} value={f.confidentiality} onChange={(e) => set("confidentiality", e.target.value)}>{["INTERNAL", "RESTRICTED", "CONFIDENTIAL", "STRICTLY_CONFIDENTIAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <button disabled={pending || !f.title || !f.breachId || !f.leadInvestigatorId} style={primaryBtn} onClick={() => { run(() => openInvestigation({ title: f.title, breachId: f.breachId, leadInvestigatorId: f.leadInvestigatorId, confidentiality: f.confidentiality as never })); onDone(); }}><Plus size={12} /> Abrir</button>
     </div>
@@ -1382,11 +1383,11 @@ function NewGoverningReportForm({ pending, run, onDone }: { pending: boolean; ru
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <input style={input} placeholder="Título del informe" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <input style={input} placeholder="Periodo (2026-Q1)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select style={input} value={f.presentedTo} onChange={(e) => set("presentedTo", e.target.value)}>{["BOARD", "AUDIT_COMMITTEE", "ETHICS_COMMITTEE", "COMPLIANCE_COMMITTEE", "CEO", "EXECUTIVE_MANAGEMENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <input aria-label="Título del informe" style={input} placeholder="Título del informe" value={f.title} onChange={(e) => set("title", e.target.value)} />
+        <input aria-label="Periodo (2026-Q1)" style={input} placeholder="Periodo (2026-Q1)" value={f.period} onChange={(e) => set("period", e.target.value)} />
+        <select aria-label="Presentado a" style={input} value={f.presentedTo} onChange={(e) => set("presentedTo", e.target.value)}>{["BOARD", "AUDIT_COMMITTEE", "ETHICS_COMMITTEE", "COMPLIANCE_COMMITTEE", "CEO", "EXECUTIVE_MANAGEMENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <input style={input} placeholder="Resumen ejecutivo (opcional)" value={f.executiveSummary} onChange={(e) => set("executiveSummary", e.target.value)} />
+      <input aria-label="Resumen ejecutivo (opcional)" style={input} placeholder="Resumen ejecutivo (opcional)" value={f.executiveSummary} onChange={(e) => set("executiveSummary", e.target.value)} />
       <p style={{ margin: 0, color: "#94a3b8", fontSize: 11 }}>Las secciones de obligaciones, riesgos, canal, investigaciones, formación y remediación se completan automáticamente con el agregado del periodo.</p>
       <button disabled={pending || !f.title || !f.period} style={primaryBtn} onClick={() => { run(() => prepareGoverningBodyReport({ title: f.title, period: f.period, presentedTo: f.presentedTo as never, executiveSummary: f.executiveSummary || undefined })); onDone(); }}><Plus size={12} /> Preparar</button>
     </div>
@@ -1411,15 +1412,15 @@ function ChannelConfigForm({ current, members, pending, run, onDone }: {
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.allowAnonymous} onChange={(e) => set("allowAnonymous", e.target.checked)} /> Permitir denuncia anónima</label>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.allowConfidential} onChange={(e) => set("allowConfidential", e.target.checked)} /> Permitir denuncia confidencial</label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-        <input style={input} type="number" min={1} max={30} value={f.acknowledgementDays} onChange={(e) => set("acknowledgementDays", Number(e.target.value))} placeholder="Plazo de acuse (días)" />
-        <input style={input} type="number" min={1} max={365} value={f.feedbackDays} onChange={(e) => set("feedbackDays", Number(e.target.value))} placeholder="Plazo de respuesta (días)" />
-        <input style={input} type="number" min={1} max={240} value={f.retentionMonths} onChange={(e) => set("retentionMonths", Number(e.target.value))} placeholder="Retención (meses)" />
+        <input aria-label="Plazo de acuse (días)" style={input} type="number" min={1} max={30} value={f.acknowledgementDays} onChange={(e) => set("acknowledgementDays", Number(e.target.value))} placeholder="Plazo de acuse (días)" />
+        <input aria-label="Plazo de respuesta (días)" style={input} type="number" min={1} max={365} value={f.feedbackDays} onChange={(e) => set("feedbackDays", Number(e.target.value))} placeholder="Plazo de respuesta (días)" />
+        <input aria-label="Retención (meses)" style={input} type="number" min={1} max={240} value={f.retentionMonths} onChange={(e) => set("retentionMonths", Number(e.target.value))} placeholder="Retención (meses)" />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.defaultHandlerId} onChange={(e) => set("defaultHandlerId", e.target.value)}><option value="">Receptor titular…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <select style={input} value={f.alternateHandlerId} onChange={(e) => set("alternateHandlerId", e.target.value)}><option value="">Receptor suplente…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Receptor titular" style={input} value={f.defaultHandlerId} onChange={(e) => set("defaultHandlerId", e.target.value)}><option value="">Receptor titular…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <select aria-label="Receptor suplente" style={input} value={f.alternateHandlerId} onChange={(e) => set("alternateHandlerId", e.target.value)}><option value="">Receptor suplente…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       </div>
-      <input style={input} placeholder="URL del canal externo (opcional)" value={f.externalChannelUrl} onChange={(e) => set("externalChannelUrl", e.target.value)} />
+      <input aria-label="URL del canal externo (opcional)" style={input} placeholder="URL del canal externo (opcional)" value={f.externalChannelUrl} onChange={(e) => set("externalChannelUrl", e.target.value)} />
       <button disabled={pending} style={primaryBtn} onClick={() => { run(() => configureSpeakUpChannel({ allowAnonymous: f.allowAnonymous, allowConfidential: f.allowConfidential, acknowledgementDays: f.acknowledgementDays, feedbackDays: f.feedbackDays, retentionMonths: f.retentionMonths, defaultHandlerId: f.defaultHandlerId || undefined, alternateHandlerId: f.alternateHandlerId || undefined, externalChannelUrl: f.externalChannelUrl || undefined })); onDone(); }}>Guardar configuración</button>
     </div>
   );
@@ -1440,20 +1441,20 @@ function NewReportForm({ members, allowAnonymous, allowConfidential, pending, ru
         Su relato y el hecho denunciado quedan protegidos: solo lo ve quien reciba una autorización explícita del caso.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select style={input} value={f.identificationMode} onChange={(e) => set("identificationMode", e.target.value)}>
+        <select aria-label="Modo de identificación" style={input} value={f.identificationMode} onChange={(e) => set("identificationMode", e.target.value)}>
           <option value="IDENTIFIED">Identificada</option>
           {allowConfidential && <option value="CONFIDENTIAL">Confidencial</option>}
           {allowAnonymous && <option value="ANONYMOUS">Anónima</option>}
         </select>
-        <select style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["BRIBERY_CORRUPTION", "FRAUD", "THEFT", "HARASSMENT", "DISCRIMINATION", "RETALIATION", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "DATA_PRIVACY", "INFORMATION_SECURITY", "CONFLICT_OF_INTEREST", "ACCOUNTING_IRREGULARITY", "COMPETITION", "HUMAN_RIGHTS", "POLICY_VIOLATION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{["BRIBERY_CORRUPTION", "FRAUD", "THEFT", "HARASSMENT", "DISCRIMINATION", "RETALIATION", "OCCUPATIONAL_SAFETY", "ENVIRONMENTAL", "DATA_PRIVACY", "INFORMATION_SECURITY", "CONFLICT_OF_INTEREST", "ACCOUNTING_IRREGULARITY", "COMPETITION", "HUMAN_RIGHTS", "POLICY_VIOLATION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
-      <textarea style={{ ...input, minHeight: 70 }} placeholder="Describa los hechos (mínimo 20 caracteres)" value={f.description} onChange={(e) => set("description", e.target.value)} />
-      <select style={input} value={f.subjectUserId} onChange={(e) => set("subjectUserId", e.target.value)}><option value="">Persona señalada (si aplica)…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+      <textarea aria-label="Describa los hechos (mínimo 20 caracteres)" style={{ ...input, minHeight: 70 }} placeholder="Describa los hechos (mínimo 20 caracteres)" value={f.description} onChange={(e) => set("description", e.target.value)} />
+      <select aria-label="Persona señalada (si aplica)" style={input} value={f.subjectUserId} onChange={(e) => set("subjectUserId", e.target.value)}><option value="">Persona señalada (si aplica)…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
       {f.identificationMode === "CONFIDENTIAL" && (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-          <input style={input} placeholder="Nombre de contacto" value={f.reporterName} onChange={(e) => set("reporterName", e.target.value)} />
-          <input style={input} placeholder="Correo de contacto" value={f.reporterEmail} onChange={(e) => set("reporterEmail", e.target.value)} />
+          <input aria-label="Nombre de contacto" style={input} placeholder="Nombre de contacto" value={f.reporterName} onChange={(e) => set("reporterName", e.target.value)} />
+          <input aria-label="Correo de contacto" style={input} placeholder="Correo de contacto" value={f.reporterEmail} onChange={(e) => set("reporterEmail", e.target.value)} />
         </div>
       )}
       <button disabled={pending || f.description.trim().length < 20} style={primaryBtn} onClick={() => {
@@ -1539,9 +1540,9 @@ function CaseCard({ row, members, can, live, pending, run }: {
           <div>
             <b style={{ fontSize: 12.5 }}>Autorizar acceso al caso</b>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr auto", gap: 8, marginTop: 6 }}>
-              <select style={input} value={accessUserId} onChange={(e) => setAccessUserId(e.target.value)}><option value="">Persona…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-              <select style={input} value={accessRole} onChange={(e) => setAccessRole(e.target.value)}>{["TRIAGE", "INVESTIGATOR", "REVIEWER", "LEGAL_COUNSEL", "DECISION_MAKER", "OBSERVER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-              <input style={input} placeholder="Motivo (necesidad de conocer)" value={accessReason} onChange={(e) => setAccessReason(e.target.value)} />
+              <select aria-label="Persona" style={input} value={accessUserId} onChange={(e) => setAccessUserId(e.target.value)}><option value="">Persona…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+              <select aria-label="Rol de acceso" style={input} value={accessRole} onChange={(e) => setAccessRole(e.target.value)}>{["TRIAGE", "INVESTIGATOR", "REVIEWER", "LEGAL_COUNSEL", "DECISION_MAKER", "OBSERVER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+              <input aria-label="Motivo (necesidad de conocer)" style={input} placeholder="Motivo (necesidad de conocer)" value={accessReason} onChange={(e) => setAccessReason(e.target.value)} />
               <button disabled={pending || !accessUserId || !accessReason} style={miniBtn} onClick={() => run(() => grantCaseAccess({ reportId: row.id, userId: accessUserId, caseRole: accessRole as never, reason: accessReason }))}>Autorizar</button>
             </div>
             {row.access.map((a) => (
@@ -1554,8 +1555,8 @@ function CaseCard({ row, members, can, live, pending, run }: {
           <div>
             <b style={{ fontSize: 12.5 }}>Añadir evidencia protegida</b>
             <div style={{ display: "grid", gridTemplateColumns: "2fr 2fr auto", gap: 8, marginTop: 6 }}>
-              <input style={input} placeholder="Título de la evidencia" value={evidenceTitle} onChange={(e) => setEvidenceTitle(e.target.value)} />
-              <input style={input} placeholder="URL del archivo (opcional)" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} />
+              <input aria-label="Título de la evidencia" style={input} placeholder="Título de la evidencia" value={evidenceTitle} onChange={(e) => setEvidenceTitle(e.target.value)} />
+              <input aria-label="URL del archivo (opcional)" style={input} placeholder="URL del archivo (opcional)" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} />
               <button disabled={pending || !evidenceTitle} style={miniBtn} onClick={() => run(() => addProtectedEvidence({ reportId: row.id, title: evidenceTitle, fileUrl: evidenceUrl || undefined }))}>Añadir</button>
             </div>
             {row.evidence.map((e) => <div key={e.id} style={{ fontSize: 12, color: "#64748b", padding: "3px 0" }}>{e.code} · {e.title}</div>)}

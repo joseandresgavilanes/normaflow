@@ -43,7 +43,7 @@ export default function AttestationModal({ open, onClose, title, statement, sess
       <label className="nf-modal-field-label" style={{ display: "block", marginBottom: 8 }}>
         Confirme su email corporativo
       </label>
-      <input
+      <input aria-label={sessionEmail}
         value={emailConfirm}
         onChange={e => setEmailConfirm(e.target.value)}
         placeholder={sessionEmail}
@@ -54,7 +54,7 @@ export default function AttestationModal({ open, onClose, title, statement, sess
       <label className="nf-modal-field-label" style={{ display: "block", marginBottom: 8 }}>
         Motivo / comentario de la decisión
       </label>
-      <textarea
+      <textarea aria-label="Motivo"
         value={reason}
         onChange={e => setReason(e.target.value)}
         rows={3}

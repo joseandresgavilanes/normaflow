@@ -12,6 +12,7 @@ import { useAdminMock, type OrgMemberMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
+import { Field as UiField } from "@/components/ui/Field";
 
 type Role = OrgMemberMockRow["role"];
 
@@ -100,7 +101,7 @@ export default function MembersClient() {
       label: "Rol",
       render: (_, r) => (
         canEdit && !r.isSelf ? (
-          <select
+          <select aria-label="Rol"
             value={r.role}
             disabled={isPending}
             onChange={(e) => changeRole(r, e.target.value as Role)}
@@ -228,7 +229,7 @@ export default function MembersClient() {
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-          <input
+          <input aria-label="Buscar por nombre, email o rol"
             type="search"
             placeholder="Buscar por nombre, email o rol…"
             value={search}
@@ -249,13 +250,13 @@ export default function MembersClient() {
       <Modal open={inviting} onClose={() => !isPending && setInviting(false)} title="Invitar persona" width={480}>
         <form onSubmit={handleInvite} className="nf-modal-form">
           <Field label="Nombre *">
-            <input name="name" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="María Torres" />
+            <input aria-label="María Torres" name="name" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="María Torres" />
           </Field>
           <Field label="Email *">
-            <input name="email" type="email" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="maria@empresa.com" />
+            <input aria-label="maria@empresa.com" name="email" type="email" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="maria@empresa.com" />
           </Field>
           <Field label="Rol">
-            <select name="role" defaultValue="CONTRIBUTOR" className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <select aria-label="Rol" name="role" defaultValue="CONTRIBUTOR" className={NF_INPUT_CLASS} style={modalInputStyle}>
               {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
             </select>
           </Field>
@@ -300,10 +301,7 @@ export default function MembersClient() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }

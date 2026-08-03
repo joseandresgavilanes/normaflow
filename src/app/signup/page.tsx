@@ -99,7 +99,7 @@ export default function SignupPage() {
                 {fields.map((f) => (
                   <div key={f.id}>
                     <label className="nf-label" htmlFor={f.id}>{f.label}</label>
-                    <input
+                    <input aria-label={f.placeholder}
                       id={f.id}
                       type={f.type}
                       value={f.val}

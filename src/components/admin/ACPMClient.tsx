@@ -31,6 +31,7 @@ import {
 } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
+import { Field as UiField } from "@/components/ui/Field";
 
 const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "REQUEST",           label: "Solicitud",             sub: "Apertura" },
@@ -427,21 +428,21 @@ export default function ACPMClient() {
       <Modal open={creating} onClose={() => !isPending && setCreating(false)} title="Nueva ACPM" width={620}>
         <form onSubmit={handleCreate} className="nf-modal-form">
           <Field label="Título *">
-            <input name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
+            <input aria-label="Título" name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <textarea aria-label="Descripción" name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <Field label="Tipo">
-              <select name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <select aria-label="Tipo" name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
                 <option value="IMPROVEMENT">Mejora</option>
               </select>
             </Field>
             <Field label="Prioridad">
-              <select name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <select aria-label="Prioridad" name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CRITICAL">Crítica</option>
                 <option value="HIGH">Alta</option>
                 <option value="MEDIUM">Media</option>
@@ -449,14 +450,14 @@ export default function ACPMClient() {
               </select>
             </Field>
             <Field label="Fecha objetivo">
-              <input type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Fecha de vencimiento" type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Origen">
-            <input name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
+            <input aria-label="Auditoría interna, Voz del cliente, Reporte, etc." name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
           <Field label="Responsable de la acción">
-            <select name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
+            <select aria-label="Responsable" name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
               <option value="">— Sin asignar por ahora —</option>
               {personnel.filter((person) => person.active).map((person) => (
                 <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
@@ -710,7 +711,7 @@ function ACPMDetailModal({
 
           {canEdit && (
             <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
-              <input
+              <input aria-label="Añadir comentario"
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Añadir comentario…"
@@ -776,7 +777,7 @@ function StageEditor({
     return (
       <Section title="Etapa: Análisis" hint="Documenta la causa raíz (5 porqués, Ishikawa) y propón una solución.">
         <Field label="Causa raíz">
-          <textarea
+          <textarea aria-label="Análisis de causa raíz (p.ej. método 5 porqués)"
             disabled={!canEdit}
             defaultValue={acpm.rootCause ?? ""}
             onBlur={(e) => onPatch("rootCause", e.target.value)}
@@ -786,7 +787,7 @@ function StageEditor({
           />
         </Field>
         <Field label="Solución propuesta">
-          <textarea
+          <textarea aria-label="Acciones concretas, plazos, responsables"
             disabled={!canEdit}
             defaultValue={acpm.proposedSolution ?? ""}
             onBlur={(e) => onPatch("proposedSolution", e.target.value)}
@@ -797,7 +798,7 @@ function StageEditor({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable">
-            <select
+            <select aria-label="Responsable"
               disabled={!canEdit}
               defaultValue={acpm.ownerId ?? ""}
               onChange={(e) => onPatch("ownerId", e.target.value || null)}
@@ -834,7 +835,7 @@ function StageEditor({
     return (
       <Section title="Etapa: Implementación" hint="Avanza el progreso a medida que se ejecutan las acciones.">
         <Field label={`Progreso · ${acpm.progress}%`}>
-          <input
+          <input aria-label="Progreso"
             type="range"
             min={0}
             max={100}
@@ -957,7 +958,7 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Field label="Motivo del rechazo *">
-        <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Indica brevemente por qué se rechaza." />
+        <textarea aria-label="Indica brevemente por qué se rechaza." value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Indica brevemente por qué se rechaza." />
       </Field>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" onClick={onCancel} disabled={disabled} className="nf-app-btn-outline">
@@ -974,12 +975,9 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
 // ─── Small helpers ──────────────────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {

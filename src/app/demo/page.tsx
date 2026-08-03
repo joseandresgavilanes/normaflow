@@ -67,27 +67,27 @@ export default function DemoPage() {
               <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div>
                   <label className="nf-label">Nombre</label>
-                  <input {...register("name")} className="nf-input" placeholder="María Torres" />
+                  <input aria-label="María Torres" {...register("name")} className="nf-input" placeholder="María Torres" />
                   {errors.name && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Email corporativo</label>
-                  <input type="email" {...register("email")} className="nf-input" placeholder="maria@empresa.com" />
+                  <input aria-label="maria@empresa.com" type="email" {...register("email")} className="nf-input" placeholder="maria@empresa.com" />
                   {errors.email && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Empresa</label>
-                  <input {...register("company")} className="nf-input" placeholder="Tecnoserv Industrial" />
+                  <input aria-label="Tecnoserv Industrial" {...register("company")} className="nf-input" placeholder="Tecnoserv Industrial" />
                   {errors.company && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
                     <label className="nf-label">Teléfono (opcional)</label>
-                    <input {...register("phone")} className="nf-input" placeholder="+34 600 000 000" />
+                    <input aria-label="Teléfono" {...register("phone")} className="nf-input" placeholder="+34 600 000 000" />
                   </div>
                   <div>
                     <label className="nf-label">Tamaño</label>
-                    <select {...register("employees")} className="nf-select">
+                    <select aria-label="Empleados" {...register("employees")} className="nf-select">
                       <option value="1-49">1 – 49</option>
                       <option value="50-250">50 – 250</option>
                       <option value="250+">Más de 250</option>
@@ -96,7 +96,7 @@ export default function DemoPage() {
                 </div>
                 <div>
                   <label className="nf-label">Mensaje</label>
-                  <textarea {...register("message")} rows={4} className="nf-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
+                  <textarea aria-label="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" {...register("message")} rows={4} className="nf-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
                   {errors.message && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>

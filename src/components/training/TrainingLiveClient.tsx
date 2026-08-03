@@ -366,12 +366,12 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       <Modal open={creatingAssignment} onClose={() => !isPending && setCreatingAssignment(false)} title="Nueva asignación" width={560}>
         <ModalForm onSubmit={submitAssignment}>
           {!activeCourses.length || !personnel.length ? <p style={{ color: "#DC2626", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
-            <ModalField label="Curso *"><select name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
-            <ModalField label="Persona *"><select name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
-            <ModalField label="Proceso"><select name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-            <ModalField label="Fecha de vencimiento *"><input type="date" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
-            <ModalField label="Documento de origen"><select name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</select></ModalField>
-            <ModalField label="Versión del documento"><input name="triggeredByVersion" placeholder="Ej. 2.0" className="nf-app-input" /></ModalField>
+            <ModalField label="Curso *"><select aria-label="Curso" name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
+            <ModalField label="Persona *"><select aria-label="Persona" name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
+            <ModalField label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
+            <ModalField label="Fecha de vencimiento *"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
+            <ModalField label="Documento de origen"><select aria-label="Asignación manual" name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</select></ModalField>
+            <ModalField label="Versión del documento"><input aria-label="Versión" name="triggeredByVersion" placeholder="Ej. 2.0" className="nf-app-input" /></ModalField>
           </>}
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setCreatingAssignment(false)} disabled={!activeCourses.length || !personnel.length} />
@@ -381,8 +381,8 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       <Modal open={completingAssignment != null} onClose={() => !isPending && setCompletingAssignment(null)} title="Completar formación" width={520}>
         <ModalForm onSubmit={submitCompletion}>
           <p style={{ marginTop: 0, fontSize: 13, color: "var(--nf-ink-2, #223648)", fontWeight: 600 }}>{completingAssignment?.assigneeName} · {completingAssignment?.courseCode}</p>
-          <ModalField label="Nota de evidencia"><textarea name="evidenceNote" rows={4} placeholder="Resultado, evaluación, responsable…" className="nf-app-input" /></ModalField>
-          <ModalField label="Enlace a evidencia"><input type="url" name="evidenceUrl" placeholder="https://…" className="nf-app-input" /></ModalField>
+          <ModalField label="Nota de evidencia"><textarea aria-label="Resultado, evaluación, responsable" name="evidenceNote" rows={4} placeholder="Resultado, evaluación, responsable…" className="nf-app-input" /></ModalField>
+          <ModalField label="Enlace a evidencia"><input aria-label="https://" type="url" name="evidenceUrl" placeholder="https://…" className="nf-app-input" /></ModalField>
           <div className="nf-modal-field-hint">Es obligatorio indicar una nota o un enlace.</div>
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setCompletingAssignment(null)} />
@@ -391,8 +391,8 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={editingAssignment != null} onClose={() => !isPending && setEditingAssignment(null)} title="Editar asignación" width={500}>
         <ModalForm onSubmit={submitAssignmentEdit}>
-          <ModalField label="Proceso"><select name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-          <ModalField label="Fecha de vencimiento"><input type="date" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
+          <ModalField label="Proceso"><select aria-label="Proceso" name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
+          <ModalField label="Fecha de vencimiento"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setEditingAssignment(null)} />
         </ModalForm>
@@ -403,10 +403,10 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
 function CourseForm({ course, payload, isPending, error, onSubmit, onCancel }: { course: TrainingCourseLive | null; payload: TrainingPayload; isPending: boolean; error: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onCancel: () => void }) {
   return <ModalForm onSubmit={onSubmit}>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}><ModalField label="Código *"><input name="code" required defaultValue={course?.code ?? ""} placeholder="TR-SGC-01" className="nf-app-input" /></ModalField><ModalField label="Nombre *"><input name="title" required defaultValue={course?.title ?? ""} className="nf-app-input" /></ModalField></div>
-    <ModalField label="Descripción"><textarea name="description" rows={3} defaultValue={course?.description ?? ""} className="nf-app-input" /></ModalField>
-    <ModalField label="Normas / etiquetas"><input name="standardTags" defaultValue={course?.standardTags.join(", ") ?? ""} placeholder="ISO 9001, ISO 27001" className="nf-app-input" /></ModalField>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><ModalField label="Plazo para completar (días) *"><input type="number" min={1} max={365} name="defaultDueDays" required defaultValue={course?.defaultDueDays ?? 30} className="nf-app-input" /></ModalField><ModalField label="Vigencia (meses) *"><input type="number" min={1} max={120} name="defaultValidityMonths" required defaultValue={course?.defaultValidityMonths ?? 12} className="nf-app-input" /></ModalField></div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}><ModalField label="Código *"><input aria-label="TR-SGC-01" name="code" required defaultValue={course?.code ?? ""} placeholder="TR-SGC-01" className="nf-app-input" /></ModalField><ModalField label="Nombre *"><input aria-label="Título" name="title" required defaultValue={course?.title ?? ""} className="nf-app-input" /></ModalField></div>
+    <ModalField label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} defaultValue={course?.description ?? ""} className="nf-app-input" /></ModalField>
+    <ModalField label="Normas / etiquetas"><input aria-label="ISO 9001, ISO 27001" name="standardTags" defaultValue={course?.standardTags.join(", ") ?? ""} placeholder="ISO 9001, ISO 27001" className="nf-app-input" /></ModalField>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><ModalField label="Plazo para completar (días) *"><input aria-label="Días de plazo por defecto" type="number" min={1} max={365} name="defaultDueDays" required defaultValue={course?.defaultDueDays ?? 30} className="nf-app-input" /></ModalField><ModalField label="Vigencia (meses) *"><input aria-label="Meses de validez por defecto" type="number" min={1} max={120} name="defaultValidityMonths" required defaultValue={course?.defaultValidityMonths ?? 12} className="nf-app-input" /></ModalField></div>
     <ChoiceList title="Documentos vinculados" emptyText="No hay documentos disponibles. Puedes crear el curso igualmente y vincularlos después." items={payload.documents.map((document) => ({ id: document.id, label: `${document.code} — ${document.title}` }))} name="documentIds" selected={course?.documentIds ?? []} />
     <ChoiceList title="Destinatarios para autoasignación" emptyText="No hay personal activo. Regístralo en Personal." items={payload.personnel.map((person) => ({ id: person.id, label: `${person.name}${person.role ? ` · ${person.role}` : ""}` }))} name="audiencePersonnelIds" selected={course?.audiencePersonnelIds ?? []} />
     <label style={checkLabel}><input type="checkbox" name="mandatory" defaultChecked={course?.mandatory ?? false} /> Curso obligatorio</label>

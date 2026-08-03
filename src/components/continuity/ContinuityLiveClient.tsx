@@ -349,7 +349,7 @@ function PlanCard({ bcp, initial, pending, onRun }: { bcp: Bcp; initial: Continu
                 {bcp.criticalProcesses.map((p) => <div key={p.id} className="nf-continuity-detail-list-item"><span><strong>{p.process.name}</strong><span style={{ color: "var(--nf-ink-3)", marginLeft: 8 }}>RTO {p.rtoMinutes ?? "—"}m</span></span>{canUpdate && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={pending} onClick={() => onRun(() => removeBcpProcess(p.id), { successMessage: "Proceso desvinculado." })}>Quitar</button>}</div>)}
               </div> : <div className="nf-continuity-detail-empty">No hay procesos críticos vinculados.</div>}
               {canUpdate && <div className="nf-continuity-detail-actions">
-                <select className="nf-app-input" value={processId} onChange={(e) => setProcessId(e.target.value)} style={{ maxWidth: 260 }}>
+                <select aria-label="Vincular proceso crítico" className="nf-app-input" value={processId} onChange={(e) => setProcessId(e.target.value)} style={{ maxWidth: 260 }}>
                   <option value="">Vincular proceso crítico…</option>
                   {initial.processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -537,12 +537,12 @@ function BiaTab({ p, pending, onRun }: { p: ContinuityPayload; pending: boolean;
       />
       <Modal open={showBiaForm} onClose={() => setShowBiaForm(false)} title="Nueva BIA" width={680}>
         <div style={{ display: "grid", gap: 12 }}>
-        <input className="nf-app-input" placeholder="Código" maxLength={60} required value={bia.code} onChange={(e) => setBia((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 120 }} />
-        <input className="nf-app-input" placeholder="Título" maxLength={200} required value={bia.title} onChange={(e) => setBia((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 220 }} />
-        <input className="nf-app-input" placeholder="Alcance" maxLength={8000} value={bia.scope} onChange={(e) => setBia((f) => ({ ...f, scope: e.target.value }))} style={{ maxWidth: 220 }} />
-        <input className="nf-app-input" placeholder="Metodología" maxLength={8000} value={bia.methodology} onChange={(e) => setBia((f) => ({ ...f, methodology: e.target.value }))} style={{ maxWidth: 220 }} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}><input className="nf-app-input" placeholder="Versión" maxLength={20} required value={bia.version} onChange={(e) => setBia((f) => ({ ...f, version: e.target.value }))} /><input className="nf-app-input" type="date" value={bia.performedAt} onChange={(e) => setBia((f) => ({ ...f, performedAt: e.target.value }))} /><input className="nf-app-input" type="date" value={bia.nextReviewDate} onChange={(e) => setBia((f) => ({ ...f, nextReviewDate: e.target.value }))} /></div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><select className="nf-app-input" value={bia.ownerId} onChange={(e) => setBia((f) => ({ ...f, ownerId: e.target.value }))}><option value="">Sin propietario</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><select className="nf-app-input" value={bia.evidenceId} onChange={(e) => setBia((f) => ({ ...f, evidenceId: e.target.value }))}><option value="">Sin evidencia</option>{p.evidenceOptions.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}</select></div>
+        <input aria-label="Código" className="nf-app-input" placeholder="Código" maxLength={60} required value={bia.code} onChange={(e) => setBia((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 120 }} />
+        <input aria-label="Título" className="nf-app-input" placeholder="Título" maxLength={200} required value={bia.title} onChange={(e) => setBia((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 220 }} />
+        <input aria-label="Alcance" className="nf-app-input" placeholder="Alcance" maxLength={8000} value={bia.scope} onChange={(e) => setBia((f) => ({ ...f, scope: e.target.value }))} style={{ maxWidth: 220 }} />
+        <input aria-label="Metodología" className="nf-app-input" placeholder="Metodología" maxLength={8000} value={bia.methodology} onChange={(e) => setBia((f) => ({ ...f, methodology: e.target.value }))} style={{ maxWidth: 220 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}><input aria-label="Versión" className="nf-app-input" placeholder="Versión" maxLength={20} required value={bia.version} onChange={(e) => setBia((f) => ({ ...f, version: e.target.value }))} /><input aria-label="Fecha de realización" className="nf-app-input" type="date" value={bia.performedAt} onChange={(e) => setBia((f) => ({ ...f, performedAt: e.target.value }))} /><input aria-label="Próxima revisión" className="nf-app-input" type="date" value={bia.nextReviewDate} onChange={(e) => setBia((f) => ({ ...f, nextReviewDate: e.target.value }))} /></div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><select aria-label="Responsable" className="nf-app-input" value={bia.ownerId} onChange={(e) => setBia((f) => ({ ...f, ownerId: e.target.value }))}><option value="">Sin propietario</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><select aria-label="Evidencia" className="nf-app-input" value={bia.evidenceId} onChange={(e) => setBia((f) => ({ ...f, evidenceId: e.target.value }))}><option value="">Sin evidencia</option>{p.evidenceOptions.map((e) => <option key={e.id} value={e.id}>{e.title}</option>)}</select></div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}><button type="button" className="nf-app-btn-ghost" onClick={() => setShowBiaForm(false)}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !bia.code.trim() || !bia.title.trim()} onClick={() => onRun(() => { assertDateOrder(bia.performedAt, bia.nextReviewDate); return createBia({ code: requiredText(bia.code, "El código", 60), title: requiredText(bia.title, "El título", 200), scope: optionalText(bia.scope, "El alcance", 8000), methodology: optionalText(bia.methodology, "La metodología", 8000), version: requiredText(bia.version, "La versión", 20), ownerId: assertOptions(bia.ownerId, p.members.map((m) => m.id), "El propietario") || null, performedAt: optionalDate(bia.performedAt, "La fecha realizada"), nextReviewDate: optionalDate(bia.nextReviewDate, "La fecha de revisión"), evidenceId: assertOptions(bia.evidenceId, p.evidenceOptions.map((e) => e.id), "La evidencia") || null }); }, { onSuccess: () => { setBia({ code: "", title: "", scope: "", methodology: "", version: "1.0", ownerId: "", performedAt: "", nextReviewDate: "", evidenceId: "" }); setShowBiaForm(false); }, successMessage: "BIA creado." })}>Crear BIA</button></div>
         </div>
       </Modal>
@@ -583,20 +583,20 @@ function BiaTab({ p, pending, onRun }: { p: ContinuityPayload; pending: boolean;
       <Modal open={showActivityForm} onClose={() => setShowActivityForm(false)} title="Nueva actividad crítica" width={760}>
         <div style={{ display: "grid", gap: 12 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <select className="nf-app-input" value={activity.biaId} onChange={(e) => setActivity((f) => ({ ...f, biaId: e.target.value }))} style={{ maxWidth: 200 }}>
+          <select aria-label="BIA" className="nf-app-input" value={activity.biaId} onChange={(e) => setActivity((f) => ({ ...f, biaId: e.target.value }))} style={{ maxWidth: 200 }}>
             <option value="">BIA…</option>{p.bias.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}
           </select>
-          <input className="nf-app-input" placeholder="Código" value={activity.code} onChange={(e) => setActivity((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 120 }} />
-          <input className="nf-app-input" placeholder="Nombre de la actividad" value={activity.name} onChange={(e) => setActivity((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 220 }} />
-          <select className="nf-app-input" value={activity.processId} onChange={(e) => setActivity((f) => ({ ...f, processId: e.target.value }))} style={{ maxWidth: 200 }}>
+          <input aria-label="Código" className="nf-app-input" placeholder="Código" value={activity.code} onChange={(e) => setActivity((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 120 }} />
+          <input aria-label="Nombre de la actividad" className="nf-app-input" placeholder="Nombre de la actividad" value={activity.name} onChange={(e) => setActivity((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 220 }} />
+          <select aria-label="Proceso (opcional)" className="nf-app-input" value={activity.processId} onChange={(e) => setActivity((f) => ({ ...f, processId: e.target.value }))} style={{ maxWidth: 200 }}>
             <option value="">Proceso (opcional)…</option>{p.processOptions.map((pr) => <option key={pr.id} value={pr.id}>{pr.name}</option>)}
           </select>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input className="nf-app-input" type="number" min={0} placeholder="MTPD (min)" value={activity.mtpdMinutes} onChange={(e) => setActivity((f) => ({ ...f, mtpdMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
-          <input className="nf-app-input" type="number" min={0} placeholder="RTO (min)" value={activity.rtoMinutes} onChange={(e) => setActivity((f) => ({ ...f, rtoMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
-          <input className="nf-app-input" type="number" min={0} placeholder="RPO (min)" value={activity.rpoMinutes} onChange={(e) => setActivity((f) => ({ ...f, rpoMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
-          <input className="nf-app-input" placeholder="Nivel mínimo aceptable (MBCO)" value={activity.minimumServiceLevel} onChange={(e) => setActivity((f) => ({ ...f, minimumServiceLevel: e.target.value }))} style={{ maxWidth: 240 }} />
+          <input aria-label="MTPD (min)" className="nf-app-input" type="number" min={0} placeholder="MTPD (min)" value={activity.mtpdMinutes} onChange={(e) => setActivity((f) => ({ ...f, mtpdMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
+          <input aria-label="RTO (min)" className="nf-app-input" type="number" min={0} placeholder="RTO (min)" value={activity.rtoMinutes} onChange={(e) => setActivity((f) => ({ ...f, rtoMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
+          <input aria-label="RPO (min)" className="nf-app-input" type="number" min={0} placeholder="RPO (min)" value={activity.rpoMinutes} onChange={(e) => setActivity((f) => ({ ...f, rpoMinutes: e.target.value }))} style={{ maxWidth: 130 }} />
+          <input aria-label="Nivel mínimo aceptable (MBCO)" className="nf-app-input" placeholder="Nivel mínimo aceptable (MBCO)" value={activity.minimumServiceLevel} onChange={(e) => setActivity((f) => ({ ...f, minimumServiceLevel: e.target.value }))} style={{ maxWidth: 240 }} />
           <button type="button" className="nf-app-btn-primary" disabled={pending || !activity.biaId || !activity.code.trim() || !activity.name.trim()} onClick={() => onRun(() => {
             const mtpdMinutes = optionalNumber(activity.mtpdMinutes, "El MTPD");
             const rtoMinutes = optionalNumber(activity.rtoMinutes, "El RTO");
@@ -659,21 +659,21 @@ function BiaTab({ p, pending, onRun }: { p: ContinuityPayload; pending: boolean;
       />
       <Modal open={showPriorityForm} onClose={() => setShowPriorityForm(false)} title="Nueva prioridad de producto o servicio" width={760}>
         <div style={{ display: "grid", gap: 12 }}>
-        <select className="nf-app-input" value={priority.biaId} onChange={(e) => setPriority((f) => ({ ...f, biaId: e.target.value }))} style={{ maxWidth: 160 }}>
+        <select aria-label="BIA" className="nf-app-input" value={priority.biaId} onChange={(e) => setPriority((f) => ({ ...f, biaId: e.target.value }))} style={{ maxWidth: 160 }}>
           <option value="">BIA…</option>{p.bias.map((b) => <option key={b.id} value={b.id}>{b.code}</option>)}
         </select>
-        <input className="nf-app-input" placeholder="Código" value={priority.code} onChange={(e) => setPriority((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
-        <input className="nf-app-input" placeholder="Producto/servicio" value={priority.name} onChange={(e) => setPriority((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 200 }} />
-        <select className="nf-app-input" value={priority.criticality} onChange={(e) => setPriority((f) => ({ ...f, criticality: e.target.value }))} style={{ maxWidth: 140 }}>
+        <input aria-label="Código" className="nf-app-input" placeholder="Código" value={priority.code} onChange={(e) => setPriority((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
+        <input aria-label="Producto/servicio" className="nf-app-input" placeholder="Producto/servicio" value={priority.name} onChange={(e) => setPriority((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 200 }} />
+        <select aria-label="Criticidad" className="nf-app-input" value={priority.criticality} onChange={(e) => setPriority((f) => ({ ...f, criticality: e.target.value }))} style={{ maxWidth: 140 }}>
           {Object.entries(CRITICALITY).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
         </select>
-        <input className="nf-app-input" type="number" min={0} placeholder="MTPD" value={priority.mtpdMinutes} onChange={(e) => setPriority((f) => ({ ...f, mtpdMinutes: e.target.value }))} style={{ maxWidth: 100 }} />
-        <input className="nf-app-input" type="number" min={0} placeholder="RTO" value={priority.rtoMinutes} onChange={(e) => setPriority((f) => ({ ...f, rtoMinutes: e.target.value }))} style={{ maxWidth: 100 }} />
-        <input className="nf-app-input" placeholder="Nivel mínimo" value={priority.minimumServiceLevel} onChange={(e) => setPriority((f) => ({ ...f, minimumServiceLevel: e.target.value }))} />
-        <input className="nf-app-input" type="number" min={0} max={100} placeholder="% ingresos" value={priority.revenueShare} onChange={(e) => setPriority((f) => ({ ...f, revenueShare: e.target.value }))} style={{ maxWidth: 110 }} />
-        <input className="nf-app-input" type="number" min={0} placeholder="Clientes afectados" value={priority.customersAffected} onChange={(e) => setPriority((f) => ({ ...f, customersAffected: e.target.value }))} style={{ maxWidth: 140 }} />
-        <textarea className="nf-app-input" rows={2} placeholder="Descripción" value={priority.description} onChange={(e) => setPriority((f) => ({ ...f, description: e.target.value }))} />
-        <textarea className="nf-app-input" rows={2} placeholder="Notas" value={priority.notes} onChange={(e) => setPriority((f) => ({ ...f, notes: e.target.value }))} />
+        <input aria-label="MTPD" className="nf-app-input" type="number" min={0} placeholder="MTPD" value={priority.mtpdMinutes} onChange={(e) => setPriority((f) => ({ ...f, mtpdMinutes: e.target.value }))} style={{ maxWidth: 100 }} />
+        <input aria-label="RTO" className="nf-app-input" type="number" min={0} placeholder="RTO" value={priority.rtoMinutes} onChange={(e) => setPriority((f) => ({ ...f, rtoMinutes: e.target.value }))} style={{ maxWidth: 100 }} />
+        <input aria-label="Nivel mínimo" className="nf-app-input" placeholder="Nivel mínimo" value={priority.minimumServiceLevel} onChange={(e) => setPriority((f) => ({ ...f, minimumServiceLevel: e.target.value }))} />
+        <input aria-label="% ingresos" className="nf-app-input" type="number" min={0} max={100} placeholder="% ingresos" value={priority.revenueShare} onChange={(e) => setPriority((f) => ({ ...f, revenueShare: e.target.value }))} style={{ maxWidth: 110 }} />
+        <input aria-label="Clientes afectados" className="nf-app-input" type="number" min={0} placeholder="Clientes afectados" value={priority.customersAffected} onChange={(e) => setPriority((f) => ({ ...f, customersAffected: e.target.value }))} style={{ maxWidth: 140 }} />
+        <textarea aria-label="Descripción" className="nf-app-input" rows={2} placeholder="Descripción" value={priority.description} onChange={(e) => setPriority((f) => ({ ...f, description: e.target.value }))} />
+        <textarea aria-label="Notas" className="nf-app-input" rows={2} placeholder="Notas" value={priority.notes} onChange={(e) => setPriority((f) => ({ ...f, notes: e.target.value }))} />
         <button type="button" className="nf-app-btn-primary" disabled={pending || !priority.biaId || !priority.code.trim() || !priority.name.trim()} onClick={() => onRun(() => {
           const mtpdMinutes = optionalNumber(priority.mtpdMinutes, "El MTPD");
           const rtoMinutes = optionalNumber(priority.rtoMinutes, "El RTO");
@@ -741,20 +741,20 @@ function DependenciesTab({ p, pending, onRun }: { p: ContinuityPayload; pending:
       />
       <Modal open={showDep} onClose={() => setShowDep(false)} title="Nueva dependencia" width={760}>
         <div style={{ display: "grid", gap: 12 }}>
-        <select className="nf-app-input" value={dep.activityId} onChange={(e) => setDep((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
+        <select aria-label="Actividad" className="nf-app-input" value={dep.activityId} onChange={(e) => setDep((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
           <option value="">Actividad…</option>{p.activities.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
         </select>
-        <select className="nf-app-input" value={dep.type} onChange={(e) => setDep((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 150 }}>
+        <select aria-label="Tipo" className="nf-app-input" value={dep.type} onChange={(e) => setDep((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 150 }}>
           {DEP_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{DEP_TYPE[t]}</option>)}
         </select>
-        <input className="nf-app-input" placeholder="Nombre" value={dep.name} onChange={(e) => setDep((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 180 }} />
-        <select className="nf-app-input" value={dep.criticality} onChange={(e) => setDep((f) => ({ ...f, criticality: e.target.value }))} style={{ maxWidth: 130 }}>
+        <input aria-label="Nombre" className="nf-app-input" placeholder="Nombre" value={dep.name} onChange={(e) => setDep((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 180 }} />
+        <select aria-label="Criticidad" className="nf-app-input" value={dep.criticality} onChange={(e) => setDep((f) => ({ ...f, criticality: e.target.value }))} style={{ maxWidth: 130 }}>
           {Object.entries(CRITICALITY).map(([v, c]) => <option key={v} value={v}>{c.label}</option>)}
         </select>
-        <input className="nf-app-input" type="number" min={0} placeholder="Indisp. máx. (min)" value={dep.maxOutageMinutes} onChange={(e) => setDep((f) => ({ ...f, maxOutageMinutes: e.target.value }))} style={{ maxWidth: 150 }} />
-        <input className="nf-app-input" placeholder="Alternativa" value={dep.alternative} onChange={(e) => setDep((f) => ({ ...f, alternative: e.target.value }))} style={{ maxWidth: 180 }} />
-        <textarea className="nf-app-input" rows={2} placeholder="Descripción" value={dep.description} onChange={(e) => setDep((f) => ({ ...f, description: e.target.value }))} />
-        <textarea className="nf-app-input" rows={2} placeholder="Notas" value={dep.notes} onChange={(e) => setDep((f) => ({ ...f, notes: e.target.value }))} />
+        <input aria-label="Indisp. máx. (min)" className="nf-app-input" type="number" min={0} placeholder="Indisp. máx. (min)" value={dep.maxOutageMinutes} onChange={(e) => setDep((f) => ({ ...f, maxOutageMinutes: e.target.value }))} style={{ maxWidth: 150 }} />
+        <input aria-label="Alternativa" className="nf-app-input" placeholder="Alternativa" value={dep.alternative} onChange={(e) => setDep((f) => ({ ...f, alternative: e.target.value }))} style={{ maxWidth: 180 }} />
+        <textarea aria-label="Descripción" className="nf-app-input" rows={2} placeholder="Descripción" value={dep.description} onChange={(e) => setDep((f) => ({ ...f, description: e.target.value }))} />
+        <textarea aria-label="Notas" className="nf-app-input" rows={2} placeholder="Notas" value={dep.notes} onChange={(e) => setDep((f) => ({ ...f, notes: e.target.value }))} />
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={dep.singlePointOfFailure} onChange={(e) => setDep((f) => ({ ...f, singlePointOfFailure: e.target.checked }))} /> Punto único de fallo</label>
         <button type="button" className="nf-app-btn-primary" disabled={pending || !dep.activityId || !dep.name.trim()} onClick={() => onRun(() => addDependency({
           activityId: assertOptions(dep.activityId, p.activities.map((a) => a.id), "La actividad"), type: assertOptions(dep.type, DEP_TYPE_OPTIONS, "El tipo") as never, name: requiredText(dep.name, "El nombre", 200), criticality: assertOptions(dep.criticality, Object.keys(CRITICALITY), "La criticidad") as never,
@@ -795,20 +795,20 @@ function DependenciesTab({ p, pending, onRun }: { p: ContinuityPayload; pending:
       />
       <Modal open={showRes} onClose={() => setShowRes(false)} title="Nuevo recurso mínimo" width={720}>
         <div style={{ display: "grid", gap: 12 }}>
-        <select className="nf-app-input" value={res.activityId} onChange={(e) => setRes((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
+        <select aria-label="Actividad" className="nf-app-input" value={res.activityId} onChange={(e) => setRes((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
           <option value="">Actividad…</option>{p.activities.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
         </select>
-        <select className="nf-app-input" value={res.type} onChange={(e) => setRes((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 150 }}>
+        <select aria-label="Tipo" className="nf-app-input" value={res.type} onChange={(e) => setRes((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 150 }}>
           {RES_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{DEP_TYPE[t] ?? t}</option>)}
         </select>
-        <input className="nf-app-input" placeholder="Recurso" value={res.name} onChange={(e) => setRes((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 180 }} />
-        <input className="nf-app-input" type="number" min={0} placeholder="Cantidad normal" value={res.normalQuantity} onChange={(e) => setRes((f) => ({ ...f, normalQuantity: e.target.value }))} style={{ maxWidth: 140 }} />
-        <input className="nf-app-input" type="number" min={0} placeholder="Cantidad mínima" value={res.minimumQuantity} onChange={(e) => setRes((f) => ({ ...f, minimumQuantity: e.target.value }))} style={{ maxWidth: 140 }} />
-        <input className="nf-app-input" placeholder="Unidad" value={res.unit} onChange={(e) => setRes((f) => ({ ...f, unit: e.target.value }))} style={{ maxWidth: 100 }} />
-        <textarea className="nf-app-input" rows={2} placeholder="Descripción" value={res.description} onChange={(e) => setRes((f) => ({ ...f, description: e.target.value }))} />
-        <input className="nf-app-input" placeholder="Disponible en" value={res.availableAt} onChange={(e) => setRes((f) => ({ ...f, availableAt: e.target.value }))} />
-        <input className="nf-app-input" placeholder="Recurso alterno" value={res.alternativeResource} onChange={(e) => setRes((f) => ({ ...f, alternativeResource: e.target.value }))} />
-        <input className="nf-app-input" type="number" min={0} placeholder="Plazo (min)" value={res.leadTimeMinutes} onChange={(e) => setRes((f) => ({ ...f, leadTimeMinutes: e.target.value }))} />
+        <input aria-label="Recurso" className="nf-app-input" placeholder="Recurso" value={res.name} onChange={(e) => setRes((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 180 }} />
+        <input aria-label="Cantidad normal" className="nf-app-input" type="number" min={0} placeholder="Cantidad normal" value={res.normalQuantity} onChange={(e) => setRes((f) => ({ ...f, normalQuantity: e.target.value }))} style={{ maxWidth: 140 }} />
+        <input aria-label="Cantidad mínima" className="nf-app-input" type="number" min={0} placeholder="Cantidad mínima" value={res.minimumQuantity} onChange={(e) => setRes((f) => ({ ...f, minimumQuantity: e.target.value }))} style={{ maxWidth: 140 }} />
+        <input aria-label="Unidad" className="nf-app-input" placeholder="Unidad" value={res.unit} onChange={(e) => setRes((f) => ({ ...f, unit: e.target.value }))} style={{ maxWidth: 100 }} />
+        <textarea aria-label="Descripción" className="nf-app-input" rows={2} placeholder="Descripción" value={res.description} onChange={(e) => setRes((f) => ({ ...f, description: e.target.value }))} />
+        <input aria-label="Disponible en" className="nf-app-input" placeholder="Disponible en" value={res.availableAt} onChange={(e) => setRes((f) => ({ ...f, availableAt: e.target.value }))} />
+        <input aria-label="Recurso alterno" className="nf-app-input" placeholder="Recurso alterno" value={res.alternativeResource} onChange={(e) => setRes((f) => ({ ...f, alternativeResource: e.target.value }))} />
+        <input aria-label="Plazo (min)" className="nf-app-input" type="number" min={0} placeholder="Plazo (min)" value={res.leadTimeMinutes} onChange={(e) => setRes((f) => ({ ...f, leadTimeMinutes: e.target.value }))} />
         <button type="button" className="nf-app-btn-primary" disabled={pending || !res.activityId || !res.name.trim()} onClick={() => onRun(() => {
           const normalQuantity = optionalNumber(res.normalQuantity, "La cantidad normal");
           const minimumQuantity = optionalNumber(res.minimumQuantity, "La cantidad mínima");
@@ -876,20 +876,20 @@ function StrategiesTab({ p, pending, onRun }: { p: ContinuityPayload; pending: b
       />
       <Modal open={showStrategy} onClose={() => setShowStrategy(false)} title="Nueva estrategia de continuidad" width={760}>
         <div style={{ display: "grid", gap: 12 }}>
-        <input className="nf-app-input" placeholder="Código" value={strategy.code} onChange={(e) => setStrategy((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
-        <input className="nf-app-input" placeholder="Estrategia" value={strategy.title} onChange={(e) => setStrategy((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 200 }} />
-        <select className="nf-app-input" value={strategy.activityId} onChange={(e) => setStrategy((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
+        <input aria-label="Código" className="nf-app-input" placeholder="Código" value={strategy.code} onChange={(e) => setStrategy((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
+        <input aria-label="Estrategia" className="nf-app-input" placeholder="Estrategia" value={strategy.title} onChange={(e) => setStrategy((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 200 }} />
+        <select aria-label="Actividad (opcional)" className="nf-app-input" value={strategy.activityId} onChange={(e) => setStrategy((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
           <option value="">Actividad (opcional)…</option>{p.activities.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
         </select>
-        <select className="nf-app-input" value={strategy.type} onChange={(e) => setStrategy((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 160 }}>
+        <select aria-label="Tipo" className="nf-app-input" value={strategy.type} onChange={(e) => setStrategy((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 160 }}>
           {STRATEGY_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{STRATEGY_TYPE[t]}</option>)}
         </select>
-        <input className="nf-app-input" type="number" min={0} placeholder="RTO que logra" value={strategy.achievesRtoMinutes} onChange={(e) => setStrategy((f) => ({ ...f, achievesRtoMinutes: e.target.value }))} style={{ maxWidth: 140 }} />
-        <input className="nf-app-input" type="number" min={0} placeholder="Coste" value={strategy.cost} onChange={(e) => setStrategy((f) => ({ ...f, cost: e.target.value }))} style={{ maxWidth: 110 }} />
-        <textarea className="nf-app-input" rows={2} placeholder="Descripción" value={strategy.description} onChange={(e) => setStrategy((f) => ({ ...f, description: e.target.value }))} />
-        <select className="nf-app-input" value={strategy.ownerId} onChange={(e) => setStrategy((f) => ({ ...f, ownerId: e.target.value }))}><option value="">Sin propietario</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <textarea className="nf-app-input" rows={2} placeholder="Recursos necesarios" value={strategy.resourcesNeeded} onChange={(e) => setStrategy((f) => ({ ...f, resourcesNeeded: e.target.value }))} />
-        <textarea className="nf-app-input" rows={2} placeholder="Notas" value={strategy.notes} onChange={(e) => setStrategy((f) => ({ ...f, notes: e.target.value }))} />
+        <input aria-label="RTO que logra" className="nf-app-input" type="number" min={0} placeholder="RTO que logra" value={strategy.achievesRtoMinutes} onChange={(e) => setStrategy((f) => ({ ...f, achievesRtoMinutes: e.target.value }))} style={{ maxWidth: 140 }} />
+        <input aria-label="Coste" className="nf-app-input" type="number" min={0} placeholder="Coste" value={strategy.cost} onChange={(e) => setStrategy((f) => ({ ...f, cost: e.target.value }))} style={{ maxWidth: 110 }} />
+        <textarea aria-label="Descripción" className="nf-app-input" rows={2} placeholder="Descripción" value={strategy.description} onChange={(e) => setStrategy((f) => ({ ...f, description: e.target.value }))} />
+        <select aria-label="Responsable" className="nf-app-input" value={strategy.ownerId} onChange={(e) => setStrategy((f) => ({ ...f, ownerId: e.target.value }))}><option value="">Sin propietario</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <textarea aria-label="Recursos necesarios" className="nf-app-input" rows={2} placeholder="Recursos necesarios" value={strategy.resourcesNeeded} onChange={(e) => setStrategy((f) => ({ ...f, resourcesNeeded: e.target.value }))} />
+        <textarea aria-label="Notas" className="nf-app-input" rows={2} placeholder="Notas" value={strategy.notes} onChange={(e) => setStrategy((f) => ({ ...f, notes: e.target.value }))} />
         <button type="button" className="nf-app-btn-primary" disabled={pending || !strategy.code.trim() || !strategy.title.trim()} onClick={() => onRun(() => createStrategy({
           code: requiredText(strategy.code, "El código", 60), title: requiredText(strategy.title, "El título", 200), activityId: assertOptions(strategy.activityId, p.activities.map((a) => a.id), "La actividad") || null, type: assertOptions(strategy.type, STRATEGY_TYPE_OPTIONS, "El tipo") as never,
           achievesRtoMinutes: optionalNumber(strategy.achievesRtoMinutes, "El RTO que logra"),
@@ -923,16 +923,16 @@ function StrategiesTab({ p, pending, onRun }: { p: ContinuityPayload; pending: b
       />
       <Modal open={showProcedure} onClose={() => setShowProcedure(false)} title="Nuevo procedimiento de recuperación" width={700}>
         <div style={{ display: "grid", gap: 12 }}>
-        <input className="nf-app-input" placeholder="Código" value={procedure.code} onChange={(e) => setProcedure((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
-        <input className="nf-app-input" placeholder="Procedimiento" value={procedure.title} onChange={(e) => setProcedure((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 220 }} />
-        <select className="nf-app-input" value={procedure.activityId} onChange={(e) => setProcedure((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
+        <input aria-label="Código" className="nf-app-input" placeholder="Código" value={procedure.code} onChange={(e) => setProcedure((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
+        <input aria-label="Procedimiento" className="nf-app-input" placeholder="Procedimiento" value={procedure.title} onChange={(e) => setProcedure((f) => ({ ...f, title: e.target.value }))} style={{ maxWidth: 220 }} />
+        <select aria-label="Actividad (opcional)" className="nf-app-input" value={procedure.activityId} onChange={(e) => setProcedure((f) => ({ ...f, activityId: e.target.value }))} style={{ maxWidth: 200 }}>
           <option value="">Actividad (opcional)…</option>{p.activities.map((a) => <option key={a.id} value={a.id}>{a.code} · {a.name}</option>)}
         </select>
-        <input className="nf-app-input" type="number" min={0} placeholder="Duración estimada (min)" value={procedure.estimatedMinutes} onChange={(e) => setProcedure((f) => ({ ...f, estimatedMinutes: e.target.value }))} style={{ maxWidth: 180 }} />
-        <textarea className="nf-app-input" rows={2} placeholder="Objetivo" value={procedure.objective} onChange={(e) => setProcedure((f) => ({ ...f, objective: e.target.value }))} />
-        <textarea className="nf-app-input" rows={3} placeholder="Pasos" value={procedure.steps} onChange={(e) => setProcedure((f) => ({ ...f, steps: e.target.value }))} />
-        <textarea className="nf-app-input" rows={2} placeholder="Prerrequisitos" value={procedure.prerequisites} onChange={(e) => setProcedure((f) => ({ ...f, prerequisites: e.target.value }))} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}><select className="nf-app-input" value={procedure.responsibleId} onChange={(e) => setProcedure((f) => ({ ...f, responsibleId: e.target.value }))}><option value="">Sin responsable</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><input className="nf-app-input" type="number" min={0} placeholder="Orden" value={procedure.order} onChange={(e) => setProcedure((f) => ({ ...f, order: e.target.value }))} /><input className="nf-app-input" placeholder="Versión" value={procedure.version} onChange={(e) => setProcedure((f) => ({ ...f, version: e.target.value }))} /></div>
+        <input aria-label="Duración estimada (min)" className="nf-app-input" type="number" min={0} placeholder="Duración estimada (min)" value={procedure.estimatedMinutes} onChange={(e) => setProcedure((f) => ({ ...f, estimatedMinutes: e.target.value }))} style={{ maxWidth: 180 }} />
+        <textarea aria-label="Objetivo" className="nf-app-input" rows={2} placeholder="Objetivo" value={procedure.objective} onChange={(e) => setProcedure((f) => ({ ...f, objective: e.target.value }))} />
+        <textarea aria-label="Pasos" className="nf-app-input" rows={3} placeholder="Pasos" value={procedure.steps} onChange={(e) => setProcedure((f) => ({ ...f, steps: e.target.value }))} />
+        <textarea aria-label="Prerrequisitos" className="nf-app-input" rows={2} placeholder="Prerrequisitos" value={procedure.prerequisites} onChange={(e) => setProcedure((f) => ({ ...f, prerequisites: e.target.value }))} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}><select aria-label="Responsable" className="nf-app-input" value={procedure.responsibleId} onChange={(e) => setProcedure((f) => ({ ...f, responsibleId: e.target.value }))}><option value="">Sin responsable</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select><input aria-label="Orden" className="nf-app-input" type="number" min={0} placeholder="Orden" value={procedure.order} onChange={(e) => setProcedure((f) => ({ ...f, order: e.target.value }))} /><input aria-label="Versión" className="nf-app-input" placeholder="Versión" value={procedure.version} onChange={(e) => setProcedure((f) => ({ ...f, version: e.target.value }))} /></div>
         <button type="button" className="nf-app-btn-primary" disabled={pending || !procedure.code.trim() || !procedure.title.trim()} onClick={() => onRun(() => createRecoveryProcedure({
           code: requiredText(procedure.code, "El código", 60), title: requiredText(procedure.title, "El título", 200), activityId: assertOptions(procedure.activityId, p.activities.map((a) => a.id), "La actividad") || null,
           estimatedMinutes: optionalNumber(procedure.estimatedMinutes, "La duración"), objective: optionalText(procedure.objective, "El objetivo", 4000) ?? null, steps: optionalText(procedure.steps, "Los pasos", 20000) ?? null, prerequisites: optionalText(procedure.prerequisites, "Los prerrequisitos", 4000) ?? null, responsibleId: assertOptions(procedure.responsibleId, p.members.map((m) => m.id), "El responsable") || null, order: optionalNumber(procedure.order, "El orden") ?? 0, version: requiredText(procedure.version, "La versión", 20),
@@ -1003,18 +1003,18 @@ function CrisisTab({ p, pending, onRun }: { p: ContinuityPayload; pending: boole
     />
     <Modal open={showTeam} onClose={() => setShowTeam(false)} title="Nuevo equipo de crisis" width={700}>
       <div style={{ display: "grid", gap: 12 }}>
-      <input className="nf-app-input" placeholder="Código" value={team.code} onChange={(e) => setTeam((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
-      <input className="nf-app-input" placeholder="Nombre del equipo" value={team.name} onChange={(e) => setTeam((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 200 }} />
-      <input className="nf-app-input" placeholder="Propósito" value={team.purpose} onChange={(e) => setTeam((f) => ({ ...f, purpose: e.target.value }))} style={{ maxWidth: 220 }} />
-      <select className="nf-app-input" value={team.planId} onChange={(e) => setTeam((f) => ({ ...f, planId: e.target.value }))} style={{ maxWidth: 200 }}>
+      <input aria-label="Código" className="nf-app-input" placeholder="Código" value={team.code} onChange={(e) => setTeam((f) => ({ ...f, code: e.target.value }))} style={{ maxWidth: 110 }} />
+      <input aria-label="Nombre del equipo" className="nf-app-input" placeholder="Nombre del equipo" value={team.name} onChange={(e) => setTeam((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 200 }} />
+      <input aria-label="Propósito" className="nf-app-input" placeholder="Propósito" value={team.purpose} onChange={(e) => setTeam((f) => ({ ...f, purpose: e.target.value }))} style={{ maxWidth: 220 }} />
+      <select aria-label="Plan (opcional)" className="nf-app-input" value={team.planId} onChange={(e) => setTeam((f) => ({ ...f, planId: e.target.value }))} style={{ maxWidth: 200 }}>
         <option value="">Plan (opcional)…</option>{p.planStatus.map((pl) => <option key={pl.id} value={pl.id}>{pl.code}</option>)}
       </select>
-      <select className="nf-app-input" value={team.leaderId} onChange={(e) => setTeam((f) => ({ ...f, leaderId: e.target.value }))} style={{ maxWidth: 180 }}>
+      <select aria-label="Líder (opcional)" className="nf-app-input" value={team.leaderId} onChange={(e) => setTeam((f) => ({ ...f, leaderId: e.target.value }))} style={{ maxWidth: 180 }}>
         <option value="">Líder (opcional)…</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
       </select>
-      <select className="nf-app-input" value={team.deputyId} onChange={(e) => setTeam((f) => ({ ...f, deputyId: e.target.value }))} style={{ maxWidth: 180 }}><option value="">Suplente (opcional)…</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-      <input className="nf-app-input" placeholder="Regla de activación" value={team.activationRule} onChange={(e) => setTeam((f) => ({ ...f, activationRule: e.target.value }))} />
-      <input className="nf-app-input" placeholder="Punto de encuentro" value={team.meetingPoint} onChange={(e) => setTeam((f) => ({ ...f, meetingPoint: e.target.value }))} />
+      <select aria-label="Suplente (opcional)" className="nf-app-input" value={team.deputyId} onChange={(e) => setTeam((f) => ({ ...f, deputyId: e.target.value }))} style={{ maxWidth: 180 }}><option value="">Suplente (opcional)…</option>{p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+      <input aria-label="Regla de activación" className="nf-app-input" placeholder="Regla de activación" value={team.activationRule} onChange={(e) => setTeam((f) => ({ ...f, activationRule: e.target.value }))} />
+      <input aria-label="Punto de encuentro" className="nf-app-input" placeholder="Punto de encuentro" value={team.meetingPoint} onChange={(e) => setTeam((f) => ({ ...f, meetingPoint: e.target.value }))} />
       <button type="button" className="nf-app-btn-primary" disabled={pending || !team.code.trim() || !team.name.trim()} onClick={() => onRun(() => createCrisisTeam({
         code: requiredText(team.code, "El código", 60), name: requiredText(team.name, "El nombre", 200), purpose: optionalText(team.purpose, "El propósito", 4000), planId: assertOptions(team.planId, p.planStatus.map((pl) => pl.id), "El plan") || null, leaderId: assertOptions(team.leaderId, p.members.map((m) => m.id), "El líder") || null, deputyId: assertOptions(team.deputyId, p.members.map((m) => m.id), "El suplente") || null, activationRule: optionalText(team.activationRule, "La regla de activación", 4000) ?? null, meetingPoint: optionalText(team.meetingPoint, "El punto de encuentro", 400) ?? null,
       }), { onSuccess: () => { setTeam({ code: "", name: "", purpose: "", planId: "", leaderId: "", deputyId: "", activationRule: "", meetingPoint: "" }); setShowTeam(false); }, successMessage: "Equipo de crisis creado." })}>Crear equipo</button>
@@ -1066,17 +1066,17 @@ function CrisisTeamCard({ team: t, p, pending, onRun, onEdit }: { team: Continui
       <button type="button" className="nf-app-btn-primary" onClick={() => setShowContact((v) => !v)}><Plus size={14} /> Nuevo contacto</button>
       <Modal open={showContact} onClose={() => setShowContact(false)} title={`Nuevo contacto · ${t.name}`} width={700}>
         <div style={{ display: "grid", gap: 12 }}>
-        <input className="nf-app-input" placeholder="Nombre" maxLength={200} value={contact.name} onChange={(e) => setContact((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 160 }} />
-        <input className="nf-app-input" placeholder="Rol" maxLength={160} value={contact.role} onChange={(e) => setContact((f) => ({ ...f, role: e.target.value }))} style={{ maxWidth: 140 }} />
-        <select className="nf-app-input" value={contact.type} onChange={(e) => setContact((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 130 }}>
+        <input aria-label="Nombre" className="nf-app-input" placeholder="Nombre" maxLength={200} value={contact.name} onChange={(e) => setContact((f) => ({ ...f, name: e.target.value }))} style={{ maxWidth: 160 }} />
+        <input aria-label="Rol" className="nf-app-input" placeholder="Rol" maxLength={160} value={contact.role} onChange={(e) => setContact((f) => ({ ...f, role: e.target.value }))} style={{ maxWidth: 140 }} />
+        <select aria-label="Tipo" className="nf-app-input" value={contact.type} onChange={(e) => setContact((f) => ({ ...f, type: e.target.value }))} style={{ maxWidth: 130 }}>
           {CONTACT_TYPE_OPTIONS.map((v) => <option key={v} value={v}>{v}</option>)}
         </select>
-        <input className="nf-app-input" placeholder="Teléfono" maxLength={60} value={contact.primaryPhone} onChange={(e) => setContact((f) => ({ ...f, primaryPhone: e.target.value }))} style={{ maxWidth: 140 }} />
-        <input className="nf-app-input" placeholder="Teléfono alternativo" maxLength={60} value={contact.altPhone} onChange={(e) => setContact((f) => ({ ...f, altPhone: e.target.value }))} style={{ maxWidth: 140 }} />
-        <input className="nf-app-input" type="email" maxLength={254} placeholder="Email" value={contact.email} onChange={(e) => setContact((f) => ({ ...f, email: e.target.value }))} style={{ maxWidth: 180 }} />
-        <input className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Orden" value={contact.escalationOrder} onChange={(e) => setContact((f) => ({ ...f, escalationOrder: e.target.value }))} style={{ maxWidth: 90 }} />
+        <input aria-label="Teléfono" className="nf-app-input" placeholder="Teléfono" maxLength={60} value={contact.primaryPhone} onChange={(e) => setContact((f) => ({ ...f, primaryPhone: e.target.value }))} style={{ maxWidth: 140 }} />
+        <input aria-label="Teléfono alternativo" className="nf-app-input" placeholder="Teléfono alternativo" maxLength={60} value={contact.altPhone} onChange={(e) => setContact((f) => ({ ...f, altPhone: e.target.value }))} style={{ maxWidth: 140 }} />
+        <input aria-label="Email" className="nf-app-input" type="email" maxLength={254} placeholder="Email" value={contact.email} onChange={(e) => setContact((f) => ({ ...f, email: e.target.value }))} style={{ maxWidth: 180 }} />
+        <input aria-label="Orden" className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Orden" value={contact.escalationOrder} onChange={(e) => setContact((f) => ({ ...f, escalationOrder: e.target.value }))} style={{ maxWidth: 90 }} />
         <label style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="checkbox" checked={contact.isDeputy} onChange={(e) => setContact((f) => ({ ...f, isDeputy: e.target.checked }))} /> Suplente</label>
-        <input className="nf-app-input" placeholder="Disponibilidad" maxLength={400} value={contact.availability} onChange={(e) => setContact((f) => ({ ...f, availability: e.target.value }))} />
+        <input aria-label="Disponibilidad" className="nf-app-input" placeholder="Disponibilidad" maxLength={400} value={contact.availability} onChange={(e) => setContact((f) => ({ ...f, availability: e.target.value }))} />
         <button type="button" className="nf-app-btn-primary" disabled={pending || !contact.name.trim()} onClick={() => onRun(() => addCrisisContact({
           teamId: t.id, name: requiredText(contact.name, "El nombre", 200), role: optionalText(contact.role, "El rol", 160), type: assertOptions(contact.type, CONTACT_TYPE_OPTIONS, "El tipo") as never,
           primaryPhone: optionalText(contact.primaryPhone, "El teléfono", 60), altPhone: optionalText(contact.altPhone, "El teléfono alternativo", 60), email: optionalEmail(contact.email, "El email"), escalationOrder: optionalNumber(contact.escalationOrder, "El orden") ?? 0, isDeputy: contact.isDeputy, availability: optionalText(contact.availability, "La disponibilidad", 400), notes: optionalText(contact.notes, "Las notas", 2000),
@@ -1112,17 +1112,17 @@ function CrisisTeamCard({ team: t, p, pending, onRun, onEdit }: { team: Continui
     {p.canUpdate && t.contacts.length > 0 && <div>
       <Modal open={showNode} onClose={() => setShowNode(false)} title={`Nuevo nodo de comunicación · ${t.name}`} width={700}>
         <div style={{ display: "grid", gap: 12 }}>
-        <input className="nf-app-input" placeholder="Etiqueta" maxLength={200} value={node.label} onChange={(e) => setNode((f) => ({ ...f, label: e.target.value }))} style={{ maxWidth: 180 }} />
-        <select className="nf-app-input" value={node.contactId} onChange={(e) => setNode((f) => ({ ...f, contactId: e.target.value }))} style={{ maxWidth: 160 }}>
+        <input aria-label="Etiqueta" className="nf-app-input" placeholder="Etiqueta" maxLength={200} value={node.label} onChange={(e) => setNode((f) => ({ ...f, label: e.target.value }))} style={{ maxWidth: 180 }} />
+        <select aria-label="Contacto (opcional)" className="nf-app-input" value={node.contactId} onChange={(e) => setNode((f) => ({ ...f, contactId: e.target.value }))} style={{ maxWidth: 160 }}>
           <option value="">Contacto (opcional)…</option>{t.contacts.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <select className="nf-app-input" value={node.parentId} onChange={(e) => setNode((f) => ({ ...f, parentId: e.target.value }))} style={{ maxWidth: 180 }}>
+        <select aria-label="Nodo padre (raíz si vacío)" className="nf-app-input" value={node.parentId} onChange={(e) => setNode((f) => ({ ...f, parentId: e.target.value }))} style={{ maxWidth: 180 }}>
           <option value="">Nodo padre (raíz si vacío)…</option>{t.communicationTree.map((n) => <option key={n.id} value={n.id}>{n.label}</option>)}
         </select>
-        <input className="nf-app-input" placeholder="Canal (teléfono, email…)" maxLength={120} value={node.channel} onChange={(e) => setNode((f) => ({ ...f, channel: e.target.value }))} style={{ maxWidth: 180 }} />
-        <input className="nf-app-input" placeholder="Audiencia" maxLength={400} value={node.audience} onChange={(e) => setNode((f) => ({ ...f, audience: e.target.value }))} />
-        <textarea className="nf-app-input" maxLength={8000} rows={2} placeholder="Plantilla del mensaje" value={node.messageTemplate} onChange={(e) => setNode((f) => ({ ...f, messageTemplate: e.target.value }))} />
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Orden" value={node.order} onChange={(e) => setNode((f) => ({ ...f, order: e.target.value }))} /><input className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Demora máxima (min)" value={node.maxDelayMinutes} onChange={(e) => setNode((f) => ({ ...f, maxDelayMinutes: e.target.value }))} /></div>
+        <input aria-label="Canal (teléfono, email…)" className="nf-app-input" placeholder="Canal (teléfono, email…)" maxLength={120} value={node.channel} onChange={(e) => setNode((f) => ({ ...f, channel: e.target.value }))} style={{ maxWidth: 180 }} />
+        <input aria-label="Audiencia" className="nf-app-input" placeholder="Audiencia" maxLength={400} value={node.audience} onChange={(e) => setNode((f) => ({ ...f, audience: e.target.value }))} />
+        <textarea aria-label="Plantilla del mensaje" className="nf-app-input" maxLength={8000} rows={2} placeholder="Plantilla del mensaje" value={node.messageTemplate} onChange={(e) => setNode((f) => ({ ...f, messageTemplate: e.target.value }))} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}><input aria-label="Orden" className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Orden" value={node.order} onChange={(e) => setNode((f) => ({ ...f, order: e.target.value }))} /><input aria-label="Demora máxima (min)" className="nf-app-input" type="number" min={0} max={MAX_MINUTES} step={1} placeholder="Demora máxima (min)" value={node.maxDelayMinutes} onChange={(e) => setNode((f) => ({ ...f, maxDelayMinutes: e.target.value }))} /></div>
         <button type="button" className="nf-app-btn-primary" disabled={pending || !node.label.trim()} onClick={() => onRun(() => addCommunicationNode({
           teamId: t.id, contactId: assertOptions(node.contactId, t.contacts.map((c) => c.id), "El contacto") || null, parentId: assertOptions(node.parentId, t.communicationTree.map((n) => n.id), "El nodo padre") || null, label: requiredText(node.label, "La etiqueta", 200), audience: optionalText(node.audience, "La audiencia", 400) ?? null, channel: optionalText(node.channel, "El canal", 120), messageTemplate: optionalText(node.messageTemplate, "La plantilla del mensaje", 8000) ?? null, order: optionalNumber(node.order, "El orden") ?? 0, maxDelayMinutes: optionalNumber(node.maxDelayMinutes, "La demora máxima"),
         }), { onSuccess: () => { setNode({ contactId: "", parentId: "", label: "", audience: "", channel: "", messageTemplate: "", order: "0", maxDelayMinutes: "" }); setShowNode(false); }, successMessage: "Nodo añadido." })}>Crear nodo</button>

@@ -98,15 +98,15 @@ export function DesignDevelopmentLive({ initial }: { initial: DesignDevelopmentP
     </OperationalGrid>}
 
     <FormModal open={creating} title={editing ? "Editar proyecto" : "Nuevo proyecto de diseño"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submitProject}>
-      <Field label="Nombre"><input name="name" required className="nf-app-input" style={inputStyle} defaultValue={editing?.name ?? ""} /></Field>
-      <Field label="Descripción"><textarea name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editing?.description ?? ""} /></Field>
+      <Field label="Nombre"><input aria-label="Nombre" name="name" required className="nf-app-input" style={inputStyle} defaultValue={editing?.name ?? ""} /></Field>
+      <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editing?.description ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Responsable"><select name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editing?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
-        <Field label="Proceso"><select name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+        <Field label="Responsable"><select aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editing?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+        <Field label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
       </div>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Inicio planificado"><input name="plannedStart" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedStart?.slice(0, 10) ?? ""} /></Field>
-        <Field label="Fin planificado"><input name="plannedEnd" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedEnd?.slice(0, 10) ?? ""} /></Field>
+        <Field label="Inicio planificado"><input aria-label="Inicio planificado" name="plannedStart" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedStart?.slice(0, 10) ?? ""} /></Field>
+        <Field label="Fin planificado"><input aria-label="Fin planificado" name="plannedEnd" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedEnd?.slice(0, 10) ?? ""} /></Field>
       </div>
     </FormModal>
 
@@ -141,14 +141,14 @@ export function DesignDevelopmentLive({ initial }: { initial: DesignDevelopmentP
     </div>}</Modal>
 
     <FormModal open={addingStage} title="Nueva etapa" pending={isPending} error="" onClose={() => setAddingStage(false)} onSubmit={submitStage}>
-      <Field label="Tipo de etapa"><select name="stageType" className="nf-app-input" style={inputStyle}>{Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-      <Field label="Título"><input name="title" required className="nf-app-input" style={inputStyle} /></Field>
-      <Field label="Descripción / criterios de aceptación"><textarea name="description" rows={3} className="nf-app-input" style={inputStyle} /></Field>
-      <Field label="Responsable"><select name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+      <Field label="Tipo de etapa"><select aria-label="Tipo de etapa" name="stageType" className="nf-app-input" style={inputStyle}>{Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+      <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} /></Field>
+      <Field label="Descripción / criterios de aceptación"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} /></Field>
+      <Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
     </FormModal>
 
     <Modal open={!!completing} onClose={() => setCompleting(null)} title={`Completar: ${completing?.title ?? ""}`} width={520}>{completing && <form onSubmit={submitComplete} style={{ display: "grid", gap: 12 }}>
-      <Field label="Resultado"><textarea name="result" required rows={4} className="nf-app-input" style={inputStyle} placeholder="Qué se verificó/validó/produjo y con qué criterio." /></Field>
+      <Field label="Resultado"><textarea aria-label="Qué se verificó/validó/produjo y con qué criterio." name="result" required rows={4} className="nf-app-input" style={inputStyle} placeholder="Qué se verificó/validó/produjo y con qué criterio." /></Field>
       <button type="submit" className="nf-app-btn-primary" disabled={isPending}>Marcar completada</button>
     </form>}</Modal>
   </div>;

@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="nf-auth-form">
                   <div>
                     <label className="nf-label" htmlFor="forgot-email">{t("common.email")}</label>
-                    <input
+                    <input aria-label={t("auth.forgot.emailPlaceholder")}
                       id="forgot-email"
                       type="email"
                       value={email}

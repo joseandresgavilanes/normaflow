@@ -64,11 +64,11 @@ export default function GapAssessmentLandingPage() {
               <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
                   <label className="nf-label">Empresa</label>
-                  <input required value={company} onChange={e => setCompany(e.target.value)} className="nf-input" placeholder="Tecnoserv Industrial" />
+                  <input aria-label="Tecnoserv Industrial" required value={company} onChange={e => setCompany(e.target.value)} className="nf-input" placeholder="Tecnoserv Industrial" />
                 </div>
                 <div>
                   <label className="nf-label">Email profesional</label>
-                  <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nf-input" placeholder="maria@empresa.com" />
+                  <input aria-label="maria@empresa.com" required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nf-input" placeholder="maria@empresa.com" />
                 </div>
                 <button type="submit" className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar <Ic.arrow className="nf-arrow"/>
