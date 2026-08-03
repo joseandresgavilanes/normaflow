@@ -147,30 +147,30 @@ export function planAllowsAI(plan: string, trialActive = false): boolean {
 }
 
 export const STANDARDS = {
-  ISO_9001: { code: "ISO_9001", name: "ISO 9001", version: "2015", color: "#123C66" },
-  ISO_27001: { code: "ISO_27001", name: "ISO 27001", version: "2022", color: "#2E8B57" },
-  ISO_14001: { code: "ISO_14001", name: "ISO 14001", version: "2015", color: "#6B3FB5" },
+  ISO_9001: { code: "ISO_9001", name: "ISO 9001", version: "2015", color: "var(--nf-primary-active)" },
+  ISO_27001: { code: "ISO_27001", name: "ISO 27001", version: "2022", color: "var(--nf-success-text)" },
+  ISO_14001: { code: "ISO_14001", name: "ISO 14001", version: "2015", color: "var(--nf-primary-active)" },
   ISO_45001: { code: "ISO_45001", name: "ISO 45001", version: "2018", color: "#D68A1A" },
-  ISO_42001: { code: "ISO_42001", name: "ISO/IEC 42001", version: "2023", color: "#0F7B8A" },
-  ISO_37301: { code: "ISO_37301", name: "ISO 37301", version: "2021", color: "#8C2F39" },
+  ISO_42001: { code: "ISO_42001", name: "ISO/IEC 42001", version: "2023", color: "var(--nf-info-text)" },
+  ISO_37301: { code: "ISO_37301", name: "ISO 37301", version: "2021", color: "var(--nf-danger-text)" },
   ISO_37001: { code: "ISO_37001", name: "ISO 37001", version: "2016", color: "#9F1239" },
   ISO_50001: { code: "ISO_50001", name: "ISO 50001", version: "2018", color: "#CA8A04" },
-  ISO_22000: { code: "ISO_22000", name: "ISO 22000", version: "2018", color: "#0F766E" },
+  ISO_22000: { code: "ISO_22000", name: "ISO 22000", version: "2018", color: "var(--nf-info-text)" },
   ISO_20000: { code: "ISO_20000", name: "ISO/IEC 20000", version: "2018", color: "#1D4ED8" },
-  ISO_22301: { code: "ISO_22301", name: "ISO 22301", version: "2019", color: "#0F766E" },
-  ISO_13485: { code: "ISO_13485", name: "ISO 13485", version: "2016", color: "var(--nf-info)" },
+  ISO_22301: { code: "ISO_22301", name: "ISO 22301", version: "2019", color: "var(--nf-info-text)" },
+  ISO_13485: { code: "ISO_13485", name: "ISO 13485", version: "2016", color: "var(--nf-info-text)" },
 } as const;
 
 export const COLORS = {
-  primary: "#123C66",
+  primary: "var(--nf-primary-active)",
   primaryDark: "#0D2E4E",
-  accent: "#2E8B57",
+  accent: "var(--nf-success-text)",
   bg: "#F7F9FC",
   surface: "#FFFFFF",
-  border: "#E5EAF2",
+  border: "var(--nf-border)",
   textMain: "#142033",
   textMuted: "#5E6B7A",
   danger: "#C93C37",
   warning: "#D68A1A",
-  success: "#2E8B57",
+  success: "var(--nf-success-text)",
 };

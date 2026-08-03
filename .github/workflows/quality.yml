@@ -31,7 +31,10 @@ jobs:
       - run: npm run validate:runtime-config
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm test -- --project=chromium
+      # `npm test -- --project=chromium` anexaba el argumento al FINAL de la
+      # cadena de cuatro comandos, así que este paso corría también los dos
+      # shards de firefox con solo chromium instalado.
+      - run: npm run test:chromium
 
   # Hard block: a PR carrying an unresolved P0/do-not-merge label cannot merge.
   p0-gate:

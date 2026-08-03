@@ -10,7 +10,7 @@
 
 .nf-modal-body .nf-app-btn-ghost {
   border: 1px solid #dbe3ee !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   color: var(--nf-ink-2) !important;
   box-shadow: none !important;
 }
@@ -88,7 +88,7 @@
   min-height: 72px !important;
   padding: 18px 24px !important;
   border-bottom: 1px solid var(--nf-line) !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
 }
 
 .nf-modal-backdrop .nf-modal > .nf-modal-header > .nf-app-btn-ghost {
@@ -106,7 +106,7 @@
   min-height: 44px !important;
   border-radius: 10px !important;
   border-color: #dbe3ee !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   box-shadow: none !important;
 }
 
@@ -129,7 +129,7 @@
   padding: 0 10px !important;
   border: 1px solid #dbe3ee !important;
   border-radius: 9px !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   color: var(--nf-ink-2) !important;
   font-size: 12px !important;
   font-weight: 650 !important;
@@ -148,15 +148,15 @@
 }
 
 .nf-table-action--danger {
-  border-color: #fecaca !important;
+  border-color: var(--nf-danger-border) !important;
   background: #fffafa !important;
-  color: #b91c1c !important;
+  color: var(--nf-danger-text) !important;
 }
 
 .nf-table-action--danger:hover:not(:disabled) {
   border-color: #fca5a5 !important;
-  background: #fef2f2 !important;
-  color: #991b1b !important;
+  background: var(--nf-danger-subtle) !important;
+  color: var(--nf-danger-text) !important;
 }
 
 .nf-energy-table-actions {
@@ -175,14 +175,14 @@
 .nf-table-action--primary {
   border-color: var(--nf-app-accent, #5266f6) !important;
   background: var(--nf-app-accent, #5266f6) !important;
-  color: #fff !important;
+  color: var(--nf-text-on-primary) !important;
   box-shadow: 0 2px 6px rgba(79, 70, 229, .18);
 }
 
 .nf-table-action--primary:hover:not(:disabled) {
   border-color: #4053e6 !important;
   background: #4053e6 !important;
-  color: #fff !important;
+  color: var(--nf-text-on-primary) !important;
 }
 
 /* Todas las tablas ISO pasan por IsoTableCard. Las acciones de fila se
@@ -222,7 +222,7 @@
 
 .nf-table-action--secondary {
   border-color: #dbe3ee !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   color: #64748b !important;
 }
 
@@ -232,7 +232,7 @@
   min-height: 24px;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #eef2ff;
+  background: var(--nf-primary-subtle);
   color: #4f46e5;
   font-size: 11px;
   font-weight: 750;
@@ -242,7 +242,7 @@
 .nf-energy-review-status--draft { background: #f1f5f9; color: #64748b; }
 .nf-energy-review-status--in_progress { background: #fff7ed; color: #c2410c; }
 .nf-energy-review-status--under_review { background: #eff6ff; color: #2563eb; }
-.nf-energy-review-status--approved { background: #ecfdf5; color: #15803d; }
+.nf-energy-review-status--approved { background: #ecfdf5; color: var(--nf-success-text); }
 .nf-energy-review-status--superseded { background: #f8fafc; color: #94a3b8; }
 
 /* Estados de ISO 50001: etiquetas legibles y consistentes en todas las tablas. */
@@ -267,7 +267,7 @@
 .nf-energy-status--selected,
 .nf-energy-status--preferred {
   background: #ecfdf5;
-  color: #15803d;
+  color: var(--nf-success-text);
 }
 
 .nf-energy-status--in_progress,
@@ -325,7 +325,7 @@
 .nf-objective-programs-row > td {
   padding: 14px 18px 18px !important;
   border-bottom: 1px solid #e5eaf2 !important;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-objective-programs-panel {
@@ -383,7 +383,7 @@
   padding: 10px 12px;
   border: 1px solid #e4eaf2;
   border-radius: 10px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-objective-program-name {

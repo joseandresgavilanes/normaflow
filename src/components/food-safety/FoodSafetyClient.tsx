@@ -54,7 +54,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
@@ -130,28 +130,28 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "#ccfbf1", display: "grid", placeItems: "center" }}>
-          <Shield size={22} color="#0f766e" />
+          <Shield size={22} color="var(--nf-info-text)" />
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>
             {SECTION_META[tab].sub}
           </p>
         </div>
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
-      {traceMsg && <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "#0f766e", fontSize: 13 }}>{traceMsg}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {traceMsg && <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "var(--nf-info-text)", fontSize: 13 }}>{traceMsg}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Productos" value={s.products} />
-        <Stat label="Peligros sig." value={s.significantHazards} accent={s.significantHazards ? "#0f766e" : undefined} />
+        <Stat label="Peligros sig." value={s.significantHazards} accent={s.significantHazards ? "var(--nf-info-text)" : undefined} />
         <Stat label="PCC" value={s.ccps} />
         <Stat label="Fuera de límite" value={s.outOfLimit} accent={s.outOfLimit ? "var(--nf-danger)" : undefined} />
         <Stat label="Desviaciones abiertas" value={s.openDeviations} accent={s.openDeviations ? "#d68a1a" : undefined} />
         <Stat label="Retiros abiertos" value={s.openRecalls} accent={s.openRecalls ? "var(--nf-danger)" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "products" ? [{ label: "Productos activos", value: s.products }, { label: "Materias primas", value: s.materials }, { label: "Alérgenos", value: s.allergens }] : tab === "hazards" ? [{ label: "Peligros evaluados", value: s.hazards }, { label: "Significativos", value: s.significantHazards, accent: s.significantHazards ? "#0f766e" : undefined }, { label: "PCC definidos", value: s.ccps }] : tab === "flows" ? [{ label: "Flujos aprobados", value: s.flows }, { label: "Productos", value: s.products }, { label: "Peligros activos", value: s.hazards }] : tab === "prp" ? [{ label: "PRP activos", value: s.prps }, { label: "OPRP activos", value: s.oprps }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "ccp" ? [{ label: "PCC activos", value: s.ccps }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Planes de monitoreo", value: initial.plans.length }] : tab === "monitoring" ? [{ label: "Planes de monitoreo", value: initial.plans.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "deviations" ? [{ label: "Desviaciones abiertas", value: s.openDeviations, accent: s.openDeviations ? "#d68a1a" : undefined }, { label: "Correcciones", value: initial.corrections.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }] : tab === "traceability" ? [{ label: "Lotes registrados", value: s.lots }, { label: "Productos", value: s.products }, { label: "Pruebas pendientes", value: s.pendingVerifications, accent: s.pendingVerifications ? "#d68a1a" : undefined }] : tab === "recalls" ? [{ label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Lotes trazables", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }] : tab === "allergens" ? [{ label: "Alérgenos activos", value: s.allergens }, { label: "Productos", value: s.products }, { label: "Materias primas", value: s.materials }] : tab === "emergencies" ? [{ label: "Emergencias abiertas", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : [{ label: "Comunicaciones", value: initial.communications.length }, { label: "Lotes", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }]} />}
+      </div> : <IsoSectionMetrics items={tab === "products" ? [{ label: "Productos activos", value: s.products }, { label: "Materias primas", value: s.materials }, { label: "Alérgenos", value: s.allergens }] : tab === "hazards" ? [{ label: "Peligros evaluados", value: s.hazards }, { label: "Significativos", value: s.significantHazards, accent: s.significantHazards ? "var(--nf-info-text)" : undefined }, { label: "PCC definidos", value: s.ccps }] : tab === "flows" ? [{ label: "Flujos aprobados", value: s.flows }, { label: "Productos", value: s.products }, { label: "Peligros activos", value: s.hazards }] : tab === "prp" ? [{ label: "PRP activos", value: s.prps }, { label: "OPRP activos", value: s.oprps }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "ccp" ? [{ label: "PCC activos", value: s.ccps }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Planes de monitoreo", value: initial.plans.length }] : tab === "monitoring" ? [{ label: "Planes de monitoreo", value: initial.plans.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : tab === "deviations" ? [{ label: "Desviaciones abiertas", value: s.openDeviations, accent: s.openDeviations ? "#d68a1a" : undefined }, { label: "Correcciones", value: initial.corrections.length }, { label: "Fuera de límite", value: s.outOfLimit, accent: s.outOfLimit ? "var(--nf-danger)" : undefined }] : tab === "traceability" ? [{ label: "Lotes registrados", value: s.lots }, { label: "Productos", value: s.products }, { label: "Pruebas pendientes", value: s.pendingVerifications, accent: s.pendingVerifications ? "#d68a1a" : undefined }] : tab === "recalls" ? [{ label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Lotes trazables", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }] : tab === "allergens" ? [{ label: "Alérgenos activos", value: s.allergens }, { label: "Productos", value: s.products }, { label: "Materias primas", value: s.materials }] : tab === "emergencies" ? [{ label: "Emergencias abiertas", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }, { label: "Retiros abiertos", value: s.openRecalls, accent: s.openRecalls ? "var(--nf-danger)" : undefined }, { label: "Validaciones pendientes", value: s.pendingValidations, accent: s.pendingValidations ? "#d68a1a" : undefined }] : [{ label: "Comunicaciones", value: initial.communications.length }, { label: "Lotes", value: s.lots }, { label: "Emergencias", value: s.openEmergencies, accent: s.openEmergencies ? "var(--nf-danger)" : undefined }]} />}
 
       {tab === "panel" && (
         <>
@@ -180,7 +180,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
             <Row k="Alérgenos" v={s.allergens} />
             <Row k="Emergencias abiertas" v={s.openEmergencies} danger={s.openEmergencies > 0} />
             <Row k="Validaciones pendientes" v={s.pendingValidations} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>
               La prueba de trazabilidad recorre previousLotIds hacia atrás (proveedor) y hacia adelante (cliente/distribución).
             </p>
           </div>
@@ -650,7 +650,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
 
       {tab === "communications" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "#0f766e", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "var(--nf-info-text)", fontSize: 13 }}>
             Comunicación con proveedores, clientes o autoridades sobre asuntos de inocuidad
             (§7.4) — cambios de especificación, retiros, incidentes de alérgenos, requisitos legales.
           </div>
@@ -663,7 +663,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
             {initial.communications.map((c) => (
               <tr key={c.id}>
                 <td style={td}>{c.code}</td>
-                <td style={td}>{c.subject}<div style={{ color: "#64748b", fontSize: 12 }}>{c.content?.slice(0, 100) ?? ""}</div></td>
+                <td style={td}>{c.subject}<div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{c.content?.slice(0, 100) ?? ""}</div></td>
                 <td style={td}>{c.audience ?? "—"}</td>
                 <td style={td}>{c.channel ?? "—"}</td>
                 <td style={td}>{fmt(c.communicatedAt)}</td>
@@ -1131,10 +1131,10 @@ function NewLotForm({ products, materials, lots, pending, run, onDone }: {
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
       </div>
       <div>
-        <label style={{ fontSize: 12, color: "#64748b" }}>Lotes previos (trazabilidad hacia atrás):</label>
+        <label style={{ fontSize: 12, color: "var(--nf-text-secondary)" }}>Lotes previos (trazabilidad hacia atrás):</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
           {lots.map((l) => (
-            <label key={l.id} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, border: "1px solid #e5eaf2", borderRadius: 6, padding: "3px 7px" }}>
+            <label key={l.id} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, border: "1px solid var(--nf-border)", borderRadius: 6, padding: "3px 7px" }}>
               <input type="checkbox" checked={f.previousLotIds.includes(l.id)} onChange={() => togglePrev(l.id)} /> {l.code}
             </label>
           ))}
@@ -1157,10 +1157,10 @@ function NewRecallForm({ lots, pending, run, onDone }: { lots: FoodSafetyPayload
       </div>
       <input aria-label="Motivo" style={input} placeholder="Motivo" value={f.reason} onChange={(e) => set("reason", e.target.value)} />
       <div>
-        <label style={{ fontSize: 12, color: "#64748b" }}>Lotes afectados (la trazabilidad expande adelante/atrás automáticamente):</label>
+        <label style={{ fontSize: 12, color: "var(--nf-text-secondary)" }}>Lotes afectados (la trazabilidad expande adelante/atrás automáticamente):</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 4 }}>
           {lots.map((l) => (
-            <label key={l.id} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, border: "1px solid #e5eaf2", borderRadius: 6, padding: "3px 7px" }}>
+            <label key={l.id} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, border: "1px solid var(--nf-border)", borderRadius: 6, padding: "3px 7px" }}>
               <input type="checkbox" checked={f.lotCodes.includes(l.code)} onChange={() => toggleLot(l.code)} /> {l.code}
             </label>
           ))}

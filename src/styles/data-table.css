@@ -146,6 +146,9 @@
 .nf-dt__th--select { width: 40px; padding-right: 0; }
 
 .nf-dt__sort {
+  /* 24 px de alto: el botón medía 18 y es el objetivo táctil más repetido del
+     producto (131 casos en 21 rutas). */
+  min-height: 24px;
   display: inline-flex;
   align-items: center;
   gap: var(--nf-space-1);

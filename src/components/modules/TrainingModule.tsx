@@ -196,7 +196,7 @@ export default function TrainingModule() {
     { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
     { id: "process", header: "Proceso", minWidth: 120, sortValue: (a) => a.processCode ?? "",
       cell: (a) => a.processCode
-        ? <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary)", textDecoration: "none" }}>{a.processCode}</Link>
+        ? <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)", textDecoration: "none" }}>{a.processCode}</Link>
         : <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span> },
     { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
       cell: (a) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}</span> },
@@ -234,13 +234,13 @@ export default function TrainingModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <PieChart size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.pct}%</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.pct}%</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cumplimiento global</div>
           </div>
         </div>
@@ -254,13 +254,13 @@ export default function TrainingModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <BookOpen size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.done}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.done}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -274,13 +274,13 @@ export default function TrainingModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-danger)",
+              color: "var(--nf-danger-text)",
             }}
           >
             <GraduationCap size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Vencidas / riesgo</div>
           </div>
         </div>
@@ -294,13 +294,13 @@ export default function TrainingModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <ScrollText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.retr}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.retr}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Reacreditación</div>
           </div>
         </div>
@@ -328,7 +328,7 @@ export default function TrainingModule() {
       {tab === "catalog" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {trainingCourses.map((c, idx) => {
-            const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "#6B3FB5"][idx % 4];
+            const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "var(--nf-primary-active)"][idx % 4];
             return (
               <Card key={c.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--nf-line)", boxShadow: "0 12px 36px -24px rgba(82, 102, 246, 0.18)" }}>
                 
@@ -340,7 +340,7 @@ export default function TrainingModule() {
                       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{c.description}</p>
                       <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {c.standardTags.map(t => (
-                          <span key={t} style={{ fontSize: 11, fontWeight: 700, background: "#f0f4ff", color: "var(--nf-primary)", padding: "4px 10px", borderRadius: 99 }}>
+                          <span key={t} style={{ fontSize: 11, fontWeight: 700, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", padding: "4px 10px", borderRadius: 99 }}>
                             {t}
                           </span>
                         ))}
@@ -349,7 +349,7 @@ export default function TrainingModule() {
                       <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 12, fontWeight: 500 }}>
                         Documentos:{" "}
                         {c.linkedDocumentCodes.map(code => (
-                          <Link key={code} href="/app/documents" style={{ color: "var(--nf-primary)", fontWeight: 700, marginRight: 8 }}>
+                          <Link key={code} href="/app/documents" style={{ color: "var(--nf-primary-active)", fontWeight: 700, marginRight: 8 }}>
                             {code}
                           </Link>
                         ))}
@@ -366,7 +366,7 @@ export default function TrainingModule() {
                             borderRadius: 10,
                             border: "1px solid var(--nf-success)",
                             background: "#16A34A12",
-                            color: "#1f6f45",
+                            color: "var(--nf-success-text)",
                             fontSize: 12,
                             fontWeight: 700,
                             cursor: "pointer",
@@ -432,7 +432,7 @@ export default function TrainingModule() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink-2)", marginBottom: 10 }}>
                     {mine.filter(m => m.status === "COMPLETED").length}/{mine.length} completadas
                   </div>
-                  <Link href="/app/activity" style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
+                  <Link href="/app/activity" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
                     Historial →
                   </Link>
                 </div>
@@ -456,7 +456,7 @@ export default function TrainingModule() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--nf-primary)",
+                  color: "var(--nf-primary-active)",
                 }}
               >
                 <PieChart size={22} strokeWidth={2.25} aria-hidden />
@@ -471,7 +471,7 @@ export default function TrainingModule() {
               <li>Asignaciones activas: {trainingAssignments.filter(a => a.status !== "COMPLETED").length}</li>
               <li>Recordatorios pendientes: {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
             </ul>
-            <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-primary)", textDecoration: "none" }}>
+            <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-primary-active)", textDecoration: "none" }}>
               Incluir en pack de auditoría →
             </Link>
           </div>

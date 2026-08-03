@@ -19,10 +19,12 @@ export type NotificationRow = {
 };
 
 function typeAccent(type: string): { color: string; bg: string; Icon: typeof Bell } {
-  if (type === "ALERT") return { color: "var(--nf-danger)", bg: "rgba(201, 60, 55, 0.12)", Icon: AlertTriangle };
-  if (type === "WARNING") return { color: "var(--nf-warning)", bg: "rgba(214, 138, 26, 0.14)", Icon: AlertTriangle };
-  if (type === "SUCCESS") return { color: "var(--nf-success)", bg: "rgba(46, 139, 87, 0.12)", Icon: CheckCircle2 };
-  return { color: "var(--nf-primary)", bg: "rgba(82, 102, 246, 0.1)", Icon: Info };
+  // Los fondos translúcidos se quedaban claros en oscuro y el texto del tema
+  // encima daba 1.00:1. Los `-subtle` se redefinen con el tema.
+  if (type === "ALERT") return { color: "var(--nf-danger-text)", bg: "var(--nf-danger-subtle)", Icon: AlertTriangle };
+  if (type === "WARNING") return { color: "var(--nf-warning-text)", bg: "var(--nf-warning-subtle)", Icon: AlertTriangle };
+  if (type === "SUCCESS") return { color: "var(--nf-success-text)", bg: "var(--nf-success-subtle)", Icon: CheckCircle2 };
+  return { color: "var(--nf-primary-active)", bg: "var(--nf-primary-subtle)", Icon: Info };
 }
 
 export default function NotificationsModule({ serverItems }: { serverItems?: NotificationRow[] }) {
@@ -115,7 +117,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <Bell size={22} strokeWidth={2.25} aria-hidden />
@@ -135,13 +137,13 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <Sparkles size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{unreadCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Sin leer</div>
           </div>
         </div>
@@ -155,13 +157,13 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <CheckCircle2 size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{readCount}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Leídas</div>
           </div>
         </div>
@@ -192,7 +194,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "var(--nf-primary)",
+                color: "var(--nf-primary-active)",
               }}
             >
               <Bell size={26} strokeWidth={2} aria-hidden />
@@ -313,7 +315,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                           fontSize: 12,
                           fontWeight: 700,
                           color: "var(--nf-ink-2)",
-                          background: "#fff",
+                          background: "var(--nf-surface)",
                           border: "1px solid var(--nf-line)",
                           borderRadius: 10,
                           padding: "8px 14px",

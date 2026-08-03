@@ -325,7 +325,7 @@
   opacity: 1;
 }
 .nf-sidenav__pin:hover { background: var(--nf-surface-sunken); color: var(--nf-text-secondary); }
-.nf-sidenav__pin[data-pinned] { color: var(--nf-primary); }
+.nf-sidenav__pin[data-pinned] { color: var(--nf-primary-active); }
 
 /* Secciones del módulo activo */
 .nf-sidenav__sections {
@@ -690,3 +690,24 @@
 
 /* Las migas viven en el shell, encima del contenido de la página. */
 .nf-app-main-inner > .nf-breadcrumb { margin-bottom: var(--nf-space-3); }
+
+/* ============================================================================
+ * Objetivos táctiles (WCAG 2.5.8)
+ *
+ * El barrido midió 454 objetivos por debajo de 24×24 px y tres componentes
+ * concentraban el 79%: el conmutador de idioma (171 casos a 29.1×23 px — un
+ * píxel), el botón de orden de DataTable (131 a 60×18) y el enlace de migas
+ * (56 a 34.2×20). Se corrigen en el componente, no ruta por ruta.
+ * ========================================================================== */
+
+.nf-lang-switcher-btn {
+  min-height: 24px;
+  min-width: 24px;
+}
+
+.nf-breadcrumb__link,
+.nf-breadcrumb__current {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}

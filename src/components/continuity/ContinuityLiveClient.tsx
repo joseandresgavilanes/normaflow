@@ -163,7 +163,7 @@ export default function ContinuityLiveClient({ initial }: { initial: ContinuityP
       <Metric label="Brechas" value={initial.bcmSummary.totalGaps} icon={<AlertTriangle size={19} />} color={initial.bcmSummary.totalGaps ? "var(--nf-danger-text)" : "var(--nf-success-text)"} />
       <Metric label="Planes activados" value={initial.bcmSummary.activePlans} icon={<FileText size={19} />} color={initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined} />
       <Metric label="Pruebas" value={initial.summary.tests} icon={<ClipboardCheck size={19} />} color="#5266F6" />
-      <Metric label="Mejoras abiertas" value={initial.summary.openImprovements} icon={<Lightbulb size={19} />} color="#B45309" />
+      <Metric label="Mejoras abiertas" value={initial.summary.openImprovements} icon={<Lightbulb size={19} />} color="var(--nf-warning-text)" />
     </div>}
     {tab !== "panel" && <IsoSectionMetrics items={tab === "plans" ? [
       { label: "BCP registrados", value: initial.bcps.length }, { label: "DRP registrados", value: initial.drps.length }, { label: "Planes activados", value: initial.bcmSummary.activePlans, accent: initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined },
@@ -376,7 +376,7 @@ function PlanCard({ bcp, initial, pending, onRun }: { bcp: Bcp; initial: Continu
                 {canUpdate && activeActivation && <button type="button" className="nf-app-btn-danger" disabled={pending} onClick={() => setShowDeactivate(true)}><AlertTriangle size={13} aria-hidden />Desactivar plan</button>}
               </div>
               {canUpdate && bcp.status === "APPROVED" && !activeActivation && <div className="nf-continuity-detail-form-stack"><label>Motivo de activación<input className="nf-app-input" maxLength={2000} placeholder="Interrupción real o ejercicio…" value={activationReason} onChange={(e) => setActivationReason(e.target.value)} /></label><label>Escenario<select className="nf-app-input" value={activationScenarioId} onChange={(e) => setActivationScenarioId(e.target.value)}><option value="">Sin escenario</option>{bcp.scenarios.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}</select></label></div>}
-              {activeActivation && <div style={{ fontSize: 12, color: "var(--nf-danger-text)", padding: "10px 12px", borderRadius: 8, background: "#fff1f2" }}>Activado {new Date(activeActivation.activatedAt).toLocaleString()} · {activeActivation.reason}</div>}
+              {activeActivation && <div style={{ fontSize: 12, color: "var(--nf-danger-text)", padding: "10px 12px", borderRadius: 8, background: "var(--nf-danger-subtle)" }}>Activado {new Date(activeActivation.activatedAt).toLocaleString()} · {activeActivation.reason}</div>}
             </ContinuityDetailSection>
           </div>
         </div>
@@ -464,7 +464,7 @@ function Metric({ label, value, icon, color = "#5266F6" }: { label: string; valu
 function DetailMetric({ label, value }: { label: string; value: string }) {
   return <div className="nf-continuity-detail-metric"><div className="nf-continuity-detail-metric-label">{label}</div><strong className="nf-continuity-detail-metric-value">{value}</strong></div>;
 }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 6 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "3px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 6 }}>{value}</span>; }
 
 /* ─── Paquete de continuidad del negocio (ISO 22301) ─── */
 

@@ -4,7 +4,7 @@ export default function AccessDenied() {
   return (
     <Card>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-danger)", textTransform: "none", letterSpacing: "0.1em" }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-danger-text)", textTransform: "none", letterSpacing: "0.1em" }}>
           Acceso restringido
         </span>
         <h2 style={{ margin: 0, fontSize: 18, color: "var(--nf-ink)" }}>

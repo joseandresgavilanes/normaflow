@@ -7,6 +7,7 @@ import { Ic } from "./Icons";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 type NavLink = [MessageKey | string, string];
 
@@ -126,6 +127,7 @@ export function NfNav() {
         </nav>
 
         <div className="nf-nav-cta">
+          <ThemeSwitcher compact />
           <LanguageSwitcher compact />
           <Link className="nf-btn nf-btn--ghost nf-btn--sm" href="/login">{t("marketing.login")}</Link>
           <Link className="nf-btn nf-btn--primary nf-btn--sm" href="/demo">{t("marketing.freeDemo")} <Ic.arrow className="nf-arrow" /></Link>

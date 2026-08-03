@@ -11,11 +11,27 @@ import path from "node:path";
 const BASE = process.env.AUDIT_BASE ?? "http://localhost:3100";
 const OUT = process.argv[2] ?? path.join(process.cwd(), "audit-out");
 
-const VIEWPORTS = [
-  { name: "desktop", width: 1440, height: 900 },
-  { name: "tablet", width: 768, height: 1024 },
+/**
+ * Anchos del contrato responsive.
+ *
+ * Los seis llevan el barrido de 249 a 498 cargas (35-45 min), así que
+ * `AUDIT_VIEWPORTS` permite acotarlos por nombre; sin la variable se recorren
+ * todos. Los tres añadidos son los que faltaban: 360 es el móvil pequeño real,
+ * 1024 la tablet horizontal y 1280 el portátil corriente.
+ */
+const TODOS_LOS_VIEWPORTS = [
+  { name: "mobile-360", width: 360, height: 780 },
   { name: "mobile", width: 390, height: 844 },
+  { name: "tablet", width: 768, height: 1024 },
+  { name: "tablet-1024", width: 1024, height: 768 },
+  { name: "laptop-1280", width: 1280, height: 800 },
+  { name: "desktop", width: 1440, height: 900 },
 ];
+
+const SOLICITADOS = (process.env.AUDIT_VIEWPORTS ?? "").split(",").map((v) => v.trim()).filter(Boolean);
+const VIEWPORTS = SOLICITADOS.length
+  ? TODOS_LOS_VIEWPORTS.filter((v) => SOLICITADOS.includes(v.name))
+  : TODOS_LOS_VIEWPORTS;
 
 const PUBLIC_ROUTES = [
   "/home", "/pricing", "/features", "/login", "/signup", "/forgot-password",

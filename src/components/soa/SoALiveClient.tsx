@@ -65,7 +65,7 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
 
     {!current && <Card><div style={{ textAlign: "center", padding: 30 }}>
-      <FileCheck2 size={34} style={{ color: "var(--nf-primary)" }} />
+      <FileCheck2 size={34} style={{ color: "var(--nf-primary-active)" }} />
       <h3 style={{ margin: "12px 0 6px" }}>Aún no hay una Declaración de Aplicabilidad</h3>
       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 520, margin: "0 auto 16px" }}>Genera la primera versión: se crearán automáticamente las entradas de los {initial.catalogVersion?.version ? "93" : "93"} controles del catálogo ISO 27001, prellenadas con el estado operativo actual.</p>
       {initial.canCreate && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => createSoADraft({}))}><FilePlus2 size={15} /> Crear SoA v1 (93 controles)</button>}
@@ -74,9 +74,9 @@ export default function SoALiveClient({ initial }: { initial: SoAPayload }) {
     {current && <>
       <div className="nf-metric-strip">
         <Metric label="Controles" value={initial.summary.total} icon={<ShieldCheck size={19} />} />
-        <Metric label="Incluidos" value={initial.summary.included} icon={<CheckCircle2 size={19} />} color="#15803D" />
-        <Metric label="Excluidos" value={initial.summary.excluded} icon={<FileCheck2 size={19} />} color="#667085" />
-        <Metric label="Pendientes" value={initial.summary.pending} icon={<Search size={19} />} color="#B45309" />
+        <Metric label="Incluidos" value={initial.summary.included} icon={<CheckCircle2 size={19} />} color="var(--nf-success-text)" />
+        <Metric label="Excluidos" value={initial.summary.excluded} icon={<FileCheck2 size={19} />} color="var(--nf-text-secondary)" />
+        <Metric label="Pendientes" value={initial.summary.pending} icon={<Search size={19} />} color="var(--nf-warning-text)" />
       </div>
 
       <Card>
@@ -154,4 +154,4 @@ function EntryDetail({ row, initial, pending, onClose, onRun }: { row: Entry; in
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }

@@ -69,9 +69,9 @@ export default function DashboardModule({
   const orgName = isLive ? orgNameProp : state.session.orgName;
 
   const progressRows: { label: string; value: string; Icon: LucideIcon; bg: string; color: string; href: string }[] = [
-    { label: "ISO 9001:2015", value: iso9001Pct == null ? "—" : `${iso9001Pct}%`, Icon: Shield, bg: "#EEF2FF", color: "var(--nf-primary)", href: "/app/gap" },
-    { label: "ISO 27001:2022", value: iso27001Pct == null ? "—" : `${iso27001Pct}%`, Icon: Lock, bg: "var(--nf-success-subtle)", color: "var(--nf-success)", href: "/app/gap" },
-    { label: "Capacitación completada", value: `${trainPct}%`, Icon: GraduationCap, bg: "var(--nf-warning-border)", color: "var(--nf-warning)", href: "/app/training" },
+    { label: "ISO 9001:2015", value: iso9001Pct == null ? "—" : `${iso9001Pct}%`, Icon: Shield, bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", href: "/app/gap" },
+    { label: "ISO 27001:2022", value: iso27001Pct == null ? "—" : `${iso27001Pct}%`, Icon: Lock, bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", href: "/app/gap" },
+    { label: "Capacitación completada", value: `${trainPct}%`, Icon: GraduationCap, bg: "var(--nf-warning-border)", color: "var(--nf-warning-text)", href: "/app/training" },
   ];
 
   // No existe serie histórica de cumplimiento en ninguna parte del sistema,
@@ -217,10 +217,10 @@ export default function DashboardModule({
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginTop: 16 }}>
         {[
-          { href: "/app/gap", Icon: Target, title: "GAP assessment", desc: globalPct == null ? "Sin evaluación" : `${globalPct}% global`, color: "var(--nf-primary)" },
-          { href: "/app/audits", Icon: ClipboardCheck, title: "Auditorías", desc: `${isLive ? live.auditsUpcoming : state.audits.length} en calendario`, color: "var(--nf-success)" },
-          { href: "/app/risks", Icon: AlertTriangle, title: "Riesgos", desc: `${criticalRisks} críticos`, color: "var(--nf-danger)" },
-          { href: "/app/actions", Icon: Zap, title: "Plan de acción", desc: `${pendingActions} activas`, color: "var(--nf-warning)" },
+          { href: "/app/gap", Icon: Target, title: "GAP assessment", desc: globalPct == null ? "Sin evaluación" : `${globalPct}% global`, color: "var(--nf-primary-active)" },
+          { href: "/app/audits", Icon: ClipboardCheck, title: "Auditorías", desc: `${isLive ? live.auditsUpcoming : state.audits.length} en calendario`, color: "var(--nf-success-text)" },
+          { href: "/app/risks", Icon: AlertTriangle, title: "Riesgos", desc: `${criticalRisks} críticos`, color: "var(--nf-danger-text)" },
+          { href: "/app/actions", Icon: Zap, title: "Plan de acción", desc: `${pendingActions} activas`, color: "var(--nf-warning-text)" },
         ].map(({ href, Icon, title, desc, color }) => (
           <Link key={href} href={href} style={{ textDecoration: "none", color: "inherit" }}>
             <div className="nf-dash-card" style={{ padding: "18px 20px" }}>

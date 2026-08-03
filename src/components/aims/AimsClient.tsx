@@ -29,6 +29,7 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ActionDialogsProvider, usePromptAction } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
+import { toneChip } from "@/lib/tone";
 
 type Tab = "panel" | "systems" | "outputs" | "impact" | "risks" | "datasets" | "models" | "oversight" | "transparency" | "incidents" | "suppliers" | "changes" | "monitoring";
 
@@ -61,9 +62,9 @@ const QUALITY_LABEL: Record<string, string> = { NOT_ASSESSED: "Sin valorar", POO
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #0f7b8a", background: "var(--nf-info-subtle)", color: "var(--nf-info)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info-text)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const pct = (v: number | null | undefined) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
 
@@ -108,10 +109,10 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
       <IsoSectionHeader headingLevel={1} icon={BrainCircuit} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {s.humanRuleViolations > 0 && (
-        <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>
+        <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>
           <b>Regla humana incumplida:</b> {s.humanRuleViolations} salida(s) de IA con decisión sin revisor, sin fecha o promovida sin aprobación. Revísalas en la pestaña de revisión humana.
         </div>
       )}
@@ -136,7 +137,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
             <Row k="Rechazadas" v={s.outputsRejected} />
             <Row k="Promovidas a registro oficial" v={s.outputsPromoted} />
             <Row k="Incumplimientos detectados" v={s.humanRuleViolations} danger={s.humanRuleViolations > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Ninguna salida de IA se convierte en registro oficial sin pasar por DRAFT → HUMAN_REVIEW → APPROVED.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Ninguna salida de IA se convierte en registro oficial sin pasar por DRAFT → HUMAN_REVIEW → APPROVED.</p>
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Database size={16} aria-hidden />Gobernanza de datos y modelos</h3>
@@ -180,14 +181,14 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
             {initial.systems.map((system) => (
               <tr key={system.id}>
                 <td style={td}>{system.code}</td>
-                <td style={td}><b>{system.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{system.purpose}</div></td>
+                <td style={td}><b>{system.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{system.purpose}</div></td>
                 <td style={td}>{nameOf(system.ownerId)}</td>
-                <td style={td}>{system.provider ?? "—"}<div style={{ color: "#94a3b8", fontSize: 11 }}>{system.providerType}</div></td>
-                <td style={td}><span style={chip(LEVEL_COLORS[system.criticality] + "22", LEVEL_COLORS[system.criticality])}>{system.criticality}</span></td>
-                <td style={td}><span style={chip(CLASS_COLORS[system.classification] + "22", CLASS_COLORS[system.classification])}>{CLASS_LABEL[system.classification]}</span></td>
+                <td style={td}>{system.provider ?? "—"}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{system.providerType}</div></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[system.criticality])}>{system.criticality}</span></td>
+                <td style={td}><span style={toneChip(CLASS_COLORS[system.classification])}>{CLASS_LABEL[system.classification]}</span></td>
                 <td style={td}>{system.autonomy}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{STATUS_LABEL[system.status] ?? system.status}</span></td>
-                <td style={td}>{system.missingSafeguards.length ? <span style={{ color: "var(--nf-danger-text)" }}>{system.missingSafeguards.join(", ")}</span> : <span style={{ color: "var(--nf-success)" }}>completas</span>}</td>
+                <td style={td}>{system.missingSafeguards.length ? <span style={{ color: "var(--nf-danger-text)" }}>{system.missingSafeguards.join(", ")}</span> : <span style={{ color: "var(--nf-success-text)" }}>completas</span>}</td>
                 {(canUpdate || canApprove) && (
                   <td style={td}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 220 }}>
@@ -244,7 +245,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
 
       {tab === "outputs" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#a5f3fc", background: "var(--nf-info-subtle)", color: "var(--nf-info)", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "#a5f3fc", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontSize: 13 }}>
             Toda salida de IA queda aquí con su prompt, modelo, versión, autor y cambios humanos. Solo una persona con permiso de aprobación puede llevarla a APPROVED, y solo entonces puede promoverse a un registro oficial.
           </div>
           {canManage && (
@@ -274,9 +275,9 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{systemCode(a.systemId)}</td>
                 <td style={td}>{a.code}</td>
                 <td style={td}>{a.version}</td>
-                <td style={td}><span style={chip((LEVEL_COLORS[a.overallSeverity] ?? "#64748b") + "22", LEVEL_COLORS[a.overallSeverity] ?? "#64748b")}>{a.overallSeverity}</span></td>
-                <td style={td}><span style={chip(CLASS_COLORS[a.classification] + "22", CLASS_COLORS[a.classification])}>{CLASS_LABEL[a.classification]}</span></td>
-                <td style={td}><span style={chip(REVIEW_COLORS[a.reviewStatus] + "22", REVIEW_COLORS[a.reviewStatus])}>{REVIEW_LABEL[a.reviewStatus]}</span></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[a.overallSeverity] ?? "#64748b")}>{a.overallSeverity}</span></td>
+                <td style={td}><span style={toneChip(CLASS_COLORS[a.classification])}>{CLASS_LABEL[a.classification]}</span></td>
+                <td style={td}><span style={toneChip(REVIEW_COLORS[a.reviewStatus])}>{REVIEW_LABEL[a.reviewStatus]}</span></td>
                 {(canUpdate || canApprove) && (
                   <td style={td}>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -284,7 +285,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                       {canApprove && a.reviewStatus === "HUMAN_REVIEW" && (
                         <>
                           <button disabled={pending} onClick={() => run(() => decideHumanReview("impactAssessment", a.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                          <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar evaluación de impacto", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("impactAssessment", a.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger-text)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                          <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar evaluación de impacto", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("impactAssessment", a.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
                         </>
                       )}
                     </div>
@@ -312,8 +313,8 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{risk.title}</td>
                 <td style={td}>{risk.category}</td>
                 <td style={td}>{risk.likelihood}×{risk.impact}</td>
-                <td style={td}><span style={chip(LEVEL_COLORS[risk.inherentLevel] + "22", LEVEL_COLORS[risk.inherentLevel])}>{risk.inherentScore ?? "—"}</span></td>
-                <td style={td}><span style={chip(LEVEL_COLORS[risk.residualLevel] + "22", LEVEL_COLORS[risk.residualLevel])}>{risk.residualScore ?? "—"}</span></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[risk.inherentLevel])}>{risk.inherentScore ?? "—"}</span></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[risk.residualLevel])}>{risk.residualScore ?? "—"}</span></td>
                 <td style={td}>{risk.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>{ACCEPT_LABEL[risk.acceptability]}</span> : ACCEPT_LABEL[risk.acceptability]}</td>
                 <td style={td}>{risk.treatment}</td>
                 <td style={td}>{risk.status}</td>
@@ -428,13 +429,13 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{incident.code}</td>
                 <td style={td}>{systemCode(incident.systemId)}</td>
                 <td style={td}>{incident.type}</td>
-                <td style={td}><span style={chip(LEVEL_COLORS[incident.severity] + "22", LEVEL_COLORS[incident.severity])}>{incident.severity}</span></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[incident.severity])}>{incident.severity}</span></td>
                 <td style={td}>{incident.title}</td>
                 <td style={td}>{fmt(incident.detectedAt)}</td>
                 <td style={td}>{incident.affectedCount ?? "—"}</td>
-                <td style={td}>{incident.notificationRequired ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Requerida</span> : "—"}</td>
+                <td style={td}>{incident.notificationRequired ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Requerida</span> : "—"}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{INCIDENT_LABEL[incident.status] ?? incident.status}</span></td>
-                {(canUpdate || canManage) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("incident", incident as unknown as Record<string, unknown>)}>Editar</button>}{canManage && (next ? <button disabled={pending} onClick={() => run(() => transitionAIIncident(incident.id, { to: next as never }))} style={miniBtn}><ArrowRight size={12} /> {INCIDENT_LABEL[next]}</button> : <span style={{ color: "#94a3b8" }}>Cerrado</span>)}</td>}
+                {(canUpdate || canManage) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("incident", incident as unknown as Record<string, unknown>)}>Editar</button>}{canManage && (next ? <button disabled={pending} onClick={() => run(() => transitionAIIncident(incident.id, { to: next as never }))} style={miniBtn}><ArrowRight size={12} /> {INCIDENT_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
               </tr>
             );
           })}
@@ -483,8 +484,8 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
               <td style={td}>{systemCode(change.systemId)}</td>
               <td style={td}>{change.title}</td>
               <td style={td}>{change.changeType}</td>
-              <td style={td}>{change.requiresReassessment ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Requerida</span> : "—"}</td>
-              <td style={td}><span style={chip(REVIEW_COLORS[change.reviewStatus] + "22", REVIEW_COLORS[change.reviewStatus])}>{REVIEW_LABEL[change.reviewStatus]}</span></td>
+              <td style={td}>{change.requiresReassessment ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Requerida</span> : "—"}</td>
+              <td style={td}><span style={toneChip(REVIEW_COLORS[change.reviewStatus])}>{REVIEW_LABEL[change.reviewStatus]}</span></td>
               <td style={td}>{change.reviewerId ? `${nameOf(change.reviewerId)} · ${fmt(change.reviewedAt)}` : "—"}</td>
               <td style={td}>{fmt(change.implementedAt)}</td>
               {(canUpdate || canManage || canApprove) && (
@@ -495,7 +496,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                     {canApprove && change.reviewStatus === "HUMAN_REVIEW" && (
                       <>
                         <button disabled={pending} onClick={() => run(() => decideHumanReview("changeRequest", change.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                        <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar solicitud de cambio", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("changeRequest", change.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger-text)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                        <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar solicitud de cambio", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("changeRequest", change.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
                       </>
                     )}
                     {canManage && change.reviewStatus === "APPROVED" && !change.implementedAt && <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => run(() => implementAIChangeRequest(change.id))}>Marcar implementado</button>}
@@ -527,7 +528,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
               <td style={td}>{metric.threshold ?? "—"}</td>
               <td style={td}>{metric.baseline ?? "—"}</td>
               <td style={td}>{metric.breached ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
-              <td style={td}>{metric.driftDetected ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sí</span> : "No"}</td>
+              <td style={td}>{metric.driftDetected ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sí</span> : "No"}</td>
               {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("metric", metric as unknown as Record<string, unknown>)}>Editar</button></td>}
             </tr>
           ))}
@@ -724,20 +725,20 @@ function DatasetRow({ dataset, canManage, canUpdate, pending, run, openEditor }:
     <Fragment>
       <tr>
         <td style={td}>{dataset.code}</td>
-        <td style={td}><b>{dataset.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{dataset.purpose ?? "—"}</div></td>
+        <td style={td}><b>{dataset.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{dataset.purpose ?? "—"}</div></td>
         <td style={td}>{dataset.classification}</td>
-        <td style={td}>{dataset.containsSpecialCategories ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Categorías especiales</span> : dataset.containsPersonalData ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sí</span> : "No"}</td>
+        <td style={td}>{dataset.containsSpecialCategories ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Categorías especiales</span> : dataset.containsPersonalData ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sí</span> : "No"}</td>
         <td style={td}>{dataset.legalBasis}</td>
         <td style={td}>{dataset.recordCount ?? "—"}</td>
-        <td style={td}>{dataset.qualityScore ?? "—"}<div style={{ color: "#94a3b8", fontSize: 11 }}>{QUALITY_LABEL[dataset.qualityLevel]}</div></td>
+        <td style={td}>{dataset.qualityScore ?? "—"}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{QUALITY_LABEL[dataset.qualityLevel]}</div></td>
         <td style={td}>{dataset.sources}</td>
         <td style={td}>{dataset.lineageSteps}{!dataset.traceable && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>sin procedencia</div>}</td>
-        <td style={td}>{dataset.biasFlags.length ? <span style={{ color: "var(--nf-danger-text)", fontSize: 12 }}>{dataset.biasFlags.join(", ")}</span> : <span style={{ color: "var(--nf-success)" }}>revisado</span>}</td>
+        <td style={td}>{dataset.biasFlags.length ? <span style={{ color: "var(--nf-danger-text)", fontSize: 12 }}>{dataset.biasFlags.join(", ")}</span> : <span style={{ color: "var(--nf-success-text)" }}>revisado</span>}</td>
         <td style={td}>{dataset.fitForTraining ? "Sí" : <span style={{ color: "var(--nf-danger-text)" }}>No</span>}</td>
         {(canManage || canUpdate) && <td style={td}><button style={miniBtn} onClick={() => setOpen((v) => !v)}>{open ? "Cerrar" : "Gestionar"}</button>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("dataset", dataset as unknown as Record<string, unknown>)}>Editar</button>}</td>}
       </tr>
       {open && (canManage || canUpdate) && (
-        <tr><td colSpan={12} style={{ ...td, background: "#f8fafc" }}>
+        <tr><td colSpan={12} style={{ ...td, background: "var(--nf-surface-muted)" }}>
           <div style={{ display: "grid", gap: 10 }}>
             <div>
               <strong style={{ fontSize: 12 }}>Calidad de datos (0-100)</strong>
@@ -825,10 +826,10 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
       <tr>
         <td style={td}>{model.code}</td>
         <td style={td}>{code}</td>
-        <td style={td}>{model.modelName}<div style={{ color: "#94a3b8", fontSize: 11 }}>{model.algorithm ?? model.provider ?? "—"}</div></td>
+        <td style={td}>{model.modelName}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{model.algorithm ?? model.provider ?? "—"}</div></td>
         <td style={td}>{model.version}</td>
         <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{model.stage}</span></td>
-        <td style={td}><span style={chip(REVIEW_COLORS[model.reviewStatus] + "22", REVIEW_COLORS[model.reviewStatus])}>{REVIEW_LABEL[model.reviewStatus]}</span></td>
+        <td style={td}><span style={toneChip(REVIEW_COLORS[model.reviewStatus])}>{REVIEW_LABEL[model.reviewStatus]}</span></td>
         <td style={td}>{model.lastEvaluation ? `${model.lastEvaluation.outcome} · ${fmt(model.lastEvaluation.evaluatedAt)}` : "—"}</td>
         <td style={td}>{pct(model.lastEvaluation?.accuracy)}</td>
         <td style={td}>{pct(model.lastEvaluation?.fairnessScore)}</td>
@@ -845,7 +846,7 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
               {canApprove && model.reviewStatus === "HUMAN_REVIEW" && (
                 <>
                   <button disabled={pending} onClick={() => run(() => decideHumanReview("modelVersion", model.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar versión de modelo", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("modelVersion", model.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger-text)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar versión de modelo", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("modelVersion", model.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
                 </>
               )}
               {canApprove && model.reviewStatus === "APPROVED" && model.stage !== "PRODUCTION" && <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => run(() => promoteModelToProduction(model.id))}>Promover a producción</button>}
@@ -920,9 +921,9 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
         <td style={td}>{nameOf(output.requestedById)}</td>
         <td style={td}>{fmt(output.generatedAt)}</td>
         <td style={td}>{output.edited ? "Sí" : "No"}</td>
-        <td style={td}>{output.containsPersonalData ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sí</span> : "No"}</td>
+        <td style={td}>{output.containsPersonalData ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sí</span> : "No"}</td>
         <td style={td}>
-          <span style={chip(REVIEW_COLORS[output.reviewStatus] + "22", REVIEW_COLORS[output.reviewStatus])}>{REVIEW_LABEL[output.reviewStatus]}</span>
+          <span style={toneChip(REVIEW_COLORS[output.reviewStatus])}>{REVIEW_LABEL[output.reviewStatus]}</span>
           {!output.integrity.valid && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>{output.integrity.problems.join("; ")}</div>}
         </td>
         <td style={td}>{output.reviewerId ? `${nameOf(output.reviewerId)} · ${fmt(output.reviewedAt)}` : "—"}</td>
@@ -937,7 +938,7 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
               {canApprove && output.reviewStatus === "HUMAN_REVIEW" && (
                 <>
                   <button disabled={pending} onClick={() => run(() => decideHumanReview("output", output.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar salida de IA", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("output", output.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger-text)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar salida de IA", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("output", output.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
                 </>
               )}
               {canManage && output.reviewStatus === "REJECTED" && <button disabled={pending} style={miniBtn} onClick={() => run(() => reopenForCorrection("output", output.id))}>Reabrir para corregir</button>}
@@ -949,7 +950,7 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
         )}
       </tr>
       {editing && (
-        <tr><td colSpan={12} style={{ ...td, background: "#f8fafc" }}>
+        <tr><td colSpan={12} style={{ ...td, background: "var(--nf-surface-muted)" }}>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <input aria-label="Texto editado por una persona" style={{ ...input, flex: 1, minWidth: 280 }} placeholder="Texto editado por una persona" value={edits} onChange={(e) => setEdits(e.target.value)} />
             <button disabled={pending || !edits.trim()} style={primaryBtn} onClick={() => run(async () => { await editAIOutput(output.id, edits); setEditing(false); setEdits(""); })}>Guardar edición humana</button>

@@ -97,7 +97,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     fontWeight: 700,
                     background: "rgba(255,255,255,0.75)",
                     border: "1px solid rgba(82, 102, 246, 0.12)",
-                    color: "var(--nf-primary)",
+                    color: "var(--nf-primary-active)",
                   }}
                 >
                   <Building2 size={14} strokeWidth={2.25} aria-hidden />
@@ -132,7 +132,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
 
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", display: "block", marginBottom: 16 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "var(--nf-primary)" }} />
+              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "var(--nf-primary-active)" }} />
               Nombre visible
             </span>
             <input

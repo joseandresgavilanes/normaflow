@@ -229,7 +229,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
       />
 
       {!readOnlyLive && !canEdit && (
-        <p style={{ fontSize: 13, color: "var(--nf-warning)", marginBottom: 16 }}>
+        <p style={{ fontSize: 13, color: "var(--nf-warning-text)", marginBottom: 16 }}>
           Su rol no permite editar respuestas GAP. Puede revisar puntuaciones y exportar.
         </p>
       )}
@@ -277,7 +277,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 {isPending ? "Activando…" : `Activar ${standard === "iso9001" ? "ISO 9001:2015" : "ISO 27001:2022"}`}
               </button>
             ) : (
-              <p style={{ fontSize: 12, color: "var(--nf-warning)" }}>
+              <p style={{ fontSize: 12, color: "var(--nf-warning-text)" }}>
                 Pide a un administrador o responsable de cumplimiento que active la norma.
               </p>
             )}
@@ -293,7 +293,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 style={{
                   fontSize: 44,
                   fontWeight: 600,
-                  color: avg >= 80 ? "var(--nf-success)" : avg >= 60 ? "var(--nf-warning)" : "var(--nf-danger)",
+                  color: avg >= 80 ? "var(--nf-success-text)" : avg >= 60 ? "var(--nf-warning-text)" : "var(--nf-danger-text)",
                   lineHeight: 1,
                 }}
               >
@@ -302,9 +302,9 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             </div>
             <div style={{ display: "flex", gap: 16 }}>
               {[
-                { label: "Conforme", count: compliant, color: "var(--nf-success)" },
-                { label: "Parcial", count: partial, color: "var(--nf-warning)" },
-                { label: "No conforme", count: nonCompliant, color: "var(--nf-danger)" },
+                { label: "Conforme", count: compliant, color: "var(--nf-success-text)" },
+                { label: "Parcial", count: partial, color: "var(--nf-warning-text)" },
+                { label: "No conforme", count: nonCompliant, color: "var(--nf-danger-text)" },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 600, color: s.color }}>{s.count}</div>
@@ -323,7 +323,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 disabled={readOnlyLive && !liveEditable}
                 style={{
                   textAlign: "left",
-                  background: readOnlyLive && !liveEditable ? "transparent" : "#f3f6fa",
+                  background: readOnlyLive && !liveEditable ? "transparent" : "var(--nf-surface-muted)",
                   border: "1px solid rgba(82, 102, 246, 0.08)",
                   borderRadius: 10,
                   padding: "12px 14px",
@@ -332,7 +332,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               >
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                   <div>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary)", marginRight: 8 }}>{g.clause}.</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)", marginRight: 8 }}>{g.clause}.</span>
                     <span style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 500 }}>{g.title}</span>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -340,7 +340,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: g.score >= 80 ? "var(--nf-success)" : g.score >= 60 ? "var(--nf-warning)" : "var(--nf-danger)",
+                        color: g.score >= 80 ? "var(--nf-success-text)" : g.score >= 60 ? "var(--nf-warning-text)" : "var(--nf-danger-text)",
                       }}
                     >
                       {g.score}%
@@ -419,7 +419,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
               justifyContent: "center",
               gap: 8,
               background: "transparent",
-              color: "var(--nf-success)",
+              color: "var(--nf-success-text)",
               border: "1px solid #16A34A50",
               borderRadius: 10,
               padding: "11px",
@@ -481,7 +481,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                         padding: "6px 12px",
                         borderRadius: 6,
                         border: `1px solid ${q.answer === a ? "var(--nf-primary)" : "var(--nf-line)"}`,
-                        background: q.answer === a ? "var(--nf-primary)" : "#f3f6fa",
+                        background: q.answer === a ? "var(--nf-primary)" : "var(--nf-surface-muted)",
                         color: q.answer === a ? "#fff" : "var(--nf-ink)",
                         fontSize: 12,
                         fontWeight: 600,

@@ -15,9 +15,9 @@
 .nf-modal-error {
   padding: 10px 12px;
   border-radius: var(--nf-radius-md);
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
-  color: #B91C1C;
+  background: var(--nf-danger-subtle);
+  border: 1px solid var(--nf-danger-border);
+  color: var(--nf-danger-text);
   font-size: 13px;
   font-weight: 500;
 }
@@ -33,7 +33,7 @@
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   color: var(--nf-ink) !important;
   font-weight: 500 !important;
   color-scheme: light;
@@ -142,10 +142,10 @@
 .nf-modal-error {
   grid-column: 1 / -1;
   padding: 10px 12px;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--nf-danger-border);
   border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
   font-size: 12px;
   line-height: 1.4;
 }
@@ -391,7 +391,7 @@
 }
 
 .nf-dash-card {
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   border-radius: 12px;
   padding: 24px;

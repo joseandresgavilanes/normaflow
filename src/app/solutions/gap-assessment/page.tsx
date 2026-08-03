@@ -88,7 +88,7 @@ export default function GapAssessmentLandingPage() {
                 <div key={r.c}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
                     <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--nf-ink)" }}>{r.c}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)" }}>{r.s}%</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger-text)" }}>{r.s}%</span>
                   </div>
                   <div style={{ height: 6, background: "var(--nf-glass-2)", borderRadius: 99, overflow: "hidden" }}>
                     <div style={{ width: `${r.s}%`, height: "100%", background: r.s >= 75 ? "linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2))" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)", boxShadow: r.s >= 75 ? "0 0 8px var(--nf-accent)" : "none" }} />

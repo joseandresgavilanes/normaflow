@@ -34,7 +34,7 @@ type Tab =
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const REVIEW_LABEL: Record<string, string> = {
@@ -222,14 +222,14 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>
             {SECTION_META[tab].sub}
           </p>
         </div>
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Consumo periodo" value={Math.round(s.periodConsumption)} suffix=" kWh" />
@@ -266,7 +266,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             <Row k="Planes abiertos" v={s.actionsOpen} danger={s.actionsOpen > 0} />
             <Row k="Verificaciones cerradas" v={s.savingsVerified} />
             <Row k="Ahorro absoluto verificado" v={Math.round(s.absoluteSavings)} suffix=" kWh" />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Las fórmulas de EnPI y ahorro son configurables y versionadas; al cambiar, la versión previa queda supersedida.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Las fórmulas de EnPI y ahorro son configurables y versionadas; al cambiar, la versión previa queda supersedida.</p>
           </div>
           </div>
         </>
@@ -304,7 +304,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.uses.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.description ?? ""}</div></td>
+                <td style={td}><b>{row.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.description ?? ""}</div></td>
                 <td style={td}>{row.source?.code ?? "—"}</td>
                 <td style={td}>{row.equipment ?? "—"}</td>
                 <td style={td}>{row.annualEstimate ?? "—"} {row.unit}</td>
@@ -333,7 +333,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.reviews.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.scope ?? ""}</div></td>
+                <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.scope ?? ""}</div></td>
                 <td style={td}>{fmt(row.periodStart)} → {fmt(row.periodEnd)}</td>
                 <td style={td}><span className={`nf-energy-review-status nf-energy-review-status--${row.status.toLowerCase()}`}>{REVIEW_LABEL[row.status] ?? row.status}</span></td>
                 <td style={td}>
@@ -370,7 +370,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.seus.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.energyUse.code}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.energyUse.name}</div></td>
+                <td style={td}><b>{row.energyUse.code}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.energyUse.name}</div></td>
                 <td style={td}>{row.consumptionShare ?? "—"}%</td>
                 <td style={td}>{row.improvementPotential ?? "—"}%</td>
                 <td style={td}>{row.significant ? "Sí" : "No"}{row.autoSignificant && !row.significant ? " (criterio)" : ""}</td>
@@ -421,7 +421,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
                 <td style={td}>{row.formulaVersion}</td>
-                <td style={td}><b>{row.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.unit}</div></td>
+                <td style={td}><b>{row.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.unit}</div></td>
                 <td style={td}>{energyLabel(row.formulaKind)}</td>
                 <td style={td}>{row.currentValue ?? "—"}</td>
                 <td style={td}>{row.baselineValue ?? "—"}</td>
@@ -444,7 +444,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
           <Table head={["Medidor", "Fuente", "Unidad", "Lecturas", "Calibración", ...(live && can.update ? ["Acciones"] : [])]} title="Registro de medidores" description="Gestiona los medidores asociados a las fuentes de energía y su calendario de calibración.">
             {initial.meters.map((row) => (
               <tr key={row.id}>
-                <td style={td}><b>{row.code}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.name}</div></td>
+                <td style={td}><b>{row.code}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.name}</div></td>
                 <td style={td}>{row.source?.code ?? "—"}</td>
                 <td style={td}>{row.unit}</td>
                 <td style={td}>{row._count.readings}</td>
@@ -487,7 +487,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.variables.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.description ?? ""}</div></td>
+                <td style={td}><b>{row.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.description ?? ""}</div></td>
                 <td style={td}>{energyLabel(row.variableType)}</td>
                 <td style={td}>{row.unit}</td>
                 <td style={td}><EnergyStatus value={row.active ? "ACTIVE" : "ARCHIVED"} /></td>
@@ -505,7 +505,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.factors.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.description ?? ""}</div></td>
+                <td style={td}><b>{row.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.description ?? ""}</div></td>
                 <td style={td}>{row.value}</td>
                 <td style={td}>{row.unit}</td>
                 <td style={td}>{fmt(row.effectiveFrom)}</td>
@@ -636,7 +636,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
             {initial.designs.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.energyConsiderations?.slice(0, 80) ?? ""}</div></td>
+                <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.energyConsiderations?.slice(0, 80) ?? ""}</div></td>
                 <td style={td}>{row.projectReference ?? "—"}</td>
                 <td style={td}><EnergyStatus value={row.status} /></td>
                 <td style={td}>{fmt(row.reviewedAt)}</td>
@@ -835,7 +835,7 @@ function NewBaselineForm({ seus, pending, run, onDone }: { seus: EnergyPayload["
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <p style={{ margin: 0, color: "#94a3b8", fontSize: 11 }}>Usa el mismo código de una línea base existente para crear una nueva versión (la anterior queda supersedida automáticamente).</p>
+      <p style={{ margin: 0, color: "var(--nf-text-subtle)", fontSize: 11 }}>Usa el mismo código de una línea base existente para crear una nueva versión (la anterior queda supersedida automáticamente).</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <input aria-label="Código (opcional, para versionar)" style={input} placeholder="Código (opcional, para versionar)" value={f.code} onChange={(e) => set("code", e.target.value)} />
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
@@ -858,7 +858,7 @@ function NewEnpiForm({ seus, baselines, pending, run, onDone }: { seus: EnergyPa
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <p style={{ margin: 0, color: "#94a3b8", fontSize: 11 }}>Usa el mismo código de un EnPI existente para crear una nueva versión de la fórmula (la anterior queda supersedida).</p>
+      <p style={{ margin: 0, color: "var(--nf-text-subtle)", fontSize: 11 }}>Usa el mismo código de un EnPI existente para crear una nueva versión de la fórmula (la anterior queda supersedida).</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
         <input aria-label="Código (opcional, para versionar)" style={input} placeholder="Código (opcional, para versionar)" value={f.code} onChange={(e) => set("code", e.target.value)} />
         <input aria-label="Nombre del EnPI" style={input} placeholder="Nombre del EnPI" value={f.name} onChange={(e) => set("name", e.target.value)} />

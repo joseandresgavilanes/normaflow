@@ -76,7 +76,7 @@ const ACTION_TONE: Record<string, string> = {
   deactivate: "var(--nf-danger)",
   approve: "var(--nf-success)",
   reject: "var(--nf-danger)",
-  transition: "#6B3FB5",
+  transition: "var(--nf-primary-active)",
   submit_review: "var(--nf-warning)",
   obsolete: "#5E6B7A",
   publish: "var(--nf-success)",

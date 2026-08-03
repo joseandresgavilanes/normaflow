@@ -26,7 +26,7 @@ export const MARKETING_CASES = [
     person: "María Torres",
     role: "Directora de Calidad",
     initials: "MT",
-    color: "#123C66",
+    color: "var(--nf-primary-active)",
     challenge:
       "Documentación dispersa en carpetas de red y correo. Cada auditoría suponía semanas de búsqueda de evidencias.",
     solution:
@@ -47,7 +47,7 @@ export const MARKETING_CASES = [
     person: "Carlos Méndez",
     role: "Responsable de Calidad",
     initials: "CM",
-    color: "#2E8B57",
+    color: "var(--nf-success-text)",
     challenge: "Primera certificación ISO 9001 con equipo reducido y procesos en varias delegaciones.",
     solution: "Plantillas por cláusula, indicadores compartidos y auditorías internas con checklist único.",
     metrics: [

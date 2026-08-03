@@ -126,9 +126,9 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
 
       <div className="nf-metric-strip">
         <Stat label="Total" value={stats.total} icon={<FileText size={20} />} />
-        <Stat label="Vigentes" value={stats.valid} icon={<ShieldCheck size={20} />} color="#15803D" />
-        <Stat label="Por revisar" value={stats.pending} icon={<Loader2 size={20} />} color="#B45309" />
-        <Stat label="Vencidas" value={stats.expired} icon={<Archive size={20} />} color="#B91C1C" />
+        <Stat label="Vigentes" value={stats.valid} icon={<ShieldCheck size={20} />} color="var(--nf-success-text)" />
+        <Stat label="Por revisar" value={stats.pending} icon={<Loader2 size={20} />} color="var(--nf-warning-text)" />
+        <Stat label="Vencidas" value={stats.expired} icon={<Archive size={20} />} color="var(--nf-danger-text)" />
       </div>
 
       {error && <div className="nf-alert nf-alert--error">{error}</div>}

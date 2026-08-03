@@ -49,7 +49,7 @@
   border: 1px solid #dfe5f0;
   border-left: 3px solid #5266f6;
   border-radius: 12px;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 5px 16px rgba(15, 23, 42, .045);
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
@@ -97,7 +97,7 @@
   border: 1px solid #e0e5ef;
   border-radius: 7px;
   color: var(--nf-ink-3);
-  background: #fff;
+  background: var(--nf-surface);
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
@@ -233,7 +233,7 @@
   padding: 8px 10px;
   border: 1px solid var(--nf-line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
   color: var(--nf-ink-2);
   font-size: 12px;

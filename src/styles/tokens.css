@@ -271,15 +271,22 @@
   --nf-surface-selected: #232842;
   --nf-overlay: rgba(0, 0, 0, 0.62);
 
-  --nf-border: #2e3238;
-  --nf-border-subtle: #26292e;
-  --nf-border-strong: #565c66;
-  --nf-border-focus: #8b98ff;
+  /* Medido: #2e3238 daba 1.32:1 sobre la superficie y #565c66 daba 2.53:1.
+     WCAG 1.4.11 exige 3:1 cuando el borde es lo único que identifica el
+     componente — el caso de los campos, las filas de tabla y las tarjetas.
+     `--nf-border` se sube solo lo justo para que se vea la separación;
+     `--nf-border-strong`, que es el que llevan los controles, pasa a 3.47:1. */
+  --nf-border: #41464f;        /* 1.80:1 — decorativo, separa sin encajonar */
+  --nf-border-subtle: #33373e; /* aún más tenue, solo agrupa */
+  --nf-border-strong: #6a717c; /* 3.47:1 sobre superficie, 3.77:1 sobre lienzo */
+  --nf-border-focus: #8b98ff;  /* 6.53:1 */
 
   --nf-text-primary: #f2f3f5;
   --nf-text-secondary: #c2c6cd;
   --nf-text-muted: #9ba1ab;
-  --nf-text-subtle: #7d848f;
+  /* #7d848f daba 3.97:1 sobre --nf-surface-hover, justo donde el usuario está
+     mirando, y 4.52:1 sobre la superficie: dos centésimas de margen. */
+  --nf-text-subtle: #8a919c;   /* 5.85 lienzo · 5.37 superficie · 4.71 hover */
   --nf-text-link: #93a1ff;
 
   /* En oscuro la marca se desatura y aclara: nunca se invierte el hex claro. */
@@ -290,6 +297,8 @@
   --nf-primary-subtle-hover: #262d47;
   --nf-primary-border: #39416b;
   --nf-on-primary: #10121a;
+  /* Sin redefinir se quedaba en blanco: 3.01:1 sobre la marca oscura. */
+  --nf-text-on-primary: #10121a;
 
   --nf-success: #3fbf6d;
   --nf-success-text: #6fd894;
@@ -319,6 +328,13 @@
   --nf-disabled-bg: #24272d;
   --nf-disabled-border: #2e3238;
   --nf-disabled-text: #7d848f;
+
+  /* Alias heredados que apuntaban a primitivas claras y no se redefinían.
+     Casi todos viven en marketing, pero el shell los hereda igual. */
+  --nf-line-2: #33373e;
+  --nf-accent-3: #93a1ff;
+  --nf-success-mid: #1d3b28;
+  --nf-shadow-glow: 0 8px 24px rgba(123, 139, 255, 0.22);
 
   --nf-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
   --nf-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.45);
@@ -494,5 +510,94 @@
     --nf-border-subtle: var(--nf-c-neutral-300);
     --nf-text-muted: var(--nf-c-neutral-700);
     --nf-text-subtle: var(--nf-c-neutral-600);
+  }
+  /* Con selector `:root` a secas este bloque perdía por especificidad contra
+     `:root[data-theme="dark"]`, así que un usuario con baja visión que además
+     usara el tema oscuro perdía las cuatro correcciones sin enterarse. */
+  :root[data-theme="dark"] {
+    --nf-border: #767d89;
+    --nf-border-subtle: #6a717c;
+    --nf-text-muted: #c2c6cd;
+    --nf-text-subtle: #b0b6bf;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Preferencia del sistema
+ *
+ * El bloque oscuro solo respondía a `data-theme="dark"`, que nadie escribía:
+ * era CSS que jamás había renderizado. Aquí se honra la preferencia del
+ * sistema operativo cuando el usuario no ha elegido explícitamente, y
+ * `data-theme="light"` la anula por especificidad (0,2,0 frente a 0,1,0).
+ * ------------------------------------------------------------------------ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --nf-background: #121316;
+    --nf-surface: #1a1c20;
+    --nf-surface-muted: #212429;
+    --nf-surface-sunken: #0e0f12;
+    --nf-surface-hover: #24272d;
+    --nf-surface-selected: #232842;
+    --nf-overlay: rgba(0, 0, 0, 0.62);
+
+    --nf-border: #41464f;
+    --nf-border-subtle: #33373e;
+    --nf-border-strong: #6a717c;
+    --nf-border-focus: #8b98ff;
+
+    --nf-text-primary: #f2f3f5;
+    --nf-text-secondary: #c2c6cd;
+    --nf-text-muted: #9ba1ab;
+    --nf-text-subtle: #8a919c;
+    --nf-text-link: #93a1ff;
+
+    --nf-primary: #7b8bff;
+    --nf-primary-hover: #93a1ff;
+    --nf-primary-active: #b0baff;
+    --nf-primary-subtle: #1e2338;
+    --nf-primary-subtle-hover: #262d47;
+    --nf-primary-border: #39416b;
+    --nf-on-primary: #10121a;
+    --nf-text-on-primary: #10121a;
+
+    --nf-success: #3fbf6d;
+    --nf-success-text: #6fd894;
+    --nf-success-subtle: #12241a;
+    --nf-success-border: #1d3b28;
+
+    --nf-warning: #e0952f;
+    --nf-warning-text: #f0b45f;
+    --nf-warning-subtle: #251c0e;
+    --nf-warning-border: #3d2e14;
+
+    --nf-danger: #f0574f;
+    --nf-danger-text: #ff847c;
+    --nf-danger-subtle: #2a1414;
+    --nf-danger-border: #4a1f1e;
+
+    --nf-info: #3aa8c4;
+    --nf-info-text: #6fc9e0;
+    --nf-info-subtle: #0f2429;
+    --nf-info-border: #1b3d47;
+
+    --nf-neutral-subtle: #24272d;
+    --nf-neutral-text: #c2c6cd;
+    --nf-focus-ring: #93a1ff;
+
+    --nf-disabled-bg: #24272d;
+    --nf-disabled-border: #41464f;
+    --nf-disabled-text: #8a919c;
+
+    --nf-line-2: #33373e;
+    --nf-accent-3: #93a1ff;
+    --nf-success-mid: #1d3b28;
+    --nf-shadow-glow: 0 8px 24px rgba(123, 139, 255, 0.22);
+
+    --nf-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --nf-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --nf-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --nf-elevation-4: 0 24px 56px rgba(0, 0, 0, 0.6);
+
+    color-scheme: dark;
   }
 }

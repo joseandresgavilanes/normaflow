@@ -38,6 +38,7 @@ import { ActionDialogsProvider, useChoiceAction, usePromptAction, useNoticeActio
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
 import { labelForKeyOrRaw } from "@/lib/field-labels";
+import { toneChip } from "@/lib/tone";
 
 type Tab =
   | "panel" | "obligations" | "sources" | "risks" | "controls" | "evaluations" | "calendar"
@@ -80,9 +81,9 @@ const PLAN_LABEL: Record<string, string> = { DRAFT: "Borrador", APPROVED: "Aprob
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #8c2f39", background: "var(--nf-danger-subtle)", color: "#8c2f39", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-danger-text)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined) => (typeof v === "number" ? v.toLocaleString("es-ES") : "—");
@@ -90,7 +91,7 @@ const level = (value: string) => LEVEL_COLORS[value] ?? "#64748b";
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
 const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
-const toggleBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "6px 10px", minHeight: 28, border: "1px solid var(--nf-line)", borderRadius: 8, background: "#fff", color: "var(--nf-ink)", fontWeight: 600, fontSize: 11, fontFamily: "inherit", cursor: "pointer" };
+const toggleBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "6px 10px", minHeight: 28, border: "1px solid var(--nf-line)", borderRadius: 8, background: "var(--nf-surface)", color: "var(--nf-ink)", fontWeight: 600, fontSize: 11, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Members = CompliancePayload["members"];
 
@@ -269,10 +270,10 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
       <IsoSectionHeader headingLevel={1} icon={Scale} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {d.escalations.length > 0 && (
-        <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>
+        <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>
           <b>Para decisión del órgano de gobierno:</b>
           <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>{d.escalations.map((item) => <li key={item}>{item}</li>)}</ul>
         </div>
@@ -308,7 +309,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
             <Row k="Fundados" v={d.speakUp.substantiated} />
             <Row k="Acuses fuera de plazo" v={d.speakUp.overdueAcknowledgement} danger={d.speakUp.overdueAcknowledgement > 0} />
             <Row k="Respuestas fuera de plazo" v={d.speakUp.overdueFeedback} danger={d.speakUp.overdueFeedback > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Cifras agregadas. Ningún dato del informante llega a este panel.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Cifras agregadas. Ningún dato del informante llega a este panel.</p>
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><AlertTriangle size={16} aria-hidden />Riesgos y controles (§6.1, §8.2)</h3>
@@ -335,7 +336,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
             <Row k="Pendientes de revisión" v={initial.declarationSummary.pending} danger={initial.declarationSummary.pending > 0} />
             <Row k="Obligan a abstenerse" v={initial.declarationSummary.recusalRequired} />
             {!initial.declarationsComplete && (
-              <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Solo ves el contenido de tus propias declaraciones.</p>
+              <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Solo ves el contenido de tus propias declaraciones.</p>
             )}
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
@@ -383,7 +384,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
             {initial.sources.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.name}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.reference ?? "—"}</div></td>
+                <td style={td}><b>{row.name}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.reference ?? "—"}</div></td>
                 <td style={td}>{row.sourceType}</td>
                 <td style={td}>{row.issuer ?? "—"}</td>
                 <td style={td}>{row.jurisdiction?.code ?? "—"}</td>
@@ -434,12 +435,12 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.obligation?.code ?? "—"}</td>
                 <td style={td}>{row.category}</td>
                 <td style={td}>{row.likelihood}×{row.impact}</td>
-                <td style={td}><span style={chip(level(row.inherentLevel) + "22", level(row.inherentLevel))}>{row.inherentScore}</span></td>
+                <td style={td}><span style={toneChip(level(row.inherentLevel))}>{row.inherentScore}</span></td>
                 <td style={td}>{row.controlEffectiveness ?? "—"}{row._count.controls ? ` (${row._count.controls})` : ""}</td>
-                <td style={td}><span style={chip(level(row.residualLevel) + "22", level(row.residualLevel))}>{row.residualScore}</span></td>
+                <td style={td}><span style={toneChip(level(row.residualLevel))}>{row.residualScore}</span></td>
                 <td style={td}>{row.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>No aceptable</span> : row.acceptability === "ACCEPTABLE" ? "Aceptable" : "Tolerable"}</td>
                 <td style={td}>{money(row.sanctionExposure)}</td>
-                <td style={td}>{row.treatment}{row.acceptedAt && <div style={{ color: "#64748b", fontSize: 11 }}>aceptado por {nameOf(row.acceptedById)}</div>}</td>
+                <td style={td}>{row.treatment}{row.acceptedAt && <div style={{ color: "var(--nf-text-secondary)", fontSize: 11 }}>aceptado por {nameOf(row.acceptedById)}</div>}</td>
                 <td style={td}>{nameOf(row.ownerId)}</td>
                 {live && (can.update || can.approve) && (
                   <td style={td}>
@@ -477,7 +478,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
 
       {tab === "evaluations" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#fecdd3", background: "#fff1f2", color: "#8c2f39", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontSize: 13 }}>
             Solo una evaluación aprobada mueve el estado de cumplimiento de la obligación, y la decisión queda con nombre y fecha.
           </div>
           {live && can.create && (
@@ -489,13 +490,13 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
             {initial.evaluations.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}>{row.obligation?.code ?? row.control?.code ?? "—"}<div style={{ color: "#64748b", fontSize: 12 }}>{row.obligation?.title ?? ""}</div></td>
+                <td style={td}>{row.obligation?.code ?? row.control?.code ?? "—"}<div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.obligation?.title ?? ""}</div></td>
                 <td style={td}>{row.period}</td>
                 <td style={td}>{row.method}</td>
-                <td style={td}><span style={chip((STATUS_COLORS[row.result] ?? "#64748b") + "22", STATUS_COLORS[row.result] ?? "#64748b")}>{STATUS_LABEL[row.result] ?? row.result}</span></td>
+                <td style={td}><span style={toneChip(STATUS_COLORS[row.result] ?? "#64748b")}>{STATUS_LABEL[row.result] ?? row.result}</span></td>
                 <td style={td}>{row.score ?? "—"}</td>
-                <td style={td}>{nameOf(row.evaluatedById)}<div style={{ color: "#94a3b8", fontSize: 11 }}>{fmt(row.evaluatedAt)}</div></td>
-                <td style={td}><span style={chip((REVIEW_COLORS[row.reviewStatus] ?? "#64748b") + "22", REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
+                <td style={td}>{nameOf(row.evaluatedById)}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{fmt(row.evaluatedAt)}</div></td>
+                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
                 <td style={td}>{row.reviewerId ? `${nameOf(row.reviewerId)} · ${fmt(row.reviewedAt)}` : "—"}</td>
                 {(can.update || can.approve) && (
                   <td style={td}>
@@ -535,7 +536,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 {initial.alerts.slice(0, 8).map((alert) => (
                   <li key={alert.id}>
                     <b>{alert.code}</b> {alert.title} — {alert.daysRemaining < 0 ? `${Math.abs(alert.daysRemaining)} día(s) de retraso` : `vence en ${alert.daysRemaining} día(s)`} · {nameOf(alert.responsibleId)}
-                    {alert.alreadyAlerted && <span style={{ color: "#94a3b8" }}> (ya notificado)</span>}
+                    {alert.alreadyAlerted && <span style={{ color: "var(--nf-text-subtle)" }}> (ya notificado)</span>}
                   </li>
                 ))}
               </ul>
@@ -557,7 +558,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.recurrence}</td>
                 <td style={td}>{row.leadTimeDays} d</td>
                 <td style={td}>
-                  <span style={chip(CALENDAR_COLORS[row.state.status] + "22", CALENDAR_COLORS[row.state.status])}>{CALENDAR_LABEL[row.state.status]}</span>
+                  <span style={toneChip(CALENDAR_COLORS[row.state.status])}>{CALENDAR_LABEL[row.state.status]}</span>
                   {row.state.status === "OVERDUE" && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>{row.state.overdueDays} día(s)</div>}
                 </td>
                 <td style={td}>{nameOf(row.responsibleId)}</td>
@@ -567,7 +568,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                     {live && !row.completedAt && row.state.status !== "CANCELLED" && (
                       <button disabled={pending} onClick={() => requestPrompt({ title: "Marcar vencimiento como cumplido", label: "Referencia de la presentación", placeholder: "Referencia opcional…", required: false, onConfirm: (reference) => run(() => completeCalendarItem(row.id, { submissionReference: reference || undefined })) })} style={okBtn}><Check size={12} /> Marcar cumplido</button>
                     )}
-                    {row.completedAt && <span style={{ color: "#64748b" }}>{fmt(row.completedAt)}</span>}
+                    {row.completedAt && <span style={{ color: "var(--nf-text-secondary)" }}>{fmt(row.completedAt)}</span>}
                   </td>
                 )}
               </tr>
@@ -595,7 +596,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
 
       {tab === "conflicts" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, display: "flex", alignItems: "center", gap: 8, borderColor: "#fecdd3", background: "#fff1f2", color: "#8c2f39", fontSize: 13 }}>
+          <div style={{ ...card, display: "flex", alignItems: "center", gap: 8, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontSize: 13 }}>
             <Lock size={16} />
             {initial.declarationsComplete
               ? "Declaraciones confidenciales. Se muestran porque revisas el registro de conflictos; su contenido no sale de aquí."
@@ -612,12 +613,12 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.code}</td>
                 <td style={td}>{nameOf(row.declarantId)}</td>
                 <td style={td}>{row.period}</td>
-                <td style={td}>{row.hasConflict ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sí</span> : "No"}</td>
+                <td style={td}>{row.hasConflict ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sí</span> : "No"}</td>
                 <td style={td}>{row.conflictType ?? "—"}</td>
                 <td style={td}>{row.relatedParty ?? "—"}</td>
                 <td style={td}>{money(row.estimatedValue)}{row.currency ? ` ${row.currency}` : ""}</td>
                 <td style={td}>{row.recusalRequired ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Obligada</span> : "—"}</td>
-                <td style={td}><span style={chip((REVIEW_COLORS[row.reviewStatus] ?? "#64748b") + "22", REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
+                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
                 <td style={td}>{row.reviewerId ? `${nameOf(row.reviewerId)} · ${fmt(row.reviewedAt)}` : "—"}</td>
                 {can.approve && (
                   <td style={td}>
@@ -665,13 +666,13 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
               <Row k="Casos que puedes gestionar" v={initial.channel.cases.length} />
               <Row k="Casos sin autorización" v={initial.channel.restrictedCount} />
               <Row k="Retención vencida" v={initial.channel.retentionDue} danger={initial.channel.retentionDue > 0} />
-              <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>
+              <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>
                 Un expediente se abre con una autorización explícita por caso. Tener permisos del módulo no basta.
               </p>
             </div>
             <div style={card}>
               <h3 style={{ marginTop: 0 }}>Patrón por categoría</h3>
-              {d.speakUp.byCategory.length === 0 && <p style={{ color: "#64748b", fontSize: 13, margin: 0 }}>Sin casos registrados.</p>}
+              {d.speakUp.byCategory.length === 0 && <p style={{ color: "var(--nf-text-secondary)", fontSize: 13, margin: 0 }}>Sin casos registrados.</p>}
               {d.speakUp.byCategory.map((row) => <Row key={row.category} k={row.category} v={row.count} />)}
             </div>
           </div>
@@ -695,7 +696,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
           )}
 
           {initial.channel.cases.length === 0 ? (
-            <div style={{ ...card, display: "flex", alignItems: "center", gap: 10, color: "#64748b" }}>
+            <div style={{ ...card, display: "flex", alignItems: "center", gap: 10, color: "var(--nf-text-secondary)" }}>
               <EyeOff size={18} />
               {initial.channel.restrictedCount > 0
                 ? `Hay ${initial.channel.restrictedCount} caso(s) en el canal para los que no tienes autorización.`
@@ -711,7 +712,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
 
       {tab === "investigations" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#fecdd3", background: "#fff1f2", color: "#8c2f39", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontSize: 13 }}>
             Solo aparecen las investigaciones de los casos que puedes gestionar. Quien está señalado no investiga, y un conflicto declarado obliga a abstenerse.
           </div>
           {live && can.update && (
@@ -725,8 +726,8 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.code}</td>
                 <td style={td}>{row.caseCode}</td>
                 <td style={td}><b>{row.title}</b></td>
-                <td style={td}>{nameOf(row.leadInvestigatorId)}{row.reassignedToId && <div style={{ color: "var(--nf-info)", fontSize: 11 }}>reasignada a {nameOf(row.reassignedToId)}</div>}</td>
-                <td style={td}>{row.independenceConfirmed ? <span style={{ color: "var(--nf-success)" }}>confirmada</span> : <span style={{ color: "var(--nf-danger-text)" }}>sin confirmar</span>}</td>
+                <td style={td}>{nameOf(row.leadInvestigatorId)}{row.reassignedToId && <div style={{ color: "var(--nf-info-text)", fontSize: 11 }}>reasignada a {nameOf(row.reassignedToId)}</div>}</td>
+                <td style={td}>{row.independenceConfirmed ? <span style={{ color: "var(--nf-success-text)" }}>confirmada</span> : <span style={{ color: "var(--nf-danger-text)" }}>sin confirmar</span>}</td>
                 <td style={td}>{row.conflictDetected ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>detectado</span> : row.conflictChecked ? "comprobado" : <span style={{ color: "#d68a1a" }}>sin comprobar</span>}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{INVESTIGATION_LABEL[row.status] ?? row.status}</span></td>
                 <td style={td}>{fmt(row.startedAt)}</td>
@@ -774,8 +775,8 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                   <td style={td}>{row.code}</td>
                   <td style={td}><b>{row.title}</b></td>
                   <td style={td}>{row.obligation?.code ?? "—"}</td>
-                  <td style={td}>{row.detectionSource}<div style={{ color: "#94a3b8", fontSize: 11 }}>{fmt(row.detectedAt)}</div></td>
-                  <td style={td}><span style={chip(level(row.severity) + "22", level(row.severity))}>{row.severity}</span></td>
+                  <td style={td}>{row.detectionSource}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{fmt(row.detectedAt)}</div></td>
+                  <td style={td}><span style={toneChip(level(row.severity))}>{row.severity}</span></td>
                   <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{BREACH_LABEL[row.status] ?? row.status}</span></td>
                   <td style={td}>{row.rootCause ? "Sí" : <span style={{ color: "#d68a1a" }}>pendiente</span>}</td>
                   <td style={td}>{row.recurrence ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
@@ -783,7 +784,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                     {row.notificationRequired
                       ? row.authorityNotifiedAt
                         ? fmt(row.authorityNotifiedAt)
-                        : <span style={chip(row.notificationOverdue ? "var(--nf-danger-border)" : "var(--nf-warning-border)", row.notificationOverdue ? "var(--nf-danger-text)" : "#92400e")}>{row.notificationOverdue ? "fuera de plazo" : `hasta ${fmt(row.notificationDeadline)}`}</span>
+                        : <span style={chip(row.notificationOverdue ? "var(--nf-danger-border)" : "var(--nf-warning-border)", row.notificationOverdue ? "var(--nf-danger-text)" : "var(--nf-warning-text)")}>{row.notificationOverdue ? "fuera de plazo" : `hasta ${fmt(row.notificationDeadline)}`}</span>
                       : "—"}
                   </td>
                   <td style={td}>{money(row.financialExposure)}</td>
@@ -798,7 +799,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                         {live && row.notificationRequired && !row.authorityNotifiedAt && (
                           <button disabled={pending} onClick={() => requestPrompt({ title: "Notificar a la autoridad", label: "Referencia de la notificación", placeholder: "Referencia opcional…", required: false, onConfirm: (authorityReference) => run(() => recordAuthorityNotification(row.id, { authorityReference: authorityReference || undefined })) })} style={okBtn}><Send size={12} /> Notificar autoridad</button>
                         )}
-                        {!next && (!row.notificationRequired || row.authorityNotifiedAt) && <span style={{ color: "#94a3b8" }}>—</span>}
+                        {!next && (!row.notificationRequired || row.authorityNotifiedAt) && <span style={{ color: "var(--nf-text-subtle)" }}>—</span>}
                       </div>
                     </td>
                   )}
@@ -881,7 +882,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
             {initial.governingBodyReports.map((row) => (
               <tr key={row.id}>
                 <td style={td}>{row.code}</td>
-                <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.executiveSummary?.slice(0, 120) ?? "—"}</div></td>
+                <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.executiveSummary?.slice(0, 120) ?? "—"}</div></td>
                 <td style={td}>{row.period}</td>
                 <td style={td}>{row.presentedTo}</td>
                 <td style={td}>{nameOf(row.preparedById)}</td>
@@ -1012,7 +1013,7 @@ function ObligationRow({ row, nameOf, jurisdictions, members, can, live, pending
     <>
       <tr>
         <td style={td}>{row.code}</td>
-        <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.articleReference ?? row.requirementText?.slice(0, 90) ?? ""}</div></td>
+        <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.articleReference ?? row.requirementText?.slice(0, 90) ?? ""}</div></td>
         <td style={td}>{row.obligationType}</td>
         <td style={td}>{row.jurisdiction?.code ?? "—"}</td>
         <td style={td}>{row.source?.code ?? "—"}</td>
@@ -1020,8 +1021,8 @@ function ObligationRow({ row, nameOf, jurisdictions, members, can, live, pending
           {APPLICABILITY_LABEL[row.applicability] ?? row.applicability}
           {row.applicabilityRollup.incomplete && <div style={{ color: "#d68a1a", fontSize: 11 }}>{row.applicabilityRollup.pending} jurisdicción(es) sin decidir</div>}
         </td>
-        <td style={td}><span style={chip((STATUS_COLORS[row.complianceStatus] ?? "#64748b") + "22", STATUS_COLORS[row.complianceStatus] ?? "#64748b")}>{STATUS_LABEL[row.complianceStatus] ?? row.complianceStatus}</span></td>
-        <td style={td}><span style={chip(level(row.criticality) + "22", level(row.criticality))}>{row.criticality}</span></td>
+        <td style={td}><span style={toneChip(STATUS_COLORS[row.complianceStatus] ?? "#64748b")}>{STATUS_LABEL[row.complianceStatus] ?? row.complianceStatus}</span></td>
+        <td style={td}><span style={toneChip(level(row.criticality))}>{row.criticality}</span></td>
         <td style={td}>{nameOf(row.ownerId)}</td>
         <td style={td}>{fmt(row.nextEvaluationDate)}</td>
         <td style={td}>{row.counts.controls}{row.uncontrolled && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>sin control</div>}</td>
@@ -1109,7 +1110,7 @@ function ControlRow({ row, members, can, live, pending, run }: { row: Compliance
     <>
       <tr>
         <td style={td}>{row.code}</td>
-        <td style={td}><b>{row.name}</b>{row.organizationControlId && <div style={{ color: "var(--nf-info)", fontSize: 11 }}>reutiliza control ISO 27001</div>}</td>
+        <td style={td}><b>{row.name}</b>{row.organizationControlId && <div style={{ color: "var(--nf-info-text)", fontSize: 11 }}>reutiliza control ISO 27001</div>}</td>
         <td style={td}>{row.obligation?.code ?? "—"}</td>
         <td style={td}>{row.risk?.code ?? "—"}</td>
         <td style={td}>{row.controlType}</td>
@@ -1124,7 +1125,7 @@ function ControlRow({ row, members, can, live, pending, run }: { row: Compliance
       </tr>
       {open && (
         <tr>
-          <td style={{ ...td, background: "#f8fafc" }} colSpan={13}>
+          <td style={{ ...td, background: "var(--nf-surface-muted)" }} colSpan={13}>
             <div style={{ display: "grid", gap: 8 }}>
               <EditRecordButton title={`Editar control ${row.code}`}>{(close) => <EditRecordForm kind="control" row={row as unknown as EditRow} members={members} pending={pending} run={run} onDone={close} />}</EditRecordButton>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 8, alignItems: "center" }}>
@@ -1220,13 +1221,13 @@ function ChangeRow({ row, members, nameOf, can, live, pending, run }: {
     <>
       <tr>
         <td style={td}>{row.code}</td>
-        <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.summary ?? "—"}</div></td>
+        <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.summary ?? "—"}</div></td>
         <td style={td}>{row.source?.code ?? "—"}</td>
         <td style={td}>{row.changeType}</td>
         <td style={td}>{fmt(row.detectedAt)}</td>
         <td style={td}>{fmt(row.effectiveFrom)}</td>
-        <td style={td}><span style={chip(level(row.impactLevel) + "22", level(row.impactLevel))}>{row.impactLevel}</span></td>
-        <td style={td}>{row.impactStatus === "PENDING_ASSESSMENT" ? <span style={chip("var(--nf-warning-border)", "#92400e")}>Sin analizar</span> : row.impactStatus}</td>
+        <td style={td}><span style={toneChip(level(row.impactLevel))}>{row.impactLevel}</span></td>
+        <td style={td}>{row.impactStatus === "PENDING_ASSESSMENT" ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sin analizar</span> : row.impactStatus}</td>
         <td style={td}>{nameOf(row.responsibleId)}</td>
         <td style={td}>{fmt(row.dueDate)}</td>
         <td style={td}>{fmt(row.implementedAt)}</td>
@@ -1234,7 +1235,7 @@ function ChangeRow({ row, members, nameOf, can, live, pending, run }: {
       </tr>
       {open && (
         <tr>
-          <td style={{ ...td, background: "#f8fafc" }} colSpan={12}>
+          <td style={{ ...td, background: "var(--nf-surface-muted)" }} colSpan={12}>
             <div style={{ display: "grid", gap: 8 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 <select aria-label="Estado del impacto" style={input} value={impactStatus} onChange={(e) => setImpactStatus(e.target.value)}>{["UNDER_ASSESSMENT", "ASSESSED", "NO_IMPACT", "IMPLEMENTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
@@ -1337,7 +1338,7 @@ function TrainingRow({ row, members, can, live, pending, run }: { row: Complianc
         <td style={td}>{row.mandatory ? "Sí" : "No"}</td>
         <td style={td}>{row.deliveryMode}</td>
         <td style={td}>{fmt(row.scheduledFor)}</td>
-        <td style={td}>{row.coverage === null ? "—" : `${row.coverage}%`}<div style={{ color: "#94a3b8", fontSize: 11 }}>{row.completedCount ?? 0}/{row.targetCount ?? 0}</div></td>
+        <td style={td}>{row.coverage === null ? "—" : `${row.coverage}%`}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{row.completedCount ?? 0}/{row.targetCount ?? 0}</div></td>
         <td style={td}>{row.passRate === null ? "—" : `${row.passRate}%`}</td>
         <td style={td}>{row.effectivenessEvaluated ? "Evaluada" : <span style={{ color: "#d68a1a" }}>sin evaluar</span>}</td>
         <td style={td}>{fmt(row.nextDueDate)}</td>
@@ -1345,7 +1346,7 @@ function TrainingRow({ row, members, can, live, pending, run }: { row: Complianc
       </tr>
       {open && (
         <tr>
-          <td style={{ ...td, background: "#f8fafc" }} colSpan={13}>
+          <td style={{ ...td, background: "var(--nf-surface-muted)" }} colSpan={13}>
             <div style={{ display: "grid", gap: 8 }}>
               <EditRecordButton title={`Editar formación ${row.code}`}>{(close) => <EditRecordForm kind="training" row={row as unknown as EditRow} members={members} pending={pending} run={run} onDone={close} />}</EditRecordButton>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8 }}>
@@ -1388,7 +1389,7 @@ function NewGoverningReportForm({ pending, run, onDone }: { pending: boolean; ru
         <select aria-label="Presentado a" style={input} value={f.presentedTo} onChange={(e) => set("presentedTo", e.target.value)}>{["BOARD", "AUDIT_COMMITTEE", "ETHICS_COMMITTEE", "COMPLIANCE_COMMITTEE", "CEO", "EXECUTIVE_MANAGEMENT"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
       </div>
       <input aria-label="Resumen ejecutivo (opcional)" style={input} placeholder="Resumen ejecutivo (opcional)" value={f.executiveSummary} onChange={(e) => set("executiveSummary", e.target.value)} />
-      <p style={{ margin: 0, color: "#94a3b8", fontSize: 11 }}>Las secciones de obligaciones, riesgos, canal, investigaciones, formación y remediación se completan automáticamente con el agregado del periodo.</p>
+      <p style={{ margin: 0, color: "var(--nf-text-subtle)", fontSize: 11 }}>Las secciones de obligaciones, riesgos, canal, investigaciones, formación y remediación se completan automáticamente con el agregado del periodo.</p>
       <button disabled={pending || !f.title || !f.period} style={primaryBtn} onClick={() => { run(() => prepareGoverningBodyReport({ title: f.title, period: f.period, presentedTo: f.presentedTo as never, executiveSummary: f.executiveSummary || undefined })); onDone(); }}><Plus size={12} /> Preparar</button>
     </div>
   );
@@ -1437,7 +1438,7 @@ function NewReportForm({ members, allowAnonymous, allowConfidential, pending, ru
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <div style={{ ...card, background: "#fff", borderColor: "#fecdd3", padding: 10, fontSize: 12, color: "#8c2f39" }}>
+      <div style={{ ...card, background: "var(--nf-surface)", borderColor: "var(--nf-danger-border)", padding: 10, fontSize: 12, color: "var(--nf-danger-text)" }}>
         Su relato y el hecho denunciado quedan protegidos: solo lo ve quien reciba una autorización explícita del caso.
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
@@ -1488,16 +1489,16 @@ function CaseCard({ row, members, can, live, pending, run }: {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, flexWrap: "wrap" }}>
         <div>
           <b>{row.code}</b> {!row.integrity.valid && <span style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>{row.integrity.problems.join("; ")}</span>}
-          <div style={{ color: "#64748b", fontSize: 12 }}>
-            {MODE_LABEL[row.identificationMode]} · {row.category} · <span style={chip(level(row.severity) + "22", level(row.severity))}>{row.severity}</span> · recibida {fmt(row.receivedAt)}
+          <div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>
+            {MODE_LABEL[row.identificationMode]} · {row.category} · <span style={toneChip(level(row.severity))}>{row.severity}</span> · recibida {fmt(row.receivedAt)}
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <span style={chip("#eef2ff", "#4338ca")}>{CASE_LABEL[row.status] ?? row.status}</span>
-          {row.outcome && <span style={{ color: "#64748b", fontSize: 12 }}>{OUTCOME_LABEL[row.outcome]}</span>}
+          {row.outcome && <span style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{OUTCOME_LABEL[row.outcome]}</span>}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "#64748b", margin: "8px 0" }}>
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", fontSize: 12, color: "var(--nf-text-secondary)", margin: "8px 0" }}>
         <span>Mi rol: {row.myCaseRole ?? "—"}</span>
         <span>Accesos: {row.access.length}</span>
         <span>Evidencia: {row.evidence.length}</span>
@@ -1546,7 +1547,7 @@ function CaseCard({ row, members, can, live, pending, run }: {
               <button disabled={pending || !accessUserId || !accessReason} style={miniBtn} onClick={() => run(() => grantCaseAccess({ reportId: row.id, userId: accessUserId, caseRole: accessRole as never, reason: accessReason }))}>Autorizar</button>
             </div>
             {row.access.map((a) => (
-              <div key={a.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", color: "#64748b" }}>
+              <div key={a.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 12, padding: "4px 0", color: "var(--nf-text-secondary)" }}>
                 <span>{members.find((m) => m.id === a.userId)?.name ?? a.userId} · {a.caseRole}</span>
                 <button disabled={pending} onClick={() => requestPrompt({ title: "Revocar acceso al caso", label: "Motivo de la revocación", placeholder: "Explica por qué se revoca el acceso…", onConfirm: (reason) => run(() => revokeCaseAccess(a.id, { reason })) })} style={{ ...miniBtn, padding: "2px 6px", fontSize: 11 }}>Revocar</button>
               </div>
@@ -1559,7 +1560,7 @@ function CaseCard({ row, members, can, live, pending, run }: {
               <input aria-label="URL del archivo (opcional)" style={input} placeholder="URL del archivo (opcional)" value={evidenceUrl} onChange={(e) => setEvidenceUrl(e.target.value)} />
               <button disabled={pending || !evidenceTitle} style={miniBtn} onClick={() => run(() => addProtectedEvidence({ reportId: row.id, title: evidenceTitle, fileUrl: evidenceUrl || undefined }))}>Añadir</button>
             </div>
-            {row.evidence.map((e) => <div key={e.id} style={{ fontSize: 12, color: "#64748b", padding: "3px 0" }}>{e.code} · {e.title}</div>)}
+            {row.evidence.map((e) => <div key={e.id} style={{ fontSize: 12, color: "var(--nf-text-secondary)", padding: "3px 0" }}>{e.code} · {e.title}</div>)}
           </div>
         </div>
       )}

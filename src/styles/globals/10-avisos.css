@@ -222,7 +222,7 @@
   border-radius: 12px;
   border: 1px solid var(--nf-line);
   box-shadow: none;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-activity-toolbar,
@@ -235,7 +235,7 @@
 .nf-org-panel-body,
 .nf-activity-timeline-body,
 .nf-acpm-body {
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-audit-card,
@@ -243,7 +243,7 @@
 .nf-acpm-card-btn {
   border-radius: 12px;
   border: 1px solid var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: none;
 }
 
@@ -286,7 +286,9 @@
 
 .nf-app-shell strong {
   font-weight: 600;
-}.nf-field-label,
+}
+
+.nf-field-label,
 .nf-meta-label {
   font-size: 12px;
   font-weight: 500;
@@ -312,15 +314,15 @@
 }
 
 .nf-alert--error {
-  background: #FEF2F2;
-  border-color: #FECACA;
-  color: #B91C1C;
+  background: var(--nf-danger-subtle);
+  border-color: var(--nf-danger-border);
+  color: var(--nf-danger-text);
 }
 
 .nf-alert--success {
-  background: #F0FDF4;
+  background: var(--nf-success-subtle);
   border-color: #BBF7D0;
-  color: #15803D;
+  color: var(--nf-success-text);
 }
 
 .nf-alert--dismissible {
@@ -352,7 +354,7 @@
 }
 
 .nf-panel {
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   border-radius: 12px;
   min-width: 0;

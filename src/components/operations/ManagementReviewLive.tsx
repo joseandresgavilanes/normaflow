@@ -174,7 +174,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, marginTop: 13 }}>
                 {[["Entradas", row.inputs.length], ["Decisiones", row.decisions.length], ["Acciones", row.actionCount]].map(([label, value]) => (
                   <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}>
-                    <strong style={{ display: "block", color: "var(--nf-primary)" }}>{value}</strong>
+                    <strong style={{ display: "block", color: "var(--nf-primary-active)" }}>{value}</strong>
                     <span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{label}</span>
                   </div>
                 ))}
@@ -227,8 +227,8 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                 {detail.inputs.map(i => (
                   <div key={i.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary)" }}>{TOPIC_LABELS[i.topic]}</span>
-                      {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "#a62d29" }} disabled={isPending} onClick={() => run(() => deleteReviewInput(i.id))}>Eliminar</button>}
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)" }}>{TOPIC_LABELS[i.topic]}</span>
+                      {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }} disabled={isPending} onClick={() => run(() => deleteReviewInput(i.id))}>Eliminar</button>}
                     </div>
                     <p style={{ margin: "4px 0 0", fontSize: 13, color: "var(--nf-ink)" }}>{i.content}</p>
                     {(i.auditId || i.indicatorId || i.riskId || i.nonconformityId || i.actionId || i.capaId) && <div style={{ marginTop: 5, fontSize: 11, color: "var(--nf-ink-3)" }}>Fuente vinculada: {i.auditId ? "Auditoría" : i.indicatorId ? "KPI" : i.riskId ? "Riesgo" : i.nonconformityId ? "NC" : i.actionId ? "Acción" : "CAPA"}</div>}
@@ -269,7 +269,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                   <div key={d.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 700 }}>{d.topic}</span>
-                      {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "#a62d29" }} disabled={isPending} onClick={() => run(() => deleteReviewDecision(d.id))}>Eliminar</button>}
+                      {canManage && <button type="button" className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }} disabled={isPending} onClick={() => run(() => deleteReviewDecision(d.id))}>Eliminar</button>}
                     </div>
                     <p style={{ margin: "4px 0", fontSize: 13, color: "var(--nf-ink)" }}>{d.decision}</p>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", fontSize: 12, color: "var(--nf-ink-3)" }}><span>{d.ownerName ?? "Sin responsable"}{d.dueDate ? ` · vence ${fmtDate(d.dueDate)}` : ""}</span>{initial.access.canCreateAction && !d.actionId && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" onClick={() => setActionDecision(d)}>Crear acción</button>}{d.actionTitle && <span>Acción: {d.actionTitle} · {d.actionStatus}</span>}</div>

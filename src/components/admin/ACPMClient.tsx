@@ -51,16 +51,18 @@ const TYPE_LABEL: Record<ACPMType, string> = {
   PREVENTIVE: "Preventiva",
   IMPROVEMENT: "Mejora",
 };
+// Se usan como color de TEXTO en las tarjetas y la tabla, así que llevan los
+// tonos de texto: los de relleno dan 3.19:1 sobre superficie.
 const TYPE_COLOR: Record<ACPMType, string> = {
-  CORRECTIVE: "var(--nf-danger)",
-  PREVENTIVE: "var(--nf-warning)",
-  IMPROVEMENT: "var(--nf-accent)",
+  CORRECTIVE: "var(--nf-danger-text)",
+  PREVENTIVE: "var(--nf-warning-text)",
+  IMPROVEMENT: "var(--nf-primary-active)",
 };
 const PRIORITY_LABEL: Record<ACPMPriority, string> = {
   CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja",
 };
 const PRIORITY_COLOR: Record<ACPMPriority, string> = {
-  CRITICAL: "var(--nf-danger)", HIGH: "var(--nf-warning)", MEDIUM: "var(--nf-primary)", LOW: "var(--nf-ink-3)",
+  CRITICAL: "var(--nf-danger-text)", HIGH: "var(--nf-warning-text)", MEDIUM: "var(--nf-primary-active)", LOW: "var(--nf-text-secondary)",
 };
 
 export default function ACPMClient() {
@@ -327,7 +329,7 @@ export default function ACPMClient() {
                               <div className="nf-acpm-card-meta">
                                 <span style={{ color: typeC }}>{TYPE_LABEL[a.type]}</span>
                                 {a.dueDate ? (
-                                  <span style={{ color: overdueCard ? "var(--nf-danger)" : undefined }}>
+                                  <span style={{ color: overdueCard ? "var(--nf-danger-text)" : undefined }}>
                                     {overdueCard ? "Vence " : ""}
                                     {formatDate(a.dueDate, "dd MMM")}
                                   </span>
@@ -364,7 +366,7 @@ export default function ACPMClient() {
                         justifyContent: "center",
                         background: "var(--nf-app-accent-soft)",
                         border: "1px solid rgba(82, 102, 246, 0.12)",
-                        color: "var(--nf-primary)",
+                        color: "var(--nf-primary-active)",
                       }}
                     >
                       <Sparkles size={24} strokeWidth={2.25} />
@@ -385,7 +387,7 @@ export default function ACPMClient() {
                         width: "100%",
                       }}
                     >
-                      <code style={{ fontSize: 11, color: "var(--nf-primary)", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
+                      <code style={{ fontSize: 11, color: "var(--nf-primary-active)", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
                       <div style={{ textAlign: "left", minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{a.title}</div>
                         {a.source && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4, fontWeight: 500 }}>Origen: {a.source}</div>}
@@ -604,7 +606,7 @@ function ACPMDetailModal({
             label="Fecha objetivo"
             value={
               acpm.dueDate ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "var(--nf-danger)" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "var(--nf-danger-text)" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
                   {formatDate(acpm.dueDate)}
                   {overdue ? <AlertTriangle size={15} strokeWidth={2.5} aria-label="Vencida" /> : null}
                 </span>
@@ -646,7 +648,7 @@ function ACPMDetailModal({
 
         {canEdit && (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "var(--nf-danger)" }}>
+            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }}>
               Eliminar ACPM
             </button>
           </div>

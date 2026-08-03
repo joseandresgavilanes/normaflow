@@ -14,8 +14,10 @@ import { DEFAULT_RISK_CATEGORY, riskCategoryOptions } from "@/lib/risk-catalog";
 import type { Column } from "@/components/ui/Table";
 
 function RiskScore({ score }: { score: number }) {
-  const color = score >= 15 ? "var(--nf-danger)" : score >= 8 ? "var(--nf-warning)" : "var(--nf-success)";
-  const bg = score >= 15 ? "#fff0f0" : score >= 8 ? "#fff8e6" : "#e8f5ee";
+  // El par relleno/fondo daba 2.94-4.36:1. Los tonos de texto sobre su fondo
+  // sutil cumplen en los dos temas.
+  const color = score >= 15 ? "var(--nf-danger-text)" : score >= 8 ? "var(--nf-warning-text)" : "var(--nf-success-text)";
+  const bg = score >= 15 ? "var(--nf-danger-subtle)" : score >= 8 ? "var(--nf-warning-subtle)" : "var(--nf-success-subtle)";
   return <span style={{ background: bg, color, padding: "2px 9px", borderRadius: 6, fontSize: 12, fontWeight: 700 }}>{score}</span>;
 }
 
@@ -42,7 +44,7 @@ function riskTraceBlock(title: string, href: string, children: ReactNode) {
         }}
       >
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>{title}</span>
-        <Link href={href} style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", whiteSpace: "nowrap" }}>
+        <Link href={href} style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none", whiteSpace: "nowrap" }}>
           Abrir módulo
           <ChevronRight size={15} strokeWidth={2.5} aria-hidden />
         </Link>
@@ -104,8 +106,8 @@ export default function RisksModule() {
     { key: "title", label: "Riesgo", render: v => <span style={{ fontWeight: 500 }}>{v}</span> },
     { key: "category", label: "Categoría" },
     { key: "score", label: "Score", render: v => <RiskScore score={v} /> },
-    { key: "probability", label: "Prob.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-warning)" }}>{v}/5</span> },
-    { key: "impact", label: "Imp.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-warning)" }}>{v}/5</span> },
+    { key: "probability", label: "Prob.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-warning-text)" }}>{v}/5</span> },
+    { key: "impact", label: "Imp.", render: v => <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-warning-text)" }}>{v}/5</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
     {
       key: "owner",
@@ -229,8 +231,8 @@ export default function RisksModule() {
                       const score = p * i;
                       const cellRisks = risks.filter(rk => rk.probability === p && rk.impact === i);
                       const r = cellRisks[0];
-                      const bg = score >= 15 ? "#fecaca" : score >= 8 ? "var(--nf-warning-border)" : "var(--nf-success-border)";
-                      const textColor = score >= 15 ? "#991b1b" : score >= 8 ? "#92400e" : "#166534";
+                      const bg = score >= 15 ? "var(--nf-danger-border)" : score >= 8 ? "var(--nf-warning-border)" : "var(--nf-success-border)";
+                      const textColor = score >= 15 ? "var(--nf-danger-text)" : score >= 8 ? "var(--nf-warning-text)" : "var(--nf-success-text)";
                       return (
                         <div
                           key={i}
@@ -264,9 +266,9 @@ export default function RisksModule() {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 14, justifyContent: "center" }}>
             {[
-              { label: "Crítico (≥15)", color: "#fecaca", text: "#991b1b" },
-              { label: "Alto (8-14)", color: "var(--nf-warning-border)", text: "#92400e" },
-              { label: "Moderado (<8)", color: "var(--nf-success-border)", text: "#166534" },
+              { label: "Crítico (≥15)", color: "var(--nf-danger-border)", text: "var(--nf-danger-text)" },
+              { label: "Alto (8-14)", color: "var(--nf-warning-border)", text: "var(--nf-warning-text)" },
+              { label: "Moderado (<8)", color: "var(--nf-success-border)", text: "var(--nf-success-text)" },
             ].map(l => (
               <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                 <div style={{ width: 12, height: 12, background: l.color, border: `1px solid ${l.text}40`, borderRadius: 2 }} />
@@ -278,10 +280,10 @@ export default function RisksModule() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[
-            { label: "Riesgos Críticos (≥15)", count: risks.filter(r => r.score >= 15).length, color: "var(--nf-danger)", bg: "#fff0f0" },
-            { label: "Riesgos Altos (8-14)", count: risks.filter(r => r.score >= 8 && r.score < 15).length, color: "var(--nf-warning)", bg: "#fff8e6" },
-            { label: "Riesgos Moderados (<8)", count: risks.filter(r => r.score < 8).length, color: "var(--nf-success)", bg: "#e8f5ee" },
-            { label: "Total registrados", count: risks.length, color: "var(--nf-primary)", bg: "#f0f4ff" },
+            { label: "Riesgos Críticos (≥15)", count: risks.filter(r => r.score >= 15).length, color: "var(--nf-danger-text)", bg: "var(--nf-danger-subtle)" },
+            { label: "Riesgos Altos (8-14)", count: risks.filter(r => r.score >= 8 && r.score < 15).length, color: "var(--nf-warning-text)", bg: "var(--nf-warning-subtle)" },
+            { label: "Riesgos Moderados (<8)", count: risks.filter(r => r.score < 8).length, color: "var(--nf-success-text)", bg: "var(--nf-success-subtle)" },
+            { label: "Total registrados", count: risks.length, color: "var(--nf-primary-active)", bg: "var(--nf-primary-subtle)" },
           ].map(s => (
             <Card key={s.label} style={{ background: s.bg, border: `1px solid ${s.color}30`, display: "flex", alignItems: "center", gap: 14, padding: "14px 18px" }}>
               <div style={{ fontSize: 30, fontWeight: 600, color: s.color }}>{s.count}</div>
@@ -308,22 +310,22 @@ export default function RisksModule() {
                 padding: "16px 18px",
                 borderRadius: 14,
                 border: "1px solid var(--nf-line)",
-                background: "linear-gradient(145deg, rgba(82, 102, 246, 0.06) 0%, #fff 55%)",
+                background: "linear-gradient(145deg, var(--nf-primary-subtle) 0%, var(--nf-surface) 55%)",
               }}
             >
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 10 }}>Evaluación inherente</div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
                 {[
-                  ["Score", detail.score, detail.score >= 15 ? "var(--nf-danger)" : detail.score >= 8 ? "var(--nf-warning)" : "var(--nf-success)"],
-                  ["Probabilidad", `${detail.probability}/5`, "var(--nf-warning)"],
-                  ["Impacto", `${detail.impact}/5`, "var(--nf-warning)"],
+                  ["Score", detail.score, detail.score >= 15 ? "var(--nf-danger-text)" : detail.score >= 8 ? "var(--nf-warning-text)" : "var(--nf-success-text)"],
+                  ["Probabilidad", `${detail.probability}/5`, "var(--nf-warning-text)"],
+                  ["Impacto", `${detail.impact}/5`, "var(--nf-warning-text)"],
                 ].map(([k, v, c]) => (
                   <div
                     key={String(k)}
                     style={{
                       textAlign: "center",
                       padding: "14px 10px",
-                      background: "#fff",
+                      background: "var(--nf-surface)",
                       borderRadius: 12,
                       border: "1px solid rgba(82, 102, 246, 0.1)",
                       boxShadow: "0 1px 0 rgba(82, 102, 246, 0.04)",
@@ -496,7 +498,7 @@ export default function RisksModule() {
                   justifyContent: "center",
                   gap: 6,
                   background: "#16A34A18",
-                  color: "var(--nf-success)",
+                  color: "var(--nf-success-text)",
                   border: "1px solid #16A34A40",
                   borderRadius: 10,
                   padding: "11px 14px",

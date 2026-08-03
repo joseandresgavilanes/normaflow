@@ -120,7 +120,7 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
     <MethodologyCard initial={initial} pending={isPending} onRun={run} />
 
     {!plan && <Card><div style={{ textAlign: "center", padding: 30 }}>
-      <ShieldAlert size={34} style={{ color: "var(--nf-primary)" }} />
+      <ShieldAlert size={34} style={{ color: "var(--nf-primary-active)" }} />
       <h3 style={{ margin: "12px 0 6px" }}>Sin plan de tratamiento de riesgos</h3>
       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 520, margin: "0 auto 16px" }}>Crea un plan para registrar los riesgos, su tratamiento y la aceptación del riesgo residual.</p>
       {initial.canUpdate && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => createRiskTreatmentPlan({ title: "Plan de tratamiento de riesgos" }), { successMessage: "Plan creado." })}><FilePlus2 size={15} /> Crear plan v1</button>}
@@ -129,10 +129,10 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
     {plan && <>
       <div className="nf-metric-strip">
         <Metric label="Riesgos" value={initial.summary.total} icon={<ShieldAlert size={19} />} />
-        <Metric label="Inherente alto" value={initial.summary.highInherent} icon={<ShieldAlert size={19} />} color="#B91C1C" />
-        <Metric label="Residual alto" value={initial.summary.highResidual} icon={<ShieldAlert size={19} />} color="#B45309" />
-        <Metric label="Aceptados" value={initial.summary.accepted} icon={<CheckCircle2 size={19} />} color="#15803D" />
-        <Metric label="Cerrados" value={initial.summary.closed} icon={<ShieldCheck size={19} />} color="#667085" />
+        <Metric label="Inherente alto" value={initial.summary.highInherent} icon={<ShieldAlert size={19} />} color="var(--nf-danger-text)" />
+        <Metric label="Residual alto" value={initial.summary.highResidual} icon={<ShieldAlert size={19} />} color="var(--nf-warning-text)" />
+        <Metric label="Aceptados" value={initial.summary.accepted} icon={<CheckCircle2 size={19} />} color="var(--nf-success-text)" />
+        <Metric label="Cerrados" value={initial.summary.closed} icon={<ShieldCheck size={19} />} color="var(--nf-text-secondary)" />
       </div>
 
       <Card>
@@ -264,4 +264,4 @@ function ItemDetail({ row, initial, pending, onClose, onRun }: { row: Item; init
 }
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }

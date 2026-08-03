@@ -57,7 +57,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const actionTd: React.CSSProperties = { ...td, verticalAlign: "middle", whiteSpace: "nowrap" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
@@ -171,7 +171,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
       <IsoSectionHeader headingLevel={1} icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Servicios" value={s.services} />
@@ -198,7 +198,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
             <Row k="Incidentes abiertos" v={s.openIncidents} danger={s.openIncidents > 0} />
             <Row k="Problemas abiertos" v={s.openProblems} danger={s.openProblems > 0} />
             <Row k="Incumplimientos SLA" v={s.slaBreaches} danger={s.slaBreaches > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>
               ITSMIncident ≠ SecurityIncident (ISO 27001). Workflow: NEW → ASSIGNED → INVESTIGATING → RESOLVED → CONFIRMED → CLOSED.
             </p>
           </div>
@@ -391,7 +391,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
 
           <div style={card}>
             <h3 style={{ marginTop: 0, display: "flex", alignItems: "center", gap: 6 }}><Link2 size={16} /> Vínculos con otros dominios</h3>
-            <p style={{ margin: "0 0 8px", color: "#64748b", fontSize: 12 }}>
+            <p style={{ margin: "0 0 8px", color: "var(--nf-text-secondary)", fontSize: 12 }}>
               Relaciona un incidente de servicio con un incidente de seguridad (ISO 27001), de IA (ISO/IEC 42001) o
               laboral (ISO 45001) — sin fusionar sus workflows. Cada uno conserva su propio estado.
             </p>
@@ -692,7 +692,7 @@ function Stat({ label, value, accent }: { label: string; value: number; accent?:
 function Row({ k, v, danger }: { k: string; v: number | string; danger?: boolean }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
-      <span style={{ color: "#64748b" }}>{k}</span>
+      <span style={{ color: "var(--nf-text-secondary)" }}>{k}</span>
       <span style={{ fontWeight: 600, color: danger ? "var(--nf-danger-text)" : "#0f172a" }}>{v}</span>
     </div>
   );

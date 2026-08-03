@@ -69,7 +69,7 @@ function PreviewBody({ doc, url }: { doc: DocumentRow; url: string | undefined }
     <div style={{ padding: 16, background: "var(--nf-app-surface-2)", borderRadius: 8, fontSize: 14, color: "var(--nf-ink)" }}>
       <p style={{ marginTop: 0 }}>Vista previa no disponible para este tipo de archivo en el navegador.</p>
       <p style={{ color: "var(--nf-ink-3)", fontSize: 13 }}>Puedes abrir o descargar el recurso en una nueva pestaña.</p>
-      <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
+      <a href={u} target="_blank" rel="noopener noreferrer" style={{ color: "var(--nf-primary-active)", fontWeight: 600 }}>
         Abrir / descargar
       </a>
     </div>
@@ -160,7 +160,7 @@ export default function DocumentsModule() {
   }
 
   const columns: Column<DocumentRow>[] = [
-    { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 600 }}>{v}</span> },
+    { key: "code", label: "Código", render: v => <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 600 }}>{v}</span> },
     {
       key: "title",
       label: "Título",
@@ -172,7 +172,7 @@ export default function DocumentsModule() {
       label: "Carpeta",
       render: v => <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600 }}>{v}</span>,
     },
-    { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "#f0f4ff", color: "var(--nf-primary)", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
+    { key: "standard", label: "Norma", render: v => <span style={{ fontSize: 12, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", padding: "2px 8px", borderRadius: 99, fontWeight: 600 }}>{v}</span> },
     { key: "version", label: "Ver.", render: v => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>v{v}</span> },
     { key: "status", label: "Estado", render: v => <Badge status={v} /> },
     {
@@ -311,13 +311,13 @@ export default function DocumentsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "APPROVED").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "APPROVED").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Aprobados</div>
           </div>
         </div>
@@ -331,13 +331,13 @@ export default function DocumentsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "IN_REVIEW").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "IN_REVIEW").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En revisión</div>
           </div>
         </div>
@@ -351,13 +351,13 @@ export default function DocumentsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <FileText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "DRAFT").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.03em", lineHeight: 1 }}>{documents.filter(d => d.status === "DRAFT").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Borrador</div>
           </div>
         </div>
@@ -453,7 +453,7 @@ export default function DocumentsModule() {
                 [
                   "Proceso",
                   detailLive.linkedProcessCode ? (
-                    <Link key="proc" href="/app/processes" style={{ color: "var(--nf-primary)", fontWeight: 600, textDecoration: "none" }}>
+                    <Link key="proc" href="/app/processes" style={{ color: "var(--nf-primary-active)", fontWeight: 600, textDecoration: "none" }}>
                       {detailLive.linkedProcessCode}
                     </Link>
                   ) : (
@@ -470,7 +470,7 @@ export default function DocumentsModule() {
                 </div>
               ))}
             </div>
-            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
+            <div style={{ marginBottom: 14, padding: "12px 14px", background: "var(--nf-surface-muted)", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Control documental</div>
               <div className="nf-grid-2" style={{ gap: 8, fontSize: 12, color: "var(--nf-ink)" }}>
                 <div>
@@ -497,7 +497,7 @@ export default function DocumentsModule() {
                   <span style={{ color: "var(--nf-ink-3)" }}>Cambios vinculados: </span>
                   {(detailLive.linkedChangeIds ?? []).length ? (
                     (detailLive.linkedChangeIds ?? []).map(cid => (
-                      <Link key={cid} href="/app/changes" style={{ color: "var(--nf-primary)", fontWeight: 600, marginRight: 8 }}>
+                      <Link key={cid} href="/app/changes" style={{ color: "var(--nf-primary-active)", fontWeight: 600, marginRight: 8 }}>
                         {cid.split("-").pop()}
                       </Link>
                     ))
@@ -507,7 +507,7 @@ export default function DocumentsModule() {
                 </div>
               </div>
             </div>
-            <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
+            <div style={{ marginBottom: 14, padding: "12px 14px", background: "var(--nf-surface-muted)", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Proceso asociado</div>
               <select aria-label="Proceso vinculado"
                 className="nf-app-input"
@@ -681,7 +681,7 @@ export default function DocumentsModule() {
                       padding: "6px 12px",
                       borderRadius: 8,
                       border: "1px solid var(--nf-line)",
-                      background: "#fff",
+                      background: "var(--nf-surface)",
                       fontSize: 12,
                       fontWeight: 600,
                       cursor: "pointer",
@@ -718,7 +718,7 @@ export default function DocumentsModule() {
                       }}
                     >
                       <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, color: "var(--nf-primary)" }}>v{v.version}</div>
+                        <div style={{ fontWeight: 700, color: "var(--nf-primary-active)" }}>v{v.version}</div>
                         <div style={{ color: "var(--nf-ink-3)", marginTop: 2 }}>
                           {v.date} · {v.author}
                         </div>
@@ -735,11 +735,11 @@ export default function DocumentsModule() {
                             padding: "7px 11px",
                             borderRadius: 8,
                             border: viewing ? "1px solid var(--nf-primary)" : "1px solid var(--nf-line)",
-                            background: viewing ? "#f0f4ff" : "#fff",
+                            background: viewing ? "var(--nf-primary-subtle)" : "#fff",
                             fontSize: 12,
                             fontWeight: 600,
                             cursor: "pointer",
-                            color: "var(--nf-primary)",
+                            color: "var(--nf-primary-active)",
                           }}
                         >
                           <Eye size={15} strokeWidth={2} aria-hidden />
@@ -762,7 +762,7 @@ export default function DocumentsModule() {
                             padding: "7px 11px",
                             borderRadius: 8,
                             border: "1px solid var(--nf-line)",
-                            background: "#fff",
+                            background: "var(--nf-surface)",
                             fontSize: 12,
                             fontWeight: 600,
                             cursor: "pointer",

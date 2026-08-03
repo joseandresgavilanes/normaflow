@@ -49,12 +49,18 @@ export default function Table<T extends Record<string, any>>({
           id: key || `col-${index}`,
           header: column.label,
           cell: (row) => (column.render ? column.render(raw(row), row) : raw(row)),
-          // Se ordena por el valor crudo: el nodo ya renderizado no es comparable.
-          sortValue: (row) => {
-            const value = raw(row);
-            if (value == null) return null;
-            return typeof value === "number" ? value : String(value);
-          },
+          // Se ordena por el valor crudo: el nodo ya renderizado no es
+          // comparable. Sin etiqueta NO se ordena: DataTable pinta entonces un
+          // botón cuyo único contenido es un icono aria-hidden, y eso es
+          // exactamente de donde salían los 9 botones sin nombre accesible que
+          // midió el barrido — la columna de acciones de 9 listados.
+          sortValue: column.label
+            ? (row) => {
+                const value = raw(row);
+                if (value == null) return null;
+                return typeof value === "number" ? value : String(value);
+              }
+            : undefined,
           primary: index === 0,
         } satisfies DataTableColumn<T>;
       }),

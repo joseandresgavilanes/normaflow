@@ -20,7 +20,7 @@
   padding: 14px;
   border: 1px solid var(--nf-line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.035);
 }
 
@@ -104,7 +104,9 @@ pero su contenedor seguía siendo transparente;
   border-radius: 16px;
   background: var(--nf-surface, #fff) !important;
   box-shadow: 0 6px 22px rgba(15, 23, 42, 0.045) !important;
-}.nf-iso-module > section:has(> .nf-iso-subsection-header,
+}
+
+.nf-iso-module > section:has(> .nf-iso-subsection-header,
 > .nf-iso-table-card,
 > .nf-data-table-wrap) {
   min-width: 0;
@@ -113,7 +115,9 @@ pero su contenedor seguía siendo transparente;
   border-radius: 16px;
   background: var(--nf-surface, #fff) !important;
   box-shadow: 0 6px 22px rgba(15, 23, 42, 0.045) !important;
-}.nf-iso-module :where(
+}
+
+.nf-iso-module :where(
   .nf-data-table-wrap,
 .nf-iso-dashboard-table-wrap,
 div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
@@ -169,7 +173,7 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   min-height: 38px;
   border: 1px solid #d9e1eb !important;
   border-radius: 10px !important;
-  background: #fff !important;
+  background: var(--nf-surface) !important;
   color: var(--nf-ink) !important;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025);
 }
@@ -370,7 +374,7 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   overflow: hidden;
   border: 1px solid #dfe5f0;
   border-radius: 16px;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 8px 26px rgba(15, 23, 42, .055);
 }
 
@@ -382,7 +386,9 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   padding: 15px 16px;
   border-bottom: 1px solid #e9edf4;
   background: linear-gradient(135deg, #fafbff 0%, #f5f7ff 100%);
-}.nf-communication-tree-heading,
+}
+
+.nf-communication-tree-heading,
 .nf-communication-tree-header-actions,
 .nf-communication-tree-empty,
 .nf-communication-node-main,

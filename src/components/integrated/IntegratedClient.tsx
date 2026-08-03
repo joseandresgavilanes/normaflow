@@ -22,6 +22,7 @@ import IsoSectionMetrics from "@/components/ui/IsoSectionMetrics";
 import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
+import { toneChip } from "@/lib/tone";
 
 type Tab = "panel" | "scope" | "parties" | "objectives" | "crosswalk" | "audit" | "shared";
 
@@ -39,7 +40,7 @@ const DISCIPLINE_LABEL: Record<string, string> = {
   QUALITY: "Calidad", ENVIRONMENT: "Ambiente", SAFETY: "Seguridad y salud", SECURITY: "Seguridad de la información",
 };
 const DISCIPLINE_COLOR: Record<string, string> = {
-  QUALITY: "#123C66", ENVIRONMENT: "#6B3FB5", SAFETY: "#D68A1A", SECURITY: "#2E8B57",
+  QUALITY: "var(--nf-primary-active)", ENVIRONMENT: "var(--nf-primary-active)", SAFETY: "#D68A1A", SECURITY: "var(--nf-success-text)",
 };
 const KIND_LABEL: Record<string, string> = {
   EQUIVALENT: "Equivalente", PARTIAL: "Parcialmente equivalente", SPECIFIC: "Específico",
@@ -50,7 +51,7 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)",
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 9, fontSize: 13, fontFamily: "inherit" };
 const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "#fff", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
-const ghostBtn: React.CSSProperties = { background: "#fff", color: "var(--nf-primary)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const ghostBtn: React.CSSProperties = { background: "var(--nf-surface)", color: "var(--nf-primary-active)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const dangerBtn: React.CSSProperties = { background: "none", color: "var(--nf-danger-text)", border: "1px solid #f2c4c4", borderRadius: 8, padding: "4px 9px", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
 
 export default function IntegratedClient({ initial, demo = false }: { initial: IntegratedPayload; demo?: boolean }) {
@@ -104,7 +105,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))", gap: 12 }}>
         <Stat label="Cumplimiento global" value={`${p.globalScore}%`} accent="var(--nf-primary)" />
         <Stat label="Grado de integración" value={`${p.integrationRate}%`} sub="requisitos compartidos" accent="var(--nf-success)" />
-        <Stat label="Factor de reutilización" value={`${p.reuseFactor}×`} sub="requisitos por elemento" accent="#6B3FB5" />
+        <Stat label="Factor de reutilización" value={`${p.reuseFactor}×`} sub="requisitos por elemento" accent="var(--nf-primary-active)" />
         <Stat label="Normas activas" value={String(s.standards)} />
         <Stat label="Evidencias faltantes" value={String(s.missingEvidence)} accent={s.missingEvidence ? "var(--nf-danger-text)" : undefined} />
       </div>
@@ -115,7 +116,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
           {p.compliance.map((c) => (
             <div key={c.familyCode}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
-                <span><strong>{c.familyCode.replace("_", " ")}</strong> <span style={chip(DISCIPLINE_COLOR[c.discipline] + "1a", DISCIPLINE_COLOR[c.discipline])}>{DISCIPLINE_LABEL[c.discipline]}</span></span>
+                <span><strong>{c.familyCode.replace("_", " ")}</strong> <span style={toneChip(DISCIPLINE_COLOR[c.discipline])}>{DISCIPLINE_LABEL[c.discipline]}</span></span>
                 <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{c.score}% · {c.covered}/{c.total} con evidencia</span>
               </div>
               <Bar pct={c.score} color={DISCIPLINE_COLOR[c.discipline]} />
@@ -137,7 +138,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
         </section>
         <section style={card}>
           <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, margin: "0 0 10px" }}><ClipboardCheck size={16} aria-hidden />Acciones y auditorías</h3>
-          <Row label="CAPA abiertas" value={s.openCapas} color="#b91c1c" />
+          <Row label="CAPA abiertas" value={s.openCapas} color="var(--nf-danger-text)" />
           <Row label="Auditorías integradas" value={s.integratedAudits} color="#5266F6" />
           <Row label="Hallazgos multi-norma" value={p.multiNormFindings.length} color="#d68a1a" />
         </section>
@@ -148,7 +149,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
               value={p.risks.filter((r) => r.score >= 15 && r.disciplines.includes(d)).length}
               color={DISCIPLINE_COLOR[d]} />
           ))}
-          <Row label="Total críticos" value={s.criticalRisks} color="#b91c1c" />
+          <Row label="Total críticos" value={s.criticalRisks} color="var(--nf-danger-text)" />
         </section>
       </div>
     </div>
@@ -202,7 +203,7 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
         <h3 style={{ fontSize: 14, margin: "0 0 10px" }}>Normas incluidas en el alcance</h3>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: p.activeStandards.length ? 14 : 0 }}>
           {p.activeStandards.map((s) => (
-            <span key={s.editionId} style={chip(DISCIPLINE_COLOR[s.discipline] + "1a", DISCIPLINE_COLOR[s.discipline])}>
+            <span key={s.editionId} style={toneChip(DISCIPLINE_COLOR[s.discipline])}>
               {s.familyCode.replace("_", " ")}:{s.editionCode} · {DISCIPLINE_LABEL[s.discipline]}
             </span>
           ))}
@@ -235,7 +236,7 @@ function SystemStandardRow({ standard, entry, members, canUpdate, pending, run }
   return (
     <div style={{ border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <span style={chip(DISCIPLINE_COLOR[standard.discipline] + "1a", DISCIPLINE_COLOR[standard.discipline])}>{standard.familyCode.replace("_", " ")}</span>
+        <span style={toneChip(DISCIPLINE_COLOR[standard.discipline])}>{standard.familyCode.replace("_", " ")}</span>
         {canUpdate && (
           <button disabled={pending} style={ghostBtn}
             onClick={() => run(() => upsertSystemStandard({
@@ -284,7 +285,7 @@ function PartiesTab({ p, canManage, pending, run }: { p: IntegratedPayload; canM
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {["QUALITY", "ENVIRONMENT", "SAFETY"].map((d) => (
                   <button type="button" key={d} onClick={() => toggle(d)} style={{
-                    ...ghostBtn, background: disciplines.includes(d) ? DISCIPLINE_COLOR[d] : "#fff",
+                    ...ghostBtn, background: disciplines.includes(d) ? DISCIPLINE_COLOR[d] : "var(--nf-surface)",
                     color: disciplines.includes(d) ? "#fff" : DISCIPLINE_COLOR[d], borderColor: DISCIPLINE_COLOR[d],
                   }}>{DISCIPLINE_LABEL[d]}</button>
                 ))}
@@ -311,7 +312,7 @@ function PartiesTab({ p, canManage, pending, run }: { p: IntegratedPayload; canM
           <span key="n" style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{party.needs ?? "—"}</span>,
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {party.disciplines.length
-              ? party.disciplines.map((d) => <span key={d} style={chip(DISCIPLINE_COLOR[d] + "1a", DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)
+              ? party.disciplines.map((d) => <span key={d} style={toneChip(DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)
               : <span style={chip("#f0f3f8", "#8794a5")}>Todas</span>}
           </span>,
           canManage ? <span key="x"><EditPartyButton party={party} pending={pending} run={run} /><button type="button" style={dangerBtn} disabled={pending} onClick={() => setPartyToDelete(party)}>Eliminar</button></span> : null,
@@ -356,7 +357,7 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 {["QUALITY", "ENVIRONMENT", "SAFETY"].map((d) => (
                   <button type="button" key={d} onClick={() => toggle(d)} style={{
-                    ...ghostBtn, background: disciplines.includes(d) ? DISCIPLINE_COLOR[d] : "#fff",
+                    ...ghostBtn, background: disciplines.includes(d) ? DISCIPLINE_COLOR[d] : "var(--nf-surface)",
                     color: disciplines.includes(d) ? "#fff" : DISCIPLINE_COLOR[d], borderColor: DISCIPLINE_COLOR[d],
                   }}>{DISCIPLINE_LABEL[d]}</button>
                 ))}
@@ -381,7 +382,7 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
           <span key="t">{o.title}{o.shared && <span style={{ ...chip("#eafaf0", "var(--nf-success)"), marginLeft: 7 }}>compartido</span>}</span>,
           o.target ?? "—",
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {o.disciplines.map((d) => <span key={d} style={chip(DISCIPLINE_COLOR[d] + "1a", DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}
+            {o.disciplines.map((d) => <span key={d} style={toneChip(DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}
           </span>,
           <span key="s" style={chip("#eef1fe", "var(--nf-primary)")}>{o.status}</span>,
           canManage ? <span key="x"><EditObjectiveButton objective={o} pending={pending} run={run} /><button type="button" style={dangerBtn} disabled={pending} onClick={() => setObjectiveToDelete(o)}>Eliminar</button></span> : null,
@@ -510,7 +511,7 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
               <tr key={r.requirementId}>
                 <td><span style={chip("#eef1fe", "var(--nf-primary)")}>{r.familyCode.replace("_", " ")}</span></td>
                 <td><strong>{r.code}</strong> {r.title}</td>
-                <td><span style={chip(KIND_COLOR[r.kind] + "1a", KIND_COLOR[r.kind])}>{KIND_LABEL[r.kind]}</span></td>
+                <td><span style={toneChip(KIND_COLOR[r.kind])}>{KIND_LABEL[r.kind]}</span></td>
                 <td>
                   {r.shareable
                     ? <span style={chip("#eafaf0", "var(--nf-success)")}>Compartible</span>
@@ -666,7 +667,7 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
         Informa al menos una dimensión; la nota global es la media de las informadas.
       </p>
       {canManage && (
-        <section style={{ ...card, background: "#f7f9fc", marginBottom: 12 }}>
+        <section style={{ ...card, background: "var(--nf-surface-muted)", marginBottom: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 }}>
             <select aria-label="Selecciona proveedor" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} style={input}>
               <option value="">Selecciona proveedor…</option>
@@ -695,7 +696,7 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
           s.lastEvaluationAt ? new Date(s.lastEvaluationAt).toLocaleDateString() : "—",
           s.lastScore != null ? String(s.lastScore) : "—",
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-            {s.lastDisciplines.map((d) => <span key={d} style={chip(DISCIPLINE_COLOR[d] + "1a", DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}
+            {s.lastDisciplines.map((d) => <span key={d} style={toneChip(DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}
           </span>,
         ])}
         empty="Aún no hay proveedores evaluados con criterio integrado."
@@ -713,7 +714,7 @@ function StandardsToggle({ value, options, disabled, onChange }: { value: string
         return (
           <button key={code} type="button" disabled={disabled}
             onClick={() => onChange(active ? value.filter((c) => c !== code) : [...value, code])}
-            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? "var(--nf-primary)" : "#fff", color: active ? "#fff" : "var(--nf-primary)", borderColor: "var(--nf-primary)" }}>
+            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? "var(--nf-primary)" : "var(--nf-surface)", color: active ? "#fff" : "var(--nf-primary-active)", borderColor: "var(--nf-primary)" }}>
             {code.replace("_", " ")}
           </button>
         );
@@ -732,7 +733,7 @@ function DisciplinesToggle({ value, disabled, onChange }: { value: string[]; dis
         return (
           <button key={d} type="button" disabled={disabled}
             onClick={() => onChange(active ? value.filter((c) => c !== d) : [...value, d])}
-            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? DISCIPLINE_COLOR[d] : "#fff", color: active ? "#fff" : DISCIPLINE_COLOR[d], borderColor: DISCIPLINE_COLOR[d] }}>
+            style={{ ...ghostBtn, padding: "3px 8px", fontSize: 11, background: active ? DISCIPLINE_COLOR[d] : "var(--nf-surface)", color: active ? "#fff" : DISCIPLINE_COLOR[d], borderColor: DISCIPLINE_COLOR[d] }}>
             {DISCIPLINE_LABEL[d]}
           </button>
         );
@@ -750,8 +751,8 @@ function SharedTab({ p }: { p: IntegratedPayload }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section style={{ ...card, background: "#f7fcf8", borderColor: "#b8e4c4" }}>
-        <strong style={{ color: "#166534" }}>Factor de reutilización: {p.reuseFactor}× </strong>
-        <span style={{ fontSize: 13, color: "#39704b" }}>
+        <strong style={{ color: "var(--nf-success-text)" }}>Factor de reutilización: {p.reuseFactor}× </strong>
+        <span style={{ fontSize: 13, color: "var(--nf-success-text)" }}>
           — cada elemento del sistema cubre de media {p.reuseFactor} requisitos. Un valor superior a 1 confirma
           que un mismo documento, evidencia o riesgo satisface varias normas sin crear copias.
         </span>

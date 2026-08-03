@@ -71,8 +71,8 @@ export default function AIPanel({
         right: 0,
         top: 0,
         bottom: 0,
-        background: "#fff",
-        borderLeft: "1px solid #E8E8E8",
+        background: "var(--nf-surface)",
+        borderLeft: "1px solid var(--nf-border)",
         zIndex: 900,
         display: "flex",
         flexDirection: "column",
@@ -82,7 +82,7 @@ export default function AIPanel({
       <div
         style={{
           padding: "18px 20px 14px",
-          borderBottom: "1px solid #E8E8E8",
+          borderBottom: "1px solid var(--nf-border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -127,7 +127,7 @@ export default function AIPanel({
             padding: "10px 14px",
             fontSize: 13,
             color: "var(--nf-ink-2, #223648)",
-            border: "1px solid #E8E8E8",
+            border: "1px solid var(--nf-border)",
           }}
         >
           <strong style={{ color: "var(--nf-ink)" }}>{t("ai.context")}</strong>{" "}
@@ -155,7 +155,7 @@ export default function AIPanel({
             style={{
               width: "100%",
               padding: "8px 10px",
-              border: "1px solid #E8E8E8",
+              border: "1px solid var(--nf-border)",
               borderRadius: 8,
               fontSize: 13,
               outline: "none",
@@ -216,7 +216,7 @@ export default function AIPanel({
             <div
               style={{
                 background: "var(--nf-app-panel)",
-                border: "1px solid #E8E8E8",
+                border: "1px solid var(--nf-border)",
                 borderRadius: 10,
                 padding: 16,
                 fontSize: 13,
@@ -259,7 +259,7 @@ export default function AIPanel({
                   borderRadius: 8,
                   padding: "10px 14px",
                   fontSize: 13,
-                  color: "var(--nf-success)",
+                  color: "var(--nf-success-text)",
                   fontWeight: 500,
                 }}
               >
@@ -280,7 +280,7 @@ export default function AIPanel({
         )}
       </div>
 
-      <div style={{ padding: 16, borderTop: "1px solid #E8E8E8" }}>
+      <div style={{ padding: 16, borderTop: "1px solid var(--nf-border)" }}>
         <button
           type="button"
           onClick={() => callAI(customPrompt || undefined)}

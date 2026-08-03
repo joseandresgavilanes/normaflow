@@ -24,7 +24,7 @@ export default function SuppliersModule() {
   type SupplierRow = (typeof suppliers)[number];
   const columns = useMemo<DataTableColumn<SupplierRow>[]>(() => [
     { id: "code", header: "Código", primary: true, minWidth: 110, hideable: false, sortValue: (s) => s.code,
-      cell: (s) => <span style={{ fontWeight: 700, color: "var(--nf-primary)" }}>{s.code}</span> },
+      cell: (s) => <span style={{ fontWeight: 700, color: "var(--nf-primary-active)" }}>{s.code}</span> },
     { id: "name", header: "Proveedor", minWidth: 180, sortValue: (s) => s.name, cell: (s) => s.name },
     { id: "criticality", header: "Criticidad", minWidth: 120, sortValue: (s) => s.criticality,
       cell: (s) => <Badge status={s.criticality === "CRITICAL" ? "OFF_TRACK" : s.criticality === "HIGH" ? "AT_RISK" : "ON_TRACK"} label={s.criticality} /> },
@@ -95,7 +95,7 @@ export default function SuppliersModule() {
                   detailLive.riskCodes.map(code => {
                     const r = risks.find(x => x.code === code);
                     return (
-                      <Link key={code} href="/app/risks" style={{ fontSize: 12, color: "var(--nf-primary)" }}>
+                      <Link key={code} href="/app/risks" style={{ fontSize: 12, color: "var(--nf-primary-active)" }}>
                         {r?.title ?? code}
                       </Link>
                     );
@@ -108,7 +108,7 @@ export default function SuppliersModule() {
               {detailLive.documentCodes.map(c => {
                 const d = documents.find(x => x.code === c);
                 return (
-                  <Link key={c} href="/app/documents" style={{ fontSize: 12, color: "var(--nf-primary)", marginRight: 10 }}>
+                  <Link key={c} href="/app/documents" style={{ fontSize: 12, color: "var(--nf-primary-active)", marginRight: 10 }}>
                     {d?.title ?? c}
                   </Link>
                 );

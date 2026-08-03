@@ -130,7 +130,7 @@ export default function RecordsClient() {
       key: "code",
       label: "Código",
       render: (_, r) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary)", fontWeight: 700 }}>{r.code}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700 }}>{r.code}</span>
       ),
     },
     {
@@ -240,7 +240,7 @@ export default function RecordsClient() {
                 <button
                   type="button"
                   className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger)", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
+                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger-text)", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
                   onClick={() => setConfirmDeactivate(r)}
                 >
                   Desactivar
@@ -329,13 +329,13 @@ export default function RecordsClient() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <Archive size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Registros activos</div>
           </div>
         </div>
@@ -369,13 +369,13 @@ export default function RecordsClient() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <Clock size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Próximos a vencer</div>
           </div>
         </div>
@@ -389,13 +389,13 @@ export default function RecordsClient() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-danger)",
+              color: "var(--nf-danger-text)",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Disposición vencida</div>
           </div>
         </div>
@@ -406,7 +406,7 @@ export default function RecordsClient() {
           style={{
             padding: "14px 18px 16px",
             borderBottom: "1px solid var(--nf-line)",
-            background: "#fff",
+            background: "var(--nf-surface)",
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
@@ -715,9 +715,9 @@ function RecordFormModal({
               marginTop: 18,
               padding: "12px 14px",
               borderRadius: 12,
-              background: "#fff0f0",
+              background: "var(--nf-danger-subtle)",
               border: "1px solid #f5c2c0",
-              color: "var(--nf-danger)",
+              color: "var(--nf-danger-text)",
               fontSize: 13,
               fontWeight: 600,
             }}
@@ -894,7 +894,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
             padding: "16px 18px",
             borderRadius: 14,
             border: "1px solid var(--nf-line)",
-            background: "#fff",
+            background: "var(--nf-surface)",
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>
@@ -933,7 +933,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
             </>
           )}
         </div>
-        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "var(--nf-danger)", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
+        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--nf-danger-subtle)", border: "1px solid #f5c2c0", color: "var(--nf-danger-text)", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
 
         {(record.physicalLocation || record.digitalLocation) && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
@@ -965,7 +965,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--nf-primary)",
+                  color: "var(--nf-primary-active)",
                 }}
               >
                 <ClipboardList size={20} strokeWidth={2.25} aria-hidden />
@@ -1000,7 +1000,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 gap: 14,
                 padding: "16px 18px",
                 borderRadius: 14,
-                background: "#fff",
+                background: "var(--nf-surface)",
                 border: "1px solid var(--nf-line)",
                 marginBottom: 14,
               }}
@@ -1035,7 +1035,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 </div>
               </div>
               {entryError && (
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "var(--nf-danger)", fontSize: 13, fontWeight: 600 }}>
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--nf-danger-subtle)", border: "1px solid #f5c2c0", color: "var(--nf-danger-text)", fontSize: 13, fontWeight: 600 }}>
                   {entryError}
                 </div>
               )}
@@ -1085,7 +1085,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                     border: "1px solid var(--nf-line)",
                   }}
                 >
-                  <code style={{ fontSize: 11, color: "var(--nf-primary)", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
+                  <code style={{ fontSize: 11, color: "var(--nf-primary-active)", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 700, lineHeight: 1.45 }}>{e.title ?? e.reference}</div><span className="nf-chip" style={{ fontSize: 10 }}>{e.status === "DRAFT" ? "Borrador" : e.status === "EXPIRED" ? "Vencido" : e.status === "ARCHIVED" ? "Archivado" : "Vigente"}</span></div>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
@@ -1160,7 +1160,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "var(--nf-danger)",
+                          color: "var(--nf-danger-text)",
                           borderColor: "#f0c4c2",
                           flexShrink: 0,
                           boxSizing: "border-box",

@@ -9,6 +9,7 @@ import { localeToOpenGraph } from "@/lib/i18n/config";
 import { translate } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { absoluteUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_PATH } from "@/lib/seo";
+import { getServerTheme } from "@/lib/theme/server";
 // Los tokens deben cargarse antes que cualquier hoja que los consuma.
 import "@/styles/tokens.css";
 import "./globals.css";
@@ -60,10 +61,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getServerLocale();
+  const [locale, theme] = await Promise.all([getServerLocale(), getServerTheme()]);
 
   return (
-    <html lang={locale} className={`${inter.variable} ${manrope.variable}`} suppressHydrationWarning>
+    // `data-theme` se pinta en el servidor desde la cookie, igual que `lang`:
+    // así no hay destello de tema claro antes de hidratar y no hace falta un
+    // script bloqueante en <head>. Con la preferencia en `system` NO se pone el
+    // atributo, para que actúe `@media (prefers-color-scheme: dark)`.
+    <html
+      lang={locale}
+      data-theme={theme === "system" ? undefined : theme}
+      className={`${inter.variable} ${manrope.variable}`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased" suppressHydrationWarning>
         <I18nProvider initialLocale={locale}>
           {/* En la raíz para que también cubra login y registro: los errores de

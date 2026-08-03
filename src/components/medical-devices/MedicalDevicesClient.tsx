@@ -68,9 +68,9 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info)", background: "var(--nf-info-subtle)", color: "var(--nf-info)", fontWeight: 600, fontSize: 12, cursor: "pointer", marginRight: 4 };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontWeight: 600, fontSize: 12, cursor: "pointer", marginRight: 4 };
 const dangerBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
@@ -154,11 +154,11 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
       <IsoSectionHeader headingLevel={1} icon={Cross} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e", fontSize: 13 }}>
+      <div style={{ ...card, borderColor: "var(--nf-warning-border)", background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", fontSize: 13 }}>
         {initial.disclaimer}
       </div>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Dispositivos" value={s.devices} />
@@ -201,7 +201,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                 <Row k="Retención configurada" v={`${initial.retentionYears} años`} />
               </>
             )}
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>
               Solo referencias opacas de sujeto — sin PII clínica innecesaria. Texto libre cifrado en reposo.
             </p>
           </div>
@@ -319,7 +319,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
             ))}
           </Table>
           {initial.coverage.uncovered.length > 0 && (
-            <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)" }}>
+            <div style={{ ...card, borderColor: "var(--nf-warning-border)", background: "var(--nf-warning-subtle)" }}>
               Inputs sin output: {initial.coverage.uncovered.join(", ")}
             </div>
           )}
@@ -499,7 +499,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
 
       {tab === "vigilance" && (
         s.sensitiveLocked ? (
-          <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e" }}>
+          <div style={{ ...card, borderColor: "var(--nf-warning-border)", background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)" }}>
             <Eye size={18} style={{ marginRight: 8, verticalAlign: "middle" }} />
             Vigilancia bloqueada: se requiere <strong>md-sensitive:read</strong> para quejas, eventos adversos, PMS, acciones de campo y retiros.
           </div>
@@ -666,7 +666,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
               </tr>
             ))}
           </Table>
-          <p style={{ margin: 0, color: "#94a3b8", fontSize: 12 }}>
+          <p style={{ margin: 0, color: "var(--nf-text-subtle)", fontSize: 12 }}>
             Requisitos regulatorios configurables por organización. NormaFlow no certifica cumplimiento nacional.
           </p>
         </div>
@@ -693,7 +693,7 @@ function Row({ k, v, danger }: { k: string; v: string | number; danger?: boolean
   return (
     <div className="nf-iso-dashboard-row">
       <span className="nf-iso-dashboard-row-label">{k}</span>
-      <strong className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger)" : undefined }}>{v}</strong>
+      <strong className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{v}</strong>
     </div>
   );
 }
@@ -781,7 +781,7 @@ function MedicalDeviceRecordEditor({ kind, value, families, devices, dhfs, suppl
           : <input style={input} type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />}
       </label>)}
     </div>
-    <div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" style={{ ...miniBtn, background: "#fff" }} onClick={onCancel}>Cancelar</button><button type="button" disabled={pending || !valid} style={primaryBtn} onClick={() => onSave(payload)}>Guardar cambios</button></div>
+    <div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" style={{ ...miniBtn, background: "var(--nf-surface)" }} onClick={onCancel}>Cancelar</button><button type="button" disabled={pending || !valid} style={primaryBtn} onClick={() => onSave(payload)}>Guardar cambios</button></div>
   </div>;
 }
 
@@ -1080,7 +1080,7 @@ function RetentionPolicyForm({ current, pending, run, onDone }: { current: numbe
   const [years, setYears] = useState(String(current));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+      <p style={{ margin: 0, fontSize: 12, color: "var(--nf-text-secondary)" }}>
         <Settings size={12} style={{ verticalAlign: "middle", marginRight: 4 }} />
         Años de conservación de quejas y eventos adversos tras su cierre. La retención regulatoria real depende de la jurisdicción del fabricante.
       </p>

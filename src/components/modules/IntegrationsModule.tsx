@@ -77,7 +77,7 @@ export default function IntegrationsModule() {
             )}
             <p style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               La ingesta de evidencias desde este conector quedaría mapeada a controles, documentos y auditorías. Desde{" "}
-              <a href="/app/evidence" style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
+              <a href="/app/evidence" style={{ color: "var(--nf-primary-active)", fontWeight: 600 }}>
                 Evidencias
               </a>{" "}
               puede distinguir origen manual vs. automatizado.

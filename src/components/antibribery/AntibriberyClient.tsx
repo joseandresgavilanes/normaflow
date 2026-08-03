@@ -82,9 +82,9 @@ const HR_LABEL: Record<string, string> = {
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #9f1239", background: "#fff1f2", color: "#9f1239", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #9f1239", background: "var(--nf-danger-subtle)", color: "#9f1239", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined, c?: string | null) => (typeof v === "number" ? `${v.toLocaleString("es-ES")}${c ? ` ${c}` : ""}` : "—");
@@ -159,14 +159,14 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
+          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>
             {SECTION_META[tab].sub}
           </p>
         </div>
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Evaluaciones" value={s.assessments} />
@@ -186,7 +186,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <Row k="Evaluaciones" v={s.assessments} />
             <Row k="Aprobadas" v={s.assessmentsApproved} />
             <Row k="Residual alto/crítico" v={s.highResidual} danger={s.highResidual > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Reutiliza la mecánica de ComplianceRisk; añade uplift de país, sector, funcionario y terceros.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Reutiliza la mecánica de ComplianceRisk; añade uplift de país, sector, funcionario y terceros.</p>
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Handshake size={16} aria-hidden />Terceros y UBO (§8.2)</h3>
@@ -201,7 +201,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <Row k="Regalos pendientes" v={s.giftsPending} danger={s.giftsPending > 0} />
             <Row k="Donaciones políticas" v={s.donationsPolitical} />
             <Row k="Pagos de facilitación abiertos" v={s.facilitationOpen} danger={s.facilitationOpen > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>SUBMITTED → MANAGER_REVIEW → COMPLIANCE_REVIEW → APPROVED|REJECTED.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>SUBMITTED → MANAGER_REVIEW → COMPLIANCE_REVIEW → APPROVED|REJECTED.</p>
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><ShieldCheck size={16} aria-hidden />Controles, aprobaciones e investigación</h3>
@@ -209,7 +209,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <Row k="Operaciones pendientes" v={s.highRiskPending} danger={s.highRiskPending > 0} />
             <Row k="Compromisos" v={s.commitments} />
             <Row k="Investigaciones abiertas" v={s.investigationsOpen} danger={s.investigationsOpen > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>Las investigaciones son un puente a Investigation del SGC; el canal de denuncias no se duplica.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>Las investigaciones son un puente a Investigation del SGC; el canal de denuncias no se duplica.</p>
           </div>
           </div>
         </>
@@ -222,7 +222,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
           {initial.assessments.map((row) => (
             <tr key={row.id}>
               <td style={td}>{row.code}</td>
-              <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.scope ?? ""}</div></td>
+              <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.scope ?? ""}</div></td>
               <td style={td}><span style={chip("#f1f5f9", level(row.inherentLevel))}>{row.inherentScore} · {row.inherentLevel}</span></td>
               <td style={td}><span style={chip("#f1f5f9", level(row.residualLevel ?? "MEDIUM"))}>{row.residualScore ?? "—"} · {row.residualLevel ?? "—"}</span></td>
               <td style={td}>{row.countryRisk}</td>
@@ -271,7 +271,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
           {initial.dueDiligence.map((row) => (
             <tr key={row.id}>
               <td style={td}>{row.code}</td>
-              <td style={td}><b>{row.associate.code}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.associate.name}</div></td>
+              <td style={td}><b>{row.associate.code}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.associate.name}</div></td>
               <td style={td}>{row.level}</td>
               <td style={td}><span style={chip("#f1f5f9", "#334155")}>{DD_LABEL[row.status] ?? row.status}</span></td>
               <td style={td}>{row.screeningResult}</td>
@@ -282,7 +282,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                   <button
                     key={to}
                     disabled={pending}
-                    style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "#f8fafc", color: "#334155", marginRight: 4 }}
+                    style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "var(--nf-surface-muted)", color: "#334155", marginRight: 4 }}
                     onClick={() => run(() => transitionDueDiligence(row.id, {
                       to: to as DueDiligenceStatus,
                       rejectionReason: to === "REJECTED" ? "Riesgo residual inaceptable / screening adverso" : undefined,
@@ -301,7 +301,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
 
       {tab === "owners" && (
         s.sensitiveLocked ? (
-          <div style={{ ...card, borderColor: "#fde68a", background: "var(--nf-warning-subtle)", color: "#92400e" }}>
+          <div style={{ ...card, borderColor: "var(--nf-warning-border)", background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)" }}>
             Beneficiarios finales bloqueado: se requiere <strong>antibribery-sensitive:read</strong> para ver UBO y condición PEP de terceros.
           </div>
         ) : (
@@ -339,7 +339,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <tr key={row.id}>
               <td style={td}>{row.code}</td>
               <td style={td}>{row.recordType} · {row.direction}</td>
-              <td style={td}><b>{row.description}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.counterpartyName ?? row.associate?.name ?? ""}</div></td>
+              <td style={td}><b>{row.description}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.counterpartyName ?? row.associate?.name ?? ""}</div></td>
               <td style={td}>{money(row.estimatedValue, row.currency)}{row.requiresCompliance ? <div style={{ color: "#9f1239", fontSize: 11 }}>Exige compliance</div> : null}</td>
               <td style={td}>{row.involvesPublicOfficial ? "Sí" : "No"}</td>
               <td style={td}>{GIFT_LABEL[row.status] ?? row.status}</td>
@@ -353,7 +353,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                     <button
                       key={to}
                       disabled={pending}
-                      style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "#f8fafc", color: "#334155", marginRight: 4 }}
+                      style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "var(--nf-surface-muted)", color: "#334155", marginRight: 4 }}
                       onClick={() => run(() => transitionGiftHospitality(row.id, {
                         to: to as GiftHospitalityStatus,
                         rejectionReason: to === "REJECTED" ? "Fuera de política / riesgo de soborno" : undefined,
@@ -379,7 +379,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <tr key={row.id}>
               <td style={td}>{row.code}</td>
               <td style={td}>{row.recordType}</td>
-              <td style={td}><b>{row.beneficiaryName}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.purpose ?? ""}</div></td>
+              <td style={td}><b>{row.beneficiaryName}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.purpose ?? ""}</div></td>
               <td style={td}>{money(row.amount, row.currency)}</td>
               <td style={td}>{row.politicalDonation ? "Sí" : "No"}</td>
               <td style={td}>{row.status}</td>
@@ -462,7 +462,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <tr key={row.id}>
               <td style={td}>{row.ambito}</td>
               <td style={td}>{row.code}</td>
-              <td style={td}><b>{row.title}</b><div style={{ color: "#64748b", fontSize: 12 }}>{row.area}</div></td>
+              <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.area}</div></td>
               <td style={td}>{row.period}</td>
               <td style={td}>{row.designAdequate === null ? "—" : row.designAdequate ? "OK" : "Falla"}</td>
               <td style={td}>{row.operatingEffective === null ? "—" : row.operatingEffective ? "OK" : "Falla"}</td>
@@ -554,7 +554,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
       )}
 
       {!initial.conflictsComplete && tab === "conflicts" && (
-        <p style={{ color: "#94a3b8", fontSize: 12 }}>Solo ves tus propias declaraciones ABMS. Quien aprueba compliance ve el registro completo.</p>
+        <p style={{ color: "var(--nf-text-subtle)", fontSize: 12 }}>Solo ves tus propias declaraciones ABMS. Quien aprueba compliance ve el registro completo.</p>
       )}
     </div>
   );
@@ -863,7 +863,7 @@ function NewInvestigationForm({ associates, pending, run, onDone }: { associates
   const set = (k: string, v: string | boolean) => setF((p) => ({ ...p, [k]: v as never }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>Puente a una Investigation ya abierta en el SGC — no crea una investigación nueva.</p>
+      <p style={{ margin: 0, fontSize: 12, color: "var(--nf-text-secondary)" }}>Puente a una Investigation ya abierta en el SGC — no crea una investigación nueva.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input aria-label="ID de la Investigation del SGC" style={input} placeholder="ID de la Investigation del SGC" value={f.investigationId} onChange={(e) => set("investigationId", e.target.value)} />
         <select aria-label="Tipo de denuncia" style={input} value={f.allegationType} onChange={(e) => set("allegationType", e.target.value)}>

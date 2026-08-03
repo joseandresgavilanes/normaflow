@@ -57,7 +57,7 @@ select.nf-app-input {
   gap: 6px;
   padding: 8px 14px;
   border-radius: var(--nf-radius-pill);
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   cursor: pointer;
   font-size: 13px;
@@ -120,15 +120,15 @@ select.nf-app-input {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--nf-app-accent);
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--nf-glass);
   border: 1px solid rgba(82, 102, 246, 0.14);
   box-shadow: 0 1px 0 rgba(82, 102, 246, 0.05);
 }
 
 .nf-activity-hero-pill--green {
-  color: #1f6f45;
+  color: var(--nf-success-text);
   border-color: rgba(46, 139, 87, 0.22);
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-activity-kpi-cell {
@@ -203,7 +203,7 @@ select.nf-app-input {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #2e8b57;
+  background: var(--nf-success-text);
   box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.25);
   flex-shrink: 0;
   animation: nf-activity-pulse-dot 2s ease-in-out infinite;
@@ -264,7 +264,7 @@ select.nf-app-input {
   border-radius: 16px;
   border: 1px solid rgba(82, 102, 246, 0.12);
   box-shadow: 0 14px 40px -28px rgba(82, 102, 246, 0.32), 0 1px 0 rgba(82, 102, 246, 0.05);
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-org-panel-head {
@@ -292,7 +292,7 @@ select.nf-app-input {
 
 .nf-org-panel-body {
   padding: 24px 26px 30px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-org-grid-2 {
@@ -326,7 +326,7 @@ select.nf-app-input {
   height: 72px;
   border-radius: 12px;
   border: 1px solid rgba(82, 102, 246, 0.12);
-  background: #fff;
+  background: var(--nf-surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -355,8 +355,8 @@ select.nf-app-input {
   border-radius: 12px;
   border: 1px solid rgba(82, 102, 246, 0.12);
   border-left-width: 4px;
-  border-left-color: #2e8b57;
-  background: #fff;
+  border-left-color: var(--nf-success-text);
+  background: var(--nf-surface);
   box-shadow: 0 1px 0 rgba(82, 102, 246, 0.04);
 }
 
@@ -371,7 +371,7 @@ select.nf-app-input {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.22);
   flex-shrink: 0;
 }
@@ -397,7 +397,7 @@ select.nf-app-input {
 .nf-org-msg-error {
   padding: 11px 14px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid rgba(201, 60, 55, 0.25);
   color: #c93c37;
   font-size: 13px;

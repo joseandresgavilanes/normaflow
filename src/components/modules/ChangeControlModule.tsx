@@ -68,7 +68,7 @@ export default function ChangeControlModule() {
   type ChangeRow = (typeof changeRequests)[number];
   const columns = useMemo<DataTableColumn<ChangeRow>[]>(() => [
     { id: "code", header: "Código", primary: true, minWidth: 120, hideable: false, sortValue: (c) => c.code,
-      cell: (c) => <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "var(--nf-primary)" }}>{c.code}</span> },
+      cell: (c) => <span style={{ fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "var(--nf-primary-active)" }}>{c.code}</span> },
     { id: "title", header: "Título", minWidth: 220, sortValue: (c) => c.title,
       cell: (c) => <span style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{c.title}</span> },
     { id: "impact", header: "Impacto", minWidth: 130, sortValue: (c) => c.impact,
@@ -306,7 +306,7 @@ export default function ChangeControlModule() {
                   detailLive.documentIds.map(did => {
                     const d = documents.find(x => x.id === did);
                     return (
-                      <Link key={did} href="/app/documents" style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-primary)" }}>
+                      <Link key={did} href="/app/documents" style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-primary-active)" }}>
                         {d?.code ?? did}
                       </Link>
                     );
@@ -327,7 +327,7 @@ export default function ChangeControlModule() {
                       disabled={!perm.changes.manage}
                       onChange={() => toggleProcessCode(p.code)}
                     />
-                    <span style={{ fontWeight: 600, color: "var(--nf-primary)" }}>{p.code}</span> — {p.name}
+                    <span style={{ fontWeight: 600, color: "var(--nf-primary-active)" }}>{p.code}</span> — {p.name}
                   </label>
                 ))}
               </div>

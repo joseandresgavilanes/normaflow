@@ -160,7 +160,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
@@ -180,13 +180,13 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <Timer size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
           </div>
         </div>
@@ -220,13 +220,13 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <Zap size={26} strokeWidth={2} aria-hidden />
@@ -293,7 +293,7 @@ export default function ActionsModule() {
                           fontSize: 11,
                           fontWeight: 700,
                           color: "var(--nf-ink-2)",
-                          background: "#f3f6fa",
+                          background: "var(--nf-surface-muted)",
                           padding: "4px 10px",
                           borderRadius: 99,
                           border: "1px solid rgba(82, 102, 246, 0.1)",
@@ -301,7 +301,7 @@ export default function ActionsModule() {
                       >
                         {action.type === "CORRECTIVE" ? "Correctiva" : action.type === "PREVENTIVE" ? "Preventiva" : "Mejora"}
                       </span>
-                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: "var(--nf-primary)" }}>{action.code}</span>
+                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: "var(--nf-primary-active)" }}>{action.code}</span>
                     </div>
                     <div
                       style={{
@@ -325,7 +325,7 @@ export default function ActionsModule() {
                         <Avatar name={action.owner} size={18} />
                         <span style={{ fontWeight: 600 }}>{action.owner.split(" ")[0]}</span>
                       </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "var(--nf-danger)" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "var(--nf-danger-text)" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
                         <CalendarDays size={14} strokeWidth={2.25} aria-hidden />
                         {action.due}
                       </span>
@@ -411,7 +411,7 @@ export default function ActionsModule() {
                   borderRadius: 99,
                   fontSize: 12,
                   fontWeight: 600,
-                  background: "#f3f6fa",
+                  background: "var(--nf-surface-muted)",
                   border: "1px solid var(--nf-line)",
                   color: "var(--nf-ink-2)",
                 }}

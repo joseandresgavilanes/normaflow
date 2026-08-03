@@ -9,6 +9,7 @@ import QuickCreateMenu from "@/components/layout/QuickCreateMenu";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 const PAGE_TITLE_KEYS: Record<string, MessageKey> = {
   "/app/dashboard": "nav.home",
@@ -114,6 +115,7 @@ export default function AppTopbar({
       </div>
 
       <div className="nf-topbar-actions">
+        <ThemeSwitcher compact />
         <LanguageSwitcher compact />
         <QuickCreateMenu />
         <button

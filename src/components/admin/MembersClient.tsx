@@ -202,7 +202,7 @@ export default function MembersClient() {
         <div style={{ flex: 1, minWidth: 180, display: "flex", flexDirection: "column", gap: 4 }}>
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)" }}>
             <span>Usuarios</span>
-            <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "var(--nf-danger)" : nearLimit ? "var(--nf-warning)" : "var(--nf-ink-2)", fontWeight: 700 }}>
+            <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "var(--nf-danger-text)" : nearLimit ? "var(--nf-warning-text)" : "var(--nf-ink-2)", fontWeight: 700 }}>
               {usedUsers} / {maxUsers === null ? "∞" : maxUsers}
             </span>
           </div>
@@ -218,7 +218,7 @@ export default function MembersClient() {
           )}
         </div>
         {(atLimit || nearLimit) && (
-          <div style={{ fontSize: 12, color: atLimit ? "var(--nf-danger)" : "var(--nf-warning)", fontWeight: 600 }}>
+          <div style={{ fontSize: 12, color: atLimit ? "var(--nf-danger-text)" : "var(--nf-warning-text)", fontWeight: 600 }}>
             {atLimit
               ? "Has alcanzado el límite del plan. "
               : `Te quedan ${maxUsers! - usedUsers} usuarios. `}

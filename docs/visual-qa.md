@@ -228,3 +228,93 @@ móvil cerrado y fuera del orden de tabulación, apertura por botón y cierre co
 - Capturas comparativas antes/después por ruta.
 - Suite E2E de Playwright sobre la navegación nueva (grupos, filtro, fijados,
   cajón móvil, skip link).
+
+---
+
+## 4. Bloques 9 a 15
+
+### Lo que la medición corrigió del plan
+
+| Lo que decía el plan | Lo que había |
+|---|---|
+| «Field con label visible» | 1.210 campos sin nombre accesible ninguno en 46 ficheros: 652 sin nada y 555 con solo placeholder |
+| «Páginas de detalle» | 0 rutas dinámicas en las 58 del workspace; 154 modales en 35 ficheros y 3 rieles de etapa incompatibles |
+| «Cobertura por requisito» | `RequirementCoverage` con 0 filas y sus dos server actions con 0 consumidores: no había pantalla que las llamara |
+| «Revisión de claims» | Un testimonio firmado con nombre y empresa de los datos demo, y cinco «logos de clientes» que eran cuadrados de degradado |
+| «Tokens de oscuro ya listos» | `:root[data-theme="dark"]` existía y era código muerto: sin media query, sin conmutador, sin persistencia. Jamás había renderizado |
+
+### Contraste: de 77 rutas con fallos a 0 en dos temas
+
+`tests/contrast.spec.ts` mide el par texto/fondo **pintado**, componiendo las
+capas semitransparentes, en las dos apariencias. No existía ninguna
+comprobación de contraste, y por eso se colaron tres errores del mismo tipo:
+
+1. Los ratios se verificaron contra blanco, no contra las superficies
+   rehundidas donde el texto se pinta.
+2. `Badge` usaba el token de RELLENO (3:1, válido para barras e iconos) como
+   color de TEXTO, que necesita 4.5:1 — 89 apariciones.
+3. Al tokenizar los hex se repitió el mismo error: `color: var(--nf-primary)`
+   da 4.11:1 sobre su propio fondo sutil — 79 apariciones.
+
+El patrón más extendido era `chip(color + "22", color)`: un solo color de texto
+y, con alfa, de fondo. Ese par no puede cumplir, porque el fondo hereda el tono
+del texto. Medido entre 1.00:1 y 4.36:1, en 34 sitios. `src/lib/tone.ts`
+traduce cualquier valor al par correcto.
+
+La sonda también tenía un fallo propio: trataba `rgba(82,102,246,0.06)` —que a
+la vista es blanco— como azul opaco, y daba 1.18:1 contra un texto gris. Ahora
+compone el alfa.
+
+| Ruta | Fallos antes (claro) | Después (claro) | Después (oscuro) |
+|---|---:|---:|---:|
+| /app/documents | 32 | **0** | **0** |
+| 8 rutas del test | — | **0** | **0** |
+
+### Objetivos táctiles y botones sin nombre
+
+Los 9 botones sin nombre accesible eran **un solo defecto**:
+`src/components/ui/Table.tsx` daba `sortValue` a todas las columnas, incluida la
+de acciones con etiqueta vacía, y `DataTable` la volvía ordenable — un botón
+cuyo único contenido es un icono `aria-hidden`. Corregido en el adaptador,
+desaparece en los 9 listados.
+
+De los 454 objetivos táctiles por debajo de 24 px, tres componentes concentraban
+el 79%, y a dos les faltaba **un píxel**: el conmutador de idioma (171 casos a
+29.1 × 23), el botón de orden de DataTable (131 a 60 × 18) y el enlace de migas
+(56 a 34.2 × 20). Tres reglas CSS en el componente, no ruta por ruta.
+
+### Barrido y CI
+
+`scripts/visual-audit.ts` pasa de 3 a 6 anchos —360, 390, 768, 1024, 1280,
+1440— con `AUDIT_VIEWPORTS` para acotarlos, porque los seis llevan el barrido de
+249 a 498 cargas.
+
+El paso de CI `npm test -- --project=chromium` no hacía lo que aparentaba: npm
+anexa el argumento al FINAL de la cadena de cuatro comandos, así que corría
+también los dos shards de firefox con solo chromium instalado. Separado en
+`test:chromium` y `test:firefox`.
+
+## 5. Lo que sigue abierto, medido
+
+- **161 valores hex sin token equivalente**, con ~830 apariciones. Revelan dos
+  paletas conviviendo: la neutra cálida de `tokens.css` y una slate azulada
+  (#64748B, #E5EAF2, #94A3B8). Es un problema de definición, no de sustitución:
+  elegir «el token más parecido» cambiaría el aspecto.
+- **23 saltos de jerarquía de encabezado**, todos el mismo par h1→h3. Falta el
+  nivel 2: nueve vienen del literal `<h3 style={{ marginTop: 0 }}>` copiado 34
+  veces en los clientes de norma.
+- **~4.400 estilos en línea**. Solo el 24% son mono-intención; el 32% mezcla
+  espaciado y layout. No son convertibles en bloque. Y hay un acoplamiento
+  duro: 39 selectores `[style*="display: grid"]` de `globals` estilan los
+  modales leyendo el atributo inline, así que convertir esos inline a clases
+  desactiva las reglas — van en el mismo commit o no van.
+- **`surfaces.css` y `controls.css` con pocos consumidores**: `Surface`,
+  `Dialog` y `FilterBar` siguen sin adoptarse. `FilterBar` existe y los
+  listados migrados conservan sus barras de filtro propias.
+- **`Modal` frente a `Dialog`**: 154 usos del primero, 0 del segundo, y el
+  propio `Modal.tsx` se declara heredado en su cabecera.
+- **13 páginas públicas de norma con 45% de duplicación literal** (34 líneas
+  idénticas en las 13).
+- **Divergencia de precio con Stripe**: el importe que ve el cliente vive en
+  `constants.ts`; el que se cobra lo define el Price de Stripe.
+  `assertStripePlanConfiguration` valida el FORMATO del id, nunca el importe.

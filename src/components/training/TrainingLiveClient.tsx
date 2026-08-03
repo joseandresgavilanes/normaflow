@@ -207,7 +207,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       />
 
       {(error || success) && (
-        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "#fff0f0" : "#edf8f1", color: error ? "var(--nf-danger)" : "#1f6f45" }}>
+        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "var(--nf-danger-subtle)" : "#edf8f1", color: error ? "var(--nf-danger-text)" : "var(--nf-success-text)" }}>
           {error || success}
         </div>
       )}
@@ -217,7 +217,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
           <div style={{ fontWeight: 600, color: "#875710", marginBottom: 6 }}>Antes de crear una asignación</div>
           {blockers.map((blocker) => (
             <div key={blocker.text} style={{ fontSize: 13, color: "#6f521e", marginTop: 4 }}>
-              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "var(--nf-primary)", fontWeight: 700 }}>Abrir Personal →</Link>}
+              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>Abrir Personal →</Link>}
             </div>
           ))}
         </Card>
@@ -252,7 +252,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {courses.map((course, idx) => {
                 const linkedDocs = documents.filter((document) => course.documentIds.includes(document.id));
-                const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "#6B3FB5"][idx % 4];
+                const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "var(--nf-primary-active)"][idx % 4];
                 return (
                   <Card key={course.id} style={{ padding: 0, overflow: "hidden", opacity: course.active ? 1 : 0.68 }}>
                     
@@ -365,7 +365,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={creatingAssignment} onClose={() => !isPending && setCreatingAssignment(false)} title="Nueva asignación" width={560}>
         <ModalForm onSubmit={submitAssignment}>
-          {!activeCourses.length || !personnel.length ? <p style={{ color: "var(--nf-danger)", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
+          {!activeCourses.length || !personnel.length ? <p style={{ color: "var(--nf-danger-text)", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
             <ModalField label="Curso *"><select aria-label="Curso" name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
             <ModalField label="Persona *"><select aria-label="Persona" name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
             <ModalField label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>

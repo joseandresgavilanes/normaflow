@@ -46,7 +46,7 @@ export default function SetupGuideModule({ live }: { live?: SetupPayload | null 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 24 }}>
         <Card>
           <div style={{ fontSize: 13, color: "var(--nf-ink-3)", marginBottom: 8 }}>Readiness general</div>
-          <div style={{ fontSize: 42, fontWeight: 600, color: pct >= 70 ? "var(--nf-success)" : pct >= 40 ? "var(--nf-warning)" : "var(--nf-primary)" }}>{pct}%</div>
+          <div style={{ fontSize: 42, fontWeight: 600, color: pct >= 70 ? "var(--nf-success-text)" : pct >= 40 ? "var(--nf-warning-text)" : "var(--nf-primary-active)" }}>{pct}%</div>
           <ProgressBar value={pct} color={pct >= 70 ? "var(--nf-success)" : "var(--nf-primary)"} height={10} />
           <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 12, lineHeight: 1.5 }}>
             {isLive ? (
@@ -60,17 +60,17 @@ export default function SetupGuideModule({ live }: { live?: SetupPayload | null 
           <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 12 }}>Quick wins</div>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.8 }}>
             <li>
-              <Link href="/app/training" style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
+              <Link href="/app/training" style={{ color: "var(--nf-primary-active)", fontWeight: 600 }}>
                 Cerrar 1 formación vencida
               </Link>
             </li>
             <li>
-              <Link href="/app/changes" style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
+              <Link href="/app/changes" style={{ color: "var(--nf-primary-active)", fontWeight: 600 }}>
                 Mover un cambio a «Implementado»
               </Link>
             </li>
             <li>
-              <Link href="/app/reporting" style={{ color: "var(--nf-primary)", fontWeight: 600 }}>
+              <Link href="/app/reporting" style={{ color: "var(--nf-primary-active)", fontWeight: 600 }}>
                 Generar pack de auditoría
               </Link>
             </li>
@@ -109,7 +109,7 @@ export default function SetupGuideModule({ live }: { live?: SetupPayload | null 
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{item.title}</div>
                     <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4 }}>{item.description}</div>
-                    <Link href={item.href} style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 600, marginTop: 8, display: "inline-block" }}>
+                    <Link href={item.href} style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 600, marginTop: 8, display: "inline-block" }}>
                       Ir al módulo →
                     </Link>
                   </div>

@@ -68,17 +68,17 @@ export default function DemoPage() {
                 <div>
                   <label className="nf-label">Nombre</label>
                   <input aria-label="María Torres" {...register("name")} className="nfm-input" placeholder="María Torres" />
-                  {errors.name && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
+                  {errors.name && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Email corporativo</label>
                   <input aria-label="maria@empresa.com" type="email" {...register("email")} className="nfm-input" placeholder="maria@empresa.com" />
-                  {errors.email && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
+                  {errors.email && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Empresa</label>
                   <input aria-label="Tecnoserv Industrial" {...register("company")} className="nfm-input" placeholder="Tecnoserv Industrial" />
-                  {errors.company && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
+                  {errors.company && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
@@ -97,7 +97,7 @@ export default function DemoPage() {
                 <div>
                   <label className="nf-label">Mensaje</label>
                   <textarea aria-label="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" {...register("message")} rows={4} className="nfm-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
-                  {errors.message && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
+                  {errors.message && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar solicitud <Ic.arrow className="nf-arrow"/>

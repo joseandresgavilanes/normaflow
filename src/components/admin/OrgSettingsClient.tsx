@@ -166,9 +166,9 @@ export default function OrgSettingsClient() {
                 ].map(([code, label, detail]) => {
                   const checked = standards.includes(code);
                   return (
-                    <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-white"}`}>
+                    <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "nf-border-primary nf-primary-subtle-bg" : "nf-border-line nf-surface-bg"}`}>
                       <input type="checkbox" checked={checked} disabled={!canEdit || (checked && standards.length === 1)} onChange={() => setStandards((current) => checked ? current.filter((item) => item !== code) : [...current, code])} className="mt-1 accent-indigo-600" />
-                      <span><strong className="block text-sm text-gray-900">{label}</strong><span className="text-xs text-gray-500">{detail}</span></span>
+                      <span><strong className="block text-sm nf-text-primary-fg">{label}</strong><span className="text-xs nf-text-subtle-fg">{detail}</span></span>
                     </label>
                   );
                 })}
@@ -260,12 +260,12 @@ function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number })
               : "Plan personalizado · usuarios ilimitados."}
           </p>
         </div>
-        <Globe size={22} strokeWidth={2} style={{ color: "var(--nf-primary)", opacity: 0.35, flexShrink: 0 }} aria-hidden />
+        <Globe size={22} strokeWidth={2} style={{ color: "var(--nf-primary-active)", opacity: 0.35, flexShrink: 0 }} aria-hidden />
       </div>
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6 }}>
           <span>Usuarios activos</span>
-          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "var(--nf-danger)" : "var(--nf-ink-2)", fontWeight: 700 }}>
+          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "var(--nf-danger-text)" : "var(--nf-ink-2)", fontWeight: 700 }}>
             {usedUsers} / {max === null ? "∞" : max}
           </span>
         </div>

@@ -65,8 +65,8 @@ export default function SecurityControlsLiveClient({ initial }: { initial: Secur
     <div className="nf-metric-strip">
       <Metric label="Controles activos" value={initial.summary.total} icon={<ShieldCheck size={19} />} />
       <Metric label="Incluidos" value={initial.summary.included} icon={<FileCheck2 size={19} />} color="#5266F6" />
-      <Metric label="Cobertura" value={`${initial.summary.coverage}%`} icon={<Link2 size={19} />} color="#15803D" />
-      <Metric label="Revisiones vencidas" value={initial.summary.overdue} icon={<Timer size={19} />} color="#B91C1C" />
+      <Metric label="Cobertura" value={`${initial.summary.coverage}%`} icon={<Link2 size={19} />} color="var(--nf-success-text)" />
+      <Metric label="Revisiones vencidas" value={initial.summary.overdue} icon={<Timer size={19} />} color="var(--nf-danger-text)" />
     </div>
 
     <Card>
@@ -130,4 +130,4 @@ function ControlDetail({ row, initial, canUpdate, canApprove, pending, onClose, 
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(event) => onChange(event.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["var(--nf-warning-text)", "#fff8e6"], red: ["var(--nf-danger-text)", "#fff0f0"], blue: ["var(--nf-primary)", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

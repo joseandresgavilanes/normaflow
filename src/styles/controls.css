@@ -132,3 +132,81 @@
 @media (max-width: 639px) {
   .nf-button-group > .nf-button { flex: 1 1 auto; }
 }
+
+/* ============================================================================
+ * Conmutador de tema
+ *
+ * El bloque de tokens oscuros llevaba en el repositorio sin ejecutarse nunca:
+ * no había media query, ni conmutador, ni persistencia. Este es el control que
+ * lo activa.
+ * ========================================================================== */
+
+.nf-theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+}
+
+.nf-theme-switch__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nf-space-1);
+  /* 28 px es el mínimo cómodo con el pulgar en una fila de tres. */
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 var(--nf-space-2);
+  border: 0;
+  border-radius: var(--nf-radius-full);
+  background: transparent;
+  color: var(--nf-text-secondary);
+  font-family: inherit;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-theme-switch__option:hover { color: var(--nf-text-primary); }
+.nf-theme-switch__option:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
+/* La opción activa se marca con relleno y peso, no solo con color: en una
+   fila de tres iconos el color solo no distingue nada. */
+.nf-theme-switch__option[aria-checked="true"] {
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+  font-weight: var(--nf-weight-semibold);
+  box-shadow: var(--nf-elevation-1);
+}
+
+.nf-theme-switch[data-compact] .nf-theme-switch__option { padding: 0; width: 28px; }
+
+/* ============================================================================
+ * Utilidades de color del sistema
+ *
+ * Reemplazan las 33 utilidades de Tailwind con color fijo que quedaban en 7
+ * ficheros (`bg-white`, `text-gray-500`…). Eran colores literales: no
+ * respondían al tema, y `Card.tsx` —consumido por medio producto— dejaba una
+ * tarjeta blanca flotando sobre el lienzo oscuro.
+ * ========================================================================== */
+
+.nf-surface-bg { background: var(--nf-surface); }
+.nf-surface-muted-bg { background: var(--nf-surface-muted); }
+.nf-surface-sunken-bg { background: var(--nf-surface-sunken); }
+.nf-primary-subtle-bg { background: var(--nf-primary-subtle); }
+
+.nf-text-primary-fg { color: var(--nf-text-primary); }
+.nf-text-secondary-fg { color: var(--nf-text-secondary); }
+.nf-text-subtle-fg { color: var(--nf-text-subtle); }
+.nf-danger-fg { color: var(--nf-danger-text); }
+.nf-success-fg { color: var(--nf-success-text); }
+.nf-primary-fg { color: var(--nf-primary-active); }
+
+.nf-border-line { border-color: var(--nf-border); }
+.nf-border-primary { border-color: var(--nf-primary-border); }

@@ -8,6 +8,7 @@ import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/context/I18nProvider";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 export type DemoLoginCredentials = {
   demo: { id: "demo-local"; email: string; password: string; name: string };
@@ -50,7 +51,7 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
 
   return <>
     <div className="nf-bg" aria-hidden="true" />
-    <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
+    <div className="nf-auth-lang"><ThemeSwitcher compact /><LanguageSwitcher compact /></div>
     <div className="nf-app"><main className="nf-auth-shell"><div style={{ width: "100%", maxWidth: 440 }}>
       <div className="nf-auth-header">
         <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}><span className="nf-logo-mark" aria-hidden />NormaFlow</Link>

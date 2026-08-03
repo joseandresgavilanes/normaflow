@@ -177,7 +177,7 @@ export default function AuditsModule() {
 
       <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", border: "1px solid var(--nf-line)", borderRadius: 16 }}>
         
-        <div style={{ padding: "20px 22px 22px", background: "#fff" }}>
+        <div style={{ padding: "20px 22px 22px", background: "var(--nf-surface)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <div
               style={{
@@ -188,7 +188,7 @@ export default function AuditsModule() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "var(--nf-primary)",
+                color: "var(--nf-primary-active)",
               }}
             >
               <Target size={22} strokeWidth={2.25} aria-hidden />
@@ -199,16 +199,16 @@ export default function AuditsModule() {
             </div>
           </div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 600, marginBottom: 10 }}>
-            <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "var(--nf-primary)" }} />
+            <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "var(--nf-primary-active)" }} />
             {auditProgram.programOwner}
           </div>
           <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: "0 0 12px", lineHeight: 1.55, fontWeight: 500 }}>{auditProgram.objectives}</p>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--nf-primary)", marginBottom: 12 }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)", marginBottom: 12 }}>
             <CalendarDays size={15} strokeWidth={2.25} aria-hidden />
             Próxima revisión dirección: {auditProgram.nextManagementReview}
           </div>
           <div>
-            <Link href="/app/reporting" style={{ fontSize: 13, color: "var(--nf-success)", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
+            <Link href="/app/reporting" style={{ fontSize: 13, color: "var(--nf-success-text)", fontWeight: 700, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}>
               Generar informe de programa →
             </Link>
           </div>
@@ -226,13 +226,13 @@ export default function AuditsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Total planificadas</div>
           </div>
         </div>
@@ -246,13 +246,13 @@ export default function AuditsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "IN_PROGRESS").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "IN_PROGRESS").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
           </div>
         </div>
@@ -266,13 +266,13 @@ export default function AuditsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <ClipboardCheck size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "COMPLETED").length}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.filter(a => a.status === "COMPLETED").length}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -286,13 +286,13 @@ export default function AuditsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-danger)",
+              color: "var(--nf-danger-text)",
             }}
           >
             <Target size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.reduce((s, a) => s + a.findings, 0)}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{audits.reduce((s, a) => s + a.findings, 0)}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Hallazgos totales</div>
           </div>
         </div>
@@ -310,7 +310,7 @@ export default function AuditsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <ClipboardCheck size={28} strokeWidth={2} aria-hidden />
@@ -334,7 +334,7 @@ export default function AuditsModule() {
                             fontSize: 11,
                             fontWeight: 600,
                             background: audit.type === "EXTERNAL" ? "#fff4e0" : "#e8f0fa",
-                            color: audit.type === "EXTERNAL" ? "#9a6510" : "var(--nf-primary)",
+                            color: audit.type === "EXTERNAL" ? "var(--nf-warning-text)" : "var(--nf-primary-active)",
                             padding: "4px 10px",
                             borderRadius: 99,
                             letterSpacing: "0.02em",
@@ -342,7 +342,7 @@ export default function AuditsModule() {
                         >
                           {audit.type === "EXTERNAL" ? "Externa" : "Interna"}
                         </span>
-                        <span style={{ fontSize: 11, fontWeight: 700, background: "#f3f6fa", color: "var(--nf-ink-2)", padding: "4px 10px", borderRadius: 99, border: "1px solid rgba(82, 102, 246, 0.1)" }}>{audit.standard}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: "var(--nf-surface-muted)", color: "var(--nf-ink-2)", padding: "4px 10px", borderRadius: 99, border: "1px solid rgba(82, 102, 246, 0.1)" }}>{audit.standard}</span>
                       </div>
                       <div style={{ fontSize: 16, fontWeight: 600, color: "var(--nf-ink)", marginBottom: 6, letterSpacing: "-0.02em", lineHeight: 1.3 }}>{audit.title}</div>
                       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>
@@ -351,7 +351,7 @@ export default function AuditsModule() {
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
                       {audit.findings > 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 600, background: "#fdecec", color: "var(--nf-danger)", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: "#fdecec", color: "var(--nf-danger-text)", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
                       )}
                       <Badge status={audit.status} />
                     </div>
@@ -441,10 +441,10 @@ export default function AuditsModule() {
                 })
               )}
               <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
-                <Link href="/app/nonconformities" style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 700, textDecoration: "none" }}>
+                <Link href="/app/nonconformities" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, textDecoration: "none" }}>
                   Gestionar en No conformidades →
                 </Link>
-                <Link href="/app/actions" style={{ fontSize: 12, color: "var(--nf-success)", fontWeight: 700, textDecoration: "none" }}>
+                <Link href="/app/actions" style={{ fontSize: 12, color: "var(--nf-success-text)", fontWeight: 700, textDecoration: "none" }}>
                   Ver plan de acción →
                 </Link>
               </div>
@@ -517,7 +517,7 @@ export default function AuditsModule() {
                   >
                     <input type="checkbox" checked={item.done} onChange={e => toggleItem(item, e.target.checked)} style={{ marginTop: 3 }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: "var(--nf-primary)", fontWeight: 600 }}>Cláusula {item.clause}</div>
+                      <div style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 600 }}>Cláusula {item.clause}</div>
                       <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{item.requirement}</div>
                     </div>
                   </label>

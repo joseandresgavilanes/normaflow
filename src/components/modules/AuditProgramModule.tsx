@@ -88,7 +88,7 @@ export default function AuditProgramModule() {
           <Card key={p.id} style={{ cursor: "pointer" }} onClick={() => setDetailId(p.id)}>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary)", fontSize: 12, fontWeight: 600 }}>{p.year}</div>
+                <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary-active)", fontSize: 12, fontWeight: 600 }}>{p.year}</div>
                 <h3 style={{ margin: "6px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{p.title}</h3>
                 <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{p.audits.filter(a => a.status === "COMPLETED").length}/{p.audits.length} auditorías completadas</div>
               </div>

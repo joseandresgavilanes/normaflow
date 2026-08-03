@@ -163,7 +163,7 @@ export default function FileImportArea({
               height: compact ? 40 : 48,
               borderRadius: 12,
               background: dragOver ? "rgba(82, 102, 246, 0.12)" : "rgba(82, 102, 246, 0.07)",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <Upload size={compact ? 20 : 24} strokeWidth={2} aria-hidden />
@@ -200,7 +200,7 @@ export default function FileImportArea({
               height: 44,
               borderRadius: 12,
               background: "rgba(82, 102, 246, 0.08)",
-              color: "var(--nf-primary)",
+              color: "var(--nf-primary-active)",
             }}
           >
             <FileText size={22} strokeWidth={2} aria-hidden />
@@ -230,10 +230,10 @@ export default function FileImportArea({
                 padding: "8px 12px",
                 borderRadius: 10,
                 border: "1px solid rgba(82, 102, 246, 0.2)",
-                background: "#fff",
+                background: "var(--nf-surface)",
                 fontSize: 12,
                 fontWeight: 700,
-                color: "var(--nf-primary)",
+                color: "var(--nf-primary-active)",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}
             >
@@ -252,7 +252,7 @@ export default function FileImportArea({
                 height: 38,
                 borderRadius: 10,
                 border: "1px solid var(--nf-line)",
-                background: "#fff",
+                background: "var(--nf-surface)",
                 color: "var(--nf-ink-3)",
                 cursor: disabled ? "not-allowed" : "pointer",
               }}

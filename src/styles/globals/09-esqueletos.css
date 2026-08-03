@@ -61,7 +61,7 @@
 }
 
 .nf-dash-table-wrap {
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   border-radius: 12px;
   overflow: hidden;
@@ -110,10 +110,14 @@
 }
 
 .nf-dash-amount-pos {
-  color: var(--success);
+  /* `var(--success)` es un alias heredado que resuelve al token de RELLENO:
+     3.30:1 como texto sobre superficie. */
+  color: var(--nf-success-text);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}.nf-skeleton {
+}
+
+.nf-skeleton {
   background: #EBEBEB;
   border-radius: var(--nf-radius-md, 10px);
   animation: nf-skeleton-pulse 1.4s ease-in-out infinite;
@@ -314,7 +318,7 @@
   margin-bottom: 10px;
   border: 1px solid var(--nf-line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-skeleton-kanban-card:last-child {

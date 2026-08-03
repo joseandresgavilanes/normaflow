@@ -66,12 +66,12 @@
    `.nf-field__error` y el `aria-invalid` del control. */
 .nf-input[aria-invalid="true"],
 .nf-app-input[aria-invalid="true"] {
-  border-color: var(--nf-danger-text);
+  border-color: var(--nf-danger);
   background: var(--nf-danger-subtle);
 }
 .nf-input[aria-invalid="true"]:focus-visible,
 .nf-app-input[aria-invalid="true"]:focus-visible {
-  outline-color: var(--nf-danger-text);
+  outline-color: var(--nf-danger);
 }
 
 .nf-input--area {
@@ -435,7 +435,7 @@ button.nf-stepper__button:focus-visible {
 
 /* Estado por forma e icono, no solo por color. */
 .nf-stepper__step[data-status="done"] .nf-stepper__marker {
-  border-color: var(--nf-success-text);
+  border-color: var(--nf-success);
   background: var(--nf-success-text);
   color: var(--nf-c-neutral-0);
 }
@@ -450,7 +450,7 @@ button.nf-stepper__button:focus-visible {
   font-weight: var(--nf-weight-semibold);
 }
 .nf-stepper__step[data-status="error"] .nf-stepper__marker {
-  border-color: var(--nf-danger-text);
+  border-color: var(--nf-danger);
   background: var(--nf-danger-subtle);
   color: var(--nf-danger-text);
 }

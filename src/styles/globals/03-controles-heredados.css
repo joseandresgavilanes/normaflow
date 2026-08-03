@@ -9,7 +9,7 @@
 
 
 .nf-app-btn-primary {
-  color: #fff;
+  color: var(--nf-text-on-primary);
   background: var(--nf-app-accent);
   border-color: var(--nf-app-accent);
 }
@@ -40,7 +40,7 @@
   padding: 8px 12px;
   border: 1px solid var(--nf-line);
   border-radius: 9px;
-  background: #fff;
+  background: var(--nf-surface);
   color: var(--nf-ink-2);
   font: inherit;
   font-size: 13px;
@@ -59,8 +59,11 @@
 .nf-iso-tab[aria-selected="true"] {
   border-color: var(--nf-app-accent);
   background: var(--nf-app-accent-soft);
-  color: var(--nf-app-accent);
-  box-shadow: 0 1px 2px rgba(82, 102, 246, 0.08);
+  /* `--nf-app-accent` es el alias del relleno de marca: como texto sobre su
+     propio fondo suave daba 4.11:1. El tono de texto da 5.92:1. */
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+  box-shadow: var(--nf-elevation-1);
 }
 
 .nf-iso-tab:focus-visible {
@@ -76,14 +79,14 @@
 }
 
 .nf-app-btn-success {
-  color: #fff;
+  color: var(--nf-text-on-primary);
   background: #16A34A;
   border-color: #16A34A;
 }
 
 .nf-app-btn-success:hover:not(:disabled) {
-  background: #15803D;
-  border-color: #15803D;
+  background: var(--nf-success-text);
+  border-color: var(--nf-success-text);
 }
 
 .nf-app-btn-success:disabled {
@@ -92,14 +95,14 @@
 }
 
 .nf-app-btn-danger {
-  color: #fff;
+  color: var(--nf-text-on-primary);
   background: var(--danger);
   border-color: var(--danger);
 }
 
 .nf-app-btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
-  border-color: #b91c1c;
+  background: var(--nf-danger-text);
+  border-color: var(--nf-danger-text);
 }
 
 .nf-app-btn-danger:active:not(:disabled) {
@@ -126,13 +129,13 @@
 
 .nf-app-btn-ghost--danger {
   color: #DC2626;
-  border-color: #FECACA;
+  border-color: var(--nf-danger-border);
 }
 
 .nf-app-btn-ghost--danger:hover:not(:disabled) {
-  background: #FEF2F2;
+  background: var(--nf-danger-subtle);
   border-color: #FCA5A5;
-  color: #B91C1C;
+  color: var(--nf-danger-text);
 }
 
 /* Acciones de texto en filas densas (no son botones pill) */
@@ -169,7 +172,7 @@
 }
 
 .nf-text-action--danger:hover:not(:disabled) {
-  color: #B91C1C;
+  color: var(--nf-danger-text);
 }
 
 .nf-icon-btn {
@@ -179,7 +182,7 @@
   padding: 0;
   border-radius: 999px;
   border: 1px solid var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
   color: var(--nf-ink-3);
   flex-shrink: 0;
   display: inline-flex;
@@ -291,7 +294,7 @@
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
   color: var(--nf-ink-2);
   font-size: 12px;
   font-weight: 600;
@@ -311,14 +314,14 @@
 .nf-chip--on {
   background: var(--nf-app-accent);
   border-color: var(--nf-app-accent);
-  color: #fff;
+  color: var(--nf-text-on-primary);
   box-shadow: none;
 }
 
 .nf-chip--on:hover:not(:disabled) {
   background: var(--primary-dark);
   border-color: var(--primary-dark);
-  color: #fff;
+  color: var(--nf-text-on-primary);
 }
 
 .nf-chip:focus-visible,
@@ -332,7 +335,7 @@
 .nf-kpi-card {
   border-radius: 12px;
   border: 1px solid var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -362,7 +365,7 @@
   gap: 12px;
   padding: 16px 18px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   min-width: 0;
 }
@@ -376,7 +379,7 @@
   overflow: auto;
   border-radius: 12px;
   border: 1px solid var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-data-table {

@@ -365,9 +365,9 @@
   transition: background-color var(--nf-duration-fast) var(--nf-ease-standard);
 }
 .nf-attention__item:hover { background: var(--nf-surface-hover); }
-.nf-attention__item[data-tone="danger"] { border-left-color: var(--nf-danger); }
-.nf-attention__item[data-tone="warning"] { border-left-color: var(--nf-warning); }
-.nf-attention__item[data-tone="info"] { border-left-color: var(--nf-info); }
+.nf-attention__item[data-tone="danger"] { border-left-color: var(--nf-danger-text); }
+.nf-attention__item[data-tone="warning"] { border-left-color: var(--nf-warning-text); }
+.nf-attention__item[data-tone="info"] { border-left-color: var(--nf-info-text); }
 
 .nf-attention__icon {
   display: grid;
@@ -453,7 +453,12 @@
   bottom: -18px;
   left: 0;
   transform: translateX(-50%);
-  color: var(--nf-text-subtle);
+  /* La etiqueta se pinta fuera de la línea de 1 px, sobre la superficie de la
+     tarjeta, donde `--nf-text-subtle` cumple de sobra. Pero al estar anidada
+     dentro del tick cualquier medición automática le atribuye el color de la
+     línea y la marca como fallo. Con `--nf-text-muted` pasa en los dos casos:
+     4.6:1 contra la línea y 6.56:1 contra la superficie. */
+  color: var(--nf-text-muted);
   font-size: var(--nf-text-2xs);
 }
 /* Las etiquetas de los extremos se anclan hacia dentro: centradas sobre el

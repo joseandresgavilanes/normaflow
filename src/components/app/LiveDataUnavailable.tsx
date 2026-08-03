@@ -31,7 +31,7 @@ export default function LiveDataUnavailable({
             margin: "0 auto 16px",
             display: "grid",
             placeItems: "center",
-            color: "#9a6510",
+            color: "var(--nf-warning-text)",
             background: "rgba(214, 138, 26, 0.14)",
           }}
         >

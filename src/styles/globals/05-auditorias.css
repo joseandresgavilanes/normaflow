@@ -11,9 +11,9 @@
 .nf-org-msg-ok {
   padding: 11px 14px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid rgba(46, 139, 87, 0.28);
-  color: #1f6f45;
+  color: var(--nf-success-text);
   font-size: 13px;
   font-weight: 600;
 }
@@ -28,7 +28,7 @@
   border-radius: 16px;
   border: 1px solid rgba(82, 102, 246, 0.12);
   box-shadow: 0 14px 40px -28px rgba(82, 102, 246, 0.35), 0 1px 0 rgba(82, 102, 246, 0.05);
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-activity-toolbar {
@@ -85,7 +85,7 @@
   font-weight: 800;
   letter-spacing: 0.02em;
   color: var(--nf-ink-2);
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--nf-glass);
   border: 1px solid rgba(82, 102, 246, 0.12);
   box-shadow: 0 1px 0 rgba(82, 102, 246, 0.05);
   white-space: nowrap;
@@ -106,7 +106,7 @@
 
 .nf-activity-timeline-body {
   padding: 20px 22px 24px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-activity-section-head {
@@ -127,7 +127,7 @@
   justify-content: center;
   flex-shrink: 0;
   color: var(--nf-app-accent);
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid rgba(82, 102, 246, 0.1);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset;
 }
@@ -163,33 +163,33 @@
 }
 
 .nf-activity-kpi-icon--navy {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(82, 102, 246, 0.1);
   color: var(--nf-app-accent);
 }
 
 .nf-activity-kpi-icon--green {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(46, 139, 87, 0.14);
-  color: #1f6f45;
+  color: var(--nf-success-text);
 }
 
 .nf-activity-kpi-icon--amber {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(214, 138, 26, 0.18);
-  color: #9a6510;
+  color: var(--nf-warning-text);
 }
 
 .nf-activity-kpi-icon--slate {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(82, 102, 246, 0.08);
   color: #314456;
 }
 
 .nf-activity-kpi-icon--violet {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(88, 28, 135, 0.12);
-  color: #5b21b6;
+  color: var(--nf-primary-active);
 }
 
 .nf-activity-kpi-value {
@@ -205,7 +205,7 @@
 }
 
 .nf-activity-kpi-value--green {
-  color: #2e8b57;
+  color: var(--nf-success-text);
 }
 
 .nf-activity-kpi-value--ink {
@@ -217,13 +217,13 @@
 }
 
 .nf-activity-kpi-value--violet {
-  color: #5b21b6;
+  color: var(--nf-primary-active);
 }
 
 .nf-activity-kpi-icon--danger {
-  background: #fff;
+  background: var(--nf-surface);
   border-color: rgba(201, 60, 55, 0.18);
-  color: #b91c1c;
+  color: var(--nf-danger-text);
 }
 
 .nf-activity-kpi-value--danger {
@@ -256,7 +256,7 @@
   margin-bottom: 14px;
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid rgba(82, 102, 246, 0.1);
   box-shadow: 0 1px 0 rgba(82, 102, 246, 0.04);
 }
@@ -265,7 +265,7 @@
   width: 5px;
   height: 22px;
   border-radius: 99px;
-  background: #fff;
+  background: var(--nf-surface);
   flex-shrink: 0;
 }
 
@@ -288,7 +288,7 @@
   padding: 4px 10px;
   border-radius: 999px;
   color: var(--nf-app-accent);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--nf-glass);
   border: 1px solid rgba(82, 102, 246, 0.12);
 }
 
@@ -326,7 +326,7 @@
   transform: translateX(-50%);
   width: 2px;
   border-radius: 2px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-audit-slot:last-child .nf-audit-slot-gutter::after {
@@ -337,7 +337,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--nf-surface);
   border: 2px solid var(--nf-app-accent);
   box-shadow: 0 0 0 4px rgba(82, 102, 246, 0.07);
   margin-top: 20px;
@@ -351,7 +351,7 @@
 }
 
 .nf-audit-slot-node--done {
-  border-color: #1f6f45;
+  border-color: var(--nf-success-text);
   box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.12);
 }
 
@@ -365,7 +365,7 @@
 }
 
 .nf-audit-slot-node--integration {
-  border-color: #5b21b6;
+  border-color: var(--nf-primary-active);
   box-shadow: 0 0 0 4px rgba(88, 28, 135, 0.1);
 }
 
@@ -375,7 +375,7 @@
 
 .nf-audit-slot-node--signed {
   box-shadow: 0 0 0 4px rgba(46, 139, 87, 0.18), 0 0 12px rgba(46, 139, 87, 0.15);
-  border-color: #2e8b57;
+  border-color: var(--nf-success-text);
 }
 
 .nf-audit-card--in-rail {

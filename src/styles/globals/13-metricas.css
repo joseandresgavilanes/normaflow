@@ -74,7 +74,7 @@
   padding: 12px;
   border: 1px solid #e5eaf2;
   border-radius: 12px;
-  background: #fff;
+  background: var(--nf-surface);
 }
 
 .nf-compliance-obligation-detail-title {
@@ -109,7 +109,7 @@
   border: 1px solid var(--nf-app-accent);
   border-radius: 8px;
   background: var(--nf-app-accent);
-  color: #fff;
+  color: var(--nf-text-on-primary);
   font-family: inherit;
   font-size: 11px;
   font-weight: 700;
@@ -118,7 +118,7 @@
 
 .nf-compliance-obligation-toggle {
   border-color: var(--nf-line);
-  background: #fff;
+  background: var(--nf-surface);
   color: var(--nf-ink);
 }
 
@@ -232,7 +232,7 @@
   overflow: hidden;
   border: 1px solid var(--nf-line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--nf-surface);
   box-shadow: 0 4px 18px rgba(15, 23, 42, 0.045);
 }
 
@@ -384,7 +384,7 @@
   gap: 12px;
   padding: 16px 18px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--nf-surface);
   border: 1px solid var(--nf-line);
   min-width: 0;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;

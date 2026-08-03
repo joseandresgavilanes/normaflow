@@ -131,7 +131,7 @@
 /* Pestaña activa: subrayado más peso, no solo color. */
 .nf-detail__tab[aria-selected="true"] {
   color: var(--nf-primary-active);
-  border-bottom-color: var(--nf-primary);
+  border-bottom-color: var(--nf-primary-active);
   font-weight: var(--nf-weight-semibold);
 }
 
@@ -232,7 +232,7 @@
 }
 
 .nf-workflow__step[data-status="done"] .nf-workflow__marker {
-  border-color: var(--nf-success-text);
+  border-color: var(--nf-success);
   background: var(--nf-success-text);
   color: var(--nf-c-neutral-0);
 }
@@ -250,7 +250,7 @@
 }
 
 .nf-workflow__step[data-status="error"] .nf-workflow__marker {
-  border-color: var(--nf-danger-text);
+  border-color: var(--nf-danger);
   background: var(--nf-danger-subtle);
   color: var(--nf-danger-text);
 }

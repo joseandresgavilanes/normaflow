@@ -19,6 +19,7 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
+import { toneChip } from "@/lib/tone";
 
 type Tab = "panel" | "matrix" | "compliance" | "objectives" | "trends" | "waste" | "emergencies" | "biodiversity";
 const SECTION_META: Record<Tab, { title: string; sub: string }> = {
@@ -34,7 +35,7 @@ const BIODIVERSITY_STATUS_LABEL: Record<string, string> = { IDENTIFIED: "Identif
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 type EnvironmentConfirm = { title: string; message: string; onConfirm: () => void };
@@ -100,12 +101,12 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>{SECTION_META[tab].sub}</p>
+          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>{SECTION_META[tab].sub}</p>
         </div>
         {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 12 }}>
         <Stat label="Aspectos" value={s.aspects} />
@@ -123,11 +124,11 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Grid3x3 size={16} aria-hidden />Metodología de significancia</h3>
-            {initial.methods.length === 0 && <p style={{ color: "#64748b" }}>Sin metodología definida.</p>}
+            {initial.methods.length === 0 && <p style={{ color: "var(--nf-text-secondary)" }}>Sin metodología definida.</p>}
             {initial.methods.map((m) => (
               <div key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9" }}>
-                <span>{m.name} <span style={{ color: "#94a3b8" }}>v{m.version}</span></span>
-                <span>{m.active ? <span style={chip("var(--nf-success-border)", "#166534")}>activa</span> : <span style={chip("#f1f5f9", "#64748b")}>histórico</span>}</span>
+                <span>{m.name} <span style={{ color: "var(--nf-text-subtle)" }}>v{m.version}</span></span>
+                <span>{m.active ? <span style={chip("var(--nf-success-border)", "var(--nf-success-text)")}>activa</span> : <span style={chip("#f1f5f9", "#64748b")}>histórico</span>}</span>
               </div>
             ))}
             {canManage && <>
@@ -136,7 +137,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
               </button>
               <Modal open={methodCreateOpen} onClose={() => setMethodCreateOpen(false)} title="Nueva versión de metodología" width={560}>
                 <div className="nf-modal-form">
-                  <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>Se creará una nueva versión de la metodología estándar de significancia ambiental.</p>
+                  <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>Se creará una nueva versión de la metodología estándar de significancia ambiental.</p>
                   <div className="nf-modal-actions">
                     <button type="button" className="nf-app-btn-ghost" onClick={() => setMethodCreateOpen(false)}>Cancelar</button>
                     <button type="button" className="nf-app-btn-primary" disabled={pending} onClick={() => { run(async () => { await createSignificanceMethod({ name: "Método de significancia ambiental", formula: "WEIGHTED_SUM", weights: { severity: 2, frequency: 1, scope: 1 }, threshold: 12 }); setMethodCreateOpen(false); }); }}>Crear metodología</button>
@@ -147,9 +148,9 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Scale size={16} aria-hidden />Cumplimiento</h3>
-            <p style={{ margin: "4px 0" }}>Obligaciones vencidas: <b style={{ color: s.overdue ? "var(--nf-danger-text)" : "#166534" }}>{s.overdue}</b></p>
-            <p style={{ margin: "4px 0" }}>No conformes / parciales: <b style={{ color: s.nonCompliant ? "var(--nf-danger-text)" : "#166534" }}>{s.nonCompliant}</b></p>
-            <p style={{ margin: "4px 0", color: "#64748b" }}>Residuos: {s.waste} · Escenarios de emergencia: {s.emergencies}</p>
+            <p style={{ margin: "4px 0" }}>Obligaciones vencidas: <b style={{ color: s.overdue ? "var(--nf-danger-text)" : "var(--nf-success-text)" }}>{s.overdue}</b></p>
+            <p style={{ margin: "4px 0" }}>No conformes / parciales: <b style={{ color: s.nonCompliant ? "var(--nf-danger-text)" : "var(--nf-success-text)" }}>{s.nonCompliant}</b></p>
+            <p style={{ margin: "4px 0", color: "var(--nf-text-secondary)" }}>Residuos: {s.waste} · Escenarios de emergencia: {s.emergencies}</p>
           </div>
           </div>
         </>
@@ -180,7 +181,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                     <td style={td}>{i?.impactType ?? "—"}</td>
                     <td style={td}>{i ? `${i.severity}/${i.frequency}/${i.scope}` : "—"}</td>
                     <td style={td}>{i?.score ?? "—"}</td>
-                    <td style={td}>{i ? <span style={chip(LEVEL_COLORS[i.level] + "22", LEVEL_COLORS[i.level])}>{i.level}</span> : "—"}</td>
+                    <td style={td}>{i ? <span style={toneChip(LEVEL_COLORS[i.level])}>{i.level}</span> : "—"}</td>
                     <td style={td}>{i?.significant ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                     {(canManage || canUpdate || canDelete) && <td style={td}>{i && canUpdate && <EnvTableAction icon={Pencil} onClick={() => setImpactEditor({ aspectId: a.id, impact: i })}>Editar</EnvTableAction>} {i && canDelete && <EnvTableAction icon={Trash2} danger disabled={pending} onClick={() => setConfirmAction({ title: "Eliminar impacto ambiental", message: "¿Quieres eliminar este impacto ambiental? Esta acción no se puede deshacer.", onConfirm: () => run(() => deleteImpact(i.id)) })}>Eliminar</EnvTableAction>} {!i && canManage && <EnvTableAction icon={Plus} onClick={() => setImpactEditor({ aspectId: a.id })}>Añadir</EnvTableAction>}</td>}{(canUpdate || canDelete) && k === 0 && <td style={td} rowSpan={a.impacts.length || 1}>{canUpdate && <EnvTableAction icon={Pencil} onClick={() => setAspectEditor(a)}>Editar</EnvTableAction>} {canDelete && <EnvTableAction icon={Trash2} danger disabled={pending} onClick={() => setConfirmAction({ title: "Eliminar aspecto ambiental", message: "Se eliminará el aspecto y sus impactos asociados. Esta acción no se puede deshacer.", onConfirm: () => run(() => deleteAspect(a.id)) })}>Eliminar</EnvTableAction>}</td>}
                   </tr>
@@ -216,8 +217,8 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                 <td style={td}>{fmt(o.reviewDate)}</td>
                 <td style={td}>
                   {o.overdue && <span style={{ ...chip("var(--nf-danger-border)", "var(--nf-danger-text)"), marginRight: 4 }}>Vencido</span>}
-                  {o.nonCompliant && <span style={chip("var(--nf-warning-border)", "#92400e")}>Incumple</span>}
-                  {!o.overdue && !o.nonCompliant && <span style={chip("var(--nf-success-border)", "#166534")}>Al día</span>}
+                  {o.nonCompliant && <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Incumple</span>}
+                  {!o.overdue && !o.nonCompliant && <span style={chip("var(--nf-success-border)", "var(--nf-success-text)")}>Al día</span>}
                 </td>
                 <td style={td}>{canUpdate && <EnvTableAction icon={Pencil} onClick={() => setObligationEditor(o)}>Editar</EnvTableAction>} {canManage && <EnvTableAction icon={ClipboardCheck} onClick={() => setEvaluationObligation(o)}>Evaluar</EnvTableAction>}</td>
               </tr>
@@ -377,7 +378,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
                     <td style={td}>{b.code}</td>
                     <td style={td}>{b.site}</td>
                     <td style={td}>{b.ecosystemType ?? "—"}</td>
-                    <td style={td}>{b.protectedArea ? <span style={chip("var(--nf-warning-border)", "#92400e")}>{b.protectedAreaName}</span> : "No"}</td>
+                    <td style={td}>{b.protectedArea ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>{b.protectedAreaName}</span> : "No"}</td>
                     <td style={td}>{b.speciesOrHabitat ?? "—"}</td>
                     <td style={td}>{BIODIVERSITY_STATUS_LABEL[b.status] ?? b.status}</td>
                     <td style={td}>{fmt(b.nextMonitoringAt)}</td>
@@ -400,7 +401,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
   );
 }
 
-const btn: React.CSSProperties = { marginTop: 12, padding: "8px 12px", borderRadius: 9, border: "1px solid var(--nf-success)", background: "var(--nf-success-subtle)", color: "#166534", fontWeight: 600, fontSize: 13, cursor: "pointer" };
+const btn: React.CSSProperties = { marginTop: 12, padding: "8px 12px", borderRadius: 9, border: "1px solid var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)", fontWeight: 600, fontSize: 13, cursor: "pointer" };
 
 function EnvTableAction({ icon: Icon, children, danger = false, disabled = false, onClick }: {
   icon: typeof Pencil;
@@ -419,8 +420,8 @@ function EnvironmentTrendOverview({ trends }: { trends: EnvironmentPayload["tren
     { key: "fuel", label: "Combustible", color: "#f97316" },
     { key: "emissions", label: "Emisiones", color: "#8b5cf6" },
     { key: "discharges", label: "Vertidos", color: "#06b6d4" },
-    { key: "waste", label: "Residuos", color: "var(--nf-success)" },
-    { key: "rawMaterials", label: "Materias primas", color: "#64748b" },
+    { key: "waste", label: "Residuos", color: "var(--nf-success-text)" },
+    { key: "rawMaterials", label: "Materias primas", color: "var(--nf-text-secondary)" },
   ] as const;
   const latest = trends[trends.length - 1];
   const previous = trends[trends.length - 2];

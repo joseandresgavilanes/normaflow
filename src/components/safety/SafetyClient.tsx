@@ -14,6 +14,7 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
+import { toneChip } from "@/lib/tone";
 
 type Tab = "panel" | "hazards" | "consultations" | "incidents" | "inspections" | "ppe" | "permits" | "drills" | "contractors" | "health";
 
@@ -37,7 +38,7 @@ const STATUS_LABEL: Record<string, string> = { REPORTED: "Reportado", CLASSIFIED
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "#64748b", borderBottom: "1px solid #e5eaf2", whiteSpace: "nowrap" };
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
@@ -139,7 +140,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
       <IsoSectionHeader headingLevel={1} icon={HardHat} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
         action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
 
-      {error && <div style={{ ...card, borderColor: "#fecaca", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
+      {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Peligros" value={s.hazards} />
@@ -164,7 +165,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
             <Row k="Casi accidentes" v={ind.nearMisses} />
             <Row k="Inspecciones" v={ind.inspections} />
             <Row k="Acciones vencidas" v={ind.overdueActions} danger={ind.overdueActions > 0} />
-            <p style={{ margin: "8px 0 0", color: "#94a3b8", fontSize: 12 }}>IF/IG requieren horas-hombre; configúralas al exportar el informe de indicadores.</p>
+            <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>IF/IG requieren horas-hombre; configúralas al exportar el informe de indicadores.</p>
           </div>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Siren size={16} aria-hidden />Incidentes por etapa</h3>
@@ -185,17 +186,17 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
           {initial.hazards.map((h) => (
             <tr key={h.id}>
               <td style={td}>{h.code}</td><td style={td}>{h.activity}</td><td style={td}>{h.task ?? "—"}</td><td style={td}>{h.hazard}</td><td style={td}>{h.category}</td><td style={td}>{h.exposedWorkers ?? "—"}</td>
-              <td style={td}>{h.inherentLevel ? <span style={chip(LEVEL_COLORS[h.inherentLevel] + "22", LEVEL_COLORS[h.inherentLevel])}>{h.inherentLevel}</span> : "—"}</td>
-              <td style={td}>{h.residualLevel ? <span style={chip(LEVEL_COLORS[h.residualLevel] + "22", LEVEL_COLORS[h.residualLevel])}>{h.residualLevel}</span> : "—"}</td>
+              <td style={td}>{h.inherentLevel ? <span style={toneChip(LEVEL_COLORS[h.inherentLevel])}>{h.inherentLevel}</span> : "—"}</td>
+              <td style={td}>{h.residualLevel ? <span style={toneChip(LEVEL_COLORS[h.residualLevel])}>{h.residualLevel}</span> : "—"}</td>
               <td style={td}>{h.acceptability ? (h.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>{ACCEPT_LABEL[h.acceptability]}</span> : ACCEPT_LABEL[h.acceptability]) : "—"}</td>
-              {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => setHazardEditor(h)}>Editar</button>{h.assessment && <button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", h.assessment as unknown as Record<string, unknown>, false)}>Evaluación</button>}<button type="button" style={{ ...miniBtn, color: h.active === false ? "var(--nf-success-text)" : "var(--nf-warning-text)", borderColor: h.active === false ? "#bbf7d0" : "#fde68a", background: h.active === false ? "var(--nf-success-subtle)" : "var(--nf-warning-subtle)" }} disabled={pending} onClick={() => runHazardAction(() => updateHazard(h.id, { active: h.active === false }))}>{h.active === false ? "Activar" : "Archivar"}</button></td>}
+              {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => setHazardEditor(h)}>Editar</button>{h.assessment && <button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", h.assessment as unknown as Record<string, unknown>, false)}>Evaluación</button>}<button type="button" style={{ ...miniBtn, color: h.active === false ? "var(--nf-success-text)" : "var(--nf-warning-text)", borderColor: h.active === false ? "var(--nf-success-border)" : "var(--nf-warning-border)", background: h.active === false ? "var(--nf-success-subtle)" : "var(--nf-warning-subtle)" }} disabled={pending} onClick={() => runHazardAction(() => updateHazard(h.id, { active: h.active === false }))}>{h.active === false ? "Activar" : "Archivar"}</button></td>}
             </tr>
           ))}
           {initial.hazards.length === 0 && <tr><td style={td} colSpan={canUpdate ? 10 : 9}>Sin peligros registrados.</td></tr>}
           </Table>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("riskAssessment")}><Plus size={13} /> Nueva evaluación de riesgo</button>}
           {initial.assessments.length > 0 && <Table head={["Peligro", "Probabilidad", "Consecuencia", "Exposición", "Nivel residual", "Aceptabilidad", canUpdate ? "Acciones" : ""]}>
-            {initial.assessments.map((a) => <tr key={a.id}><td style={td}>{a.hazard.code} — {a.hazard.hazard}</td><td style={td}>{a.probability}</td><td style={td}>{a.consequence}</td><td style={td}>{a.exposure}</td><td style={td}><span style={chip(LEVEL_COLORS[a.residualLevel] + "22", LEVEL_COLORS[a.residualLevel])}>{a.residualLevel}</span></td><td style={td}>{ACCEPT_LABEL[a.acceptability] ?? a.acceptability}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", a as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>)}
+            {initial.assessments.map((a) => <tr key={a.id}><td style={td}>{a.hazard.code} — {a.hazard.hazard}</td><td style={td}>{a.probability}</td><td style={td}>{a.consequence}</td><td style={td}>{a.exposure}</td><td style={td}><span style={toneChip(LEVEL_COLORS[a.residualLevel])}>{a.residualLevel}</span></td><td style={td}>{ACCEPT_LABEL[a.acceptability] ?? a.acceptability}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", a as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>)}
           </Table>}
           <HazardEditor key={hazardEditor === "new" ? "new" : hazardEditor?.id ?? "none"} value={hazardEditor} pending={pending} error={error} onClose={() => setHazardEditor(null)} onSave={(value) => {
             const { id, exposedWorkers, processId, existingControls, responsibleId, ...fields } = value;
@@ -225,10 +226,10 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
             return (
               <tr key={i.id}>
                 <td style={td}>{i.code}</td><td style={td}>{i.type}</td>
-                <td style={td}><span style={chip(SEV_COLORS[i.severity] + "22", SEV_COLORS[i.severity])}>{i.severity}</span></td>
+                <td style={td}><span style={toneChip(SEV_COLORS[i.severity])}>{i.severity}</span></td>
                 <td style={td}>{i.title}</td><td style={td}>{fmt(i.occurredAt)}</td><td style={td}>{i.lostDays}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{STATUS_LABEL[i.status] ?? i.status}</span></td>
-                {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("incident", i as unknown as Record<string, unknown>, false)}>Editar</button>{canManage && (next ? <button disabled={pending} onClick={() => advance(i.id, next)} style={miniBtn}><ArrowRight size={12} /> {STATUS_LABEL[next]}</button> : <span style={{ color: "#94a3b8" }}>Cerrado</span>)}</td>}
+                {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("incident", i as unknown as Record<string, unknown>, false)}>Editar</button>{canManage && (next ? <button disabled={pending} onClick={() => advance(i.id, next)} style={miniBtn}><ArrowRight size={12} /> {STATUS_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
               </tr>
             );
           })}
@@ -296,12 +297,12 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
           <div style={{ display: "grid", gap: 12 }}>
             {sensitive.canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("health")}><Plus size={13} /> Nuevo registro</button>}
             <Table head={["Código", "Trabajador", "Exposición", "Aptitud", "Restricciones", "Próxima revisión", sensitive.canUpdate || sensitive.canDelete ? "Acciones" : ""]}>
-              {sensitive.records.map((h) => (<tr key={h.id}><td style={td}>{h.code}</td><td style={td}>{h.workerName ?? "—"}</td><td style={td}>{h.exposure ?? "—"}</td><td style={td}>{h.fitness}</td><td style={td}>{h.restrictions ?? "—"}</td><td style={td}>{fmt(h.nextReviewDate)}</td>{(sensitive.canUpdate || sensitive.canDelete) && <td style={td}>{sensitive.canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("health", h as unknown as Record<string, unknown>, false)}>Editar</button>}{sensitive.canDelete && <button type="button" style={{ ...miniBtn, color: "var(--nf-danger-text)", borderColor: "#fecaca", background: "#fff5f5" }} disabled={pending} onClick={() => setHealthRecordToDelete(h)}>Eliminar</button>}</td>}</tr>))}
+              {sensitive.records.map((h) => (<tr key={h.id}><td style={td}>{h.code}</td><td style={td}>{h.workerName ?? "—"}</td><td style={td}>{h.exposure ?? "—"}</td><td style={td}>{h.fitness}</td><td style={td}>{h.restrictions ?? "—"}</td><td style={td}>{fmt(h.nextReviewDate)}</td>{(sensitive.canUpdate || sensitive.canDelete) && <td style={td}>{sensitive.canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("health", h as unknown as Record<string, unknown>, false)}>Editar</button>}{sensitive.canDelete && <button type="button" style={{ ...miniBtn, color: "var(--nf-danger-text)", borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)" }} disabled={pending} onClick={() => setHealthRecordToDelete(h)}>Eliminar</button>}</td>}</tr>))}
               {sensitive.records.length === 0 && <tr><td style={td} colSpan={sensitive.canUpdate || sensitive.canDelete ? 7 : 6}>Sin vigilancia de salud.</td></tr>}
             </Table>
           </div>
         ) : (
-          <div style={{ ...card, textAlign: "center", padding: 36, color: "#64748b" }}>
+          <div style={{ ...card, textAlign: "center", padding: 36, color: "var(--nf-text-secondary)" }}>
             <Lock size={22} style={{ marginBottom: 8 }} />
             <p style={{ margin: 0, fontWeight: 600 }}>Acceso restringido</p>
             <p style={{ margin: "4px 0 0", fontSize: 13 }}>La vigilancia de la salud es información médica sensible. Solo roles de gestión (Manager, Compliance Manager, Admin) y Auditor (solo lectura) pueden verla.</p>
@@ -332,7 +333,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
   );
 }
 
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-warning-text)", background: "var(--nf-warning-subtle)", color: "#92400e", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-warning-text)", background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return <IsoMetricCard label={label} value={value} accent={accent} />;
