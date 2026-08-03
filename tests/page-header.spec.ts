@@ -43,8 +43,11 @@ async function sondear(page: Page, ruta: string) {
 
 test.describe("Cabecera de página", () => {
   test.describe.configure({ mode: "serial" });
-  // Recorre decenas de rutas y en desarrollo cada primera visita compila.
-  test.setTimeout(15 * 60_000);
+  // Recorre las 57 rutas del workspace y en desarrollo cada primera visita
+  // compila. Con globals.css troceado en 16 hojas hay más trabajo por ruta:
+  // con 15 minutos el recorrido se cortaba en /app/soa por tiempo, no por un
+  // fallo de la comprobación.
+  test.setTimeout(30 * 60_000);
 
   let page: Page;
 
