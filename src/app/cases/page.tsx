@@ -2,13 +2,28 @@ import Link from "next/link";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { MARKETING_CASES } from "@/lib/marketing-cases";
 import { Ic } from "@/components/marketing/nf/Icons";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Casos de éxito — NormaFlow" };
+export const metadata = createMarketingMetadata({
+  title: "Casos de éxito de software ISO | NormaFlow",
+  description: "Resultados y experiencias de equipos que gestionan calidad, seguridad y cumplimiento con NormaFlow.",
+  path: "/cases",
+});
 
 export default function CasesPage() {
   const cases = MARKETING_CASES;
   return (
     <MarketingLayout>
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Casos de éxito de NormaFlow",
+        url: absoluteUrl("/cases"),
+        // No se declaran como `Article`: son escenarios ilustrativos con los
+        // datos demo del producto, no artículos sobre hechos reales.
+        hasPart: cases.map((c) => ({ "@type": "WebPage", name: c.company, url: absoluteUrl(`/cases/${c.slug}`) })),
+      }} />
       <section className="nf-section">
         <div className="nf-container">
           <div style={{ textAlign: "center", maxWidth: 760, margin: "0 auto" }}>

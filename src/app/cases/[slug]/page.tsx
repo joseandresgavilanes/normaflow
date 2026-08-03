@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { MARKETING_CASES } from "@/lib/marketing-cases";
 import { Ic } from "@/components/marketing/nf/Icons";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, breadcrumbJsonLd, createMarketingMetadata } from "@/lib/seo";
 
 export function generateStaticParams() {
   return MARKETING_CASES.map(c => ({ slug: c.slug }));
@@ -11,7 +13,11 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const c = MARKETING_CASES.find(x => x.slug === slug);
-  return { title: c ? `${c.company} — Caso de éxito | NormaFlow` : "Caso | NormaFlow" };
+  return createMarketingMetadata({
+    title: c ? `${c.company} — Caso de éxito | NormaFlow` : "Caso de éxito | NormaFlow",
+    description: c?.challenge || "Caso de éxito sobre la gestión de sistemas ISO con NormaFlow.",
+    path: `/cases/${slug}`,
+  });
 }
 
 export default async function CaseDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -21,6 +27,10 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
 
   return (
     <MarketingLayout>
+      {/* Sin `Article`: declararlo haría que los buscadores indexaran un
+          escenario ilustrativo como un artículo publicado sobre hechos reales.
+          Las migas sí se mantienen: describen la navegación, no el contenido. */}
+      <JsonLd data={[breadcrumbJsonLd([{ name: "Inicio", path: "/home" }, { name: "Casos de éxito", path: "/cases" }, { name: c.company, path: `/cases/${c.slug}` }])]} />
       <article className="nf-section">
         <div className="nf-container" style={{ maxWidth: 800 }}>
           <Link href="/cases" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-ink-3)" }}>
@@ -31,6 +41,11 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
           </div>
           <h1 className="nf-h-section" style={{ marginTop: 18 }}>{c.company}</h1>
+          <p className="nf-case-illustrative" role="note">
+            <strong>Escenario ilustrativo.</strong> Esta empresa y las personas
+            que aparecen son los datos de ejemplo del producto. Describe un uso
+            plausible de NormaFlow, no resultados obtenidos por un cliente.
+          </p>
           <p style={{ fontSize: 20, color: "var(--nf-accent)", fontWeight: 600, marginTop: 14, marginBottom: 36, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
             ↑ {c.result}
           </p>

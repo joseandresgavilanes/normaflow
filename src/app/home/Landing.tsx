@@ -11,6 +11,7 @@ import Link from "next/link";
 import { Ic } from "@/components/marketing/nf/Icons";
 import { useReveal, useMouseParallax } from "@/components/marketing/nf/hooks";
 import { PLAN_CATALOG, type PlanKey } from "@/lib/constants";
+import { HOME_FAQS } from "@/lib/seo-content";
 
 function riskHeatCellBg(lvl: number): string {
   if (lvl >= 7) return "var(--nf-danger)";
@@ -273,32 +274,39 @@ function NfHero() {
 }
 
 /* ============ Trust ============ */
+/**
+ * Aquí había cinco "logos de clientes": cuadrados de degradado CSS con nombres
+ * de empresa que salían literalmente de los datos demo del producto
+ * (src/lib/demo-data.ts, src/lib/demo/organizations.ts), bajo el titular
+ * "Equipos de calidad y seguridad que confían en NormaFlow".
+ *
+ * Se han retirado. Afirmar que hay clientes que confían en el producto, con
+ * nombres de empresa, sin que exista ninguno, es publicidad engañosa; y
+ * sustituir los cuadrados por logotipos de verdad agravaría el problema.
+ *
+ * En su lugar se muestra lo único verificable en el repositorio: el catálogo
+ * normativo que se instala, contado desde src/lib/standard-packs/ (13 paquetes,
+ * ~557 requisitos catalogados). Cuando haya clientes con permiso por escrito
+ * para aparecer, esta sección vuelve con sus logotipos reales.
+ */
 function NfTrust() {
-  const companies = [
-    "Tecnoserv Industrial",
-    "Grupo Logística Norte",
-    "Sistemas Ibérica",
-    "Manufactura Global",
-    "DataSec Solutions",
-  ];
+  const hechos = [
+    ["13", "paquetes normativos instalables"],
+    ["557", "requisitos catalogados"],
+    ["3", "sistemas integrables en uno (9001 · 14001 · 45001)"],
+  ] as [string, string][];
   return (
     <section className="nf-trust">
       <div className="nf-container nf-trust-row" data-reveal>
-        <span className="nf-trust-label">Equipos de calidad y seguridad que confían en NormaFlow</span>
-        <div className="nf-trust-logos">
-          {companies.map((c) => (
-            <span key={c} className="nf-trust-logo">
-              <span className="lm" style={{
-                background: c.includes("DataSec") ? "linear-gradient(135deg, oklch(0.7 0.10 240), oklch(0.45 0.08 240))" :
-                            c.includes("Logística") ? "linear-gradient(135deg, oklch(0.75 0.12 75), oklch(0.55 0.10 75))" :
-                            c.includes("Ibérica") ? "linear-gradient(135deg, oklch(0.7 0.10 158), oklch(0.5 0.10 158))" :
-                            c.includes("Manufactura") ? "linear-gradient(135deg, oklch(0.7 0.05 30), oklch(0.5 0.05 30))" :
-                            "linear-gradient(135deg, var(--nf-ink-2), var(--nf-ink-4))"
-              }}/>
-              {c}
-            </span>
+        <span className="nf-trust-label">Catálogo normativo incluido</span>
+        <dl className="nf-trust-facts">
+          {hechos.map(([valor, etiqueta]) => (
+            <div key={etiqueta} className="nf-trust-fact">
+              <dt className="nf-trust-fact-value">{valor}</dt>
+              <dd className="nf-trust-fact-label">{etiqueta}</dd>
+            </div>
           ))}
-        </div>
+        </dl>
       </div>
     </section>
   );
@@ -318,7 +326,7 @@ function NfProblem() {
         <div data-reveal>
           <span className="nf-eyebrow"><span className="dot" style={{ background: "var(--nf-danger)", boxShadow: "0 0 12px var(--nf-danger)" }}></span> El problema</span>
           <h2 className="nf-h-section" style={{ marginTop: 22, maxWidth: "20ch" }}>
-            El cumplimiento no falla<br/>de golpe. <em style={{ color: "var(--nf-ink-3)", fontStyle: "normal" }}>Se rompe en silencio.</em>
+            El cumplimiento no falla<br/>de golpe. {" "}<em style={{ color: "var(--nf-ink-3)", fontStyle: "normal" }}>Se rompe en silencio.</em>
           </h2>
           <p className="nf-lede" style={{ marginTop: 22 }}>
             La mayoría de empresas certificadas gestionan sus sistemas en hojas de cálculo, correos y carpetas compartidas. El coste no se ve en una factura — se ve en cada auditoría.
@@ -1202,7 +1210,7 @@ function NfAI() {
               Contexto · NC-2026-118 · ISO 27001 A.5.18
             </div>
             <div style={{ padding: 16, borderRadius: 12, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", fontSize: 14, lineHeight: 1.55, color: "var(--nf-ink-2)" }}>
-              He revisado el expediente. La causa raíz más probable es <strong style={{ color: "var(--nf-ink)" }}>una regla de notificación apuntando a un usuario inactivo</strong> tras un offboarding sin actualizar la matriz de roles.
+              He revisado el expediente. La causa raíz más probable es <strong style={{ color: "var(--nf-ink)" }}>una regla de notificación apuntando a un usuario inactivo</strong>{" "}tras un offboarding sin actualizar la matriz de roles.
               <br/><br/>
               Sugiero <strong style={{ color: "var(--nf-ink)" }}>tres acciones</strong>:
               <ul style={{ margin: "10px 0 0", paddingLeft: 18, color: "var(--nf-ink-2)" }}>
@@ -1230,60 +1238,52 @@ function NfAI() {
 }
 
 /* ============ Case ============ */
+/**
+ * Aquí había una sección rotulada "Caso real" con una cita textual firmada por
+ * "María Torres · Directora de Calidad · Tecnoserv Industrial S.A." — nombre y
+ * empresa tomados de los datos demo del producto — y tres métricas de
+ * resultado ("70% menos tiempo", "2 días", "0 NC mayores").
+ *
+ * Se ha retirado por dos motivos independientes:
+ *
+ *  1. Un testimonio atribuido a una persona y una empresa que no existen es
+ *     publicidad engañosa, no deuda de diseño.
+ *  2. Contradecía a /cases/tecnoserv-industrial, que para el MISMO cliente
+ *     decía "18 días → 5 días" y atribuía el 70% a otra cosa, con una cita
+ *     distinta de la misma persona. Cualquiera que pulsara "Ver caso completo"
+ *     veía las dos versiones.
+ *
+ * En su lugar va lo que el producto hace de verdad, sin atribuirlo a nadie.
+ */
 function NfCase() {
+  const capacidades = [
+    ["Evidencia una vez, sirve para varias normas", "Un documento cubre la cláusula 7.5 de ISO 9001 y la de ISO 14001 a la vez; no se mantienen dos sistemas en paralelo."],
+    ["El rastro de auditoría se escribe solo", "Cada cambio de estado, aprobación y adjunto queda registrado con autor y fecha, dentro de la misma transacción que la operación."],
+    ["El GAP marca lo que falta, no lo que sobra", "La evaluación por requisito indica qué cláusulas no tienen evidencia y genera el plan de acción con responsable y fecha."],
+  ] as [string, string][];
+
   return (
     <section className="nf-section" id="caso">
       <div className="nf-container">
         <div data-reveal style={{ maxWidth: 740, marginBottom: 36 }}>
-          <span className="nf-eyebrow"><span className="dot"/> Caso real</span>
+          <span className="nf-eyebrow"><span className="dot"/> Cómo funciona</span>
           <h2 className="nf-h-section" style={{ marginTop: 22 }}>
-            Pasamos de 3 semanas a <span className="nf-grad-text">2 días</span> de preparación para auditoría.
+            Un sistema de gestión que se mantiene <span className="nf-grad-text">al día solo</span>.
           </h2>
+          <p style={{ marginTop: 18, color: "var(--nf-ink-2)", lineHeight: 1.6 }}>
+            NormaFlow es una herramienta de gestión. No emite certificados ni
+            sustituye a una auditoría de certificación: prepara y mantiene la
+            evidencia que esa auditoría pide.
+          </p>
         </div>
 
-        <div className="nf-case" data-reveal>
-          <div style={{ position: "absolute", top: -100, left: -100, width: 360, height: 360, borderRadius: "50%", background: "radial-gradient(circle, rgba(82, 102, 246, 0.12), transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }}/>
-
-          <div style={{ position: "relative" }}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
-              ● Tecnoserv Industrial S.A.
-            </div>
-            <p className="nf-case-quote">
-              <span className="qm">“</span>Antes tardábamos semanas en preparar cada auditoría interna. Con NormaFlow, toda la evidencia está centralizada y siempre actualizada. La última revisión por dirección duró 45 minutos en lugar de medio día<span className="qm">.”</span>
-            </p>
-            <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 14 }}>
-              <span style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.04 30))", display: "grid", placeItems: "center", color: "#fff", fontFamily: "var(--font-display)", fontWeight: 700 }}>MT</span>
-              <div>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>María Torres</div>
-                <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Directora de Calidad · Tecnoserv Industrial S.A.</div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div className="nf-case-metrics">
-              {([
-                ["70%", "menos tiempo en gestión documental"],
-                ["2 días", "preparación de auditoría"],
-                ["0", "NC mayores en certificación"],
-              ] as [string, string][]).map(([v, l]) => (
-                <div key={l} className="nf-case-metric">
-                  <div className="v">{v}</div>
-                  <div className="l">{l}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 18, display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {["Manufactura", "ISO 9001 + ISO 27001", "420 empleados"].map((t) => (
-                <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 11, padding: "5px 10px", borderRadius: 99, background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-ink-2)" }}>{t}</span>
-              ))}
-            </div>
-
-            <Link href="/cases" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, fontSize: 14, color: "var(--nf-accent)" }}>
-              Ver caso completo + 2 casos más <Ic.arrow/>
-            </Link>
-          </div>
+        <div className="nf-capabilities" data-reveal>
+          {capacidades.map(([titulo, texto]) => (
+            <article key={titulo} className="nf-capability">
+              <h3 className="nf-capability-title">{titulo}</h3>
+              <p className="nf-capability-text">{texto}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -1373,6 +1373,37 @@ function NfCTA() {
   );
 }
 
+/* ============ FAQ ============ */
+function NfFAQ() {
+  return (
+    <section className="nf-section nf-section--tight" id="preguntas-frecuentes">
+      <div className="nf-container" style={{ maxWidth: 860 }}>
+        <div data-reveal style={{ maxWidth: 700 }}>
+          <span className="nf-eyebrow"><span className="dot"/> Preguntas frecuentes</span>
+          <h2 className="nf-h-section" style={{ marginTop: 22 }}>
+            Lo importante, <span className="nf-grad-text">sin letra pequeña.</span>
+          </h2>
+          <p className="nf-lede" style={{ marginTop: 18 }}>
+            Respuestas directas sobre el alcance de la plataforma, las normas compatibles y el papel de la IA.
+          </p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 32 }}>
+          {HOME_FAQS.map((faq) => (
+            <details key={faq.question} className="nf-card" style={{ padding: "18px 22px" }}>
+              <summary style={{ cursor: "pointer", fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--nf-ink)", lineHeight: 1.4 }}>
+                {faq.question}
+              </summary>
+              <p style={{ margin: "12px 28px 0 0", color: "var(--nf-ink-2)", fontSize: 15, lineHeight: 1.65 }}>
+                {faq.answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ============ App ============ */
 export default function Landing() {
   useReveal();
@@ -1390,6 +1421,7 @@ export default function Landing() {
       <NfAI/>
       <NfCase/>
       <NfPricing/>
+      <NfFAQ/>
       <NfCTA/>
     </>
   );

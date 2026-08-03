@@ -83,7 +83,7 @@ export default function SignupPage() {
       <div className="nf-bg" aria-hidden="true" />
       <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
       <div className="nf-app">
-        <div className="nf-auth-shell">
+        <main className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 460 }}>
             <div className="nf-auth-header">
               <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
@@ -126,7 +126,7 @@ export default function SignupPage() {
               {t("auth.signup.haveAccount")} <Link href="/login">{t("auth.signup.signin")}</Link>
             </p>
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

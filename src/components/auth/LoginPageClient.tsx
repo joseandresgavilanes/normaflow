@@ -51,7 +51,7 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
   return <>
     <div className="nf-bg" aria-hidden="true" />
     <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
-    <div className="nf-app"><div className="nf-auth-shell"><div style={{ width: "100%", maxWidth: 440 }}>
+    <div className="nf-app"><main className="nf-auth-shell"><div style={{ width: "100%", maxWidth: 440 }}>
       <div className="nf-auth-header">
         <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}><span className="nf-logo-mark" aria-hidden />NormaFlow</Link>
         <h1 className="nf-h-3" style={{ marginTop: 20 }}>{t("auth.login.title")}</h1><p>{t("auth.login.subtitle")}</p>
@@ -71,7 +71,7 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
         </form>
       </div>
       <p className="nf-auth-footer">{t("auth.login.noAccount")} <Link href="/signup">{t("auth.login.signup")}</Link></p>
-    </div></div></div>
+    </div></main></div>
   </>;
 }
 

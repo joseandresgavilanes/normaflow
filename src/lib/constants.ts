@@ -76,7 +76,21 @@ export const PLAN_CATALOG: Record<PlanKey, CommercialPlan> = {
   ENTERPRISE: {
     key: "ENTERPRISE", label: "Enterprise", monthlyUsd: null, currency: "usd", maxUsers: null, storageGb: null, exportsPerMonth: null, ai: true, aiMonthlyTokenBudget: null, modules: ALL_MODULES, checkout: false,
     lifetimeUsd: null, maintenanceYearlyUsd: null,
-    features: ["Usuarios ilimitados", "Multi-organización", "SLA", "CSM dedicado", "API e integraciones", "SSO"],
+    // "SSO" y "API e integraciones" se anunciaban como incluidas y no existen
+    // en el código: no hay ninguna implementación de SAML/OIDC (el único
+    // resultado es un dato simulado del seed demo) y src/app/api solo expone
+    // auth, health, internal, ai, cron y webhooks — nada público. Venderlas
+    // como disponibles es riesgo contractual, no solo de marketing, así que
+    // quedan marcadas hasta que se implementen o se retiren por decisión de
+    // negocio.
+    features: [
+      "Usuarios ilimitados",
+      "Multi-organización",
+      "SLA",
+      "CSM dedicado",
+      "API e integraciones (en preparación)",
+      "SSO (en preparación)",
+    ],
   },
 };
 

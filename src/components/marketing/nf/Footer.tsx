@@ -38,6 +38,14 @@ export function NfFooter() {
             </div>
           ))}
         </div>
+        {/* Un solo sitio para el aviso: NfShell lo monta en las 25 rutas
+            públicas. Antes lo llevaban 9 de 13 páginas de norma y ninguna de
+            /home, /features o /cases. */}
+        <p className="nf-footer-disclaimer">
+          NormaFlow es una herramienta de gestión. No emite certificados, no
+          sustituye una auditoría de certificación ni constituye asesoría legal.
+          La certificación la concede un organismo acreditado independiente.
+        </p>
         <div className="nf-footer-bottom">
           <span>{t("marketing.footerBottom")}</span>
           <span>Madrid · Barcelona · Lisboa</span>

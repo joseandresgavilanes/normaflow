@@ -1,3 +1,18 @@
+/**
+ * Casos ILUSTRATIVOS, no clientes reales.
+ *
+ * Las empresas y las personas de esta lista salen de los datos demo del
+ * producto (src/lib/demo-data.ts, src/lib/demo/organizations.ts): "Tecnoserv
+ * Industrial S.A." es la organización de ejemplo y "María Torres" su usuaria
+ * de ejemplo. Describen escenarios de uso plausibles, no resultados obtenidos
+ * por clientes.
+ *
+ * Por eso las páginas que los consumen los rotulan como ejemplos y no los
+ * emiten como `Article` de schema.org. Cuando haya clientes con autorización
+ * por escrito para aparecer, se sustituyen y se retira `illustrative`.
+ */
+export const ILLUSTRATIVE_CASES = true;
+
 export const MARKETING_CASES = [
   {
     slug: "tecnoserv-industrial",
