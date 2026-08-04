@@ -58,7 +58,7 @@ function MiniSpark({ chartId, data, color }: { chartId: string; data: number[]; 
       </defs>
       <polygon points={areaPts} fill={`url(#${gid})`} stroke="none" />
       <polyline points={linePts} fill="none" stroke={color} strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastXi} cy={lastYi} r="3.5" fill="#fff" stroke={color} strokeWidth="2" />
+      <circle cx={lastXi} cy={lastYi} r="3.5" fill="var(--nf-surface)" stroke={color} strokeWidth="2" />
     </svg>
   );
 }
@@ -266,7 +266,7 @@ export default function IndicatorsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#a32a26",
+              color: "var(--nf-danger-text)",
               flexShrink: 0,
             }}
           >
@@ -423,7 +423,7 @@ export default function IndicatorsModule() {
                       <span>Cumplimiento de meta</span>
                       <span style={{ color }}>{Math.round(pct)}%</span>
                     </div>
-                    <ProgressBar value={pct} color={color} height={7} railColor="#eef2f9" />
+                    <ProgressBar value={pct} color={color} height={7} railColor="var(--nf-surface-sunken)" />
                   </div>
 
                   {ind.clause && (
@@ -576,7 +576,7 @@ export default function IndicatorsModule() {
                   fontSize: 12,
                   fontWeight: 600,
                   background: "rgba(46, 139, 87, 0.1)",
-                  color: "#1f5f3f",
+                  color: "var(--nf-text-secondary)",
                   border: "1px solid rgba(46, 139, 87, 0.2)",
                 }}
               >
@@ -660,7 +660,7 @@ export default function IndicatorsModule() {
                 onClick={saveProcessLink}
                 style={{
                   marginBottom: 12,
-                  background: "#f0f4fa",
+                  background: "var(--nf-surface-selected)",
                   color: "var(--nf-primary-active)",
                   border: "1px solid rgba(82, 102, 246, 0.15)",
                   borderRadius: 8,

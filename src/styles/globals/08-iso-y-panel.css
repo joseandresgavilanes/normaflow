@@ -30,7 +30,8 @@
   line-height: var(--nf-form-control-line-height) !important;
   border: 1px solid var(--nf-line) !important;
   border-radius: var(--nf-form-control-radius) !important;
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   font-family: inherit;
   box-sizing: border-box;
   background: var(--nf-surface) !important;

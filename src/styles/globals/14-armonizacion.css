@@ -352,8 +352,8 @@
 }
 
 .nf-modal-close:hover {
-  border-color: #cbd5e1 !important;
-  background: #f8fafc !important;
+  border-color: var(--nf-primary-border) !important;
+  background: var(--nf-surface-muted) !important;
   color: var(--nf-ink) !important;
 }
 
@@ -365,13 +365,13 @@
 .nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
   min-height: 44px !important;
   border-radius: 10px !important;
-  border-color: #dbe3ee !important;
+  border-color: var(--nf-border) !important;
   background: var(--nf-surface) !important;
   box-shadow: none !important;
 }
 
 .nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):hover {
-  border-color: #c5d0df !important;
+  border-color: var(--nf-primary-border) !important;
 }
 
 .nf-modal-body :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {

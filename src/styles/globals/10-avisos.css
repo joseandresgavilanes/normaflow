@@ -257,7 +257,7 @@
 .nf-kpi-card:hover {
   transform: none;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
 }
 
 .nf-audit-day-head {
@@ -321,7 +321,7 @@
 
 .nf-alert--success {
   background: var(--nf-success-subtle);
-  border-color: #BBF7D0;
+  border-color: var(--nf-success-border);
   color: var(--nf-success-text);
 }
 
@@ -350,7 +350,8 @@
 .nf-alert-close:hover,
 .nf-alert-close:focus-visible {
   background: rgba(185, 28, 28, 0.1);
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-panel {

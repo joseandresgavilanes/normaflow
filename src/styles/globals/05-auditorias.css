@@ -183,7 +183,7 @@
 .nf-activity-kpi-icon--slate {
   background: var(--nf-surface);
   border-color: rgba(82, 102, 246, 0.08);
-  color: #314456;
+  color: var(--nf-text-secondary);
 }
 
 .nf-activity-kpi-icon--violet {
@@ -227,7 +227,7 @@
 }
 
 .nf-activity-kpi-value--danger {
-  color: #c93c37;
+  color: var(--nf-danger-text);
 }
 
 .nf-activity-kpi-label {
@@ -395,6 +395,7 @@ button.nf-audit-card {
 }
 
 button.nf-audit-card:focus-visible {
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.2), 0 10px 28px -18px rgba(82, 102, 246, 0.28);
 }

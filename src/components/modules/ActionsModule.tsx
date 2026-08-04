@@ -200,7 +200,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#314456",
+              color: "var(--nf-text-secondary)",
             }}
           >
             <Target size={22} strokeWidth={2.25} aria-hidden />
@@ -336,7 +336,7 @@ export default function ActionsModule() {
                       <span>Progreso</span>
                       <span style={{ color: pc }}>{action.progress}%</span>
                     </div>
-                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "var(--nf-success)" : pc} height={7} railColor="#eef2f9" />
+                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "var(--nf-success)" : pc} height={7} railColor="var(--nf-surface-sunken)" />
                   </div>
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default function ActionsModule() {
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 600,
-                    background: "#fff8f0",
+                    background: "var(--nf-warning-subtle)",
                     color: "var(--nf-ink-2)",
                     border: "1px solid #f5e0c8",
                   }}

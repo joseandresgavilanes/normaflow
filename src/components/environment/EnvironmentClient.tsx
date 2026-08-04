@@ -27,7 +27,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  LOW: "var(--nf-success)", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)",
+  LOW: "var(--nf-success)", MODERATE: "var(--nf-warning)", HIGH: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)",
 };
 const CONDITION_LABEL: Record<string, string> = { NORMAL: "Normal", ABNORMAL: "Anormal", EMERGENCY: "Emergencia" };
 const WASTE_LABEL: Record<string, string> = { NON_HAZARDOUS: "No peligroso", HAZARDOUS: "Peligroso", RECYCLABLE: "Reciclable", INERT: "Inerte", SPECIAL: "Especial" };
@@ -128,7 +128,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
             {initial.methods.map((m) => (
               <div key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9" }}>
                 <span>{m.name} <span style={{ color: "var(--nf-text-subtle)" }}>v{m.version}</span></span>
-                <span>{m.active ? <span style={chip("var(--nf-success-border)", "var(--nf-success-text)")}>activa</span> : <span style={chip("#f1f5f9", "#64748b")}>histórico</span>}</span>
+                <span>{m.active ? <span style={chip("var(--nf-success-border)", "var(--nf-success-text)")}>activa</span> : <span style={chip("var(--nf-surface-muted)", "var(--nf-text-secondary)")}>histórico</span>}</span>
               </div>
             ))}
             {canManage && <>
@@ -416,10 +416,10 @@ function EnvTableAction({ icon: Icon, children, danger = false, disabled = false
 function EnvironmentTrendOverview({ trends }: { trends: EnvironmentPayload["trends"] }) {
   const series = [
     { key: "water", label: "Agua", color: "#3b82f6" },
-    { key: "energy", label: "Energía", color: "#eab308" },
+    { key: "energy", label: "Energía", color: "var(--nf-warning)" },
     { key: "fuel", label: "Combustible", color: "#f97316" },
     { key: "emissions", label: "Emisiones", color: "#8b5cf6" },
-    { key: "discharges", label: "Vertidos", color: "#06b6d4" },
+    { key: "discharges", label: "Vertidos", color: "var(--nf-info)" },
     { key: "waste", label: "Residuos", color: "var(--nf-success-text)" },
     { key: "rawMaterials", label: "Materias primas", color: "var(--nf-text-secondary)" },
   ] as const;

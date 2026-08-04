@@ -213,10 +213,10 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       )}
 
       {blockers.length > 0 && canManage && (
-        <Card style={{ marginBottom: 16, border: "1px solid #f1d29d", background: "#fffaf0" }}>
-          <div style={{ fontWeight: 600, color: "#875710", marginBottom: 6 }}>Antes de crear una asignación</div>
+        <Card style={{ marginBottom: 16, border: "1px solid #f1d29d", background: "var(--nf-warning-subtle)" }}>
+          <div style={{ fontWeight: 600, color: "var(--nf-warning-text)", marginBottom: 6 }}>Antes de crear una asignación</div>
           {blockers.map((blocker) => (
-            <div key={blocker.text} style={{ fontSize: 13, color: "#6f521e", marginTop: 4 }}>
+            <div key={blocker.text} style={{ fontSize: 13, color: "var(--nf-text-secondary)", marginTop: 4 }}>
               {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>Abrir Personal →</Link>}
             </div>
           ))}

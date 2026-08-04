@@ -75,7 +75,7 @@ const dangerBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-dang
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Devices = MedicalDevicesPayload["devices"];
 type MedicalDeviceEditorKind = "family" | "device" | "dmr" | "dhf" | "input" | "output" | "review" | "verification" | "validation" | "transfer" | "risk" | "supplier" | "qualification" | "processValidation" | "sterilizationValidation" | "batch" | "trace" | "complaint" | "adverseEvent" | "pms" | "fieldAction" | "recall" | "requirement" | "submission";
@@ -773,7 +773,7 @@ function MedicalDeviceRecordEditor({ kind, value, families, devices, dhfs, suppl
   return <div className="nf-modal-form nf-iso-edit-form">
     <MedicalModalError />
     <div className="nf-iso-edit-fields" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
-      {fieldsFor.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "#475569" }}>
+      {fieldsFor.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "var(--nf-text-secondary)" }}>
         <span>{field.label}</span>
         {field.type === "textarea" ? <textarea style={{ ...input, minHeight: 70 }} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />
           : field.type === "select" ? <select style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{dynamicOptions(field.key).length ? dynamicOptions(field.key).map((item: any) => <option key={item.id} value={item.id}>{labelFor(field.key, item)}</option>) : (field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</select>

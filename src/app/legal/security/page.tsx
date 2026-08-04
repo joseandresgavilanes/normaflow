@@ -44,7 +44,7 @@ export default function SecurityPage() {
           </div>
 
           <div className="nfm-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
+            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "var(--nf-text-on-primary)" }}>
               <Ic.mail/>
             </span>
             <div style={{ flex: 1, minWidth: 240 }}>

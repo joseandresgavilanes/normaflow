@@ -67,7 +67,7 @@ export const MARKETING_CASES = [
     person: "Ana García",
     role: "CISO y DPO",
     initials: "AG",
-    color: "#D68A1A",
+    color: "var(--nf-warning)",
     challenge: "Cumplir prescripciones de clientes enterprise y preparar certificación ISO 27001 sin ampliar plantilla.",
     solution: "Registro de riesgos con controles del Anexo A, evidencias por control y auditorías internas semestrales.",
     metrics: [

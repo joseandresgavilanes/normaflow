@@ -118,7 +118,10 @@
 }
 
 .nf-skeleton {
-  background: #EBEBEB;
+  /* Era `#EBEBEB` fijo: 42 superficies claras sobre el lienzo oscuro, el
+     hallazgo más repetido del barrido. Todo estado de carga de la aplicación
+     pasa por esta clase. */
+  background: var(--nf-surface-muted);
   border-radius: var(--nf-radius-md, 10px);
   animation: nf-skeleton-pulse 1.4s ease-in-out infinite;
 }
@@ -237,7 +240,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: #EBEBEB;
+  background: var(--nf-surface-sunken);
 }
 
 .nf-skeleton-process-head,

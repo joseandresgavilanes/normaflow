@@ -81,7 +81,7 @@ const ITSM_LABELS: Record<string, string> = {
 const itsmLabel = (value: string | null | undefined) => value ? (ITSM_LABELS[value] ?? value.replaceAll("_", " ")) : "—";
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Members = ItsmPayload["members"];
 type Services = ItsmPayload["services"];
@@ -693,7 +693,7 @@ function Row({ k, v, danger }: { k: string; v: number | string; danger?: boolean
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
       <span style={{ color: "var(--nf-text-secondary)" }}>{k}</span>
-      <span style={{ fontWeight: 600, color: danger ? "var(--nf-danger-text)" : "#0f172a" }}>{v}</span>
+      <span style={{ fontWeight: 600, color: danger ? "var(--nf-danger-text)" : "var(--nf-text-primary)" }}>{v}</span>
     </div>
   );
 }
@@ -805,7 +805,7 @@ function ItsmRecordEditor({ kind, value, services, members, catalog, slas, relea
   return <div className="nf-modal-form nf-iso-edit-form">
     <ItsmModalError />
     <div className="nf-iso-edit-fields" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9 }}>
-      {fields.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "#475569" }}>
+      {fields.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "var(--nf-text-secondary)" }}>
         <span>{field.label}</span>
         {field.type === "textarea" ? <textarea style={{ ...input, minHeight: 70 }} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />
           : field.type === "select" ? <select style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{field.key === "userId" ? members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>) : renderSelectOptions(field)}</select>

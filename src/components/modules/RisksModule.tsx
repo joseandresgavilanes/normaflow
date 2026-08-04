@@ -28,7 +28,7 @@ function riskTraceBlock(title: string, href: string, children: ReactNode) {
         marginBottom: 14,
         borderRadius: 14,
         border: "1px solid rgba(82, 102, 246, 0.12)",
-        background: "#fbfcfe",
+        background: "var(--nf-surface-muted)",
         overflow: "hidden",
       }}
     >
@@ -344,7 +344,7 @@ export default function RisksModule() {
                 padding: "16px 18px",
                 borderRadius: 14,
                 border: "1px solid var(--nf-line)",
-                background: "#fafbfd",
+                background: "var(--nf-surface-muted)",
               }}
             >
               <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>Ficha del riesgo</div>
@@ -472,7 +472,7 @@ export default function RisksModule() {
                   flex: 1,
                   minWidth: 160,
                   background: "var(--nf-primary)",
-                  color: "#fff",
+                  color: "var(--nf-text-on-primary)",
                   border: "none",
                   borderRadius: 10,
                   padding: "11px 14px",

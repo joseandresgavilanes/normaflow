@@ -63,14 +63,14 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
   board: { title: "Informes al órgano de gobierno", sub: "Informes preparados, enviados y reconocidos por el órgano de gobierno." },
 };
 
-const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MINOR: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", MAJOR: "#ea580c", CRITICAL: "var(--nf-danger-text)", SEVERE: "var(--nf-danger-text)" };
-const STATUS_COLORS: Record<string, string> = { COMPLIANT: "var(--nf-success)", PARTIALLY_COMPLIANT: "#d68a1a", NON_COMPLIANT: "var(--nf-danger-text)", NOT_EVALUATED: "#64748b", NOT_APPLICABLE: "#94a3b8" };
+const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MINOR: "var(--nf-success)", MEDIUM: "var(--nf-warning)", MODERATE: "var(--nf-warning)", HIGH: "var(--nf-warning)", MAJOR: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)", SEVERE: "var(--nf-danger-text)" };
+const STATUS_COLORS: Record<string, string> = { COMPLIANT: "var(--nf-success)", PARTIALLY_COMPLIANT: "var(--nf-warning)", NON_COMPLIANT: "var(--nf-danger-text)", NOT_EVALUATED: "var(--nf-text-secondary)", NOT_APPLICABLE: "var(--nf-text-subtle)" };
 const STATUS_LABEL: Record<string, string> = { COMPLIANT: "Cumple", PARTIALLY_COMPLIANT: "Cumple parcialmente", NON_COMPLIANT: "No cumple", NOT_EVALUATED: "Sin evaluar", NOT_APPLICABLE: "No aplicable" };
 const APPLICABILITY_LABEL: Record<string, string> = { APPLICABLE: "Aplicable", PARTIALLY_APPLICABLE: "Parcialmente aplicable", NOT_APPLICABLE: "No aplicable", UNDER_ASSESSMENT: "En evaluación" };
-const REVIEW_COLORS: Record<string, string> = { DRAFT: "#64748b", UNDER_REVIEW: "#d68a1a", APPROVED: "var(--nf-success)", REJECTED: "var(--nf-danger-text)", PENDING: "#d68a1a", ACCEPTED: "var(--nf-success)", MITIGATED: "var(--nf-info)" };
+const REVIEW_COLORS: Record<string, string> = { DRAFT: "var(--nf-text-secondary)", UNDER_REVIEW: "var(--nf-warning)", APPROVED: "var(--nf-success)", REJECTED: "var(--nf-danger-text)", PENDING: "var(--nf-warning)", ACCEPTED: "var(--nf-success)", MITIGATED: "var(--nf-info)" };
 const REVIEW_LABEL: Record<string, string> = { DRAFT: "Borrador", UNDER_REVIEW: "En revisión", APPROVED: "Aprobada", REJECTED: "Rechazada", PENDING: "Pendiente", ACCEPTED: "Aceptada", MITIGATED: "Mitigada" };
 const CALENDAR_LABEL: Record<string, string> = { SCHEDULED: "Programado", DUE_SOON: "Próximo", OVERDUE: "Vencido", COMPLETED: "Cumplido", CANCELLED: "Cancelado" };
-const CALENDAR_COLORS: Record<string, string> = { SCHEDULED: "#64748b", DUE_SOON: "#d68a1a", OVERDUE: "var(--nf-danger-text)", COMPLETED: "var(--nf-success)", CANCELLED: "#94a3b8" };
+const CALENDAR_COLORS: Record<string, string> = { SCHEDULED: "var(--nf-text-secondary)", DUE_SOON: "var(--nf-warning)", OVERDUE: "var(--nf-danger-text)", COMPLETED: "var(--nf-success)", CANCELLED: "var(--nf-text-subtle)" };
 const CASE_LABEL: Record<string, string> = { RECEIVED: "Recibida", ACKNOWLEDGED: "Acuse enviado", UNDER_TRIAGE: "En triaje", ADMISSIBLE: "Admitida", INADMISSIBLE: "Inadmitida", UNDER_INVESTIGATION: "En investigación", RESOLVED: "Resuelta", CLOSED: "Cerrada" };
 const MODE_LABEL: Record<string, string> = { IDENTIFIED: "Identificada", CONFIDENTIAL: "Confidencial", ANONYMOUS: "Anónima" };
 const OUTCOME_LABEL: Record<string, string> = { SUBSTANTIATED: "Fundada", PARTIALLY_SUBSTANTIATED: "Parcialmente fundada", UNSUBSTANTIATED: "No fundada", INCONCLUSIVE: "Inconcluyente", WITHDRAWN: "Retirada", OUT_OF_SCOPE: "Fuera de ámbito", REFERRED_EXTERNALLY: "Derivada" };
@@ -87,10 +87,10 @@ const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "cent
 const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined) => (typeof v === "number" ? v.toLocaleString("es-ES") : "—");
-const level = (value: string) => LEVEL_COLORS[value] ?? "#64748b";
+const level = (value: string) => LEVEL_COLORS[value] ?? "var(--nf-text-secondary)";
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 const toggleBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "6px 10px", minHeight: 28, border: "1px solid var(--nf-line)", borderRadius: 8, background: "var(--nf-surface)", color: "var(--nf-ink)", fontWeight: 600, fontSize: 11, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Members = CompliancePayload["members"];
@@ -411,7 +411,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.country ?? "—"}</td>
                 <td style={td}>{row.authority ?? "—"}</td>
                 <td style={td}>{row.applicable ? "Sí" : "No"}</td>
-                <td style={td}>{row.rationale ?? <span style={{ color: "#d68a1a" }}>sin motivo</span>}</td>
+                <td style={td}>{row.rationale ?? <span style={{ color: "var(--nf-warning)" }}>sin motivo</span>}</td>
                 {live && can.update && <td style={td}><EditRecordButton title={`Editar jurisdicción ${row.code}`}>{(close) => <EditRecordForm kind="jurisdiction" row={row as unknown as EditRow} members={initial.members} pending={pending} run={run} onDone={close} />}</EditRecordButton></td>}
               </tr>
             ))}
@@ -493,10 +493,10 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.obligation?.code ?? row.control?.code ?? "—"}<div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.obligation?.title ?? ""}</div></td>
                 <td style={td}>{row.period}</td>
                 <td style={td}>{row.method}</td>
-                <td style={td}><span style={toneChip(STATUS_COLORS[row.result] ?? "#64748b")}>{STATUS_LABEL[row.result] ?? row.result}</span></td>
+                <td style={td}><span style={toneChip(STATUS_COLORS[row.result] ?? "var(--nf-text-secondary)")}>{STATUS_LABEL[row.result] ?? row.result}</span></td>
                 <td style={td}>{row.score ?? "—"}</td>
                 <td style={td}>{nameOf(row.evaluatedById)}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{fmt(row.evaluatedAt)}</div></td>
-                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
+                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "var(--nf-text-secondary)")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
                 <td style={td}>{row.reviewerId ? `${nameOf(row.reviewerId)} · ${fmt(row.reviewedAt)}` : "—"}</td>
                 {(can.update || can.approve) && (
                   <td style={td}>
@@ -524,10 +524,10 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
       {tab === "calendar" && (
         <div style={{ display: "grid", gap: 14 }}>
           {initial.alerts.length > 0 && (
-            <div style={{ ...card, borderColor: "#fed7aa", background: "#fff7ed" }}>
+            <div style={{ ...card, borderColor: "var(--nf-warning-border)", background: "var(--nf-warning-subtle)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <BellRing size={16} color="#c2410c" />
-                <b style={{ color: "#c2410c" }}>{initial.alerts.length} alerta(s) de vencimiento</b>
+                <b style={{ color: "var(--nf-warning-text)" }}>{initial.alerts.length} alerta(s) de vencimiento</b>
                 {live && can.update && (
                   <button disabled={pending} onClick={() => run(() => refreshCalendarAlerts())} style={{ ...miniBtn, marginLeft: "auto" }}><RefreshCw size={12} /> Notificar responsables</button>
                 )}
@@ -618,7 +618,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}>{row.relatedParty ?? "—"}</td>
                 <td style={td}>{money(row.estimatedValue)}{row.currency ? ` ${row.currency}` : ""}</td>
                 <td style={td}>{row.recusalRequired ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Obligada</span> : "—"}</td>
-                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "#64748b")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
+                <td style={td}><span style={toneChip(REVIEW_COLORS[row.reviewStatus] ?? "var(--nf-text-secondary)")}>{REVIEW_LABEL[row.reviewStatus] ?? row.reviewStatus}</span></td>
                 <td style={td}>{row.reviewerId ? `${nameOf(row.reviewerId)} · ${fmt(row.reviewedAt)}` : "—"}</td>
                 {can.approve && (
                   <td style={td}>
@@ -652,7 +652,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
               <Row k="Plazo de acuse" v={initial.channel.config.acknowledgementDays} suffix=" d" />
               <Row k="Plazo de respuesta" v={initial.channel.config.feedbackDays} suffix=" d" />
               <Row k="Retención del expediente" v={initial.channel.config.retentionMonths} suffix=" meses" />
-              {!initial.channel.configured && <p style={{ margin: "8px 0 0", color: "#d68a1a", fontSize: 12 }}>Sin configurar: se aplican los valores por defecto.</p>}
+              {!initial.channel.configured && <p style={{ margin: "8px 0 0", color: "var(--nf-warning)", fontSize: 12 }}>Sin configurar: se aplican los valores por defecto.</p>}
               {live && can.channelDecide && (
                 <div style={{ marginTop: 10 }}>
                   <NewFormToggle label="Configurar canal">
@@ -689,7 +689,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                   <td style={td}>{fmt(row.acknowledgedAt)}</td>
                   <td style={td}>{fmt(row.feedbackProvidedAt)}</td>
                   <td style={td}>{row.outcome ? OUTCOME_LABEL[row.outcome] : "—"}</td>
-                  <td style={td}>{row.protectionMeasures ?? (row.retaliationRisk ? <span style={{ color: "#d68a1a" }}>riesgo señalado, sin medidas</span> : "—")}</td>
+                  <td style={td}>{row.protectionMeasures ?? (row.retaliationRisk ? <span style={{ color: "var(--nf-warning)" }}>riesgo señalado, sin medidas</span> : "—")}</td>
                 </tr>
               ))}
             </Table>
@@ -728,7 +728,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                 <td style={td}><b>{row.title}</b></td>
                 <td style={td}>{nameOf(row.leadInvestigatorId)}{row.reassignedToId && <div style={{ color: "var(--nf-info-text)", fontSize: 11 }}>reasignada a {nameOf(row.reassignedToId)}</div>}</td>
                 <td style={td}>{row.independenceConfirmed ? <span style={{ color: "var(--nf-success-text)" }}>confirmada</span> : <span style={{ color: "var(--nf-danger-text)" }}>sin confirmar</span>}</td>
-                <td style={td}>{row.conflictDetected ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>detectado</span> : row.conflictChecked ? "comprobado" : <span style={{ color: "#d68a1a" }}>sin comprobar</span>}</td>
+                <td style={td}>{row.conflictDetected ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>detectado</span> : row.conflictChecked ? "comprobado" : <span style={{ color: "var(--nf-warning)" }}>sin comprobar</span>}</td>
                 <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{INVESTIGATION_LABEL[row.status] ?? row.status}</span></td>
                 <td style={td}>{fmt(row.startedAt)}</td>
                 <td style={td}>{fmt(row.dueDate)}</td>
@@ -778,7 +778,7 @@ function ComplianceClientContent({ initial, demo = false }: { initial: Complianc
                   <td style={td}>{row.detectionSource}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{fmt(row.detectedAt)}</div></td>
                   <td style={td}><span style={toneChip(level(row.severity))}>{row.severity}</span></td>
                   <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{BREACH_LABEL[row.status] ?? row.status}</span></td>
-                  <td style={td}>{row.rootCause ? "Sí" : <span style={{ color: "#d68a1a" }}>pendiente</span>}</td>
+                  <td style={td}>{row.rootCause ? "Sí" : <span style={{ color: "var(--nf-warning)" }}>pendiente</span>}</td>
                   <td style={td}>{row.recurrence ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                   <td style={td}>
                     {row.notificationRequired
@@ -1019,9 +1019,9 @@ function ObligationRow({ row, nameOf, jurisdictions, members, can, live, pending
         <td style={td}>{row.source?.code ?? "—"}</td>
         <td style={td}>
           {APPLICABILITY_LABEL[row.applicability] ?? row.applicability}
-          {row.applicabilityRollup.incomplete && <div style={{ color: "#d68a1a", fontSize: 11 }}>{row.applicabilityRollup.pending} jurisdicción(es) sin decidir</div>}
+          {row.applicabilityRollup.incomplete && <div style={{ color: "var(--nf-warning)", fontSize: 11 }}>{row.applicabilityRollup.pending} jurisdicción(es) sin decidir</div>}
         </td>
-        <td style={td}><span style={toneChip(STATUS_COLORS[row.complianceStatus] ?? "#64748b")}>{STATUS_LABEL[row.complianceStatus] ?? row.complianceStatus}</span></td>
+        <td style={td}><span style={toneChip(STATUS_COLORS[row.complianceStatus] ?? "var(--nf-text-secondary)")}>{STATUS_LABEL[row.complianceStatus] ?? row.complianceStatus}</span></td>
         <td style={td}><span style={toneChip(level(row.criticality))}>{row.criticality}</span></td>
         <td style={td}>{nameOf(row.ownerId)}</td>
         <td style={td}>{fmt(row.nextEvaluationDate)}</td>
@@ -1340,7 +1340,7 @@ function TrainingRow({ row, members, can, live, pending, run }: { row: Complianc
         <td style={td}>{fmt(row.scheduledFor)}</td>
         <td style={td}>{row.coverage === null ? "—" : `${row.coverage}%`}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{row.completedCount ?? 0}/{row.targetCount ?? 0}</div></td>
         <td style={td}>{row.passRate === null ? "—" : `${row.passRate}%`}</td>
-        <td style={td}>{row.effectivenessEvaluated ? "Evaluada" : <span style={{ color: "#d68a1a" }}>sin evaluar</span>}</td>
+        <td style={td}>{row.effectivenessEvaluated ? "Evaluada" : <span style={{ color: "var(--nf-warning)" }}>sin evaluar</span>}</td>
         <td style={td}>{fmt(row.nextDueDate)}</td>
         {live && can.update && <td style={td}><button style={toggleBtn} onClick={() => setOpen((v) => !v)}>{open ? "Ocultar" : "Registrar"}</button></td>}
       </tr>

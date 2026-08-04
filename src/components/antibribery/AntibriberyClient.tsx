@@ -66,7 +66,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 };
 
 const LEVEL_COLORS: Record<string, string> = {
-  LOW: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)",
+  LOW: "var(--nf-success)", MEDIUM: "var(--nf-warning)", MODERATE: "var(--nf-warning)", HIGH: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)",
 };
 const DD_LABEL: Record<string, string> = {
   DRAFT: "Borrador", SCREENING: "Screening", REVIEW: "Revisión", ENHANCED_REVIEW: "Revisión reforzada",
@@ -84,14 +84,14 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)",
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #9f1239", background: "var(--nf-danger-subtle)", color: "#9f1239", fontWeight: 600, fontSize: 12, cursor: "pointer" };
+const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid #9f1239", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined, c?: string | null) => (typeof v === "number" ? `${v.toLocaleString("es-ES")}${c ? ` ${c}` : ""}` : "—");
-const level = (value: string) => LEVEL_COLORS[value] ?? "#64748b";
+const level = (value: string) => LEVEL_COLORS[value] ?? "var(--nf-text-secondary)";
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Associates = AntibriberyPayload["associates"];
 
@@ -154,7 +154,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#ffe4e6", display: "grid", placeItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-danger-subtle)", display: "grid", placeItems: "center" }}>
           <ShieldBan size={22} color="#9f1239" />
         </div>
         <div>
@@ -175,7 +175,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
         <Stat label="DD abiertas" value={s.dueDiligenceOpen} accent={s.dueDiligenceOpen ? "#d68a1a" : undefined} />
         <Stat label="Regalos pendientes" value={s.giftsPending} accent={s.giftsPending ? "#d68a1a" : undefined} />
         <Stat label="Investigaciones abiertas" value={s.investigationsOpen} accent={s.investigationsOpen ? "#ea580c" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "risks" ? [{ label: "Evaluaciones", value: s.assessments }, { label: "Riesgo residual alto", value: s.highResidual, accent: s.highResidual ? "var(--nf-danger-text)" : undefined }, { label: "Aprobadas", value: s.assessmentsApproved }] : tab === "associates" ? [{ label: "Socios de negocio", value: s.associates }, { label: "Riesgo alto/crítico", value: s.highRiskAssociates, accent: s.highRiskAssociates ? "#ea580c" : undefined }, { label: "Debida diligencia abierta", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }] : tab === "due-diligence" ? [{ label: "Casos abiertos", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }, { label: "Vencidos", value: s.dueDiligenceOverdue, accent: s.dueDiligenceOverdue ? "var(--nf-danger-text)" : undefined }, { label: "Socios evaluados", value: s.associates }] : tab === "owners" ? [{ label: "Beneficiarios finales", value: initial.owners.length }, { label: "PEP", value: s.pepOwners, accent: s.pepOwners ? "#ea580c" : undefined }, { label: "Socios de negocio", value: s.associates }] : tab === "gifts" ? [{ label: "Regalos pendientes", value: s.giftsPending, accent: s.giftsPending ? "#d68a1a" : undefined }, { label: "Regalos registrados", value: initial.gifts.length }, { label: "Socios relacionados", value: s.associates }] : tab === "donations" ? [{ label: "Donaciones", value: initial.donations.length }, { label: "Políticas", value: s.donationsPolitical, accent: s.donationsPolitical ? "#d68a1a" : undefined }, { label: "Pendientes", value: initial.donations.filter((row) => !["APPROVED", "REJECTED"].includes(row.status)).length, accent: "#d68a1a" }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.conflicts.length }, { label: "Pendientes", value: initial.conflicts.filter((row) => row.reviewStatus === "PENDING").length, accent: "#d68a1a" }, { label: "Socios relacionados", value: s.associates }] : tab === "facilitation" ? [{ label: "Pagos abiertos", value: s.facilitationOpen, accent: s.facilitationOpen ? "var(--nf-danger-text)" : undefined }, { label: "Reportes", value: initial.facilitation.length }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : tab === "controls" ? [{ label: "Pruebas financieras", value: initial.financialTests.length }, { label: "Pruebas no financieras", value: initial.nonFinancialTests.length }, { label: "Fallos de control", value: s.controlFailures, accent: s.controlFailures ? "var(--nf-danger-text)" : undefined }] : tab === "approvals" ? [{ label: "Aprobaciones pendientes", value: s.highRiskPending, accent: s.highRiskPending ? "#d68a1a" : undefined }, { label: "Operaciones alto riesgo", value: initial.highRisk.length }, { label: "Socios", value: s.associates }] : tab === "commitments" ? [{ label: "Compromisos", value: s.commitments }, { label: "Socios relacionados", value: s.associates }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : [{ label: "Investigaciones", value: initial.investigations.length }, { label: "Abiertas", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }, { label: "Socios relacionados", value: s.associates }]} />}
+      </div> : <IsoSectionMetrics items={tab === "risks" ? [{ label: "Evaluaciones", value: s.assessments }, { label: "Riesgo residual alto", value: s.highResidual, accent: s.highResidual ? "var(--nf-danger-text)" : undefined }, { label: "Aprobadas", value: s.assessmentsApproved }] : tab === "associates" ? [{ label: "Socios de negocio", value: s.associates }, { label: "Riesgo alto/crítico", value: s.highRiskAssociates, accent: s.highRiskAssociates ? "#ea580c" : undefined }, { label: "Debida diligencia abierta", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }] : tab === "due-diligence" ? [{ label: "Casos abiertos", value: s.dueDiligenceOpen, accent: s.dueDiligenceOpen ? "#d68a1a" : undefined }, { label: "Vencidos", value: s.dueDiligenceOverdue, accent: s.dueDiligenceOverdue ? "var(--nf-danger-text)" : undefined }, { label: "Socios evaluados", value: s.associates }] : tab === "owners" ? [{ label: "Beneficiarios finales", value: initial.owners.length }, { label: "PEP", value: s.pepOwners, accent: s.pepOwners ? "#ea580c" : undefined }, { label: "Socios de negocio", value: s.associates }] : tab === "gifts" ? [{ label: "Regalos pendientes", value: s.giftsPending, accent: s.giftsPending ? "#d68a1a" : undefined }, { label: "Regalos registrados", value: initial.gifts.length }, { label: "Socios relacionados", value: s.associates }] : tab === "donations" ? [{ label: "Donaciones", value: initial.donations.length }, { label: "Políticas", value: s.donationsPolitical, accent: s.donationsPolitical ? "#d68a1a" : undefined }, { label: "Pendientes", value: initial.donations.filter((row) => !["APPROVED", "REJECTED"].includes(row.status)).length, accent: "var(--nf-warning)" }] : tab === "conflicts" ? [{ label: "Declaraciones", value: initial.conflicts.length }, { label: "Pendientes", value: initial.conflicts.filter((row) => row.reviewStatus === "PENDING").length, accent: "var(--nf-warning)" }, { label: "Socios relacionados", value: s.associates }] : tab === "facilitation" ? [{ label: "Pagos abiertos", value: s.facilitationOpen, accent: s.facilitationOpen ? "var(--nf-danger-text)" : undefined }, { label: "Reportes", value: initial.facilitation.length }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : tab === "controls" ? [{ label: "Pruebas financieras", value: initial.financialTests.length }, { label: "Pruebas no financieras", value: initial.nonFinancialTests.length }, { label: "Fallos de control", value: s.controlFailures, accent: s.controlFailures ? "var(--nf-danger-text)" : undefined }] : tab === "approvals" ? [{ label: "Aprobaciones pendientes", value: s.highRiskPending, accent: s.highRiskPending ? "#d68a1a" : undefined }, { label: "Operaciones alto riesgo", value: initial.highRisk.length }, { label: "Socios", value: s.associates }] : tab === "commitments" ? [{ label: "Compromisos", value: s.commitments }, { label: "Socios relacionados", value: s.associates }, { label: "Investigaciones", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }] : [{ label: "Investigaciones", value: initial.investigations.length }, { label: "Abiertas", value: s.investigationsOpen, accent: s.investigationsOpen ? "#ea580c" : undefined }, { label: "Socios relacionados", value: s.associates }]} />}
 
       {tab === "panel" && (
         <>
@@ -223,8 +223,8 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
             <tr key={row.id}>
               <td style={td}>{row.code}</td>
               <td style={td}><b>{row.title}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.scope ?? ""}</div></td>
-              <td style={td}><span style={chip("#f1f5f9", level(row.inherentLevel))}>{row.inherentScore} · {row.inherentLevel}</span></td>
-              <td style={td}><span style={chip("#f1f5f9", level(row.residualLevel ?? "MEDIUM"))}>{row.residualScore ?? "—"} · {row.residualLevel ?? "—"}</span></td>
+              <td style={td}><span style={chip("var(--nf-surface-muted)", level(row.inherentLevel))}>{row.inherentScore} · {row.inherentLevel}</span></td>
+              <td style={td}><span style={chip("var(--nf-surface-muted)", level(row.residualLevel ?? "MEDIUM"))}>{row.residualScore ?? "—"} · {row.residualLevel ?? "—"}</span></td>
               <td style={td}>{row.countryRisk}</td>
               <td style={td}>{row.sectorRisk}</td>
               <td style={td}>{row.publicOfficialRisk ? "Sí" : "No"}</td>
@@ -252,7 +252,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}><b>{row.name}</b></td>
               <td style={td}>{row.associateType}</td>
               <td style={td}>{row.country ?? "—"}</td>
-              <td style={td}><span style={chip("#f1f5f9", level(row.riskTier))}>{row.riskTier}</span></td>
+              <td style={td}><span style={chip("var(--nf-surface-muted)", level(row.riskTier))}>{row.riskTier}</span></td>
               <td style={td}>{row.isPublicOfficial || row.interactsWithPEPs ? "Sí" : "No"}</td>
               <td style={td}>{row.sanctionedScreen}</td>
               <td style={td}>{row._count.beneficialOwners}</td>
@@ -273,7 +273,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>{row.code}</td>
               <td style={td}><b>{row.associate.code}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.associate.name}</div></td>
               <td style={td}>{row.level}</td>
-              <td style={td}><span style={chip("#f1f5f9", "#334155")}>{DD_LABEL[row.status] ?? row.status}</span></td>
+              <td style={td}><span style={chip("var(--nf-surface-muted)", "#334155")}>{DD_LABEL[row.status] ?? row.status}</span></td>
               <td style={td}>{row.screeningResult}</td>
               <td style={td}>{row.enhancedRequired ? "Obligatoria" : "No"}</td>
               <td style={td}>{fmt(row.nextReviewDate)}</td>
@@ -282,7 +282,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                   <button
                     key={to}
                     disabled={pending}
-                    style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "var(--nf-surface-muted)", color: "#334155", marginRight: 4 }}
+                    style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "var(--nf-text-secondary)", background: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", marginRight: 4 }}
                     onClick={() => run(() => transitionDueDiligence(row.id, {
                       to: to as DueDiligenceStatus,
                       rejectionReason: to === "REJECTED" ? "Riesgo residual inaceptable / screening adverso" : undefined,
@@ -340,7 +340,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>{row.code}</td>
               <td style={td}>{row.recordType} · {row.direction}</td>
               <td style={td}><b>{row.description}</b><div style={{ color: "var(--nf-text-secondary)", fontSize: 12 }}>{row.counterpartyName ?? row.associate?.name ?? ""}</div></td>
-              <td style={td}>{money(row.estimatedValue, row.currency)}{row.requiresCompliance ? <div style={{ color: "#9f1239", fontSize: 11 }}>Exige compliance</div> : null}</td>
+              <td style={td}>{money(row.estimatedValue, row.currency)}{row.requiresCompliance ? <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>Exige compliance</div> : null}</td>
               <td style={td}>{row.involvesPublicOfficial ? "Sí" : "No"}</td>
               <td style={td}>{GIFT_LABEL[row.status] ?? row.status}</td>
               <td style={td}>{nameOf(row.complianceReviewerId)}</td>
@@ -353,7 +353,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                     <button
                       key={to}
                       disabled={pending}
-                      style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "#64748b", background: "var(--nf-surface-muted)", color: "#334155", marginRight: 4 }}
+                      style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "var(--nf-text-secondary)", background: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", marginRight: 4 }}
                       onClick={() => run(() => transitionGiftHospitality(row.id, {
                         to: to as GiftHospitalityStatus,
                         rejectionReason: to === "REJECTED" ? "Fuera de política / riesgo de soborno" : undefined,

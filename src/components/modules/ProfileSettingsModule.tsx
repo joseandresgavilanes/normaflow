@@ -95,7 +95,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 700,
-                    background: "rgba(255,255,255,0.75)",
+                    background: "var(--nf-glass)",
                     border: "1px solid rgba(82, 102, 246, 0.12)",
                     color: "var(--nf-primary-active)",
                   }}
@@ -112,7 +112,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 700,
-                    background: "rgba(255,255,255,0.75)",
+                    background: "var(--nf-glass)",
                     border: "1px solid rgba(82, 102, 246, 0.12)",
                     color: "var(--nf-ink-2)",
                   }}
@@ -172,7 +172,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
               width: "100%",
               maxWidth: 280,
               background: "var(--nf-primary)",
-              color: "#fff",
+              color: "var(--nf-text-on-primary)",
               border: "none",
               borderRadius: 10,
               padding: "12px 18px",

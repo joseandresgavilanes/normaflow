@@ -98,7 +98,7 @@ export default function AuditProgramModule() {
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>
                 <span>Avance del programa</span><span style={{ fontWeight: 700 }}>{avg(p.audits)}%</span>
               </div>
-              <ProgressBar value={avg(p.audits)} color={avg(p.audits) >= 80 ? "var(--nf-success)" : avg(p.audits) >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="#eef2f9" />
+              <ProgressBar value={avg(p.audits)} color={avg(p.audits) >= 80 ? "var(--nf-success)" : avg(p.audits) >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="var(--nf-surface-sunken)" />
             </div>
           </Card>
         ))}

@@ -73,7 +73,7 @@ export default function IntegrationsModule() {
             <p style={{ fontSize: 14, color: "var(--nf-ink)", lineHeight: 1.55 }}>{detail.valueProposition}</p>
             <div style={{ marginTop: 12, marginBottom: 16 }}>{statusBadge(detail.status)}</div>
             {detail.detailNote && (
-              <div style={{ background: "#fff8e6", border: "1px solid #f5e0a8", borderRadius: 8, padding: 12, fontSize: 13, color: "#7a5c1a", marginBottom: 16 }}>{detail.detailNote}</div>
+              <div style={{ background: "var(--nf-warning-subtle)", border: "1px solid #f5e0a8", borderRadius: 8, padding: 12, fontSize: 13, color: "#7a5c1a", marginBottom: 16 }}>{detail.detailNote}</div>
             )}
             <p style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               La ingesta de evidencias desde este conector quedaría mapeada a controles, documentos y auditorías. Desde{" "}
@@ -92,7 +92,7 @@ export default function IntegrationsModule() {
                   width: "100%",
                   padding: 12,
                   background: "var(--nf-primary)",
-                  color: "#fff",
+                  color: "var(--nf-text-on-primary)",
                   border: "none",
                   borderRadius: 8,
                   fontWeight: 600,

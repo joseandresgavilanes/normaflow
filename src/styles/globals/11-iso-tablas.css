@@ -137,9 +137,9 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
 
 .nf-iso-module :where(table thead th, .nf-data-table thead th) {
   padding: 12px 14px !important;
-  background: #f8fafc !important;
+  background: var(--nf-surface-muted) !important;
   border-bottom: 1px solid #e5eaf2 !important;
-  color: #64748b !important;
+  color: var(--nf-text-subtle) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   letter-spacing: .045em;
@@ -152,7 +152,7 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   padding: 13px 14px !important;
   background: transparent !important;
   border-bottom: 1px solid #eef2f6 !important;
-  color: #334155;
+  color: var(--nf-text-secondary);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -166,7 +166,7 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
 }
 
 .nf-iso-module :where(table tbody tr:hover td, .nf-data-table tbody tr:hover td) {
-  background: #fbfdff !important;
+  background: var(--nf-surface) !important;
 }
 
 .nf-iso-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
@@ -181,7 +181,8 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
 .nf-iso-module :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea):focus {
   border-color: var(--nf-app-accent) !important;
   box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-iso-module button:not(.nf-quick-create-trigger):not(.nf-quick-create-item) {
@@ -228,7 +229,8 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   align-items: center;
   gap: 10px;
   min-width: 0;
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-iso-subsection-mark {
@@ -237,10 +239,10 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   width: 30px;
   height: 30px;
   place-items: center;
-  color: #5266f6;
+  color: var(--nf-primary-active);
   border: 1px solid #e1e5ff;
   border-radius: 9px;
-  background: #f1f3ff;
+  background: var(--nf-surface-selected);
 }
 
 .nf-iso-subsection-copy {
@@ -267,7 +269,8 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   border-radius: 50%;
   color: var(--nf-ink-3);
   cursor: help;
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-iso-subsection-info:hover,
@@ -408,6 +411,6 @@ div:has(> table):not(.nf-iso-table-card):not(.nf-iso-table-scroll)
   flex: 0 0 32px;
   border: 1px solid #dbe1ff;
   border-radius: 10px;
-  color: #5266f6;
-  background: #eef0ff;
+  color: var(--nf-primary-active);
+  background: var(--nf-surface-selected);
 }

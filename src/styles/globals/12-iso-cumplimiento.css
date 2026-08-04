@@ -54,18 +54,18 @@
   transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
 }
 .nf-communication-node-card:hover {
-  border-color: #c5cdfd;
+  border-color: var(--nf-primary-border);
   box-shadow: 0 9px 22px rgba(82, 102, 246, .12);
   transform: translateY(-1px);
 }
 .nf-communication-node--depth-0 > .nf-communication-node-card {
-  border-color: #cdd5ff;
+  border-color: var(--nf-primary-border);
   border-left-color: #5266f6;
-  background: linear-gradient(135deg, #f7f8ff 0%, #fff 66%);
+  background: linear-gradient(135deg, var(--nf-primary-subtle) 0%, var(--nf-surface) 66%);
 }
 .nf-communication-node-topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
 .nf-communication-node-level {
-  color: #5266f6;
+  color: var(--nf-primary-active);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .07em;
@@ -73,7 +73,7 @@
 }
 .nf-communication-node-delay {
   gap: 4px;
-  color: #9a6700;
+  color: var(--nf-warning-text);
   font-size: 11px;
   font-weight: 700;
 }
@@ -85,8 +85,8 @@
   height: 30px;
   flex: 0 0 30px;
   border-radius: 9px;
-  color: #5266f6;
-  background: #eef0ff;
+  color: var(--nf-primary-active);
+  background: var(--nf-surface-selected);
 }
 .nf-communication-node-copy { display: grid; min-width: 0; flex: 1; gap: 2px; }
 .nf-communication-node-label { overflow: hidden; color: var(--nf-ink); font-size: 13px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
@@ -102,7 +102,7 @@
   font-weight: 700;
   cursor: pointer;
 }
-.nf-communication-node-edit:hover { border-color: #c5cdfd; color: #5266f6; background: #f7f8ff; }
+.nf-communication-node-edit:hover { border-color: var(--nf-primary-border); color: var(--nf-primary-active); background: var(--nf-surface-muted); }
 .nf-communication-node-meta { gap: 6px; flex-wrap: wrap; margin: 10px 0 0 39px; }
 .nf-communication-node-meta span {
   display: inline-flex;
@@ -112,7 +112,7 @@
   padding: 4px 6px;
   border-radius: 6px;
   color: var(--nf-ink-3);
-  background: #f5f7fa;
+  background: var(--nf-surface-hover);
   font-size: 10.5px;
   line-height: 1.2;
 }
@@ -191,10 +191,10 @@
   width: 30px;
   height: 30px;
   place-items: center;
-  color: #5266f6;
+  color: var(--nf-primary-active);
   border: 1px solid #e1e5ff;
   border-radius: 9px;
-  background: #f1f3ff;
+  background: var(--nf-surface-selected);
 }
 
 .nf-iso-table-card-heading h3 {
@@ -215,7 +215,8 @@
   border-radius: 50%;
   color: var(--nf-ink-3);
   cursor: help;
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-iso-table-card-info:hover,

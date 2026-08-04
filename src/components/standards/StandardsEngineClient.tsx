@@ -77,7 +77,7 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
         meta={demo ? <span style={{ color: "var(--nf-primary-active)", fontWeight: 600, fontSize: 13 }}>Vista demo (solo lectura)</span> : undefined}
       />
 
-      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
+      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
 
       <nav className="nf-iso-tabs" role="tablist" aria-label="Secciones del motor de normas" style={{ marginBottom: 20 }}>
         {tabs.map(({ id, label, Icon }) => (
@@ -306,5 +306,5 @@ function Empty({ text }: { text: string }) {
   return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3,#8794a5)", padding: 40 }}>{text}</div>;
 }
 
-const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "#fff", border: "none", borderRadius: 9, padding: "7px 14px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "var(--nf-text-on-primary)", border: "none", borderRadius: 9, padding: "7px 14px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const ghostBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 7, background: "var(--nf-surface)", color: "var(--nf-primary-active)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "8px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };

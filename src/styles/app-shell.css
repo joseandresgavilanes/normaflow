@@ -164,7 +164,8 @@
   background: transparent;
   color: var(--nf-text-primary);
   font-size: var(--nf-text-sm);
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 .nf-sidenav__filter input::placeholder { color: var(--nf-text-subtle); }
 
@@ -386,7 +387,8 @@
   justify-content: center;
   gap: var(--nf-space-2);
   min-height: 34px;
-  border: 1px solid var(--nf-primary-border);
+  /* Botón: el borde sutil de chip no llega a 3:1 sobre la superficie. */
+  border: 1px solid var(--nf-primary);
   border-radius: var(--nf-radius-m);
   background: var(--nf-primary-subtle);
   color: var(--nf-primary-active);

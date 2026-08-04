@@ -140,7 +140,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>
                   <span>Avance del programa</span><span style={{ fontWeight: 700 }}>{row.avgProgress}%</span>
                 </div>
-                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "var(--nf-success)" : row.avgProgress >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="#eef2f9" />
+                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "var(--nf-success)" : row.avgProgress >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="var(--nf-surface-sunken)" />
               </div>
               {canManage && (
                 <CardActions canUpdate canDelete pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />

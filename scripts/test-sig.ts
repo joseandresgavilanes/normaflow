@@ -105,11 +105,27 @@ async function main() {
     assert.ok(ids.has(REQ.s92), "enlaza con ISO 45001");
   });
 
-  await t("crosswalk: un requisito sin correspondencia es específico de su norma", async () => {
-    const links = await prisma.requirementMapping.count({
+  await t("crosswalk: un requisito sin correspondencia SIG es específico de su norma", async () => {
+    // req-iso-45001-5.4 sí tiene una correspondencia legítima con ISO 37301 8.3
+    // (canal de denuncias ⇄ consulta y participación de los trabajadores,
+    // declarada en iso-37301-2021.pack.ts) — eso es correcto y no compete al
+    // SIG. Dentro del SIG (9001+14001+45001) 5.4 sigue siendo específico.
+    const SIG_FAMILIES = new Set(["ISO_9001", "ISO_14001", "ISO_45001"]);
+    const links = await prisma.requirementMapping.findMany({
       where: { OR: [{ sourceRequirementId: REQ.s54 }, { targetRequirementId: REQ.s54 }] },
+      select: {
+        sourceRequirementId: true,
+        source: { select: { standard: { select: { family: { select: { code: true } } } } } },
+        target: { select: { standard: { select: { family: { select: { code: true } } } } } },
+      },
     });
-    assert.equal(links, 0, "5.4 (consulta a trabajadores) es específico de ISO 45001");
+    const sigLinks = links.filter((l) => {
+      const counterpartFamily = l.sourceRequirementId === REQ.s54
+        ? l.target.standard.family.code
+        : l.source.standard.family.code;
+      return SIG_FAMILIES.has(counterpartFamily);
+    });
+    assert.equal(sigLinks.length, 0, "5.4 (consulta a trabajadores) es específico dentro del SIG 9001+14001+45001");
   });
 
   // ── Fixtures de organización (recreadas en cada ejecución: test idempotente) ──

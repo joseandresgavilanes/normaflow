@@ -31,7 +31,7 @@ function processTypeMeta(type: ProcessRow["type"]) {
     return { label: "Soporte", color: "var(--nf-warning-text)", soft: "rgba(214, 138, 26, 0.09)", gradientEnd: "#f4a020" };
   }
   if (type === "strategic") {
-    return { label: "Estratégico", color: "#5B3FA6", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
+    return { label: "Estratégico", color: "var(--nf-primary-active)", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
   }
   return { label: "Core", color: "var(--nf-primary-active)", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "var(--nf-success)" };
 }
@@ -60,7 +60,7 @@ function linkBlock(title: string, href: string, children: ReactNode) {
         marginBottom: 14,
         borderRadius: 14,
         border: "1px solid rgba(82, 102, 246, 0.12)",
-        background: "#fbfcfe",
+        background: "var(--nf-surface-muted)",
         overflow: "hidden",
       }}
     >
@@ -588,17 +588,17 @@ export default function ProcessesModule() {
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: "#F5F3FF",
+                background: "var(--nf-surface-selected)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#5B3FA6",
+                color: "var(--nf-primary-active)",
               }}
             >
               <Target size={22} strokeWidth={2.25} aria-hidden />
             </div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 600, color: "#5B3FA6", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "strategic").length}</div>
+              <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.03em", lineHeight: 1 }}>{processes.filter(p => p.type === "strategic").length}</div>
               <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Estratégico</div>
             </div>
           </div>
@@ -889,7 +889,7 @@ export default function ProcessesModule() {
                       alignItems: "center",
                       gap: 12,
                       flexWrap: "wrap",
-                      background: "#fafbfd",
+                      background: "var(--nf-surface-muted)",
                     }}
                   >
                     <span style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>Vínculos con documentos, riesgos y más — vista detallada en el modal.</span>

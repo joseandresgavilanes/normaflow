@@ -31,11 +31,63 @@ A manifest is a plain object validated by `standardPackSchema`
 (`src/lib/standard-packs/pack-schema.ts`). Authored packs live in
 `src/lib/standard-packs/*.pack.ts` and are typed `StandardPackInput`.
 
+### Commercial lifecycle
+
+`lifecycleStatus`: **DEVELOPMENT** | **PILOT** | **LIVE** (field on
+`StandardPack`, distinct from edition `status` DRAFT/ACTIVE/SUPERSEDED/WITHDRAWN).
+Only 3 states — a pack never *ends* the lifecycle disabled. Retiring a pack from
+the commercial catalog is a separate act, `StandardPack.archivedAt`, orthogonal
+to where it sits in DEVELOPMENT → PILOT → LIVE (`isPackListed()` checks that,
+not lifecycle).
+
+`lifecycleStatus` alone is a **necessary but not sufficient** activation gate.
+The actual check an org hits is `assertPackEntitlement()`
+(`src/lib/standard-packs/entitlements.ts`), which combines:
+
+| Axis | Enforced by |
+|---|---|
+| Plan includes `requiredModules` | `canUseModule` against `PLAN_CATALOG` |
+| Pack lifecycle | LIVE always eligible; PILOT needs a `PILOT_PROGRAM` entitlement or Enterprise plan; DEVELOPMENT never |
+| `OrganizationPackEntitlement` row | must exist, `enabled`, within `[startsAt, expiresAt)` |
+| User permission | caller's own `requirePermission("standards:activate")` |
+
+There is **no `ALL_MODULES`-style blanket grant** — every organization needs its
+own `OrganizationPackEntitlement` row (`source`: PLAN / MANUAL_GRANT / TRIAL /
+PILOT_PROGRAM), created via `grantPackEntitlement` (server action, `packs:install`
+only) or `upsertPackEntitlement`.
+
+**The only path that changes `lifecycleStatus`** is
+`promotePackLifecycle()` (`src/lib/standard-packs/promotion.ts`), exposed as the
+`promoteStandardPack` server action. A forward move to LIVE first persists a
+`PackReadinessAssessment` + its `PackReadinessCheck` rows (the 32-criterion
+checklist) — kept on disk even when it blocks the promotion, so a rejected
+attempt is still auditable evidence — then the status flip and its
+`StandardPackLifecycleEvent` land in one transaction: never a status change
+without a matching history row. `standard_pack_lifecycle_events` is DB-level
+append-only (`BEFORE UPDATE OR DELETE` trigger).
+
+**Product goal:** every listed pack reaches **LIVE**. DEVELOPMENT/PILOT are
+temporary. Promotion requires the 32-criterion checklist in `readiness.ts` +
+live tenant tests + docs/runbook/commercial page. See `docs/pack-live-backlog.md`.
+
+**ACTIVE editions are immutable for requirement titles.** Reinstall with the same
+`editionCode` + `catalogVersion` freezes requirement text and only refreshes catalog
+artifacts. Changing `catalogVersion` on an ACTIVE edition without a new `editionCode`
+throws — bump `editionCode` instead. This is enforced at two layers: the app-level
+freeze in `installPack()` (never writes over an ACTIVE edition's existing
+requirement rows) and, as defense in depth, Postgres triggers
+(`nf_standard_requirements_lock`, `nf_standard_editions_lock`,
+migration `20260724250000_pack_governance`) that reject any `UPDATE`/`DELETE` on
+a `standard_requirements` row once its edition is ACTIVE/SUPERSEDED/WITHDRAWN,
+and any `UPDATE` on a `standard_editions` row that would mutate an ACTIVE
+edition's identity/`catalogVersion` or touch a SUPERSEDED/WITHDRAWN one at all.
+
 ```ts
 {
   code: "PACK_ISO_9001",            // globally unique pack code
   name: "ISO 9001 — Calidad",
   version: "2015.1",
+  lifecycleStatus: "LIVE",          // DEVELOPMENT | PILOT | LIVE
   description?: string,
   requiredModules: ["gap", "documents", …],   // gated against the org plan on activation
   featureFlags: { qualityManagement: true },  // stored on the pack; per-plan checks
@@ -109,24 +161,75 @@ from an ISO document into a manifest.
 ## Security
 
 - Global catalog tables: `GRANT SELECT` to `authenticated`; writes go through the
-  Prisma owner / service role (pack install is platform-gated).
+  Prisma owner / service role (pack install is platform-gated). Same pattern for
+  `organization_pack_entitlements`, `pack_readiness_assessments`,
+  `pack_readiness_checks` and `standard_pack_lifecycle_events` — read-only from
+  `authenticated`, no `INSERT`/`UPDATE`/`DELETE` grant at all; every write goes
+  through a `packs:install`-gated server action.
 - `requirement_coverage` is org-scoped with RLS: `SELECT` requires `standards:read`,
   writes require `standards:activate`, both bound to the row's `organizationId`.
+- `organization_pack_entitlements` is org-scoped with RLS: `SELECT` requires
+  `billing:view`, bound to the row's `organizationId`.
 - Every server action enforces `requirePermission` + `tenantWhere`/`tenantData` +
-  Zod validation + `AuditLog`. Cross-tenant isolation is covered by
+  Zod validation + `AuditLog`, written in the **same transaction** as the business
+  mutation (`writeAuditLog(tx, …)` — see `standards.ts`/`standard-packs.ts` for the
+  reference shape; `logAuditEvent` is a non-transactional convenience for call
+  sites with no existing `tx` and should not be used where atomicity matters).
+  `audit_logs` is DB-level append-only. Cross-tenant isolation is covered by
   `tests-live/standards-engine-tenant.spec.ts`.
+- File downloads (reports, evidence) never return raw bytes/base64 through an
+  action: `ReportExport` rows carry a `storagePath` validated by
+  `assertTenantStoragePath` (`org-<id>/…` prefix) and are served via a
+  short-lived Supabase signed URL.
+
+## Testing
+
+`scripts/lib/pack-test-factory.ts` is the shared harness for pack integration
+tests: the disposable-DB safety guard, a `TestRunner`/`t()` runner, tenant A/B +
+member fixtures (`createTenantPair`), a generic cross-tenant assertion
+(`assertTenantIsolated`), an `AuditLog` assertion (`assertAuditLogged`), and
+entitlement/evidence fixtures (`grantTestEntitlement`, `attachTestEvidence`). New
+`test:<domain>` scripts should build on it instead of re-deriving tenant/audit
+boilerplate — see `scripts/test-pack-lifecycle.ts` for the reference usage
+(entitlement gating + lifecycle promotion, run only when `DATABASE_URL` points at
+a disposable Postgres).
 
 ## Adding a new norm
 
 1. Create `src/lib/standard-packs/<iso-xxxxx-yyyy>.pack.ts` exporting a
-   `StandardPackInput`.
+   `StandardPackInput`. Set `requiredModules` to keys from `ALL_MODULES`
+   (`src/lib/constants.ts`) — not permission-matrix keys (e.g. `nonconformities`
+   and `management-review`, not `nc`/`mgmt-review`).
 2. Register it in `STANDARD_PACKS` (`src/lib/standard-packs/index.ts`).
 3. (Optional) add cross-mappings to/from existing families.
 4. Install it: `npm run db:seed` (dev) or `installStandardPack("PACK_…")` (platform).
-5. Verify: `DATABASE_URL=<disposable> npm run test:packs`.
+5. Grant it: an org needs an `OrganizationPackEntitlement` row before it can
+   activate the pack, even once LIVE (`grantPackEntitlement` server action).
+6. Verify: `DATABASE_URL=<disposable> npm run test:packs`.
 
 No schema change, migration, or module rewrite is required to add a norm.
 ```
+
+## Shared clause-4/8.3 modules (ISO 9001 + ISO 27001)
+
+Three capabilities live outside any single pack's specialized module because
+they're needed by **any** standalone organization, not only multi-standard
+(SIG) ones:
+
+- **Organizational context** (`/app/context`, models `InterestedParty` /
+  `IntegratedObjective`, reused from `/app/integrated`): interested parties
+  and objectives (clause 4.2/6.2 — mandatory in both 9001 and 27001). Module
+  key `context`, always in `ESSENTIAL_MODULES` — never locked behind a
+  higher plan tier.
+- **Quality operations** (`/app/quality-ops`, `src/lib/actions/quality-operations.ts`):
+  customer requirements (9001 §7.2), customer property (§8.5.3), preservation
+  (§8.5.4), customer satisfaction (§9.1.2), and communication (§7.4 — same
+  Annex SL clause number in both standards). Permission module `quality-ops`.
+- **Design & development** (`/app/design-dev`, `src/lib/actions/design-development.ts`):
+  generic ISO 9001 §8.3 with configurable stages (`DesignProject` +
+  `DesignStage`) — deliberately **not** the ISO 13485 DHF models
+  (`DesignHistoryFile`/…), which stay hard-scoped to `MedicalDevice` on
+  purpose. Permission module `design-dev`.
 
 ## Specialized modules on top of a pack (ISO 14001)
 

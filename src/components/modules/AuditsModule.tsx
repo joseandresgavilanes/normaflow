@@ -351,7 +351,7 @@ export default function AuditsModule() {
                     </div>
                     <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
                       {audit.findings > 0 && (
-                        <span style={{ fontSize: 11, fontWeight: 600, background: "#fdecec", color: "var(--nf-danger-text)", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
+                        <span style={{ fontSize: 11, fontWeight: 600, background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", padding: "4px 10px", borderRadius: 99 }}>{audit.findings} hallazgos</span>
                       )}
                       <Badge status={audit.status} />
                     </div>
@@ -362,7 +362,7 @@ export default function AuditsModule() {
                         <span>Progreso de ejecución</span>
                         <span style={{ fontWeight: 600, color: accent }}>{audit.progress}%</span>
                       </div>
-                      <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "var(--nf-success)" : accent} height={7} railColor="#eef2f9" />
+                      <ProgressBar value={audit.progress} color={audit.status === "COMPLETED" ? "var(--nf-success)" : accent} height={7} railColor="var(--nf-surface-sunken)" />
                     </div>
                   )}
                 </div>
@@ -403,7 +403,7 @@ export default function AuditsModule() {
                 <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{detailLive.objectives}</div>
               </div>
             )}
-            <div style={{ marginBottom: 16, padding: 12, background: "#fff8f0", borderRadius: 8, border: "1px solid #f5e0c8" }}>
+            <div style={{ marginBottom: 16, padding: 12, background: "var(--nf-warning-subtle)", borderRadius: 8, border: "1px solid #f5e0c8" }}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", marginBottom: 8 }}>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>Hallazgos / NC vinculadas</div>

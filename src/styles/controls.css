@@ -210,3 +210,9 @@
 
 .nf-border-line { border-color: var(--nf-border); }
 .nf-border-primary { border-color: var(--nf-primary-border); }
+
+/* Últimas utilidades de color fijo que quedaban en administración. */
+.nf-success-subtle-bg { background: var(--nf-success-subtle); }
+.nf-danger-subtle-bg { background: var(--nf-danger-subtle); }
+.nf-success-border-line { border-color: var(--nf-success-border); }
+.nf-danger-border-line { border-color: var(--nf-danger-border); }

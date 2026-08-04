@@ -243,9 +243,12 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             style={{
               padding: "7px 18px",
               borderRadius: 8,
-              border: `1px solid ${standard === s.key ? "var(--nf-primary)" : "var(--nf-line)"}`,
+              // `--nf-line` es el borde decorativo: en un control no llega a
+              // 3:1. Y el texto sobre el relleno de marca tiene que voltear con
+              // el tema, porque en oscuro la marca aclara.
+              border: `1px solid ${standard === s.key ? "var(--nf-primary)" : "var(--nf-border-strong)"}`,
               background: standard === s.key ? "var(--nf-primary)" : "transparent",
-              color: standard === s.key ? "#fff" : "var(--nf-ink-3)",
+              color: standard === s.key ? "var(--nf-on-primary)" : "var(--nf-text-secondary)",
               fontSize: 13,
               fontWeight: standard === s.key ? 600 : 400,
               cursor: "pointer",
@@ -351,7 +354,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                     />
                   </div>
                 </div>
-                <ProgressBar value={g.score} color={g.score >= 80 ? "var(--nf-success)" : g.score >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={7} railColor="#eef2f9" />
+                <ProgressBar value={g.score} color={g.score >= 80 ? "var(--nf-success)" : g.score >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={7} railColor="var(--nf-surface-sunken)" />
                 <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>
                   {g.answered}/{g.questions} respuestas · {(!readOnlyLive && canEdit) || liveEditable ? "Pulse para editar" : "Detalle"}
                 </div>
@@ -364,7 +367,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
           <Card>
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 14 }}>Resumen ejecutivo</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <ProgressBar value={avg} color={avg >= 80 ? "var(--nf-success)" : avg >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={10} railColor="#eef2f9" />
+              <ProgressBar value={avg} color={avg >= 80 ? "var(--nf-success)" : avg >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={10} railColor="var(--nf-surface-sunken)" />
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
                 {avg < 60
                   ? "Se requieren acciones urgentes antes de una auditoría de certificación."
@@ -464,7 +467,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
             <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6 }}>
               Puntuación {fullClause.score}% · {fullClause.answered}/{fullClause.questions} respuestas
             </div>
-            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "var(--nf-success)" : fullClause.score >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={8} railColor="#eef2f9" />
+            <ProgressBar value={fullClause.score} color={fullClause.score >= 80 ? "var(--nf-success)" : fullClause.score >= 60 ? "var(--nf-warning)" : "var(--nf-danger)"} height={8} railColor="var(--nf-surface-sunken)" />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {fullClause.questionsDetail.map(q => (
@@ -541,7 +544,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 value={editScore}
                 color={editScore >= 80 ? "var(--nf-success)" : editScore >= 40 ? "var(--nf-warning)" : "var(--nf-danger)"}
                 height={8}
-                railColor="#eef2f9"
+                railColor="var(--nf-surface-sunken)"
               />
             </div>
 

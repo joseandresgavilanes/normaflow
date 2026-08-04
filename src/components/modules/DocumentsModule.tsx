@@ -371,7 +371,7 @@ export default function DocumentsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#314456",
+              color: "var(--nf-text-secondary)",
             }}
           >
             <FileText size={22} strokeWidth={2.25} aria-hidden />
@@ -735,7 +735,7 @@ export default function DocumentsModule() {
                             padding: "7px 11px",
                             borderRadius: 8,
                             border: viewing ? "1px solid var(--nf-primary)" : "1px solid var(--nf-line)",
-                            background: viewing ? "var(--nf-primary-subtle)" : "#fff",
+                            background: viewing ? "var(--nf-primary-subtle)" : "var(--nf-surface)",
                             fontSize: 12,
                             fontWeight: 600,
                             cursor: "pointer",

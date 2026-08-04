@@ -38,7 +38,8 @@
   gap: 6px;
   min-height: 34px;
   padding: 8px 12px;
-  border: 1px solid var(--nf-line);
+  /* Pestaña = control: el borde es lo que la identifica, necesita 3:1. */
+  border: 1px solid var(--nf-border-strong);
   border-radius: 9px;
   background: var(--nf-surface);
   color: var(--nf-ink-2);
@@ -51,7 +52,7 @@
 }
 
 .nf-iso-tab:hover:not(:disabled):not([aria-selected="true"]) {
-  border-color: #cfd4df;
+  border-color: var(--nf-primary-border);
   background: var(--nf-app-surface-1);
   color: var(--nf-ink);
 }
@@ -80,7 +81,7 @@
 
 .nf-app-btn-success {
   color: var(--nf-text-on-primary);
-  background: #16A34A;
+  background: var(--nf-success);
   border-color: #16A34A;
 }
 
@@ -128,8 +129,10 @@
 }
 
 .nf-app-btn-ghost--danger {
-  color: #DC2626;
-  border-color: var(--nf-danger-border);
+  color: var(--nf-danger-text);
+  /* `--nf-danger-border` delimita un chip de fondo sutil, no un control:
+     sobre la superficie se queda por debajo de 3:1. */
+  border-color: var(--nf-danger-text);
 }
 
 .nf-app-btn-ghost--danger:hover:not(:disabled) {
@@ -168,7 +171,7 @@
 }
 
 .nf-text-action--danger {
-  color: #DC2626;
+  color: var(--nf-danger-text);
 }
 
 .nf-text-action--danger:hover:not(:disabled) {
@@ -196,7 +199,7 @@
 
 .nf-icon-btn:hover:not(:disabled) {
   background: var(--nf-app-surface-1);
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
   color: var(--nf-ink);
 }
 
@@ -274,7 +277,8 @@
 .nf-app-btn-outline:focus-visible,
 .nf-app-btn-ghost:focus-visible,
 .nf-icon-btn:focus-visible {
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
 }
 
@@ -306,7 +310,7 @@
 }
 
 .nf-chip:hover:not(:disabled):not(.nf-chip--on) {
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
   color: var(--nf-ink);
   background: var(--nf-app-surface-1);
 }
@@ -327,7 +331,8 @@
 .nf-chip:focus-visible,
 .nf-app-btn-outline:focus-visible,
 .nf-app-btn-ghost:focus-visible {
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.22);
 }
 
@@ -343,7 +348,7 @@
 }
 
 .nf-kpi-card:hover {
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 

@@ -49,10 +49,10 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
   monitoring: { title: "Monitoreo y desempeño", sub: "Métricas, umbrales, desviaciones y detección de deriva." },
 };
 
-const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)", SEVERE: "var(--nf-danger-text)" };
-const CLASS_COLORS: Record<string, string> = { NOT_CLASSIFIED: "#64748b", MINIMAL: "var(--nf-success)", LIMITED: "#d68a1a", HIGH: "#ea580c", UNACCEPTABLE: "var(--nf-danger-text)" };
+const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "var(--nf-warning)", MODERATE: "var(--nf-warning)", HIGH: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)", SEVERE: "var(--nf-danger-text)" };
+const CLASS_COLORS: Record<string, string> = { NOT_CLASSIFIED: "var(--nf-text-secondary)", MINIMAL: "var(--nf-success)", LIMITED: "var(--nf-warning)", HIGH: "var(--nf-warning)", UNACCEPTABLE: "var(--nf-danger-text)" };
 const CLASS_LABEL: Record<string, string> = { NOT_CLASSIFIED: "Sin clasificar", MINIMAL: "Mínimo", LIMITED: "Limitado", HIGH: "Alto", UNACCEPTABLE: "Inaceptable" };
-const REVIEW_COLORS: Record<string, string> = { DRAFT: "#64748b", HUMAN_REVIEW: "#d68a1a", APPROVED: "var(--nf-success)", REJECTED: "var(--nf-danger-text)" };
+const REVIEW_COLORS: Record<string, string> = { DRAFT: "var(--nf-text-secondary)", HUMAN_REVIEW: "var(--nf-warning)", APPROVED: "var(--nf-success)", REJECTED: "var(--nf-danger-text)" };
 const REVIEW_LABEL: Record<string, string> = { DRAFT: "Borrador", HUMAN_REVIEW: "En revisión humana", APPROVED: "Aprobado", REJECTED: "Rechazado" };
 const STATUS_LABEL: Record<string, string> = { PLANNED: "Planificado", IN_DEVELOPMENT: "En desarrollo", IN_VALIDATION: "En validación", APPROVED: "Aprobado", IN_PRODUCTION: "En producción", SUSPENDED: "Suspendido", RETIRED: "Retirado" };
 const INCIDENT_LABEL: Record<string, string> = { REPORTED: "Reportado", TRIAGED: "Triado", INVESTIGATING: "Investigando", ROOT_CAUSE: "Causa raíz", ACTION_PLAN: "Plan de acción", IMPLEMENTED: "Implementado", EFFECTIVENESS_VERIFIED: "Eficacia verificada", CLOSED: "Cerrado" };
@@ -245,7 +245,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
 
       {tab === "outputs" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#a5f3fc", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "var(--nf-info-border)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontSize: 13 }}>
             Toda salida de IA queda aquí con su prompt, modelo, versión, autor y cambios humanos. Solo una persona con permiso de aprobación puede llevarla a APPROVED, y solo entonces puede promoverse a un registro oficial.
           </div>
           {canManage && (
@@ -275,7 +275,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{systemCode(a.systemId)}</td>
                 <td style={td}>{a.code}</td>
                 <td style={td}>{a.version}</td>
-                <td style={td}><span style={toneChip(LEVEL_COLORS[a.overallSeverity] ?? "#64748b")}>{a.overallSeverity}</span></td>
+                <td style={td}><span style={toneChip(LEVEL_COLORS[a.overallSeverity] ?? "var(--nf-text-secondary)")}>{a.overallSeverity}</span></td>
                 <td style={td}><span style={toneChip(CLASS_COLORS[a.classification])}>{CLASS_LABEL[a.classification]}</span></td>
                 <td style={td}><span style={toneChip(REVIEW_COLORS[a.reviewStatus])}>{REVIEW_LABEL[a.reviewStatus]}</span></td>
                 {(canUpdate || canApprove) && (
@@ -548,7 +548,7 @@ function Row({ k, v, danger }: { k: string; v: number; danger?: boolean }) {
   return (<div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">{k}</span><b className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{v}</b></div>);
 }
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 
 /** Modal "+ Nuevo X" form shell shared by every creation form in this module. */
 function NewFormToggle({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {

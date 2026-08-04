@@ -31,8 +31,8 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
   health: { title: "Vigilancia de la salud", sub: "Seguimiento ocupacional restringido por permisos de información sensible." },
 };
 
-const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "#d68a1a", MODERATE: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)" };
-const SEV_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "#d68a1a", HIGH: "#ea580c", CRITICAL: "var(--nf-danger-text)" };
+const LEVEL_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "var(--nf-warning)", MODERATE: "var(--nf-warning)", HIGH: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)" };
+const SEV_COLORS: Record<string, string> = { LOW: "var(--nf-success)", MEDIUM: "var(--nf-warning)", HIGH: "var(--nf-warning)", CRITICAL: "var(--nf-danger-text)" };
 const ACCEPT_LABEL: Record<string, string> = { ACCEPTABLE: "Aceptable", TOLERABLE: "Tolerable", NOT_ACCEPTABLE: "No aceptable" };
 const STATUS_LABEL: Record<string, string> = { REPORTED: "Reportado", CLASSIFIED: "Clasificado", INVESTIGATING: "Investigando", ROOT_CAUSE: "Causa raíz", ACTION_PLAN: "Plan de acción", IMPLEMENTED: "Implementado", EFFECTIVENESS_VERIFIED: "Eficacia verificada", CLOSED: "Cerrado" };
 

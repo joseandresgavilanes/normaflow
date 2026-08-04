@@ -15,16 +15,18 @@
   position: relative;
 }
 
+/* El borde identifica el campo: token fuerte, no el decorativo. */
 .nf-topbar-search-input {
   width: 100%;
   height: 40px;
   padding: 0 16px 0 40px;
   border-radius: 10px;
-  border: 1px solid var(--nf-line);
+  border: 1px solid var(--nf-border-strong);
   background: var(--nf-surface);
   font-size: 14px;
   color: var(--nf-ink);
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -169,7 +171,8 @@
 .nf-quick-create-item:hover,
 .nf-quick-create-item:focus-visible {
   background: var(--nf-app-surface-1);
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-quick-create-item-icon {
@@ -372,17 +375,18 @@ a.nf-app-btn-soft-success {
 .nf-app-btn-ghost {
   color: var(--nf-ink);
   background: var(--nf-surface);
-  border-color: var(--nf-line);
+  /* Es un botón: el borde es lo que lo identifica, así que necesita 3:1. */
+  border-color: var(--nf-border-strong);
 }
 
 .nf-app-btn-ghost:hover:not(:disabled) {
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
   background: var(--nf-app-surface-1);
 }
 
 .nf-app-btn-ghost:disabled {
   color: #8a96a8;
-  border-color: #dce4ee;
+  border-color: var(--nf-border);
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -394,7 +398,7 @@ a.nf-app-btn-soft-success {
 }
 
 .nf-app-btn-outline:hover:not(:disabled) {
-  border-color: #d4d4d4;
+  border-color: var(--nf-border);
   color: var(--nf-ink);
   background: var(--nf-app-surface-1);
 }

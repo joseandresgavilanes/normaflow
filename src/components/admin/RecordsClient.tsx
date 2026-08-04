@@ -240,7 +240,7 @@ export default function RecordsClient() {
                 <button
                   type="button"
                   className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger-text)", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
+                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger-text)", borderColor: "var(--nf-border)", fontWeight: 700, flexShrink: 0 }}
                   onClick={() => setConfirmDeactivate(r)}
                 >
                   Desactivar
@@ -349,7 +349,7 @@ export default function RecordsClient() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#314456",
+              color: "var(--nf-text-secondary)",
             }}
           >
             <ArchiveX size={22} strokeWidth={2.25} aria-hidden />
@@ -800,7 +800,7 @@ function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) 
           padding: "10px 18px",
           fontSize: 14,
           fontWeight: 700,
-          color: "#fff",
+          color: "var(--nf-text-on-primary)",
           background: "var(--nf-app-accent)",
           border: "1px solid #0f3255",
           borderRadius: 10,
@@ -1161,7 +1161,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                           alignItems: "center",
                           justifyContent: "center",
                           color: "var(--nf-danger-text)",
-                          borderColor: "#f0c4c2",
+                          borderColor: "var(--nf-border)",
                           flexShrink: 0,
                           boxSizing: "border-box",
                           fontFamily: "inherit",

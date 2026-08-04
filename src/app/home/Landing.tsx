@@ -24,7 +24,7 @@ function riskHeatMarkerStyle(lvl: number, marked: boolean): Pick<CSSProperties, 
   if (!marked) return { color: "transparent", border: "none", boxShadow: "none" };
   if (lvl >= 5) {
     return {
-      color: "#fff",
+      color: "var(--nf-text-on-primary)",
       border: "1px solid rgba(255,255,255,0.5)",
       boxShadow: "0 0 12px rgba(255,255,255,0.15)",
     };
@@ -148,7 +148,7 @@ function HeroDashboard() {
             <div className="nf-flow" style={{ marginTop: 2 }}>
               <span className="chip" style={{ background: "var(--nf-glass-2)", color: "var(--nf-ink-3)" }}>Borrador</span>
               <span className="arr">→</span>
-              <span className="chip" style={{ background: "var(--nf-warning)", color: "var(--nf-warning-text)" }}>Pendiente</span>
+              <span className="chip" style={{ background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)" }}>Pendiente</span>
               <span className="arr">→</span>
               <span className="chip nf-chip--ok">Aprobado</span>
               <span className="arr">→</span>
@@ -181,7 +181,7 @@ function HeroDashboard() {
       <div className="nf-float-tile" style={{ right: "-6%", top: "32%", minWidth: 180 }} data-parallax="1.4">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ width: 18, height: 18, borderRadius: 5, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))" }}>
-            <Ic.spark style={{ color: "#fff" }}/>
+            <Ic.spark style={{ color: "var(--nf-text-on-primary)" }}/>
           </span>
           <span className="h" style={{ margin: 0 }}>Asistente IA</span>
         </div>
@@ -189,7 +189,7 @@ function HeroDashboard() {
           Sugiero CAPA para NC-118: revisar matriz de roles antes del 14 oct.
         </div>
         <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
-          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "var(--nf-warning)", color: "var(--nf-warning-text)", border: "1px solid var(--nf-warning)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
+          <span style={{ fontSize: 9, fontFamily: "var(--font-mono)", padding: "3px 7px", borderRadius: 99, background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", border: "1px solid var(--nf-warning-border)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Requiere aprobación</span>
         </div>
       </div>
 
@@ -510,8 +510,8 @@ function MiniViz({ kind }: { kind: string }) {
         </defs>
         <path d="M0 60 L25 50 L50 55 L75 40 L100 42 L125 30 L150 35 L175 18 L200 22 L200 80 L0 80 Z" fill="url(#kpi-grad)"/>
         <path d="M0 60 L25 50 L50 55 L75 40 L100 42 L125 30 L150 35 L175 18 L200 22" fill="none" stroke="var(--nf-accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ filter: "drop-shadow(0 0 4px var(--nf-accent))" }}/>
-        <line x1="0" y1="34" x2="200" y2="34" stroke="#d97706" strokeWidth="0.6" strokeDasharray="2 3"/>
-        <text x="6" y="32" fill="#92400e" fontSize="7" fontFamily="JetBrains Mono">objetivo</text>
+        <line x1="0" y1="34" x2="200" y2="34" stroke="var(--nf-warning)" strokeWidth="0.6" strokeDasharray="2 3"/>
+        <text x="6" y="32" fill="var(--nf-warning-text)" fontSize="7" fontFamily="JetBrains Mono">objetivo</text>
       </svg>
     );
   }
@@ -549,7 +549,7 @@ function MiniViz({ kind }: { kind: string }) {
           <div>El acceso lógico se concederá según el principio de mínimo privilegio…</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
-          <span style={{ color: "var(--nf-warning-text)", padding: "2px 6px", borderRadius: 99, border: "1px solid var(--nf-warning)", background: "var(--nf-warning)" }}>● Requiere aprobación</span>
+          <span style={{ color: "var(--nf-warning-text)", padding: "2px 6px", borderRadius: 99, border: "1px solid var(--nf-warning-border)", background: "var(--nf-warning-subtle)" }}>● Requiere aprobación</span>
           <span style={{ color: "var(--nf-ink-3)" }}>+3 sugerencias</span>
         </div>
       </div>
@@ -1198,7 +1198,7 @@ function NfAI() {
           <div className="nf-ai-card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
+                <span style={{ width: 30, height: 30, borderRadius: 8, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "var(--nf-text-on-primary)" }}>
                   <Ic.spark/>
                 </span>
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 14 }}>NormaFlow · Asistente</span>

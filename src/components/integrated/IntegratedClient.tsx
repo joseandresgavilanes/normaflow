@@ -40,17 +40,17 @@ const DISCIPLINE_LABEL: Record<string, string> = {
   QUALITY: "Calidad", ENVIRONMENT: "Ambiente", SAFETY: "Seguridad y salud", SECURITY: "Seguridad de la información",
 };
 const DISCIPLINE_COLOR: Record<string, string> = {
-  QUALITY: "var(--nf-primary-active)", ENVIRONMENT: "var(--nf-primary-active)", SAFETY: "#D68A1A", SECURITY: "var(--nf-success-text)",
+  QUALITY: "var(--nf-primary-active)", ENVIRONMENT: "var(--nf-primary-active)", SAFETY: "var(--nf-warning)", SECURITY: "var(--nf-success-text)",
 };
 const KIND_LABEL: Record<string, string> = {
   EQUIVALENT: "Equivalente", PARTIAL: "Parcialmente equivalente", SPECIFIC: "Específico",
 };
-const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success)", PARTIAL: "#d68a1a", SPECIFIC: "var(--nf-primary)" };
+const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success)", PARTIAL: "var(--nf-warning)", SPECIFIC: "var(--nf-primary)" };
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 9, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "#fff", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "var(--nf-text-on-primary)", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const ghostBtn: React.CSSProperties = { background: "var(--nf-surface)", color: "var(--nf-primary-active)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const dangerBtn: React.CSSProperties = { background: "none", color: "var(--nf-danger-text)", border: "1px solid #f2c4c4", borderRadius: 8, padding: "4px 9px", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
 
@@ -82,7 +82,7 @@ export default function IntegratedClient({ initial, demo = false }: { initial: I
       <IsoSectionHeader headingLevel={1} icon={Layers} title={SECTION_META[tab].title}
         description={`${SECTION_META[tab].sub}${demo ? " Vista demo (solo lectura)." : ""}`} />
 
-      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "#fdf3f3", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
+      {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
 
       {tab !== "panel" && <IsoSectionMetrics items={tab === "scope" ? [{ label: "Normas activas", value: initial.activeStandards.length }, { label: "Requisitos", value: initial.summary.requirements }, { label: "Cobertura global", value: initial.globalScore, suffix: "%" }] : tab === "parties" ? [{ label: "Partes interesadas", value: initial.interestedParties.length }, { label: "Relevantes", value: initial.interestedParties.filter((row) => row.isRelevant).length }, { label: "Normas activas", value: initial.activeStandards.length }] : tab === "objectives" ? [{ label: "Objetivos", value: initial.objectives.length }, { label: "Compartidos", value: initial.objectives.filter((row) => row.shared).length }, { label: "Vencidos", value: initial.objectives.filter((row) => row.dueDate && new Date(row.dueDate) < new Date() && row.status !== "ACHIEVED").length, accent: "var(--nf-danger-text)" }] : tab === "crosswalk" ? [{ label: "Correspondencias", value: initial.crosswalk.length }, { label: "Equivalentes", value: initial.summary.equivalent }, { label: "Sin evidencia", value: initial.summary.missingEvidence, accent: initial.summary.missingEvidence ? "var(--nf-danger-text)" : undefined }] : tab === "audit" ? [{ label: "Auditorías integradas", value: initial.integratedAuditCount }, { label: "Hallazgos multinorma", value: initial.multiNormFindings.length, accent: initial.multiNormFindings.length ? "#d68a1a" : undefined }, { label: "CAPA abiertas", value: initial.summary.openCapas, accent: initial.summary.openCapas ? "var(--nf-danger-text)" : undefined }] : [{ label: "Elementos compartidos", value: initial.summary.sharedElements }, { label: "Riesgos críticos", value: initial.summary.criticalRisks, accent: initial.summary.criticalRisks ? "var(--nf-danger-text)" : undefined }, { label: "Proveedores", value: initial.suppliers.length }]} />}
 
@@ -750,7 +750,7 @@ function SharedTab({ p }: { p: IntegratedPayload }) {
   };
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <section style={{ ...card, background: "#f7fcf8", borderColor: "#b8e4c4" }}>
+      <section style={{ ...card, background: "var(--nf-surface-muted)", borderColor: "var(--nf-border)" }}>
         <strong style={{ color: "var(--nf-success-text)" }}>Factor de reutilización: {p.reuseFactor}× </strong>
         <span style={{ fontSize: 13, color: "var(--nf-success-text)" }}>
           — cada elemento del sistema cubre de media {p.reuseFactor} requisitos. Un valor superior a 1 confirma

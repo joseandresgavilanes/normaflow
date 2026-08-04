@@ -192,7 +192,7 @@ export default function AIPanel({
             <div
               style={{
                 height: 3,
-                background: "#E8E8E8",
+                background: "var(--nf-surface-sunken)",
                 borderRadius: 99,
                 overflow: "hidden",
               }}
@@ -254,7 +254,7 @@ export default function AIPanel({
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#e8f5ee",
+                  background: "var(--nf-surface-sunken)",
                   border: "1px solid #16A34A40",
                   borderRadius: 8,
                   padding: "10px 14px",

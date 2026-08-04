@@ -95,7 +95,7 @@ export default function SetupGuideModule({ live }: { live?: SetupPayload | null 
                     padding: 12,
                     borderRadius: 10,
                     border: "1px solid var(--nf-line)",
-                    background: item.done ? "#f6faf7" : "var(--nf-app-surface-2)",
+                    background: item.done ? "var(--nf-success-subtle)" : "var(--nf-app-surface-2)",
                   }}
                 >
                   <input

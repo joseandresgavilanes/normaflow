@@ -35,14 +35,14 @@
   min-height: 26px;
   padding: 0 9px;
   border-radius: 999px;
-  background: #eef0ff;
+  background: var(--nf-surface-selected);
   color: var(--nf-app-accent);
   font-size: 12px;
   font-weight: 650;
 }
 
 .nf-objective-program-count--empty {
-  background: #f1f5f9;
+  background: var(--nf-surface-hover);
   color: var(--nf-ink-3);
   font-weight: 500;
 }
@@ -67,7 +67,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  color: #64748b;
+  color: var(--nf-text-subtle);
 }
 
 .nf-environment-trend-heading > div {
@@ -93,7 +93,7 @@
   flex-wrap: wrap;
   gap: 8px 12px;
   margin: 16px 0 10px;
-  color: #64748b;
+  color: var(--nf-text-subtle);
   font-size: 11px;
 }
 
@@ -125,7 +125,7 @@
 }
 
 .nf-environment-trend-period-label {
-  color: #64748b;
+  color: var(--nf-text-subtle);
   font-size: 11px;
   font-weight: 700;
   overflow: hidden;
@@ -142,7 +142,7 @@
   height: 5px;
   overflow: hidden;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--nf-surface-hover);
 }
 
 .nf-environment-trend-bar-track span {
@@ -156,7 +156,7 @@
   padding: 4px 8px;
   border-radius: 999px;
   background: var(--nf-primary-subtle);
-  color: #4f46e5 !important;
+  color: var(--nf-primary-active) !important;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -168,7 +168,7 @@
   gap: 10px;
   padding: 11px 0;
   border-bottom: 1px solid #f1f5f9;
-  color: #64748b;
+  color: var(--nf-text-subtle);
   font-size: 12px;
 }
 
@@ -188,7 +188,7 @@
 }
 
 .nf-environment-trend-stat small.is-up {
-  color: #dc2626;
+  color: var(--nf-danger-text);
 }
 
 .nf-environment-trend-stat small.is-down {
@@ -329,13 +329,13 @@
 .nf-iso-create-form .nf-modal-field {
   display: grid !important;
   gap: 6px;
-  color: #475569;
+  color: var(--nf-text-secondary);
   font-size: 12px;
   font-weight: 700;
 }
 
 .nf-iso-create-form .nf-modal-field-label {
-  color: #475569;
+  color: var(--nf-text-secondary);
   font-size: 12px;
   font-weight: 700;
 }
@@ -345,8 +345,8 @@
 .nf-modal-body button:disabled {
   cursor: not-allowed !important;
   color: #94a3b8 !important;
-  border-color: #dbe3ee !important;
-  background: #e8edf5 !important;
+  border-color: var(--nf-border) !important;
+  background: var(--nf-surface-selected) !important;
   box-shadow: none !important;
   opacity: 1 !important;
 }

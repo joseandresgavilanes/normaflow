@@ -87,7 +87,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
 };
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Members = EnergyPayload["members"];
 type EnergyEditorKind = "source" | "use" | "review" | "seu" | "meter" | "variable" | "factor" | "opportunity" | "plan" | "procurement" | "design";
@@ -217,7 +217,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fef9c3", display: "grid", placeItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-warning-subtle)", display: "grid", placeItems: "center" }}>
           <Flame size={22} color="#ca8a04" />
         </div>
         <div>

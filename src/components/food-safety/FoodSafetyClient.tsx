@@ -59,7 +59,7 @@ const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBotto
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "#fff", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
+const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 type Runner = (action: () => Promise<unknown>) => void;
 type Members = FoodSafetyPayload["members"];
 type FoodEditorKind = "product" | "material" | "allergen" | "intendedUse" | "flow" | "step" | "hazard" | "assessment" | "prp" | "oprp" | "ccp" | "limit" | "plan" | "emergency";
@@ -129,7 +129,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: "#ccfbf1", display: "grid", placeItems: "center" }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-success-subtle)", display: "grid", placeItems: "center" }}>
           <Shield size={22} color="var(--nf-info-text)" />
         </div>
         <div>
@@ -142,7 +142,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
       </header>
 
       {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
-      {traceMsg && <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "var(--nf-info-text)", fontSize: 13 }}>{traceMsg}</div>}
+      {traceMsg && <div style={{ ...card, borderColor: "var(--nf-info-border)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontSize: 13 }}>{traceMsg}</div>}
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
         <Stat label="Productos" value={s.products} />
@@ -261,7 +261,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{f.product.code}</td>
                 <td style={td}>{f.title}</td>
                 <td style={td}>{f._count.steps}</td>
-                <td style={td}><span style={chip("#f1f5f9", "#334155")}>{f.status}</span></td>
+                <td style={td}><span style={chip("var(--nf-surface-muted)", "#334155")}>{f.status}</span></td>
                 <td style={td}><FoodRowActions>
                   {live && can.update && f.status !== "APPROVED" && <FoodTableAction icon={Pencil} onClick={() => setEditor({ kind: "flow", value: f })}>Editar</FoodTableAction>}
                   {live && can.approve && f.status !== "APPROVED" && (
@@ -327,7 +327,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{a.step?.code ?? "—"}</td>
                 <td style={td}>{a.severity}×{a.likelihood}={a.score}</td>
                 <td style={td}>{a.significant ? "Sí" : "No"}</td>
-                <td style={td}><span style={chip(a.controlDecision === "CCP" ? "var(--nf-warning-border)" : "#f1f5f9", a.controlDecision === "CCP" ? "#a16207" : "#334155")}>{a.controlDecision}</span></td>
+                <td style={td}><span style={chip(a.controlDecision === "CCP" ? "var(--nf-warning-border)" : "var(--nf-surface-muted)", a.controlDecision === "CCP" ? "#a16207" : "#334155")}>{a.controlDecision}</span></td>
                 <td style={td}>{a.status}</td>
                 <td style={td}><FoodRowActions>
                   {live && can.update && a.status !== "APPROVED" && <FoodTableAction icon={Pencil} onClick={() => setEditor({ kind: "assessment", value: a })}>Editar</FoodTableAction>}
@@ -434,7 +434,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{v.code}</td>
                 <td style={td}>{v.title}</td>
                 <td style={td}>{v.targetType} {v.targetCode ?? ""}</td>
-                <td style={td}><span style={chip(v.result === "VALID" ? "var(--nf-success-border)" : v.result === "INVALID" ? "var(--nf-danger-border)" : "#f1f5f9", v.result === "VALID" ? "var(--nf-success-text)" : v.result === "INVALID" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
+                <td style={td}><span style={chip(v.result === "VALID" ? "var(--nf-success-border)" : v.result === "INVALID" ? "var(--nf-danger-border)" : "var(--nf-surface-muted)", v.result === "VALID" ? "var(--nf-success-text)" : v.result === "INVALID" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
                 <td style={td}>{fmt(v.validatedAt)}</td>
               </tr>
             ))}
@@ -451,7 +451,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
                 <td style={td}>{v.code}</td>
                 <td style={td}>{v.title}</td>
                 <td style={td}>{v.activityType}</td>
-                <td style={td}><span style={chip(v.result === "CONFORMING" ? "var(--nf-success-border)" : v.result === "NONCONFORMING" ? "var(--nf-danger-border)" : "#f1f5f9", v.result === "CONFORMING" ? "var(--nf-success-text)" : v.result === "NONCONFORMING" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
+                <td style={td}><span style={chip(v.result === "CONFORMING" ? "var(--nf-success-border)" : v.result === "NONCONFORMING" ? "var(--nf-danger-border)" : "var(--nf-surface-muted)", v.result === "CONFORMING" ? "var(--nf-success-text)" : v.result === "NONCONFORMING" ? "var(--nf-danger-text)" : "#334155")}>{v.result}</span></td>
                 <td style={td}>{fmt(v.scheduledFor)}</td>
               </tr>
             ))}
@@ -650,7 +650,7 @@ export default function FoodSafetyClient({ initial, demo = false }: { initial: F
 
       {tab === "communications" && (
         <div style={{ display: "grid", gap: 14 }}>
-          <div style={{ ...card, borderColor: "#99f6e4", background: "#f0fdfa", color: "var(--nf-info-text)", fontSize: 13 }}>
+          <div style={{ ...card, borderColor: "var(--nf-info-border)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontSize: 13 }}>
             Comunicación con proveedores, clientes o autoridades sobre asuntos de inocuidad
             (§7.4) — cambios de especificación, retiros, incidentes de alérgenos, requisitos legales.
           </div>

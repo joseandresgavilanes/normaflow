@@ -40,7 +40,9 @@
   display: grid;
   place-items: center;
   width: 32px; height: 32px;
-  border: 1px solid var(--nf-border);
+  /* `--nf-border` es decorativo: 1.8:1 en oscuro. En un control el borde es lo
+     que lo identifica, así que WCAG 1.4.11 pide 3:1. */
+  border: 1px solid var(--nf-border-strong);
   border-radius: var(--nf-radius-s);
   background: var(--nf-surface);
   color: var(--nf-text-secondary);
@@ -289,7 +291,8 @@
   background: transparent;
   color: var(--nf-text-primary);
   font-size: var(--nf-text-sm);
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
 }
 
 .nf-filterbar__select {

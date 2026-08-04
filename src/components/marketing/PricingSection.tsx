@@ -182,8 +182,10 @@ function toggleBtn(active: boolean): React.CSSProperties {
     borderRadius: 999,
     border: "none",
     cursor: "pointer",
-    background: active ? "var(--nf-ink)" : "transparent",
-    color: active ? "var(--nf-bg-1)" : "var(--nf-ink-2)",
+    // `--nf-ink` es el alias del TEXTO: en oscuro vale #f2f3f5 y el botón
+    // activo salía blanco con texto claro encima.
+    background: active ? "var(--nf-primary)" : "transparent",
+    color: active ? "var(--nf-on-primary)" : "var(--nf-text-secondary)",
     transition: "background 0.15s, color 0.15s",
   };
 }

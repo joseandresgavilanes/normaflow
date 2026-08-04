@@ -74,6 +74,60 @@
   --nf-c-teal-50: #ecfdf5;
   --nf-c-amber-500: #ca8a04;
   --nf-c-slate-500: #475569;
+
+
+  /* Superficies compuestas */
+  /* Capa por encima de la superficie: menú, popover, tarjeta arrastrada.
+     En claro coincide con la superficie y la separa la sombra; en oscuro la
+     sombra no se ve, así que tiene que aclararse. */
+  --nf-surface-raised: var(--nf-surface);
+
+  /* Controles de formulario */
+  /* El campo se hunde respecto a su superficie: en oscuro un campo del mismo
+     color que la tarjeta no se distingue como zona editable. */
+  --nf-input-bg: var(--nf-surface);
+  /* El borde ES lo que identifica el control, así que va al token fuerte
+     (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
+  --nf-input-border: var(--nf-border-strong);
+
+  /* Tabla de datos */
+  /* La cabecera se separa de las filas sin recurrir a un borde grueso. */
+  --nf-table-header: var(--nf-surface-sunken);
+
+  /* Navegación lateral */
+  /* En oscuro la barra se hunde respecto al contenido, que es lo que le da
+     el papel de chrome; en claro es blanca como el resto. */
+  --nf-sidebar-bg: var(--nf-surface);
+  --nf-sidebar-active: var(--nf-primary-subtle);
+  --nf-sidebar-hover: var(--nf-surface-hover);
+
+  /* Gráficos */
+  /* Rejilla deliberadamente recesiva: 1.27:1 sobre la superficie oscura. No
+     es un objeto que identifique un componente —eso es el eje— así que el
+     mínimo de 3:1 de WCAG 1.4.11 no aplica, y subirla convertiría el
+     gráfico en una cuadrícula. */
+  --nf-chart-grid: var(--nf-border);
+  /* El eje sí delimita el área de trazado: 3.47:1 en oscuro. */
+  --nf-chart-axis: var(--nf-border-strong);
+  /* En claro el tooltip es oscuro por convención; en oscuro se eleva sobre la
+     superficie. Lleva texto primario o secundario (12.3:1 y 7.9:1), nunca
+     `--nf-text-subtle`, que ahí se queda en 4.29:1. */
+  --nf-chart-tooltip: var(--nf-c-neutral-900);
+  --nf-chart-tooltip-text: var(--nf-c-neutral-0);
+
+  /* Paleta categórica de series */
+  --nf-series-1: #2a78d6;
+  --nf-series-2: #eb6834;
+  --nf-series-3: #1baf7a;
+  --nf-series-4: #eda100;
+  --nf-series-5: #e87ba4;
+  --nf-series-6: #008300;
+  --nf-series-7: #4a3aa7;
+  --nf-series-8: #e34948;
+
+  /* Alias que el sistema usaba sin declarar */
+  --nf-text-disabled: var(--nf-disabled-text);
+  --nf-shadow: rgba(16, 18, 28, 0.10);
 }
 
 /* ----------------------------------------------------------------------------
@@ -326,8 +380,8 @@
   --nf-focus-ring: #93a1ff;
 
   --nf-disabled-bg: #24272d;
-  --nf-disabled-border: #2e3238;
-  --nf-disabled-text: #7d848f;
+  --nf-disabled-border: #41464f;
+  --nf-disabled-text: #8a919c;
 
   /* Alias heredados que apuntaban a primitivas claras y no se redefinían.
      Casi todos viven en marketing, pero el shell los hereda igual. */
@@ -342,6 +396,59 @@
   --nf-elevation-4: 0 24px 56px rgba(0, 0, 0, 0.6);
 
   color-scheme: dark;
+
+  /* Superficies compuestas */
+  /* Capa por encima de la superficie: menú, popover, tarjeta arrastrada.
+     En claro coincide con la superficie y la separa la sombra; en oscuro la
+     sombra no se ve, así que tiene que aclararse. */
+  --nf-surface-raised: #22252b;
+
+  /* Controles de formulario */
+  /* El campo se hunde respecto a su superficie: en oscuro un campo del mismo
+     color que la tarjeta no se distingue como zona editable. */
+  --nf-input-bg: #14161a;
+  /* El borde ES lo que identifica el control, así que va al token fuerte
+     (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
+  --nf-input-border: var(--nf-border-strong);
+
+  /* Tabla de datos */
+  /* La cabecera se separa de las filas sin recurrir a un borde grueso. */
+  --nf-table-header: #20232a;
+
+  /* Navegación lateral */
+  /* En oscuro la barra se hunde respecto al contenido, que es lo que le da
+     el papel de chrome; en claro es blanca como el resto. */
+  --nf-sidebar-bg: #16181c;
+  --nf-sidebar-active: #1e2338;
+  --nf-sidebar-hover: #22252b;
+
+  /* Gráficos */
+  /* Rejilla deliberadamente recesiva: 1.27:1 sobre la superficie oscura. No
+     es un objeto que identifique un componente —eso es el eje— así que el
+     mínimo de 3:1 de WCAG 1.4.11 no aplica, y subirla convertiría el
+     gráfico en una cuadrícula. */
+  --nf-chart-grid: #2b2f36;
+  /* El eje sí delimita el área de trazado: 3.47:1 en oscuro. */
+  --nf-chart-axis: var(--nf-border-strong);
+  /* En claro el tooltip es oscuro por convención; en oscuro se eleva sobre la
+     superficie. Lleva texto primario o secundario (12.3:1 y 7.9:1), nunca
+     `--nf-text-subtle`, que ahí se queda en 4.29:1. */
+  --nf-chart-tooltip: #2a2e35;
+  --nf-chart-tooltip-text: var(--nf-text-primary);
+
+  /* Paleta categórica de series */
+  --nf-series-1: #3987e5;
+  --nf-series-2: #d95926;
+  --nf-series-3: #199e70;
+  --nf-series-4: #c98500;
+  --nf-series-5: #d55181;
+  --nf-series-6: #008300;
+  --nf-series-7: #9085e9;
+  --nf-series-8: #e66767;
+
+  /* Alias que el sistema usaba sin declarar */
+  --nf-text-disabled: var(--nf-disabled-text);
+  --nf-shadow: rgba(0, 0, 0, 0.55);
 }
 
 /* ----------------------------------------------------------------------------
@@ -441,6 +548,16 @@
   outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
   outline-offset: var(--nf-focus-ring-offset);
   border-radius: var(--nf-radius-xs);
+}
+
+/* Sobre un elemento de color propio —el cuadro de marca de la barra lateral,
+   un botón primario, una píldora de idioma activa— el anillo del mismo tono no
+   contrasta con lo que tiene debajo. Separándolo cae sobre la superficie de
+   alrededor, que es contra lo que WCAG 2.4.13 mide el indicador, y se le añade
+   un halo del color de la superficie para que se lea sobre cualquier fondo. */
+:where(a, button, [role="tab"], [role="radio"]):focus-visible:not(:disabled) {
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--nf-surface);
 }
 
 /* Enlace de salto — el usuario de teclado atravesaba ~180 enlaces de
@@ -599,5 +716,58 @@
     --nf-elevation-4: 0 24px 56px rgba(0, 0, 0, 0.6);
 
     color-scheme: dark;
+
+    /* Superficies compuestas */
+    /* Capa por encima de la superficie: menú, popover, tarjeta arrastrada.
+     En claro coincide con la superficie y la separa la sombra; en oscuro la
+     sombra no se ve, así que tiene que aclararse. */
+    --nf-surface-raised: #22252b;
+
+    /* Controles de formulario */
+    /* El campo se hunde respecto a su superficie: en oscuro un campo del mismo
+     color que la tarjeta no se distingue como zona editable. */
+    --nf-input-bg: #14161a;
+    /* El borde ES lo que identifica el control, así que va al token fuerte
+     (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
+    --nf-input-border: var(--nf-border-strong);
+
+    /* Tabla de datos */
+    /* La cabecera se separa de las filas sin recurrir a un borde grueso. */
+    --nf-table-header: #20232a;
+
+    /* Navegación lateral */
+    /* En oscuro la barra se hunde respecto al contenido, que es lo que le da
+     el papel de chrome; en claro es blanca como el resto. */
+    --nf-sidebar-bg: #16181c;
+    --nf-sidebar-active: #1e2338;
+    --nf-sidebar-hover: #22252b;
+
+    /* Gráficos */
+    /* Rejilla deliberadamente recesiva: 1.27:1 sobre la superficie oscura. No
+     es un objeto que identifique un componente —eso es el eje— así que el
+     mínimo de 3:1 de WCAG 1.4.11 no aplica, y subirla convertiría el
+     gráfico en una cuadrícula. */
+    --nf-chart-grid: #2b2f36;
+    /* El eje sí delimita el área de trazado: 3.47:1 en oscuro. */
+    --nf-chart-axis: var(--nf-border-strong);
+    /* En claro el tooltip es oscuro por convención; en oscuro se eleva sobre la
+     superficie. Lleva texto primario o secundario (12.3:1 y 7.9:1), nunca
+     `--nf-text-subtle`, que ahí se queda en 4.29:1. */
+    --nf-chart-tooltip: #2a2e35;
+    --nf-chart-tooltip-text: var(--nf-text-primary);
+
+    /* Paleta categórica de series */
+    --nf-series-1: #3987e5;
+    --nf-series-2: #d95926;
+    --nf-series-3: #199e70;
+    --nf-series-4: #c98500;
+    --nf-series-5: #d55181;
+    --nf-series-6: #008300;
+    --nf-series-7: #9085e9;
+    --nf-series-8: #e66767;
+
+    /* Alias que el sistema usaba sin declarar */
+    --nf-text-disabled: var(--nf-disabled-text);
+    --nf-shadow: rgba(0, 0, 0, 0.55);
   }
 }

@@ -13,12 +13,17 @@ import {
   assertOpaqueSubjectRef,
 } from "../src/lib/medical-devices/privacy";
 import {
+  assertAdverseEventTransition,
   assertComplaintTransition,
+  assertFsaTransition,
+  assertMdRecordPurgeable,
+  assertPmsTransition,
   assertRecallTransition,
   assertRecordApproval,
   assertRecordTransition,
   assertTestResultAttribution,
   designInputCoverage,
+  mdRetentionUntil,
   nextComplaintStatuses,
   nextRecallStatuses,
   nextRecordStatuses,
@@ -90,6 +95,39 @@ async function main() {
     });
     assert.equal(cov.percent, 67);
     assert.deepEqual(cov.uncovered, ["DI-3"]);
+  });
+
+  await t("adverse event / FSCA / PMS workflows", async () => {
+    assert.deepEqual(nextComplaintStatuses("RECEIVED"), ["TRIAGED"]); // sanity: unrelated import still wired
+    assertAdverseEventTransition("REPORTED", "UNDER_REVIEW");
+    assertAdverseEventTransition("UNDER_REVIEW", "REPORTED_TO_AUTHORITY");
+    assertAdverseEventTransition("REPORTED_TO_AUTHORITY", "CLOSED");
+    assert.throws(() => assertAdverseEventTransition("REPORTED", "CLOSED"), /Transición/);
+
+    assertFsaTransition("DRAFT", "INITIATED");
+    assertFsaTransition("INITIATED", "IN_PROGRESS");
+    assertFsaTransition("COMPLETED", "CLOSED");
+    assert.throws(() => assertFsaTransition("DRAFT", "COMPLETED"), /Transición/);
+
+    assertPmsTransition("PLANNED", "IN_PROGRESS");
+    assertPmsTransition("IN_PROGRESS", "OVERDUE");
+    assertPmsTransition("OVERDUE", "COMPLETED");
+    assert.throws(() => assertPmsTransition("COMPLETED", "PLANNED"), /Transición/);
+  });
+
+  await t("retention: date math and purge guard", async () => {
+    const closedAt = new Date("2026-01-15T00:00:00.000Z");
+    const until = mdRetentionUntil(closedAt, 15);
+    assert.equal(until.getUTCFullYear(), 2041);
+    assert.throws(
+      () => assertMdRecordPurgeable({ closedAt, retentionUntil: until, purgedAt: null }, new Date("2030-01-01"), "La queja"),
+      /vence/,
+    );
+    assertMdRecordPurgeable({ closedAt, retentionUntil: until, purgedAt: null }, new Date("2042-01-01"), "La queja");
+    assert.throws(
+      () => assertMdRecordPurgeable({ closedAt: null, retentionUntil: null, purgedAt: null }, new Date(), "El evento adverso"),
+      /cerrado/,
+    );
   });
 
   if (!prisma) {
@@ -211,6 +249,31 @@ async function main() {
       assert.fail("expected CHECK violation");
     } catch (error) {
       assert.ok(isCheckViolation(error), String(error));
+    }
+  });
+
+  await t("CHECK rejects purge before retention expires; retention policy is per-org configurable", async () => {
+    const device = await prisma.medicalDevice.findFirst({ where: { organizationId: org.id } });
+    assert.ok(device);
+    const policy = await prisma.mdRetentionPolicy.upsert({
+      where: { organizationId: org.id },
+      update: { retentionYears: 20 },
+      create: { organizationId: org.id, retentionYears: 20 },
+    });
+    assert.equal(policy.retentionYears, 20);
+
+    const closedAt = new Date();
+    const complaint = await prisma.complaint.create({
+      data: {
+        organizationId: org.id, code: "CMP-RET", deviceId: device.id,
+        description: "x", status: "CLOSED", closedAt, retentionUntil: mdRetentionUntil(closedAt, policy.retentionYears),
+      },
+    });
+    try {
+      await prisma.complaint.update({ where: { id: complaint.id }, data: { purgedAt: new Date() } });
+      assert.fail("expected CHECK violation");
+    } catch (error) {
+      assert.ok(isCheckViolation(error, "md_complaint_purge_after_retention"), String(error));
     }
   });
 

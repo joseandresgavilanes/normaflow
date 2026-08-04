@@ -31,7 +31,7 @@ button { font: inherit; cursor: pointer; }
   background:
     radial-gradient(900px 600px at 85% -5%, rgba(82, 102, 246, 0.08), transparent 55%),
     radial-gradient(700px 500px at -5% 40%, rgba(82, 102, 246, 0.05), transparent 60%),
-    linear-gradient(180deg, #f7f7f5 0%, #f3f3f1 100%);
+    linear-gradient(180deg, var(--nf-background) 0%, var(--nf-surface-sunken) 100%);
 }
 
 /* Layout */
@@ -80,13 +80,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-lede { font-size: clamp(16px, 1.5vw, 18px); color: var(--nf-ink-2); line-height: 1.6; max-width: 60ch; }
 .nf-mono { font-family: var(--font-mono); }
 .nf-grad-text {
-  background: linear-gradient(95deg, #4355e8 0%, var(--nf-accent) 50%, #6b7af8 100%);
+  background: linear-gradient(95deg, var(--nf-primary-active) 0%, var(--nf-primary) 50%, var(--nf-primary-hover) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 .nf-grad-text-cool {
-  background: linear-gradient(95deg, #1a1a1a 0%, var(--nf-accent) 70%, #6b7af8 100%);
+  /* Arrancaba en `#1a1a1a`: sobre el lienzo oscuro el titular y el logotipo
+     salían en negro sobre negro. Ahora arranca en el texto primario del tema. */
+  background: linear-gradient(95deg, var(--nf-text-primary) 0%, var(--nf-primary) 70%, var(--nf-primary-hover) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -112,7 +114,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 }
 .nf-btn--primary {
   background: var(--nf-accent);
-  color: #fff;
+  color: var(--nf-text-on-primary);
   border-color: var(--nf-accent);
 }
 .nf-btn--primary:hover {
@@ -123,7 +125,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-btn--ghost {
   background: var(--nf-bg-1);
   color: var(--nf-ink);
-  border-color: var(--nf-line);
+  border-color: var(--nf-border-strong);
 }
 .nf-btn--ghost:hover {
   background: var(--nf-glass-2);
@@ -153,7 +155,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(247, 247, 245, 0.92);
+  background: var(--nf-glass);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--nf-line);
 }
@@ -181,7 +183,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   display: grid;
   place-items: center;
   background: var(--nf-accent);
-  color: #fff;
+  color: var(--nf-text-on-primary);
   font-size: 13px;
   font-weight: 700;
   line-height: 1;
@@ -242,7 +244,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   left: 50%;
   width: 11px;
   height: 11px;
-  background: #fff;
+  background: var(--nf-surface);
   border-left: 1px solid var(--nf-line);
   border-top: 1px solid var(--nf-line);
   transform: translateX(-50%) rotate(45deg);
@@ -384,7 +386,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   box-sizing: border-box;
 }
 .nfm-input:focus, .nfm-textarea:focus, .nfm-select:focus {
-  outline: none;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
   border-color: var(--nf-accent);
   box-shadow: 0 0 0 3px var(--nf-accent-soft);
 }
@@ -459,14 +462,14 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   font-weight: 500;
 }
 .nf-auth-alert--error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: var(--nf-danger-subtle);
+  border: 1px solid var(--nf-danger-border);
+  color: var(--nf-danger-text);
 }
 .nf-auth-alert--success {
-  background: #edf8f1;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
+  background: var(--nf-success-subtle);
+  border: 1px solid var(--nf-success-border);
+  color: var(--nf-success-text);
 }
 
 /* Hero */
@@ -508,7 +511,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   box-shadow: var(--nf-shadow-1);
   will-change: transform;
 }
+/* La etiqueta de tipo de archivo va sobre un relleno saturado: el texto tiene
+   que ser el que contrasta con el relleno, no el del tema. */
 .nf-chaos .ic {
+  color: var(--nf-c-neutral-0);
   width: 18px;
   height: 18px;
   border-radius: 4px;
@@ -516,8 +522,13 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   place-items: center;
   font-size: 9px;
   font-weight: 700;
-  color: #fff;
+  /* Va sobre un relleno saturado que no cambia con el tema, así que el blanco
+     es lo correcto: `--nf-text-on-primary` voltea a oscuro y aquí daría 2.8:1. */
+  color: var(--nf-c-neutral-0);
 }
+/* Los cinco tonos siguientes identifican el tipo de archivo en la ilustración
+   del hero (hoja de cálculo, correo, PDF, carpeta, incidencia). Son color de
+   DATOS dentro de un dibujo, no superficie del tema: no se tokenizan. */
 .nf-chaos--xls .ic { background: #16a34a; }
 .nf-chaos--mail .ic { background: #dc2626; }
 .nf-chaos--pdf .ic { background: #e11d48; }
@@ -610,7 +621,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-flow .arr { color: var(--nf-ink-4); font-size: 11px; }
 .nf-chip--ok {
   background: var(--nf-success) !important;
-  color: #fff !important;
+  color: var(--nf-text-on-primary) !important;
   border-color: var(--nf-success) !important;
   box-shadow: 0 0 12px rgba(22, 163, 74, 0.22);
 }
@@ -886,8 +897,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   border-radius: 10px;
   display: grid;
   place-items: center;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--nf-danger-subtle);
+  border: 1px solid var(--nf-danger-border);
   color: var(--nf-danger);
   margin-bottom: 16px;
 }
@@ -925,7 +936,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   background: var(--nf-bg-1);
   border: 1px solid var(--nf-line);
 }
-.nf-transform-tag.chaos { color: var(--nf-danger); border-color: #fecaca; background: #fef2f2; }
+.nf-transform-tag.chaos { color: var(--nf-danger); border-color: var(--nf-danger-border); background: var(--nf-danger-subtle); }
 .nf-transform-core {
   position: relative;
   width: 200px;
@@ -1265,22 +1276,22 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: #fff8e6;
-  color: #92400e;
-  border: 1px solid #fde68a;
+  background: var(--nf-warning-subtle);
+  color: var(--nf-warning-text);
+  border: 1px solid var(--nf-warning-border);
 }
 .nf-ai-human-callout {
   margin-top: 28px;
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px dashed #fcd34d;
-  background: #fffbeb;
+  border: 1px dashed var(--nf-warning-border);
+  background: var(--nf-warning-subtle);
   display: flex;
   gap: 12px;
   align-items: flex-start;
 }
 .nf-ai-human-callout .icon {
-  color: #b45309;
+  color: var(--nf-warning-text);
   flex-shrink: 0;
   margin-top: 1px;
 }
@@ -1291,7 +1302,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   color: var(--nf-ink-2);
 }
 .nf-ai-human-callout strong {
-  color: #92400e;
+  color: var(--nf-warning-text);
   font-weight: 600;
 }
 
@@ -1347,7 +1358,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   top: -10px;
   right: 18px;
   background: var(--nf-accent);
-  color: #fff;
+  color: var(--nf-text-on-primary);
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 10px;
@@ -1428,7 +1439,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   margin: 18px 0 0;
   padding: 12px 14px;
   border: 1px solid var(--nf-line);
-  border-left: 3px solid var(--nf-warn, #B45309);
+  border-left: 3px solid var(--nf-warn, var(--nf-warning-text));
   border-radius: 10px;
   background: var(--nf-bg-1);
   font-size: 13px;

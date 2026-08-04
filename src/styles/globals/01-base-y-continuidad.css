@@ -38,7 +38,7 @@
 }
 .nf-form-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .nf-form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.nf-acpm-verification-box { display: grid; gap: 10px; padding: 14px; border: 1px solid #F3C56B; border-radius: 10px; background: #FFF9EB; }
+.nf-acpm-verification-box { display: grid; gap: 10px; padding: 14px; border: 1px solid #F3C56B; border-radius: 10px; background: var(--nf-warning-subtle); }
 
 /* Business continuity plan detail modal */
 .nf-continuity-plan-card {
@@ -86,7 +86,7 @@
   padding: 16px;
   border: 1px solid #dfe5ff;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f7f8ff 0%, #ffffff 72%);
+  background: linear-gradient(135deg, var(--nf-primary-subtle) 0%, var(--nf-surface) 72%);
 }
 .nf-continuity-detail-hero-icon {
   display: grid;
@@ -95,12 +95,12 @@
   height: 42px;
   flex: 0 0 42px;
   border-radius: 12px;
-  color: #5266f6;
-  background: #e9ecff;
+  color: var(--nf-primary-active);
+  background: var(--nf-primary-subtle-hover);
 }
 .nf-continuity-detail-hero-copy { min-width: 0; flex: 1; }
 .nf-continuity-detail-eyebrow {
-  color: #5266f6;
+  color: var(--nf-primary-active);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: .08em;
@@ -155,8 +155,8 @@
   height: 30px;
   flex: 0 0 30px;
   border-radius: 9px;
-  color: #5266f6;
-  background: #eef0ff;
+  color: var(--nf-primary-active);
+  background: var(--nf-surface-selected);
 }
 .nf-continuity-detail-section-title {
   margin: 0;
@@ -181,7 +181,7 @@
   padding: 11px 12px;
   border-left: 3px solid #5266f6;
   border-radius: 0 8px 8px 0;
-  background: #f7f8ff;
+  background: var(--nf-surface-muted);
   color: var(--nf-ink-2);
   font-size: 13px;
   line-height: 1.55;
@@ -196,7 +196,7 @@
   padding: 10px 12px;
   border: 1px solid #eef2f6;
   border-radius: 9px;
-  background: #f8fafc;
+  background: var(--nf-surface-muted);
 }
 .nf-continuity-detail-metric-label {
   margin-bottom: 4px;
@@ -221,7 +221,7 @@
   padding: 10px 11px;
   border: 1px solid #eef2f6;
   border-radius: 9px;
-  background: #fafbfc;
+  background: var(--nf-surface-muted);
   font-size: 12.5px;
 }
 .nf-continuity-detail-list-item > span { min-width: 0; }
@@ -246,7 +246,7 @@
   padding: 12px;
   border: 1px solid #e5eaf2;
   border-radius: 12px;
-  background: #fafbfc;
+  background: var(--nf-surface-muted);
 }
 .nf-continuity-filter-search {
   position: relative;

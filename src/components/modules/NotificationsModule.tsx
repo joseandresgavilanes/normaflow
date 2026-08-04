@@ -271,7 +271,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                             letterSpacing: "-0.01em",
                             textTransform: "none",
                             verticalAlign: "middle",
-                            color: "#fff",
+                            color: "var(--nf-text-on-primary)",
                             background: color,
                             padding: "3px 8px",
                             borderRadius: 99,
@@ -291,7 +291,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                         onClick={() => markRead(n.id)}
                         style={{
                           fontSize: 13,
-                          color: "#fff",
+                          color: "var(--nf-text-on-primary)",
                           fontWeight: 700,
                           textDecoration: "none",
                           background: "var(--nf-app-accent)",

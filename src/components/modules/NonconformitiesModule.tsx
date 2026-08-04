@@ -275,7 +275,7 @@ export default function NonconformitiesModule() {
               </div>
             ))}
             {(detailAudit || detailLive.clause) && (
-              <div style={{ marginTop: 12, padding: "10px 12px", background: "#fff8f0", border: "1px solid #f5e0c8", borderRadius: 8, fontSize: 12, color: "var(--nf-ink)" }}>
+              <div style={{ marginTop: 12, padding: "10px 12px", background: "var(--nf-warning-subtle)", border: "1px solid #f5e0c8", borderRadius: 8, fontSize: 12, color: "var(--nf-ink)" }}>
                 {detailAudit && (
                   <div>
                     <strong>Auditoría vinculada:</strong> {detailAudit.title}
