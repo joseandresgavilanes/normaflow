@@ -26,9 +26,9 @@ export function getLiveTestEnvironment() {
   const databaseUrl = required("TEST_DATABASE_URL");
   const directUrl = required("TEST_DIRECT_URL");
   const supabaseUrl = required("TEST_SUPABASE_URL");
-  const normalDatabaseUrl = process.env.DATABASE_URL?.trim();
-  const normalDirectUrl = process.env.DIRECT_URL?.trim();
-  const normalSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const normalDatabaseUrl = (process.env.NORMAFLOW_NORMAL_DATABASE_URL ?? process.env.DATABASE_URL)?.trim();
+  const normalDirectUrl = (process.env.NORMAFLOW_NORMAL_DIRECT_URL ?? process.env.DIRECT_URL)?.trim();
+  const normalSupabaseUrl = (process.env.NORMAFLOW_NORMAL_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL)?.trim();
   if (normalDatabaseUrl && connectionTarget(databaseUrl) === connectionTarget(normalDatabaseUrl)) {
     throw new Error("TEST_DATABASE_URL comparte el mismo target que DATABASE_URL; el entorno de testing debe ser exclusivo.");
   }

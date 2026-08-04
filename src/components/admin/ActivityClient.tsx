@@ -69,27 +69,34 @@ const ACTION_LABEL: Record<string, string> = {
   complete: "Completado",
 };
 
+/**
+ * Tono por acción, en su variante de TEXTO.
+ *
+ * Se usa como `color` sobre la superficie, así que necesita 4.5:1. Con los
+ * tokens de relleno daba 3.30:1 (éxito) y 3.19:1 (aviso) — 28 y 1 apariciones
+ * medidas en /app/activity.
+ */
 const ACTION_TONE: Record<string, string> = {
-  create: "var(--nf-success)",
-  update: "var(--nf-primary)",
-  delete: "var(--nf-danger)",
-  deactivate: "var(--nf-danger)",
-  approve: "var(--nf-success)",
-  reject: "var(--nf-danger)",
+  create: "var(--nf-success-text)",
+  update: "var(--nf-primary-active)",
+  delete: "var(--nf-danger-text)",
+  deactivate: "var(--nf-danger-text)",
+  approve: "var(--nf-success-text)",
+  reject: "var(--nf-danger-text)",
   transition: "var(--nf-primary-active)",
-  submit_review: "var(--nf-warning)",
-  obsolete: "#5E6B7A",
-  publish: "var(--nf-success)",
-  invite: "var(--nf-primary)",
-  login: "#5E6B7A",
-  logout: "#5E6B7A",
-  add_entry: "var(--nf-success)",
-  close: "var(--nf-success)",
-  complete: "var(--nf-success)",
+  submit_review: "var(--nf-warning-text)",
+  obsolete: "var(--nf-text-secondary)",
+  publish: "var(--nf-success-text)",
+  invite: "var(--nf-primary-active)",
+  login: "var(--nf-text-secondary)",
+  logout: "var(--nf-text-secondary)",
+  add_entry: "var(--nf-success-text)",
+  close: "var(--nf-success-text)",
+  complete: "var(--nf-success-text)",
 };
 
 function actionTone(action: string): string {
-  return ACTION_TONE[action] ?? "#5E6B7A";
+  return ACTION_TONE[action] ?? "var(--nf-text-secondary)";
 }
 
 function actionLabel(action: string): string {
@@ -528,7 +535,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
                     )}
                   </div>
                   <span style={{ color: "var(--nf-ink-3)" }}>→</span>
-                  <div style={{ fontSize: 12, color: "var(--nf-accent)", fontFamily: "monospace" }}>
+                  <div style={{ fontSize: 12, color: "var(--nf-primary-active)", fontFamily: "monospace" }}>
                     {d.after === undefined ? <span style={{ color: "var(--nf-ink-4)" }}>— eliminado —</span> : formatValue(d.after)}
                   </div>
                 </div>

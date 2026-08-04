@@ -33,7 +33,7 @@ export default function SecurityPage() {
               const Icon = Ic[p.icon];
               return (
                 <article key={p.t} className="nf-tile">
-                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)" }}>
                     <Icon/>
                   </span>
                   <div className="nf-h-4" style={{ marginTop: 14 }}>{p.t}</div>
@@ -50,7 +50,7 @@ export default function SecurityPage() {
             <div style={{ flex: 1, minWidth: 240 }}>
               <div className="nf-h-4">Informes de vulnerabilidad</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 4 }}>
-                Para reportes responsables o preguntas de debida diligencia, escribe a <a href="mailto:security@normaflow.io" style={{ color: "var(--nf-accent)" }}>security@normaflow.io</a>.
+                Para reportes responsables o preguntas de debida diligencia, escribe a <a href="mailto:security@normaflow.io" style={{ color: "var(--nf-primary-active)" }}>security@normaflow.io</a>.
               </div>
             </div>
           </div>

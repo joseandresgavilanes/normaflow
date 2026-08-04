@@ -1,0 +1,67 @@
+[
+  {
+    "ruta": "/app/environment",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 1,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/app/aims",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/app/compliance",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/app/setup",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/app/gap",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  }
+]

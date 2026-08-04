@@ -257,7 +257,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   width: 14px;
   height: 14px;
   flex: 0 0 14px;
-  color: var(--nf-accent);
+  color: var(--nf-primary-active);
   font-size: 12px;
   line-height: 1;
   opacity: 0;
@@ -271,7 +271,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-nav-popover-intro strong { color: var(--nf-ink); font-family: var(--font-display); font-size: 17px; letter-spacing: -.02em; }
 .nf-nav-popover-intro > span:last-child { color: var(--nf-ink-3); font-size: 12px; }
 .nf-nav-popover-kicker,
-.nf-nav-group-title { color: var(--nf-accent); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.nf-nav-group-title { color: var(--nf-primary-active); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .nf-nav-standard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; padding-top: 15px; }
 .nf-nav-standard-group { display: grid; align-content: start; gap: 3px; }
 .nf-nav-standard-group .nf-nav-group-title { margin: 0 8px 5px; color: var(--nf-ink-3); }
@@ -324,7 +324,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 }
 .nf-nav-drawer a:hover { background: var(--nf-glass-2); color: var(--nf-ink); }
 .nf-nav-mobile-group { display: grid; gap: 2px; padding-bottom: 10px; }
-.nf-nav-mobile-title { padding: 8px 14px 5px; color: var(--nf-accent); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.nf-nav-mobile-title { padding: 8px 14px 5px; color: var(--nf-primary-active); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .nf-nav-mobile-standards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 8px 5px; }
 .nf-nav-mobile-standards > div { display: grid; align-content: start; gap: 2px; }
 .nf-nav-mobile-standards .nf-nav-group-title { padding: 7px 6px 3px; color: var(--nf-ink-3); }
@@ -353,7 +353,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-prose p { margin: 0 0 16px; }
 .nf-prose ul { padding-left: 22px; margin: 0 0 18px; }
 .nf-prose ul li { margin: 6px 0; }
-.nf-prose a { color: var(--nf-accent); text-decoration: underline; text-underline-offset: 3px; }
+.nf-prose a { color: var(--nf-primary-active); text-decoration: underline; text-underline-offset: 3px; }
 .nf-prose strong { color: var(--nf-ink); }
 
 .nf-tile {
@@ -448,13 +448,13 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--nf-accent);
+  color: var(--nf-primary-active);
   margin-bottom: 4px;
 }
 .nf-auth-callout code { font-family: var(--font-mono); font-size: 12px; color: var(--nf-ink); }
 .nf-auth-callouts { display: grid; gap: 10px; margin-bottom: 20px; }
 .nf-auth-footer { text-align: center; margin-top: 22px; font-size: 13px; color: var(--nf-ink-3); }
-.nf-auth-footer a { color: var(--nf-accent); font-weight: 600; }
+.nf-auth-footer a { color: var(--nf-primary-active); font-weight: 600; }
 .nf-auth-alert {
   padding: 10px 12px;
   border-radius: var(--nf-form-control-radius);
@@ -526,13 +526,17 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
      es lo correcto: `--nf-text-on-primary` voltea a oscuro y aquí daría 2.8:1. */
   color: var(--nf-c-neutral-0);
 }
-/* Los cinco tonos siguientes identifican el tipo de archivo en la ilustración
+/* Los cinco tonos identifican el tipo de archivo en la ilustración del hero.
+   Son color de DATOS dentro de un dibujo, no superficie del tema, pero llevan
+   una etiqueta de 9 px en blanco encima: se usan los tonos oscuros de cada
+   familia para que ese texto cumpla el mínimo.
+   Los cinco tonos siguientes identifican el tipo de archivo en la ilustración
    del hero (hoja de cálculo, correo, PDF, carpeta, incidencia). Son color de
    DATOS dentro de un dibujo, no superficie del tema: no se tokenizan. */
-.nf-chaos--xls .ic { background: #16a34a; }
-.nf-chaos--mail .ic { background: #dc2626; }
+.nf-chaos--xls .ic { background: #15803d; }
+.nf-chaos--mail .ic { background: #b91c1c; }
 .nf-chaos--pdf .ic { background: #e11d48; }
-.nf-chaos--folder .ic { background: #d97706; }
+.nf-chaos--folder .ic { background: #b45309; }
 .nf-chaos--bug .ic { background: #7c3aed; }
 
 @keyframes drift-a { 0%, 100% { transform: translate3d(var(--x,0), var(--y,0), 0) rotate(var(--r,0deg)); } 50% { transform: translate3d(calc(var(--x,0) + 6px), calc(var(--y,0) - 10px), 0) rotate(calc(var(--r,0deg) + 1deg)); } }
@@ -899,7 +903,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   place-items: center;
   background: var(--nf-danger-subtle);
   border: 1px solid var(--nf-danger-border);
-  color: var(--nf-danger);
+  color: var(--nf-danger-text);
   margin-bottom: 16px;
 }
 
@@ -936,7 +940,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   background: var(--nf-bg-1);
   border: 1px solid var(--nf-line);
 }
-.nf-transform-tag.chaos { color: var(--nf-danger); border-color: var(--nf-danger-border); background: var(--nf-danger-subtle); }
+.nf-transform-tag.chaos { color: var(--nf-danger-text); border-color: var(--nf-danger-border); background: var(--nf-danger-subtle); }
 .nf-transform-core {
   position: relative;
   width: 200px;
@@ -1256,7 +1260,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-standard h3 { font-size: 28px; }
 .nf-standard ul { list-style: none; padding: 0; margin: 20px 0 0; display: flex; flex-direction: column; gap: 10px; }
 .nf-standard ul li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--nf-ink-2); }
-.nf-standard ul li svg { flex-shrink: 0; margin-top: 2px; color: var(--nf-accent); }
+.nf-standard ul li svg { flex-shrink: 0; margin-top: 2px; color: var(--nf-primary-active); }
 
 /* AI */
 .nf-ai-card {
@@ -1326,10 +1330,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   letter-spacing: -0.02em;
   color: var(--nf-ink);
 }
-.nf-case-quote .qm { color: var(--nf-accent); font-weight: 700; }
+.nf-case-quote .qm { color: var(--nf-primary-active); font-weight: 700; }
 .nf-case-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
 .nf-case-metric { padding: 14px; background: var(--nf-glass-2); border: 1px solid var(--nf-line); border-radius: 12px; }
-.nf-case-metric .v { font-weight: 700; font-size: 26px; color: var(--nf-accent); letter-spacing: -0.025em; }
+.nf-case-metric .v { font-weight: 700; font-size: 26px; color: var(--nf-primary-active); letter-spacing: -0.025em; }
 .nf-case-metric .l { font-size: 12px; color: var(--nf-ink-3); margin-top: 2px; }
 
 /* Pricing */

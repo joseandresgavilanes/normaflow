@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { PrismaClient } from "@prisma/client";
 import { readLiveState, type LiveActor, type LiveFixtureState } from "./support";
 
 test.describe.configure({ mode: "serial" });
@@ -11,6 +12,36 @@ async function login(page: Page, actor: LiveActor) {
   await page.locator("input[type='password']").fill(actor.password);
   await page.getByRole("button", { name: /^Entrar/ }).click();
   await page.waitForURL(/\/app\/dashboard/);
+}
+
+async function gotoStable(page: Page, url: string) {
+  try {
+    await page.goto(url);
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.includes("ERR_ABORTED")) throw error;
+    await page.goto(url);
+  }
+}
+
+async function processQueuedReport(page: Page, format: "PDF" | "EXCEL") {
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  if (!cronSecret) throw new Error("CRON_SECRET es obligatorio para verificar el worker de reportes live.");
+  const prisma = new PrismaClient();
+  try {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const response = await page.request.post("/api/cron/report-delivery", { headers: { authorization: `Bearer ${cronSecret}` } });
+      expect(response.ok()).toBeTruthy();
+      const artifact = await prisma.reportExport.findFirst({ where: { organizationId: state.actorA.organizationId, format }, orderBy: { createdAt: "desc" }, select: { status: true, error: true, attempts: true } });
+      if (artifact?.status === "COMPLETED") return;
+      if (artifact?.error) {
+        throw new Error(`El worker no completó el reporte: ${JSON.stringify(artifact)}`);
+      }
+      await page.waitForTimeout(250);
+    }
+  } finally {
+    await prisma.$disconnect();
+  }
+  throw new Error("El reporte no llegó a la cola del worker dentro del plazo de la prueba.");
 }
 
 const file = (name: string, contents = "deterministic Playwright evidence") => ({
@@ -115,12 +146,12 @@ test.describe("NormaFlow critical live journey", () => {
     await page.getByText(title, { exact: true }).click();
     dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Subir versión" }).click();
-    dialog = page.getByRole("dialog");
+    dialog = page.getByRole("dialog").last();
     await dialog.locator("input[type='file']").setInputFiles(file(`document-${state.runId}.txt`, "version 1"));
     await dialog.locator("textarea").fill("Versión inicial para revisión.");
     const reviewer = dialog.locator("input[type='checkbox']").first();
     if (await reviewer.count()) await reviewer.check();
-    await dialog.getByRole("button", { name: /Subir( y enviar a revisión)? versión/i }).click();
+    await dialog.getByRole("button", { name: /Subir (?:versión|y enviar a revisión)/i }).click();
 
     await page.goto("/app/documents");
     await page.getByText(title, { exact: true }).click();
@@ -137,33 +168,37 @@ test.describe("NormaFlow critical live journey", () => {
     await page.getByRole("button", { name: "Nueva auditoría" }).click();
     let dialog = page.getByRole("dialog");
     await dialog.locator("input[name='title']").fill(title);
-    await dialog.locator("input[name='standardCode']").fill("ISO 9001");
+    await dialog.locator("input[name='standardCode']").fill("ISO_9001");
     await dialog.locator("textarea[name='scope']").fill("Alcance de auditoría live.");
     await dialog.locator("textarea[name='criteria']").fill("ISO 9001:2015");
     await dialog.getByRole("button", { name: "Guardar" }).click();
+    await page.getByRole("button", { name: "Lista de ejecución" }).click();
     await expect(page.getByText(title, { exact: true })).toBeVisible();
 
     await page.getByText(title, { exact: true }).click();
     dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Iniciar auditoría" }).click();
-    await page.getByText(title, { exact: true }).click();
-    dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Añadir pregunta" }).click();
-    dialog = page.getByRole("dialog");
-    await dialog.locator("textarea[name='question']").fill("¿Se mantiene el control documentado?");
-    await dialog.getByRole("button", { name: "Guardar" }).click();
+    let nestedDialog = page.getByRole("dialog", { name: "Nueva pregunta de checklist" });
+    await nestedDialog.locator("textarea[name='question']").fill("¿Se mantiene el control documentado?");
+    await nestedDialog.getByRole("button", { name: "Guardar" }).click();
+    await expect(nestedDialog).toBeHidden();
 
-    await page.getByText(title, { exact: true }).click();
+    await page.getByRole("heading", { name: title, exact: true }).click();
     dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Registrar hallazgo" }).click();
+    nestedDialog = page.getByRole("dialog", { name: "Registrar hallazgo" });
+    await nestedDialog.locator("input[name='title']").fill(`Hallazgo E2E ${state.runId}`);
+    await nestedDialog.locator("textarea[name='description']").fill("Hallazgo creado por el flujo crítico live.");
+    await nestedDialog.getByRole("button", { name: "Guardar" }).click();
+    await expect(nestedDialog).toBeHidden();
+    const auditCard = page.locator(".nf-operational-card").filter({ has: page.getByRole("heading", { name: title, exact: true }) });
+    await expect(auditCard.getByText("1 hallazgos · 0 NC", { exact: true })).toBeVisible();
+    await auditCard.click();
     dialog = page.getByRole("dialog");
-    await dialog.locator("input[name='title']").fill(`Hallazgo E2E ${state.runId}`);
-    await dialog.locator("textarea[name='description']").fill("Hallazgo creado por el flujo crítico live.");
-    await dialog.getByRole("button", { name: "Guardar" }).click();
-    await page.getByText(title, { exact: true }).click();
-    await expect(page.getByText(`Hallazgo E2E ${state.runId}`, { exact: true })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Convertir a CAPA" })).toBeVisible();
-    await page.getByRole("button", { name: "Convertir a CAPA" }).click();
+    await expect(dialog.getByText(`Hallazgo E2E ${state.runId}`, { exact: false })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Convertir a CAPA" })).toBeVisible();
+    await dialog.getByRole("button", { name: "Convertir a CAPA" }).click();
     await expect(page.getByText(/Hallazgo convertido en CAPA/i)).toBeVisible();
   });
 
@@ -180,37 +215,65 @@ test.describe("NormaFlow critical live journey", () => {
       await dialog.locator("input[name='title']").fill(`Evidencia NC ${state.runId}`);
       await dialog.locator("input[type='file']").last().setInputFiles(file(`capa-nc-${state.runId}.txt`));
       await dialog.getByRole("button", { name: "Adjuntar" }).click();
-      await expect(dialog.getByText(`Evidencia NC ${state.runId}`, { exact: true })).toBeVisible();
+      await expect(dialog.getByText(`Evidencia NC ${state.runId}`, { exact: false })).toBeVisible();
     });
 
     await dialog.getByRole("button", { name: "Avanzar a Causa raíz" }).click();
     await expect(dialog.getByText("2. Causa raíz", { exact: true })).toBeVisible();
     await dialog.locator("textarea[name='rootCause']").fill("Falta de revisión periódica documentada.");
     await dialog.locator("input[name='why1']").fill("No existía un calendario de revisión.");
-    await dialog.getByRole("button", { name: "Guardar etapa" }).click();
-    await dialog.getByRole("button", { name: "Aprobar causa raíz" }).click();
-    await dialog.getByRole("button", { name: "Avanzar a Plan de acción" }).click();
+    const saveStage = dialog.getByRole("button", { name: "Guardar etapa" });
+    await saveStage.click();
+    await expect(saveStage).toBeDisabled();
+    await expect(saveStage).toBeEnabled();
+    const approveRootCause = dialog.getByRole("button", { name: "Aprobar causa raíz" });
+    await approveRootCause.click();
+    await expect(approveRootCause).toBeHidden();
+    const advanceToPlan = dialog.getByRole("button", { name: "Avanzar a Plan de acción" });
+    await expect(advanceToPlan).toBeEnabled();
+    await advanceToPlan.click();
+    await expect(dialog.getByText("3. Plan de acción", { exact: true })).toBeVisible();
 
     await dialog.locator("textarea[name='correctiveAction']").fill("Implantar calendario y responsable de revisión.");
-    await dialog.getByRole("button", { name: "Guardar etapa" }).click();
-    await dialog.getByRole("button", { name: "Avanzar a Implementación" }).click();
+    await dialog.locator("select[name='ownerId']").selectOption({ index: 1 });
+    await dialog.locator("input[name='dueDate']").fill("2027-01-31");
+    await saveStage.click();
+    await expect(saveStage).toBeDisabled();
+    await expect(saveStage).toBeEnabled();
+    const advanceToImplementation = dialog.getByRole("button", { name: "Avanzar a Implementación" });
+    await expect(advanceToImplementation).toBeEnabled();
+    await advanceToImplementation.click();
+    await expect(dialog.getByText("4. Implementación", { exact: true })).toBeVisible();
 
     await dialog.locator("input[name='progress']").fill("100");
     await dialog.locator("textarea[name='implementationComments']").fill("Acción implementada y comunicada.");
-    await dialog.getByRole("button", { name: "Guardar etapa" }).click();
+    await saveStage.click();
+    await expect(saveStage).toBeDisabled();
+    await expect(saveStage).toBeEnabled();
     await dialog.locator("select").last().selectOption("IMPLEMENTATION");
     await dialog.locator("input[name='title']").fill(`Evidencia implementación ${state.runId}`);
     await dialog.locator("input[type='file']").last().setInputFiles(file(`capa-implementation-${state.runId}.txt`));
     await dialog.getByRole("button", { name: "Adjuntar" }).click();
-    await dialog.getByRole("button", { name: "Avanzar a Eficacia" }).click();
+    await expect(dialog.getByText(`Evidencia implementación ${state.runId}`, { exact: false })).toBeVisible();
+    const advanceToVerification = dialog.getByRole("button", { name: "Avanzar a Eficacia" });
+    await expect(advanceToVerification).toBeEnabled();
+    await advanceToVerification.click();
+    await expect(dialog.getByText("5. Eficacia", { exact: true })).toBeVisible();
 
-    await dialog.locator("select").last().selectOption("EFFECTIVE");
-    await dialog.getByPlaceholder("Comentario del verificador").fill("La acción previene la recurrencia.");
-    await dialog.getByRole("button", { name: "Registrar verificación" }).click();
+    await dialog.locator("select").last().selectOption("EFFECTIVENESS");
     await dialog.locator("input[name='title']").fill(`Evidencia eficacia ${state.runId}`);
     await dialog.locator("input[type='file']").last().setInputFiles(file(`capa-effectiveness-${state.runId}.txt`));
     await dialog.getByRole("button", { name: "Adjuntar" }).click();
-    await dialog.getByRole("button", { name: "Avanzar a Cierre" }).click();
+    await expect(dialog.getByText(`Evidencia eficacia ${state.runId}`, { exact: false })).toBeVisible();
+    await dialog.getByPlaceholder("Comentario del verificador").fill("La acción previene la recurrencia.");
+    const verifyButton = dialog.getByRole("button", { name: "Registrar verificación" });
+    await expect(verifyButton).toBeEnabled();
+    await verifyButton.click();
+    await expect(verifyButton).toBeDisabled();
+    await expect(verifyButton).toBeEnabled();
+    const advanceToClose = dialog.getByRole("button", { name: "Avanzar a Cierre" });
+    await expect(advanceToClose).toBeEnabled();
+    await advanceToClose.click();
     await expect(dialog.getByText("6. Cierre", { exact: true })).toBeVisible();
   });
 
@@ -220,15 +283,17 @@ test.describe("NormaFlow critical live journey", () => {
     await expect(page.getByRole("heading", { name: /Informes y paquetes de auditoría/i })).toBeVisible();
     const pdfDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: /Exportar PDF/i }).first().click();
+    await processQueuedReport(page, "PDF");
     await expect((await pdfDownload).suggestedFilename()).toMatch(/\.pdf$/i);
     const xlsxDownload = page.waitForEvent("download");
     await page.getByRole("button", { name: /XLSX/i }).first().click();
+    await processQueuedReport(page, "EXCEL");
     await expect((await xlsxDownload).suggestedFilename()).toMatch(/\.(xlsx|xls)$/i);
 
     await page.goto("/app/documents");
     await expect(page.getByText(state.actorA.documentTitle)).toBeVisible();
     await expect(page.getByText(state.actorB.documentTitle)).toHaveCount(0);
-    await page.goto("/app/billing");
+    await gotoStable(page, "/app/billing");
     await expect(page.getByText(state.actorA.invoiceNumber)).toBeVisible();
     await expect(page.getByText(state.actorB.invoiceNumber)).toHaveCount(0);
   });

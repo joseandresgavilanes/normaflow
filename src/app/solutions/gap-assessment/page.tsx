@@ -45,7 +45,7 @@ export default function GapAssessmentLandingPage() {
                 "Exportación a PDF con resumen ejecutivo",
               ].map((t) => (
                 <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
-                  <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                  <span style={{ color: "var(--nf-primary-active)", marginTop: 4 }}><Ic.check/></span>{t}
                 </li>
               ))}
             </ul>
@@ -56,8 +56,8 @@ export default function GapAssessmentLandingPage() {
               Solicitar evaluación de ejemplo
             </div>
             {sent ? (
-              <div style={{ padding: 16, borderRadius: 10, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>● Enviado</div>
+              <div style={{ padding: 16, borderRadius: 10, background: "var(--nf-accent-soft)", border: "1px solid var(--nf-primary-border)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-primary-active)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>● Enviado</div>
                 <p style={{ margin: 0, fontSize: 14, color: "var(--nf-ink)" }}>Te enviaremos un ejemplo en menos de un día laborable.</p>
               </div>
             ) : (

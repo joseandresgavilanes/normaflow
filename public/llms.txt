@@ -1,0 +1,28 @@
+# NormaFlow
+
+> NormaFlow es una plataforma SaaS para gestionar sistemas de gestión ISO con trazabilidad continua: documentos, riesgos, auditorías, evidencias, indicadores, no conformidades y CAPA en un solo espacio.
+
+## Producto
+
+- [Página principal](https://normaflow.io/home): propuesta de valor y visión general.
+- [Funcionalidades](https://normaflow.io/features): documentos, riesgos, auditorías, CAPA, indicadores, evidencias e IA.
+- [Precios](https://normaflow.io/pricing): planes y prueba de 14 días sin tarjeta.
+- [Solicitar demo](https://normaflow.io/demo): demo adaptada al sector y las normas de la organización.
+- [GAP Assessment](https://normaflow.io/solutions/gap-assessment): evaluación de brechas por cláusula y plan de acción.
+
+## Normas y sistemas de gestión
+
+- [ISO 9001](https://normaflow.io/iso9001) · [ISO 27001](https://normaflow.io/iso27001) · [ISO 14001](https://normaflow.io/iso14001) · [ISO 45001](https://normaflow.io/iso45001)
+- [ISO 22301](https://normaflow.io/iso22301) · [ISO/IEC 42001](https://normaflow.io/iso42001) · [ISO/IEC 20000-1](https://normaflow.io/iso20000)
+- [ISO 37301](https://normaflow.io/iso37301) · [ISO 37001](https://normaflow.io/iso37001) · [ISO 50001](https://normaflow.io/iso50001)
+- [ISO 22000](https://normaflow.io/iso22000) · [ISO 13485](https://normaflow.io/iso13485) · [Sistema Integrado de Gestión](https://normaflow.io/sig)
+
+## Recursos
+
+- [Blog](https://normaflow.io/blog): implementación, auditorías e indicadores.
+- [Casos de éxito](https://normaflow.io/cases): experiencias de equipos de calidad y seguridad.
+- [Seguridad](https://normaflow.io/legal/security): prácticas técnicas y canal de reporte responsable.
+
+## Límites y precisión
+
+NormaFlow es una herramienta de apoyo. No certifica organizaciones, no sustituye a un auditor o asesor y las sugerencias de IA requieren revisión y aprobación humana antes de guardarse como registros oficiales.

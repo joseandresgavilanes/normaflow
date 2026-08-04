@@ -1,0 +1,33 @@
+- generic [ref=f2e1]:
+  - generic "Language" [ref=f2e46]:
+    - group "Language" [ref=f2e47]:
+      - button "ES" [ref=f2e10] [cursor=pointer]
+      - button "EN" [active] [pressed] [ref=f2e11] [cursor=pointer]
+      - button "PT" [ref=f2e12] [cursor=pointer]
+  - generic [ref=f2e15]:
+    - generic [ref=f2e16]:
+      - link "NormaFlow" [ref=f2e17] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f2e18]: "N"
+        - text: NormaFlow
+      - heading "Welcome back" [level=1] [ref=f2e48]
+      - paragraph [ref=f2e20]: Access your compliance dashboard
+    - generic [ref=f2e22]:
+      - generic [ref=f2e23]:
+        - generic [ref=f2e24]: Email
+        - textbox "Email" [ref=f2e25]:
+          - /placeholder: tu@empresa.com
+      - generic [ref=f2e26]:
+        - generic [ref=f2e27]: Password
+        - textbox "Password" [ref=f2e49]:
+          - /placeholder: ••••••••
+      - button "Log in" [ref=f2e50] [cursor=pointer]
+      - paragraph [ref=f2e32]:
+        - link "Forgot your password?" [ref=f2e51] [cursor=pointer]:
+          - /url: /forgot-password
+    - paragraph [ref=f2e34]:
+      - text: Don't have an account?
+      - link "Sign up free" [ref=f2e52] [cursor=pointer]:
+        - /url: /signup
+  - button "Open Next.js Dev Tools" [ref=f2e41] [cursor=pointer]
+  - alert [ref=f2e45]

@@ -159,10 +159,10 @@ export default function ContinuityLiveClient({ initial }: { initial: ContinuityP
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
     {tab === "panel" && <div className="nf-metric-strip">
       <Metric label="Preparación" value={`${initial.bcmSummary.readiness}%`} icon={<LifeBuoy size={19} />} color={initial.bcmSummary.readiness >= 70 ? "var(--nf-success-text)" : "var(--nf-warning-text)"} />
-      <Metric label="Actividades críticas" value={initial.bcmSummary.criticalActivities} icon={<ClipboardCheck size={19} />} color="#5266F6" />
+      <Metric label="Actividades críticas" value={initial.bcmSummary.criticalActivities} icon={<ClipboardCheck size={19} />} color="var(--nf-primary-active)" />
       <Metric label="Brechas" value={initial.bcmSummary.totalGaps} icon={<AlertTriangle size={19} />} color={initial.bcmSummary.totalGaps ? "var(--nf-danger-text)" : "var(--nf-success-text)"} />
       <Metric label="Planes activados" value={initial.bcmSummary.activePlans} icon={<FileText size={19} />} color={initial.bcmSummary.activePlans ? "var(--nf-danger-text)" : undefined} />
-      <Metric label="Pruebas" value={initial.summary.tests} icon={<ClipboardCheck size={19} />} color="#5266F6" />
+      <Metric label="Pruebas" value={initial.summary.tests} icon={<ClipboardCheck size={19} />} color="var(--nf-primary-active)" />
       <Metric label="Mejoras abiertas" value={initial.summary.openImprovements} icon={<Lightbulb size={19} />} color="var(--nf-warning-text)" />
     </div>}
     {tab !== "panel" && <IsoSectionMetrics items={tab === "plans" ? [

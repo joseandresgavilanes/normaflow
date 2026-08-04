@@ -192,7 +192,7 @@
 }
 
 .nf-environment-trend-stat small.is-down {
-  color: #16a34a;
+  color: var(--nf-success-text);
 }
 
 .nf-environment-trend-empty {

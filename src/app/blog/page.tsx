@@ -51,12 +51,12 @@ export default function BlogPage() {
               className="nfm-card"
               style={{ display: "block", padding: "clamp(20px, 3vw, 28px)", color: "inherit" }}
             >
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{post.category}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-primary-active)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{post.category}</div>
               <h2 className="nf-h-3" style={{ marginBottom: 10 }}>{post.title}</h2>
               <p style={{ fontSize: 15, color: "var(--nf-ink-2)", lineHeight: 1.65, margin: "0 0 14px" }}>{post.excerpt}</p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink-3)" }}>
                 <span>{post.date} · {post.readTime}</span>
-                <span style={{ color: "var(--nf-accent)", display: "inline-flex", alignItems: "center", gap: 6 }}>Leer <Ic.arrow/></span>
+                <span style={{ color: "var(--nf-primary-active)", display: "inline-flex", alignItems: "center", gap: 6 }}>Leer <Ic.arrow/></span>
               </div>
             </Link>
           ))}

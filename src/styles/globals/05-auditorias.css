@@ -356,7 +356,7 @@
 }
 
 .nf-audit-slot-node--write {
-  border-color: #d68a1a;
+  border-color: var(--nf-warning-text);
   box-shadow: 0 0 0 4px rgba(214, 138, 26, 0.12);
 }
 

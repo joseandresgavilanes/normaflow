@@ -45,7 +45,7 @@ const DISCIPLINE_COLOR: Record<string, string> = {
 const KIND_LABEL: Record<string, string> = {
   EQUIVALENT: "Equivalente", PARTIAL: "Parcialmente equivalente", SPECIFIC: "Específico",
 };
-const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success)", PARTIAL: "var(--nf-warning)", SPECIFIC: "var(--nf-primary)" };
+const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success-text)", PARTIAL: "var(--nf-warning-text)", SPECIFIC: "var(--nf-primary-active)" };
 
 const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
@@ -84,7 +84,7 @@ export default function IntegratedClient({ initial, demo = false }: { initial: I
 
       {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
 
-      {tab !== "panel" && <IsoSectionMetrics items={tab === "scope" ? [{ label: "Normas activas", value: initial.activeStandards.length }, { label: "Requisitos", value: initial.summary.requirements }, { label: "Cobertura global", value: initial.globalScore, suffix: "%" }] : tab === "parties" ? [{ label: "Partes interesadas", value: initial.interestedParties.length }, { label: "Relevantes", value: initial.interestedParties.filter((row) => row.isRelevant).length }, { label: "Normas activas", value: initial.activeStandards.length }] : tab === "objectives" ? [{ label: "Objetivos", value: initial.objectives.length }, { label: "Compartidos", value: initial.objectives.filter((row) => row.shared).length }, { label: "Vencidos", value: initial.objectives.filter((row) => row.dueDate && new Date(row.dueDate) < new Date() && row.status !== "ACHIEVED").length, accent: "var(--nf-danger-text)" }] : tab === "crosswalk" ? [{ label: "Correspondencias", value: initial.crosswalk.length }, { label: "Equivalentes", value: initial.summary.equivalent }, { label: "Sin evidencia", value: initial.summary.missingEvidence, accent: initial.summary.missingEvidence ? "var(--nf-danger-text)" : undefined }] : tab === "audit" ? [{ label: "Auditorías integradas", value: initial.integratedAuditCount }, { label: "Hallazgos multinorma", value: initial.multiNormFindings.length, accent: initial.multiNormFindings.length ? "#d68a1a" : undefined }, { label: "CAPA abiertas", value: initial.summary.openCapas, accent: initial.summary.openCapas ? "var(--nf-danger-text)" : undefined }] : [{ label: "Elementos compartidos", value: initial.summary.sharedElements }, { label: "Riesgos críticos", value: initial.summary.criticalRisks, accent: initial.summary.criticalRisks ? "var(--nf-danger-text)" : undefined }, { label: "Proveedores", value: initial.suppliers.length }]} />}
+      {tab !== "panel" && <IsoSectionMetrics items={tab === "scope" ? [{ label: "Normas activas", value: initial.activeStandards.length }, { label: "Requisitos", value: initial.summary.requirements }, { label: "Cobertura global", value: initial.globalScore, suffix: "%" }] : tab === "parties" ? [{ label: "Partes interesadas", value: initial.interestedParties.length }, { label: "Relevantes", value: initial.interestedParties.filter((row) => row.isRelevant).length }, { label: "Normas activas", value: initial.activeStandards.length }] : tab === "objectives" ? [{ label: "Objetivos", value: initial.objectives.length }, { label: "Compartidos", value: initial.objectives.filter((row) => row.shared).length }, { label: "Vencidos", value: initial.objectives.filter((row) => row.dueDate && new Date(row.dueDate) < new Date() && row.status !== "ACHIEVED").length, accent: "var(--nf-danger-text)" }] : tab === "crosswalk" ? [{ label: "Correspondencias", value: initial.crosswalk.length }, { label: "Equivalentes", value: initial.summary.equivalent }, { label: "Sin evidencia", value: initial.summary.missingEvidence, accent: initial.summary.missingEvidence ? "var(--nf-danger-text)" : undefined }] : tab === "audit" ? [{ label: "Auditorías integradas", value: initial.integratedAuditCount }, { label: "Hallazgos multinorma", value: initial.multiNormFindings.length, accent: initial.multiNormFindings.length ? "var(--nf-warning-text)" : undefined }, { label: "CAPA abiertas", value: initial.summary.openCapas, accent: initial.summary.openCapas ? "var(--nf-danger-text)" : undefined }] : [{ label: "Elementos compartidos", value: initial.summary.sharedElements }, { label: "Riesgos críticos", value: initial.summary.criticalRisks, accent: initial.summary.criticalRisks ? "var(--nf-danger-text)" : undefined }, { label: "Proveedores", value: initial.suppliers.length }]} />}
 
       {tab === "panel" && <PanelTab p={initial} />}
       {tab === "scope" && <ScopeTab p={initial} canUpdate={canUpdate} pending={pending} run={run} />}
@@ -129,9 +129,9 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: 14 }}>
         <section style={card}>
           <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, margin: "0 0 10px" }}><GitCompareArrows size={16} aria-hidden />Requisitos comunes vs específicos</h3>
-          <Row label="Equivalentes" value={s.equivalent} color="#16a34a" />
-          <Row label="Parcialmente equivalentes" value={s.partial} color="#d68a1a" />
-          <Row label="Específicos de una norma" value={s.specific} color="#5266F6" />
+          <Row label="Equivalentes" value={s.equivalent} color="var(--nf-success-text)" />
+          <Row label="Parcialmente equivalentes" value={s.partial} color="var(--nf-warning-text)" />
+          <Row label="Específicos de una norma" value={s.specific} color="var(--nf-primary-active)" />
           <p style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", marginTop: 10, marginBottom: 0 }}>
             Los requisitos equivalentes se cubren una sola vez para todas las normas.
           </p>
@@ -139,8 +139,8 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
         <section style={card}>
           <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, margin: "0 0 10px" }}><ClipboardCheck size={16} aria-hidden />Acciones y auditorías</h3>
           <Row label="CAPA abiertas" value={s.openCapas} color="var(--nf-danger-text)" />
-          <Row label="Auditorías integradas" value={s.integratedAudits} color="#5266F6" />
-          <Row label="Hallazgos multi-norma" value={p.multiNormFindings.length} color="#d68a1a" />
+          <Row label="Auditorías integradas" value={s.integratedAudits} color="var(--nf-primary-active)" />
+          <Row label="Hallazgos multi-norma" value={p.multiNormFindings.length} color="var(--nf-warning-text)" />
         </section>
         <section style={card}>
           <h3 style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, margin: "0 0 10px" }}><ShieldAlert size={16} aria-hidden />Riesgos críticos por disciplina</h3>
@@ -558,7 +558,7 @@ function AuditTab({ p, canUpdate, canManage, pending, run }: {
     <div style={{ display: "grid", gap: 16 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 12 }}>
         <Stat label="Auditorías integradas" value={String(p.integratedAuditCount)} accent="var(--nf-primary)" />
-        <Stat label="Hallazgos multi-norma" value={String(p.multiNormFindings.length)} accent="#d68a1a" />
+        <Stat label="Hallazgos multi-norma" value={String(p.multiNormFindings.length)} accent="var(--nf-warning-text)" />
         <Stat label="CAPA compartidas" value={String(p.capas.filter((c) => c.shared).length)} accent="var(--nf-success)" />
         <Stat label="Revisiones integradas" value={String(p.reviews.filter((r) => r.integrated).length)} />
       </div>

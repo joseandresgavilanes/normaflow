@@ -51,6 +51,7 @@ test.describe("risk treatment live tenant boundary", () => {
     const insert = await viewer.from("risk_treatment_items").insert({ organizationId: state.actorA.organizationId, planId, reference: "R-999", title: "intento", impact: 1, probability: 1, inherentRisk: 1 });
     expect(insert.error).not.toBeNull();
     const update = await viewer.from("risk_treatment_items").update({ title: "hack" }).eq("id", itemId).select("id");
-    expect(update.error).not.toBeNull();
+    expect(update.error).toBeNull();
+    expect(update.data).toEqual([]);
   });
 });

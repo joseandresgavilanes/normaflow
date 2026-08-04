@@ -45,7 +45,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
           <Link href="/blog" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-ink-3)" }}>
             ← Blog
           </Link>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 24 }}>{post.category}</div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-primary-active)", letterSpacing: "0.12em", textTransform: "uppercase", marginTop: 24 }}>{post.category}</div>
           <h1 className="nf-h-section" style={{ marginTop: 14 }}>{post.title}</h1>
           <p style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 14, marginBottom: 36, fontFamily: "var(--font-mono)" }}>
             <time dateTime={post.date}>{post.date}</time> · {post.readTime} · Equipo NormaFlow

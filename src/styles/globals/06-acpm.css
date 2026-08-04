@@ -107,8 +107,10 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--nf-app-accent);
-  background: rgba(82, 102, 246, 0.08);
+  /* `--nf-app-accent` es el alias del relleno de marca: como texto sobre su
+     propio fondo daba 4.14:1, en 44 apariciones de /app/activity. */
+  color: var(--nf-primary-active);
+  background: var(--nf-primary-subtle);
   border-color: rgba(82, 102, 246, 0.14);
 }
 

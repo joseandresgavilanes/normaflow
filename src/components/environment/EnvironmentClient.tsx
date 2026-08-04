@@ -97,7 +97,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-success-border)", display: "grid", placeItems: "center" }}>
-          <Leaf size={22} color="#16a34a" />
+          <Leaf size={22} color="var(--nf-success-text)" />
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
@@ -416,10 +416,10 @@ function EnvTableAction({ icon: Icon, children, danger = false, disabled = false
 function EnvironmentTrendOverview({ trends }: { trends: EnvironmentPayload["trends"] }) {
   const series = [
     { key: "water", label: "Agua", color: "#3b82f6" },
-    { key: "energy", label: "Energía", color: "var(--nf-warning)" },
+    { key: "energy", label: "Energía", color: "var(--nf-warning-text)" },
     { key: "fuel", label: "Combustible", color: "#f97316" },
     { key: "emissions", label: "Emisiones", color: "#8b5cf6" },
-    { key: "discharges", label: "Vertidos", color: "var(--nf-info)" },
+    { key: "discharges", label: "Vertidos", color: "var(--nf-info-text)" },
     { key: "waste", label: "Residuos", color: "var(--nf-success-text)" },
     { key: "rawMaterials", label: "Materias primas", color: "var(--nf-text-secondary)" },
   ] as const;

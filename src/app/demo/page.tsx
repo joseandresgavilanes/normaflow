@@ -48,19 +48,19 @@ export default function DemoPage() {
                 "Adaptamos la demo a tu sector y norma.",
               ].map((t) => (
                 <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
-                  <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                  <span style={{ color: "var(--nf-primary-active)", marginTop: 4 }}><Ic.check/></span>{t}
                 </li>
               ))}
             </ul>
             <p style={{ marginTop: 32, fontSize: 14, color: "var(--nf-ink-3)" }}>
-              ¿Prefieres probar solo? <Link href="/signup" style={{ color: "var(--nf-accent)" }}>Crear cuenta · 14 días gratis</Link>
+              ¿Prefieres probar solo? <Link href="/signup" style={{ color: "var(--nf-primary-active)" }}>Crear cuenta · 14 días gratis</Link>
             </p>
           </div>
 
           <div className="nfm-card" style={{ padding: "clamp(24px, 3.5vw, 36px)" }}>
             {isSubmitSuccessful ? (
-              <div style={{ padding: 20, borderRadius: 12, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
+              <div style={{ padding: 20, borderRadius: 12, background: "var(--nf-accent-soft)", border: "1px solid var(--nf-primary-border)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-primary-active)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
                 <p style={{ color: "var(--nf-ink)", margin: 0, fontSize: 15 }}>Gracias por contactar con NormaFlow. Te respondemos en breve.</p>
               </div>
             ) : (

@@ -1,0 +1,31 @@
+- generic [active] [ref=f2e1]:
+  - generic "Idioma" [ref=f2e3]:
+    - group "Idioma" [ref=f2e9]:
+      - button "ES" [pressed] [ref=f2e10] [cursor=pointer]
+      - button "EN" [ref=f2e11] [cursor=pointer]
+      - button "PT" [ref=f2e12] [cursor=pointer]
+  - generic [ref=f2e15]:
+    - generic [ref=f2e16]:
+      - link "NormaFlow" [ref=f2e17] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f2e18]: "N"
+        - text: NormaFlow
+      - heading "Bienvenido de nuevo" [level=1] [ref=f2e19]
+      - paragraph [ref=f2e20]: Accede a tu panel de cumplimiento
+    - generic [ref=f2e22]:
+      - generic [ref=f2e23]:
+        - generic [ref=f2e24]: Email
+        - textbox "Email" [ref=f2e25]:
+          - /placeholder: tu@empresa.com
+      - generic [ref=f2e26]:
+        - generic [ref=f2e27]: Contraseña
+        - textbox "Contraseña" [ref=f2e28]:
+          - /placeholder: ••••••••
+      - button "Entrar" [ref=f2e29] [cursor=pointer]
+      - paragraph [ref=f2e32]:
+        - link "¿Olvidaste tu contraseña?" [ref=f2e33] [cursor=pointer]:
+          - /url: /forgot-password
+    - paragraph [ref=f2e34]:
+      - text: ¿No tienes cuenta?
+      - link "Regístrate gratis" [ref=f2e35] [cursor=pointer]:
+        - /url: /signup

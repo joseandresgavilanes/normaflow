@@ -49,7 +49,10 @@ test.describe("security: live tenant and role boundaries", () => {
       .update({ organizationId: state.actorB.organizationId })
       .eq("id", state.actorA.documentId)
       .select("id,organizationId");
-    expect(attemptedMove.error).not.toBeNull();
+    expect(
+      Boolean(attemptedMove.error) || attemptedMove.data?.length === 0,
+      "RLS must either reject the new tenant or affect no row",
+    ).toBe(true);
 
     const ownDocument = await clientA.from("documents").select("organizationId").eq("id", state.actorA.documentId).single();
     expect(ownDocument.data?.organizationId).toBe(state.actorA.organizationId);
@@ -85,7 +88,7 @@ test.describe("security: live tenant and role boundaries", () => {
     await page.goto("/app/audits");
     await expect(page.getByRole("button", { name: /Nueva auditoría/i })).toHaveCount(0);
     await page.goto("/app/settings/users");
-    await expect(page.getByText(/Acceso restringido|No tienes permiso/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/app\/dashboard\?error=forbidden/);
     await page.goto("/app/processes");
     await expect(page.getByText(state.actorA.name, { exact: true })).toHaveCount(0);
 
@@ -105,7 +108,7 @@ test.describe("security: live tenant and role boundaries", () => {
     await page.goto("/app/audits");
     await expect(page.getByRole("button", { name: /Nueva auditoría/i })).toBeVisible();
     await page.goto("/app/settings/users");
-    await expect(page.getByText(/Acceso restringido|No tienes permiso/i)).toBeVisible();
+    await expect(page).toHaveURL(/\/app\/dashboard\?error=forbidden/);
   });
 
   test("ORG_ADMIN can manage its organization but not the other one", async ({ page }) => {

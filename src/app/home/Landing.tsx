@@ -66,8 +66,8 @@ function HeroDashboard() {
       <svg className="nf-connectors" viewBox="0 0 620 600" preserveAspectRatio="none" aria-hidden="true">
         <defs>
           <linearGradient id="grad-line" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#5266F6" stopOpacity="0"/>
-            <stop offset="0.5" stopColor="#5266F6" stopOpacity="0.45"/>
+            <stop offset="0" stopColor="var(--nf-primary-active)" stopOpacity="0"/>
+            <stop offset="0.5" stopColor="var(--nf-primary-active)" stopOpacity="0.45"/>
             <stop offset="1" stopColor="#6B7AF8" stopOpacity="0"/>
           </linearGradient>
         </defs>
@@ -207,7 +207,7 @@ function HeroDashboard() {
       <div className="nf-iso-badge" style={{ right: "8%", bottom: "-2%", width: 70, height: 70 }} data-parallax="1.6">
         <div>
           <div className="top">ISO</div>
-          <div className="num" style={{ color: "var(--nf-accent)" }}>9001</div>
+          <div className="num" style={{ color: "var(--nf-primary-active)" }}>9001</div>
           <div className="yr">2015</div>
         </div>
       </div>
@@ -257,7 +257,7 @@ function NfHero() {
               ["Sin tarjeta", "Sin compromiso"],
             ] as [string, string][]).map(([v, l]) => (
               <div key={l}>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--nf-accent)", letterSpacing: "-0.01em" }}>{v}</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, color: "var(--nf-primary-active)", letterSpacing: "-0.01em" }}>{v}</div>
                 <div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em" }}>{l}</div>
               </div>
             ))}
@@ -403,10 +403,10 @@ function NfTransform() {
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10, alignContent: "center", position: "relative" }}>
-            <div style={{ position: "absolute", top: -22, left: 0, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "var(--nf-accent)", textTransform: "uppercase" }}>después · conectado</div>
+            <div style={{ position: "absolute", top: -22, left: 0, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "var(--nf-primary-active)", textTransform: "uppercase" }}>después · conectado</div>
             {order.map((o) => (
               <div key={o.l} className="nf-transform-tag" style={{ justifyContent: "flex-start", gap: 8, color: "var(--nf-ink)" }}>
-                <span style={{ color: "var(--nf-accent)" }}>{o.c}</span>
+                <span style={{ color: "var(--nf-primary-active)" }}>{o.c}</span>
                 <span>{o.l}</span>
               </div>
             ))}
@@ -492,7 +492,7 @@ function MiniViz({ kind }: { kind: string }) {
         <div style={{ color: "var(--nf-ink-3)", marginBottom: 2, letterSpacing: "0.06em" }}>5 PORQUÉS · NC-118</div>
         {["1. ¿Por qué falló el control?", "2. ¿Por qué se omitió el paso?", "3. ¿Por qué no se detectó?", "4. ¿Por qué no había alerta?"].map((q, i) => (
           <div key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-            <span style={{ color: "var(--nf-accent)", width: 12, flexShrink: 0 }}>↳</span>
+            <span style={{ color: "var(--nf-primary-active)", width: 12, flexShrink: 0 }}>↳</span>
             <span style={{ color: "var(--nf-ink-2)" }}>{q}</span>
           </div>
         ))}
@@ -603,7 +603,7 @@ function NfModules() {
             <article key={m.t} className="nf-module-card" data-reveal style={{ transitionDelay: `${(i % 3) * 60}ms` }} onMouseMove={onMove}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <span className="nf-module-num">MÓDULO {m.n}</span>
-                <span style={{ width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)" }}>
                   {vizIcon[m.viz]}
                 </span>
               </div>
@@ -687,14 +687,14 @@ function ScreenAudit() {
           })}
         </div>
         <div style={{ marginTop: 10, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", display: "flex", gap: 12 }}>
-          <span><span style={{ color: "var(--nf-accent)" }}>●</span> Auditoría</span>
+          <span><span style={{ color: "var(--nf-primary-active)" }}>●</span> Auditoría</span>
           <span><span style={{ color: "var(--nf-warning-text)" }}>●</span> Planificación</span>
         </div>
 
         <div style={{ marginTop: 18, padding: 14, borderRadius: 10, border: "1px solid var(--nf-line)", background: "var(--nf-surface-muted)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <span style={{ fontFamily: "var(--font-display)", fontSize: 14, fontWeight: 700 }}>Auditoría interna · 03 dic</span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>Programada</span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-primary-active)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>Programada</span>
           </div>
           <div style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>ISO 9001:2015 · alcance: Producción + Calidad · 12 procesos</div>
         </div>
@@ -855,7 +855,7 @@ function ScreenEvid() {
             <div style={{ aspectRatio: "1.4", borderRadius: 6, background: "linear-gradient(180deg, var(--nf-glass-2), transparent)", border: "1px solid var(--nf-line)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 14, color: f.k === "VID" ? "oklch(0.78 0.13 25)" : f.k === "PNG" ? "var(--nf-accent-3)" : f.k === "XLS" ? "var(--nf-accent)" : "var(--nf-ink-2)" }}>{f.k}</div>
             <div>
               <div style={{ fontSize: 11, color: "var(--nf-ink-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.t}</div>
-              <div style={{ fontSize: 10, color: "var(--nf-accent)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em", marginTop: 2 }}>↳ {f.l}</div>
+              <div style={{ fontSize: 10, color: "var(--nf-primary-active)", fontFamily: "var(--font-mono)", letterSpacing: "0.04em", marginTop: 2 }}>↳ {f.l}</div>
             </div>
           </div>
         ))}
@@ -874,7 +874,7 @@ function WalkCanvas({ active }: { active: string }) {
         <span style={{ marginLeft: 10, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.06em" }}>
           normaflow.app / {active}
         </span>
-        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-accent)" }}>● en vivo</span>
+        <span style={{ marginLeft: "auto", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-primary-active)" }}>● en vivo</span>
       </div>
 
       {active === "doc" && <ScreenDoc/>}
@@ -1115,7 +1115,7 @@ function NfStandards() {
               <div className="nf-iso-badge" style={{ position: "relative", left: 0, top: 0, width: 64, height: 64 }}>
                 <div>
                   <div className="top">ISO</div>
-                  <div className="num" style={{ color: "var(--nf-accent)" }}>9001</div>
+                  <div className="num" style={{ color: "var(--nf-primary-active)" }}>9001</div>
                   <div className="yr">2015</div>
                 </div>
               </div>
@@ -1126,7 +1126,7 @@ function NfStandards() {
             </div>
             <ul>
               {["GAP Assessment por cláusula", "Control documental completo", "Auditorías y CAPA", "Indicadores de calidad", "Revisión por dirección"].map((t) => (
-                <li key={t}><span style={{ color: "var(--nf-accent)" }}><Ic.check/></span>{t}</li>
+                <li key={t}><span style={{ color: "var(--nf-primary-active)" }}><Ic.check/></span>{t}</li>
               ))}
             </ul>
           </div>
@@ -1181,7 +1181,7 @@ function NfAI() {
               "Resumen de hallazgos de auditoría con prioridades",
             ].map((t) => (
               <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
-                <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                <span style={{ color: "var(--nf-primary-active)", marginTop: 4 }}><Ic.check/></span>{t}
               </li>
             ))}
           </ul>
@@ -1328,7 +1328,7 @@ function NfPricing() {
               <ul>
                 {p.features.map((f) => (
                   <li key={f}>
-                    <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-accent)" }}><Ic.check/></span>{f}
+                    <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-primary-active)" }}><Ic.check/></span>{f}
                   </li>
                 ))}
               </ul>
@@ -1363,9 +1363,9 @@ function NfCTA() {
             <a className="nf-btn nf-btn--ghost" href="/signup">Crear cuenta · 14 días gratis</a>
           </div>
           <div style={{ display: "flex", gap: 28, justifyContent: "center", marginTop: 28, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", flexWrap: "wrap" }}>
-            <span><span style={{ color: "var(--nf-accent)" }}>●</span> Sin tarjeta</span>
-            <span><span style={{ color: "var(--nf-accent)" }}>●</span> Sin compromiso</span>
-            <span><span style={{ color: "var(--nf-accent)" }}>●</span> Cancela cuando quieras</span>
+            <span><span style={{ color: "var(--nf-primary-active)" }}>●</span> Sin tarjeta</span>
+            <span><span style={{ color: "var(--nf-primary-active)" }}>●</span> Sin compromiso</span>
+            <span><span style={{ color: "var(--nf-primary-active)" }}>●</span> Cancela cuando quieras</span>
           </div>
         </div>
       </div>

@@ -417,7 +417,7 @@ export default function GroupsClient() {
             <div className="nf-groups-detail-split" style={{ padding: 20 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <Users size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <Users size={18} strokeWidth={2.25} color="var(--nf-primary-active)" aria-hidden />
                   <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Miembros</h4>
                 </div>
                 <div
@@ -527,7 +527,7 @@ export default function GroupsClient() {
 
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <KeyRound size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <KeyRound size={18} strokeWidth={2.25} color="var(--nf-primary-active)" aria-hidden />
                   <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Permisos</h4>
                 </div>
                 <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.55 }}>

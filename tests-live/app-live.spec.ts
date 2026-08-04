@@ -57,7 +57,7 @@ test.describe("NormaFlow live application", () => {
     await expect(page.getByText(state.actorA.reportFileName)).toHaveCount(0);
 
     await page.goto("/app/billing");
-    await expect(page.getByText("Acceso restringido")).toBeVisible();
+    await expect(page).toHaveURL(/\/app\/dashboard\?error=forbidden/);
     await expect(page.getByText(state.actorA.invoiceNumber)).toHaveCount(0);
     await expect(page.getByText(state.actorB.invoiceNumber)).toHaveCount(0);
   });

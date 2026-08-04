@@ -218,7 +218,7 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <header style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-warning-subtle)", display: "grid", placeItems: "center" }}>
-          <Flame size={22} color="#ca8a04" />
+          <Flame size={22} color="var(--nf-warning-text)" />
         </div>
         <div>
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
@@ -233,10 +233,10 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
 
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Consumo periodo" value={Math.round(s.periodConsumption)} suffix=" kWh" />
-        <Stat label="SEU" value={s.significantUses} accent={s.significantUses ? "#ca8a04" : undefined} />
+        <Stat label="SEU" value={s.significantUses} accent={s.significantUses ? "var(--nf-warning-text)" : undefined} />
         <Stat label="EnPI activos" value={s.enpisActive} />
         <Stat label="Coste periodo" value={s.periodCost} suffix=" €" />
-        <Stat label="Acciones abiertas" value={s.actionsOpen} accent={s.actionsOpen ? "#d68a1a" : undefined} />
+        <Stat label="Acciones abiertas" value={s.actionsOpen} accent={s.actionsOpen ? "var(--nf-warning-text)" : undefined} />
         <Stat label="Ahorro verificado" value={Math.round(s.absoluteSavings)} suffix=" kWh" accent="var(--nf-success)" />
       </div> : <IsoSectionMetrics items={tab === "sources" ? [{ label: "Fuentes activas", value: s.sources }, { label: "Usos de energía", value: s.uses }, { label: "Consumo del periodo", value: Math.round(s.periodConsumption), suffix: " kWh" }] : tab === "review" ? [{ label: "Revisiones abiertas", value: s.reviewsOpen, accent: s.reviewsOpen ? "var(--nf-danger-text)" : undefined }, { label: "Fuentes", value: s.sources }, { label: "Líneas base", value: s.baselines }] : tab === "seu" ? [{ label: "Usos significativos", value: s.significantUses, accent: s.significantUses ? "var(--nf-warning-text)" : undefined }, { label: "Usos de energía", value: s.uses }, { label: "EnPI activos", value: s.enpisActive }] : tab === "baseline" ? [{ label: "Líneas base activas", value: s.baselines }, { label: "EnPI activos", value: s.enpisActive }, { label: "Consumo del periodo", value: Math.round(s.periodConsumption), suffix: " kWh" }] : tab === "enpi" ? [{ label: "EnPI activos", value: s.enpisActive }, { label: "Consumo del periodo", value: Math.round(s.periodConsumption), suffix: " kWh" }, { label: "Coste del periodo", value: s.periodCost, suffix: " €" }] : tab === "meters" ? [{ label: "Medidores", value: s.meters }, { label: "Consumo medido", value: Math.round(s.periodConsumption), suffix: " kWh" }, { label: "Emisiones", value: s.periodEmissions, suffix: " tCO2e" }] : tab === "variables" ? [{ label: "Variables relevantes", value: s.uses }, { label: "Medidores", value: s.meters }, { label: "EnPI activos", value: s.enpisActive }] : tab === "opportunities" ? [{ label: "Oportunidades abiertas", value: s.opportunitiesOpen, accent: s.opportunitiesOpen ? "var(--nf-warning-text)" : undefined }, { label: "Acciones abiertas", value: s.actionsOpen }, { label: "Ahorro verificado", value: Math.round(s.absoluteSavings), suffix: " kWh" }] : tab === "actions" ? [{ label: "Acciones abiertas", value: s.actionsOpen, accent: s.actionsOpen ? "var(--nf-warning-text)" : undefined }, { label: "Oportunidades", value: s.opportunitiesOpen }, { label: "Ahorro verificado", value: Math.round(s.absoluteSavings), suffix: " kWh" }] : tab === "savings" ? [{ label: "Verificaciones cerradas", value: s.savingsVerified }, { label: "Ahorro verificado", value: Math.round(s.absoluteSavings), suffix: " kWh", accent: "var(--nf-success-text)" }, { label: "Coste del periodo", value: s.periodCost, suffix: " €" }] : [{ label: "EnPI activos", value: s.enpisActive }, { label: "Medidores", value: s.meters }, { label: "Acciones abiertas", value: s.actionsOpen }]} />}
 

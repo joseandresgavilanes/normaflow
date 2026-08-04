@@ -6,6 +6,11 @@ loadEnvConfig(process.cwd());
 const testEnv = getLiveTestEnvironment();
 // Prisma instances created by global setup and tests must target the same
 // explicitly configured testing database as the application web server.
+// Preserve the normal targets so child workers can re-run the isolation guard
+// after DATABASE_URL is replaced with TEST_DATABASE_URL.
+if (!process.env.NORMAFLOW_NORMAL_DATABASE_URL && process.env.DATABASE_URL) process.env.NORMAFLOW_NORMAL_DATABASE_URL = process.env.DATABASE_URL;
+if (!process.env.NORMAFLOW_NORMAL_DIRECT_URL && process.env.DIRECT_URL) process.env.NORMAFLOW_NORMAL_DIRECT_URL = process.env.DIRECT_URL;
+if (!process.env.NORMAFLOW_NORMAL_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL) process.env.NORMAFLOW_NORMAL_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 process.env.DATABASE_URL = testEnv.databaseUrl;
 process.env.DIRECT_URL = testEnv.directUrl;
 process.env.NEXT_PUBLIC_SUPABASE_URL = testEnv.supabaseUrl;
@@ -25,14 +30,15 @@ export default defineConfig({
   globalSetup: "./tests-live/global-setup.ts",
   globalTeardown: "./tests-live/global-teardown.ts",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: "http://127.0.0.1:3300",
+    locale: "es-EC",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
   projects: [{ name: "live-chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npm run dev -- -p 3100",
-    url: "http://127.0.0.1:3100/login",
+    command: "npm run dev -- -p 3300",
+    url: "http://127.0.0.1:3300/login",
     reuseExistingServer: false,
     timeout: 120_000,
     env: {
@@ -44,7 +50,8 @@ export default defineConfig({
       SUPABASE_SERVICE_ROLE_KEY: testEnv.supabaseServiceRoleKey,
       AUTH_DEMO_MODE: "false",
       NEXT_PUBLIC_AUTH_DEMO_MODE: "false",
-      NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3100",
+      NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3300",
+      NEXT_DIST_DIR: ".next-playwright-live",
     },
   },
 });

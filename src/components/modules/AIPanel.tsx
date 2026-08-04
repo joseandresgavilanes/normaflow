@@ -90,7 +90,7 @@ export default function AIPanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Sparkles size={18} strokeWidth={2} color="#16A34A" aria-hidden />
+            <Sparkles size={18} strokeWidth={2} color="var(--nf-success-text)" aria-hidden />
             <span style={{ fontSize: 15, fontWeight: 700, color: "var(--nf-ink)" }}>
               {t("ai.title")}
             </span>
@@ -169,7 +169,7 @@ export default function AIPanel({
         {!result && !loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-              <Sparkles size={40} strokeWidth={1.5} color="#16A34A" aria-hidden />
+              <Sparkles size={40} strokeWidth={1.5} color="var(--nf-success-text)" aria-hidden />
             </div>
             <p
               style={{

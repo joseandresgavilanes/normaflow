@@ -37,7 +37,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             ← Casos de éxito
           </Link>
           <div style={{ marginTop: 24, display: "flex", gap: 8, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-            <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>{c.industry}</span>
+            <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", border: "1px solid var(--nf-primary-border)", letterSpacing: "0.06em" }}>{c.industry}</span>
             <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
           </div>
           <h1 className="nf-h-section" style={{ marginTop: 18 }}>{c.company}</h1>
@@ -46,7 +46,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             que aparecen son los datos de ejemplo del producto. Describe un uso
             plausible de NormaFlow, no resultados obtenidos por un cliente.
           </p>
-          <p style={{ fontSize: 20, color: "var(--nf-accent)", fontWeight: 600, marginTop: 14, marginBottom: 36, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
+          <p style={{ fontSize: 20, color: "var(--nf-primary-active)", fontWeight: 600, marginTop: 14, marginBottom: 36, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
             ↑ {c.result}
           </p>
 
@@ -66,7 +66,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
                 <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--nf-ink)" }}>{m.label}</span>
                 <span style={{ color: "var(--nf-ink-3)", fontFamily: "var(--font-mono)", fontSize: 13 }}>
                   <span style={{ textDecoration: "line-through", marginRight: 10 }}>{m.before}</span>
-                  <span style={{ color: "var(--nf-accent)", fontWeight: 700 }}>{m.after}</span>
+                  <span style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>{m.after}</span>
                 </span>
               </div>
             ))}

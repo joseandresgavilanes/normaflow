@@ -51,7 +51,7 @@ export default function IncidentsLiveClient({ initial }: { initial: IncidentsPay
       <Metric label="Incidentes" value={initial.summary.total} icon={<Siren size={19} />} />
       <Metric label="Abiertos" value={initial.summary.open} icon={<Siren size={19} />} color="var(--nf-warning-text)" />
       <Metric label="Críticos abiertos" value={initial.summary.critical} icon={<Siren size={19} />} color="var(--nf-danger-text)" />
-      <Metric label="Con notificación" value={initial.summary.notifiable} icon={<Siren size={19} />} color="#5266F6" />
+      <Metric label="Con notificación" value={initial.summary.notifiable} icon={<Siren size={19} />} color="var(--nf-primary-active)" />
     </div>
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>

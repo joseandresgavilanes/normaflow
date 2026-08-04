@@ -224,10 +224,10 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       )}
 
       <div className="nf-metric-strip">
-        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="#16A34A" />
-        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="#5266F6" />
+        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="var(--nf-success-text)" />
+        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="var(--nf-primary-active)" />
         <Kpi icon={<GraduationCap size={22} />} value={String(overdue)} label="Vencidas" color="#DC2626" />
-        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="#D97706" />
+        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="var(--nf-warning-text)" />
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
@@ -312,7 +312,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             {personnel.map((person) => {
               const rows = assignments.filter((assignment) => assignment.personnelId === person.id);
               const done = rows.filter((assignment) => assignment.status === "COMPLETED").length;
-              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="#5266F6" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
+              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="var(--nf-primary-active)" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
             })}
           </div>
         )
@@ -433,7 +433,7 @@ function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: stri
 }
 
 function EmptyState({ title, text, action, actionLabel, href }: { title: string; text: string; action?: () => void; actionLabel: string; href?: string }) {
-  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="#5266F6" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
+  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="var(--nf-primary-active)" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
 }
 
 function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onCancel: () => void; disabled?: boolean }) {

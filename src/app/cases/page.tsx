@@ -48,14 +48,14 @@ export default function CasesPage() {
               >
                 <div>
                   <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>{c.industry}</span>
+                    <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", border: "1px solid var(--nf-primary-border)", letterSpacing: "0.06em" }}>{c.industry}</span>
                     <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.normas}</span>
                     <span style={{ padding: "4px 10px", borderRadius: 99, background: "var(--nf-glass-2)", color: "var(--nf-ink-2)", border: "1px solid var(--nf-line)" }}>{c.employees}</span>
                   </div>
                   <h3 className="nf-h-3">{c.company}</h3>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-accent)", marginTop: 8, marginBottom: 14 }}>↑ {c.result}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-primary-active)", marginTop: 8, marginBottom: 14 }}>↑ {c.result}</div>
                   <p style={{ fontSize: 15, color: "var(--nf-ink-2)", fontStyle: "italic", lineHeight: 1.7, margin: "0 0 18px" }}>&ldquo;{c.quote}&rdquo;</p>
-                  <Link href={`/cases/${c.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-accent)" }}>
+                  <Link href={`/cases/${c.slug}`} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 14, color: "var(--nf-primary-active)" }}>
                     Ver caso completo <Ic.arrow/>
                   </Link>
                 </div>

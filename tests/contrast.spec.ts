@@ -20,6 +20,7 @@ import { test } from "./fixtures/normaflow";
  */
 
 const RUTAS = [
+  // Aplicación: una por familia de pantalla.
   "/app/dashboard",
   "/app/documents",
   "/app/risks",
@@ -28,6 +29,17 @@ const RUTAS = [
   "/app/assets",
   "/app/standards",
   "/app/settings/organization",
+  "/app/activity",
+  "/app/billing",
+  "/app/energy",
+  "/app/integrated",
+  "/app/setup",
+  "/app/gap",
+  // Públicas: el marketing no tenía apariencia oscura y es donde más falló.
+  "/home",
+  "/pricing",
+  "/login",
+  "/iso9001",
 ];
 
 const SONDA = `() => {
@@ -97,7 +109,10 @@ const SONDA = `() => {
 
 async function medir(page: Page, ruta: string) {
   await page.goto(ruta, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("#nf-main", { timeout: 25000 });
+  // `#nf-main` es el landmark del shell de la aplicación; las rutas públicas
+  // tienen el suyo desde `NfShell`. Esperar el selector específico dejaba
+  // colgadas las cuatro públicas.
+  await page.waitForSelector(ruta.startsWith("/app/") ? "#nf-main" : "main", { timeout: 40000 });
   await page.waitForTimeout(400);
   return page.evaluate(`(${SONDA})()`) as Promise<string[]>;
 }

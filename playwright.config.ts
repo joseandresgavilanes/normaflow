@@ -26,7 +26,7 @@ export default defineConfig({
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
   ],
   webServer: {
-    command: "npm run dev -- -H 127.0.0.1 -p 3200",
+    command: "exec ./node_modules/.bin/next dev -H 127.0.0.1 -p 3200",
     url: "http://127.0.0.1:3200/login",
     reuseExistingServer: false,
     timeout: 120000,
@@ -35,6 +35,7 @@ export default defineConfig({
       AUTH_DEMO_MODE: "true",
       NEXT_PUBLIC_AUTH_DEMO_MODE: "true",
       NEXT_PUBLIC_APP_URL: "http://127.0.0.1:3200",
+      NEXT_DIST_DIR: ".next-playwright",
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || "playwright-test-secret-min-32-chars!!",
       DEMO_EMAIL: "demo@normaflow.io",
       DEMO_PASSWORD: "NormaFlow2025!",

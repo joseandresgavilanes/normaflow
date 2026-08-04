@@ -385,7 +385,7 @@ a.nf-app-btn-soft-success {
 }
 
 .nf-app-btn-ghost:disabled {
-  color: #8a96a8;
+  color: var(--nf-text-secondary);
   border-color: var(--nf-border);
   cursor: not-allowed;
   box-shadow: none;

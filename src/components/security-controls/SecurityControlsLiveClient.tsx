@@ -64,7 +64,7 @@ export default function SecurityControlsLiveClient({ initial }: { initial: Secur
 
     <div className="nf-metric-strip">
       <Metric label="Controles activos" value={initial.summary.total} icon={<ShieldCheck size={19} />} />
-      <Metric label="Incluidos" value={initial.summary.included} icon={<FileCheck2 size={19} />} color="#5266F6" />
+      <Metric label="Incluidos" value={initial.summary.included} icon={<FileCheck2 size={19} />} color="var(--nf-primary-active)" />
       <Metric label="Cobertura" value={`${initial.summary.coverage}%`} icon={<Link2 size={19} />} color="var(--nf-success-text)" />
       <Metric label="Revisiones vencidas" value={initial.summary.overdue} icon={<Timer size={19} />} color="var(--nf-danger-text)" />
     </div>

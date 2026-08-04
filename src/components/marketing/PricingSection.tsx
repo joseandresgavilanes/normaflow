@@ -135,12 +135,12 @@ export default function PricingSection() {
                 <ul>
                   {p.features.map((f) => (
                     <li key={f}>
-                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-accent)" }}><Ic.check/></span>{f}
+                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-primary-active)" }}><Ic.check/></span>{f}
                     </li>
                   ))}
                   {mode === "lifetime" && p.name !== "Enterprise" && (
                     <li>
-                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-accent)" }}><Ic.check/></span>
+                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-primary-active)" }}><Ic.check/></span>
                       Instalación remota + 12 meses de actualizaciones
                     </li>
                   )}

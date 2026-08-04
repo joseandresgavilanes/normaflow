@@ -51,7 +51,7 @@ export default function FeaturesPage() {
                 }}
               >
                 <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--nf-accent-soft)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)", marginBottom: 18 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--nf-accent-soft)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)", marginBottom: 18 }}>
                     <Icon />
                   </div>
                   <h3 className="nf-h-3">{feat.title}</h3>
@@ -59,7 +59,7 @@ export default function FeaturesPage() {
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                     {feat.bullets.map((b) => (
                       <li key={b} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: "var(--nf-ink-2)" }}>
-                        <span style={{ color: "var(--nf-accent)", marginTop: 3 }}><Ic.check/></span>{b}
+                        <span style={{ color: "var(--nf-primary-active)", marginTop: 3 }}><Ic.check/></span>{b}
                       </li>
                     ))}
                   </ul>
@@ -75,7 +75,7 @@ export default function FeaturesPage() {
                   position: "relative",
                   overflow: "hidden",
                 }}>
-                  <div style={{ color: "var(--nf-accent)", transform: "scale(4)", opacity: 0.35 }}>
+                  <div style={{ color: "var(--nf-primary-active)", transform: "scale(4)", opacity: 0.35 }}>
                     <Icon />
                   </div>
                   <div style={{ position: "absolute", bottom: 14, left: 16, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.16em", textTransform: "uppercase" }}>

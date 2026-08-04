@@ -82,7 +82,7 @@
 .nf-app-btn-success {
   color: var(--nf-text-on-primary);
   background: var(--nf-success);
-  border-color: #16A34A;
+  border-color: var(--nf-success-text);
 }
 
 .nf-app-btn-success:hover:not(:disabled) {
@@ -118,7 +118,7 @@
 }
 
 .nf-app-btn-soft-success {
-  color: #16A34A;
+  color: var(--nf-success-text);
   background: #16A34A18;
   border-color: #16A34A40;
 }

@@ -46,7 +46,7 @@ test.describe("information assets live tenant boundary", () => {
 
   test("permite clasificar el activo propio y detecta revisión vencida", async () => {
     const clientA = await actorClient(state.actorA);
-    const classify = await clientA.from("asset_classifications").insert({ organizationId: state.actorA.organizationId, assetId: assetAId, confidentiality: "HIGH", integrity: "HIGH", availability: "MEDIUM", classification: "CONFIDENTIAL" }).select("id");
+    const classify = await clientA.from("asset_classifications").insert({ id: `live_asset_classification_${state.runId}`, organizationId: state.actorA.organizationId, assetId: assetAId, confidentiality: "HIGH", integrity: "HIGH", availability: "MEDIUM", classification: "CONFIDENTIAL", updatedAt: new Date().toISOString() }).select("id");
     expect(classify.error).toBeNull();
     expect(classify.data).toHaveLength(1);
     const overdue = await clientA.from("information_assets").select("id,nextReviewDate").lt("nextReviewDate", new Date().toISOString());
@@ -59,6 +59,7 @@ test.describe("information assets live tenant boundary", () => {
     const insert = await viewer.from("information_assets").insert({ organizationId: state.actorA.organizationId, code: "ACT-V", name: "x", category: "SOFTWARE" });
     expect(insert.error).not.toBeNull();
     const update = await viewer.from("information_assets").update({ name: "y" }).eq("id", assetAId).select("id");
-    expect(update.error).not.toBeNull();
+    expect(update.error).toBeNull();
+    expect(update.data).toEqual([]);
   });
 });

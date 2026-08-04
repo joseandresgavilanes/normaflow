@@ -463,24 +463,47 @@ ALTER TABLE "static_factors" ADD CONSTRAINT "static_factors_effective_window"
 ALTER TABLE "energy_sources" ADD CONSTRAINT "energy_sources_renewable_range"
   CHECK ("renewableShare" IS NULL OR ("renewableShare" >= 0 AND "renewableShare" <= 100));
 
--- ─── Tenant trigger for SEU / reading / verification children ─
-CREATE OR REPLACE FUNCTION public.nf_validate_enms_tenant() RETURNS TRIGGER
+-- ─── Tenant triggers for SEU / reading / verification children ─
+-- One function per table (not a single TG_TABLE_NAME-branching function):
+-- PL/pgSQL resolves `NEW."col"` against the actual per-table row type at
+-- runtime for a generic RECORD, and does NOT reliably short-circuit that
+-- resolution inside `IF cond1 AND cond2 THEN` — referencing a column that
+-- exists on table B (e.g. NEW."meterId") raises even while validating table A
+-- (significant_energy_uses), because A has no such column. Each trigger below
+-- only ever sees its own table's row shape.
+CREATE OR REPLACE FUNCTION public.nf_validate_seu_tenant() RETURNS TRIGGER
 LANGUAGE plpgsql AS $$
 DECLARE parent_org TEXT;
 BEGIN
-  IF TG_TABLE_NAME = 'significant_energy_uses' AND NEW."energyUseId" IS NOT NULL THEN
+  IF NEW."energyUseId" IS NOT NULL THEN
     SELECT "organizationId" INTO parent_org FROM "energy_uses" WHERE id = NEW."energyUseId";
     IF parent_org IS NULL OR parent_org <> NEW."organizationId" THEN
       RAISE EXCEPTION 'ENMS tenant mismatch: energy use % not in org %', NEW."energyUseId", NEW."organizationId";
     END IF;
   END IF;
-  IF TG_TABLE_NAME = 'energy_readings' AND NEW."meterId" IS NOT NULL THEN
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.nf_validate_energy_reading_tenant() RETURNS TRIGGER
+LANGUAGE plpgsql AS $$
+DECLARE parent_org TEXT;
+BEGIN
+  IF NEW."meterId" IS NOT NULL THEN
     SELECT "organizationId" INTO parent_org FROM "energy_meters" WHERE id = NEW."meterId";
     IF parent_org IS NULL OR parent_org <> NEW."organizationId" THEN
       RAISE EXCEPTION 'ENMS tenant mismatch: meter % not in org %', NEW."meterId", NEW."organizationId";
     END IF;
   END IF;
-  IF TG_TABLE_NAME = 'energy_saving_verifications' AND NEW."actionPlanId" IS NOT NULL THEN
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.nf_validate_energy_verification_tenant() RETURNS TRIGGER
+LANGUAGE plpgsql AS $$
+DECLARE parent_org TEXT;
+BEGIN
+  IF NEW."actionPlanId" IS NOT NULL THEN
     SELECT "organizationId" INTO parent_org FROM "energy_action_plans" WHERE id = NEW."actionPlanId";
     IF parent_org IS NULL OR parent_org <> NEW."organizationId" THEN
       RAISE EXCEPTION 'ENMS tenant mismatch: action plan % not in org %', NEW."actionPlanId", NEW."organizationId";
@@ -491,11 +514,11 @@ END;
 $$;
 
 CREATE TRIGGER nf_significant_energy_uses_tenant BEFORE INSERT OR UPDATE ON "significant_energy_uses"
-  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_enms_tenant();
+  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_seu_tenant();
 CREATE TRIGGER nf_energy_readings_tenant BEFORE INSERT OR UPDATE ON "energy_readings"
-  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_enms_tenant();
+  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_energy_reading_tenant();
 CREATE TRIGGER nf_energy_saving_verifications_tenant BEFORE INSERT OR UPDATE ON "energy_saving_verifications"
-  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_enms_tenant();
+  FOR EACH ROW EXECUTE FUNCTION public.nf_validate_energy_verification_tenant();
 
 -- ─── GRANTS ──────────────────────────────────────────
 DO $$

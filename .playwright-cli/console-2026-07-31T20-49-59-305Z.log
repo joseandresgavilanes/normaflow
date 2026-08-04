@@ -1,0 +1,60 @@
+[     433ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25630
+[   36663ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:196
+[   37183ms] [WARNING] [Fast Refresh] performing full reload
+
+Fast Refresh will perform a full reload when you edit a file that's imported by modules outside of the React rendering tree.
+You might have a file which exports a React component but also exports a value that is imported by a non-React component file.
+Consider migrating the non-React component export to a separate file and importing it into both files.
+
+It is also possible the parent component of the component you edited is a class component, which disables Fast Refresh.
+Fast Refresh requires at least one parent function component in your React tree. @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:111
+[   38552ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25630
+[   55939ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:196
+[   56880ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3002/_next/static/webpack/fda144de06f2cd59.webpack.hot-update.json:0
+[   57234ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:196
+[   58674ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3002/_next/static/webpack/884d760cf5c44581.webpack.hot-update.json:0
+[   59411ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/home?_rsc=10fqy:0
+[   59424ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3002/home:0
+[   60563ms] [INFO] %cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold @ webpack-internal:///(pages-dir-browser)/./node_modules/react-dom/cjs/react-dom.development.js:29889
+[   60626ms] TypeError: __webpack_modules__[moduleId] is not a function
+    at __webpack_require__ (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/webpack-runtime.js:25:42)
+    at eval (webpack-internal:///(rsc)/./node_modules/next/dist/server/app-render/encryption-utils.js:40:35)
+    at <unknown> (rsc)/./node_modules/next/dist/server/app-render/encryption-utils.js (/Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/vendor-chunks/next.js:861:1)
+    at __webpack_require__ (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/webpack-runtime.js:25:42)
+    at eval (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fhome%2Fpage&page=%2Fhome%2Fpage&appPaths=%2Fhome%2Fpage&pagePath=private-next-app-dir%2Fhome%2Fpage.tsx&appDir=%2FUsers%2F5m1l33y%2FDocuments%2Fcode%2Fstartup%2Fverk%2Fnormaflow%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2F5m1l33y%2FDocuments%2Fcode%2Fstartup%2Fverk%2Fnormaflow&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:27:103)
+    at <unknown> (rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fhome%2Fpage&page=%2Fhome%2Fpage&appPaths=%2Fhome%2Fpage&pagePath=private-next-app-dir%2Fhome%2Fpage.tsx&appDir=%2FUsers%2F5m1l33y%2FDocuments%2Fcode%2Fstartup%2Fverk%2Fnormaflow%2Fsrc%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2FUsers%2F5m1l33y%2FDocuments%2Fcode%2Fstartup%2Fverk%2Fnormaflow&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=! (/Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/app/home/page.js:22:1)
+    at __webpack_require__ (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/webpack-runtime.js:25:42)
+    at __webpack_exec__ (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/app/home/page.js:631:39)
+    at <unknown> (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/app/home/page.js:632:158)
+    at __webpack_require__.X (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/webpack-runtime.js:155:21)
+    at <unknown> (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/app/home/page.js:632:47)
+    at Object.<anonymous> (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/.next/server/app/home/page.js:635:3)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+    at mod.require (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/require-hook.js:68:28)
+    at require (node:internal/modules/helpers:147:16)
+    at requirePage (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/require.js:99:80)
+    at loadComponentsImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/load-components.js:132:57)
+    at async DevServer.findPageComponentsImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/next-server.js:899:36)
+    at async DevServer.findPageComponents (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/dev/next-dev-server.js:706:16)
+    at async DevServer.renderPageComponent (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/base-server.js:1460:24)
+    at async DevServer.renderToResponseImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/base-server.js:1514:32)
+    at async DevServer.pipeImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/base-server.js:1025:25)
+    at async NextNodeServer.handleCatchallRenderRequest (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/next-server.js:393:17)
+    at async DevServer.handleRequestImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/base-server.js:916:17)
+    at async (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/dev/next-dev-server.js:400:20)
+    at async Span.traceAsyncFn (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/dev/next-dev-server.js:396:24)
+    at async invokeRender (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/lib/router-server.js:240:21)
+    at async handleRequest (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/lib/router-server.js:437:24)
+    at async requestHandlerImpl (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/lib/router-server.js:485:13)
+    at async Server.requestListener (file:///Users/5m1l33y/Documents/code/startup/verk/normaflow/node_modules/next/dist/server/lib/start-server.js:228:13)
+[   60625ms] [LOG] [HMR] connected @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/websocket.js:45
+[   66010ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/hot-reloader-pages.js:206
+[   66839ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///(pages-dir-browser)/./node_modules/next/dist/client/dev/hot-reloader/pages/hot-reloader-pages.js:347
+[   68853ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:25630
