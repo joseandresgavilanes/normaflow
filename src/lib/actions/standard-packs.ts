@@ -31,7 +31,10 @@ export async function installStandardPack(packCode: string) {
   if (!pack) throw new Error(`Paquete ${code} no encontrado.`);
 
   const result = await prisma.$transaction(async (tx) => {
-    const installed = await installPack(pack, tx);
+    // Acción explícita de administración: aquí se reinstala de verdad, aunque
+    // la versión coincida. El cortocircuito de `installPack` es para el camino
+    // perezoso, no para quien pulsa «instalar».
+    const installed = await installPack(pack, tx, { force: true });
     await writeAuditLog(tx, {
       ctx, action: "create", module: "packs", recordId: code,
       after: installed as unknown as Record<string, unknown>,

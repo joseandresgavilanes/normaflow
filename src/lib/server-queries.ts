@@ -240,7 +240,6 @@ export async function getDocumentsPayload() {
   const authorization = await requireAuthorization("documents:read");
   const { ctx, can } = authorization;
   const organizationId = ctx.organization.id;
-  await ensureDocumentTemplates();
   const scope = await getCollaboratorScope(ctx);
   const canCreate = can("documents:create");
   const canReadProcesses = can("processes:read");
@@ -304,6 +303,25 @@ export async function getDocumentsPayload() {
       orderBy: [{ edition: { code: "asc" } }, { name: "asc" }],
     }),
   ]);
+
+  // `ensureDocumentTemplates()` se llamaba AQUÍ, antes de leer nada. Recorre el
+  // catálogo de normas llamando a `installPack` una por una, así que cada visita
+  // a esta pantalla reinstalaba el catálogo ISO entero antes de pintar la primera
+  // fila: la ruta no llegaba a terminar de cargar nunca.
+  //
+  // Sembrar es una operación de arranque —`scripts/seed.ts`, el bootstrap de la
+  // cuenta— y no del camino de lectura. Se conserva solo como red de seguridad
+  // para una base sin sembrar, y se paga únicamente cuando de verdad no hay nada
+  // que leer, no en cada carga.
+  let documentTemplates = templates;
+  if (documentTemplates.length === 0) {
+    await ensureDocumentTemplates();
+    documentTemplates = await prisma.documentTemplate.findMany({
+      where: { isActive: true },
+      include: { clause: { select: { code: true, title: true } } },
+      orderBy: [{ standardCode: "asc" }, { sortOrder: "asc" }],
+    });
+  }
   const memberGroupPermissions = canReadMembers ? await prisma.groupMembership.findMany({
     where: { userId: { in: members.map((membership) => membership.userId) }, group: { organizationId } },
     select: { userId: true, group: { select: { permissions: { select: { permission: true } } } } },
@@ -404,7 +422,7 @@ export async function getDocumentsPayload() {
       canApprove: roleOrGroupCan(m.role, groupPermissionsByUser.get(m.userId) ?? [], "documents:approve"),
     }))),
     templates: [
-      ...templates.map((template) => ({
+      ...documentTemplates.map((template) => ({
         id: template.id,
         code: template.code,
         standardCode: template.standardCode,

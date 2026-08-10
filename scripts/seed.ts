@@ -47,7 +47,7 @@ async function main() {
 
   // Standard Pack Engine: install the built-in norm packs (families, editions,
   // requirement trees, mappings, GAP/audit templates, evidence rules).
-  await installAllPacks(prisma);
+  await installAllPacks(prisma, { force: true });
   const iso9001 = await prisma.standardEdition.findFirstOrThrow({ where: { family: { code: "ISO_9001" } } });
   const iso27001 = await prisma.standardEdition.findFirstOrThrow({ where: { family: { code: "ISO_27001" } } });
 

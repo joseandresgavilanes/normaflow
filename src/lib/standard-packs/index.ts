@@ -62,6 +62,8 @@ export type InstallPackResult = {
   templates: number;
   mappings: number;
   frozenActiveEditions: number;
+  /** Cierto cuando el pack ya estaba instalado en esta versión y no se reescribió. */
+  skipped?: boolean;
 };
 
 const levelFromCode = (code: string) => code.split(".").length;
@@ -78,7 +80,11 @@ const levelFromCode = (code: string) => code.split(".").length;
  * - Si el manifest trae catalogVersion distinta sobre la misma editionCode ACTIVE → error
  *   (fuerza bump de editionCode, no silent overwrite).
  */
-export async function installPack(input: unknown, db: Db = prisma): Promise<InstallPackResult> {
+export async function installPack(
+  input: unknown,
+  db: Db = prisma,
+  opciones: { force?: boolean } = {},
+): Promise<InstallPackResult> {
   const manifest = parsePackManifest(input);
   const result: InstallPackResult = {
     packCode: manifest.code,
@@ -86,6 +92,29 @@ export async function installPack(input: unknown, db: Db = prisma): Promise<Inst
     editions: 0, requirements: 0, evidenceRules: 0, gapQuestions: 0, auditChecklist: 0, templates: 0, mappings: 0,
     frozenActiveEditions: 0,
   };
+
+  // Reinstalar un pack que ya está en esta misma versión son miles de escrituras
+  // secuenciales que no cambian una sola fila. Importa porque `ensureStandardCatalog`
+  // entra aquí una vez POR NORMA: sin esta salida, cualquier código que recorra el
+  // catálogo multiplica ese coste por el número de normas. Es lo que dejaba
+  // /app/documents cargando indefinidamente.
+  //
+  // No basta con que exista el pack: se exige que estén sus ediciones, para que una
+  // instalación interrumpida a medias no se dé por buena. Quien instala a propósito
+  // —semillas, acción de administración— pasa `force` y reescribe todo.
+  if (!opciones.force) {
+    const instalado = await db.standardPack.findUnique({
+      where: { code: manifest.code },
+      select: { version: true, lifecycleStatus: true, _count: { select: { editionLinks: true } } },
+    });
+    if (
+      instalado
+      && instalado.version === manifest.version
+      && instalado._count.editionLinks >= manifest.editions.length
+    ) {
+      return { ...result, lifecycleStatus: instalado.lifecycleStatus, skipped: true };
+    }
+  }
 
   const pack = await db.standardPack.upsert({
     where: { code: manifest.code },
@@ -309,9 +338,12 @@ export async function installCrosswalk(db: Db = prisma): Promise<number> {
 }
 
 /** Install every built-in pack (used by seeds and bootstrap). Order matters for mappings. */
-export async function installAllPacks(db: Db = prisma): Promise<InstallPackResult[]> {
+export async function installAllPacks(
+  db: Db = prisma,
+  opciones: { force?: boolean } = {},
+): Promise<InstallPackResult[]> {
   const results: InstallPackResult[] = [];
-  for (const pack of STANDARD_PACKS) results.push(await installPack(pack, db));
+  for (const pack of STANDARD_PACKS) results.push(await installPack(pack, db, opciones));
   // La matriz SIG se instala al final, cuando ya existen todos los requisitos.
   await installCrosswalk(db);
   return results;
