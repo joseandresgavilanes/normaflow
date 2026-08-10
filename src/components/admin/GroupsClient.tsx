@@ -20,6 +20,7 @@ import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import Badge from "@/components/ui/Badge";
 import { useAdminMock, type GroupMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import { Field as UiField } from "@/components/ui/Field";
 
 const PERMISSION_GROUPS: { label: string; permissions: { key: string; label: string }[] }[] = [
   {
@@ -224,8 +225,8 @@ export default function GroupsClient() {
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                color: "#5266F6",
-                background: "rgba(255,255,255,0.75)",
+                color: "var(--nf-primary-active)",
+                background: "var(--nf-glass)",
                 padding: "3px 9px",
                 borderRadius: 99,
                 border: "1px solid rgba(82, 102, 246,0.12)",
@@ -257,7 +258,7 @@ export default function GroupsClient() {
                       padding: "11px 12px",
                       borderRadius: 12,
                       border: active ? "1px solid rgba(82, 102, 246, 0.32)" : "1px solid rgba(255, 255, 255, 0.55)",
-                      background: active ? "#fff" : "rgba(255, 255, 255, 0.42)",
+                      background: active ? "var(--nf-surface)" : "rgba(255, 255, 255, 0.42)",
                       boxShadow: active ? "0 12px 32px -14px rgba(82, 102, 246, 0.35)" : "none",
                       cursor: "pointer",
                       transition: "box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.18s ease",
@@ -269,8 +270,8 @@ export default function GroupsClient() {
                         height: 40,
                         borderRadius: 11,
                         flexShrink: 0,
-                        background: "linear-gradient(135deg, #5266F6 0%, #1a5080 55%, #2563a8 100%)",
-                        color: "#fff",
+                        background: "linear-gradient(135deg, var(--nf-primary) 0%, #1a5080 55%, #2563a8 100%)",
+                        color: "var(--nf-text-on-primary)",
                         fontSize: 13,
                         fontWeight: 600,
                         display: "flex",
@@ -367,7 +368,7 @@ export default function GroupsClient() {
                         fontSize: 12,
                         fontWeight: 600,
                         background: "rgba(46, 139, 87, 0.1)",
-                        color: "#1f5f3f",
+                        color: "var(--nf-text-secondary)",
                         border: "1px solid rgba(46, 139, 87, 0.2)",
                       }}
                     >
@@ -402,8 +403,8 @@ export default function GroupsClient() {
                     marginTop: 14,
                     padding: "10px 14px",
                     borderRadius: 10,
-                    background: "#fff0f0",
-                    color: "#DC2626",
+                    background: "var(--nf-danger-subtle)",
+                    color: "var(--nf-danger-text)",
                     fontSize: 13,
                     border: "1px solid #ffd6d6",
                   }}
@@ -416,7 +417,7 @@ export default function GroupsClient() {
             <div className="nf-groups-detail-split" style={{ padding: 20 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                  <Users size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <Users size={18} strokeWidth={2.25} color="var(--nf-primary-active)" aria-hidden />
                   <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Miembros</h4>
                 </div>
                 <div
@@ -424,7 +425,7 @@ export default function GroupsClient() {
                     maxHeight: 380,
                     overflowY: "auto",
                     borderRadius: 14,
-                    background: "#f3f6fa",
+                    background: "var(--nf-surface-muted)",
                     border: "1px solid rgba(82, 102, 246, 0.07)",
                     padding: 8,
                     display: "flex",
@@ -448,7 +449,7 @@ export default function GroupsClient() {
                             gap: 10,
                             padding: "9px 10px",
                             borderRadius: 11,
-                            background: checked ? "#fff" : "transparent",
+                            background: checked ? "var(--nf-surface)" : "transparent",
                             border: checked ? "1px solid rgba(82, 102, 246, 0.16)" : "1px solid transparent",
                             boxShadow: checked ? "0 6px 18px -10px rgba(82, 102, 246, 0.28)" : "none",
                             cursor: canEdit ? "pointer" : "default",
@@ -475,7 +476,7 @@ export default function GroupsClient() {
                               borderRadius: 9,
                               flexShrink: 0,
                               background: "linear-gradient(145deg, #e2e8f0 0%, #cbd5e1 100%)",
-                              color: "#334155",
+                              color: "var(--nf-text-secondary)",
                               fontSize: 11,
                               fontWeight: 600,
                               display: "flex",
@@ -497,13 +498,13 @@ export default function GroupsClient() {
                 </div>
               </div>
 
-              <div className="mt-5 grid gap-5 border-t border-gray-200 pt-5 lg:grid-cols-2">
+              <div className="mt-5 grid gap-5 border-t nf-border-line pt-5 lg:grid-cols-2">
                 <div>
-                  <h4 className="mb-1 text-sm font-semibold text-gray-900">Procesos asociados</h4>
-                  <p className="mb-3 text-xs text-gray-500">Limita el contexto operativo que este equipo gestiona.</p>
+                  <h4 className="mb-1 text-sm font-semibold nf-text-primary-fg">Procesos asociados</h4>
+                  <p className="mb-3 text-xs nf-text-subtle-fg">Limita el contexto operativo que este equipo gestiona.</p>
                   <div className="grid gap-2">
-                    {admin.state.processes.length === 0 ? <p className="text-xs text-gray-500">No hay procesos disponibles.</p> : admin.state.processes.map((process) => (
-                      <label key={process.id} className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
+                    {admin.state.processes.length === 0 ? <p className="text-xs nf-text-subtle-fg">No hay procesos disponibles.</p> : admin.state.processes.map((process) => (
+                      <label key={process.id} className="flex cursor-pointer items-center gap-2 rounded-lg border nf-border-line px-3 py-2 text-sm hover:nf-surface-muted-bg">
                         <input type="checkbox" checked={(current.processIds ?? []).includes(process.id)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("process", process.id)} className="accent-indigo-600" />
                         <span>{process.code ? `${process.code} · ` : ""}{process.name}</span>
                       </label>
@@ -511,11 +512,11 @@ export default function GroupsClient() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="mb-1 text-sm font-semibold text-gray-900">Módulos asociados</h4>
-                  <p className="mb-3 text-xs text-gray-500">Define qué áreas aparecen como contexto del grupo.</p>
+                  <h4 className="mb-1 text-sm font-semibold nf-text-primary-fg">Módulos asociados</h4>
+                  <p className="mb-3 text-xs nf-text-subtle-fg">Define qué áreas aparecen como contexto del grupo.</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {["documents", "processes", "risks", "audits", "actions", "reporting"].map((module) => (
-                      <label key={module} className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50">
+                      <label key={module} className="flex cursor-pointer items-center gap-2 rounded-lg border nf-border-line px-3 py-2 text-sm hover:nf-surface-muted-bg">
                         <input type="checkbox" checked={(current.modules ?? []).includes(module)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("module", module)} className="accent-indigo-600" />
                         <span className="capitalize">{module}</span>
                       </label>
@@ -526,7 +527,7 @@ export default function GroupsClient() {
 
               <div style={{ minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <KeyRound size={18} strokeWidth={2.25} color="#5266F6" aria-hidden />
+                  <KeyRound size={18} strokeWidth={2.25} color="var(--nf-primary-active)" aria-hidden />
                   <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Permisos</h4>
                 </div>
                 <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--nf-ink-3)", lineHeight: 1.55 }}>
@@ -552,12 +553,12 @@ export default function GroupsClient() {
                             width: 38,
                             height: 38,
                             borderRadius: 11,
-                            background: "#fff",
+                            background: "var(--nf-surface)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             boxShadow: "0 4px 14px -8px rgba(82, 102, 246, 0.35)",
-                            color: "#5266F6",
+                            color: "var(--nf-primary-active)",
                           }}
                         >
                           <Icon size={18} strokeWidth={2.25} aria-hidden />
@@ -580,7 +581,7 @@ export default function GroupsClient() {
                                 padding: "10px 11px",
                                 borderRadius: 12,
                                 border: granted ? "1px solid rgba(82, 102, 246, 0.22)" : "1px solid rgba(82, 102, 246, 0.08)",
-                                background: granted ? "#fff" : "rgba(255,255,255,0.65)",
+                                background: granted ? "var(--nf-surface)" : "rgba(255,255,255,0.65)",
                                 boxShadow: granted ? "0 6px 18px -12px rgba(82, 102, 246, 0.22)" : "none",
                                 cursor: canEdit ? "pointer" : "default",
                               }}
@@ -646,7 +647,7 @@ export default function GroupsClient() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "#5266F6",
+                color: "var(--nf-primary-active)",
               }}
             >
               <KeyRound size={26} strokeWidth={2} aria-hidden />
@@ -666,10 +667,10 @@ export default function GroupsClient() {
       <Modal open={creating || editing != null} onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }} title={creating ? "Nuevo grupo" : "Editar grupo"} width={480}>
         <form onSubmit={(e) => handleSubmit(e, creating ? "create" : "edit")} className="nf-modal-form">
           <Field label="Nombre *">
-            <input name="name" required defaultValue={editing?.name ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Auditores internos" />
+            <input aria-label="Nombre" name="name" required defaultValue={editing?.name ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Auditores internos" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} defaultValue={editing?.description ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <textarea aria-label="Descripción" name="description" rows={3} defaultValue={editing?.description ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           {error && <div className="nf-modal-error">{error}</div>}
           <div className="nf-modal-actions">
@@ -715,10 +716,7 @@ export default function GroupsClient() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }

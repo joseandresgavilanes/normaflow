@@ -137,7 +137,7 @@ export default function ManagementReviewModule() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, marginTop: 13 }}>
               {[["Entradas", r.inputs.length], ["Decisiones", r.decisions.length], ["Acciones", r.decisions.length]].map(([l, v]) => (
                 <div key={String(l)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}>
-                  <strong style={{ display: "block", color: "#5266F6" }}>{v}</strong>
+                  <strong style={{ display: "block", color: "var(--nf-primary-active)" }}>{v}</strong>
                   <span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{l}</span>
                 </div>
               ))}
@@ -177,7 +177,7 @@ export default function ManagementReviewModule() {
                 {detail.inputs.length === 0 && <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin entradas.</p>}
                 {detail.inputs.map(i => (
                   <div key={i.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#5266F6" }}>{TOPIC_LABELS[i.topic]}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)" }}>{TOPIC_LABELS[i.topic]}</span>
                     <p style={{ margin: "4px 0 0", fontSize: 13 }}>{i.content}</p>
                   </div>
                 ))}
@@ -185,12 +185,12 @@ export default function ManagementReviewModule() {
               {detail.status !== "COMPLETED" && detail.status !== "CANCELLED" && (
                 <form onSubmit={e => addInput(e, detail.id)} style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select name="topic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} defaultValue="AUDIT_RESULTS">
+                    <select aria-label="Tema" name="topic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} defaultValue="AUDIT_RESULTS">
                       {Object.entries(TOPIC_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                     </select>
                     <button type="submit" className="nf-app-btn-outline">Añadir entrada</button>
                   </div>
-                  <textarea name="content" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Resumen de la entrada…" required />
+                  <textarea aria-label="Resumen de la entrada" name="content" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Resumen de la entrada…" required />
                 </form>
               )}
             </section>
@@ -210,12 +210,12 @@ export default function ManagementReviewModule() {
               {detail.status !== "COMPLETED" && detail.status !== "CANCELLED" && (
                 <form onSubmit={e => addDecision(e, detail.id)} style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <input name="dtopic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} placeholder="Tema" required />
-                    <input name="owner" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} placeholder="Responsable" />
+                    <input aria-label="Tema" name="dtopic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} placeholder="Tema" required />
+                    <input aria-label="Responsable" name="owner" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} placeholder="Responsable" />
                   </div>
-                  <textarea name="decision" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Decisión / acción…" required />
+                  <textarea aria-label="Decisión / acción" name="decision" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Decisión / acción…" required />
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <input name="dueDate" type="date" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} />
+                    <input aria-label="Fecha de vencimiento" name="dueDate" type="date" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} />
                     <button type="submit" className="nf-app-btn-outline">Registrar decisión</button>
                   </div>
                 </form>

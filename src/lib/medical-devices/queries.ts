@@ -2,7 +2,10 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAuthorization } from "@/lib/permissions/server";
+import { decryptMdSensitiveField } from "@/lib/crypto/field-encryption";
 import { designInputCoverage } from "@/lib/medical-devices/workflows";
+
+const DEFAULT_RETENTION_YEARS = 15;
 
 export type MedicalDevicesPayload = Awaited<ReturnType<typeof getMedicalDevicesPayload>>;
 
@@ -25,6 +28,9 @@ type FieldActionRow = Prisma.FieldSafetyActionGetPayload<{
 type RecallRow = Prisma.ProductRecallGetPayload<{
   include: { device: { select: { code: true; name: true } } };
 }>;
+type PmsRow = Prisma.PostMarketSurveillanceGetPayload<{
+  include: { device: { select: { code: true; name: true } } };
+}>;
 
 export async function getMedicalDevicesPayload() {
   const auth = await requireAuthorization("medical-devices:read");
@@ -34,7 +40,7 @@ export async function getMedicalDevicesPayload() {
   const [
     families, devices, dmrs, dhfs, inputs, outputs, reviews, verifications, validations, transfers,
     riskFiles, suppliers, qualifications, processVals, sterVals, batches, traces,
-    pms, requirements, submissions, members,
+    requirements, submissions, members, retentionPolicy,
   ] = await Promise.all([
     prisma.deviceFamily.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.medicalDevice.findMany({
@@ -92,11 +98,6 @@ export async function getMedicalDevicesPayload() {
       include: { batch: { select: { code: true, lotNumber: true } } },
       orderBy: { code: "asc" },
     }),
-    prisma.postMarketSurveillance.findMany({
-      where: { organizationId },
-      include: { device: { select: { code: true, name: true } } },
-      orderBy: { periodEnd: "desc" },
-    }),
     prisma.regulatoryRequirement.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.regulatorySubmission.findMany({
       where: { organizationId },
@@ -107,15 +108,21 @@ export async function getMedicalDevicesPayload() {
       where: { memberships: { some: { organizationId } } },
       select: { id: true, name: true },
     }),
+    prisma.mdRetentionPolicy.findUnique({ where: { organizationId } }),
   ]);
 
   let complaints: ComplaintRow[] = [];
   let adverseEvents: AdverseEventRow[] = [];
   let fieldActions: FieldActionRow[] = [];
   let recalls: RecallRow[] = [];
+  let pms: PmsRow[] = [];
 
+  // Quejas, eventos adversos, PMS, acciones de campo y retiros comparten el
+  // mismo perfil de riesgo (vigilancia post-comercialización) y quedan todos
+  // detrás de md-sensitive:read — sin excepción, incluida la PMS (su
+  // `findings` lleva la misma minimización que Complaint/AdverseEvent).
   if (canSensitive) {
-    [complaints, adverseEvents, fieldActions, recalls] = await Promise.all([
+    [complaints, adverseEvents, fieldActions, recalls, pms] = await Promise.all([
       prisma.complaint.findMany({
         where: { organizationId },
         include: {
@@ -143,8 +150,26 @@ export async function getMedicalDevicesPayload() {
         include: { device: { select: { code: true, name: true } } },
         orderBy: { initiatedAt: "desc" },
       }),
+      prisma.postMarketSurveillance.findMany({
+        where: { organizationId },
+        include: { device: { select: { code: true, name: true } } },
+        orderBy: { periodEnd: "desc" },
+      }),
     ]);
   }
+
+  const decryptedComplaints = complaints.map((c) => ({
+    ...c,
+    description: decryptMdSensitiveField(c.description) ?? c.description,
+    investigationSummary: decryptMdSensitiveField(c.investigationSummary),
+  }));
+  const decryptedAdverseEvents = adverseEvents.map((e) => ({
+    ...e,
+    description: decryptMdSensitiveField(e.description) ?? e.description,
+  }));
+  const decryptedPms = pms.map((p) => ({ ...p, findings: decryptMdSensitiveField(p.findings) }));
+  const decryptedFieldActions = fieldActions.map((f) => ({ ...f, reason: decryptMdSensitiveField(f.reason) }));
+  const decryptedRecalls = recalls.map((r) => ({ ...r, reason: decryptMdSensitiveField(r.reason) ?? r.reason }));
 
   const coverage = designInputCoverage({
     inputCodes: inputs.map((i) => i.code),
@@ -160,9 +185,11 @@ export async function getMedicalDevicesPayload() {
       sensitiveRead: canSensitive,
       sensitiveCreate: auth.can("md-sensitive:create"),
       sensitiveUpdate: auth.can("md-sensitive:update"),
+      sensitiveDelete: auth.can("md-sensitive:delete"),
     },
     disclaimer:
       "Este módulo es una herramienta de gestión de calidad configurable. No sustituye los requisitos regulatorios nacionales aplicables (p. ej. MDR, FDA QSR/QMSR u otros).",
+    retentionYears: retentionPolicy?.retentionYears ?? DEFAULT_RETENTION_YEARS,
     members,
     families,
     devices,
@@ -181,11 +208,11 @@ export async function getMedicalDevicesPayload() {
     sterVals,
     batches,
     traces,
-    complaints,
-    adverseEvents,
-    pms,
-    fieldActions,
-    recalls,
+    complaints: decryptedComplaints,
+    adverseEvents: decryptedAdverseEvents,
+    pms: decryptedPms,
+    fieldActions: decryptedFieldActions,
+    recalls: decryptedRecalls,
     requirements,
     submissions,
     coverage,

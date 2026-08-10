@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getSupplierSecurityPayload, type SupplierSecurityPayload } from "@/lib/actions/supplier-security";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Proveedores de seguridad | NormaFlow" };
+export const metadata = { title: "Proveedores de seguridad" };
 export const dynamic = "force-dynamic";
 
 export default async function SupplierSecurityPage() {

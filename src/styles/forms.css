@@ -1,0 +1,507 @@
+/* ============================================================================
+ * NormaFlow — Formularios
+ *
+ * Una geometría única para todo control de entrada. Antes el mismo objeto de
+ * estilo en línea (`padding: "8px 10px"; border: 1px solid var(--nf-line)`)
+ * estaba copiado literalmente en seis clientes de norma, y cada modal tenía
+ * su propia versión.
+ *
+ * `.nf-app-input` se mantiene como alias: hay 818 usos repartidos por el
+ * producto y todos deben heredar esta geometría sin tocarse.
+ * ========================================================================== */
+
+.nf-input,
+.nf-app-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--nf-form-control-min-height);
+  padding: var(--nf-form-control-py) var(--nf-form-control-px);
+  border: 1px solid var(--nf-border-strong);
+  border-radius: var(--nf-form-control-radius);
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+  font-family: inherit;
+  font-size: var(--nf-form-control-font-size);
+  line-height: var(--nf-form-control-line-height);
+  transition:
+    border-color var(--nf-duration-fast) var(--nf-ease-standard),
+    box-shadow var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+.nf-input::placeholder,
+.nf-app-input::placeholder {
+  color: var(--nf-text-subtle);
+  /* El placeholder es un ejemplo, nunca la etiqueta: no debe parecer texto
+     ya escrito ni desaparecer una información que haga falta después. */
+  opacity: 1;
+}
+
+.nf-input:hover:not(:disabled),
+.nf-app-input:hover:not(:disabled) {
+  border-color: var(--nf-input-border-hover);
+}
+
+.nf-input:focus-visible,
+.nf-app-input:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+  border-color: var(--nf-focus-ring);
+}
+
+.nf-input:disabled,
+.nf-app-input:disabled {
+  background: var(--nf-disabled-bg);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+
+.nf-input[readonly],
+.nf-app-input[readonly] {
+  background: var(--nf-surface-sunken);
+}
+
+/* El estado inválido nunca es solo el borde rojo: lo acompaña el mensaje de
+   `.nf-field__error` y el `aria-invalid` del control. */
+.nf-input[aria-invalid="true"],
+.nf-app-input[aria-invalid="true"] {
+  border-color: var(--nf-danger);
+  background: var(--nf-danger-subtle);
+}
+.nf-input[aria-invalid="true"]:focus-visible,
+.nf-app-input[aria-invalid="true"]:focus-visible {
+  outline-color: var(--nf-danger);
+}
+
+.nf-input--area {
+  min-height: 88px;
+  line-height: var(--nf-leading-normal);
+  resize: vertical;
+}
+
+/* La flecha se dibuja con el fondo para que el select tenga la misma altura
+   y el mismo radio que el resto de controles en todos los navegadores.
+   Solo se aplica al control nuevo: hay 580 `<select>` heredados con estilo en
+   línea, y su `padding` propio ganaría al de aquí dejando la flecha encima
+   del texto. Esos conservan la flecha nativa hasta que se migren. */
+.nf-input--select {
+  appearance: none;
+  padding-right: calc(var(--nf-form-control-px) * 2 + 10px);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    right calc(var(--nf-form-control-px) + 5px) center,
+    right var(--nf-form-control-px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+/* Los controles nativos de fecha y hora traen su propio icono. */
+.nf-input[type="date"],
+.nf-input[type="time"],
+.nf-input[type="datetime-local"],
+.nf-app-input[type="date"] {
+  background-image: none;
+  padding-right: var(--nf-form-control-px);
+}
+
+/* --------------------------------------------------------------------------
+ * Campo: etiqueta, ayuda, error
+ * ------------------------------------------------------------------------ */
+
+.nf-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-1);
+  min-width: 0;
+}
+
+.nf-field__label {
+  display: block;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-primary);
+  line-height: var(--nf-leading-snug);
+}
+
+/* El asterisco es redundante a propósito: el nombre accesible ya dice
+   "obligatorio" y el control lleva `aria-required`. */
+.nf-field__required {
+  margin-left: 2px;
+  color: var(--nf-danger-text);
+  font-weight: var(--nf-weight-semibold);
+}
+
+.nf-field__optional {
+  margin-left: var(--nf-space-2);
+  color: var(--nf-text-subtle);
+  font-weight: var(--nf-weight-regular);
+  font-size: var(--nf-text-xs);
+}
+
+.nf-field__hint {
+  margin: 0;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+  line-height: var(--nf-leading-normal);
+}
+
+/* Siempre presente en el DOM aunque esté vacío: un `role="alert"` que se
+   monta junto con su texto no lo anuncian varios lectores de pantalla.
+   Vacío no ocupa nada y no se anuncia. */
+.nf-field__error {
+  margin: 0;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-danger-text);
+  line-height: var(--nf-leading-normal);
+}
+.nf-field__error:empty {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Casillas y radios
+ * ------------------------------------------------------------------------ */
+
+.nf-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nf-space-2);
+  /* 24 px de alto mínimo por WCAG 2.5.8: la casilla nativa mide 13. */
+  min-height: 24px;
+  padding: 2px 0;
+}
+
+.nf-check__box {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 3px 0 0;
+  accent-color: var(--nf-primary);
+  cursor: pointer;
+}
+.nf-check__box:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+}
+.nf-check__box:disabled {
+  cursor: not-allowed;
+}
+
+.nf-check__label {
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+  line-height: var(--nf-leading-normal);
+  cursor: pointer;
+}
+.nf-check__box:disabled + .nf-check__label {
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+
+.nf-check__hint {
+  display: block;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+.nf-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-1);
+}
+
+/* --------------------------------------------------------------------------
+ * Agrupación y rejilla
+ * ------------------------------------------------------------------------ */
+
+.nf-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nf-fieldset--group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-4);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+}
+
+.nf-fieldset__legend {
+  padding: 0 var(--nf-space-2);
+  margin-left: calc(var(--nf-space-2) * -1);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+}
+
+.nf-fieldset__description {
+  margin: 0;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+.nf-form-grid {
+  display: grid;
+  gap: var(--nf-space-4) var(--nf-space-3);
+  align-items: start;
+}
+.nf-form-grid[data-columns="1"] { grid-template-columns: 1fr; }
+.nf-form-grid[data-columns="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.nf-form-grid[data-columns="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.nf-field[data-span="2"] { grid-column: span 2; }
+.nf-field[data-span="3"] { grid-column: span 3; }
+.nf-field[data-span="full"] { grid-column: 1 / -1; }
+
+/* Una sola columna en pantallas estrechas: dos campos de 150 px lado a lado
+   no se pueden rellenar cómodamente con el pulgar. */
+@media (max-width: 639px) {
+  .nf-form-grid[data-columns="2"],
+  .nf-form-grid[data-columns="3"] {
+    grid-template-columns: 1fr;
+  }
+  .nf-field[data-span="2"],
+  .nf-field[data-span="3"],
+  .nf-field[data-span="full"] {
+    grid-column: auto;
+  }
+}
+
+.nf-form-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+  padding-top: var(--nf-space-2);
+}
+.nf-form-actions[data-align="start"] { justify-content: flex-start; }
+.nf-form-actions[data-align="end"] { justify-content: flex-end; }
+.nf-form-actions[data-align="between"] { justify-content: space-between; }
+
+@media (max-width: 639px) {
+  .nf-form-actions > * { flex: 1 1 auto; }
+}
+
+/* --------------------------------------------------------------------------
+ * Errores del formulario completo
+ * ------------------------------------------------------------------------ */
+
+.nf-form-summary {
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border: 1px solid var(--nf-danger-border);
+  border-left-width: 3px;
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-danger-subtle);
+}
+.nf-form-summary:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+}
+
+.nf-form-summary__title {
+  margin: 0 0 var(--nf-space-2);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-danger-text);
+}
+
+.nf-form-summary__list {
+  margin: 0;
+  padding-left: var(--nf-space-4);
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+}
+.nf-form-summary__list li + li { margin-top: 2px; }
+.nf-form-summary__list a {
+  color: var(--nf-danger-text);
+  font-weight: var(--nf-weight-medium);
+}
+
+.nf-form-error {
+  margin: 0;
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
+  font-size: var(--nf-text-sm);
+}
+
+/* --------------------------------------------------------------------------
+ * Progreso por pasos
+ * ------------------------------------------------------------------------ */
+
+.nf-stepper {
+  --nf-step-size: 26px;
+}
+
+.nf-stepper__list {
+  display: flex;
+  gap: var(--nf-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nf-stepper[data-orientation="vertical"] .nf-stepper__list {
+  flex-direction: column;
+  gap: var(--nf-space-2);
+}
+
+.nf-stepper__step {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* La línea que une los pasos se dibuja detrás del marcador del siguiente. */
+.nf-stepper[data-orientation="horizontal"] .nf-stepper__step + .nf-stepper__step::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--nf-space-3) * -1);
+  top: calc(var(--nf-step-size) / 2 + var(--nf-space-2));
+  width: var(--nf-space-4);
+  height: 2px;
+  background: var(--nf-border);
+}
+.nf-stepper__step[data-status="done"] + .nf-stepper__step::before,
+.nf-stepper__step[data-status="current"]::before {
+  background: var(--nf-primary);
+}
+
+.nf-stepper__button {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nf-space-2);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--nf-space-2);
+  border: 0;
+  border-radius: var(--nf-radius-m);
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+}
+button.nf-stepper__button { cursor: pointer; }
+button.nf-stepper__button:hover { background: var(--nf-surface-hover); }
+button.nf-stepper__button:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+}
+
+.nf-stepper__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--nf-step-size);
+  height: var(--nf-step-size);
+  border: 1.5px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-stepper__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nf-stepper__label {
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-secondary);
+  line-height: var(--nf-leading-snug);
+}
+
+.nf-stepper__hint {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-subtle);
+  line-height: var(--nf-leading-snug);
+}
+
+/* Estado por forma e icono, no solo por color. */
+.nf-stepper__step[data-status="done"] .nf-stepper__marker {
+  border-color: var(--nf-success);
+  background: var(--nf-success-text);
+  color: var(--nf-c-neutral-0);
+}
+.nf-stepper__step[data-status="current"] .nf-stepper__marker {
+  border-color: var(--nf-primary);
+  background: var(--nf-primary);
+  color: var(--nf-on-primary);
+  box-shadow: 0 0 0 3px var(--nf-primary-subtle);
+}
+.nf-stepper__step[data-status="current"] .nf-stepper__label {
+  color: var(--nf-text-primary);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-stepper__step[data-status="error"] .nf-stepper__marker {
+  border-color: var(--nf-danger);
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
+}
+.nf-stepper__step[data-status="error"] .nf-stepper__label {
+  color: var(--nf-danger-text);
+}
+
+@media (max-width: 767px) {
+  /* En móvil el paso activo se lee entero y los demás quedan como marcadores:
+     cinco etiquetas apiladas empujarían el formulario fuera de la pantalla. */
+  .nf-stepper[data-orientation="horizontal"] .nf-stepper__step:not([aria-current]) .nf-stepper__text {
+    display: none;
+  }
+  .nf-stepper[data-orientation="horizontal"] .nf-stepper__step:not([aria-current]) {
+    flex: 0 0 auto;
+  }
+  .nf-stepper[data-orientation="horizontal"] .nf-stepper__step[aria-current] {
+    flex: 1 1 auto;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Guardado automático
+ * ------------------------------------------------------------------------ */
+
+.nf-autosave {
+  margin: 0;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-subtle);
+  min-height: 1em;
+}
+.nf-autosave[data-status="saved"] { color: var(--nf-success-text); }
+.nf-autosave[data-status="error"] { color: var(--nf-danger-text); }
+.nf-autosave[data-status="saving"],
+.nf-autosave[data-status="pending"] { color: var(--nf-text-secondary); }
+
+/* --------------------------------------------------------------------------
+ * Alias heredados
+ *
+ * `.nf-field-label` la pintan los 139 campos del módulo de operaciones, que
+ * ya asocian bien con un `<label>` envolvente. Aquí solo se iguala su
+ * aspecto al del resto para que la tipografía no cambie entre módulos.
+ * ------------------------------------------------------------------------ */
+.nf-field-label,
+.nf-modal-field-label {
+  display: block;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  color: var(--nf-text-primary);
+  line-height: var(--nf-leading-snug);
+}
+
+/* El asistente de alta ocupa todo el ancho de su tarjeta. */
+.nf-onboarding-stepper { margin-bottom: var(--nf-space-6); }

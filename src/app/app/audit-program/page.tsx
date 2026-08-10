@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getAuditProgramPayload } from "@/lib/server-queries";
 
-export const metadata = { title: "Programa de auditorías | NormaFlow" };
+export const metadata = { title: "Programa de auditorías" };
 export const dynamic = "force-dynamic";
 
 export default async function AuditProgramPage() {

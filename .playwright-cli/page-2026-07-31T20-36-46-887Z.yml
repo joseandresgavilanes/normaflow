@@ -1,0 +1,750 @@
+- generic [ref=f1e1]:
+  - generic [ref=f1e2]:
+    - banner [ref=f1e3]:
+      - generic [ref=f1e4]:
+        - link "NormaFlow" [ref=f1e5] [cursor=pointer]:
+          - /url: /home
+          - generic [ref=f1e6]: "N"
+          - text: NormaFlow
+        - navigation "Navegación" [ref=f1e1136]:
+          - button "Producto" [ref=f1e1137] [cursor=pointer]
+          - button "Normas" [ref=f1e1138] [cursor=pointer]
+          - button "Recursos" [ref=f1e1139] [cursor=pointer]
+        - generic [ref=f1e17]:
+          - generic "Idioma" [ref=f1e1140]:
+            - group "Idioma" [ref=f1e1141]:
+              - button "ES" [active] [pressed] [ref=f1e25] [cursor=pointer]
+              - button "EN" [ref=f1e26] [cursor=pointer]
+              - button "PT" [ref=f1e27] [cursor=pointer]
+          - link "Entrar" [ref=f1e1142] [cursor=pointer]:
+            - /url: /login
+          - link "Demo gratuita" [ref=f1e1143] [cursor=pointer]:
+            - /url: /demo
+    - main [ref=f1e32]:
+      - generic [ref=f1e34]:
+        - generic [ref=f1e35]:
+          - generic [ref=f1e36]: Asistente IA · Anexo A 2022 actualizado
+          - heading "Del caos ISO al control continuo." [level=1] [ref=f1e1144]: Del caos ISO alcontrol continuo.
+          - paragraph [ref=f1e39]:
+            - text: NormaFlow centraliza documentos, riesgos, auditorías, evidencias, CAPA e indicadores en una plataforma diseñada para mantener
+            - strong [ref=f1e40]: ISO 9001
+            - text: e
+            - strong [ref=f1e41]: ISO 27001
+            - text: siempre bajo control. Sin hojas de cálculo, sin caos.
+          - generic [ref=f1e42]:
+            - link "Solicitar demo gratuita" [ref=f1e1145] [cursor=pointer]:
+              - /url: /demo
+            - link "Ver la aplicación" [ref=f1e1146] [cursor=pointer]:
+              - /url: /features
+          - generic [ref=f1e47]:
+            - generic [ref=f1e48]:
+              - generic [ref=f1e49]: ISO 9001
+              - generic [ref=f1e50]: Calidad
+            - generic [ref=f1e51]:
+              - generic [ref=f1e52]: ISO 27001
+              - generic [ref=f1e53]: Seguridad
+            - generic [ref=f1e54]:
+              - generic [ref=f1e55]: 14 días
+              - generic [ref=f1e56]: Trial gratis
+            - generic [ref=f1e57]:
+              - generic [ref=f1e58]: Sin tarjeta
+              - generic [ref=f1e59]: Sin compromiso
+        - generic [ref=f1e60]:
+          - generic [ref=f1e61]:
+            - generic [ref=f1e62]: XLS
+            - generic [ref=f1e63]: registros_riesgos_v17_FINAL.xlsx
+          - generic [ref=f1e64]:
+            - generic [ref=f1e65]: "@"
+            - generic [ref=f1e66]: "Fwd: Aprobar política v3 ?"
+          - generic [ref=f1e67]:
+            - generic [ref=f1e68]: PDF
+            - generic [ref=f1e69]: Politica_seguridad_2022_v2.pdf
+          - generic [ref=f1e70]:
+            - generic [ref=f1e71]: DIR
+            - generic [ref=f1e72]: /auditoría 2024 (copia copia)
+          - generic [ref=f1e73]:
+            - generic [ref=f1e74]: NC
+            - generic [ref=f1e75]: NC-2024-118 sin asignar · vence ayer
+          - generic [ref=f1e76]:
+            - generic [ref=f1e77]: XLS
+            - generic [ref=f1e78]: KPI_Q3_borrador.xlsx
+          - generic [ref=f1e79]:
+            - generic [ref=f1e80]:
+              - generic [ref=f1e81]: normaflow.app · Tecnoserv Industrial · Q4 2026
+              - generic [ref=f1e86]:
+                - generic [ref=f1e87]:
+                  - generic [ref=f1e88]: Cumplimiento
+                  - generic [ref=f1e89]: 94%
+                  - generic [ref=f1e91]:
+                    - generic [ref=f1e93]:
+                      - generic [ref=f1e94]: ISO 9001:2015
+                      - generic [ref=f1e95]: 96%
+                    - generic [ref=f1e99]:
+                      - generic [ref=f1e100]: ISO 27001:2022
+                      - generic [ref=f1e101]: 92%
+                  - generic [ref=f1e104]:
+                    - generic [ref=f1e105]: 148/156 controles
+                    - generic [ref=f1e106]: 0 NC mayores
+                - generic [ref=f1e107]:
+                  - generic [ref=f1e108]: Matriz Riesgo
+                  - generic [ref=f1e135]: ● 12 bajos · ● 7 medios · ● 2 altos
+                - generic [ref=f1e136]:
+                  - generic [ref=f1e137]: CAPA
+                  - generic [ref=f1e138]: 18 abiertas
+                  - generic [ref=f1e139]:
+                    - generic [ref=f1e140]:
+                      - generic [ref=f1e141]: Causa raíz
+                      - generic [ref=f1e142]: 14 ✓
+                    - generic [ref=f1e143]:
+                      - generic [ref=f1e144]: Eficacia
+                      - generic [ref=f1e145]: 4 ⧗
+                - generic [ref=f1e146]:
+                  - generic [ref=f1e147]: Aprobación — Política Seguridad v3.2
+                  - generic [ref=f1e148]:
+                    - generic [ref=f1e149]: Borrador
+                    - generic [ref=f1e150]: →
+                    - generic [ref=f1e151]: Pendiente
+                    - generic [ref=f1e152]: →
+                    - generic [ref=f1e153]: Aprobado
+                    - generic [ref=f1e154]: →
+                    - generic [ref=f1e155]: Activo
+                  - generic [ref=f1e156]:
+                    - generic [ref=f1e157]: v3.2 · maría.torres@
+                    - generic [ref=f1e158]: SHA · 9f2c…ae71
+                    - generic [ref=f1e159]: ● firmado
+            - generic [ref=f1e160]:
+              - generic [ref=f1e161]: Audit readiness
+              - generic [ref=f1e166]:
+                - generic [ref=f1e167]: 91%
+                - generic [ref=f1e168]: 156 evidencias
+            - generic [ref=f1e169]:
+              - generic [ref=f1e170]: Asistente IA
+              - generic [ref=f1e175]: "Sugiero CAPA para NC-118: revisar matriz de roles antes del 14 oct."
+              - generic [ref=f1e176]: Requiere aprobación
+            - generic [ref=f1e178]:
+              - generic [ref=f1e179]: Próxima auditoría
+              - generic [ref=f1e180]: 03 dic 2026
+              - generic [ref=f1e181]: ISO 9001 · Interna · M. López
+            - generic [ref=f1e198]:
+              - generic [ref=f1e199]: ISO
+              - generic [ref=f1e200]: "9001"
+              - generic [ref=f1e201]: "2015"
+            - generic [ref=f1e203]:
+              - generic [ref=f1e204]: ISO
+              - generic [ref=f1e205]: "27001"
+              - generic [ref=f1e206]: "2022"
+      - generic [ref=f1e208]:
+        - generic [ref=f1e209]: Equipos de calidad y seguridad que confían en NormaFlow
+        - generic [ref=f1e210]:
+          - generic [ref=f1e211]: Tecnoserv Industrial
+          - generic [ref=f1e213]: Grupo Logística Norte
+          - generic [ref=f1e215]: Sistemas Ibérica
+          - generic [ref=f1e217]: Manufactura Global
+          - generic [ref=f1e219]: DataSec Solutions
+      - generic [ref=f1e222]:
+        - generic [ref=f1e223]:
+          - generic [ref=f1e224]: El problema
+          - heading [level=2] [ref=f1e1147]:
+            - text: El cumplimiento no fallade golpe.
+            - emphasis [ref=f1e227]: Se rompe en silencio.
+          - paragraph [ref=f1e228]: La mayoría de empresas certificadas gestionan sus sistemas en hojas de cálculo, correos y carpetas compartidas. El coste no se ve en una factura — se ve en cada auditoría.
+        - generic [ref=f1e229]:
+          - generic [ref=f1e230]:
+            - generic [ref=f1e235]: Correos perdidos
+            - generic [ref=f1e236]: Aprobaciones de documentos que nadie recuerda. Versiones desactualizadas circulando entre equipos.
+          - generic [ref=f1e237]:
+            - generic [ref=f1e242]: Auditorías estresantes
+            - generic [ref=f1e243]: Buscar evidencias durante semanas antes de cada auditoría. Preparación reactiva en lugar de continua.
+          - generic [ref=f1e244]:
+            - generic [ref=f1e249]: Hojas de cálculo inviables
+            - generic [ref=f1e250]: Registros de riesgos y planes de acción en archivos sin trazabilidad ni control de cambios real.
+          - generic [ref=f1e251]:
+            - generic [ref=f1e255]: Sin alertas ni seguimiento
+            - generic [ref=f1e256]: Acciones vencidas sin responsable. Indicadores que nadie actualiza. El cumplimiento se deteriora lentamente.
+      - generic [ref=f1e258]:
+        - generic [ref=f1e259]:
+          - generic [ref=f1e260]: La transformación
+          - heading "Una plataforma. Toda la evidencia." [level=2] [ref=f1e1148]
+          - paragraph [ref=f1e263]: "El mismo trabajo, pero conectado: lo que hoy son archivos sueltos, hilos de correo y hojas dispersas se convierte en un único sistema vivo y trazable."
+        - generic [ref=f1e264]:
+          - generic [ref=f1e265]:
+            - generic [ref=f1e266]: antes · disperso
+            - generic [ref=f1e267]: registros_riesgos.xlsx
+            - generic [ref=f1e268]: "Fwd: Aprobar política"
+            - generic [ref=f1e269]: /auditoría 2024 (copia)
+            - generic [ref=f1e270]: NC-118 sin asignar
+            - generic [ref=f1e271]: KPI_Q3_borrador
+            - generic [ref=f1e272]: Politica_v2_FINAL.pdf
+            - generic [ref=f1e273]: Acciones_pendientes.xls
+            - generic [ref=f1e274]: evidencias_dispersas/
+          - generic [ref=f1e277]:
+            - generic [ref=f1e278]: NormaFlow
+            - generic [ref=f1e279]: Sistema único
+          - generic [ref=f1e280]:
+            - generic [ref=f1e281]: después · conectado
+            - generic [ref=f1e282]: Documentos
+            - generic [ref=f1e289]: Riesgos
+            - generic [ref=f1e297]: Auditorías
+            - generic [ref=f1e303]: CAPA
+            - generic [ref=f1e309]: Indicadores
+            - generic [ref=f1e315]: Evidencia
+            - generic [ref=f1e320]: Acciones
+            - generic [ref=f1e326]: AI
+      - generic [ref=f1e333]:
+        - generic [ref=f1e334]:
+          - generic [ref=f1e335]:
+            - generic [ref=f1e336]: Módulos
+            - heading "Nueve módulos. Un mismo sistema, cada paso conectado." [level=2] [ref=f1e1149]
+          - paragraph [ref=f1e339]: Cada módulo escribe en la misma capa de evidencia, así nada se duplica y todo se puede auditar.
+        - generic [ref=f1e340]:
+          - article [ref=f1e341]:
+            - generic [ref=f1e342]: MÓDULO 01
+            - generic [ref=f1e348]: GAP Assessment
+            - generic [ref=f1e349]: Evalúa tu nivel de cumplimiento por cláusula. Scoring global, plan de acción y exportación a PDF.
+            - generic [ref=f1e351]:
+              - generic [ref=f1e352]:
+                - generic [ref=f1e353]: 4. Contexto
+                - generic [ref=f1e356]: "88"
+              - generic [ref=f1e357]:
+                - generic [ref=f1e358]: 5. Liderazgo
+                - generic [ref=f1e361]: "95"
+              - generic [ref=f1e362]:
+                - generic [ref=f1e363]: 6. Planificación
+                - generic [ref=f1e366]: "72"
+              - generic [ref=f1e367]:
+                - generic [ref=f1e368]: 7. Soporte
+                - generic [ref=f1e371]: "81"
+              - generic [ref=f1e372]:
+                - generic [ref=f1e373]: 8. Operación
+                - generic [ref=f1e376]: "90"
+          - article [ref=f1e377]:
+            - generic [ref=f1e378]: MÓDULO 02
+            - generic [ref=f1e385]: Control de Documentos
+            - generic [ref=f1e386]: Versionado automático, flujo de aprobación y trazabilidad completa con cláusulas ISO.
+            - generic [ref=f1e388]:
+              - generic [ref=f1e389]:
+                - generic [ref=f1e390]: v3.2
+                - generic [ref=f1e391]: ● Aprobado
+              - generic [ref=f1e392]:
+                - generic [ref=f1e393]: v3.1
+                - generic [ref=f1e394]: ● Archivado
+              - generic [ref=f1e395]:
+                - generic [ref=f1e396]: v3.0
+                - generic [ref=f1e397]: ● Archivado
+              - generic [ref=f1e398]:
+                - generic [ref=f1e399]: v2.8
+                - generic [ref=f1e400]: ● Archivado
+          - article [ref=f1e401]:
+            - generic [ref=f1e402]: MÓDULO 03
+            - generic [ref=f1e410]: Gestión de Riesgos
+            - generic [ref=f1e411]: Heatmap 5×5 interactivo, tratamiento (mitigar, aceptar, transferir, evitar) y controles vinculados.
+          - article [ref=f1e439]:
+            - generic [ref=f1e440]: MÓDULO 04
+            - generic [ref=f1e446]: Auditorías
+            - generic [ref=f1e447]: Plan anual, checklists editables, hallazgos NC y informe final con firma digital.
+            - generic [ref=f1e449]:
+              - generic [ref=f1e450]:
+                - generic [ref=f1e451]: □
+                - generic [ref=f1e452]: 4.1 Comprensión del contexto
+              - generic [ref=f1e453]:
+                - generic [ref=f1e454]: ☑
+                - generic [ref=f1e455]: 5.2 Política de calidad
+              - generic [ref=f1e456]:
+                - generic [ref=f1e457]: ☑
+                - generic [ref=f1e458]: 7.5 Información documentada
+              - generic [ref=f1e459]:
+                - generic [ref=f1e460]: ⚠
+                - generic [ref=f1e461]: 9.2 Auditoría interna
+              - generic [ref=f1e462]:
+                - generic [ref=f1e463]: ☑
+                - generic [ref=f1e464]: 10.2 NC y CAPA
+          - article [ref=f1e465]:
+            - generic [ref=f1e466]: MÓDULO 05
+            - generic [ref=f1e472]: Nonconformities & CAPA
+            - generic [ref=f1e473]: Causa raíz con 5 porqués e Ishikawa, acción correctiva, validación de eficacia y cierre con evidencia.
+            - generic [ref=f1e475]:
+              - generic [ref=f1e476]: 5 PORQUÉS · NC-118
+              - generic [ref=f1e477]:
+                - generic [ref=f1e478]: ↳
+                - generic [ref=f1e479]: 1. ¿Por qué falló el control?
+              - generic [ref=f1e480]:
+                - generic [ref=f1e481]: ↳
+                - generic [ref=f1e482]: 2. ¿Por qué se omitió el paso?
+              - generic [ref=f1e483]:
+                - generic [ref=f1e484]: ↳
+                - generic [ref=f1e485]: 3. ¿Por qué no se detectó?
+              - generic [ref=f1e486]:
+                - generic [ref=f1e487]: ↳
+                - generic [ref=f1e488]: 4. ¿Por qué no había alerta?
+          - article [ref=f1e489]:
+            - generic [ref=f1e490]: MÓDULO 06
+            - generic [ref=f1e496]: Indicadores KPI
+            - generic [ref=f1e497]: Metas, umbrales, semáforo y alertas cuando un indicador se sale de objetivo.
+            - img [ref=f1e499]:
+              - generic [ref=f1e502]: objetivo
+          - article [ref=f1e503]:
+            - generic [ref=f1e504]: MÓDULO 07
+            - generic [ref=f1e510]: Plan de Acción
+            - generic [ref=f1e511]: "Seguimiento centralizado: responsables, vencimientos y notificaciones automáticas."
+            - generic [ref=f1e513]:
+              - generic [ref=f1e514]:
+                - generic [ref=f1e515]: Plan revisión Q4
+                - generic [ref=f1e516]: M.T
+                - generic [ref=f1e517]: 03 dic
+              - generic [ref=f1e518]:
+                - generic [ref=f1e519]: Implantar 8.1.4
+                - generic [ref=f1e520]: A.R
+                - generic [ref=f1e521]: vencido
+              - generic [ref=f1e522]:
+                - generic [ref=f1e523]: Revisar 5×5
+                - generic [ref=f1e524]: L.C
+                - generic [ref=f1e525]: 12 nov
+          - article [ref=f1e526]:
+            - generic [ref=f1e527]: MÓDULO 08
+            - generic [ref=f1e532]: Evidencia
+            - generic [ref=f1e533]: Repositorio único de pruebas vinculadas a auditoría, riesgo, documento o NC.
+            - generic [ref=f1e535]:
+              - generic [ref=f1e536]: PDF
+              - generic [ref=f1e537]: PNG
+              - generic [ref=f1e538]: XLS
+              - generic [ref=f1e539]: PDF
+              - generic [ref=f1e540]: DOC
+              - generic [ref=f1e541]: PNG
+              - generic [ref=f1e542]: PDF
+              - generic [ref=f1e543]: MP4
+          - article [ref=f1e544]:
+            - generic [ref=f1e545]: MÓDULO 09
+            - generic [ref=f1e551]: Asistente IA
+            - generic [ref=f1e552]: Borradores, resúmenes y sugerencias. Toda salida requiere confirmación humana.
+            - generic [ref=f1e554]:
+              - generic [ref=f1e555]:
+                - generic [ref=f1e556]: ▸ borrador · política de acceso
+                - generic [ref=f1e557]: El acceso lógico se concederá según el principio de mínimo privilegio…
+              - generic [ref=f1e558]:
+                - generic [ref=f1e559]: ● Requiere aprobación
+                - generic [ref=f1e560]: +3 sugerencias
+      - generic [ref=f1e562]:
+        - generic [ref=f1e563]:
+          - generic [ref=f1e564]: Producto
+          - heading "Un recorrido. Cinco módulos. Cero contexto perdido." [level=2] [ref=f1e1150]
+        - generic [ref=f1e568]:
+          - generic [ref=f1e569]:
+            - generic [ref=f1e570]:
+              - generic [ref=f1e573] [cursor=pointer]:
+                - generic [ref=f1e574]: 01 · Documentación
+                - generic [ref=f1e575]: Control documental con versionado real
+                - generic [ref=f1e576]: Cada documento conserva su historial, su flujo de aprobación y su vínculo a las cláusulas ISO. La versión activa es siempre la que se ve.
+              - generic [ref=f1e577] [cursor=pointer]:
+                - generic [ref=f1e578]: 02 · Auditorías
+                - generic [ref=f1e579]: Auditorías siempre preparadas
+                - generic: Plan anual, checklists por norma y hallazgos vinculados a la evidencia. Sin semanas de búsqueda previas a cada auditoría.
+              - generic [ref=f1e580] [cursor=pointer]:
+                - generic [ref=f1e581]: 03 · Riesgos
+                - generic [ref=f1e582]: Riesgos con un heatmap 5×5 vivo
+                - generic: Tratamiento, controles preventivos/detectivos y revisiones programadas. El nivel residual se recalcula al cerrar acciones.
+              - generic [ref=f1e583] [cursor=pointer]:
+                - generic [ref=f1e584]: 04 · CAPA
+                - generic [ref=f1e585]: CAPA de causa a eficacia
+                - generic: 5 porqués, Ishikawa, acción correctiva, validación de eficacia y cierre con evidencia. Todo en un solo expediente.
+              - generic [ref=f1e586] [cursor=pointer]:
+                - generic [ref=f1e587]: 05 · Evidencias
+                - generic [ref=f1e588]: Una sola fuente de verdad
+                - generic: Toda la evidencia (firmas, capturas, informes, registros) está enlazada al riesgo, control, documento o auditoría que la justifica.
+            - generic [ref=f1e590]:
+              - generic [ref=f1e591]:
+                - generic [ref=f1e595]: normaflow.app / doc
+                - generic [ref=f1e596]: ● en vivo
+              - generic [ref=f1e597]:
+                - generic [ref=f1e598]:
+                  - generic [ref=f1e599]: DOC · SGSI-POL-001
+                  - generic [ref=f1e600]: Política de Information Información
+                  - generic [ref=f1e601]: Vinculado a ISO 27001 · A.5.1 · Proceso “Gobierno”
+                  - generic [ref=f1e602]:
+                    - generic [ref=f1e603]: Flujo de aprobación
+                    - generic [ref=f1e604]:
+                      - generic [ref=f1e605]: Borrador
+                      - generic [ref=f1e606]: →
+                      - generic [ref=f1e607]: Revisión Calidad
+                      - generic [ref=f1e608]: →
+                      - generic [ref=f1e609]: Aprobado · M. Torres
+                      - generic [ref=f1e610]: →
+                      - generic [ref=f1e611]: Activo
+                    - generic [ref=f1e612]: firmado 2026-10-12 · SHA 9f2c…ae71 · próxima revisión 12-04-2027
+                - generic [ref=f1e613]:
+                  - generic [ref=f1e614]: Historial
+                  - generic [ref=f1e615]:
+                    - generic [ref=f1e616]:
+                      - generic [ref=f1e617]: v3.2
+                      - generic [ref=f1e618]: 2026-10-12 · M. Torres
+                      - generic [ref=f1e619]: ● Aprobado
+                    - generic [ref=f1e620]:
+                      - generic [ref=f1e621]: v3.1
+                      - generic [ref=f1e622]: 2026-04-08 · M. Torres
+                      - generic [ref=f1e623]: ● Archivado
+                    - generic [ref=f1e624]:
+                      - generic [ref=f1e625]: v3.0
+                      - generic [ref=f1e626]: 2025-10-02 · A. Ríos
+                      - generic [ref=f1e627]: ● Archivado
+                    - generic [ref=f1e628]:
+                      - generic [ref=f1e629]: v2.8
+                      - generic [ref=f1e630]: 2025-04-19 · M. Torres
+                      - generic [ref=f1e631]: ● Archivado
+                    - generic [ref=f1e632]:
+                      - generic [ref=f1e633]: v2.7
+                      - generic [ref=f1e634]: 2024-11-04 · A. Ríos
+                      - generic [ref=f1e635]: ● Archivado
+                    - generic [ref=f1e636]:
+                      - generic [ref=f1e637]: v2.6
+                      - generic [ref=f1e638]: 2024-06-10 · L. Castro
+                      - generic [ref=f1e639]: ● Archivado
+          - generic [ref=f1e640]: 01 / 05
+      - generic [ref=f1e648]:
+        - generic [ref=f1e649]:
+          - generic [ref=f1e650]: Flujo documental
+          - heading "Cada documento sigue el mismo camino. Sin atajos por correo." [level=2] [ref=f1e1151]
+          - paragraph [ref=f1e653]: Borrador → revisión → aprobación → activo. Con historial completo, firma digital y notificaciones automáticas a cada responsable.
+        - generic [ref=f1e654]:
+          - generic [ref=f1e655]:
+            - generic [ref=f1e656]:
+              - generic [ref=f1e657]: 01 · Borrador
+              - generic [ref=f1e658]: Editor con plantilla por norma
+              - generic [ref=f1e659]: Plantilla · ISO 27001 A.5.1
+            - generic [ref=f1e660]:
+              - generic [ref=f1e661]: 02 · Revisión
+              - generic [ref=f1e662]: Validación por Calidad
+              - generic [ref=f1e663]: L. Castro · 06 oct
+            - generic [ref=f1e664]:
+              - generic [ref=f1e665]: 03 · Aprobación
+              - generic [ref=f1e666]: Firma con sello digital
+              - generic [ref=f1e667]: M. Torres · SHA 9f2c…ae71
+            - generic [ref=f1e668]:
+              - generic [ref=f1e669]: 04 · Activo
+              - generic [ref=f1e670]: Versión en uso · trazabilidad
+              - generic [ref=f1e671]: v3.2 · revisión 04-2027
+          - generic [ref=f1e673]:
+            - generic [ref=f1e674]:
+              - generic [ref=f1e675]: Trazabilidad
+              - generic [ref=f1e676]: Cada cambio queda registrado con autor, fecha y diff exportable a PDF.
+            - generic [ref=f1e677]:
+              - generic [ref=f1e678]: Vínculo ISO
+              - generic [ref=f1e679]: Cláusulas, controles del Anexo A y procesos enlazados al documento.
+            - generic [ref=f1e680]:
+              - generic [ref=f1e681]: Revisión periódica
+              - generic [ref=f1e682]: Alertas automáticas antes de que cualquier política quede desactualizada.
+      - generic [ref=f1e684]:
+        - generic [ref=f1e685]:
+          - generic [ref=f1e686]: PDCA
+          - heading "Mejora continua en movimiento." [level=2] [ref=f1e1152]
+          - paragraph [ref=f1e689]: NormaFlow estructura el trabajo alrededor de las cuatro fases del ciclo PDCA — y conecta cada una con sus módulos.
+        - generic [ref=f1e691]:
+          - generic [ref=f1e693]:
+            - generic [ref=f1e694]: FASE 01
+            - generic [ref=f1e695]: Planificar
+            - list [ref=f1e696]:
+              - listitem [ref=f1e697]: GAP Assessment
+              - listitem [ref=f1e698]: Plan de auditorías
+              - listitem [ref=f1e699]: Registro de riesgos
+              - listitem [ref=f1e700]: Objetivos de calidad
+          - generic [ref=f1e702]:
+            - generic [ref=f1e703]: FASE 02
+            - generic [ref=f1e704]: Hacer
+            - list [ref=f1e705]:
+              - listitem [ref=f1e706]: Control documental
+              - listitem [ref=f1e707]: Formación y evidencias
+              - listitem [ref=f1e708]: Acciones preventivas
+              - listitem [ref=f1e709]: Implementación de controles
+          - generic [ref=f1e711]:
+            - generic [ref=f1e712]: FASE 03
+            - generic [ref=f1e713]: Verificar
+            - list [ref=f1e714]:
+              - listitem [ref=f1e715]: Auditorías internas
+              - listitem [ref=f1e716]: Indicadores KPI
+              - listitem [ref=f1e717]: Revisión por dirección
+              - listitem [ref=f1e718]: Seguimiento de acciones
+          - generic [ref=f1e720]:
+            - generic [ref=f1e721]: FASE 04
+            - generic [ref=f1e722]: Actuar
+            - list [ref=f1e723]:
+              - listitem [ref=f1e724]: CAPA
+              - listitem [ref=f1e725]: Acciones correctivas
+              - listitem [ref=f1e726]: Mejora continua
+              - listitem [ref=f1e727]: Actualización del SGC
+          - generic [ref=f1e729]:
+            - generic [ref=f1e730]: SGC
+            - generic [ref=f1e731]: PDCA
+      - generic [ref=f1e733]:
+        - generic [ref=f1e734]:
+          - generic [ref=f1e735]: Estándares
+          - heading "Soporte nativo para las normas más demandadas." [level=2] [ref=f1e1153]
+        - generic [ref=f1e738]:
+          - generic [ref=f1e739]:
+            - generic [ref=f1e740]:
+              - generic [ref=f1e742]:
+                - generic [ref=f1e743]: ISO
+                - generic [ref=f1e744]: "9001"
+                - generic [ref=f1e745]: "2015"
+              - generic [ref=f1e746]:
+                - heading "ISO 9001:2015" [level=3] [ref=f1e747]
+                - generic [ref=f1e748]: Sistema de Gestión de la Calidad
+            - list [ref=f1e749]:
+              - listitem [ref=f1e750]: GAP Assessment por cláusula
+              - listitem [ref=f1e754]: Control documental completo
+              - listitem [ref=f1e758]: Auditorías y CAPA
+              - listitem [ref=f1e762]: Indicadores de calidad
+              - listitem [ref=f1e766]: Revisión por dirección
+          - generic [ref=f1e770]:
+            - generic [ref=f1e771]:
+              - generic [ref=f1e773]:
+                - generic [ref=f1e774]: ISO
+                - generic [ref=f1e775]: "27001"
+                - generic [ref=f1e776]: "2022"
+              - generic [ref=f1e777]:
+                - heading "ISO 27001:2022" [level=3] [ref=f1e778]
+                - generic [ref=f1e779]: Sistema de Gestión de Seguridad de la Información
+            - list [ref=f1e780]:
+              - listitem [ref=f1e781]: Gestión de riesgos de seguridad
+              - listitem [ref=f1e785]: Controles Anexo A · 93 controles
+              - listitem [ref=f1e789]: Gestión de incidentes
+              - listitem [ref=f1e793]: Continuidad del negocio
+              - listitem [ref=f1e797]: Auditorías técnicas
+      - generic [ref=f1e802]:
+        - generic [ref=f1e803]:
+          - generic [ref=f1e804]: Asistente IA
+          - heading "IA que redacta y sugiere. El humano aprueba." [level=2] [ref=f1e1154]: IA que redacta y sugiere.El humano aprueba.
+          - paragraph [ref=f1e807]: Borradores de políticas, resúmenes de evaluaciones GAP, propuestas de causa raíz y sugerencias de controles — pero nada entra al sistema sin la confirmación explícita de una persona responsable.
+          - list [ref=f1e808]:
+            - listitem [ref=f1e809]: Borradores de políticas y procedimientos por norma
+            - listitem [ref=f1e813]: Resumen de evaluaciones GAP listo para dirección
+            - listitem [ref=f1e817]: Sugerencia de acciones correctivas con justificación
+            - listitem [ref=f1e821]: Análisis del tratamiento de un riesgo
+            - listitem [ref=f1e825]: Resumen de hallazgos de auditoría con prioridades
+          - paragraph [ref=f1e834]:
+            - strong [ref=f1e835]: Human-in-the-loop por diseño.
+            - text: Cada sugerencia se marca como tal hasta que un responsable la aprueba y la firma.
+        - generic [ref=f1e837]:
+          - generic [ref=f1e838]:
+            - generic [ref=f1e839]: NormaFlow · Asistente
+            - generic [ref=f1e844]: Requiere aprobación humana
+          - generic [ref=f1e848]: Contexto · NC-2026-118 · ISO 27001 A.5.18
+          - generic [ref=f1e849]:
+            - text: He revisado el expediente. La causa raíz más probable es
+            - strong [ref=f1e850]: una regla de notificación apuntando a un usuario inactivo
+            - text: tras un offboarding sin actualizar la matriz de roles.Sugiero
+            - strong [ref=f1e851]: tres acciones
+            - text: ":"
+            - list [ref=f1e852]:
+              - listitem [ref=f1e853]: Reasignar la regla a un rol funcional, no a un usuario.
+              - listitem [ref=f1e854]: Añadir revisión cruzada al cierre de turno (control 8.1.4).
+              - listitem [ref=f1e855]: Validar eficacia a 30 días sin nuevas incidencias.
+          - generic [ref=f1e856]:
+            - button "Rechazar" [ref=f1e857] [cursor=pointer]
+            - button "Editar borrador" [ref=f1e858] [cursor=pointer]
+            - button "Aprobar y guardar" [ref=f1e859] [cursor=pointer]
+          - generic [ref=f1e862]:
+            - generic [ref=f1e863]: fuente · 6 documentos · 2 auditorías · 1 NC histórica
+            - generic [ref=f1e864]: modelo · normaflow-iso · v2
+      - generic [ref=f1e866]:
+        - generic [ref=f1e867]:
+          - generic [ref=f1e868]: Caso real
+          - heading "Pasamos de 3 semanas a 2 días de preparación para auditoría." [level=2] [ref=f1e1155]
+        - generic [ref=f1e871]:
+          - generic [ref=f1e872]:
+            - generic [ref=f1e873]: ● Tecnoserv Industrial S.A.
+            - paragraph [ref=f1e874]: “Antes tardábamos semanas en preparar cada auditoría interna. Con NormaFlow, toda la evidencia está centralizada y siempre actualizada. La última revisión por dirección duró 45 minutos en lugar de medio día.”
+            - generic [ref=f1e875]:
+              - generic [ref=f1e876]: MT
+              - generic [ref=f1e877]:
+                - generic [ref=f1e878]: María Torres
+                - generic [ref=f1e879]: Directora de Calidad · Tecnoserv Industrial S.A.
+          - generic [ref=f1e880]:
+            - generic [ref=f1e881]:
+              - generic [ref=f1e882]:
+                - generic [ref=f1e883]: 70%
+                - generic [ref=f1e884]: menos tiempo en gestión documental
+              - generic [ref=f1e885]:
+                - generic [ref=f1e886]: 2 días
+                - generic [ref=f1e887]: preparación de auditoría
+              - generic [ref=f1e888]:
+                - generic [ref=f1e889]: "0"
+                - generic [ref=f1e890]: NC mayores en certificación
+            - generic [ref=f1e891]:
+              - generic [ref=f1e892]: Manufactura
+              - generic [ref=f1e893]: ISO 9001 + ISO 27001
+              - generic [ref=f1e894]: 420 empleados
+            - link "Ver caso completo + 2 casos más" [ref=f1e1156] [cursor=pointer]:
+              - /url: /cases
+      - generic [ref=f1e899]:
+        - generic [ref=f1e900]:
+          - generic [ref=f1e901]: Precios
+          - heading "Tres planes. Una plataforma." [level=2] [ref=f1e1157]
+          - paragraph [ref=f1e904]: 14 días de prueba en cualquier plan. Sin tarjeta, sin compromiso.
+        - generic [ref=f1e905]:
+          - generic [ref=f1e906]:
+            - generic [ref=f1e907]: Starter
+            - generic [ref=f1e908]: $149 USD / mes
+            - generic [ref=f1e909]: Para implementar ISO sin caos
+            - list [ref=f1e910]:
+              - listitem [ref=f1e911]: Hasta 5 usuarios
+              - listitem [ref=f1e915]: ISO 9001 + ISO 27001
+              - listitem [ref=f1e919]: Módulos esenciales
+              - listitem [ref=f1e923]: 10 GB de almacenamiento
+              - listitem [ref=f1e927]: Soporte por correo
+            - link "Empezar 14 días gratis" [ref=f1e1158] [cursor=pointer]:
+              - /url: /signup
+          - generic [ref=f1e934]:
+            - generic [ref=f1e935]: Más popular
+            - generic [ref=f1e936]: Growth
+            - generic [ref=f1e937]: $449 USD / mes
+            - generic [ref=f1e938]: Para equipos en mantenimiento activo
+            - list [ref=f1e939]:
+              - listitem [ref=f1e940]: Hasta 20 usuarios
+              - listitem [ref=f1e944]: Todos los módulos
+              - listitem [ref=f1e948]: Asistente IA
+              - listitem [ref=f1e952]: 50 GB de almacenamiento
+              - listitem [ref=f1e956]: Soporte prioritario
+              - listitem [ref=f1e960]: Onboarding
+            - link "Probar 14 días" [ref=f1e1159] [cursor=pointer]:
+              - /url: /signup
+          - generic [ref=f1e967]:
+            - generic [ref=f1e968]: Enterprise
+            - generic [ref=f1e969]: A medida
+            - generic [ref=f1e970]: Para multi-organización y SLA
+            - list [ref=f1e971]:
+              - listitem [ref=f1e972]: Usuarios ilimitados
+              - listitem [ref=f1e976]: Multi-organización
+              - listitem [ref=f1e980]: SLA
+              - listitem [ref=f1e984]: CSM dedicado
+              - listitem [ref=f1e988]: API e integraciones
+              - listitem [ref=f1e992]: SSO
+            - link "Hablar con ventas" [ref=f1e1160] [cursor=pointer]:
+              - /url: /demo
+      - generic [ref=f1e1000]:
+        - generic [ref=f1e1001]:
+          - generic [ref=f1e1002]: Preguntas frecuentes
+          - heading "Lo importante, sin letra pequeña." [level=2] [ref=f1e1004]
+          - paragraph [ref=f1e1005]: Respuestas directas sobre el alcance plataforma, las normas compatibles y el papel IA.
+        - generic [ref=f1e1006]:
+          - group [ref=f1e1007]:
+            - generic "¿Qué es NormaFlow?" [ref=f1e1008] [cursor=pointer]
+          - group [ref=f1e1009]:
+            - generic "¿Qué normas ISO puedo gestionar con NormaFlow?" [ref=f1e1010] [cursor=pointer]
+          - group [ref=f1e1011]:
+            - generic "¿NormaFlow sustituye a un auditor o a un organismo de certificación?" [ref=f1e1012] [cursor=pointer]
+          - group [ref=f1e1013]:
+            - generic "¿Cómo ayuda NormaFlow a preparar una auditoría ISO?" [ref=f1e1014] [cursor=pointer]
+          - group [ref=f1e1015]:
+            - generic "¿La inteligencia artificial de NormaFlow puede guardar cambios por sí sola?" [ref=f1e1016] [cursor=pointer]
+          - group [ref=f1e1017]:
+            - generic "¿Puedo probar NormaFlow antes de contratar?" [ref=f1e1018] [cursor=pointer]
+      - generic [ref=f1e1021]:
+        - generic [ref=f1e1022]: Cumplimiento bajo control
+        - heading "Convierte el caos ISO en control continuo." [level=2] [ref=f1e1161]
+        - paragraph [ref=f1e1025]: Programa una demo de 30 minutos con un especialista. Vemos tu sistema actual y te mostramos cómo quedaría en NormaFlow.
+        - generic [ref=f1e1026]:
+          - link "Solicitar demo gratuita" [ref=f1e1162] [cursor=pointer]:
+            - /url: /demo
+          - link "Crear cuenta · 14 días gratis" [ref=f1e1163] [cursor=pointer]:
+            - /url: /signup
+        - generic [ref=f1e1031]:
+          - generic [ref=f1e1032]: ● Sin tarjeta
+          - generic [ref=f1e1033]: ● Sin compromiso
+          - generic [ref=f1e1034]: ● Cancela cuando quieras
+    - contentinfo [ref=f1e1035]:
+      - generic [ref=f1e1036]:
+        - generic [ref=f1e1037]:
+          - generic [ref=f1e1038]:
+            - link "NormaFlow" [ref=f1e1039] [cursor=pointer]:
+              - /url: /home
+              - generic [ref=f1e1040]: "N"
+              - text: NormaFlow
+            - paragraph [ref=f1e1041]: Software de gestión ISO 9001 e ISO 27001. Documentos, riesgos, auditorías, evidencias, CAPA e IA — en una sola plataforma.
+            - generic [ref=f1e1042]:
+              - generic [ref=f1e1043]: ISO 9001
+              - generic [ref=f1e1044]: ISO 27001
+              - generic [ref=f1e1045]: SOC 2 (en proceso)
+          - generic [ref=f1e1046]:
+            - heading "Producto" [level=4] [ref=f1e1164]
+            - list [ref=f1e1048]:
+              - listitem [ref=f1e1049]:
+                - link "Funcionalidades" [ref=f1e1165] [cursor=pointer]:
+                  - /url: /features
+              - listitem [ref=f1e1051]:
+                - link "GAP Assessment" [ref=f1e1052] [cursor=pointer]:
+                  - /url: /solutions/gap-assessment
+              - listitem [ref=f1e1053]:
+                - link "ISO 9001" [ref=f1e1054] [cursor=pointer]:
+                  - /url: /iso9001
+              - listitem [ref=f1e1055]:
+                - link "ISO 27001" [ref=f1e1056] [cursor=pointer]:
+                  - /url: /iso27001
+              - listitem [ref=f1e1057]:
+                - link "ISO 14001" [ref=f1e1058] [cursor=pointer]:
+                  - /url: /iso14001
+              - listitem [ref=f1e1059]:
+                - link "ISO 45001" [ref=f1e1060] [cursor=pointer]:
+                  - /url: /iso45001
+              - listitem [ref=f1e1061]:
+                - link "Sistema Integrado" [ref=f1e1062] [cursor=pointer]:
+                  - /url: /sig
+              - listitem [ref=f1e1063]:
+                - link "ISO 22301" [ref=f1e1064] [cursor=pointer]:
+                  - /url: /iso22301
+              - listitem [ref=f1e1065]:
+                - link "ISO/IEC 42001" [ref=f1e1066] [cursor=pointer]:
+                  - /url: /iso42001
+              - listitem [ref=f1e1067]:
+                - link "ISO 37301" [ref=f1e1068] [cursor=pointer]:
+                  - /url: /iso37301
+              - listitem [ref=f1e1069]:
+                - link "ISO 50001" [ref=f1e1070] [cursor=pointer]:
+                  - /url: /iso50001
+              - listitem [ref=f1e1071]:
+                - link "ISO 22000" [ref=f1e1072] [cursor=pointer]:
+                  - /url: /iso22000
+              - listitem [ref=f1e1073]:
+                - link "ISO/IEC 20000" [ref=f1e1074] [cursor=pointer]:
+                  - /url: /iso20000
+              - listitem [ref=f1e1075]:
+                - link "ISO 13485" [ref=f1e1076] [cursor=pointer]:
+                  - /url: /iso13485
+              - listitem [ref=f1e1077]:
+                - link "ISO 37001" [ref=f1e1078] [cursor=pointer]:
+                  - /url: /iso37001
+              - listitem [ref=f1e1079]:
+                - link "Precios" [ref=f1e1166] [cursor=pointer]:
+                  - /url: /pricing
+          - generic [ref=f1e1081]:
+            - heading "Empresa" [level=4] [ref=f1e1167]
+            - list [ref=f1e1083]:
+              - listitem [ref=f1e1084]:
+                - link "Casos" [ref=f1e1168] [cursor=pointer]:
+                  - /url: /cases
+              - listitem [ref=f1e1086]:
+                - link "Blog" [ref=f1e1087] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=f1e1088]:
+                - link "Contacto" [ref=f1e1169] [cursor=pointer]:
+                  - /url: /demo
+              - listitem [ref=f1e1090]:
+                - link "Iniciar sesión" [ref=f1e1170] [cursor=pointer]:
+                  - /url: /login
+              - listitem [ref=f1e1092]:
+                - link "Crear cuenta" [ref=f1e1171] [cursor=pointer]:
+                  - /url: /signup
+          - generic [ref=f1e1094]:
+            - heading "Legal" [level=4] [ref=f1e1095]
+            - list [ref=f1e1096]:
+              - listitem [ref=f1e1097]:
+                - link "Privacidad" [ref=f1e1172] [cursor=pointer]:
+                  - /url: /legal/privacy
+              - listitem [ref=f1e1099]:
+                - link "Términos" [ref=f1e1173] [cursor=pointer]:
+                  - /url: /legal/terms
+              - listitem [ref=f1e1101]:
+                - link "Seguridad" [ref=f1e1174] [cursor=pointer]:
+                  - /url: /legal/security
+        - generic [ref=f1e1103]:
+          - generic [ref=f1e1104]: © 2026 NormaFlow · Hecho con cumplimiento en mente.
+          - generic [ref=f1e1105]: Madrid · Barcelona · Lisboa
+  - button "Open Next.js Dev Tools" [ref=f1e1131] [cursor=pointer]
+  - alert [ref=f1e1135]

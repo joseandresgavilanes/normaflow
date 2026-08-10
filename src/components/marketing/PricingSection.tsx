@@ -74,9 +74,12 @@ export default function PricingSection() {
       <div className="nf-container">
         <div style={{ maxWidth: 740, textAlign: "center", margin: "0 auto" }}>
           <span className="nf-eyebrow"><span className="dot"/> Precios</span>
-          <h2 className="nf-h-section" style={{ marginTop: 22 }}>
+          {/* h1: esta sección es el contenido principal de /pricing, su único
+              consumidor. Antes la página no declaraba ningún h1 y la jerarquía
+              del documento empezaba en h2. */}
+          <h1 className="nf-h-section" style={{ marginTop: 22 }}>
             Tres planes. <span className="nf-grad-text">Una sola plataforma.</span>
-          </h2>
+          </h1>
           <p className="nf-lede" style={{ marginTop: 18, marginInline: "auto" }}>
             Elige cómo prefieres usar NormaFlow: suscripción mensual gestionada por nosotros, o licencia única para instalar en tu propia infraestructura.
           </p>
@@ -112,7 +115,7 @@ export default function PricingSection() {
           <p style={{ fontSize: 13, color: "var(--nf-ink-3)", textAlign: "center", maxWidth: 560 }}>
             {mode === "saas"
               ? "14 días de prueba gratis. Sin tarjeta, sin compromiso. Hosting, respaldos y actualizaciones incluidos."
-              : "Pago único. Te entregamos el software listo para desplegar en tu propio Supabase + Vercel. Instalación remota + 12 meses de actualizaciones incluidos."}
+              : "Pago único. Te entregamos el software listo para desplegar en tu propio Supabase + Vercel. Instalación remota + 12 meses de actualizaciones incluidos. Se contrata hablando con nosotros: no hay compra automática."}
           </p>
         </div>
 
@@ -132,18 +135,26 @@ export default function PricingSection() {
                 <ul>
                   {p.features.map((f) => (
                     <li key={f}>
-                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-accent)" }}><Ic.check/></span>{f}
+                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-primary-active)" }}><Ic.check/></span>{f}
                     </li>
                   ))}
                   {mode === "lifetime" && p.name !== "Enterprise" && (
                     <li>
-                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-accent)" }}><Ic.check/></span>
+                      <span style={{ flexShrink: 0, marginTop: 1, color: "var(--nf-primary-active)" }}><Ic.check/></span>
                       Instalación remota + 12 meses de actualizaciones
                     </li>
                   )}
                 </ul>
-                <a href={p.href} className={`nf-btn ${p.popular ? "nf-btn--primary" : "nf-btn--ghost"}`} style={{ justifyContent: "center" }}>
-                  {p.cta} <Ic.arrow className="nf-arrow"/>
+                {/* En modo lifetime el botón llevaba a /signup, que abre una
+                    prueba SaaS: no existe ningún precio de Stripe para la
+                    licencia única (stripe.ts solo mapea STARTER y GROWTH), así
+                    que era una promesa comercial sin camino de compra. */}
+                <a
+                  href={mode === "lifetime" ? "/demo" : p.href}
+                  className={`nf-btn ${p.popular ? "nf-btn--primary" : "nf-btn--ghost"}`}
+                  style={{ justifyContent: "center" }}
+                >
+                  {mode === "lifetime" ? "Hablar con ventas" : p.cta} <Ic.arrow className="nf-arrow"/>
                 </a>
               </div>
             );
@@ -171,8 +182,10 @@ function toggleBtn(active: boolean): React.CSSProperties {
     borderRadius: 999,
     border: "none",
     cursor: "pointer",
-    background: active ? "var(--nf-ink)" : "transparent",
-    color: active ? "var(--nf-bg-1)" : "var(--nf-ink-2)",
+    // `--nf-ink` es el alias del TEXTO: en oscuro vale #f2f3f5 y el botón
+    // activo salía blanco con texto claro encima.
+    background: active ? "var(--nf-primary)" : "transparent",
+    color: active ? "var(--nf-on-primary)" : "var(--nf-text-secondary)",
     transition: "background 0.15s, color 0.15s",
   };
 }

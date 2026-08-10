@@ -1,0 +1,67 @@
+[
+  {
+    "ruta": "/home",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [
+      {
+        "clase": "superficie clara en oscuro",
+        "valor": 0.572,
+        "fg": "",
+        "bg": "rgb(254, 188, 46)",
+        "texto": "",
+        "origen": "span.tl [style: background:#febc2e]"
+      },
+      {
+        "clase": "superficie clara en oscuro",
+        "valor": 0.572,
+        "fg": "",
+        "bg": "rgb(254, 188, 46)",
+        "texto": "",
+        "origen": "span [style: width:9px;height:9px;border-radius:50%;background:#febc2e]"
+      }
+    ],
+    "textoInvisible": [],
+    "contrasteBajo": [
+      {
+        "clase": "contraste bajo el mínimo",
+        "valor": 3.3,
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(22, 163, 74)",
+        "texto": "XLS",
+        "origen": "span.ic"
+      }
+    ],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 2,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/pricing",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  },
+  {
+    "ruta": "/app/risks",
+    "tema": "dark",
+    "estado": 200,
+    "temaAplicado": "dark",
+    "superficiesClaras": [],
+    "textoInvisible": [],
+    "contrasteBajo": [],
+    "bordesDebiles": [],
+    "focoInvisible": [],
+    "svgFijo": 0,
+    "erroresConsola": []
+  }
+]

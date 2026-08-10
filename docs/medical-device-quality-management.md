@@ -22,7 +22,7 @@ sus asesores / organismos notificados.
 | Riesgo de dispositivo | `DeviceRiskFile` | `Risk` corporativo (enlace por `linkedRiskIds`) |
 | Queja de producto | `Complaint` (`md_complaints`) | NC / CAPA genéricos |
 
-## Modelos (24)
+## Modelos (25)
 
 `DeviceFamily` · `MedicalDevice` · `DeviceMasterRecord` · `DesignHistoryFile` ·
 `DesignInput` · `DesignOutput` · `DesignReview` · `DesignVerification` ·
@@ -30,33 +30,83 @@ sus asesores / organismos notificados.
 `SupplierQualification` · `ProcessValidation` · `SterilizationValidation` ·
 `ProductionBatch` · `DeviceTraceability` · `Complaint` · `AdverseEvent` ·
 `PostMarketSurveillance` · `FieldSafetyAction` · `ProductRecall` ·
-`RegulatoryRequirement` · `RegulatorySubmission`
+`RegulatoryRequirement` · `RegulatorySubmission` · `MdRetentionPolicy` (nuevo)
 
 ## Privacidad
 
 - No almacenar información clínica personal innecesaria.
-- Usar `anonymizedSubjectRef` / `customerAccountRef` opacos (p. ej. `CASE-0001`).
-- Validación en dominio + CHECKs SQL (sin `@`, sin secuencias de 8+ dígitos).
+- Usar `anonymizedSubjectRef` / `customerAccountRef` opacos (p. ej. `CASE-0001`)
+  — permanecen en claro, protegidos por CHECK (sin `@`, sin secuencias de
+  8+ dígitos), porque cifrarlos ocultaría el texto que ese CHECK inspecciona.
+- El texto libre de vigilancia (`Complaint.description`/`investigationSummary`,
+  `AdverseEvent.description`, `PostMarketSurveillance.findings`,
+  `FieldSafetyAction.reason`, `ProductRecall.reason`) se cifra en reposo
+  con `MD_SENSITIVE_DATA_ENCRYPTION_KEY` — capa adicional para el caso en
+  que texto narrativo contenga PII más sutil que el heurístico no detecte.
+- Retención configurable por organización (`MdRetentionPolicy.retentionYears`,
+  por defecto 15) para quejas y eventos adversos cerrados; la purga
+  (`purgeComplaint`/`purgeAdverseEvent`) exige `closedAt` + retención vencida,
+  reforzado por CHECK.
 
 ## Permisos reforzados
 
 | Módulo | Alcance |
 |---|---|
-| `medical-devices:*` | Expedientes, diseño, riesgos, proveedores, validaciones, lotes, PMS, requisitos |
-| `md-sensitive:*` | Quejas, eventos adversos, FSCA, retiros |
+| `medical-devices:*` | Expedientes, diseño, riesgos, proveedores, validaciones, lotes, requisitos |
+| `md-sensitive:*` | Quejas, eventos adversos, PMS, FSCA, retiros |
 
 CONTRIBUTOR/VIEWER tienen QMS general pero **no** `md-sensitive` (salvo grants
 explícitos). AUDITOR y roles de gestión sí pueden leer vigilancia sensible.
+Corregido esta entrega: `PostMarketSurveillance` estaba en el grupo
+`medical-devices:*` (legible por CONTRIBUTOR/VIEWER) pese a llevar la misma
+minimización de PII que las otras tres tablas de vigilancia — reclasificada
+a `md-sensitive:*` (migración `20260725070000_medical_devices_retention_privacy`).
+`md-audit-package` excluye deliberadamente las cuatro secciones sensibles
+(mismo patrón que `safety-audit-package` excluyendo `safety-surveillance`);
+se exportan por separado, con un guard `md-sensitive:read` explícito en
+`exportReport`.
 
 ## Workflows
 
 ```
-DMR/DHF:   DRAFT → UNDER_REVIEW → APPROVED → SUPERSEDED
-Queja:     RECEIVED → TRIAGED → INVESTIGATING → CAPA_LINKED → CLOSED
-Retiro:    DRAFT → INITIATED → NOTIFYING → IN_PROGRESS → COMPLETED → CLOSED
+DMR/DHF:         DRAFT → UNDER_REVIEW → APPROVED → SUPERSEDED
+Queja:           RECEIVED → TRIAGED → INVESTIGATING → CAPA_LINKED → CLOSED
+Evento adverso:  REPORTED → UNDER_REVIEW → (REPORTED_TO_AUTHORITY) → CLOSED
+PMS:             PLANNED → IN_PROGRESS → (OVERDUE) → COMPLETED
+FSCA:            DRAFT → INITIATED → IN_PROGRESS → COMPLETED → CLOSED
+Retiro:          DRAFT → INITIATED → NOTIFYING → IN_PROGRESS → COMPLETED → CLOSED
 ```
 
-Implementados en `src/lib/medical-devices/workflows.ts` (+ CHECKs de atribución).
+Implementados en `src/lib/medical-devices/workflows.ts` (+ CHECKs de
+atribución). Los workflows de evento adverso, PMS y FSCA son nuevos esta
+entrega — antes el esquema tenía los estados pero ninguna función podía
+transicionarlos.
+
+## UI y ciclo de vida
+
+Los 25 modelos del módulo están representados en las 10 pestañas de
+`MedicalDevicesClient.tsx`. Las tablas de familias, dispositivos, DMR/DHF,
+inputs/outputs, revisiones, verificaciones, validaciones, transferencias,
+riesgos, proveedores, cualificaciones, lotes, trazabilidad, vigilancia y
+regulación tienen `Editar` cuando el permiso correspondiente está disponible.
+
+`updateMedicalDeviceRecord` valida referencias dentro de la organización,
+registra `AuditLog` dentro de la misma transacción y conserva las reglas de
+atribución para resultados de verificación/validación. La edición de quejas,
+eventos adversos, PMS, acciones de campo y retiros exige `md-sensitive:update`,
+vuelve a aplicar los controles de privacidad y cifra los textos sensibles.
+Los estados permiten retirar/desactivar cuando el modelo lo contempla; no se
+ofrece borrado físico de expedientes regulatorios. La purga de quejas y eventos
+adversos sigue siendo excepcional y solo está disponible después del cierre y
+del vencimiento de la retención configurada.
+
+## AuditLog
+
+Las 33 acciones de `medical-devices.ts` escriben su `AuditLog` dentro de la
+misma `prisma.$transaction` que el registro de negocio (`writeAuditLog`).
+Cerrado esta entrega: 15 de las 26 acciones preexistentes (todo el diseño,
+lotes, trazabilidad, transición de queja, PMS, FSCA y ambos regulatorios) no
+dejaban ningún rastro de auditoría.
 
 ## Pack
 

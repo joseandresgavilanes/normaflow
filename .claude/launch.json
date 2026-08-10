@@ -12,6 +12,19 @@
       "runtimeExecutable": "env",
       "runtimeArgs": ["AUTH_DEMO_MODE=true", "NEXT_PUBLIC_AUTH_DEMO_MODE=true", "npm", "run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "normaflow-design-qa",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "AUTH_DEMO_MODE=true",
+        "NEXT_PUBLIC_AUTH_DEMO_MODE=true",
+        "PORT=3100",
+        "npm",
+        "run",
+        "dev"
+      ],
+      "port": 3100
     }
   ]
 }

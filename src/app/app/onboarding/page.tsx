@@ -2,7 +2,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getOnboardingPayload, type OnboardingPayload } from "@/lib/server-queries";
 import OnboardingWizard from "@/components/onboarding/OnboardingWizard";
 
-export const metadata = { title: "Configura tu workspace | NormaFlow" };
+export const metadata = { title: "Configura tu workspace" };
 
 export default async function OnboardingPage() {
   const ctx = await getAppContext();

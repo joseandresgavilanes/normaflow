@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAuthorization, requirePermission } from "@/lib/permissions/server";
 import { writeAuditLog } from "@/lib/audit-log";
 import { queueReportForContext } from "@/lib/report-queue";
-import { parseInput } from "@/lib/validation/common";
+import { parseId, parseInput } from "@/lib/validation/common";
 import type { Prisma } from "@prisma/client";
 import { assertRtoWithinMtpd, criticalityFor, detectGaps, impactScore, readinessScore, recoveryPriority } from "@/lib/continuity/bia";
 import {
@@ -17,14 +17,19 @@ import {
   criticalActivitySchema,
   criticalActivityUpdateSchema,
   dependencySchema,
+  dependencyUpdateSchema,
   planActivationSchema,
   planApprovalSchema,
   planDeactivationSchema,
   planVersionSchema,
   productPrioritySchema,
+  productPriorityUpdateSchema,
   recoveryProcedureSchema,
+  recoveryProcedureUpdateSchema,
   resourceSchema,
+  resourceUpdateSchema,
   strategySchema,
+  strategyUpdateSchema,
   strategyStatusSchema,
   bcpProcessSchema,
   bcpSchema,
@@ -32,6 +37,9 @@ import {
   continuityExportSchema,
   drpSchema,
   drpUpdateSchema,
+  crisisContactUpdateSchema,
+  crisisTeamUpdateSchema,
+  communicationNodeUpdateSchema,
   improvementSchema,
   improvementStatusSchema,
   scenarioSchema,
@@ -45,7 +53,33 @@ const PATH = "/app/continuity";
 export type ContinuityPayload = Awaited<ReturnType<typeof getContinuityPayload>>;
 
 function dateValue(v: Date | null | undefined) { return v?.toISOString().slice(0, 10) ?? null; }
-function toDate(v: string | null | undefined) { if (!v) return null; return /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T12:00:00.000Z`) : new Date(v); }
+function toDate(v: string | null | undefined) {
+  if (!v) return null;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T12:00:00.000Z`) : new Date(v);
+  if (Number.isNaN(date.getTime())) throw new Error("La fecha no es válida.");
+  return date;
+}
+
+function assertRecoveryWindow(rtoMinutes?: number | null, rpoMinutes?: number | null) {
+  if (typeof rtoMinutes === "number" && typeof rpoMinutes === "number" && rpoMinutes > rtoMinutes) {
+    throw new Error(`El RPO (${rpoMinutes} min) no puede superar el RTO (${rtoMinutes} min).`);
+  }
+}
+
+function assertDateOrder(start?: string | null, end?: string | null) {
+  if (!start || !end) return;
+  const startTime = toDate(start)?.getTime();
+  const endTime = toDate(end)?.getTime();
+  if (startTime !== undefined && endTime !== undefined && startTime > endTime) {
+    throw new Error("La fecha de revisión debe ser posterior o igual a la fecha realizada.");
+  }
+}
+
+function assertResourceQuantities(normalQuantity?: number | null, minimumQuantity?: number | null) {
+  if (typeof normalQuantity === "number" && typeof minimumQuantity === "number" && minimumQuantity > normalQuantity) {
+    throw new Error("La cantidad mínima no puede superar la cantidad normal.");
+  }
+}
 async function ensureMember(organizationId: string, userId: string | null | undefined) {
   if (!userId) return null;
   const m = await prisma.membership.findFirst({ where: { organizationId, userId, active: true } });
@@ -81,6 +115,8 @@ export async function getContinuityPayload() {
   return {
     canCreate: authorization.can("continuity:create"),
     canUpdate: authorization.can("continuity:update"),
+    canApprove: authorization.can("continuity:approve"),
+    canDelete: authorization.can("continuity:delete"),
     canExport: authorization.can("continuity:export"),
     summary: {
       bcps: bcps.length,
@@ -90,7 +126,7 @@ export async function getContinuityPayload() {
       openImprovements: allTests.flatMap((t) => t.results).flatMap((r) => r.improvementActions).filter((a) => a.status !== "DONE").length,
     },
     bcps: bcps.map((b) => ({
-      id: b.id, code: b.code, title: b.title, scope: b.scope, owner: b.owner, status: b.status, rtoMinutes: b.rtoMinutes, rpoMinutes: b.rpoMinutes, dependencies: b.dependencies, nextReviewDate: dateValue(b.nextReviewDate),
+      id: b.id, code: b.code, title: b.title, scope: b.scope, owner: b.owner, status: b.status, version: b.version, rtoMinutes: b.rtoMinutes, rpoMinutes: b.rpoMinutes, dependencies: b.dependencies, nextReviewDate: dateValue(b.nextReviewDate),
       criticalProcesses: b.criticalProcesses.map((p) => ({ id: p.id, process: p.process, rtoMinutes: p.rtoMinutes, rpoMinutes: p.rpoMinutes })),
       scenarios: b.scenarios.map((s) => ({ id: s.id, title: s.title, description: s.description, type: s.type })),
       tests: b.tests.map((t) => ({ id: t.id, title: t.title, type: t.type, status: t.status, plannedDate: dateValue(t.plannedDate), executedDate: dateValue(t.executedDate), responsible: t.responsible, scenario: t.scenario, results: t.results.map((r) => ({ id: r.id, outcome: r.outcome, rtoAchievedMinutes: r.rtoAchievedMinutes, rpoAchievedMinutes: r.rpoAchievedMinutes, summary: r.summary, testedBy: r.testedBy, testedAt: r.testedAt.toISOString(), evidence: r.evidence, improvementActions: r.improvementActions.map((a) => ({ id: a.id, description: a.description, responsible: a.responsible, targetDate: dateValue(a.targetDate), status: a.status })) })) })),
@@ -196,7 +232,7 @@ async function getBcmSection(
     bias: bias.map((b) => ({
       id: b.id, code: b.code, title: b.title, scope: b.scope, methodology: b.methodology,
       version: b.version, status: b.status, owner: b.owner, approvedBy: b.approvedBy,
-      approvedAt: dateValue(b.approvedAt), performedAt: dateValue(b.performedAt),
+      approvedAt: dateValue(b.approvedAt), performedAt: dateValue(b.performedAt), evidenceId: b.evidenceId,
       nextReviewDate: dateValue(b.nextReviewDate),
       activityCount: activityRows.filter((a) => a.biaId === b.id).length,
     })),
@@ -204,7 +240,7 @@ async function getBcmSection(
     productPriorities: priorities.map((p) => ({
       id: p.id, code: p.code, name: p.name, priority: p.priority, criticality: p.criticality,
       mtpdMinutes: p.mtpdMinutes, rtoMinutes: p.rtoMinutes, minimumServiceLevel: p.minimumServiceLevel,
-      revenueShare: p.revenueShare, customersAffected: p.customersAffected,
+      revenueShare: p.revenueShare, customersAffected: p.customersAffected, description: p.description, notes: p.notes,
     })),
     strategies: strategies.map((s) => ({
       id: s.id, code: s.code, title: s.title, type: s.type, status: s.status,
@@ -260,6 +296,7 @@ async function getBcmSection(
 
 export async function createBcp(input: unknown) {
   const data = parseInput(bcpSchema, input);
+  assertRecoveryWindow(data.rtoMinutes, data.rpoMinutes);
   const ctx = await requirePermission("continuity:create");
   const organizationId = ctx.organization.id;
   await ensureMember(organizationId, data.ownerId);
@@ -282,7 +319,27 @@ export async function updateBcp(input: unknown) {
   await prisma.$transaction(async (tx) => {
     const before = await tx.businessContinuityPlan.findFirst({ where: { id: data.id, organizationId } });
     if (!before) throw new Error("Plan no encontrado.");
-    await tx.businessContinuityPlan.update({ where: { id: before.id }, data: { code: data.code, title: data.title, scope: data.scope ?? null, ownerId: data.ownerId ?? null, status: data.status, rtoMinutes: data.rtoMinutes ?? null, rpoMinutes: data.rpoMinutes ?? null, dependencies: data.dependencies ?? null, nextReviewDate: toDate(data.nextReviewDate) } });
+    assertRecoveryWindow(data.rtoMinutes ?? before.rtoMinutes, data.rpoMinutes ?? before.rpoMinutes);
+    if (data.status !== undefined && data.status !== before.status) {
+      throw new Error("El estado del BCP solo puede cambiarse mediante el flujo de aprobación.");
+    }
+    if (data.code !== undefined) {
+      const duplicate = await tx.businessContinuityPlan.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un plan con el código ${data.code}.`);
+    }
+    await tx.businessContinuityPlan.update({
+      where: { id: before.id },
+      data: {
+        ...(data.code !== undefined ? { code: data.code } : {}),
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.scope !== undefined ? { scope: data.scope ?? null } : {}),
+        ...(data.ownerId !== undefined ? { ownerId: data.ownerId ?? null } : {}),
+        ...(data.rtoMinutes !== undefined ? { rtoMinutes: data.rtoMinutes ?? null } : {}),
+        ...(data.rpoMinutes !== undefined ? { rpoMinutes: data.rpoMinutes ?? null } : {}),
+        ...(data.dependencies !== undefined ? { dependencies: data.dependencies ?? null } : {}),
+        ...(data.nextReviewDate !== undefined ? { nextReviewDate: toDate(data.nextReviewDate) } : {}),
+      },
+    });
     await writeAuditLog(tx, { ctx, action: "update", module: "bcp", recordId: before.id });
   });
   revalidatePath(PATH);
@@ -291,6 +348,7 @@ export async function updateBcp(input: unknown) {
 
 export async function createDrp(input: unknown) {
   const data = parseInput(drpSchema, input);
+  assertRecoveryWindow(data.rtoMinutes, data.rpoMinutes);
   const ctx = await requirePermission("continuity:create");
   const organizationId = ctx.organization.id;
   await ensureMember(organizationId, data.ownerId);
@@ -317,11 +375,32 @@ export async function updateDrp(input: unknown) {
   await prisma.$transaction(async (tx) => {
     const before = await tx.disasterRecoveryPlan.findFirst({ where: { id: data.id, organizationId } });
     if (!before) throw new Error("DRP no encontrado.");
+    assertRecoveryWindow(data.rtoMinutes ?? before.rtoMinutes, data.rpoMinutes ?? before.rpoMinutes);
+    if (data.status !== undefined && data.status !== before.status) {
+      throw new Error("El estado del DRP no puede modificarse desde la edición del plan.");
+    }
+    if (data.code !== undefined) {
+      const duplicate = await tx.disasterRecoveryPlan.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un DRP con el código ${data.code}.`);
+    }
     if (data.bcpId) {
       const bcp = await tx.businessContinuityPlan.findFirst({ where: { id: data.bcpId, organizationId } });
       if (!bcp) throw new Error("El BCP vinculado no pertenece a la organización.");
     }
-    await tx.disasterRecoveryPlan.update({ where: { id: before.id }, data: { code: data.code, title: data.title, bcpId: data.bcpId ?? null, ownerId: data.ownerId ?? null, status: data.status, rtoMinutes: data.rtoMinutes ?? null, rpoMinutes: data.rpoMinutes ?? null, systems: data.systems ?? null, dependencies: data.dependencies ?? null, nextReviewDate: toDate(data.nextReviewDate) } });
+    await tx.disasterRecoveryPlan.update({
+      where: { id: before.id },
+      data: {
+        ...(data.code !== undefined ? { code: data.code } : {}),
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.bcpId !== undefined ? { bcpId: data.bcpId ?? null } : {}),
+        ...(data.ownerId !== undefined ? { ownerId: data.ownerId ?? null } : {}),
+        ...(data.rtoMinutes !== undefined ? { rtoMinutes: data.rtoMinutes ?? null } : {}),
+        ...(data.rpoMinutes !== undefined ? { rpoMinutes: data.rpoMinutes ?? null } : {}),
+        ...(data.systems !== undefined ? { systems: data.systems ?? null } : {}),
+        ...(data.dependencies !== undefined ? { dependencies: data.dependencies ?? null } : {}),
+        ...(data.nextReviewDate !== undefined ? { nextReviewDate: toDate(data.nextReviewDate) } : {}),
+      },
+    });
     await writeAuditLog(tx, { ctx, action: "update", module: "drp", recordId: before.id });
   });
   revalidatePath(PATH);
@@ -330,6 +409,7 @@ export async function updateDrp(input: unknown) {
 
 export async function addBcpProcess(input: unknown) {
   const data = parseInput(bcpProcessSchema, input);
+  assertRecoveryWindow(data.rtoMinutes, data.rpoMinutes);
   const ctx = await requirePermission("continuity:update");
   const organizationId = ctx.organization.id;
   const result = await prisma.$transaction(async (tx) => {
@@ -347,6 +427,7 @@ export async function addBcpProcess(input: unknown) {
 }
 
 export async function removeBcpProcess(id: string) {
+  id = parseId(id);
   const ctx = await requirePermission("continuity:update");
   const organizationId = ctx.organization.id;
   const result = await prisma.$transaction(async (tx) => {
@@ -384,8 +465,8 @@ export async function createTest(input: unknown) {
     const plan = await tx.businessContinuityPlan.findFirst({ where: { id: data.planId, organizationId } });
     if (!plan) throw new Error("Plan no encontrado.");
     if (data.scenarioId) {
-      const sc = await tx.continuityScenario.findFirst({ where: { id: data.scenarioId, organizationId } });
-      if (!sc) throw new Error("El escenario no pertenece a la organización.");
+      const sc = await tx.continuityScenario.findFirst({ where: { id: data.scenarioId, organizationId, planId: plan.id } });
+      if (!sc) throw new Error("El escenario no pertenece a este plan.");
     }
     const t = await tx.continuityTest.create({ data: { organizationId, planId: plan.id, scenarioId: data.scenarioId ?? null, title: data.title, type: data.type, plannedDate: toDate(data.plannedDate), responsibleId: data.responsibleId ?? null } });
     await writeAuditLog(tx, { ctx, action: "create_test", module: "continuity_test", recordId: t.id, after: { planId: plan.id } });
@@ -402,6 +483,16 @@ export async function setTestStatus(input: unknown) {
   await prisma.$transaction(async (tx) => {
     const test = await tx.continuityTest.findFirst({ where: { id: data.id, organizationId } });
     if (!test) throw new Error("Prueba no encontrada.");
+    const allowedTransitions: Record<string, string[]> = {
+      PLANNED: ["IN_PROGRESS", "CANCELLED"],
+      IN_PROGRESS: ["COMPLETED", "CANCELLED"],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+    if (test.status === data.status) return;
+    if (!allowedTransitions[test.status]?.includes(data.status)) {
+      throw new Error(`No se puede cambiar una prueba ${test.status} a ${data.status}.`);
+    }
     await tx.continuityTest.update({ where: { id: test.id }, data: { status: data.status, executedDate: data.status === "COMPLETED" ? new Date() : test.executedDate } });
     await writeAuditLog(tx, { ctx, action: "status_change", module: "continuity_test", recordId: test.id, before: { status: test.status }, after: { status: data.status } });
   });
@@ -416,6 +507,9 @@ export async function recordTestResult(input: unknown) {
   const result = await prisma.$transaction(async (tx) => {
     const test = await tx.continuityTest.findFirst({ where: { id: data.testId, organizationId } });
     if (!test) throw new Error("Prueba no encontrada.");
+    if (test.status === "CANCELLED") throw new Error("No se puede registrar un resultado en una prueba cancelada.");
+    const existingResult = await tx.testResult.findFirst({ where: { testId: test.id, organizationId }, select: { id: true } });
+    if (existingResult) throw new Error("La prueba ya tiene un resultado registrado.");
     if (data.evidenceId) {
       const ev = await tx.evidenceFile.findFirst({ where: { id: data.evidenceId, organizationId, deletedAt: null } });
       if (!ev) throw new Error("La evidencia no pertenece a la organización.");
@@ -452,6 +546,11 @@ export async function setImprovementStatus(input: unknown) {
   await prisma.$transaction(async (tx) => {
     const action = await tx.improvementAction.findFirst({ where: { id: data.id, organizationId } });
     if (!action) throw new Error("Acción de mejora no encontrada.");
+    const allowedTransitions: Record<string, string[]> = { OPEN: ["IN_PROGRESS"], IN_PROGRESS: ["DONE"], DONE: [] };
+    if (action.status === data.status) return;
+    if (!allowedTransitions[action.status]?.includes(data.status)) {
+      throw new Error(`No se puede cambiar una mejora ${action.status} a ${data.status}.`);
+    }
     await tx.improvementAction.update({ where: { id: action.id }, data: { status: data.status } });
     await writeAuditLog(tx, { ctx, action: "improvement_status", module: "continuity_test", recordId: action.testResultId, after: { improvementId: action.id, status: data.status } });
   });
@@ -464,7 +563,15 @@ export async function exportContinuity(input: unknown) {
   const ctx = await requirePermission("continuity:export");
   const now = new Date();
   const reportType = data.reportType ?? "continuity-plans";
-  const titles: Record<string, string> = { "continuity-plans": "Planes de continuidad y recuperación", "bcp-dr-tests": "Pruebas BCP/DR" };
+  const titles: Record<string, string> = {
+    "continuity-plans": "Planes de continuidad y recuperación", "bcp-dr-tests": "Pruebas BCP/DR",
+    "bcm-bia": "Análisis de Impacto en el Negocio", "bcm-critical-processes": "Procesos críticos priorizados",
+    "bcm-rto-rpo": "Matriz MTPD/RTO/RPO", "bcm-priority-products": "Priorización de productos y servicios",
+    "bcm-dependencies": "Dependencias y recursos", "bcm-strategies": "Estrategias de continuidad",
+    "bcm-plans": "Planes de continuidad", "bcm-plan-versions": "Historial de versiones de planes",
+    "bcm-crisis-teams": "Equipos de crisis y contactos", "bcm-activations": "Activaciones e interrupciones reales",
+    "bcm-exercises": "Simulacros y resultados", "bcm-gaps": "Brechas de continuidad", "bcm-audit-package": "Auditoría de continuidad (paquete completo)",
+  };
   const report = await queueReportForContext({ ctx, reportType, title: titles[reportType] ?? "Continuidad", format: data.format, fileName: `${reportType}-${now.toISOString().slice(0, 10)}.${data.format === "PDF" ? "pdf" : "xlsx"}`, dateFrom: now, dateTo: now, filters: { from: now.toISOString().slice(0, 10), to: now.toISOString().slice(0, 10) } });
   revalidatePath("/app/reporting");
   return { id: report.id, status: report.status };
@@ -488,7 +595,7 @@ async function ensureRefs(organizationId: string, refs: Partial<Record<
   if (refs.personnelId) guard(prisma.personnel.findFirst({ where: { id: refs.personnelId, organizationId }, select: { id: true } }), "La persona no pertenece a la organización.");
   if (refs.locationId) guard(prisma.location.findFirst({ where: { id: refs.locationId, organizationId }, select: { id: true } }), "La ubicación no pertenece a la organización.");
   if (refs.documentId) guard(prisma.document.findFirst({ where: { id: refs.documentId, organizationId }, select: { id: true } }), "El documento no pertenece a la organización.");
-  if (refs.evidenceId) guard(prisma.evidenceFile.findFirst({ where: { id: refs.evidenceId, organizationId }, select: { id: true } }), "La evidencia no pertenece a la organización.");
+  if (refs.evidenceId) guard(prisma.evidenceFile.findFirst({ where: { id: refs.evidenceId, organizationId, deletedAt: null }, select: { id: true } }), "La evidencia no pertenece a la organización o fue eliminada.");
   if (refs.riskId) guard(prisma.risk.findFirst({ where: { id: refs.riskId, organizationId }, select: { id: true } }), "El riesgo no pertenece a la organización.");
   if (refs.incidentId) guard(prisma.securityIncident.findFirst({ where: { id: refs.incidentId, organizationId }, select: { id: true } }), "El incidente no pertenece a la organización.");
   await Promise.all(checks);
@@ -498,9 +605,11 @@ async function ensureRefs(organizationId: string, refs: Partial<Record<
 
 export async function createBia(input: unknown) {
   const data = parseInput(biaSchema, input);
+  assertDateOrder(data.performedAt, data.nextReviewDate);
   const ctx = await requirePermission("continuity:create");
   const organizationId = ctx.organization.id;
   await ensureMember(organizationId, data.ownerId);
+  await ensureRefs(organizationId, { evidenceId: data.evidenceId });
   const result = await prisma.$transaction(async (tx) => {
     const dup = await tx.businessImpactAnalysis.findFirst({ where: { organizationId, code: data.code } });
     if (dup) throw new Error(`Ya existe un BIA con el código ${data.code}.`);
@@ -508,6 +617,7 @@ export async function createBia(input: unknown) {
       data: {
         organizationId, code: data.code, title: data.title, scope: data.scope ?? null,
         methodology: data.methodology ?? null, version: data.version, ownerId: data.ownerId ?? null,
+        evidenceId: data.evidenceId ?? null,
         performedAt: toDate(data.performedAt), nextReviewDate: toDate(data.nextReviewDate),
         createdById: ctx.user.id,
       },
@@ -517,6 +627,43 @@ export async function createBia(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id };
+}
+
+export async function updateBia(input: unknown) {
+  const data = parseInput(biaUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureMember(organizationId, data.ownerId);
+  await ensureRefs(organizationId, { evidenceId: data.evidenceId });
+  await prisma.$transaction(async (tx) => {
+    const before = await tx.businessImpactAnalysis.findFirst({ where: { id: data.id, organizationId } });
+    if (!before) throw new Error("BIA no encontrado.");
+    if (before.status === "APPROVED") throw new Error("El BIA aprobado está congelado; crea una nueva versión para modificarlo.");
+    const performedAt = data.performedAt !== undefined ? data.performedAt : dateValue(before.performedAt);
+    const nextReviewDate = data.nextReviewDate !== undefined ? data.nextReviewDate : dateValue(before.nextReviewDate);
+    assertDateOrder(performedAt, nextReviewDate);
+    if (data.code !== undefined) {
+      const duplicate = await tx.businessImpactAnalysis.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un BIA con el código ${data.code}.`);
+    }
+    await tx.businessImpactAnalysis.update({
+      where: { id: before.id },
+      data: {
+        ...(data.code !== undefined ? { code: data.code } : {}),
+        ...(data.title !== undefined ? { title: data.title } : {}),
+        ...(data.scope !== undefined ? { scope: data.scope ?? null } : {}),
+        ...(data.methodology !== undefined ? { methodology: data.methodology ?? null } : {}),
+        ...(data.version !== undefined ? { version: data.version } : {}),
+        ...(data.ownerId !== undefined ? { ownerId: data.ownerId ?? null } : {}),
+        ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId ?? null } : {}),
+        ...(data.performedAt !== undefined ? { performedAt: toDate(data.performedAt) } : {}),
+        ...(data.nextReviewDate !== undefined ? { nextReviewDate: toDate(data.nextReviewDate) } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, before: { code: before.code, version: before.version }, after: { code: data.code ?? before.code, version: data.version ?? before.version }, extra: { event: "update_bia" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
 }
 
 /** Aprueba el BIA: queda congelado como línea base para las estrategias. */
@@ -566,6 +713,7 @@ export async function createCriticalActivity(input: unknown) {
   const ctx = await requirePermission("continuity:create");
   const organizationId = ctx.organization.id;
   assertRtoWithinMtpd(data.rtoMinutes, data.mtpdMinutes);
+  assertRecoveryWindow(data.rtoMinutes, data.rpoMinutes);
   await ensureMember(organizationId, data.ownerId);
   await ensureRefs(organizationId, { processId: data.processId });
   const result = await prisma.$transaction(async (tx) => {
@@ -603,7 +751,9 @@ export async function updateCriticalActivity(input: unknown) {
     if (!before) throw new Error("Actividad crítica no encontrada.");
     const mtpd = data.mtpdMinutes !== undefined ? data.mtpdMinutes : before.mtpdMinutes;
     const rto = data.rtoMinutes !== undefined ? data.rtoMinutes : before.rtoMinutes;
+    const rpo = data.rpoMinutes !== undefined ? data.rpoMinutes : before.rpoMinutes;
     assertRtoWithinMtpd(rto, mtpd);
+    assertRecoveryWindow(rto, rpo);
     await tx.criticalActivity.update({
       where: { id: before.id },
       data: {
@@ -658,6 +808,38 @@ export async function createProductPriority(input: unknown) {
   return { id: result.id };
 }
 
+export async function updateProductPriority(input: unknown) {
+  const data = parseInput(productPriorityUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  const existing = await prisma.productServicePriority.findFirst({ where: { id: data.id, organizationId } });
+  if (!existing) throw new Error("Producto o servicio prioritario no encontrado.");
+  const mtpd = data.mtpdMinutes !== undefined ? data.mtpdMinutes : existing.mtpdMinutes;
+  const rto = data.rtoMinutes !== undefined ? data.rtoMinutes : existing.rtoMinutes;
+  assertRtoWithinMtpd(rto, mtpd);
+  await prisma.$transaction(async (tx) => {
+    if (data.biaId !== undefined) {
+      const bia = await tx.businessImpactAnalysis.findFirst({ where: { id: data.biaId, organizationId }, select: { id: true } });
+      if (!bia) throw new Error("BIA no encontrado.");
+    }
+    if (data.code !== undefined) {
+      const duplicate = await tx.productServicePriority.findFirst({ where: { organizationId, code: data.code, NOT: { id: existing.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un producto/servicio con el código ${data.code}.`);
+    }
+    await tx.productServicePriority.update({ where: { id: existing.id }, data: {
+      ...(data.biaId !== undefined ? { biaId: data.biaId } : {}), ...(data.code !== undefined ? { code: data.code } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}), ...(data.description !== undefined ? { description: data.description ?? null } : {}),
+      ...(data.criticality !== undefined ? { criticality: data.criticality } : {}), ...(data.mtpdMinutes !== undefined ? { mtpdMinutes: data.mtpdMinutes ?? null } : {}),
+      ...(data.rtoMinutes !== undefined ? { rtoMinutes: data.rtoMinutes ?? null } : {}), ...(data.minimumServiceLevel !== undefined ? { minimumServiceLevel: data.minimumServiceLevel ?? null } : {}),
+      ...(data.revenueShare !== undefined ? { revenueShare: data.revenueShare ?? null } : {}), ...(data.customersAffected !== undefined ? { customersAffected: data.customersAffected ?? null } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: existing.id, extra: { event: "update_product_priority" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
+}
+
 // ─── Dependencias y recursos ─────────────────────────
 
 export async function addDependency(input: unknown) {
@@ -684,8 +866,36 @@ export async function addDependency(input: unknown) {
   return { id: result.id };
 }
 
+export async function updateDependency(input: unknown) {
+  const data = parseInput(dependencyUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureRefs(organizationId, { processId: data.processId, assetId: data.assetId, supplierId: data.supplierId, personnelId: data.personnelId, locationId: data.locationId });
+  const before = await prisma.businessDependency.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Dependencia no encontrada.");
+  if (data.activityId !== undefined) {
+    const activity = await prisma.criticalActivity.findFirst({ where: { id: data.activityId, organizationId }, select: { id: true } });
+    if (!activity) throw new Error("Actividad crítica no encontrada.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.businessDependency.update({ where: { id: before.id }, data: {
+      ...(data.activityId !== undefined ? { activityId: data.activityId } : {}), ...(data.type !== undefined ? { type: data.type } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}), ...(data.description !== undefined ? { description: data.description ?? null } : {}),
+      ...(data.processId !== undefined ? { processId: data.processId ?? null } : {}), ...(data.assetId !== undefined ? { assetId: data.assetId ?? null } : {}),
+      ...(data.supplierId !== undefined ? { supplierId: data.supplierId ?? null } : {}), ...(data.personnelId !== undefined ? { personnelId: data.personnelId ?? null } : {}),
+      ...(data.locationId !== undefined ? { locationId: data.locationId ?? null } : {}), ...(data.criticality !== undefined ? { criticality: data.criticality } : {}),
+      ...(data.maxOutageMinutes !== undefined ? { maxOutageMinutes: data.maxOutageMinutes ?? null } : {}), ...(data.alternative !== undefined ? { alternative: data.alternative ?? null } : {}),
+      ...(data.singlePointOfFailure !== undefined ? { singlePointOfFailure: data.singlePointOfFailure } : {}), ...(data.notes !== undefined ? { notes: data.notes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, before: { name: before.name, spof: before.singlePointOfFailure }, after: { name: data.name ?? before.name, spof: data.singlePointOfFailure ?? before.singlePointOfFailure }, extra: { event: "update_dependency" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
+}
+
 export async function addResourceRequirement(input: unknown) {
   const data = parseInput(resourceSchema, input);
+  assertResourceQuantities(data.normalQuantity, data.minimumQuantity);
   const ctx = await requirePermission("continuity:update");
   const organizationId = ctx.organization.id;
   await ensureRefs(organizationId, { supplierId: data.supplierId, assetId: data.assetId });
@@ -706,6 +916,37 @@ export async function addResourceRequirement(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id };
+}
+
+export async function updateResourceRequirement(input: unknown) {
+  const data = parseInput(resourceUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureRefs(organizationId, { supplierId: data.supplierId, assetId: data.assetId });
+  const before = await prisma.resourceRequirement.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Recurso mínimo no encontrado.");
+  assertResourceQuantities(
+    data.normalQuantity !== undefined ? data.normalQuantity : before.normalQuantity,
+    data.minimumQuantity !== undefined ? data.minimumQuantity : before.minimumQuantity,
+  );
+  if (data.activityId !== undefined) {
+    const activity = await prisma.criticalActivity.findFirst({ where: { id: data.activityId, organizationId }, select: { id: true } });
+    if (!activity) throw new Error("Actividad crítica no encontrada.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.resourceRequirement.update({ where: { id: before.id }, data: {
+      ...(data.activityId !== undefined ? { activityId: data.activityId } : {}), ...(data.type !== undefined ? { type: data.type } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}), ...(data.description !== undefined ? { description: data.description ?? null } : {}),
+      ...(data.normalQuantity !== undefined ? { normalQuantity: data.normalQuantity ?? null } : {}), ...(data.minimumQuantity !== undefined ? { minimumQuantity: data.minimumQuantity ?? null } : {}),
+      ...(data.unit !== undefined ? { unit: data.unit ?? null } : {}), ...(data.availableAt !== undefined ? { availableAt: data.availableAt ?? null } : {}),
+      ...(data.alternativeResource !== undefined ? { alternativeResource: data.alternativeResource ?? null } : {}), ...(data.leadTimeMinutes !== undefined ? { leadTimeMinutes: data.leadTimeMinutes ?? null } : {}),
+      ...(data.supplierId !== undefined ? { supplierId: data.supplierId ?? null } : {}), ...(data.assetId !== undefined ? { assetId: data.assetId ?? null } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_resource_requirement" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
 }
 
 // ─── Estrategias ─────────────────────────────────────
@@ -740,6 +981,40 @@ export async function createStrategy(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id };
+}
+
+export async function updateStrategy(input: unknown) {
+  const data = parseInput(strategyUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureMember(organizationId, data.ownerId);
+  const before = await prisma.continuityStrategy.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Estrategia no encontrada.");
+  if (data.activityId) {
+    const activity = await prisma.criticalActivity.findFirst({ where: { id: data.activityId, organizationId }, select: { id: true } });
+    if (!activity) throw new Error("Actividad crítica no encontrada.");
+  }
+  if (data.planId) {
+    const plan = await prisma.businessContinuityPlan.findFirst({ where: { id: data.planId, organizationId }, select: { id: true } });
+    if (!plan) throw new Error("Plan no encontrado.");
+  }
+  await prisma.$transaction(async (tx) => {
+    if (data.code !== undefined) {
+      const duplicate = await tx.continuityStrategy.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe una estrategia con el código ${data.code}.`);
+    }
+    await tx.continuityStrategy.update({ where: { id: before.id }, data: {
+      ...(data.code !== undefined ? { code: data.code } : {}), ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.activityId !== undefined ? { activityId: data.activityId ?? null } : {}), ...(data.planId !== undefined ? { planId: data.planId ?? null } : {}),
+      ...(data.type !== undefined ? { type: data.type } : {}), ...(data.description !== undefined ? { description: data.description ?? null } : {}),
+      ...(data.achievesRtoMinutes !== undefined ? { achievesRtoMinutes: data.achievesRtoMinutes ?? null } : {}), ...(data.achievesRpoMinutes !== undefined ? { achievesRpoMinutes: data.achievesRpoMinutes ?? null } : {}),
+      ...(data.cost !== undefined ? { cost: data.cost ?? null } : {}), ...(data.ownerId !== undefined ? { ownerId: data.ownerId ?? null } : {}),
+      ...(data.resourcesNeeded !== undefined ? { resourcesNeeded: data.resourcesNeeded ?? null } : {}), ...(data.notes !== undefined ? { notes: data.notes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_strategy" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
 }
 
 export async function setStrategyStatus(input: unknown) {
@@ -794,6 +1069,41 @@ export async function createRecoveryProcedure(input: unknown) {
   return { id: result.id };
 }
 
+export async function updateRecoveryProcedure(input: unknown) {
+  const data = parseInput(recoveryProcedureUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureMember(organizationId, data.responsibleId);
+  await ensureRefs(organizationId, { documentId: data.documentId });
+  const before = await prisma.recoveryProcedure.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Procedimiento de recuperación no encontrado.");
+  if (data.planId) {
+    const plan = await prisma.businessContinuityPlan.findFirst({ where: { id: data.planId, organizationId }, select: { id: true } });
+    if (!plan) throw new Error("Plan no encontrado.");
+  }
+  if (data.activityId) {
+    const activity = await prisma.criticalActivity.findFirst({ where: { id: data.activityId, organizationId }, select: { id: true } });
+    if (!activity) throw new Error("Actividad crítica no encontrada.");
+  }
+  await prisma.$transaction(async (tx) => {
+    if (data.code !== undefined) {
+      const duplicate = await tx.recoveryProcedure.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un procedimiento con el código ${data.code}.`);
+    }
+    await tx.recoveryProcedure.update({ where: { id: before.id }, data: {
+      ...(data.code !== undefined ? { code: data.code } : {}), ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.planId !== undefined ? { planId: data.planId ?? null } : {}), ...(data.activityId !== undefined ? { activityId: data.activityId ?? null } : {}),
+      ...(data.objective !== undefined ? { objective: data.objective ?? null } : {}), ...(data.steps !== undefined ? { steps: data.steps ?? null } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId ?? null } : {}), ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId ?? null } : {}),
+      ...(data.estimatedMinutes !== undefined ? { estimatedMinutes: data.estimatedMinutes ?? null } : {}), ...(data.prerequisites !== undefined ? { prerequisites: data.prerequisites ?? null } : {}),
+      ...(data.order !== undefined ? { order: data.order } : {}), ...(data.version !== undefined ? { version: data.version } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_recovery_procedure" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
+}
+
 // ─── Equipos de crisis y comunicación ────────────────
 
 export async function createCrisisTeam(input: unknown) {
@@ -823,6 +1133,35 @@ export async function createCrisisTeam(input: unknown) {
   return { id: result.id };
 }
 
+export async function updateCrisisTeam(input: unknown) {
+  const data = parseInput(crisisTeamUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureMember(organizationId, data.leaderId);
+  await ensureMember(organizationId, data.deputyId);
+  const before = await prisma.crisisTeam.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Equipo de crisis no encontrado.");
+  if (data.planId) {
+    const plan = await prisma.businessContinuityPlan.findFirst({ where: { id: data.planId, organizationId }, select: { id: true } });
+    if (!plan) throw new Error("Plan no encontrado.");
+  }
+  await prisma.$transaction(async (tx) => {
+    if (data.code !== undefined) {
+      const duplicate = await tx.crisisTeam.findFirst({ where: { organizationId, code: data.code, NOT: { id: before.id } }, select: { id: true } });
+      if (duplicate) throw new Error(`Ya existe un equipo con el código ${data.code}.`);
+    }
+    await tx.crisisTeam.update({ where: { id: before.id }, data: {
+      ...(data.code !== undefined ? { code: data.code } : {}), ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.purpose !== undefined ? { purpose: data.purpose ?? null } : {}), ...(data.planId !== undefined ? { planId: data.planId ?? null } : {}),
+      ...(data.leaderId !== undefined ? { leaderId: data.leaderId ?? null } : {}), ...(data.deputyId !== undefined ? { deputyId: data.deputyId ?? null } : {}),
+      ...(data.activationRule !== undefined ? { activationRule: data.activationRule ?? null } : {}), ...(data.meetingPoint !== undefined ? { meetingPoint: data.meetingPoint ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_crisis_team" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
+}
+
 export async function addCrisisContact(input: unknown) {
   const data = parseInput(crisisContactSchema, input);
   const ctx = await requirePermission("continuity:update");
@@ -846,6 +1185,34 @@ export async function addCrisisContact(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id };
+}
+
+export async function updateCrisisContact(input: unknown) {
+  const data = parseInput(crisisContactUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  await ensureMember(organizationId, data.userId);
+  await ensureRefs(organizationId, { personnelId: data.personnelId, supplierId: data.supplierId });
+  const before = await prisma.crisisContact.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Contacto de crisis no encontrado.");
+  if (data.teamId) {
+    const team = await prisma.crisisTeam.findFirst({ where: { id: data.teamId, organizationId }, select: { id: true } });
+    if (!team) throw new Error("Equipo de crisis no encontrado.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.crisisContact.update({ where: { id: before.id }, data: {
+      ...(data.teamId !== undefined ? { teamId: data.teamId } : {}), ...(data.name !== undefined ? { name: data.name } : {}), ...(data.role !== undefined ? { role: data.role ?? null } : {}),
+      ...(data.type !== undefined ? { type: data.type } : {}), ...(data.userId !== undefined ? { userId: data.userId ?? null } : {}),
+      ...(data.personnelId !== undefined ? { personnelId: data.personnelId ?? null } : {}), ...(data.supplierId !== undefined ? { supplierId: data.supplierId ?? null } : {}),
+      ...(data.primaryPhone !== undefined ? { primaryPhone: data.primaryPhone ?? null } : {}), ...(data.altPhone !== undefined ? { altPhone: data.altPhone ?? null } : {}),
+      ...(data.email !== undefined ? { email: data.email ?? null } : {}), ...(data.escalationOrder !== undefined ? { escalationOrder: data.escalationOrder } : {}),
+      ...(data.isDeputy !== undefined ? { isDeputy: data.isDeputy } : {}), ...(data.availability !== undefined ? { availability: data.availability ?? null } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_crisis_contact" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
 }
 
 export async function addCommunicationNode(input: unknown) {
@@ -875,6 +1242,40 @@ export async function addCommunicationNode(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id };
+}
+
+export async function updateCommunicationNode(input: unknown) {
+  const data = parseInput(communicationNodeUpdateSchema, input);
+  const ctx = await requirePermission("continuity:update");
+  const organizationId = ctx.organization.id;
+  const before = await prisma.communicationTree.findFirst({ where: { id: data.id, organizationId } });
+  if (!before) throw new Error("Nodo de comunicación no encontrado.");
+  const teamId = data.teamId ?? before.teamId;
+  if (data.teamId) {
+    const team = await prisma.crisisTeam.findFirst({ where: { id: data.teamId, organizationId }, select: { id: true } });
+    if (!team) throw new Error("Equipo de crisis no encontrado.");
+  }
+  if (data.contactId) {
+    const contact = await prisma.crisisContact.findFirst({ where: { id: data.contactId, organizationId, teamId }, select: { id: true } });
+    if (!contact) throw new Error("El contacto no pertenece a este equipo.");
+  }
+  if (data.parentId) {
+    if (data.parentId === before.id) throw new Error("Un nodo no puede ser su propio padre.");
+    const parent = await prisma.communicationTree.findFirst({ where: { id: data.parentId, organizationId, teamId }, select: { id: true } });
+    if (!parent) throw new Error("El nodo padre no pertenece a este árbol.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.communicationTree.update({ where: { id: before.id }, data: {
+      ...(data.teamId !== undefined ? { teamId: data.teamId } : {}), ...(data.contactId !== undefined ? { contactId: data.contactId ?? null } : {}),
+      ...(data.parentId !== undefined ? { parentId: data.parentId ?? null } : {}), ...(data.label !== undefined ? { label: data.label } : {}),
+      ...(data.audience !== undefined ? { audience: data.audience ?? null } : {}), ...(data.channel !== undefined ? { channel: data.channel ?? null } : {}),
+      ...(data.messageTemplate !== undefined ? { messageTemplate: data.messageTemplate ?? null } : {}), ...(data.order !== undefined ? { order: data.order } : {}),
+      ...(data.maxDelayMinutes !== undefined ? { maxDelayMinutes: data.maxDelayMinutes ?? null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: "bcm", recordId: before.id, extra: { event: "update_communication_node" } });
+  });
+  revalidatePath(PATH);
+  return { id: data.id };
 }
 
 // ─── Versionado, aprobación y ACTIVACIÓN del plan ────

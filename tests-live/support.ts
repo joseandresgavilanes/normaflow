@@ -74,6 +74,11 @@ export async function cleanupLiveFixture(state: LiveFixtureState, prisma = new P
   });
   const authIds = Array.from(new Set(runUsers.map((user) => user.authUserId).filter((id): id is string => Boolean(id))));
   await admin.storage.from("documents").remove(state.storagePaths).catch(() => undefined);
+  // This database is required by getLiveTestEnvironment() to be an isolated,
+  // mutation-safe test target. TRUNCATE bypasses the append-only row trigger
+  // without weakening it and prevents fixture organization cascades from
+  // trying to DELETE immutable audit rows.
+  await prisma.$executeRawUnsafe('TRUNCATE TABLE public."audit_logs"');
   await prisma.organization.deleteMany({ where: { id: { in: [state.actorA.organizationId, state.actorB.organizationId] } } });
   await prisma.user.deleteMany({ where: { id: { in: runUsers.map((user) => user.id) } } });
   await Promise.allSettled([

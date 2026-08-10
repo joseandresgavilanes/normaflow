@@ -95,9 +95,9 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 700,
-                    background: "rgba(255,255,255,0.75)",
+                    background: "var(--nf-glass)",
                     border: "1px solid rgba(82, 102, 246, 0.12)",
-                    color: "#5266F6",
+                    color: "var(--nf-primary-active)",
                   }}
                 >
                   <Building2 size={14} strokeWidth={2.25} aria-hidden />
@@ -112,7 +112,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 700,
-                    background: "rgba(255,255,255,0.75)",
+                    background: "var(--nf-glass)",
                     border: "1px solid rgba(82, 102, 246, 0.12)",
                     color: "var(--nf-ink-2)",
                   }}
@@ -132,7 +132,7 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
 
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", display: "block", marginBottom: 16 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 7, marginBottom: 8 }}>
-              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "#5266F6" }} />
+              <UserRound size={16} strokeWidth={2.25} aria-hidden style={{ color: "var(--nf-primary-active)" }} />
               Nombre visible
             </span>
             <input
@@ -171,8 +171,8 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
             style={{
               width: "100%",
               maxWidth: 280,
-              background: "#5266F6",
-              color: "#fff",
+              background: "var(--nf-primary)",
+              color: "var(--nf-text-on-primary)",
               border: "none",
               borderRadius: 10,
               padding: "12px 18px",

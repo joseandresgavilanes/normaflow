@@ -8,7 +8,7 @@ import { getIntegrationsPayload } from "@/lib/server-queries";
 import { PlanLimitError } from "@/lib/plan-entitlements";
 import PlanUpgradeGate from "@/components/app/PlanUpgradeGate";
 
-export const metadata = { title: "Integraciones | NormaFlow" };
+export const metadata = { title: "Integraciones" };
 export const dynamic = "force-dynamic";
 
 export default async function IntegrationsPage() {

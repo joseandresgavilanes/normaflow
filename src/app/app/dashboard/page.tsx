@@ -5,7 +5,7 @@ import { getDashboardPayload } from "@/lib/server-queries";
 import AccessDenied from "@/components/app/AccessDenied";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Dashboard | NormaFlow" };
+export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const ctx = await getAppContext();

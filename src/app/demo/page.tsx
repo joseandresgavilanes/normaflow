@@ -48,46 +48,46 @@ export default function DemoPage() {
                 "Adaptamos la demo a tu sector y norma.",
               ].map((t) => (
                 <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
-                  <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                  <span style={{ color: "var(--nf-primary-active)", marginTop: 4 }}><Ic.check/></span>{t}
                 </li>
               ))}
             </ul>
             <p style={{ marginTop: 32, fontSize: 14, color: "var(--nf-ink-3)" }}>
-              ¿Prefieres probar solo? <Link href="/signup" style={{ color: "var(--nf-accent)" }}>Crear cuenta · 14 días gratis</Link>
+              ¿Prefieres probar solo? <Link href="/signup" style={{ color: "var(--nf-primary-active)" }}>Crear cuenta · 14 días gratis</Link>
             </p>
           </div>
 
-          <div className="nf-card" style={{ padding: "clamp(24px, 3.5vw, 36px)" }}>
+          <div className="nfm-card" style={{ padding: "clamp(24px, 3.5vw, 36px)" }}>
             {isSubmitSuccessful ? (
-              <div style={{ padding: 20, borderRadius: 12, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
+              <div style={{ padding: 20, borderRadius: 12, background: "var(--nf-accent-soft)", border: "1px solid var(--nf-primary-border)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-primary-active)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6 }}>● Mensaje enviado</div>
                 <p style={{ color: "var(--nf-ink)", margin: 0, fontSize: 15 }}>Gracias por contactar con NormaFlow. Te respondemos en breve.</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div>
                   <label className="nf-label">Nombre</label>
-                  <input {...register("name")} className="nf-input" placeholder="María Torres" />
-                  {errors.name && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
+                  <input aria-label="María Torres" {...register("name")} className="nfm-input" placeholder="María Torres" />
+                  {errors.name && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.name.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Email corporativo</label>
-                  <input type="email" {...register("email")} className="nf-input" placeholder="maria@empresa.com" />
-                  {errors.email && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
+                  <input aria-label="maria@empresa.com" type="email" {...register("email")} className="nfm-input" placeholder="maria@empresa.com" />
+                  {errors.email && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.email.message}</span>}
                 </div>
                 <div>
                   <label className="nf-label">Empresa</label>
-                  <input {...register("company")} className="nf-input" placeholder="Tecnoserv Industrial" />
-                  {errors.company && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
+                  <input aria-label="Tecnoserv Industrial" {...register("company")} className="nfm-input" placeholder="Tecnoserv Industrial" />
+                  {errors.company && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.company.message}</span>}
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div>
                     <label className="nf-label">Teléfono (opcional)</label>
-                    <input {...register("phone")} className="nf-input" placeholder="+34 600 000 000" />
+                    <input aria-label="Teléfono" {...register("phone")} className="nfm-input" placeholder="+34 600 000 000" />
                   </div>
                   <div>
                     <label className="nf-label">Tamaño</label>
-                    <select {...register("employees")} className="nf-select">
+                    <select aria-label="Empleados" {...register("employees")} className="nfm-select">
                       <option value="1-49">1 – 49</option>
                       <option value="50-250">50 – 250</option>
                       <option value="250+">Más de 250</option>
@@ -96,8 +96,8 @@ export default function DemoPage() {
                 </div>
                 <div>
                   <label className="nf-label">Mensaje</label>
-                  <textarea {...register("message")} rows={4} className="nf-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
-                  {errors.message && <span style={{ color: "var(--nf-danger)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
+                  <textarea aria-label="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" {...register("message")} rows={4} className="nfm-textarea" placeholder="¿Qué normas gestionas? ¿Cuándo es tu próxima auditoría?" />
+                  {errors.message && <span style={{ color: "var(--nf-danger-text)", fontSize: 12, marginTop: 4, display: "block" }}>{errors.message.message}</span>}
                 </div>
                 <button type="submit" disabled={isSubmitting} className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar solicitud <Ic.arrow className="nf-arrow"/>

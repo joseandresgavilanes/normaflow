@@ -7,7 +7,7 @@ import { getAimsPayload } from "@/lib/aims/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { requiredSafeguards } from "@/lib/aims/classification";
 
-export const metadata = { title: "Gestión de IA | NormaFlow" };
+export const metadata = { title: "Gestión de IA" };
 export const dynamic = "force-dynamic";
 
 export default async function AimsPage() {
@@ -33,6 +33,7 @@ const day = 86400000;
 function demoPayload(): Awaited<ReturnType<typeof getAimsPayload>> {
   return {
     canManage: false,
+    canUpdate: false,
     canApprove: false,
     members: [{ id: "demo-u1", name: "Marta Gobernanza" }, { id: "demo-u2", name: "Iván Datos" }],
     systems: [
@@ -54,6 +55,14 @@ function demoPayload(): Awaited<ReturnType<typeof getAimsPayload>> {
         impactAssessment: null,
         requiredSafeguards: requiredSafeguards("LIMITED"), missingSafeguards: [], compliant: true,
       },
+    ],
+    useCases: [
+      { id: "d-uc1", code: "IAU-0001", systemId: "d-s1", title: "Criba inicial de candidaturas", objective: "Reducir el tiempo de preselección para vacantes operativas de alto volumen.", decisionAutonomy: "HUMAN_IN_THE_LOOP", affectedCount: 500 },
+      { id: "d-uc2", code: "IAU-0002", systemId: "d-s2", title: "Borrador de procedimientos", objective: "Acelerar la redacción inicial de procedimientos del SGC.", decisionAutonomy: "HUMAN_IN_COMMAND", affectedCount: null },
+    ],
+    assessments: [
+      { id: "d-a1", code: "EIA-0001", systemId: "d-s1", version: "1", overallSeverity: "HIGH", classification: "HIGH", reviewStatus: "APPROVED", reviewerId: "demo-u1", reviewedAt: new Date(Date.now() - day * 61), assessorId: "demo-u2" },
+      { id: "d-a2", code: "EIA-0002", systemId: "d-s2", version: "1", overallSeverity: "MODERATE", classification: "LIMITED", reviewStatus: "HUMAN_REVIEW", reviewerId: null, reviewedAt: null, assessorId: "demo-u2" },
     ],
     risks: [
       { id: "d-r1", code: "IAR-0001", systemId: "d-s1", title: "Sesgo por antigüedad del historial de contratación", category: "BIAS_DISCRIMINATION", likelihood: 4, impact: 5, inherentScore: 20, inherentLevel: "CRITICAL", residualScore: 8, residualLevel: "MEDIUM", acceptability: "TOLERABLE", treatment: "MITIGATE", status: "IN_TREATMENT", ownerId: "demo-u1", dueDate: new Date(Date.now() + day * 30) },
@@ -102,5 +111,5 @@ function demoPayload(): Awaited<ReturnType<typeof getAimsPayload>> {
       outputsAwaitingReview: 1, outputsApproved: 1, outputsRejected: 0, outputsPromoted: 1, humanRuleViolations: 0,
       monitoring: { measurements: 2, breached: 1, drifting: 1, systemsWithBreach: 1, unmonitoredSystems: 0 },
     },
-  };
+  } as unknown as Awaited<ReturnType<typeof getAimsPayload>>;
 }

@@ -8,17 +8,19 @@ export const REPORT_IDS = [
   "continuity-plans", "bcp-dr-tests", "critical-suppliers",
   "env-aspects-impacts", "env-significant-aspects", "env-legal-obligations",
   "env-compliance-evaluation", "env-objectives", "env-resource-consumption",
-  "env-waste", "env-emissions", "env-emergencies", "env-audit-package",
+  "env-waste", "env-emissions", "env-emergencies", "env-biodiversity", "env-audit-package",
   "safety-hazard-matrix", "safety-critical-risks", "safety-inspections",
   "safety-ppe", "safety-permits", "safety-incidents", "safety-investigation",
-  "safety-drills", "safety-indicators", "safety-contractors", "safety-audit-package",
+  "safety-drills", "safety-indicators", "safety-contractors", "safety-surveillance", "safety-audit-package",
   // Sistema Integrado de Gestión (ISO 9001 + 14001 + 45001)
-  "sig-crosswalk", "sig-scope-policy", "sig-interested-parties", "sig-objectives",
+  "sig-crosswalk", "sig-compliance-by-standard", "sig-common-requirements",
+  "sig-scope-policy", "sig-interested-parties", "sig-objectives",
   "sig-shared-elements", "sig-integrated-audit", "sig-integrated-capa",
   "sig-management-review", "sig-system-package",
   // Continuidad del negocio (ISO 22301)
   "bcm-bia", "bcm-critical-processes", "bcm-rto-rpo", "bcm-dependencies",
-  "bcm-strategies", "bcm-plans", "bcm-exercises", "bcm-gaps", "bcm-audit-package",
+  "bcm-priority-products", "bcm-strategies", "bcm-plans", "bcm-plan-versions",
+  "bcm-crisis-teams", "bcm-activations", "bcm-exercises", "bcm-gaps", "bcm-audit-package",
   // Gestión de inteligencia artificial (ISO/IEC 42001)
   "ai-inventory", "ai-impact-assessment", "ai-risks", "ai-datasets", "ai-models",
   "ai-controls", "ai-incidents", "ai-transparency", "ai-human-review", "ai-audit-package",
@@ -26,11 +28,11 @@ export const REPORT_IDS = [
   // sin identidades; el resto del canal no se exporta.
   "compliance-obligations", "compliance-risks", "compliance-evaluations", "compliance-calendar",
   "compliance-speak-up", "compliance-investigations", "compliance-breaches",
-  "compliance-remediation", "compliance-management-review",
+  "compliance-remediation", "compliance-management-review", "compliance-audit-package",
   // Antisoborno (ISO 37001) — extensión del SGC; no duplica obligaciones ni canal.
   "abms-risk-map", "abms-third-parties", "abms-due-diligence", "abms-beneficial-owners",
   "abms-gifts", "abms-donations", "abms-conflicts", "abms-high-risk-ops",
-  "abms-controls", "abms-investigations",
+  "abms-controls", "abms-investigations", "abms-audit-package",
   // Gestión energética (ISO 50001)
   "enms-energy-review", "enms-significant-uses", "enms-baseline", "enms-enpi",
   "enms-consumption", "enms-opportunities", "enms-actions", "enms-savings",
@@ -42,7 +44,7 @@ export const REPORT_IDS = [
   // Gestión de servicios TI (ISO/IEC 20000 / ITSM)
   "itsm-sla", "itsm-incidents", "itsm-problems", "itsm-changes",
   "itsm-availability", "itsm-capacity", "itsm-continuity", "itsm-suppliers",
-  "itsm-service-performance",
+  "itsm-service-performance", "itsm-audit-package",
   // Dispositivos médicos (ISO 13485)
   "md-design-history", "md-master-record", "md-risks", "md-validations",
   "md-suppliers", "md-batches", "md-complaints", "md-surveillance",

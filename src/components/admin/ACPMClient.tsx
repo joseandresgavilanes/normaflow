@@ -31,6 +31,8 @@ import {
 } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
+import { Field as UiField } from "@/components/ui/Field";
+import { WorkflowStepper } from "@/components/ui/WorkflowStepper";
 
 const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "REQUEST",           label: "Solicitud",             sub: "Apertura" },
@@ -42,7 +44,6 @@ const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "CLOSED",            label: "Cerrada",               sub: "Verificada" },
 ];
 
-const STAGE_INDEX = new Map(STAGES.map((s, i) => [s.key, i]));
 const STAGE_LABEL = new Map(STAGES.map((s) => [s.key, s.label]));
 
 const TYPE_LABEL: Record<ACPMType, string> = {
@@ -50,16 +51,18 @@ const TYPE_LABEL: Record<ACPMType, string> = {
   PREVENTIVE: "Preventiva",
   IMPROVEMENT: "Mejora",
 };
+// Se usan como color de TEXTO en las tarjetas y la tabla, así que llevan los
+// tonos de texto: los de relleno dan 3.19:1 sobre superficie.
 const TYPE_COLOR: Record<ACPMType, string> = {
-  CORRECTIVE: "#DC2626",
-  PREVENTIVE: "#D97706",
-  IMPROVEMENT: "var(--nf-accent)",
+  CORRECTIVE: "var(--nf-danger-text)",
+  PREVENTIVE: "var(--nf-warning-text)",
+  IMPROVEMENT: "var(--nf-primary-active)",
 };
 const PRIORITY_LABEL: Record<ACPMPriority, string> = {
   CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja",
 };
 const PRIORITY_COLOR: Record<ACPMPriority, string> = {
-  CRITICAL: "#DC2626", HIGH: "#D97706", MEDIUM: "#5266F6", LOW: "var(--nf-ink-3)",
+  CRITICAL: "var(--nf-danger-text)", HIGH: "var(--nf-warning-text)", MEDIUM: "var(--nf-primary-active)", LOW: "var(--nf-text-secondary)",
 };
 
 export default function ACPMClient() {
@@ -326,7 +329,7 @@ export default function ACPMClient() {
                               <div className="nf-acpm-card-meta">
                                 <span style={{ color: typeC }}>{TYPE_LABEL[a.type]}</span>
                                 {a.dueDate ? (
-                                  <span style={{ color: overdueCard ? "#DC2626" : undefined }}>
+                                  <span style={{ color: overdueCard ? "var(--nf-danger-text)" : undefined }}>
                                     {overdueCard ? "Vence " : ""}
                                     {formatDate(a.dueDate, "dd MMM")}
                                   </span>
@@ -336,7 +339,7 @@ export default function ACPMClient() {
                               </div>
                               {a.progress > 0 && a.stage !== "CLOSED" && (
                                 <div className="nf-acpm-progress-rail" aria-hidden>
-                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, #16A34A)" }} />
+                                  <div className="nf-acpm-progress-fill" style={{ width: `${a.progress}%`, background: "var(--nf-accent, var(--nf-success))" }} />
                                 </div>
                               )}
                             </button>
@@ -363,7 +366,7 @@ export default function ACPMClient() {
                         justifyContent: "center",
                         background: "var(--nf-app-accent-soft)",
                         border: "1px solid rgba(82, 102, 246, 0.12)",
-                        color: "#5266F6",
+                        color: "var(--nf-primary-active)",
                       }}
                     >
                       <Sparkles size={24} strokeWidth={2.25} />
@@ -384,7 +387,7 @@ export default function ACPMClient() {
                         width: "100%",
                       }}
                     >
-                      <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
+                      <code style={{ fontSize: 11, color: "var(--nf-primary-active)", fontFamily: "ui-monospace, monospace", fontWeight: 600 }}>{a.code}</code>
                       <div style={{ textAlign: "left", minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{a.title}</div>
                         {a.source && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 4, fontWeight: 500 }}>Origen: {a.source}</div>}
@@ -427,21 +430,21 @@ export default function ACPMClient() {
       <Modal open={creating} onClose={() => !isPending && setCreating(false)} title="Nueva ACPM" width={620}>
         <form onSubmit={handleCreate} className="nf-modal-form">
           <Field label="Título *">
-            <input name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
+            <input aria-label="Título" name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="p.ej. Quejas sobre tiempos de respuesta" />
           </Field>
           <Field label="Descripción">
-            <textarea name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <textarea aria-label="Descripción" name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <Field label="Tipo">
-              <select name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <select aria-label="Tipo" name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
                 <option value="IMPROVEMENT">Mejora</option>
               </select>
             </Field>
             <Field label="Prioridad">
-              <select name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <select aria-label="Prioridad" name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CRITICAL">Crítica</option>
                 <option value="HIGH">Alta</option>
                 <option value="MEDIUM">Media</option>
@@ -449,14 +452,14 @@ export default function ACPMClient() {
               </select>
             </Field>
             <Field label="Fecha objetivo">
-              <input type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <input aria-label="Fecha de vencimiento" type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Origen">
-            <input name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
+            <input aria-label="Auditoría interna, Voz del cliente, Reporte, etc." name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
           <Field label="Responsable de la acción">
-            <select name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
+            <select aria-label="Responsable" name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
               <option value="">— Sin asignar por ahora —</option>
               {personnel.filter((person) => person.active).map((person) => (
                 <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
@@ -509,7 +512,6 @@ function ACPMDetailModal({
 
   if (!acpm) return null;
 
-  const stageIdx = STAGE_INDEX.get(acpm.stage) ?? 0;
 
   function patch(field: keyof ACPMRow, value: unknown) {
     if (!acpm || !canEdit) return;
@@ -589,22 +591,9 @@ function ACPMDetailModal({
   return (
     <Modal open onClose={onClose} title={`${acpm.code} — ${acpm.title}`} width={820}>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {/* Stage progress bar */}
-        <div className="nf-acpm-stage-rail" aria-label="Etapas del flujo ACPM">
-          {STAGES.map((s, i) => {
-            const done = i < stageIdx;
-            const active = i === stageIdx;
-            const barColor = active || done ? "var(--nf-accent, #16A34A)" : "rgba(82, 102, 246, 0.12)";
-            return (
-              <div key={s.key} className="nf-acpm-stage-node">
-                <div className="nf-acpm-stage-bar" style={{ background: barColor }} />
-                <div className={`nf-acpm-stage-label ${active ? "nf-acpm-stage-label--active" : ""}`}>
-                  {String(i + 1).padStart(2, "0")} · {s.label}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {/* El riel anterior marcaba lo hecho solo con color y no decía en qué
+            paso estabas de forma que un lector de pantalla lo anunciara. */}
+        <WorkflowStepper workflow="nonconformity" current={acpm.stage} />
 
         {/* Top meta */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
@@ -617,7 +606,7 @@ function ACPMDetailModal({
             label="Fecha objetivo"
             value={
               acpm.dueDate ? (
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "#DC2626" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: overdue ? "var(--nf-danger-text)" : "var(--nf-ink)", fontWeight: overdue ? 600 : 400 }}>
                   {formatDate(acpm.dueDate)}
                   {overdue ? <AlertTriangle size={15} strokeWidth={2.5} aria-label="Vencida" /> : null}
                 </span>
@@ -659,7 +648,7 @@ function ACPMDetailModal({
 
         {canEdit && (
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "#DC2626" }}>
+            <button type="button" disabled={isPending} onClick={handleDelete} className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }}>
               Eliminar ACPM
             </button>
           </div>
@@ -673,7 +662,7 @@ function ACPMDetailModal({
               <p style={{ fontSize: 12, color: "var(--nf-ink-4)", margin: 0 }}>Sin historial.</p>
             ) : history.map((h) => {
               const iconBg =
-                h.kind === "transition" ? "var(--nf-accent, #16A34A)" : h.kind === "comment" ? "#5266F6" : "var(--nf-ink-3)";
+                h.kind === "transition" ? "var(--nf-accent, var(--nf-success))" : h.kind === "comment" ? "var(--nf-primary)" : "var(--nf-ink-3)";
               return (
                 <div key={h.id} className="nf-acpm-history-row">
                   <span className="nf-acpm-history-icon" style={{ background: iconBg }}>
@@ -710,7 +699,7 @@ function ACPMDetailModal({
 
           {canEdit && (
             <div style={{ marginTop: 10, display: "flex", gap: 6 }}>
-              <input
+              <input aria-label="Añadir comentario"
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder="Añadir comentario…"
@@ -776,7 +765,7 @@ function StageEditor({
     return (
       <Section title="Etapa: Análisis" hint="Documenta la causa raíz (5 porqués, Ishikawa) y propón una solución.">
         <Field label="Causa raíz">
-          <textarea
+          <textarea aria-label="Análisis de causa raíz (p.ej. método 5 porqués)"
             disabled={!canEdit}
             defaultValue={acpm.rootCause ?? ""}
             onBlur={(e) => onPatch("rootCause", e.target.value)}
@@ -786,7 +775,7 @@ function StageEditor({
           />
         </Field>
         <Field label="Solución propuesta">
-          <textarea
+          <textarea aria-label="Acciones concretas, plazos, responsables"
             disabled={!canEdit}
             defaultValue={acpm.proposedSolution ?? ""}
             onBlur={(e) => onPatch("proposedSolution", e.target.value)}
@@ -797,7 +786,7 @@ function StageEditor({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable">
-            <select
+            <select aria-label="Responsable"
               disabled={!canEdit}
               defaultValue={acpm.ownerId ?? ""}
               onChange={(e) => onPatch("ownerId", e.target.value || null)}
@@ -834,7 +823,7 @@ function StageEditor({
     return (
       <Section title="Etapa: Implementación" hint="Avanza el progreso a medida que se ejecutan las acciones.">
         <Field label={`Progreso · ${acpm.progress}%`}>
-          <input
+          <input aria-label="Progreso"
             type="range"
             min={0}
             max={100}
@@ -957,7 +946,7 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Field label="Motivo del rechazo *">
-        <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Indica brevemente por qué se rechaza." />
+        <textarea aria-label="Indica brevemente por qué se rechaza." value={msg} onChange={(e) => setMsg(e.target.value)} rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Indica brevemente por qué se rechaza." />
       </Field>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="button" onClick={onCancel} disabled={disabled} className="nf-app-btn-outline">
@@ -974,12 +963,9 @@ function RejectForm({ onCancel, onSubmit, disabled }: { onCancel: () => void; on
 // ─── Small helpers ──────────────────────────────────────────────────
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="nf-modal-field">
-      <span className="nf-modal-field-label">{label}</span>
-      {children}
-    </div>
-  );
+  // Delegado en el Field del sistema: asocia con htmlFor, enlaza la ayuda y
+  // añade el hueco de error. Antes era un <span>, que no asocia nada.
+  return <UiField label={label}>{children}</UiField>;
 }
 
 function Meta({ label, value }: { label: string; value: React.ReactNode }) {

@@ -1,6 +1,8 @@
 /**
  * ISO 37001 anti-bribery management system — integration test.
  *
+ * Pure workflow/privacy checks always run. DB checks require a disposable Postgres.
+ *
  * Extends compliance: does not recreate obligations, speak-up, Investigation or CAPA.
  * Exercises due-diligence / gift workflows, bribery risk uplift, high-risk approval
  * segregation and DB CHECK constraints on a DISPOSABLE Postgres only.
@@ -35,11 +37,13 @@ import {
 } from "../src/lib/antibribery/approvals";
 
 const url = process.env.DATABASE_URL ?? "";
-if (/supabase|pooler|amazonaws/i.test(url)) {
-  throw new Error("Refusing to run integration test against a managed/production database.");
+const managed = /supabase|pooler|amazonaws/i.test(url);
+const skipDb = !url || managed;
+if (managed) {
+  console.warn("DATABASE_URL apunta a un entorno gestionado: solo se ejecutan checks puros (sin DB).\n");
 }
 
-const prisma = new PrismaClient();
+const prisma = skipDb ? null : new PrismaClient();
 let passed = 0;
 async function t(name: string, fn: () => Promise<void>) {
   await fn();
@@ -55,32 +59,6 @@ function isCheckViolation(error: unknown, constraint?: string): boolean {
 
 async function main() {
   console.log("ISO 37001 anti-bribery management system integration test\n");
-
-  await t("ISO 37001 pack installs after 37301 (family, requirements, mappings)", async () => {
-    await installAllPacks(prisma);
-    assert.ok(await prisma.standardFamily.findUnique({ where: { code: "ISO_37001" } }), "ISO_37001 family");
-    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-4.5" } }), "bribery risk 4.5");
-    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-8.2" } }), "due diligence 8.2");
-    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-8.7" } }), "gifts 8.7");
-    const speakUpMap = await prisma.requirementMapping.findUnique({
-      where: {
-        sourceRequirementId_targetRequirementId: {
-          sourceRequirementId: "req-iso-37001-8.9",
-          targetRequirementId: "req-iso-37301-8.3",
-        },
-      },
-    });
-    assert.ok(speakUpMap && speakUpMap.relationType === "EQUIVALENT", "37001 8.9 ⇄ 37301 8.3 speak-up reuse");
-    const invMap = await prisma.requirementMapping.findUnique({
-      where: {
-        sourceRequirementId_targetRequirementId: {
-          sourceRequirementId: "req-iso-37001-8.10",
-          targetRequirementId: "req-iso-37301-8.4",
-        },
-      },
-    });
-    assert.ok(invMap, "37001 investigation bridges to 37301 investigation");
-  });
 
   await t("due diligence workflow graph", async () => {
     assert.deepEqual(nextDueDiligenceStatuses("DRAFT"), ["SCREENING"]);
@@ -130,6 +108,37 @@ async function main() {
       }),
       /no puede aprobarla/,
     );
+  });
+
+  if (!prisma) {
+    console.log(`\n${passed} pure checks passed (DB skipped — set disposable DATABASE_URL for full suite).`);
+    return;
+  }
+
+  await t("ISO 37001 pack installs after 37301 (family, requirements, mappings)", async () => {
+    await installAllPacks(prisma);
+    assert.ok(await prisma.standardFamily.findUnique({ where: { code: "ISO_37001" } }), "ISO_37001 family");
+    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-4.5" } }), "bribery risk 4.5");
+    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-8.2" } }), "due diligence 8.2");
+    assert.ok(await prisma.standardRequirement.findUnique({ where: { id: "req-iso-37001-8.7" } }), "gifts 8.7");
+    const speakUpMap = await prisma.requirementMapping.findUnique({
+      where: {
+        sourceRequirementId_targetRequirementId: {
+          sourceRequirementId: "req-iso-37001-8.9",
+          targetRequirementId: "req-iso-37301-8.3",
+        },
+      },
+    });
+    assert.ok(speakUpMap && speakUpMap.relationType === "EQUIVALENT", "37001 8.9 ⇄ 37301 8.3 speak-up reuse");
+    const invMap = await prisma.requirementMapping.findUnique({
+      where: {
+        sourceRequirementId_targetRequirementId: {
+          sourceRequirementId: "req-iso-37001-8.10",
+          targetRequirementId: "req-iso-37301-8.4",
+        },
+      },
+    });
+    assert.ok(invMap, "37001 investigation bridges to 37301 investigation");
   });
 
   const org = await prisma.organization.upsert({
@@ -255,5 +264,5 @@ main()
     process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
   });

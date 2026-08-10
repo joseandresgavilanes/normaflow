@@ -88,7 +88,17 @@ export default function SetPasswordPage() {
   }
 
   if (checking) {
-    return <div style={{ minHeight: "100vh", background: "var(--nf-bg-0)" }} />;
+    // El estado de comprobación pintaba un div vacío, así que el HTML inicial
+    // de esta ruta no tenía ni landmark ni encabezado: era la única pública sin
+    // `<h1>` junto con /pricing. Ahora también anuncia que está trabajando.
+    return (
+      <main className="nf-auth-shell" style={{ minHeight: "100vh", background: "var(--nf-bg-0)" }}>
+        <h1 className="nf-sr-only">{t("auth.setPassword.title")}</h1>
+        <p style={{ color: "var(--nf-ink-3)", fontSize: 14 }} aria-busy="true">
+          {t("common.loading")}
+        </p>
+      </main>
+    );
   }
 
   return (
@@ -96,7 +106,7 @@ export default function SetPasswordPage() {
       <div className="nf-bg" aria-hidden="true" />
       <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
       <div className="nf-app">
-        <div className="nf-auth-shell">
+        <main className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 440 }}>
             <div className="nf-auth-header">
               <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
@@ -115,7 +125,7 @@ export default function SetPasswordPage() {
               <form onSubmit={handleSubmit} className="nf-auth-form">
                 <div>
                   <label className="nf-label" htmlFor="set-password">{t("auth.setPassword.newPassword")}</label>
-                  <input
+                  <input aria-label={t("auth.signup.passwordPlaceholder")}
                     id="set-password"
                     type="password"
                     value={password}
@@ -128,7 +138,7 @@ export default function SetPasswordPage() {
                 </div>
                 <div>
                   <label className="nf-label" htmlFor="set-password-confirm">{t("auth.setPassword.confirmPassword")}</label>
-                  <input
+                  <input aria-label={t("auth.setPassword.confirmPlaceholder")}
                     id="set-password-confirm"
                     type="password"
                     value={confirm}
@@ -154,7 +164,7 @@ export default function SetPasswordPage() {
               </form>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

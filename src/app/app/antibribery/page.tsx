@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getAntibriberyPayload, type AntibriberyPayload } from "@/lib/antibribery/queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Antisoborno | NormaFlow" };
+export const metadata = { title: "Antisoborno" };
 export const dynamic = "force-dynamic";
 
 export default async function AntibriberyPage() {
@@ -35,7 +35,7 @@ const stamps = { createdAt: ago(90), updatedAt: ago(5) };
 /** Demo: programa antisoborno ficticio que reutiliza el SGC (sin inventar obligaciones ni canal). */
 function demoPayload(): AntibriberyPayload {
   return {
-    can: { create: false, update: false, approve: false, export: false },
+    can: { create: false, update: false, approve: false, export: false, sensitiveRead: true, sensitiveCreate: false, sensitiveUpdate: false },
     members: [
       { id: "demo-u1", name: "Elena Cumplimiento" },
       { id: "demo-u2", name: "Marco Compras" },
@@ -209,7 +209,7 @@ function demoPayload(): AntibriberyPayload {
       assessments: 1, assessmentsApproved: 1, highResidual: 0, associates: 2, highRiskAssociates: 1,
       dueDiligenceOpen: 1, dueDiligenceOverdue: 0, pepOwners: 1, giftsPending: 1,
       donationsPolitical: 0, facilitationOpen: 1, controlFailures: 1, highRiskPending: 1,
-      commitments: 1, investigationsOpen: 1,
+      commitments: 1, investigationsOpen: 1, sensitiveLocked: false,
     },
   };
 }

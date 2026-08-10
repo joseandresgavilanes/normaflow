@@ -1,0 +1,222 @@
+/* ============================================================================
+ * NormaFlow — Controles: Button
+ *
+ * Una sola geometría para todos los botones del producto. Antes había diez
+ * sistemas con alturas, radios, paddings y criterios de foco distintos.
+ * ========================================================================== */
+
+.nf-button {
+  --nf-btn-h: var(--nf-control-height);
+  --nf-btn-px: var(--nf-space-4);
+  --nf-btn-fs: var(--nf-text-base);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nf-space-2);
+  min-height: var(--nf-btn-h);
+  padding: 0 var(--nf-btn-px);
+  border: 1px solid transparent;
+  border-radius: var(--nf-radius-m);
+  font-family: inherit;
+  font-size: var(--nf-btn-fs);
+  font-weight: var(--nf-weight-semibold);
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--nf-duration-fast) var(--nf-ease-standard),
+    border-color var(--nf-duration-fast) var(--nf-ease-standard),
+    color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+.nf-button--sm {
+  --nf-btn-h: var(--nf-control-height-sm);
+  --nf-btn-px: var(--nf-space-3);
+  --nf-btn-fs: var(--nf-text-sm);
+}
+
+/* Cuadrado exacto: un icono sin etiqueta no debe heredar el padding lateral. */
+.nf-button--icon {
+  --nf-btn-px: 0;
+  width: var(--nf-btn-h);
+  min-width: var(--nf-btn-h);
+}
+
+.nf-button--block { width: 100%; }
+
+.nf-button__label { display: inline-block; }
+
+/* --------------------------------------------------------------------------
+ * Variantes
+ * ------------------------------------------------------------------------ */
+.nf-button--primary {
+  background: var(--nf-primary);
+  color: var(--nf-on-primary);
+}
+.nf-button--primary:hover:not(:disabled):not([data-loading]) { background: var(--nf-primary-hover); }
+.nf-button--primary:active:not(:disabled) { background: var(--nf-primary-active); }
+
+.nf-button--secondary {
+  border-color: var(--nf-border-strong);
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+}
+.nf-button--secondary:hover:not(:disabled):not([data-loading]) { background: var(--nf-surface-hover); }
+.nf-button--secondary:active:not(:disabled) { background: var(--nf-surface-sunken); }
+
+.nf-button--ghost {
+  background: transparent;
+  color: var(--nf-text-secondary);
+}
+.nf-button--ghost:hover:not(:disabled):not([data-loading]) {
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-primary);
+}
+
+.nf-button--danger {
+  background: var(--nf-danger);
+  color: var(--nf-c-neutral-0);
+}
+.nf-button--danger:hover:not(:disabled):not([data-loading]) { background: var(--nf-danger-text); }
+
+.nf-button--success {
+  background: var(--nf-success-text);
+  color: var(--nf-c-neutral-0);
+}
+.nf-button--success:hover:not(:disabled):not([data-loading]) { background: var(--nf-success); }
+
+/* --------------------------------------------------------------------------
+ * Estados
+ * ------------------------------------------------------------------------ */
+
+/* Deshabilitado: opacidad + cursor + semántica. Nunca solo opacidad. */
+.nf-button:disabled,
+.nf-button[aria-disabled="true"] {
+  opacity: var(--nf-disabled-opacity);
+  cursor: not-allowed;
+}
+.nf-button--secondary:disabled,
+.nf-button--ghost:disabled {
+  background: var(--nf-disabled-bg);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-disabled-text);
+  opacity: 1; /* con relleno propio la opacidad sobra y empeora el contraste */
+}
+
+/* En carga el botón conserva su ancho: si el texto desapareciera, el botón
+   encogería bajo el cursor y el siguiente clic caería en otro sitio. */
+.nf-button[data-loading] { cursor: progress; }
+.nf-button__spinner { animation: nf-button-spin 640ms linear infinite; }
+@keyframes nf-button-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-button__spinner { animation-duration: 2s; }
+}
+
+/* --------------------------------------------------------------------------
+ * Grupo de acciones
+ * ------------------------------------------------------------------------ */
+.nf-button-group {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex-wrap: wrap;
+}
+.nf-button-group--start { justify-content: flex-start; }
+.nf-button-group--end { justify-content: flex-end; }
+/* `between` separa lo destructivo de la acción primaria. */
+.nf-button-group--between { justify-content: space-between; width: 100%; }
+
+@media (max-width: 639px) {
+  .nf-button-group > .nf-button { flex: 1 1 auto; }
+}
+
+/* ============================================================================
+ * Conmutador de tema
+ *
+ * El bloque de tokens oscuros llevaba en el repositorio sin ejecutarse nunca:
+ * no había media query, ni conmutador, ni persistencia. Este es el control que
+ * lo activa.
+ * ========================================================================== */
+
+.nf-theme-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+}
+
+.nf-theme-switch__option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--nf-space-1);
+  /* 28 px es el mínimo cómodo con el pulgar en una fila de tres. */
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 var(--nf-space-2);
+  border: 0;
+  border-radius: var(--nf-radius-full);
+  background: transparent;
+  color: var(--nf-text-secondary);
+  font-family: inherit;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-theme-switch__option:hover { color: var(--nf-text-primary); }
+.nf-theme-switch__option:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
+/* La opción activa se marca con relleno y peso, no solo con color: en una
+   fila de tres iconos el color solo no distingue nada. */
+.nf-theme-switch__option[aria-checked="true"] {
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+  font-weight: var(--nf-weight-semibold);
+  box-shadow: var(--nf-elevation-1);
+}
+
+.nf-theme-switch[data-compact] .nf-theme-switch__option { padding: 0; width: 28px; }
+
+/* ============================================================================
+ * Utilidades de color del sistema
+ *
+ * Reemplazan las 33 utilidades de Tailwind con color fijo que quedaban en 7
+ * ficheros (`bg-white`, `text-gray-500`…). Eran colores literales: no
+ * respondían al tema, y `Card.tsx` —consumido por medio producto— dejaba una
+ * tarjeta blanca flotando sobre el lienzo oscuro.
+ * ========================================================================== */
+
+.nf-surface-bg { background: var(--nf-surface); }
+.nf-surface-muted-bg { background: var(--nf-surface-muted); }
+.nf-surface-sunken-bg { background: var(--nf-surface-sunken); }
+.nf-primary-subtle-bg { background: var(--nf-primary-subtle); }
+
+.nf-text-primary-fg { color: var(--nf-text-primary); }
+.nf-text-secondary-fg { color: var(--nf-text-secondary); }
+.nf-text-subtle-fg { color: var(--nf-text-subtle); }
+.nf-danger-fg { color: var(--nf-danger-text); }
+.nf-success-fg { color: var(--nf-success-text); }
+.nf-primary-fg { color: var(--nf-primary-active); }
+
+.nf-border-line { border-color: var(--nf-border); }
+/* Pareja de `.nf-border-line` para las listas separadas: `divide-y` de Tailwind
+   pone el borde en los hijos, así que el color hay que darlo ahí. Era la última
+   clase de utilidad con color fijo del repositorio (`divide-gray-100`). */
+.nf-divide-line > * + * { border-color: var(--nf-border); }
+.nf-border-primary { border-color: var(--nf-primary-border); }
+
+/* Últimas utilidades de color fijo que quedaban en administración. */
+.nf-success-subtle-bg { background: var(--nf-success-subtle); }
+.nf-danger-subtle-bg { background: var(--nf-danger-subtle); }
+.nf-success-border-line { border-color: var(--nf-success-border); }
+.nf-danger-border-line { border-color: var(--nf-danger-border); }

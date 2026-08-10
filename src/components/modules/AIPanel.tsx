@@ -71,8 +71,8 @@ export default function AIPanel({
         right: 0,
         top: 0,
         bottom: 0,
-        background: "#fff",
-        borderLeft: "1px solid #E8E8E8",
+        background: "var(--nf-surface)",
+        borderLeft: "1px solid var(--nf-border)",
         zIndex: 900,
         display: "flex",
         flexDirection: "column",
@@ -82,7 +82,7 @@ export default function AIPanel({
       <div
         style={{
           padding: "18px 20px 14px",
-          borderBottom: "1px solid #E8E8E8",
+          borderBottom: "1px solid var(--nf-border)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -90,12 +90,12 @@ export default function AIPanel({
       >
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Sparkles size={18} strokeWidth={2} color="#16A34A" aria-hidden />
+            <Sparkles size={18} strokeWidth={2} color="var(--nf-success-text)" aria-hidden />
             <span style={{ fontSize: 15, fontWeight: 700, color: "var(--nf-ink)" }}>
               {t("ai.title")}
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "var(--nf-ink-2, #223648)", marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: "var(--nf-ink-2)", marginTop: 2 }}>
             {t("ai.humanReview")}
           </div>
         </div>
@@ -126,8 +126,8 @@ export default function AIPanel({
             borderRadius: 8,
             padding: "10px 14px",
             fontSize: 13,
-            color: "var(--nf-ink-2, #223648)",
-            border: "1px solid #E8E8E8",
+            color: "var(--nf-ink-2)",
+            border: "1px solid var(--nf-border)",
           }}
         >
           <strong style={{ color: "var(--nf-ink)" }}>{t("ai.context")}</strong>{" "}
@@ -140,14 +140,14 @@ export default function AIPanel({
             style={{
               fontSize: 12,
               fontWeight: 500,
-              color: "var(--nf-ink-2, #223648)",
+              color: "var(--nf-ink-2)",
               display: "block",
               marginBottom: 6,
             }}
           >
             {t("ai.customPrompt")}
           </label>
-          <textarea
+          <textarea aria-label={t("ai.customPromptPlaceholder")}
             value={customPrompt}
             onChange={(e) => setCustomPrompt(e.target.value)}
             placeholder={t("ai.customPromptPlaceholder")}
@@ -155,7 +155,7 @@ export default function AIPanel({
             style={{
               width: "100%",
               padding: "8px 10px",
-              border: "1px solid #E8E8E8",
+              border: "1px solid var(--nf-border)",
               borderRadius: 8,
               fontSize: 13,
               outline: "none",
@@ -169,12 +169,12 @@ export default function AIPanel({
         {!result && !loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 12 }}>
-              <Sparkles size={40} strokeWidth={1.5} color="#16A34A" aria-hidden />
+              <Sparkles size={40} strokeWidth={1.5} color="var(--nf-success-text)" aria-hidden />
             </div>
             <p
               style={{
                 fontSize: 13,
-                color: "var(--nf-ink-2, #223648)",
+                color: "var(--nf-ink-2)",
                 lineHeight: 1.6,
                 marginBottom: 0,
               }}
@@ -186,13 +186,13 @@ export default function AIPanel({
 
         {loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", marginBottom: 10 }}>
+            <div style={{ fontSize: 13, color: "var(--nf-ink-2)", marginBottom: 10 }}>
               {t("ai.loadingContext")}
             </div>
             <div
               style={{
                 height: 3,
-                background: "#E8E8E8",
+                background: "var(--nf-surface-sunken)",
                 borderRadius: 99,
                 overflow: "hidden",
               }}
@@ -201,7 +201,7 @@ export default function AIPanel({
                 style={{
                   height: "100%",
                   width: "50%",
-                  background: "#5266F6",
+                  background: "var(--nf-primary)",
                   borderRadius: 99,
                   animation: "slide 1.2s ease-in-out infinite alternate",
                 }}
@@ -216,7 +216,7 @@ export default function AIPanel({
             <div
               style={{
                 background: "var(--nf-app-panel)",
-                border: "1px solid #E8E8E8",
+                border: "1px solid var(--nf-border)",
                 borderRadius: 10,
                 padding: 16,
                 fontSize: 13,
@@ -254,12 +254,12 @@ export default function AIPanel({
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#e8f5ee",
+                  background: "var(--nf-surface-sunken)",
                   border: "1px solid #16A34A40",
                   borderRadius: 8,
                   padding: "10px 14px",
                   fontSize: 13,
-                  color: "#16A34A",
+                  color: "var(--nf-success-text)",
                   fontWeight: 500,
                 }}
               >
@@ -280,7 +280,7 @@ export default function AIPanel({
         )}
       </div>
 
-      <div style={{ padding: 16, borderTop: "1px solid #E8E8E8" }}>
+      <div style={{ padding: 16, borderTop: "1px solid var(--nf-border)" }}>
         <button
           type="button"
           onClick={() => callAI(customPrompt || undefined)}

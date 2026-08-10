@@ -83,7 +83,7 @@ function AuthConfirmInner() {
     <>
       <div className="nf-bg" aria-hidden="true" />
       <div className="nf-app">
-        <div className="nf-auth-shell">
+        <main className="nf-auth-shell">
           <div style={{ width: "100%", maxWidth: 440 }}>
             <div className="nf-auth-header">
               <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}>
@@ -111,7 +111,7 @@ function AuthConfirmInner() {
               )}
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </>
   );

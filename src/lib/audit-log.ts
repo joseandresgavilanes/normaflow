@@ -98,3 +98,66 @@ export function diff<T extends Record<string, unknown>>(
   }
   return changed ? { before: b, after: a } : null;
 }
+
+/* ---------------------------------------------------------------------------
+ * Historial por entidad
+ * ------------------------------------------------------------------------ */
+
+export type EntityHistoryEntry = {
+  id: string;
+  action: string;
+  module: string;
+  at: string;
+  by: string;
+  /** Campos que cambiaron, cuando la mutación guardó before/after. */
+  changes: { field: string; from: unknown; to: unknown }[];
+};
+
+/**
+ * Rastro de una entidad concreta.
+ *
+ * Generaliza `getAssetHistory`, que era el único historial por entidad del
+ * producto: el resto de AuditLog solo se veía agregado en /app/activity.
+ *
+ * `organizationId` NO sale del argumento sino del contexto autenticado, y la
+ * pertenencia del registro se comprueba antes de llamar aquí. Filtrar por
+ * `recordId` sin acotar la organización devolvería el rastro de otro
+ * inquilino a quien acertara un id.
+ */
+export async function getEntityHistory({
+  organizationId,
+  modules,
+  recordId,
+  limit = 60,
+}: {
+  organizationId: string;
+  /** Claves de módulo relacionadas: la principal más sus satélites. */
+  modules: string[];
+  recordId: string;
+  limit?: number;
+}): Promise<EntityHistoryEntry[]> {
+  const logs = await prisma.auditLog.findMany({
+    where: { organizationId, module: { in: modules }, recordId },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { user: { select: { name: true } } },
+  });
+
+  return logs.map((log) => {
+    const metadata = (log.metadata ?? {}) as Record<string, unknown>;
+    const before = (metadata.before ?? {}) as Record<string, unknown>;
+    const after = (metadata.after ?? {}) as Record<string, unknown>;
+    const changes = Object.keys(after)
+      .filter((field) => JSON.stringify(before[field]) !== JSON.stringify(after[field]))
+      .map((field) => ({ field, from: before[field], to: after[field] }));
+
+    return {
+      id: log.id,
+      action: log.action,
+      module: log.module,
+      at: log.createdAt.toISOString(),
+      by: log.user?.name ?? "Sistema",
+      changes,
+    };
+  });
+}

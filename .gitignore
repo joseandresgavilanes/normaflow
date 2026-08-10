@@ -4,7 +4,11 @@ node_modules/
 .pnp.js
 
 # Next.js
-.next/
+# El patrón cubre cualquier directorio que empiece por `.next`, no solo los dos
+# que conocíamos: una copia manual llamada `.next-stale-20260801` cayó fuera de
+# `.next/` y `.next-playwright*/`, y se colaron 1 GB de caché de webpack al
+# repositorio —con ficheros de 466 MB que GitHub rechaza al recibir.
+.next*/
 out/
 build/
 

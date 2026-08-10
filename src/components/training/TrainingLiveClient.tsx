@@ -6,6 +6,7 @@ import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { TrainingAssignmentStatus } from "@prisma/client";
 import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -169,6 +170,31 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
     setError("");
   });
 
+
+  type AssignmentRow = (typeof assignments)[number];
+  const assignmentColumns = useMemo<DataTableColumn<AssignmentRow>[]>(() => [
+    { id: "person", header: "Persona", primary: true, minWidth: 190, hideable: false, sortValue: (a) => a.assigneeName,
+      cell: (a) => <><strong style={{ color: "var(--nf-ink)" }}>{a.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeRole || a.assigneeEmail || "—"}</div></> },
+    { id: "course", header: "Curso", minWidth: 180, sortValue: (a) => a.courseCode,
+      cell: (a) => <><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>{a.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.courseTitle}</div></> },
+    { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.status,
+      cell: (a) => <Badge status={assignmentBadgeStatus(a.status)} label={STATUS_LABEL[a.status] ?? a.status} /> },
+    { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
+    { id: "process", header: "Proceso", minWidth: 130, sortValue: (a) => a.processCode ?? a.processName ?? "",
+      cell: (a) => a.processCode || a.processName || "—" },
+    { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
+      cell: (a) => a.triggeredByDocumentCode ? `${a.triggeredByDocumentCode} v${a.triggeredByVersion || "—"}` : "Manual" },
+    { id: "actions", header: "Acciones", minWidth: 230, hideable: false,
+      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
+        {canManage && a.status !== "COMPLETED" && a.status !== "CANCELLED" && (<>
+          {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(a.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
+          <button type="button" onClick={() => setEditingAssignment(a)} className="nf-text-action">Editar</button>
+          <button type="button" onClick={() => { setCompletingAssignment(a); setError(""); }} className="nf-text-action">Completar</button>
+          <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
+        </>)}
+      </span> },
+  ], [canManage, isPending, run]);
+
   return (
     <div>
       <SectionTitle
@@ -181,27 +207,27 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       />
 
       {(error || success) && (
-        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "#fff0f0" : "#edf8f1", color: error ? "#DC2626" : "#1f6f45" }}>
+        <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 9, fontSize: 13, background: error ? "var(--nf-danger-subtle)" : "#edf8f1", color: error ? "var(--nf-danger-text)" : "var(--nf-success-text)" }}>
           {error || success}
         </div>
       )}
 
       {blockers.length > 0 && canManage && (
-        <Card style={{ marginBottom: 16, border: "1px solid #f1d29d", background: "#fffaf0" }}>
-          <div style={{ fontWeight: 600, color: "#875710", marginBottom: 6 }}>Antes de crear una asignación</div>
+        <Card style={{ marginBottom: 16, border: "1px solid #f1d29d", background: "var(--nf-warning-subtle)" }}>
+          <div style={{ fontWeight: 600, color: "var(--nf-warning-text)", marginBottom: 6 }}>Antes de crear una asignación</div>
           {blockers.map((blocker) => (
-            <div key={blocker.text} style={{ fontSize: 13, color: "#6f521e", marginTop: 4 }}>
-              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "#5266F6", fontWeight: 700 }}>Abrir Personal →</Link>}
+            <div key={blocker.text} style={{ fontSize: 13, color: "var(--nf-text-secondary)", marginTop: 4 }}>
+              {blocker.text} {blocker.href && <Link href={blocker.href} style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>Abrir Personal →</Link>}
             </div>
           ))}
         </Card>
       )}
 
       <div className="nf-metric-strip">
-        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="#16A34A" />
-        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="#5266F6" />
+        <Kpi icon={<PieChart size={22} />} value={`${compliancePct}%`} label="Cumplimiento global" color="var(--nf-success-text)" />
+        <Kpi icon={<BookOpen size={22} />} value={String(completed)} label="Completadas" color="var(--nf-primary-active)" />
         <Kpi icon={<GraduationCap size={22} />} value={String(overdue)} label="Vencidas" color="#DC2626" />
-        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="#D97706" />
+        <Kpi icon={<ScrollText size={22} />} value={String(retraining)} label="Reacreditación" color="var(--nf-warning-text)" />
       </div>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap", alignItems: "center" }}>
@@ -226,7 +252,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {courses.map((course, idx) => {
                 const linkedDocs = documents.filter((document) => course.documentIds.includes(document.id));
-                const accent = ["#5266F6", "#16A34A", "#D97706", "#6B3FB5"][idx % 4];
+                const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "var(--nf-primary-active)"][idx % 4];
                 return (
                   <Card key={course.id} style={{ padding: 0, overflow: "hidden", opacity: course.active ? 1 : 0.68 }}>
                     
@@ -239,12 +265,12 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
                           {!course.active && <Badge status="OBSOLETE" label="Archivado" />}
                           {course.autoAssignOnDocApproval && <Badge status="ON_TRACK" label="Autoasignación" />}
                         </div>
-                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{course.title}</h3>
-                        <p style={{ margin: 0, color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{course.description || "Sin descripción."}</p>
-                        <div style={{ marginTop: 10, fontSize: 12, color: "var(--nf-ink-2, #223648)", fontWeight: 500 }}>
+                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{course.title}</h3>
+                        <p style={{ margin: 0, color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.55 }}>{course.description || "Sin descripción."}</p>
+                        <div style={{ marginTop: 10, fontSize: 12, color: "var(--nf-ink-2)", fontWeight: 500 }}>
                           Plazo: {course.defaultDueDays} días · Vigencia: {course.defaultValidityMonths} meses · Destinatarios: {course.audiencePersonnelIds.length}
                         </div>
-                        <div style={{ marginTop: 6, fontSize: 12, color: "var(--nf-ink-2, #223648)", fontWeight: 500 }}>
+                        <div style={{ marginTop: 6, fontSize: 12, color: "var(--nf-ink-2)", fontWeight: 500 }}>
                           Documentos: {linkedDocs.length ? linkedDocs.map((document) => document.code).join(", ") : "ninguno"}
                         </div>
                       </div>
@@ -269,33 +295,13 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
           <EmptyState title="No hay asignaciones" text="Las asignaciones aparecerán aquí cuando vincules un curso con una persona." action={canManage && !blockers.length ? () => setCreatingAssignment(true) : undefined} actionLabel="Crear asignación" />
         ) : (
           <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
-              <table className="nf-data-table" style={{ fontSize: 13 }}>
-                <thead><tr><th>Persona</th><th>Curso</th><th>Estado</th><th>Vence</th><th>Proceso</th><th>Origen</th><th /></tr></thead>
-                <tbody>
-                  {assignments.map((assignment) => (
-                    <tr key={assignment.id}>
-                      <td><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{assignment.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{assignment.assigneeRole || assignment.assigneeEmail || "—"}</div></td>
-                      <td><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)" }}>{assignment.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{assignment.courseTitle}</div></td>
-                      <td><Badge status={assignmentBadgeStatus(assignment.status)} label={STATUS_LABEL[assignment.status] ?? assignment.status} /></td>
-                      <td>{formatDate(assignment.dueAt)}</td>
-                      <td>{assignment.processCode || assignment.processName || "—"}</td>
-                      <td>{assignment.triggeredByDocumentCode ? `${assignment.triggeredByDocumentCode} v${assignment.triggeredByVersion || "—"}` : "Manual"}</td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {canManage && assignment.status !== "COMPLETED" && assignment.status !== "CANCELLED" && (
-                          <>
-                            {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(assignment.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
-                            <button type="button" onClick={() => setEditingAssignment(assignment)} className="nf-text-action">Editar</button>
-                            <button type="button" onClick={() => { setCompletingAssignment(assignment); setError(""); }} className="nf-text-action">Completar</button>
-                            <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(assignment.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={assignmentColumns}
+              rows={assignments}
+              rowKey={(a) => a.id}
+              caption="Asignaciones de formación: persona, curso, estado, vencimiento, proceso y origen."
+              storageKey="training-live-assignments"
+            />
           </Card>
         )
       )}
@@ -306,7 +312,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             {personnel.map((person) => {
               const rows = assignments.filter((assignment) => assignment.personnelId === person.id);
               const done = rows.filter((assignment) => assignment.status === "COMPLETED").length;
-              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="#5266F6" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
+              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="var(--nf-primary-active)" /><div><strong style={{ color: "var(--nf-ink)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2)" }}>{done}/{rows.length} completadas</div></Card>;
             })}
           </div>
         )
@@ -314,9 +320,9 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "compliance" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
-          <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
-          <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink, #0f1b2d)", fontWeight: 500, paddingLeft: 20 }}>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
+          <p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
+          <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink)", fontWeight: 500, paddingLeft: 20 }}>
             <li>Cursos activos: {activeCourses.length}</li>
             <li>Cursos obligatorios: {activeCourses.filter((course) => course.mandatory).length}</li>
             <li>Asignaciones activas: {activeAssignments.length}</li>
@@ -328,11 +334,11 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "trail" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
-          {!auditEvents.length ? <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13 }}>Todavía no hay eventos.</p> : auditEvents.map((event) => (
-            <div key={event.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--nf-line, #b8c8d9)", fontSize: 13, color: "var(--nf-ink-2, #223648)" }}>
-              <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{event.actorName}</strong> · {event.action.replaceAll("_", " ")} · {event.module === "training_course" ? "curso" : "asignación"}
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)", marginTop: 3 }}>{formatDate(event.createdAt)}</div>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
+          {!auditEvents.length ? <p style={{ color: "var(--nf-ink-2)", fontSize: 13 }}>Todavía no hay eventos.</p> : auditEvents.map((event) => (
+            <div key={event.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13, color: "var(--nf-ink-2)" }}>
+              <strong style={{ color: "var(--nf-ink)" }}>{event.actorName}</strong> · {event.action.replaceAll("_", " ")} · {event.module === "training_course" ? "curso" : "asignación"}
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>{formatDate(event.createdAt)}</div>
             </div>
           ))}
         </Card>
@@ -343,7 +349,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       </Modal>
 
       <Modal open={archivingCourse != null} onClose={() => !isPending && setArchivingCourse(null)} title={archivingCourse?.active ? "Archivar curso" : "Reactivar curso"} width={430}>
-        <p style={{ marginTop: 0, color: "var(--nf-ink-2, #223648)" }}>Las asignaciones históricas se conservarán. {archivingCourse?.active ? "El curso dejará de estar disponible para nuevas asignaciones." : "El curso volverá a estar disponible."}</p>
+        <p style={{ marginTop: 0, color: "var(--nf-ink-2)" }}>Las asignaciones históricas se conservarán. {archivingCourse?.active ? "El curso dejará de estar disponible para nuevas asignaciones." : "El curso volverá a estar disponible."}</p>
         <div className="nf-modal-actions">
           <ModalCancelButton onClick={() => setArchivingCourse(null)} disabled={isPending} />
           <button
@@ -359,13 +365,13 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={creatingAssignment} onClose={() => !isPending && setCreatingAssignment(false)} title="Nueva asignación" width={560}>
         <ModalForm onSubmit={submitAssignment}>
-          {!activeCourses.length || !personnel.length ? <p style={{ color: "#DC2626", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
-            <ModalField label="Curso *"><select name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
-            <ModalField label="Persona *"><select name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
-            <ModalField label="Proceso"><select name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-            <ModalField label="Fecha de vencimiento *"><input type="date" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
-            <ModalField label="Documento de origen"><select name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</select></ModalField>
-            <ModalField label="Versión del documento"><input name="triggeredByVersion" placeholder="Ej. 2.0" className="nf-app-input" /></ModalField>
+          {!activeCourses.length || !personnel.length ? <p style={{ color: "var(--nf-danger-text)", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
+            <ModalField label="Curso *"><select aria-label="Curso" name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
+            <ModalField label="Persona *"><select aria-label="Persona" name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
+            <ModalField label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
+            <ModalField label="Fecha de vencimiento *"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
+            <ModalField label="Documento de origen"><select aria-label="Asignación manual" name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</select></ModalField>
+            <ModalField label="Versión del documento"><input aria-label="Versión" name="triggeredByVersion" placeholder="Ej. 2.0" className="nf-app-input" /></ModalField>
           </>}
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setCreatingAssignment(false)} disabled={!activeCourses.length || !personnel.length} />
@@ -374,9 +380,9 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={completingAssignment != null} onClose={() => !isPending && setCompletingAssignment(null)} title="Completar formación" width={520}>
         <ModalForm onSubmit={submitCompletion}>
-          <p style={{ marginTop: 0, fontSize: 13, color: "var(--nf-ink-2, #223648)", fontWeight: 600 }}>{completingAssignment?.assigneeName} · {completingAssignment?.courseCode}</p>
-          <ModalField label="Nota de evidencia"><textarea name="evidenceNote" rows={4} placeholder="Resultado, evaluación, responsable…" className="nf-app-input" /></ModalField>
-          <ModalField label="Enlace a evidencia"><input type="url" name="evidenceUrl" placeholder="https://…" className="nf-app-input" /></ModalField>
+          <p style={{ marginTop: 0, fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 600 }}>{completingAssignment?.assigneeName} · {completingAssignment?.courseCode}</p>
+          <ModalField label="Nota de evidencia"><textarea aria-label="Resultado, evaluación, responsable" name="evidenceNote" rows={4} placeholder="Resultado, evaluación, responsable…" className="nf-app-input" /></ModalField>
+          <ModalField label="Enlace a evidencia"><input aria-label="https://" type="url" name="evidenceUrl" placeholder="https://…" className="nf-app-input" /></ModalField>
           <div className="nf-modal-field-hint">Es obligatorio indicar una nota o un enlace.</div>
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setCompletingAssignment(null)} />
@@ -385,8 +391,8 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={editingAssignment != null} onClose={() => !isPending && setEditingAssignment(null)} title="Editar asignación" width={500}>
         <ModalForm onSubmit={submitAssignmentEdit}>
-          <ModalField label="Proceso"><select name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-          <ModalField label="Fecha de vencimiento"><input type="date" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
+          <ModalField label="Proceso"><select aria-label="Proceso" name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
+          <ModalField label="Fecha de vencimiento"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setEditingAssignment(null)} />
         </ModalForm>
@@ -397,10 +403,10 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
 function CourseForm({ course, payload, isPending, error, onSubmit, onCancel }: { course: TrainingCourseLive | null; payload: TrainingPayload; isPending: boolean; error: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; onCancel: () => void }) {
   return <ModalForm onSubmit={onSubmit}>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}><ModalField label="Código *"><input name="code" required defaultValue={course?.code ?? ""} placeholder="TR-SGC-01" className="nf-app-input" /></ModalField><ModalField label="Nombre *"><input name="title" required defaultValue={course?.title ?? ""} className="nf-app-input" /></ModalField></div>
-    <ModalField label="Descripción"><textarea name="description" rows={3} defaultValue={course?.description ?? ""} className="nf-app-input" /></ModalField>
-    <ModalField label="Normas / etiquetas"><input name="standardTags" defaultValue={course?.standardTags.join(", ") ?? ""} placeholder="ISO 9001, ISO 27001" className="nf-app-input" /></ModalField>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><ModalField label="Plazo para completar (días) *"><input type="number" min={1} max={365} name="defaultDueDays" required defaultValue={course?.defaultDueDays ?? 30} className="nf-app-input" /></ModalField><ModalField label="Vigencia (meses) *"><input type="number" min={1} max={120} name="defaultValidityMonths" required defaultValue={course?.defaultValidityMonths ?? 12} className="nf-app-input" /></ModalField></div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}><ModalField label="Código *"><input aria-label="TR-SGC-01" name="code" required defaultValue={course?.code ?? ""} placeholder="TR-SGC-01" className="nf-app-input" /></ModalField><ModalField label="Nombre *"><input aria-label="Título" name="title" required defaultValue={course?.title ?? ""} className="nf-app-input" /></ModalField></div>
+    <ModalField label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} defaultValue={course?.description ?? ""} className="nf-app-input" /></ModalField>
+    <ModalField label="Normas / etiquetas"><input aria-label="ISO 9001, ISO 27001" name="standardTags" defaultValue={course?.standardTags.join(", ") ?? ""} placeholder="ISO 9001, ISO 27001" className="nf-app-input" /></ModalField>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><ModalField label="Plazo para completar (días) *"><input aria-label="Días de plazo por defecto" type="number" min={1} max={365} name="defaultDueDays" required defaultValue={course?.defaultDueDays ?? 30} className="nf-app-input" /></ModalField><ModalField label="Vigencia (meses) *"><input aria-label="Meses de validez por defecto" type="number" min={1} max={120} name="defaultValidityMonths" required defaultValue={course?.defaultValidityMonths ?? 12} className="nf-app-input" /></ModalField></div>
     <ChoiceList title="Documentos vinculados" emptyText="No hay documentos disponibles. Puedes crear el curso igualmente y vincularlos después." items={payload.documents.map((document) => ({ id: document.id, label: `${document.code} — ${document.title}` }))} name="documentIds" selected={course?.documentIds ?? []} />
     <ChoiceList title="Destinatarios para autoasignación" emptyText="No hay personal activo. Regístralo en Personal." items={payload.personnel.map((person) => ({ id: person.id, label: `${person.name}${person.role ? ` · ${person.role}` : ""}` }))} name="audiencePersonnelIds" selected={course?.audiencePersonnelIds ?? []} />
     <label style={checkLabel}><input type="checkbox" name="mandatory" defaultChecked={course?.mandatory ?? false} /> Curso obligatorio</label>
@@ -411,7 +417,7 @@ function CourseForm({ course, payload, isPending, error, onSubmit, onCancel }: {
 }
 
 function ChoiceList({ title, emptyText, items, name, selected }: { title: string; emptyText: string; items: { id: string; label: string }[]; name: string; selected: string[] }) {
-  return <fieldset style={{ border: "1px solid var(--nf-line, #b8c8d9)", borderRadius: 8, padding: 12 }}><legend style={{ padding: "0 5px", fontSize: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{title}</legend>{items.length ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8, maxHeight: 150, overflow: "auto" }}>{items.map((item) => <label key={item.id} style={checkLabel}><input type="checkbox" name={name} value={item.id} defaultChecked={selected.includes(item.id)} /> {item.label}</label>)}</div> : <div style={{ fontSize: 12, color: "var(--nf-ink-2, #223648)" }}>{emptyText}</div>}</fieldset>;
+  return <fieldset style={{ border: "1px solid var(--nf-line)", borderRadius: 8, padding: 12 }}><legend style={{ padding: "0 5px", fontSize: 12, fontWeight: 700, color: "var(--nf-ink-2)" }}>{title}</legend>{items.length ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8, maxHeight: 150, overflow: "auto" }}>{items.map((item) => <label key={item.id} style={checkLabel}><input type="checkbox" name={name} value={item.id} defaultChecked={selected.includes(item.id)} /> {item.label}</label>)}</div> : <div style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>{emptyText}</div>}</fieldset>;
 }
 
 function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: string }) {
@@ -427,7 +433,7 @@ function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: stri
 }
 
 function EmptyState({ title, text, action, actionLabel, href }: { title: string; text: string; action?: () => void; actionLabel: string; href?: string }) {
-  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="#5266F6" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
+  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="var(--nf-primary-active)" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
 }
 
 function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onCancel: () => void; disabled?: boolean }) {
@@ -439,4 +445,4 @@ function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onC
   );
 }
 
-const checkLabel: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--nf-ink, #0f1b2d)", lineHeight: 1.4, fontWeight: 500 };
+const checkLabel: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--nf-ink)", lineHeight: 1.4, fontWeight: 500 };

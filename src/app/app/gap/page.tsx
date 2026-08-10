@@ -5,7 +5,7 @@ import { getGapPayload } from "@/lib/server-queries";
 import AccessDenied from "@/components/app/AccessDenied";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "GAP Assessment | NormaFlow" };
+export const metadata = { title: "GAP Assessment" };
 
 export default async function GapPage() {
   const ctx = await getAppContext();

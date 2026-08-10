@@ -25,6 +25,7 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { exportRecordsMatrix } from "@/lib/actions/records";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
+import { Field as UiField } from "@/components/ui/Field";
 
 type Status = "ALL" | "ACTIVE" | "INACTIVE" | "DUE_SOON" | "OVERDUE";
 
@@ -129,7 +130,7 @@ export default function RecordsClient() {
       key: "code",
       label: "Código",
       render: (_, r) => (
-        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code}</span>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700 }}>{r.code}</span>
       ),
     },
     {
@@ -159,7 +160,7 @@ export default function RecordsClient() {
         if (!r.retentionTimeId) return <span style={{ color: "var(--nf-ink-4)" }}>—</span>;
         const st = retentionStatus(r);
         const label = retentionLabel.get(r.retentionTimeId)?.name ?? "—";
-        const color = st === "overdue" ? "#DC2626" : st === "due_soon" ? "#D97706" : "var(--nf-ink-3)";
+        const color = st === "overdue" ? "var(--nf-danger)" : st === "due_soon" ? "var(--nf-warning)" : "var(--nf-ink-3)";
         const hint =
           st === "overdue"
             ? "Disposición vencida"
@@ -239,7 +240,7 @@ export default function RecordsClient() {
                 <button
                   type="button"
                   className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "#DC2626", borderColor: "#f0c4c2", fontWeight: 700, flexShrink: 0 }}
+                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger-text)", borderColor: "var(--nf-input-border)", fontWeight: 700, flexShrink: 0 }}
                   onClick={() => setConfirmDeactivate(r)}
                 >
                   Desactivar
@@ -324,17 +325,17 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <Archive size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.active}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Registros activos</div>
           </div>
         </div>
@@ -348,7 +349,7 @@ export default function RecordsClient() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#314456",
+              color: "var(--nf-text-secondary)",
             }}
           >
             <ArchiveX size={22} strokeWidth={2.25} aria-hidden />
@@ -364,17 +365,17 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <Clock size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.dueSoon}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Próximos a vencer</div>
           </div>
         </div>
@@ -384,17 +385,17 @@ export default function RecordsClient() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FEF2F2",
+              background: "var(--nf-danger-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#DC2626",
+              color: "var(--nf-danger-text)",
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{stats.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Disposición vencida</div>
           </div>
         </div>
@@ -405,11 +406,11 @@ export default function RecordsClient() {
           style={{
             padding: "14px 18px 16px",
             borderBottom: "1px solid var(--nf-line)",
-            background: "#fff",
+            background: "var(--nf-surface)",
           }}
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", marginBottom: 14 }}>
-            <input
+            <input aria-label="Buscar por código, nombre, proceso"
               type="search"
               placeholder="Buscar por código, nombre, proceso…"
               value={search}
@@ -417,7 +418,7 @@ export default function RecordsClient() {
               className="nf-app-input"
               style={{ flex: 1, minWidth: 220, boxSizing: "border-box" }}
             />
-            <select
+            <select aria-label="Filtrar por tipo"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="nf-app-input"
@@ -430,11 +431,11 @@ export default function RecordsClient() {
                 </option>
               ))}
             </select>
-            <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            <select aria-label="Filtrar por proceso" value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todos los procesos</option>
               {processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}
             </select>
-            <select value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            <select aria-label="Filtrar por cláusula" value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todas las cláusulas ISO</option>
               {admin.state.clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code}</option>)}
             </select>
@@ -596,14 +597,14 @@ function RecordFormModal({
           <FormSection title="Identificación">
             <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 12 }}>
               <Field label="Código *">
-                <input name="code" required defaultValue={editing?.code ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="REG-XXX-001" />
+                <input aria-label="REG-XXX-001" name="code" required defaultValue={editing?.code ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="REG-XXX-001" />
               </Field>
               <Field label="Nombre *">
-                <input name="name" required defaultValue={editing?.name ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Registro de…" />
+                <input aria-label="Registro de" name="name" required defaultValue={editing?.name ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Registro de…" />
               </Field>
             </div>
             <Field label="Proceso relacionado">
-              <select name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Sin proceso relacionado —</option>
                 {processes.map((process) => (
                   <option key={process.id} value={process.id}>
@@ -613,7 +614,7 @@ function RecordFormModal({
               </select>
             </Field>
             <Field label="Cláusula ISO relacionada">
-              <select name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Cláusula" name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Sin cláusula relacionada —</option>
                 {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code} — {clause.title}</option>)}
               </select>
@@ -623,7 +624,7 @@ function RecordFormModal({
           <FormSection title="Clasificación y custodio">
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <Field label="Tipo de registro">
-                <select name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Tipo de registro" name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">— Sin tipo —</option>
                   {recordTypes.filter((t) => t.active).map((t) => (
                     <option key={t.id} value={t.id}>
@@ -633,7 +634,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Custodio">
-                <select name="custodianId" defaultValue={editing?.custodianId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Custodio" name="custodianId" defaultValue={editing?.custodianId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">— Sin custodio asignado —</option>
                   {personnel
                     .filter((p) => p.active)
@@ -646,7 +647,7 @@ function RecordFormModal({
               </Field>
             </div>
             <Field label="Revisor asignado">
-              <select name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <select aria-label="Revisor" name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Seleccionar revisor —</option>
                 {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER" || m.role === "AUDITOR").map((member) => (
                   <option key={member.userId} value={member.userId}>{member.name} · {member.role}</option>
@@ -658,7 +659,7 @@ function RecordFormModal({
           <FormSection title="Retención y archivo">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
               <Field label="Tiempo de retención">
-                <select name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Tiempo de retención" name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {retentionTimes.filter((r) => r.active).map((r) => (
                     <option key={r.id} value={r.id}>
@@ -668,7 +669,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Disposición">
-                <select name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Disposición" name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {dispositions.filter((d) => d.active).map((d) => (
                     <option key={d.id} value={d.id}>
@@ -678,7 +679,7 @@ function RecordFormModal({
                 </select>
               </Field>
               <Field label="Método de archivo">
-                <select name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <select aria-label="Método de archivo" name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {archiveMethods.filter((a) => a.active).map((a) => (
                     <option key={a.id} value={a.id}>
@@ -693,17 +694,17 @@ function RecordFormModal({
           <FormSection title="Ubicaciones">
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <Field label="Ubicación física">
-                <input name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Archivador, estante…" />
+                <input aria-label="Archivador, estante" name="physicalLocation" defaultValue={editing?.physicalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="Archivador, estante…" />
               </Field>
               <Field label="Ubicación digital">
-                <input name="digitalLocation" defaultValue={editing?.digitalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="/ruta/del/registro" />
+                <input aria-label="/ruta/del/registro" name="digitalLocation" defaultValue={editing?.digitalLocation ?? ""} className="nf-app-input" style={inputFieldStyle} placeholder="/ruta/del/registro" />
               </Field>
             </div>
           </FormSection>
 
           <FormSection title="Observaciones">
             <Field label="Notas internas">
-              <textarea name="observations" rows={3} defaultValue={editing?.observations ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
+              <textarea aria-label="Observaciones" name="observations" rows={3} defaultValue={editing?.observations ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
             </Field>
           </FormSection>
         </div>
@@ -714,9 +715,9 @@ function RecordFormModal({
               marginTop: 18,
               padding: "12px 14px",
               borderRadius: 12,
-              background: "#fff0f0",
+              background: "var(--nf-danger-subtle)",
               border: "1px solid #f5c2c0",
-              color: "#DC2626",
+              color: "var(--nf-danger-text)",
               fontSize: 13,
               fontWeight: 600,
             }}
@@ -799,7 +800,7 @@ function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) 
           padding: "10px 18px",
           fontSize: 14,
           fontWeight: 700,
-          color: "#fff",
+          color: "var(--nf-text-on-primary)",
           background: "var(--nf-app-accent)",
           border: "1px solid #0f3255",
           borderRadius: 10,
@@ -893,7 +894,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
             padding: "16px 18px",
             borderRadius: 14,
             border: "1px solid var(--nf-line)",
-            background: "#fff",
+            background: "var(--nf-surface)",
           }}
         >
           <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", color: "var(--nf-ink-3)", marginBottom: 12 }}>
@@ -926,13 +927,13 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
           )}
           {canReview && record.reviewStatus === "IN_REVIEW" && (
             <>
-              <input value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Comentario (opcional)" className="nf-app-input" style={{ minWidth: 190, flex: 1 }} />
+              <input aria-label="Comentario (opcional)" value={reviewComment} onChange={(event) => setReviewComment(event.target.value)} placeholder="Comentario (opcional)" className="nf-app-input" style={{ minWidth: 190, flex: 1 }} />
               <button type="button" className="nf-app-btn-success" disabled={isPending} onClick={() => review("approve")}>Aprobar</button>
               <button type="button" className="nf-app-btn-danger" disabled={isPending || !reviewComment.trim()} onClick={() => review("reject")}>Devolver</button>
             </>
           )}
         </div>
-        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
+        {entryError && !addingEntry && <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--nf-danger-subtle)", border: "1px solid #f5c2c0", color: "var(--nf-danger-text)", fontSize: 13, fontWeight: 600 }}>{entryError}</div>}
 
         {(record.physicalLocation || record.digitalLocation) && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))", gap: 10 }}>
@@ -964,7 +965,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#5266F6",
+                  color: "var(--nf-primary-active)",
                 }}
               >
                 <ClipboardList size={20} strokeWidth={2.25} aria-hidden />
@@ -999,7 +1000,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 gap: 14,
                 padding: "16px 18px",
                 borderRadius: 14,
-                background: "#fff",
+                background: "var(--nf-surface)",
                 border: "1px solid var(--nf-line)",
                 marginBottom: 14,
               }}
@@ -1008,15 +1009,15 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Título *</label>
-                  <input name="title" required placeholder="Acta, inspección, certificado…" className="nf-app-input" style={inputFieldStyle} />
+                  <input aria-label="Acta, inspección, certificado" name="title" required placeholder="Acta, inspección, certificado…" className="nf-app-input" style={inputFieldStyle} />
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input aria-label="LOTE-…, INC-" name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input aria-label="Fecha de entrada" name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select aria-label="Responsable" name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select aria-label="Estado" name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
                 </div>
                 <FileImportArea
                   baseId={`record-entry-${recordId}`}
@@ -1030,11 +1031,11 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 />
                 <div>
                   <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Descripción</label>
-                  <textarea name="description" rows={2} placeholder="Descripción u observaciones" className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
+                  <textarea aria-label="Descripción u observaciones" name="description" rows={2} placeholder="Descripción u observaciones" className="nf-app-input" style={{ ...inputFieldStyle, resize: "vertical" }} />
                 </div>
               </div>
               {entryError && (
-                <div style={{ padding: "10px 12px", borderRadius: 10, background: "#fff0f0", border: "1px solid #f5c2c0", color: "#DC2626", fontSize: 13, fontWeight: 600 }}>
+                <div style={{ padding: "10px 12px", borderRadius: 10, background: "var(--nf-danger-subtle)", border: "1px solid #f5c2c0", color: "var(--nf-danger-text)", fontSize: 13, fontWeight: 600 }}>
                   {entryError}
                 </div>
               )}
@@ -1084,7 +1085,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                     border: "1px solid var(--nf-line)",
                   }}
                 >
-                  <code style={{ fontSize: 11, color: "#5266F6", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
+                  <code style={{ fontSize: 11, color: "var(--nf-primary-active)", fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>{e.reference}</code>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 700, lineHeight: 1.45 }}>{e.title ?? e.reference}</div><span className="nf-chip" style={{ fontSize: 10 }}>{e.status === "DRAFT" ? "Borrador" : e.status === "EXPIRED" ? "Vencido" : e.status === "ARCHIVED" ? "Archivado" : "Vigente"}</span></div>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
@@ -1159,8 +1160,8 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                           display: "inline-flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: "#DC2626",
-                          borderColor: "#f0c4c2",
+                          color: "var(--nf-danger-text)",
+                          borderColor: "var(--nf-border)",
                           flexShrink: 0,
                           boxSizing: "border-box",
                           fontFamily: "inherit",
@@ -1212,12 +1213,8 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
 const inputFieldStyle: CSSProperties = { width: "100%", marginTop: 6, boxSizing: "border-box" };
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>{label}</label>
-      {children}
-    </div>
-  );
+  // Antes: <label> sin htmlFor, que no asocia con ningún control.
+  return <UiField label={label}>{children}</UiField>;
 }
 
 function MetaCell({ label, value }: { label: string; value: ReactNode }) {

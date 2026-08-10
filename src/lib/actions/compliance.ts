@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { writeAuditLog } from "@/lib/audit-log";
 import { notifyUser } from "@/lib/notify";
 import { assertApplicabilityDecision, rollupApplicability, statusForApplicability } from "@/lib/compliance/applicability";
 import { aggregateControlEffectiveness, assertRiskAcceptance, computeComplianceRisk } from "@/lib/compliance/risk";
@@ -40,7 +40,7 @@ const revalidate = () => {
 async function assertRefInOrg(
   organizationId: string,
   refs: Partial<Record<
-    "processId" | "riskId" | "capaId" | "evidenceId" | "documentId" | "supplierId" | "controlId" | "trainingCourseId" | "changeRequestId" | "actionId" | "ncId" | "managementReviewId" | "requirementId",
+    "processId" | "riskId" | "capaId" | "evidenceId" | "documentId" | "supplierId" | "controlId" | "trainingCourseId" | "changeRequestId" | "actionId" | "ncId" | "managementReviewId" | "requirementId" | "breachId",
     string | null | undefined
   >>,
 ) {
@@ -60,6 +60,7 @@ async function assertRefInOrg(
   if (refs.actionId) guard(prisma.action.findFirst(w(refs.actionId)), "de acción");
   if (refs.ncId) guard(prisma.nonconformity.findFirst(w(refs.ncId)), "de no conformidad");
   if (refs.managementReviewId) guard(prisma.managementReview.findFirst(w(refs.managementReviewId)), "de revisión por la dirección");
+  if (refs.breachId) guard(prisma.complianceBreach.findFirst(w(refs.breachId)), "de incumplimiento");
   await Promise.all(checks);
 }
 
@@ -103,16 +104,47 @@ export async function createJurisdiction(input: z.infer<typeof jurisdictionSchem
     const parent = await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id: data.parentId }), select: { id: true } });
     if (!parent) throw new Error("La jurisdicción superior no pertenece a la organización.");
   }
-  const created = await prisma.jurisdiction.create({
-    data: tenantData(ctx, {
-      code: data.code, name: data.name, level: data.level, parentId: data.parentId ?? null,
-      country: data.country ?? null, authority: data.authority ?? null, applicable: data.applicable,
-      rationale: data.rationale ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.jurisdiction.create({
+      data: tenantData(ctx, {
+        code: data.code, name: data.name, level: data.level, parentId: data.parentId ?? null,
+        country: data.country ?? null, authority: data.authority ?? null, applicable: data.applicable,
+        rationale: data.rationale ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code: data.code, name: data.name, level: data.level }, extra: { event: "create_jurisdiction" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code: data.code, name: data.name, level: data.level }, extra: { event: "create_jurisdiction" } });
   revalidate();
   return { id: created.id, code: created.code };
+}
+
+export async function updateJurisdiction(id: string, input: Partial<z.infer<typeof jurisdictionSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = jurisdictionSchema.partial().parse(input);
+  const current = await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Jurisdicción no encontrada.");
+  if (data.parentId) {
+    if (data.parentId === id) throw new Error("Una jurisdicción no puede ser su propia superior.");
+    const parent = await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id: data.parentId }), select: { id: true } });
+    if (!parent) throw new Error("La jurisdicción superior no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.jurisdiction.update({ where: { id }, data: {
+      ...(data.code !== undefined ? { code: data.code } : {}),
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.level !== undefined ? { level: data.level } : {}),
+      ...(data.parentId !== undefined ? { parentId: data.parentId || null } : {}),
+      ...(data.country !== undefined ? { country: data.country || null } : {}),
+      ...(data.authority !== undefined ? { authority: data.authority || null } : {}),
+      ...(data.applicable !== undefined ? { applicable: data.applicable } : {}),
+      ...(data.rationale !== undefined ? { rationale: data.rationale || null } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { code: current.code, name: current.name, applicable: current.applicable }, after: data, extra: { event: "update_jurisdiction" } });
+  });
+  revalidate();
+  return { id };
 }
 
 // ─────────────────────────────────────────────────────
@@ -145,17 +177,20 @@ export async function createRegulatorySource(input: z.infer<typeof sourceSchema>
     if (!jurisdiction) throw new Error("La jurisdicción no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("FR", prisma.regulatorySource.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.regulatorySource.create({
-    data: tenantData(ctx, {
-      code, name: data.name, sourceType: data.sourceType, issuer: data.issuer ?? null, reference: data.reference ?? null,
-      officialUrl: data.officialUrl ?? null, jurisdictionId: data.jurisdictionId ?? null,
-      publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
-      effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
-      monitored: data.monitored, monitoringFrequency: data.monitoringFrequency, ownerId: data.ownerId ?? null,
-      documentId: data.documentId ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.regulatorySource.create({
+      data: tenantData(ctx, {
+        code, name: data.name, sourceType: data.sourceType, issuer: data.issuer ?? null, reference: data.reference ?? null,
+        officialUrl: data.officialUrl ?? null, jurisdictionId: data.jurisdictionId ?? null,
+        publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
+        effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
+        monitored: data.monitored, monitoringFrequency: data.monitoringFrequency, ownerId: data.ownerId ?? null,
+        documentId: data.documentId ?? null, notes: data.notes ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, name: data.name, monitored: data.monitored }, extra: { event: "create_regulatory_source" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, name: data.name, monitored: data.monitored }, extra: { event: "create_regulatory_source" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -167,10 +202,42 @@ export async function recordSourceCheck(id: string, input: { note?: string; chan
   if (!source) throw new Error("Fuente regulatoria no encontrada.");
   const now = new Date();
   const next = nextOccurrence(now, source.monitoringFrequency === "CONTINUOUS" || source.monitoringFrequency === "ON_EVENT" ? "MONTHLY" : source.monitoringFrequency === "WEEKLY" ? "MONTHLY" : source.monitoringFrequency);
-  await prisma.regulatorySource.update({ where: { id }, data: { lastCheckedAt: now, nextCheckDate: next } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { lastCheckedAt: now, nextCheckDate: next }, extra: { event: "record_source_check", note: input.note, changeDetected: input.changeDetected ?? false } });
+  await prisma.$transaction(async (tx) => {
+    await tx.regulatorySource.update({ where: { id }, data: { lastCheckedAt: now, nextCheckDate: next } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { lastCheckedAt: now, nextCheckDate: next }, extra: { event: "record_source_check", note: input.note, changeDetected: input.changeDetected ?? false } });
+  });
   revalidate();
   return { id, nextCheckDate: next };
+}
+
+export async function updateRegulatorySource(id: string, input: Partial<z.infer<typeof sourceSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = sourceSchema.partial().parse(input);
+  const current = await prisma.regulatorySource.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Fuente regulatoria no encontrada.");
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId });
+  if (data.jurisdictionId) {
+    const jurisdiction = await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id: data.jurisdictionId }), select: { id: true } });
+    if (!jurisdiction) throw new Error("La jurisdicción no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.regulatorySource.update({ where: { id }, data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.sourceType !== undefined ? { sourceType: data.sourceType } : {}),
+      ...(data.issuer !== undefined ? { issuer: data.issuer || null } : {}),
+      ...(data.reference !== undefined ? { reference: data.reference || null } : {}),
+      ...(data.officialUrl !== undefined ? { officialUrl: data.officialUrl || null } : {}),
+      ...(data.jurisdictionId !== undefined ? { jurisdictionId: data.jurisdictionId || null } : {}),
+      ...(data.monitored !== undefined ? { monitored: data.monitored } : {}),
+      ...(data.monitoringFrequency !== undefined ? { monitoringFrequency: data.monitoringFrequency } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId || null } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId || null } : {}),
+      ...(data.notes !== undefined ? { notes: data.notes || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { name: current.name, monitored: current.monitored }, after: data, extra: { event: "update_regulatory_source" } });
+  });
+  revalidate();
+  return { id };
 }
 
 // ─────────────────────────────────────────────────────
@@ -216,22 +283,25 @@ export async function createComplianceObligation(input: z.infer<typeof obligatio
     if (!jurisdiction) throw new Error("La jurisdicción no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("OBL", prisma.complianceObligation.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceObligation.create({
-    data: tenantData(ctx, {
-      code, title: data.title, description: data.description ?? null, requirementText: data.requirementText ?? null,
-      obligationType: data.obligationType, category: data.category, sourceId: data.sourceId ?? null,
-      jurisdictionId: data.jurisdictionId ?? null, articleReference: data.articleReference ?? null,
-      ownerId: data.ownerId ?? null, accountableId: data.accountableId ?? null, criticality: data.criticality,
-      sanctionDescription: data.sanctionDescription ?? null, maxSanctionAmount: data.maxSanctionAmount ?? null,
-      currency: data.currency ?? null, evidenceRequired: data.evidenceRequired ?? null,
-      evaluationFrequency: data.evaluationFrequency,
-      nextEvaluationDate: data.nextEvaluationDate ? new Date(data.nextEvaluationDate) : null,
-      effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
-      processId: data.processId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-      requirementId: data.requirementId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceObligation.create({
+      data: tenantData(ctx, {
+        code, title: data.title, description: data.description ?? null, requirementText: data.requirementText ?? null,
+        obligationType: data.obligationType, category: data.category, sourceId: data.sourceId ?? null,
+        jurisdictionId: data.jurisdictionId ?? null, articleReference: data.articleReference ?? null,
+        ownerId: data.ownerId ?? null, accountableId: data.accountableId ?? null, criticality: data.criticality,
+        sanctionDescription: data.sanctionDescription ?? null, maxSanctionAmount: data.maxSanctionAmount ?? null,
+        currency: data.currency ?? null, evidenceRequired: data.evidenceRequired ?? null,
+        evaluationFrequency: data.evaluationFrequency,
+        nextEvaluationDate: data.nextEvaluationDate ? new Date(data.nextEvaluationDate) : null,
+        effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
+        processId: data.processId ?? null, documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+        requirementId: data.requirementId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, category: data.category, criticality: data.criticality }, extra: { event: "create_obligation" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, category: data.category, criticality: data.criticality }, extra: { event: "create_obligation" } });
   if (data.ownerId && data.ownerId !== ctx.user.id) {
     await safeNotify({ organizationId: ctx.organization.id, userId: data.ownerId, title: `Obligación asignada: ${code}`, body: `Es responsable de "${data.title}".`, type: "INFO", link: "/app/compliance", idempotencyKey: `obligation:${created.id}:owner` });
   }
@@ -245,26 +315,28 @@ export async function updateComplianceObligation(id: string, input: Partial<z.in
   if (!existing) throw new Error("Obligación no encontrada.");
   const data = obligationSchema.partial().parse(input);
   await assertRefInOrg(ctx.organization.id, { processId: data.processId, documentId: data.documentId, evidenceId: data.evidenceId });
-  await prisma.complianceObligation.update({ where: { id }, data: {
-    ...(data.title !== undefined ? { title: data.title } : {}),
-    ...(data.description !== undefined ? { description: data.description } : {}),
-    ...(data.requirementText !== undefined ? { requirementText: data.requirementText } : {}),
-    ...(data.obligationType !== undefined ? { obligationType: data.obligationType } : {}),
-    ...(data.category !== undefined ? { category: data.category } : {}),
-    ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
-    ...(data.accountableId !== undefined ? { accountableId: data.accountableId } : {}),
-    ...(data.criticality !== undefined ? { criticality: data.criticality } : {}),
-    ...(data.sanctionDescription !== undefined ? { sanctionDescription: data.sanctionDescription } : {}),
-    ...(data.maxSanctionAmount !== undefined ? { maxSanctionAmount: data.maxSanctionAmount } : {}),
-    ...(data.evidenceRequired !== undefined ? { evidenceRequired: data.evidenceRequired } : {}),
-    ...(data.evaluationFrequency !== undefined ? { evaluationFrequency: data.evaluationFrequency } : {}),
-    ...(data.nextEvaluationDate !== undefined ? { nextEvaluationDate: data.nextEvaluationDate ? new Date(data.nextEvaluationDate) : null } : {}),
-    ...(data.processId !== undefined ? { processId: data.processId } : {}),
-    ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
-    ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    ...(data.requirementId !== undefined ? { requirementId: data.requirementId } : {}),
-  } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: data, extra: { event: "update_obligation" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceObligation.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.description !== undefined ? { description: data.description } : {}),
+      ...(data.requirementText !== undefined ? { requirementText: data.requirementText } : {}),
+      ...(data.obligationType !== undefined ? { obligationType: data.obligationType } : {}),
+      ...(data.category !== undefined ? { category: data.category } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+      ...(data.accountableId !== undefined ? { accountableId: data.accountableId } : {}),
+      ...(data.criticality !== undefined ? { criticality: data.criticality } : {}),
+      ...(data.sanctionDescription !== undefined ? { sanctionDescription: data.sanctionDescription } : {}),
+      ...(data.maxSanctionAmount !== undefined ? { maxSanctionAmount: data.maxSanctionAmount } : {}),
+      ...(data.evidenceRequired !== undefined ? { evidenceRequired: data.evidenceRequired } : {}),
+      ...(data.evaluationFrequency !== undefined ? { evaluationFrequency: data.evaluationFrequency } : {}),
+      ...(data.nextEvaluationDate !== undefined ? { nextEvaluationDate: data.nextEvaluationDate ? new Date(data.nextEvaluationDate) : null } : {}),
+      ...(data.processId !== undefined ? { processId: data.processId } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      ...(data.requirementId !== undefined ? { requirementId: data.requirementId } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: data, extra: { event: "update_obligation" } });
+  });
   revalidate();
   return { id };
 }
@@ -283,8 +355,10 @@ export async function supersedeObligation(id: string, input: { supersededById: s
   if (!replacement) throw new Error("La obligación sustituta no pertenece a la organización.");
   if (current.id === replacement.id) throw new Error("Una obligación no puede sustituirse a sí misma.");
   if (current.status === "SUPERSEDED") throw new Error("La obligación ya está sustituida.");
-  await prisma.complianceObligation.update({ where: { id }, data: { status: "SUPERSEDED", supersededById: replacement.id, effectiveTo: new Date() } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: current.status }, after: { status: "SUPERSEDED", supersededBy: replacement.code }, extra: { event: "supersede_obligation", note: input.note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceObligation.update({ where: { id }, data: { status: "SUPERSEDED", supersededById: replacement.id, effectiveTo: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: current.status }, after: { status: "SUPERSEDED", supersededBy: replacement.code }, extra: { event: "supersede_obligation", note: input.note } });
+  });
   revalidate();
   return { id, supersededBy: replacement.code };
 }
@@ -331,26 +405,29 @@ export async function assessObligationApplicability(input: z.infer<typeof applic
     reviewDate: data.reviewDate ? new Date(data.reviewDate) : null,
     evidenceId: data.evidenceId ?? null,
   };
-  const row = await prisma.obligationApplicability.upsert({
-    where: { organizationId_obligationId_jurisdictionId: { organizationId: ctx.organization.id, obligationId: data.obligationId, jurisdictionId: data.jurisdictionId } },
-    create: tenantData(ctx, { obligationId: data.obligationId, jurisdictionId: data.jurisdictionId, ...assessed }),
-    update: assessed,
-  });
+  const { row, rollup } = await prisma.$transaction(async (tx) => {
+    const upserted = await tx.obligationApplicability.upsert({
+      where: { organizationId_obligationId_jurisdictionId: { organizationId: ctx.organization.id, obligationId: data.obligationId, jurisdictionId: data.jurisdictionId } },
+      create: tenantData(ctx, { obligationId: data.obligationId, jurisdictionId: data.jurisdictionId, ...assessed }),
+      update: assessed,
+    });
 
-  const all = await prisma.obligationApplicability.findMany({
-    where: { organizationId: ctx.organization.id, obligationId: data.obligationId },
-    include: { jurisdiction: { select: { code: true } } },
-  });
-  const rollup = rollupApplicability(all.map((entry) => ({ jurisdictionCode: entry.jurisdiction.code, decision: entry.decision })));
-  await prisma.complianceObligation.update({
-    where: { id: data.obligationId },
-    data: {
-      applicability: rollup.decision,
-      complianceStatus: statusForApplicability(rollup.decision, obligation.complianceStatus),
-    },
-  });
+    const all = await tx.obligationApplicability.findMany({
+      where: { organizationId: ctx.organization.id, obligationId: data.obligationId },
+      include: { jurisdiction: { select: { code: true } } },
+    });
+    const computedRollup = rollupApplicability(all.map((entry) => ({ jurisdictionCode: entry.jurisdiction.code, decision: entry.decision })));
+    await tx.complianceObligation.update({
+      where: { id: data.obligationId },
+      data: {
+        applicability: computedRollup.decision,
+        complianceStatus: statusForApplicability(computedRollup.decision, obligation.complianceStatus),
+      },
+    });
 
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: row.id, after: { obligation: obligation.code, jurisdiction: jurisdiction.code, decision: data.decision, rollup: rollup.decision }, extra: { event: "assess_applicability" } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: upserted.id, after: { obligation: obligation.code, jurisdiction: jurisdiction.code, decision: data.decision, rollup: computedRollup.decision }, extra: { event: "assess_applicability" } });
+    return { row: upserted, rollup: computedRollup };
+  });
   revalidate();
   return { id: row.id, decision: data.decision, rollup };
 }
@@ -386,19 +463,22 @@ export async function createComplianceRisk(input: z.infer<typeof riskSchema>) {
   }
   const valuation = computeComplianceRisk({ likelihood: data.likelihood, impact: data.impact });
   const code = data.code ?? await nextCode("RC", prisma.complianceRisk.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceRisk.create({
-    data: tenantData(ctx, {
-      code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
-      category: data.category, likelihood: data.likelihood, impact: data.impact,
-      inherentScore: valuation.inherentScore, inherentLevel: valuation.inherentLevel,
-      residualScore: valuation.residualScore, residualLevel: valuation.residualLevel,
-      acceptability: valuation.acceptability, treatment: data.treatment,
-      sanctionExposure: data.sanctionExposure ?? null, reputationalImpact: data.reputationalImpact,
-      ownerId: data.ownerId ?? null, dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      riskId: data.riskId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceRisk.create({
+      data: tenantData(ctx, {
+        code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
+        category: data.category, likelihood: data.likelihood, impact: data.impact,
+        inherentScore: valuation.inherentScore, inherentLevel: valuation.inherentLevel,
+        residualScore: valuation.residualScore, residualLevel: valuation.residualLevel,
+        acceptability: valuation.acceptability, treatment: data.treatment,
+        sanctionExposure: data.sanctionExposure ?? null, reputationalImpact: data.reputationalImpact,
+        ownerId: data.ownerId ?? null, dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        riskId: data.riskId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, residualLevel: valuation.residualLevel, acceptability: valuation.acceptability }, extra: { event: "create_compliance_risk" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, residualLevel: valuation.residualLevel, acceptability: valuation.acceptability }, extra: { event: "create_compliance_risk" } });
   revalidate();
   return { id: created.id, code, ...valuation };
 }
@@ -414,18 +494,52 @@ export async function revalueComplianceRisk(id: string) {
   if (!risk) throw new Error("Riesgo de compliance no encontrado.");
   const controlEffectiveness = aggregateControlEffectiveness(risk.controls);
   const valuation = computeComplianceRisk({ likelihood: risk.likelihood, impact: risk.impact, controlEffectiveness });
-  await prisma.complianceRisk.update({
-    where: { id },
-    data: {
-      controlEffectiveness,
-      inherentScore: valuation.inherentScore, inherentLevel: valuation.inherentLevel,
-      residualScore: valuation.residualScore, residualLevel: valuation.residualLevel,
-      acceptability: valuation.acceptability,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceRisk.update({
+      where: { id },
+      data: {
+        controlEffectiveness,
+        inherentScore: valuation.inherentScore, inherentLevel: valuation.inherentLevel,
+        residualScore: valuation.residualScore, residualLevel: valuation.residualLevel,
+        acceptability: valuation.acceptability,
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { residualScore: risk.residualScore }, after: { controlEffectiveness, ...valuation }, extra: { event: "revalue_compliance_risk" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { residualScore: risk.residualScore }, after: { controlEffectiveness, ...valuation }, extra: { event: "revalue_compliance_risk" } });
   revalidate();
   return { id, controlEffectiveness, ...valuation };
+}
+
+export async function updateComplianceRisk(id: string, input: Partial<z.infer<typeof riskSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = riskSchema.partial().parse(input);
+  const current = await prisma.complianceRisk.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Riesgo de compliance no encontrado.");
+  if (data.obligationId) {
+    const obligation = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!obligation) throw new Error("La obligación no pertenece a la organización.");
+  }
+  await assertRefInOrg(ctx.organization.id, { riskId: data.riskId, capaId: data.capaId });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceRisk.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.description !== undefined ? { description: data.description || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.category !== undefined ? { category: data.category } : {}),
+      ...(data.likelihood !== undefined ? { likelihood: data.likelihood } : {}),
+      ...(data.impact !== undefined ? { impact: data.impact } : {}),
+      ...(data.reputationalImpact !== undefined ? { reputationalImpact: data.reputationalImpact } : {}),
+      ...(data.treatment !== undefined ? { treatment: data.treatment } : {}),
+      ...(data.sanctionExposure !== undefined ? { sanctionExposure: data.sanctionExposure } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId || null } : {}),
+      ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
+      ...(data.riskId !== undefined ? { riskId: data.riskId || null } : {}),
+      ...(data.capaId !== undefined ? { capaId: data.capaId || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, likelihood: current.likelihood, impact: current.impact }, after: data, extra: { event: "update_compliance_risk" } });
+  });
+  await revalueComplianceRisk(id);
+  return { id };
 }
 
 /** Aceptar un riesgo es una decisión con nombre y motivo, no un cambio de estado. */
@@ -435,11 +549,13 @@ export async function acceptComplianceRisk(id: string, input: { rationale: strin
   if (!risk) throw new Error("Riesgo de compliance no encontrado.");
   if (risk.status === "ACCEPTED") throw new Error("El riesgo ya está aceptado.");
   assertRiskAcceptance({ acceptability: risk.acceptability, rationale: input.rationale, acceptedById: ctx.user.id });
-  await prisma.complianceRisk.update({
-    where: { id },
-    data: { status: "ACCEPTED", treatment: "ACCEPT", acceptedById: ctx.user.id, acceptedAt: new Date(), acceptanceRationale: input.rationale },
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceRisk.update({
+      where: { id },
+      data: { status: "ACCEPTED", treatment: "ACCEPT", acceptedById: ctx.user.id, acceptedAt: new Date(), acceptanceRationale: input.rationale },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: risk.status }, after: { status: "ACCEPTED" }, extra: { event: "accept_compliance_risk", rationale: input.rationale, residualLevel: risk.residualLevel } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: risk.status }, after: { status: "ACCEPTED" }, extra: { event: "accept_compliance_risk", rationale: input.rationale, residualLevel: risk.residualLevel } });
   revalidate();
   return { id, status: "ACCEPTED" as const };
 }
@@ -462,6 +578,7 @@ const controlSchema = z.object({
   documentId: z.string().optional(),
   evidenceId: z.string().optional(),
   nextTestDate: z.string().datetime().optional(),
+  active: z.boolean().optional(),
 });
 
 export async function createComplianceControl(input: z.infer<typeof controlSchema>) {
@@ -477,18 +594,57 @@ export async function createComplianceControl(input: z.infer<typeof controlSchem
     if (!risk) throw new Error("El riesgo de compliance no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("CC", prisma.complianceControl.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceControl.create({
-    data: tenantData(ctx, {
-      code, name: data.name, description: data.description ?? null, obligationId: data.obligationId ?? null,
-      riskId: data.riskId ?? null, controlType: data.controlType, nature: data.nature, frequency: data.frequency,
-      ownerId: data.ownerId ?? null, organizationControlId: data.organizationControlId ?? null,
-      documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
-      nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceControl.create({
+      data: tenantData(ctx, {
+        code, name: data.name, description: data.description ?? null, obligationId: data.obligationId ?? null,
+        riskId: data.riskId ?? null, controlType: data.controlType, nature: data.nature, frequency: data.frequency,
+        ownerId: data.ownerId ?? null, organizationControlId: data.organizationControlId ?? null,
+        documentId: data.documentId ?? null, evidenceId: data.evidenceId ?? null,
+        nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, name: data.name, controlType: data.controlType }, extra: { event: "create_compliance_control" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, name: data.name, controlType: data.controlType }, extra: { event: "create_compliance_control" } });
   revalidate();
   return { id: created.id, code };
+}
+
+export async function updateComplianceControl(id: string, input: Partial<z.infer<typeof controlSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = controlSchema.partial().parse(input);
+  const current = await prisma.complianceControl.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Control de compliance no encontrado.");
+  await assertRefInOrg(ctx.organization.id, { controlId: data.organizationControlId, documentId: data.documentId, evidenceId: data.evidenceId });
+  if (data.obligationId) {
+    const found = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!found) throw new Error("La obligación no pertenece a la organización.");
+  }
+  if (data.riskId) {
+    const found = await prisma.complianceRisk.findFirst({ where: tenantWhere(ctx, { id: data.riskId }), select: { id: true } });
+    if (!found) throw new Error("El riesgo de compliance no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceControl.update({ where: { id }, data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.description !== undefined ? { description: data.description || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.riskId !== undefined ? { riskId: data.riskId || null } : {}),
+      ...(data.controlType !== undefined ? { controlType: data.controlType } : {}),
+      ...(data.nature !== undefined ? { nature: data.nature } : {}),
+      ...(data.frequency !== undefined ? { frequency: data.frequency } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId || null } : {}),
+      ...(data.active !== undefined ? { active: data.active } : {}),
+      ...(data.organizationControlId !== undefined ? { organizationControlId: data.organizationControlId || null } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId || null } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId || null } : {}),
+      ...(data.nextTestDate !== undefined ? { nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { name: current.name, active: current.active }, after: data, extra: { event: "update_compliance_control" } });
+  });
+  revalidate();
+  return { id };
 }
 
 const controlTestSchema = z.object({
@@ -511,24 +667,26 @@ export async function testComplianceControl(id: string, input: z.infer<typeof co
   if (!control) throw new Error("Control de compliance no encontrado.");
   await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId });
   const effectiveness = data.designAdequate && data.operatingEffective ? data.effectiveness : 0;
-  await prisma.complianceControl.update({
-    where: { id },
-    data: {
-      designAdequate: data.designAdequate, operatingEffective: data.operatingEffective, effectiveness,
-      lastTestedAt: new Date(), nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : nextOccurrence(new Date(), control.frequency === "CONTINUOUS" || control.frequency === "ON_EVENT" || control.frequency === "WEEKLY" ? "MONTHLY" : control.frequency),
-      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
-    },
-  });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { designAdequate: data.designAdequate, operatingEffective: data.operatingEffective, effectiveness }, extra: { event: "test_compliance_control", note: data.note } });
-  // El riesgo asociado se revalora solo: un control probado cambia el residual.
-  if (control.riskId) {
-    const risk = await prisma.complianceRisk.findFirst({ where: { id: control.riskId, organizationId: ctx.organization.id }, include: { controls: true } });
-    if (risk) {
-      const controlEffectiveness = aggregateControlEffectiveness(risk.controls.map((row) => (row.id === id ? { ...row, effectiveness, operatingEffective: data.operatingEffective } : row)));
-      const valuation = computeComplianceRisk({ likelihood: risk.likelihood, impact: risk.impact, controlEffectiveness });
-      await prisma.complianceRisk.update({ where: { id: risk.id }, data: { controlEffectiveness, ...valuation } });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceControl.update({
+      where: { id },
+      data: {
+        designAdequate: data.designAdequate, operatingEffective: data.operatingEffective, effectiveness,
+        lastTestedAt: new Date(), nextTestDate: data.nextTestDate ? new Date(data.nextTestDate) : nextOccurrence(new Date(), control.frequency === "CONTINUOUS" || control.frequency === "ON_EVENT" || control.frequency === "WEEKLY" ? "MONTHLY" : control.frequency),
+        ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { designAdequate: data.designAdequate, operatingEffective: data.operatingEffective, effectiveness }, extra: { event: "test_compliance_control", note: data.note } });
+    // El riesgo asociado se revalora solo: un control probado cambia el residual.
+    if (control.riskId) {
+      const risk = await tx.complianceRisk.findFirst({ where: { id: control.riskId, organizationId: ctx.organization.id }, include: { controls: true } });
+      if (risk) {
+        const controlEffectiveness = aggregateControlEffectiveness(risk.controls.map((row) => (row.id === id ? { ...row, effectiveness, operatingEffective: data.operatingEffective } : row)));
+        const valuation = computeComplianceRisk({ likelihood: risk.likelihood, impact: risk.impact, controlEffectiveness });
+        await tx.complianceRisk.update({ where: { id: risk.id }, data: { controlEffectiveness, ...valuation } });
+      }
     }
-  }
+  });
   revalidate();
   return { id, effectiveness };
 }
@@ -551,6 +709,7 @@ const evaluationSchema = z.object({
   recommendation: z.string().max(4000).optional(),
   evidenceId: z.string().optional(),
   capaId: z.string().optional(),
+  breachId: z.string().optional(),
 });
 
 export async function createComplianceEvaluation(input: z.infer<typeof evaluationSchema>) {
@@ -560,7 +719,7 @@ export async function createComplianceEvaluation(input: z.infer<typeof evaluatio
     throw new Error("Una evaluación de obligación debe indicar la obligación evaluada.");
   }
   assertFindingsForNonCompliance({ result: data.result, findings: data.findings });
-  await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId, capaId: data.capaId });
+  await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId, capaId: data.capaId, breachId: data.breachId });
   if (data.obligationId) {
     const obligation = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
     if (!obligation) throw new Error("La obligación no pertenece a la organización.");
@@ -570,18 +729,60 @@ export async function createComplianceEvaluation(input: z.infer<typeof evaluatio
     if (!control) throw new Error("El control no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("EC", prisma.complianceEvaluation.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceEvaluation.create({
-    data: tenantData(ctx, {
-      code, obligationId: data.obligationId ?? null, controlId: data.controlId ?? null, scope: data.scope,
-      method: data.method, period: data.period, evaluatedById: ctx.user.id, evaluatedAt: new Date(),
-      result: data.result, score: data.score ?? null, findings: data.findings ?? null,
-      gapsIdentified: data.gapsIdentified ?? null, recommendation: data.recommendation ?? null,
-      reviewStatus: "DRAFT", evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceEvaluation.create({
+      data: tenantData(ctx, {
+        code, obligationId: data.obligationId ?? null, controlId: data.controlId ?? null, scope: data.scope,
+        method: data.method, period: data.period, evaluatedById: ctx.user.id, evaluatedAt: new Date(),
+        result: data.result, score: data.score ?? null, findings: data.findings ?? null,
+        gapsIdentified: data.gapsIdentified ?? null, recommendation: data.recommendation ?? null,
+        reviewStatus: "DRAFT", evidenceId: data.evidenceId ?? null, capaId: data.capaId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, period: data.period, result: data.result }, extra: { event: "create_compliance_evaluation" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, period: data.period, result: data.result }, extra: { event: "create_compliance_evaluation" } });
   revalidate();
   return { id: created.id, code };
+}
+
+export async function updateComplianceEvaluation(id: string, input: Partial<z.infer<typeof evaluationSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = evaluationSchema.partial().parse(input);
+  const current = await prisma.complianceEvaluation.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Evaluación de cumplimiento no encontrada.");
+  if (!["DRAFT", "REJECTED"].includes(current.reviewStatus)) throw new Error("Solo una evaluación en borrador o rechazada puede editarse.");
+  assertFindingsForNonCompliance({ result: data.result ?? current.result, findings: data.findings ?? current.findings ?? undefined });
+  await assertRefInOrg(ctx.organization.id, { evidenceId: data.evidenceId, capaId: data.capaId, breachId: data.breachId });
+  if (data.obligationId) {
+    const found = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!found) throw new Error("La obligación no pertenece a la organización.");
+  }
+  if (data.controlId) {
+    const found = await prisma.complianceControl.findFirst({ where: tenantWhere(ctx, { id: data.controlId }), select: { id: true } });
+    if (!found) throw new Error("El control no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceEvaluation.update({ where: { id }, data: {
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.controlId !== undefined ? { controlId: data.controlId || null } : {}),
+      ...(data.scope !== undefined ? { scope: data.scope } : {}),
+      ...(data.method !== undefined ? { method: data.method } : {}),
+      ...(data.period !== undefined ? { period: data.period } : {}),
+      ...(data.result !== undefined ? { result: data.result } : {}),
+      ...(data.score !== undefined ? { score: data.score ?? null } : {}),
+      ...(data.findings !== undefined ? { findings: data.findings || null } : {}),
+      ...(data.gapsIdentified !== undefined ? { gapsIdentified: data.gapsIdentified || null } : {}),
+      ...(data.recommendation !== undefined ? { recommendation: data.recommendation || null } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId || null } : {}),
+      ...(data.capaId !== undefined ? { capaId: data.capaId || null } : {}),
+      ...(data.breachId !== undefined ? { breachId: data.breachId || null } : {}),
+      reviewStatus: "DRAFT", reviewerId: null, reviewedAt: null, decisionNote: null,
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { reviewStatus: current.reviewStatus }, after: { ...data, reviewStatus: "DRAFT" }, extra: { event: "update_compliance_evaluation" } });
+  });
+  revalidate();
+  return { id };
 }
 
 /** Envía la evaluación a revisión: nadie aprueba su propio trabajo sin pasar por aquí. */
@@ -590,8 +791,10 @@ export async function submitEvaluationForReview(id: string, note?: string) {
   const evaluation = await prisma.complianceEvaluation.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!evaluation) throw new Error("Evaluación no encontrada.");
   assertReviewTransition(evaluation.reviewStatus, "UNDER_REVIEW");
-  await prisma.complianceEvaluation.update({ where: { id }, data: { reviewStatus: "UNDER_REVIEW" } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { reviewStatus: evaluation.reviewStatus }, after: { reviewStatus: "UNDER_REVIEW" }, extra: { event: "submit_evaluation_review", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceEvaluation.update({ where: { id }, data: { reviewStatus: "UNDER_REVIEW" } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { reviewStatus: evaluation.reviewStatus }, after: { reviewStatus: "UNDER_REVIEW" }, extra: { event: "submit_evaluation_review", note } });
+  });
   revalidate();
   return { id, reviewStatus: "UNDER_REVIEW" as ComplianceReviewStatus };
 }
@@ -609,26 +812,28 @@ export async function decideEvaluation(id: string, input: { decision: "APPROVED"
   const reviewedAt = new Date();
   assertReviewerPresent({ reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt });
 
-  await prisma.complianceEvaluation.update({
-    where: { id },
-    data: { reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt, decisionNote: input.note ?? null },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceEvaluation.update({
+      where: { id },
+      data: { reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt, decisionNote: input.note ?? null },
+    });
 
-  if (input.decision === "APPROVED" && evaluation.obligationId) {
-    const obligation = await prisma.complianceObligation.findFirst({ where: { id: evaluation.obligationId, organizationId: ctx.organization.id }, select: { id: true, evaluationFrequency: true, applicability: true, complianceStatus: true } });
-    if (obligation && obligation.applicability !== "NOT_APPLICABLE") {
-      await prisma.complianceObligation.update({
-        where: { id: obligation.id },
-        data: {
-          complianceStatus: statusFromResult(evaluation.result),
-          lastEvaluatedAt: evaluation.evaluatedAt,
-          nextEvaluationDate: nextOccurrence(evaluation.evaluatedAt, obligation.evaluationFrequency === "CONTINUOUS" || obligation.evaluationFrequency === "ON_EVENT" || obligation.evaluationFrequency === "WEEKLY" ? "MONTHLY" : obligation.evaluationFrequency),
-        },
-      });
+    if (input.decision === "APPROVED" && evaluation.obligationId) {
+      const obligation = await tx.complianceObligation.findFirst({ where: { id: evaluation.obligationId, organizationId: ctx.organization.id }, select: { id: true, evaluationFrequency: true, applicability: true, complianceStatus: true } });
+      if (obligation && obligation.applicability !== "NOT_APPLICABLE") {
+        await tx.complianceObligation.update({
+          where: { id: obligation.id },
+          data: {
+            complianceStatus: statusFromResult(evaluation.result),
+            lastEvaluatedAt: evaluation.evaluatedAt,
+            nextEvaluationDate: nextOccurrence(evaluation.evaluatedAt, obligation.evaluationFrequency === "CONTINUOUS" || obligation.evaluationFrequency === "ON_EVENT" || obligation.evaluationFrequency === "WEEKLY" ? "MONTHLY" : obligation.evaluationFrequency),
+          },
+        });
+      }
     }
-  }
 
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: evaluation.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "decide_evaluation", note: input.note, result: evaluation.result } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: evaluation.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "decide_evaluation", note: input.note, result: evaluation.result } });
+  });
   if (evaluation.evaluatedById && evaluation.evaluatedById !== ctx.user.id) {
     await safeNotify({ organizationId: ctx.organization.id, userId: evaluation.evaluatedById, title: `Evaluación ${input.decision === "APPROVED" ? "aprobada" : "rechazada"}: ${evaluation.code}`, body: input.note ?? `Su evaluación del periodo ${evaluation.period} fue revisada.`, type: input.decision === "APPROVED" ? "SUCCESS" : "WARNING", link: "/app/compliance", idempotencyKey: `evaluation:${id}:${input.decision}` });
   }
@@ -668,17 +873,66 @@ export async function createCalendarItem(input: z.infer<typeof calendarSchema>) 
   const dueDate = new Date(data.dueDate);
   const code = data.code ?? await nextCode("CAL", prisma.complianceCalendar.count({ where: { organizationId: ctx.organization.id } }));
   const state = calendarState({ dueDate, leadTimeDays: data.leadTimeDays, today: new Date() });
-  const created = await prisma.complianceCalendar.create({
-    data: tenantData(ctx, {
-      code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
-      jurisdictionId: data.jurisdictionId ?? null, dueDate, recurrence: data.recurrence,
-      leadTimeDays: data.leadTimeDays, criticality: data.criticality, responsibleId: data.responsibleId ?? null,
-      authority: data.authority ?? null, status: state.status, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceCalendar.create({
+      data: tenantData(ctx, {
+        code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
+        jurisdictionId: data.jurisdictionId ?? null, dueDate, recurrence: data.recurrence,
+        leadTimeDays: data.leadTimeDays, criticality: data.criticality, responsibleId: data.responsibleId ?? null,
+        authority: data.authority ?? null, status: state.status, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, dueDate, recurrence: data.recurrence }, extra: { event: "create_calendar_item" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, dueDate, recurrence: data.recurrence }, extra: { event: "create_calendar_item" } });
   revalidate();
   return { id: created.id, code, status: state.status };
+}
+
+export async function updateCalendarItem(id: string, input: Partial<z.infer<typeof calendarSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = calendarSchema.partial().parse(input);
+  const current = await prisma.complianceCalendar.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Vencimiento no encontrado.");
+  if (current.completedAt || current.status === "CANCELLED") throw new Error("Un vencimiento cumplido o cancelado no puede editarse.");
+  if (data.obligationId) {
+    const found = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!found) throw new Error("La obligación no pertenece a la organización.");
+  }
+  if (data.jurisdictionId) {
+    const found = await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id: data.jurisdictionId }), select: { id: true } });
+    if (!found) throw new Error("La jurisdicción no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceCalendar.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.description !== undefined ? { description: data.description || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.jurisdictionId !== undefined ? { jurisdictionId: data.jurisdictionId || null } : {}),
+      ...(data.dueDate !== undefined ? { dueDate: new Date(data.dueDate) } : {}),
+      ...(data.recurrence !== undefined ? { recurrence: data.recurrence } : {}),
+      ...(data.leadTimeDays !== undefined ? { leadTimeDays: data.leadTimeDays } : {}),
+      ...(data.criticality !== undefined ? { criticality: data.criticality } : {}),
+      ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId || null } : {}),
+      ...(data.authority !== undefined ? { authority: data.authority || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, dueDate: current.dueDate }, after: data, extra: { event: "update_calendar_item" } });
+  });
+  revalidate();
+  return { id };
+}
+
+export async function cancelCalendarItem(id: string, note?: string) {
+  const ctx = await requirePermission("compliance:update");
+  const current = await prisma.complianceCalendar.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Vencimiento no encontrado.");
+  if (current.completedAt || current.status === "COMPLETED") throw new Error("Un vencimiento cumplido no puede cancelarse.");
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceCalendar.update({ where: { id }, data: { status: "CANCELLED" } });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { status: current.status }, after: { status: "CANCELLED" }, extra: { event: "cancel_calendar_item", note } });
+  });
+  revalidate();
+  return { id, status: "CANCELLED" as const };
 }
 
 /**
@@ -694,31 +948,34 @@ export async function completeCalendarItem(id: string, input: { submissionRefere
   await assertRefInOrg(ctx.organization.id, { evidenceId: input.evidenceId });
 
   const completedAt = new Date();
-  await prisma.complianceCalendar.update({
-    where: { id },
-    data: {
-      status: "COMPLETED", completedAt, completedById: ctx.user.id,
-      submissionReference: input.submissionReference ?? null,
-      ...(input.evidenceId ? { evidenceId: input.evidenceId } : {}),
-    },
-  });
-
-  let nextItem: { id: string; code: string; dueDate: Date } | null = null;
-  const nextDue = nextOccurrence(item.dueDate, item.recurrence);
-  if (nextDue) {
-    const code = await nextCode("CAL", prisma.complianceCalendar.count({ where: { organizationId: ctx.organization.id } }));
-    const created = await prisma.complianceCalendar.create({
-      data: tenantData(ctx, {
-        code, title: item.title, description: item.description, obligationId: item.obligationId,
-        jurisdictionId: item.jurisdictionId, dueDate: nextDue, recurrence: item.recurrence,
-        leadTimeDays: item.leadTimeDays, criticality: item.criticality, responsibleId: item.responsibleId,
-        authority: item.authority, status: "SCHEDULED", parentItemId: item.id, createdById: ctx.user.id,
-      }),
+  const nextCodeValue = await nextCode("CAL", prisma.complianceCalendar.count({ where: { organizationId: ctx.organization.id } }));
+  const nextItem = await prisma.$transaction(async (tx) => {
+    await tx.complianceCalendar.update({
+      where: { id },
+      data: {
+        status: "COMPLETED", completedAt, completedById: ctx.user.id,
+        submissionReference: input.submissionReference ?? null,
+        ...(input.evidenceId ? { evidenceId: input.evidenceId } : {}),
+      },
     });
-    nextItem = { id: created.id, code: created.code, dueDate: nextDue };
-  }
 
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: item.status }, after: { status: "COMPLETED", completedAt, nextOccurrence: nextItem?.code ?? null }, extra: { event: "complete_calendar_item", note: input.note, submissionReference: input.submissionReference } });
+    let created: { id: string; code: string; dueDate: Date } | null = null;
+    const nextDue = nextOccurrence(item.dueDate, item.recurrence);
+    if (nextDue) {
+      const row = await tx.complianceCalendar.create({
+        data: tenantData(ctx, {
+          code: nextCodeValue, title: item.title, description: item.description, obligationId: item.obligationId,
+          jurisdictionId: item.jurisdictionId, dueDate: nextDue, recurrence: item.recurrence,
+          leadTimeDays: item.leadTimeDays, criticality: item.criticality, responsibleId: item.responsibleId,
+          authority: item.authority, status: "SCHEDULED", parentItemId: item.id, createdById: ctx.user.id,
+        }),
+      });
+      created = { id: row.id, code: row.code, dueDate: nextDue };
+    }
+
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: item.status }, after: { status: "COMPLETED", completedAt, nextOccurrence: created?.code ?? null }, extra: { event: "complete_calendar_item", note: input.note, submissionReference: input.submissionReference } });
+    return created;
+  });
   revalidate();
   return { id, completedAt, next: nextItem };
 }
@@ -734,27 +991,32 @@ export async function refreshCalendarAlerts() {
     where: { organizationId: ctx.organization.id, completedAt: null, status: { notIn: ["CANCELLED", "COMPLETED"] } },
   });
 
-  let notified = 0;
-  for (const item of items) {
-    const state = calendarState({ dueDate: item.dueDate, leadTimeDays: item.leadTimeDays, completedAt: item.completedAt, today });
-    if (state.status !== item.status) {
-      await prisma.complianceCalendar.update({ where: { id: item.id }, data: { status: state.status } });
+  const toNotify: { id: string; code: string; title: string; responsibleId: string; status: string; overdueDays: number; daysRemaining: number }[] = [];
+  await prisma.$transaction(async (tx) => {
+    for (const item of items) {
+      const state = calendarState({ dueDate: item.dueDate, leadTimeDays: item.leadTimeDays, completedAt: item.completedAt, today });
+      if (state.status !== item.status) {
+        await tx.complianceCalendar.update({ where: { id: item.id }, data: { status: state.status } });
+      }
+      if (!state.alertDue || item.alertSentAt || !item.responsibleId) continue;
+      await tx.complianceCalendar.update({ where: { id: item.id }, data: { alertSentAt: today } });
+      toNotify.push({ id: item.id, code: item.code, title: item.title, responsibleId: item.responsibleId, status: state.status, overdueDays: state.overdueDays, daysRemaining: state.daysRemaining });
     }
-    if (!state.alertDue || item.alertSentAt || !item.responsibleId) continue;
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: ctx.organization.id, after: { reviewed: items.length, notified: toNotify.length }, extra: { event: "refresh_calendar_alerts" } });
+  });
+
+  for (const item of toNotify) {
     await safeNotify({
       organizationId: ctx.organization.id, userId: item.responsibleId,
-      title: state.status === "OVERDUE" ? `Vencimiento fuera de plazo: ${item.code}` : `Vencimiento próximo: ${item.code}`,
-      body: state.status === "OVERDUE"
-        ? `"${item.title}" venció hace ${state.overdueDays} día(s).`
-        : `"${item.title}" vence en ${state.daysRemaining} día(s).`,
-      type: state.status === "OVERDUE" ? "ALERT" : "WARNING",
-      link: "/app/compliance", idempotencyKey: `calendar:${item.id}:${state.status}`,
+      title: item.status === "OVERDUE" ? `Vencimiento fuera de plazo: ${item.code}` : `Vencimiento próximo: ${item.code}`,
+      body: item.status === "OVERDUE"
+        ? `"${item.title}" venció hace ${item.overdueDays} día(s).`
+        : `"${item.title}" vence en ${item.daysRemaining} día(s).`,
+      type: item.status === "OVERDUE" ? "ALERT" : "WARNING",
+      link: "/app/compliance", idempotencyKey: `calendar:${item.id}:${item.status}`,
     });
-    await prisma.complianceCalendar.update({ where: { id: item.id }, data: { alertSentAt: today } });
-    notified += 1;
   }
-
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: ctx.organization.id, after: { reviewed: items.length, notified }, extra: { event: "refresh_calendar_alerts" } });
+  const notified = toNotify.length;
   revalidate();
   return { reviewed: items.length, notified };
 }
@@ -815,13 +1077,15 @@ export async function declareConflictOfInterest(input: z.infer<typeof declaratio
   };
 
   const code = existing ? undefined : data.code ?? await nextCode("CI", prisma.conflictOfInterestDeclaration.count({ where: { organizationId: ctx.organization.id } }));
-  const row = existing
-    ? await prisma.conflictOfInterestDeclaration.update({ where: { id: existing.id }, data: payload })
-    : await prisma.conflictOfInterestDeclaration.create({ data: tenantData(ctx, { code: code!, declarantId, period: data.period, ...payload }) });
-
-  // El contenido de la declaración no entra en el registro de auditoría: basta
-  // saber que existe, de quién y de qué periodo.
-  await logAuditEvent({ ctx, action: existing ? "update" : "create", module: MODULE, recordId: row.id, after: { code: row.code, period: data.period, hasConflict: data.hasConflict }, extra: { event: "declare_conflict_of_interest" } });
+  const row = await prisma.$transaction(async (tx) => {
+    const saved = existing
+      ? await tx.conflictOfInterestDeclaration.update({ where: { id: existing.id }, data: payload })
+      : await tx.conflictOfInterestDeclaration.create({ data: tenantData(ctx, { code: code!, declarantId, period: data.period, ...payload }) });
+    // El contenido de la declaración no entra en el registro de auditoría: basta
+    // saber que existe, de quién y de qué periodo.
+    await writeAuditLog(tx, { ctx, action: existing ? "update" : "create", module: MODULE, recordId: saved.id, after: { code: saved.code, period: data.period, hasConflict: data.hasConflict }, extra: { event: "declare_conflict_of_interest" } });
+    return saved;
+  });
   revalidate();
   return { id: row.id, code: row.code };
 }
@@ -836,15 +1100,17 @@ export async function reviewConflictDeclaration(id: string, input: { decision: "
   if (input.decision === "MITIGATED" && !input.mitigationMeasures) {
     throw new Error("Declarar un conflicto como mitigado exige registrar las medidas de mitigación.");
   }
-  await prisma.conflictOfInterestDeclaration.update({
-    where: { id },
-    data: {
-      reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt: new Date(),
-      mitigationMeasures: input.mitigationMeasures ?? declaration.mitigationMeasures,
-      ...(input.recusalRequired !== undefined ? { recusalRequired: input.recusalRequired } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.conflictOfInterestDeclaration.update({
+      where: { id },
+      data: {
+        reviewStatus: input.decision, reviewerId: ctx.user.id, reviewedAt: new Date(),
+        mitigationMeasures: input.mitigationMeasures ?? declaration.mitigationMeasures,
+        ...(input.recusalRequired !== undefined ? { recusalRequired: input.recusalRequired } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: declaration.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "review_conflict_declaration" } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: declaration.reviewStatus }, after: { reviewStatus: input.decision }, extra: { event: "review_conflict_declaration" } });
   revalidate();
   return { id, reviewStatus: input.decision };
 }
@@ -880,23 +1146,61 @@ export async function registerRegulatoryChange(input: z.infer<typeof changeSchem
     if (!obligation) throw new Error("La obligación no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("CR", prisma.regulatoryChange.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.regulatoryChange.create({
-    data: tenantData(ctx, {
-      code, title: data.title, sourceId: data.sourceId ?? null, jurisdictionId: data.jurisdictionId ?? null,
-      obligationId: data.obligationId ?? null, changeType: data.changeType, summary: data.summary ?? null,
-      detectedAt: new Date(), detectedById: ctx.user.id,
-      publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
-      effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
-      transitionUntil: data.transitionUntil ? new Date(data.transitionUntil) : null,
-      impactStatus: "PENDING_ASSESSMENT", documentId: data.documentId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.regulatoryChange.create({
+      data: tenantData(ctx, {
+        code, title: data.title, sourceId: data.sourceId ?? null, jurisdictionId: data.jurisdictionId ?? null,
+        obligationId: data.obligationId ?? null, changeType: data.changeType, summary: data.summary ?? null,
+        detectedAt: new Date(), detectedById: ctx.user.id,
+        publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
+        effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null,
+        transitionUntil: data.transitionUntil ? new Date(data.transitionUntil) : null,
+        impactStatus: "PENDING_ASSESSMENT", documentId: data.documentId ?? null,
+      }),
+    });
+    if (data.sourceId) {
+      await tx.regulatorySource.update({ where: { id: data.sourceId }, data: { lastCheckedAt: new Date() } });
+    }
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, changeType: data.changeType }, extra: { event: "register_regulatory_change" } });
+    return row;
   });
-  if (data.sourceId) {
-    await prisma.regulatorySource.update({ where: { id: data.sourceId }, data: { lastCheckedAt: new Date() } });
-  }
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, changeType: data.changeType }, extra: { event: "register_regulatory_change" } });
   revalidate();
   return { id: created.id, code };
+}
+
+export async function updateRegulatoryChange(id: string, input: Partial<z.infer<typeof changeSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = changeSchema.partial().parse(input);
+  const current = await prisma.regulatoryChange.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Cambio regulatorio no encontrado.");
+  if (["IMPLEMENTED"].includes(current.impactStatus)) throw new Error("Un cambio implementado conserva su ficha histórica y no puede editarse.");
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId });
+  for (const [value, message] of [[data.sourceId, "La fuente"], [data.jurisdictionId, "La jurisdicción"], [data.obligationId, "La obligación"]] as const) {
+    if (!value) continue;
+    const found = data.sourceId === value
+      ? await prisma.regulatorySource.findFirst({ where: tenantWhere(ctx, { id: value }), select: { id: true } })
+      : data.jurisdictionId === value
+        ? await prisma.jurisdiction.findFirst({ where: tenantWhere(ctx, { id: value }), select: { id: true } })
+        : await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: value }), select: { id: true } });
+    if (!found) throw new Error(`${message} no pertenece a la organización.`);
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.regulatoryChange.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.sourceId !== undefined ? { sourceId: data.sourceId || null } : {}),
+      ...(data.jurisdictionId !== undefined ? { jurisdictionId: data.jurisdictionId || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.changeType !== undefined ? { changeType: data.changeType } : {}),
+      ...(data.summary !== undefined ? { summary: data.summary || null } : {}),
+      ...(data.publishedAt !== undefined ? { publishedAt: data.publishedAt ? new Date(data.publishedAt) : null } : {}),
+      ...(data.effectiveFrom !== undefined ? { effectiveFrom: data.effectiveFrom ? new Date(data.effectiveFrom) : null } : {}),
+      ...(data.transitionUntil !== undefined ? { transitionUntil: data.transitionUntil ? new Date(data.transitionUntil) : null } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, impactStatus: current.impactStatus }, after: data, extra: { event: "update_regulatory_change" } });
+  });
+  revalidate();
+  return { id };
 }
 
 const changeAssessmentSchema = z.object({
@@ -931,21 +1235,23 @@ export async function assessRegulatoryChange(id: string, input: z.infer<typeof c
     throw new Error("Concluir que un cambio no tiene impacto exige justificarlo.");
   }
 
-  await prisma.regulatoryChange.update({
-    where: { id },
-    data: {
-      impactStatus: data.impactStatus,
-      ...(data.impactLevel !== undefined ? { impactLevel: data.impactLevel } : {}),
-      ...(data.impactAnalysis !== undefined ? { impactAnalysis: data.impactAnalysis } : {}),
-      ...(data.affectedAreas !== undefined ? { affectedAreas: data.affectedAreas } : {}),
-      ...(data.actionsRequired !== undefined ? { actionsRequired: data.actionsRequired } : {}),
-      ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId } : {}),
-      ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
-      ...(data.changeRequestId !== undefined ? { changeRequestId: data.changeRequestId } : {}),
-      ...(data.impactStatus === "IMPLEMENTED" ? { implementedAt: new Date() } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.regulatoryChange.update({
+      where: { id },
+      data: {
+        impactStatus: data.impactStatus,
+        ...(data.impactLevel !== undefined ? { impactLevel: data.impactLevel } : {}),
+        ...(data.impactAnalysis !== undefined ? { impactAnalysis: data.impactAnalysis } : {}),
+        ...(data.affectedAreas !== undefined ? { affectedAreas: data.affectedAreas } : {}),
+        ...(data.actionsRequired !== undefined ? { actionsRequired: data.actionsRequired } : {}),
+        ...(data.responsibleId !== undefined ? { responsibleId: data.responsibleId } : {}),
+        ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
+        ...(data.changeRequestId !== undefined ? { changeRequestId: data.changeRequestId } : {}),
+        ...(data.impactStatus === "IMPLEMENTED" ? { implementedAt: new Date() } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { impactStatus: change.impactStatus }, after: { impactStatus: data.impactStatus, impactLevel: data.impactLevel }, extra: { event: "assess_regulatory_change" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { impactStatus: change.impactStatus }, after: { impactStatus: data.impactStatus, impactLevel: data.impactLevel }, extra: { event: "assess_regulatory_change" } });
   if (data.responsibleId && data.responsibleId !== ctx.user.id && data.impactStatus === "ASSESSED") {
     await safeNotify({ organizationId: ctx.organization.id, userId: data.responsibleId, title: `Cambio regulatorio con impacto: ${change.code}`, body: `"${change.title}" exige acciones antes de ${data.dueDate ? new Date(data.dueDate).toISOString().slice(0, 10) : "la fecha de entrada en vigor"}.`, type: "WARNING", link: "/app/compliance", idempotencyKey: `regchange:${id}:assigned` });
   }
@@ -992,24 +1298,61 @@ export async function registerComplianceBreach(input: z.infer<typeof breachSchem
   const detectedAt = new Date();
   const notificationRequired = requiresNotificationDecision(category, data.severity);
   const code = data.code ?? await nextCode("INC", prisma.complianceBreach.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceBreach.create({
-    data: tenantData(ctx, {
-      code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
-      jurisdictionId: data.jurisdictionId ?? null, detectionSource: data.detectionSource, severity: data.severity,
-      detectedAt, detectedById: ctx.user.id, occurredAt: data.occurredAt ? new Date(data.occurredAt) : null,
-      rootCause: data.rootCause ?? null, affectedParties: data.affectedParties ?? null,
-      recurrence: data.recurrence, financialExposure: data.financialExposure ?? null,
-      notificationRequired, notificationDeadline: notificationRequired ? notificationDeadline(detectedAt, category) : null,
-      status: "OPEN", capaId: data.capaId ?? null, ncId: data.ncId ?? null, evidenceId: data.evidenceId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceBreach.create({
+      data: tenantData(ctx, {
+        code, title: data.title, description: data.description ?? null, obligationId: data.obligationId ?? null,
+        jurisdictionId: data.jurisdictionId ?? null, detectionSource: data.detectionSource, severity: data.severity,
+        detectedAt, detectedById: ctx.user.id, occurredAt: data.occurredAt ? new Date(data.occurredAt) : null,
+        rootCause: data.rootCause ?? null, affectedParties: data.affectedParties ?? null,
+        recurrence: data.recurrence, financialExposure: data.financialExposure ?? null,
+        notificationRequired, notificationDeadline: notificationRequired ? notificationDeadline(detectedAt, category) : null,
+        status: "OPEN", capaId: data.capaId ?? null, ncId: data.ncId ?? null, evidenceId: data.evidenceId ?? null,
+      }),
+    });
+    // La obligación incumplida deja de estar conforme en el momento de detectarlo.
+    if (data.obligationId) {
+      await tx.complianceObligation.update({ where: { id: data.obligationId }, data: { complianceStatus: "NON_COMPLIANT" } });
+    }
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, severity: data.severity, notificationRequired }, extra: { event: "register_compliance_breach" } });
+    return row;
   });
-  // La obligación incumplida deja de estar conforme en el momento de detectarlo.
-  if (data.obligationId) {
-    await prisma.complianceObligation.update({ where: { id: data.obligationId }, data: { complianceStatus: "NON_COMPLIANT" } });
-  }
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, severity: data.severity, notificationRequired }, extra: { event: "register_compliance_breach" } });
   revalidate();
   return { id: created.id, code, notificationRequired, notificationDeadline: created.notificationDeadline };
+}
+
+export async function updateComplianceBreach(id: string, input: Partial<z.infer<typeof breachSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = breachSchema.partial().parse(input);
+  const current = await prisma.complianceBreach.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Incumplimiento no encontrado.");
+  if (["REMEDIATED", "CLOSED"].includes(current.status)) throw new Error("Un incumplimiento remediado o cerrado conserva su evidencia y no puede editarse.");
+  await assertRefInOrg(ctx.organization.id, { capaId: data.capaId, ncId: data.ncId, evidenceId: data.evidenceId });
+  if (data.obligationId) {
+    const found = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!found) throw new Error("La obligación no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceBreach.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.description !== undefined ? { description: data.description || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.jurisdictionId !== undefined ? { jurisdictionId: data.jurisdictionId || null } : {}),
+      ...(data.detectionSource !== undefined ? { detectionSource: data.detectionSource } : {}),
+      ...(data.severity !== undefined ? { severity: data.severity } : {}),
+      ...(data.occurredAt !== undefined ? { occurredAt: data.occurredAt ? new Date(data.occurredAt) : null } : {}),
+      ...(data.rootCause !== undefined ? { rootCause: data.rootCause || null } : {}),
+      ...(data.affectedParties !== undefined ? { affectedParties: data.affectedParties || null } : {}),
+      ...(data.financialExposure !== undefined ? { financialExposure: data.financialExposure ?? null } : {}),
+      ...(data.recurrence !== undefined ? { recurrence: data.recurrence } : {}),
+      ...(data.capaId !== undefined ? { capaId: data.capaId || null } : {}),
+      ...(data.ncId !== undefined ? { ncId: data.ncId || null } : {}),
+      ...(data.evidenceId !== undefined ? { evidenceId: data.evidenceId || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, severity: current.severity }, after: data, extra: { event: "update_compliance_breach" } });
+  });
+  revalidate();
+  return { id };
 }
 
 export async function setBreachStatus(id: string, input: { to: BreachStatus; note?: string }) {
@@ -1028,11 +1371,13 @@ export async function setBreachStatus(id: string, input: { to: BreachStatus; not
     });
   }
 
-  await prisma.complianceBreach.update({
-    where: { id },
-    data: { status: input.to, ...(input.to === "CLOSED" ? { closedAt: new Date(), closedById: ctx.user.id } : {}) },
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceBreach.update({
+      where: { id },
+      data: { status: input.to, ...(input.to === "CLOSED" ? { closedAt: new Date(), closedById: ctx.user.id } : {}) },
+    });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { status: breach.status }, after: { status: input.to }, extra: { event: "breach_status", note: input.note } });
   });
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { status: breach.status }, after: { status: input.to }, extra: { event: "breach_status", note: input.note } });
   revalidate();
   return { id, status: input.to };
 }
@@ -1043,11 +1388,13 @@ export async function recordAuthorityNotification(id: string, input: { notifiedA
   if (!breach) throw new Error("Incumplimiento no encontrado.");
   const notifiedAt = input.notifiedAt ? new Date(input.notifiedAt) : new Date();
   const late = Boolean(breach.notificationDeadline && notifiedAt > breach.notificationDeadline);
-  await prisma.complianceBreach.update({
-    where: { id },
-    data: { authorityNotifiedAt: notifiedAt, authorityReference: input.authorityReference ?? null, notificationRequired: true },
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceBreach.update({
+      where: { id },
+      data: { authorityNotifiedAt: notifiedAt, authorityReference: input.authorityReference ?? null, notificationRequired: true },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { authorityNotifiedAt: notifiedAt, late }, extra: { event: "notify_authority", note: input.note, deadline: breach.notificationDeadline } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { authorityNotifiedAt: notifiedAt, late }, extra: { event: "notify_authority", note: input.note, deadline: breach.notificationDeadline } });
   revalidate();
   return { id, notifiedAt, late };
 }
@@ -1079,19 +1426,52 @@ export async function createRemediationPlan(input: z.infer<typeof planSchema>) {
     if (!breach) throw new Error("El incumplimiento no pertenece a la organización.");
   }
   const code = data.code ?? await nextCode("REM", prisma.remediationPlan.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.remediationPlan.create({
-    data: tenantData(ctx, {
-      code, title: data.title, breachId: data.breachId ?? null, obligationId: data.obligationId ?? null,
-      objective: data.objective ?? null, actionsDescription: data.actionsDescription ?? null,
-      ownerId: data.ownerId ?? null,
-      startDate: data.startDate ? new Date(data.startDate) : null,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      status: "DRAFT", cost: data.cost ?? null, actionId: data.actionId ?? null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.remediationPlan.create({
+      data: tenantData(ctx, {
+        code, title: data.title, breachId: data.breachId ?? null, obligationId: data.obligationId ?? null,
+        objective: data.objective ?? null, actionsDescription: data.actionsDescription ?? null,
+        ownerId: data.ownerId ?? null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        dueDate: data.dueDate ? new Date(data.dueDate) : null,
+        status: "DRAFT", cost: data.cost ?? null, actionId: data.actionId ?? null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, dueDate: data.dueDate }, extra: { event: "create_remediation_plan" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, dueDate: data.dueDate }, extra: { event: "create_remediation_plan" } });
   revalidate();
   return { id: created.id, code };
+}
+
+export async function updateRemediationPlan(id: string, input: Partial<z.infer<typeof planSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = planSchema.partial().parse(input);
+  const current = await prisma.remediationPlan.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Plan de remediación no encontrado.");
+  if (current.status !== "DRAFT") throw new Error("Solo un plan en borrador puede editarse.");
+  await assertRefInOrg(ctx.organization.id, { actionId: data.actionId });
+  if (data.breachId) {
+    const found = await prisma.complianceBreach.findFirst({ where: tenantWhere(ctx, { id: data.breachId }), select: { id: true } });
+    if (!found) throw new Error("El incumplimiento no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.remediationPlan.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.breachId !== undefined ? { breachId: data.breachId || null } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.objective !== undefined ? { objective: data.objective || null } : {}),
+      ...(data.actionsDescription !== undefined ? { actionsDescription: data.actionsDescription || null } : {}),
+      ...(data.ownerId !== undefined ? { ownerId: data.ownerId || null } : {}),
+      ...(data.startDate !== undefined ? { startDate: data.startDate ? new Date(data.startDate) : null } : {}),
+      ...(data.dueDate !== undefined ? { dueDate: data.dueDate ? new Date(data.dueDate) : null } : {}),
+      ...(data.cost !== undefined ? { cost: data.cost ?? null } : {}),
+      ...(data.actionId !== undefined ? { actionId: data.actionId || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, status: current.status }, after: data, extra: { event: "update_remediation_plan" } });
+  });
+  revalidate();
+  return { id };
 }
 
 export async function approveRemediationPlan(id: string, note?: string) {
@@ -1101,8 +1481,10 @@ export async function approveRemediationPlan(id: string, note?: string) {
   assertRemediationTransition(plan.status, "APPROVED");
   if (!plan.dueDate) throw new Error("Un plan sin fecha objetivo no puede aprobarse.");
   if (!plan.ownerId) throw new Error("Un plan sin responsable no puede aprobarse.");
-  await prisma.remediationPlan.update({ where: { id }, data: { status: "APPROVED", approvedById: ctx.user.id, approvedAt: new Date() } });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: plan.status }, after: { status: "APPROVED" }, extra: { event: "approve_remediation_plan", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.remediationPlan.update({ where: { id }, data: { status: "APPROVED", approvedById: ctx.user.id, approvedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: plan.status }, after: { status: "APPROVED" }, extra: { event: "approve_remediation_plan", note } });
+  });
   if (plan.ownerId !== ctx.user.id) {
     await safeNotify({ organizationId: ctx.organization.id, userId: plan.ownerId, title: `Plan de remediación aprobado: ${plan.code}`, body: `"${plan.title}" está aprobado y puede ejecutarse.`, type: "SUCCESS", link: "/app/compliance", idempotencyKey: `remediation:${id}:approved` });
   }
@@ -1124,8 +1506,10 @@ export async function updateRemediationProgress(id: string, input: { progressPer
     ? "COMPLETED"
     : effectiveStatus({ status: plan.status === "APPROVED" ? "IN_PROGRESS" : plan.status, dueDate: plan.dueDate, completedAt: null }, today);
 
-  await prisma.remediationPlan.update({ where: { id }, data: { progressPercent, status, completedAt } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { progressPercent: plan.progressPercent, status: plan.status }, after: { progressPercent, status }, extra: { event: "update_remediation_progress", note: input.note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.remediationPlan.update({ where: { id }, data: { progressPercent, status, completedAt } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { progressPercent: plan.progressPercent, status: plan.status }, after: { progressPercent, status }, extra: { event: "update_remediation_progress", note: input.note } });
+  });
   revalidate();
   return { id, progressPercent, status };
 }
@@ -1139,17 +1523,19 @@ export async function verifyRemediationEffectiveness(id: string, input: { note: 
     status: plan.status, completedAt: plan.completedAt, verifierId: ctx.user.id, ownerId: plan.ownerId, note: input.note,
   });
   await assertRefInOrg(ctx.organization.id, { evidenceId: input.evidenceId });
-  await prisma.remediationPlan.update({
-    where: { id },
-    data: {
-      effectivenessVerified: true, effectivenessVerifiedById: ctx.user.id, effectivenessVerifiedAt: new Date(),
-      verificationNote: input.note, verificationEvidenceId: input.evidenceId ?? null,
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.remediationPlan.update({
+      where: { id },
+      data: {
+        effectivenessVerified: true, effectivenessVerifiedById: ctx.user.id, effectivenessVerifiedAt: new Date(),
+        verificationNote: input.note, verificationEvidenceId: input.evidenceId ?? null,
+      },
+    });
+    if (plan.breachId) {
+      await tx.complianceBreach.updateMany({ where: { id: plan.breachId, organizationId: ctx.organization.id, status: "UNDER_REMEDIATION" }, data: { status: "REMEDIATED" } });
+    }
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, after: { effectivenessVerified: true }, extra: { event: "verify_remediation_effectiveness", note: input.note } });
   });
-  if (plan.breachId) {
-    await prisma.complianceBreach.updateMany({ where: { id: plan.breachId, organizationId: ctx.organization.id, status: "UNDER_REMEDIATION" }, data: { status: "REMEDIATED" } });
-  }
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, after: { effectivenessVerified: true }, extra: { event: "verify_remediation_effectiveness", note: input.note } });
   revalidate();
   return { id, effectivenessVerified: true };
 }
@@ -1179,19 +1565,53 @@ export async function createComplianceTraining(input: z.infer<typeof trainingSch
   const data = trainingSchema.parse(input);
   await assertRefInOrg(ctx.organization.id, { trainingCourseId: data.trainingCourseId, documentId: data.materialsDocumentId });
   const code = data.code ?? await nextCode("FC", prisma.complianceTraining.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.complianceTraining.create({
-    data: tenantData(ctx, {
-      code, title: data.title, topic: data.topic, obligationId: data.obligationId ?? null,
-      audience: data.audience ?? null, mandatory: data.mandatory, deliveryMode: data.deliveryMode,
-      scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
-      durationMinutes: data.durationMinutes ?? null, targetCount: data.targetCount ?? null,
-      trainingCourseId: data.trainingCourseId ?? null, materialsDocumentId: data.materialsDocumentId ?? null,
-      nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : null, createdById: ctx.user.id,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.complianceTraining.create({
+      data: tenantData(ctx, {
+        code, title: data.title, topic: data.topic, obligationId: data.obligationId ?? null,
+        audience: data.audience ?? null, mandatory: data.mandatory, deliveryMode: data.deliveryMode,
+        scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
+        durationMinutes: data.durationMinutes ?? null, targetCount: data.targetCount ?? null,
+        trainingCourseId: data.trainingCourseId ?? null, materialsDocumentId: data.materialsDocumentId ?? null,
+        nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : null, createdById: ctx.user.id,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, title: data.title, topic: data.topic }, extra: { event: "create_compliance_training" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, title: data.title, topic: data.topic }, extra: { event: "create_compliance_training" } });
   revalidate();
   return { id: created.id, code };
+}
+
+export async function updateComplianceTraining(id: string, input: Partial<z.infer<typeof trainingSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = trainingSchema.partial().parse(input);
+  const current = await prisma.complianceTraining.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Formación no encontrada.");
+  await assertRefInOrg(ctx.organization.id, { trainingCourseId: data.trainingCourseId, documentId: data.materialsDocumentId });
+  if (data.obligationId) {
+    const found = await prisma.complianceObligation.findFirst({ where: tenantWhere(ctx, { id: data.obligationId }), select: { id: true } });
+    if (!found) throw new Error("La obligación no pertenece a la organización.");
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceTraining.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.topic !== undefined ? { topic: data.topic } : {}),
+      ...(data.obligationId !== undefined ? { obligationId: data.obligationId || null } : {}),
+      ...(data.audience !== undefined ? { audience: data.audience || null } : {}),
+      ...(data.mandatory !== undefined ? { mandatory: data.mandatory } : {}),
+      ...(data.deliveryMode !== undefined ? { deliveryMode: data.deliveryMode } : {}),
+      ...(data.scheduledFor !== undefined ? { scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null } : {}),
+      ...(data.durationMinutes !== undefined ? { durationMinutes: data.durationMinutes ?? null } : {}),
+      ...(data.targetCount !== undefined ? { targetCount: data.targetCount ?? null } : {}),
+      ...(data.trainingCourseId !== undefined ? { trainingCourseId: data.trainingCourseId || null } : {}),
+      ...(data.materialsDocumentId !== undefined ? { materialsDocumentId: data.materialsDocumentId || null } : {}),
+      ...(data.nextDueDate !== undefined ? { nextDueDate: data.nextDueDate ? new Date(data.nextDueDate) : null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, targetCount: current.targetCount }, after: data, extra: { event: "update_compliance_training" } });
+  });
+  revalidate();
+  return { id };
 }
 
 export async function recordTrainingCompletion(id: string, input: { completedCount: number; passRate?: number; effectivenessNote?: string; evidenceId?: string }) {
@@ -1203,16 +1623,18 @@ export async function recordTrainingCompletion(id: string, input: { completedCou
     throw new Error("Las personas formadas no pueden superar la audiencia prevista.");
   }
   await assertRefInOrg(ctx.organization.id, { evidenceId: input.evidenceId });
-  await prisma.complianceTraining.update({
-    where: { id },
-    data: {
-      completedCount, completedAt: new Date(),
-      ...(input.passRate !== undefined ? { passRate: z.number().int().min(0).max(100).parse(input.passRate) } : {}),
-      ...(input.effectivenessNote !== undefined ? { effectivenessNote: input.effectivenessNote, effectivenessEvaluated: true } : {}),
-      ...(input.evidenceId !== undefined ? { evidenceId: input.evidenceId } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.complianceTraining.update({
+      where: { id },
+      data: {
+        completedCount, completedAt: new Date(),
+        ...(input.passRate !== undefined ? { passRate: z.number().int().min(0).max(100).parse(input.passRate) } : {}),
+        ...(input.effectivenessNote !== undefined ? { effectivenessNote: input.effectivenessNote, effectivenessEvaluated: true } : {}),
+        ...(input.evidenceId !== undefined ? { evidenceId: input.evidenceId } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { completedCount, passRate: input.passRate }, extra: { event: "record_training_completion" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { completedCount, passRate: input.passRate }, extra: { event: "record_training_completion" } });
   revalidate();
   return { id, completedCount };
 }
@@ -1247,26 +1669,53 @@ export async function prepareGoverningBodyReport(input: z.infer<typeof governing
   const digest = payload.digest;
 
   const code = data.code ?? await nextCode("OG", prisma.governingBodyReport.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.governingBodyReport.create({
-    data: tenantData(ctx, {
-      code, title: data.title, period: data.period, presentedTo: data.presentedTo, preparedById: ctx.user.id,
-      reportedAt: new Date(), executiveSummary: data.executiveSummary ?? null,
-      obligationsSummary: `Obligaciones: ${digest.obligations.total}; incumplidas: ${digest.obligations.nonCompliant}; sin evaluar: ${digest.obligations.notEvaluated}.`,
-      risksSummary: `Riesgos: ${digest.risks.total}; alto/crítico: ${digest.risks.highOrCritical}; no aceptables: ${digest.risks.notAcceptable}.`,
-      evaluationsSummary: `Evaluaciones: ${digest.evaluations.total}; aprobadas: ${digest.evaluations.approved}; en revisión: ${digest.evaluations.pendingReview}.`,
-      breachesSummary: `Incumplimientos: ${digest.breaches.total}; abiertos: ${digest.breaches.open}; graves: ${digest.breaches.severe}; sanciones: ${digest.breaches.sanctions}.`,
-      speakUpSummary: `Canal: ${digest.speakUp.total} caso(s); abiertos: ${digest.speakUp.open}; anónimos: ${digest.speakUp.anonymous}; fundados o parcialmente fundados: ${digest.speakUp.substantiated}. Categorías: ${digest.speakUp.byCategory.map((row) => `${row.category} (${row.count})`).join(", ") || "sin casos"}.`,
-      investigationsSummary: `Investigaciones: ${digest.investigations.total}; activas: ${digest.investigations.active}; reasignadas por conflicto: ${digest.investigations.withConflict}.`,
-      trainingSummary: `Formaciones obligatorias: ${digest.training.mandatory}; cobertura: ${digest.training.coverageRate ?? "n/d"}%.`,
-      remediationSummary: `Remediaciones completadas: ${digest.remediation.completed}; fuera de plazo: ${digest.remediation.overdue}; sin verificar eficacia: ${digest.remediation.completedNotVerified}.`,
-      resourcesRequested: data.resourcesRequested ?? null,
-      decisionsRequested: data.decisionsRequested ?? (digest.escalations.length > 0 ? digest.escalations.join("; ") : null),
-      reviewStatus: "DRAFT", documentId: data.documentId ?? null, managementReviewId: data.managementReviewId ?? null,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.governingBodyReport.create({
+      data: tenantData(ctx, {
+        code, title: data.title, period: data.period, presentedTo: data.presentedTo, preparedById: ctx.user.id,
+        reportedAt: new Date(), executiveSummary: data.executiveSummary ?? null,
+        obligationsSummary: `Obligaciones: ${digest.obligations.total}; incumplidas: ${digest.obligations.nonCompliant}; sin evaluar: ${digest.obligations.notEvaluated}.`,
+        risksSummary: `Riesgos: ${digest.risks.total}; alto/crítico: ${digest.risks.highOrCritical}; no aceptables: ${digest.risks.notAcceptable}.`,
+        evaluationsSummary: `Evaluaciones: ${digest.evaluations.total}; aprobadas: ${digest.evaluations.approved}; en revisión: ${digest.evaluations.pendingReview}.`,
+        breachesSummary: `Incumplimientos: ${digest.breaches.total}; abiertos: ${digest.breaches.open}; graves: ${digest.breaches.severe}; sanciones: ${digest.breaches.sanctions}.`,
+        speakUpSummary: `Canal: ${digest.speakUp.total} caso(s); abiertos: ${digest.speakUp.open}; anónimos: ${digest.speakUp.anonymous}; fundados o parcialmente fundados: ${digest.speakUp.substantiated}. Categorías: ${digest.speakUp.byCategory.map((row) => `${row.category} (${row.count})`).join(", ") || "sin casos"}.`,
+        investigationsSummary: `Investigaciones: ${digest.investigations.total}; activas: ${digest.investigations.active}; reasignadas por conflicto: ${digest.investigations.withConflict}.`,
+        trainingSummary: `Formaciones obligatorias: ${digest.training.mandatory}; cobertura: ${digest.training.coverageRate ?? "n/d"}%.`,
+        remediationSummary: `Remediaciones completadas: ${digest.remediation.completed}; fuera de plazo: ${digest.remediation.overdue}; sin verificar eficacia: ${digest.remediation.completedNotVerified}.`,
+        resourcesRequested: data.resourcesRequested ?? null,
+        decisionsRequested: data.decisionsRequested ?? (digest.escalations.length > 0 ? digest.escalations.join("; ") : null),
+        reviewStatus: "DRAFT", documentId: data.documentId ?? null, managementReviewId: data.managementReviewId ?? null,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { code, period: data.period, presentedTo: data.presentedTo, escalations: digest.escalations.length }, extra: { event: "prepare_governing_body_report" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, period: data.period, presentedTo: data.presentedTo, escalations: digest.escalations.length }, extra: { event: "prepare_governing_body_report" } });
   revalidate();
   return { id: created.id, code, escalations: digest.escalations };
+}
+
+export async function updateGoverningBodyReport(id: string, input: Partial<z.infer<typeof governingReportSchema>>) {
+  const ctx = await requirePermission("compliance:update");
+  const data = governingReportSchema.partial().parse(input);
+  const current = await prisma.governingBodyReport.findFirst({ where: tenantWhere(ctx, { id }) });
+  if (!current) throw new Error("Informe no encontrado.");
+  if (current.reviewStatus !== "DRAFT") throw new Error("Solo un informe en borrador puede editarse.");
+  await assertRefInOrg(ctx.organization.id, { documentId: data.documentId, managementReviewId: data.managementReviewId });
+  await prisma.$transaction(async (tx) => {
+    await tx.governingBodyReport.update({ where: { id }, data: {
+      ...(data.title !== undefined ? { title: data.title } : {}),
+      ...(data.period !== undefined ? { period: data.period } : {}),
+      ...(data.presentedTo !== undefined ? { presentedTo: data.presentedTo } : {}),
+      ...(data.executiveSummary !== undefined ? { executiveSummary: data.executiveSummary || null } : {}),
+      ...(data.resourcesRequested !== undefined ? { resourcesRequested: data.resourcesRequested || null } : {}),
+      ...(data.decisionsRequested !== undefined ? { decisionsRequested: data.decisionsRequested || null } : {}),
+      ...(data.documentId !== undefined ? { documentId: data.documentId || null } : {}),
+      ...(data.managementReviewId !== undefined ? { managementReviewId: data.managementReviewId || null } : {}),
+    } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { title: current.title, period: current.period }, after: data, extra: { event: "update_governing_body_report" } });
+  });
+  revalidate();
+  return { id };
 }
 
 export async function submitGoverningBodyReport(id: string) {
@@ -1274,8 +1723,10 @@ export async function submitGoverningBodyReport(id: string) {
   const report = await prisma.governingBodyReport.findFirst({ where: tenantWhere(ctx, { id }) });
   if (!report) throw new Error("Informe no encontrado.");
   if (report.reviewStatus !== "DRAFT") throw new Error("Solo un informe en borrador puede enviarse.");
-  await prisma.governingBodyReport.update({ where: { id }, data: { reviewStatus: "SUBMITTED", submittedAt: new Date() } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { reviewStatus: report.reviewStatus }, after: { reviewStatus: "SUBMITTED" }, extra: { event: "submit_governing_body_report" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.governingBodyReport.update({ where: { id }, data: { reviewStatus: "SUBMITTED", submittedAt: new Date() } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { reviewStatus: report.reviewStatus }, after: { reviewStatus: "SUBMITTED" }, extra: { event: "submit_governing_body_report" } });
+  });
   revalidate();
   return { id, reviewStatus: "SUBMITTED" as const };
 }
@@ -1289,16 +1740,18 @@ export async function acknowledgeGoverningBodyReport(id: string, input: { decisi
   assertAcknowledgement({ acknowledgedById: ctx.user.id });
   await assertRefInOrg(ctx.organization.id, { evidenceId: input.evidenceId });
   const now = new Date();
-  await prisma.governingBodyReport.update({
-    where: { id },
-    data: {
-      reviewStatus: "ACKNOWLEDGED", acknowledgedAt: now, acknowledgedById: ctx.user.id,
-      presentedAt: report.presentedAt ?? now,
-      decisionsTaken: input.decisionsTaken ?? report.decisionsTaken,
-      ...(input.evidenceId ? { evidenceId: input.evidenceId } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.governingBodyReport.update({
+      where: { id },
+      data: {
+        reviewStatus: "ACKNOWLEDGED", acknowledgedAt: now, acknowledgedById: ctx.user.id,
+        presentedAt: report.presentedAt ?? now,
+        decisionsTaken: input.decisionsTaken ?? report.decisionsTaken,
+        ...(input.evidenceId ? { evidenceId: input.evidenceId } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: report.reviewStatus }, after: { reviewStatus: "ACKNOWLEDGED" }, extra: { event: "acknowledge_governing_body_report", decisionsTaken: input.decisionsTaken } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { reviewStatus: report.reviewStatus }, after: { reviewStatus: "ACKNOWLEDGED" }, extra: { event: "acknowledge_governing_body_report", decisionsTaken: input.decisionsTaken } });
   revalidate();
   return { id, reviewStatus: "ACKNOWLEDGED" as const };
 }

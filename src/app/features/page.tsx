@@ -1,7 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Funcionalidades — NormaFlow" };
+export const metadata = createMarketingMetadata({
+  title: "Funcionalidades del software ISO | NormaFlow",
+  description: "Documentos, riesgos, auditorías, CAPA, indicadores, evidencias y asistente IA para gestionar tu sistema ISO.",
+  path: "/features",
+});
 
 const FEATURES: { icon: keyof typeof Ic; title: string; desc: string; bullets: string[] }[] = [
   { icon: "kpi",    title: "GAP Assessment", desc: "Evalúa el nivel de cumplimiento de tu organización frente a los requisitos de cada norma. Diagnóstico por cláusula, scoring automatizado y plan de acción sugerido por IA.", bullets: ["Plantillas por norma (ISO 9001, 27001, 14001, 45001)", "Scoring por cláusula y puntuación global", "Plan de acción sugerido automáticamente", "Exportación a PDF con portada y resumen ejecutivo", "Versión resumida gratuita para captación de leads"] },
@@ -36,7 +41,7 @@ export default function FeaturesPage() {
             return (
               <article
                 key={feat.title}
-                className="nf-card"
+                className="nfm-card"
                 style={{
                   display: "grid",
                   gridTemplateColumns: i % 2 === 0 ? "1.1fr 1fr" : "1fr 1.1fr",
@@ -46,7 +51,7 @@ export default function FeaturesPage() {
                 }}
               >
                 <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--nf-accent-soft)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)", marginBottom: 18 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, display: "grid", placeItems: "center", background: "var(--nf-accent-soft)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)", marginBottom: 18 }}>
                     <Icon />
                   </div>
                   <h3 className="nf-h-3">{feat.title}</h3>
@@ -54,7 +59,7 @@ export default function FeaturesPage() {
                   <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 }}>
                     {feat.bullets.map((b) => (
                       <li key={b} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 14, color: "var(--nf-ink-2)" }}>
-                        <span style={{ color: "var(--nf-accent)", marginTop: 3 }}><Ic.check/></span>{b}
+                        <span style={{ color: "var(--nf-primary-active)", marginTop: 3 }}><Ic.check/></span>{b}
                       </li>
                     ))}
                   </ul>
@@ -70,7 +75,7 @@ export default function FeaturesPage() {
                   position: "relative",
                   overflow: "hidden",
                 }}>
-                  <div style={{ color: "var(--nf-accent)", transform: "scale(4)", opacity: 0.35 }}>
+                  <div style={{ color: "var(--nf-primary-active)", transform: "scale(4)", opacity: 0.35 }}>
                     <Icon />
                   </div>
                   <div style={{ position: "absolute", bottom: 14, left: 16, fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-ink-3)", letterSpacing: "0.16em", textTransform: "uppercase" }}>

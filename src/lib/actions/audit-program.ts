@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { notifyUsers } from "@/lib/notify";
+import { assertAuditIndependence } from "@/lib/audit-workflow";
 import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
 import { parseId, parseInput } from "@/lib/validation/common";
@@ -168,13 +169,14 @@ export async function addProgramAudit(programId: string, input: PlannedProgramAu
   const program = await loadProgram(programId, ctx.organization.id);
   if (!input.title.trim() || !input.processId || !input.standardCode.trim() || !input.date || !input.auditorId) throw new Error("Título, proceso, norma, fecha y auditor son obligatorios.");
   const [process, standard, auditor] = await Promise.all([
-    prisma.process.findFirst({ where: { id: input.processId, organizationId: ctx.organization.id }, select: { id: true } }),
+    prisma.process.findFirst({ where: { id: input.processId, organizationId: ctx.organization.id }, select: { id: true, ownerId: true } }),
     prisma.organizationStandard.findFirst({ where: { organizationId: ctx.organization.id, standard: { code: input.standardCode.trim() } }, select: { id: true } }),
     prisma.membership.findFirst({ where: { organizationId: ctx.organization.id, userId: input.auditorId, active: true }, select: { id: true } }),
   ]);
   if (!process) throw new Error("El proceso no pertenece a la organización.");
   if (!standard) throw new Error("La norma no está habilitada para la organización.");
   if (!auditor) throw new Error("El auditor no pertenece a la organización.");
+  assertAuditIndependence({ auditorId: input.auditorId, processOwnerId: process.ownerId });
   const date = new Date(`${input.date}T12:00:00.000Z`);
   if (Number.isNaN(date.getTime())) throw new Error("La fecha no es válida.");
   const audit = await prisma.audit.create({ data: { organizationId: ctx.organization.id, programId, processId: process.id, title: input.title.trim(), type: AuditType.INTERNAL, standardCode: input.standardCode.trim(), auditorId: input.auditorId, plannedDate: date, scheduledDate: date, status: AuditStatus.PLANNED } });

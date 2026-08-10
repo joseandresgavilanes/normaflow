@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
+import { decryptMdSensitiveField } from "@/lib/crypto/field-encryption";
 
 type Row = Record<string, string | number | boolean | null>;
 const date = (value: Date | null | undefined) => value?.toISOString().slice(0, 10) ?? "";
@@ -99,6 +100,7 @@ export async function getMdComplaintRows(organizationId: string): Promise<Row[]>
     codigo: row.code, dispositivo: row.device?.code ?? "", lote: row.batch?.lotNumber ?? "",
     fuente: row.source, categoria: row.category ?? "", estado: row.status,
     recibido_el: date(row.receivedAt), sujeto_opaco: row.anonymizedSubjectRef ?? "",
+    descripcion: decryptMdSensitiveField(row.description) ?? row.description,
     capa: row.capaId ?? "",
   }));
 }
@@ -112,7 +114,7 @@ export async function getMdSurveillanceRows(organizationId: string): Promise<Row
   return rows.map((row) => ({
     codigo: row.code, dispositivo: row.device.code, titulo: row.title,
     desde: date(row.periodStart), hasta: date(row.periodEnd), estado: row.status,
-    hallazgos: row.findings ?? "",
+    hallazgos: decryptMdSensitiveField(row.findings) ?? "",
   }));
 }
 
@@ -127,6 +129,7 @@ export async function getMdAdverseEventRows(organizationId: string): Promise<Row
     queja: row.complaint?.code ?? "", severidad: row.severity, reportable: YES(row.reportable),
     autoridad: YES(row.reportedToAuthority), estado: row.status, reportado_el: date(row.reportedAt),
     sujeto_opaco: row.anonymizedSubjectRef ?? "",
+    descripcion: decryptMdSensitiveField(row.description) ?? row.description,
   }));
 }
 
@@ -147,12 +150,12 @@ export async function getMdRecallRows(organizationId: string): Promise<Row[]> {
     ...recalls.map((row) => ({
       tipo: "RETIRO", codigo: row.code, dispositivo: row.device?.code ?? "", titulo: row.title,
       lotes: join(row.lotNumbers), estado: row.status, iniciado_el: date(row.initiatedAt),
-      autoridad: YES(row.authorityNotified),
+      autoridad: YES(row.authorityNotified), motivo: decryptMdSensitiveField(row.reason) ?? row.reason,
     })),
     ...fsas.map((row) => ({
       tipo: "ACCION_CAMPO", codigo: row.code, dispositivo: row.device?.code ?? "", titulo: row.title,
       lotes: join(row.lotNumbers), estado: row.status, iniciado_el: date(row.initiatedAt),
-      autoridad: "",
+      autoridad: "", motivo: decryptMdSensitiveField(row.reason) ?? "",
     })),
   ];
 }

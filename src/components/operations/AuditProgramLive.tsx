@@ -130,7 +130,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
             <OperationalCard key={row.id} onClick={() => setDetailId(row.id)}>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontFamily: "ui-monospace, monospace", color: "#5266F6", fontSize: 12, fontWeight: 600 }}>{row.year}</div>
+                  <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary-active)", fontSize: 12, fontWeight: 600 }}>{row.year}</div>
                   <h3 style={{ margin: "6px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{row.title}</h3>
                   <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.completedCount}/{row.auditCount} auditorías completadas</div>
                 </div>
@@ -140,7 +140,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>
                   <span>Avance del programa</span><span style={{ fontWeight: 700 }}>{row.avgProgress}%</span>
                 </div>
-                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "#16A34A" : row.avgProgress >= 40 ? "#D97706" : "#5266F6"} height={7} railColor="#eef2f9" />
+                <ProgressBar value={row.avgProgress} color={row.avgProgress >= 80 ? "var(--nf-success)" : row.avgProgress >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="var(--nf-surface-sunken)" />
               </div>
               {canManage && (
                 <CardActions canUpdate canDelete pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
@@ -153,14 +153,14 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
       {/* Create / edit */}
       <FormModal open={creating || !!editing} title={editing ? "Editar programa" : "Nuevo programa anual"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submit}>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Año"><input name="year" type="number" min="2000" max="2100" className="nf-app-input" style={inputStyle} defaultValue={editing?.year ?? new Date().getFullYear()} required /></Field>
-          <Field label="Título"><input name="title" className="nf-app-input" style={inputStyle} defaultValue={editing?.title ?? ""} required placeholder="Programa anual de auditorías" /></Field>
+          <Field label="Año"><input aria-label="Año" name="year" type="number" min="2000" max="2100" className="nf-app-input" style={inputStyle} defaultValue={editing?.year ?? new Date().getFullYear()} required /></Field>
+          <Field label="Título"><input aria-label="Programa anual de auditorías" name="title" className="nf-app-input" style={inputStyle} defaultValue={editing?.title ?? ""} required placeholder="Programa anual de auditorías" /></Field>
         </div>
-        <Field label="Objetivos"><textarea name="objectives" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.objectives ?? ""} placeholder="Verificar la conformidad y eficacia del SGC…" /></Field>
-        <Field label="Alcance"><textarea name="scope" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.scope ?? ""} placeholder="Todos los procesos y sedes certificadas…" /></Field>
-        <Field label="Normas incluidas"><select name="standards" multiple size={Math.min(Math.max(2, initial.standards.length), 6)} className="nf-app-input" style={inputStyle} defaultValue={editing?.standards ?? []}>{initial.standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name} {standard.version}</option>)}</select></Field>
-        <Field label="Criterios de auditoría"><textarea name="criteria" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.criteria ?? ""} placeholder="Requisitos de la norma, políticas y procedimientos aplicables…" /></Field>
-        <Field label="Responsable del programa"><select name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editing?.responsibleId ?? ""}><option value="">Sin asignar</option>{initial.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
+        <Field label="Objetivos"><textarea aria-label="Verificar la conformidad y eficacia del SGC" name="objectives" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.objectives ?? ""} placeholder="Verificar la conformidad y eficacia del SGC…" /></Field>
+        <Field label="Alcance"><textarea aria-label="Todos los procesos y sedes certificadas" name="scope" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.scope ?? ""} placeholder="Todos los procesos y sedes certificadas…" /></Field>
+        <Field label="Normas incluidas"><select aria-label="Normas" name="standards" multiple size={Math.min(Math.max(2, initial.standards.length), 6)} className="nf-app-input" style={inputStyle} defaultValue={editing?.standards ?? []}>{initial.standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name} {standard.version}</option>)}</select></Field>
+        <Field label="Criterios de auditoría"><textarea aria-label="Criterios" name="criteria" className="nf-app-input" style={inputStyle} rows={2} defaultValue={editing?.criteria ?? ""} placeholder="Requisitos de la norma, políticas y procedimientos aplicables…" /></Field>
+        <Field label="Responsable del programa"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editing?.responsibleId ?? ""}><option value="">Sin asignar</option>{initial.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field>
       </FormModal>
 
       {/* Detail */}
@@ -196,7 +196,7 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
             <section>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <strong style={{ fontSize: 14 }}>Auditorías del programa · {detail.auditCount}</strong>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}><button type="button" className={auditView === "list" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("list")}>Lista</button><button type="button" className={auditView === "calendar" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("calendar")}>Calendario</button>{canManage && <button type="button" className="nf-app-btn-ghost" onClick={() => setPlanningFor(detail)}>+ Planificar auditoría</button>}<Link href="/app/audits" style={{ fontSize: 12, color: "#5266F6", fontWeight: 700, textDecoration: "none" }}>Abrir módulo →</Link></div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}><button type="button" className={auditView === "list" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("list")}>Lista</button><button type="button" className={auditView === "calendar" ? "nf-app-btn-primary nf-app-btn-sm" : "nf-app-btn-ghost nf-app-btn-sm"} onClick={() => setAuditView("calendar")}>Calendario</button>{canManage && <button type="button" className="nf-app-btn-ghost" onClick={() => setPlanningFor(detail)}>+ Planificar auditoría</button>}<Link href="/app/audits" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, textDecoration: "none" }}>Abrir módulo →</Link></div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: auditView === "calendar" ? "repeat(auto-fit,minmax(210px,1fr))" : "1fr", gap: 8, marginTop: 10 }}>
                 {detail.audits.length === 0 && <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin auditorías enlazadas. Asígnalas desde el módulo de Auditorías seleccionando este programa.</p>}
@@ -215,9 +215,9 @@ export function AuditProgramLive({ initial }: { initial: AuditProgramPayload }) 
         )}
       </Modal>
       <FormModal open={!!planningFor} title="Agregar auditoría planificada" pending={isPending} error={error} onClose={() => setPlanningFor(null)} onSubmit={(event) => { event.preventDefault(); if (!planningFor) return; const fd = new FormData(event.currentTarget); run(() => addProgramAudit(planningFor.id, { title: String(fd.get("title") ?? ""), processId: String(fd.get("processId") ?? ""), standardCode: String(fd.get("standardCode") ?? ""), date: String(fd.get("date") ?? ""), auditorId: String(fd.get("auditorId") ?? "") }), { onSuccess: () => setPlanningFor(null), successMessage: "Auditoría planificada." }); }}>
-        <Field label="Título"><input name="title" required className="nf-app-input" style={inputStyle} placeholder="Auditoría del proceso de compras" /></Field>
-        <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Proceso"><select name="processId" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}</select></Field><Field label="Norma"><select name="standardCode" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}</select></Field></div>
-        <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Fecha"><input name="date" type="date" required className="nf-app-input" style={inputStyle} /></Field><Field label="Auditor"><select name="auditorId" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field></div>
+        <Field label="Título"><input aria-label="Auditoría del proceso de compras" name="title" required className="nf-app-input" style={inputStyle} placeholder="Auditoría del proceso de compras" /></Field>
+        <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Proceso"><select aria-label="Seleccionar" name="processId" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}</select></Field><Field label="Norma"><select aria-label="Seleccionar" name="standardCode" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}</select></Field></div>
+        <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Fecha"><input aria-label="Fecha" name="date" type="date" required className="nf-app-input" style={inputStyle} /></Field><Field label="Auditor"><select aria-label="Seleccionar" name="auditorId" required className="nf-app-input" style={inputStyle}><option value="">Seleccionar</option>{initial.members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field></div>
       </FormModal>
       <ConfirmActionModal
         open={!!confirmDelete}

@@ -1,0 +1,407 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 08-iso-y-panel
+ *
+ * Módulos normativos y panel principal.
+ *
+ * Trozo literal de las líneas 2760-3156 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-modal-actions > :where(button, a) {
+  flex: 0 0 auto;
+}
+
+.nf-modal-error {
+  padding: 10px 12px;
+  border-radius: var(--nf-radius-md);
+  background: var(--nf-danger-subtle);
+  border: 1px solid var(--nf-danger-border);
+  color: var(--nf-danger-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
+  width: 100%;
+  padding: var(--nf-form-control-py) var(--nf-form-control-px) !important;
+  min-height: var(--nf-form-control-min-height) !important;
+  font-size: var(--nf-form-control-font-size) !important;
+  line-height: var(--nf-form-control-line-height) !important;
+  border: 1px solid var(--nf-line) !important;
+  border-radius: var(--nf-form-control-radius) !important;
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+  font-family: inherit;
+  box-sizing: border-box;
+  background: var(--nf-surface) !important;
+  color: var(--nf-ink) !important;
+  font-weight: 500 !important;
+  color-scheme: light;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-modal-body textarea {
+  min-height: 88px;
+}
+
+.nf-modal-body :where(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus {
+  border-color: var(--nf-app-accent) !important;
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft) !important;
+}
+
+/* Algunas pantallas ISO todavía reutilizan estilos inline antiguos. Dentro de
+   un modal prevalece el mismo control visual que usa el resto de la app. */
+.nf-modal-body :where(button, a):not(.nf-modal-close) {
+  min-height: var(--nf-form-control-min-height) !important;
+  padding: var(--nf-form-control-py) var(--nf-form-control-px) !important;
+  font-size: var(--nf-form-control-font-size) !important;
+  border-radius: var(--nf-form-control-radius) !important;
+  font-family: inherit;
+  line-height: var(--nf-form-control-line-height);
+}
+
+.nf-modal-body :where(div)[style*="justify-content: flex-end"] {
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--nf-line);
+}
+
+/* Formularios ISO heredados: dos columnas equilibradas en escritorio, sin
+   alterar las subrejillas internas que ya definen sus proporciones. */
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px !important;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(input, select),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(textarea, button, div, p),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > :where(textarea, button, div, p),
+.nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label) > label:has(> textarea),
+.nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+/* En los formularios antiguos, crear y cancelar comparten la última fila. */
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type {
+  grid-column: 2;
+  order: 2;
+  align-self: end;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+  grid-column: 1;
+  order: 1;
+  align-self: end;
+  justify-content: stretch;
+  width: 100%;
+  min-width: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button,
+.nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button {
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-modal-body :where(input, select, textarea)::placeholder {
+  color: #98a2b3;
+  font-size: 13px;
+  opacity: 1;
+}
+
+/* Modales de creación compartidos por las nuevas ISO: el formulario conserva
+   sus subrejillas internas, pero las acciones quedan en una fila común y
+   siempre muestran una salida explícita para cancelar. */
+.nf-iso-create-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  gap: 16px !important;
+}
+
+.nf-modal-error {
+  grid-column: 1 / -1;
+  padding: 10px 12px;
+  border: 1px solid var(--nf-danger-border);
+  border-radius: 10px;
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.nf-iso-create-fields,
+.nf-iso-edit-fields {
+  display: contents !important;
+}
+
+.nf-iso-create-fields > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-iso-create-fields > :where(textarea, div, p),
+.nf-iso-create-fields > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] {
+  display: contents !important;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] > button:last-child,
+.nf-iso-create-fields > button:last-of-type {
+  grid-column: 1;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.nf-iso-create-fields > :where(div)[style*="display: grid"] > :where(div)[style*="display: grid"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.nf-iso-create-fields > button:last-of-type {
+  grid-column: auto;
+  align-self: end;
+  width: 100%;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.nf-iso-create-form-actions {
+  display: contents !important;
+  grid-column: 1;
+}
+
+.nf-iso-create-form-actions > button {
+  grid-column: 2;
+  align-self: end;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+.nf-iso-create-form > .nf-iso-create-form-actions:has(> button + button) {
+  display: flex !important;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--nf-line);
+}
+
+/* El editor compartido de Compliance usa la misma jerarquía que los nuevos. */
+.nf-iso-edit-form {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px !important;
+}
+
+.nf-iso-edit-fields > :where(input, select) {
+  grid-column: span 1;
+  min-width: 0;
+  max-width: 100% !important;
+}
+
+.nf-iso-edit-fields > :where(textarea, div, p),
+.nf-iso-edit-fields > label:has(> textarea) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.nf-iso-edit-fields > :where(div)[style*="display: grid"] {
+  display: contents !important;
+}
+
+.nf-iso-edit-fields > :where(div)[style*="display: grid"] > :where(div)[style*="display: grid"] {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.nf-iso-edit-fields > button:last-of-type {
+  grid-column: auto;
+  align-self: end;
+  width: auto;
+  min-width: 132px;
+}
+
+.nf-iso-edit-form-actions {
+  grid-column: 1 / -1;
+  align-self: end;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.nf-iso-edit-form-actions > button {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Cuando el formulario ya contiene ambos botones en el mismo footer, se
+   mantienen juntos y en el orden Cancelar → acción principal. */
+.nf-iso-create-form > .nf-modal-actions:has(> button + button),
+.nf-iso-edit-form > .nf-modal-actions:has(> button + button) {
+  justify-content: flex-end;
+}
+
+.nf-iso-create-form > .nf-modal-actions:has(> button + button) > button,
+.nf-iso-edit-form > .nf-modal-actions:has(> button + button) > button {
+  width: auto;
+  min-width: 128px;
+}
+
+@media (max-width: 640px) {
+  .nf-modal-body .nf-form-grid-2,
+  .nf-modal-body .nf-form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> input, > select, > textarea, > label),
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> input, > select, > textarea, > label) {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+    grid-column: 1 / -1;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > button.nf-app-btn-primary:last-of-type {
+    justify-self: stretch;
+    width: 100%;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"],
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] {
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .nf-modal-body > div[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button,
+  .nf-modal-form > :first-child[style*="display: grid"]:has(> button.nf-app-btn-primary) > div[style*="justify-content: flex-end"] > button {
+    width: 100%;
+  }
+
+  .nf-iso-create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-create-fields,
+  .nf-iso-edit-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-create-fields > :where(input, select, textarea, label, div, p, button),
+  .nf-iso-create-form-actions {
+    grid-column: 1 / -1;
+  }
+
+  .nf-iso-create-fields > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-create-fields > button:last-of-type {
+    order: 2;
+  }
+
+  .nf-iso-create-form-actions {
+    order: 1;
+  }
+
+  .nf-iso-edit-form {
+    grid-template-columns: 1fr;
+  }
+
+  .nf-iso-edit-fields > :where(input, select, textarea, label, div, p, button),
+  .nf-iso-edit-form-actions {
+    grid-column: 1 / -1;
+  }
+
+  .nf-iso-edit-fields > div[style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .nf-iso-edit-fields > button:last-of-type {
+    order: 2;
+  }
+
+  .nf-iso-edit-form-actions {
+    order: 1;
+  }
+}
+
+.nf-data-table :where(.nf-app-btn-outline, .nf-app-btn-ghost, .nf-app-btn-primary, .nf-app-btn-danger, .nf-app-btn-success, .nf-app-btn-soft-success) {
+  padding: 6px 10px;
+  min-height: 28px;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+/* Mercury-style dashboard */
+.nf-dash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.nf-dash-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .nf-dash-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.nf-dash-card {
+  background: var(--nf-surface);
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 0;
+}
+
+.nf-dash-card-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nf-ink-3);
+  margin-bottom: 8px;
+}

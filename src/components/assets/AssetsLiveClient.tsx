@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Boxes, Download, Link2, Plus, Search, ShieldCheck, Trash2, Upload } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -65,6 +67,23 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
     } finally { setExporting(false); }
   }
 
+  const columns = useMemo<DataTableColumn<Asset>[]>(() => [
+    { id: "asset", header: "Activo de información", primary: true, minWidth: 210, hideable: false, sortValue: (a) => a.code,
+      cell: (a) => <><strong>{a.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{a.name}</div></> },
+    { id: "category", header: "Categoría", minWidth: 140, sortValue: (a) => a.category, cell: (a) => CATEGORY_LABEL[a.category] },
+    { id: "criticality", header: "Criticidad", minWidth: 120, sortValue: (a) => a.criticality,
+      cell: (a) => <Badge value={CRIT_LABEL[a.criticality]} tone={critTone(a.criticality)} /> },
+    { id: "classification", header: "Clasificación", minWidth: 140, sortValue: (a) => a.classification?.classification ?? "",
+      cell: (a) => a.classification ? CLASS_LABEL[a.classification.classification] : "—" },
+    { id: "cia", header: "CIA", minWidth: 90,
+      cell: (a) => <span style={{ fontSize: 12 }}>{a.classification ? `${a.classification.confidentiality[0]}/${a.classification.integrity[0]}/${a.classification.availability[0]}` : "—"}</span> },
+    { id: "owner", header: "Propietario", minWidth: 140, sortValue: (a) => a.owner?.name ?? "", cell: (a) => a.owner?.name ?? "—" },
+    { id: "review", header: "Próxima revisión", minWidth: 140, numeric: true, sortValue: (a) => a.nextReviewDate ?? "",
+      cell: (a) => <span style={{ color: a.overdue ? "var(--nf-danger-text)" : undefined }}>{a.nextReviewDate ?? "—"}</span> },
+    { id: "status", header: "Estado", minWidth: 120, sortValue: (a) => a.status,
+      cell: (a) => <Badge value={STATUS_LABEL[a.status]} tone={a.status === "ACTIVE" ? "green" : a.status === "RETIRED" ? "gray" : "blue"} /> },
+  ], []);
+
   return <div>
     <SectionTitle title="Activos de información" sub="Inventario ISO 27001: propietario, custodio, clasificación CIA, dependencias, riesgos y controles del Anexo A por activo." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -72,9 +91,9 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
 
     <div className="nf-metric-strip">
       <Metric label="Activos" value={initial.summary.total} icon={<Boxes size={19} />} />
-      <Metric label="Críticos" value={initial.summary.critical} icon={<AlertTriangle size={19} />} color="#B91C1C" />
-      <Metric label="Clasificados" value={initial.summary.classified} icon={<ShieldCheck size={19} />} color="#15803D" />
-      <Metric label="Revisión vencida" value={initial.summary.overdue} icon={<AlertTriangle size={19} />} color="#B45309" />
+      <Metric label="Críticos" value={initial.summary.critical} icon={<AlertTriangle size={19} />} color="var(--nf-danger-text)" />
+      <Metric label="Clasificados" value={initial.summary.classified} icon={<ShieldCheck size={19} />} color="var(--nf-success-text)" />
+      <Metric label="Revisión vencida" value={initial.summary.overdue} icon={<AlertTriangle size={19} />} color="var(--nf-warning-text)" />
     </div>
 
     {initial.overdueAlerts.length > 0 && <div className="nf-alert nf-alert--warning" style={{ marginBottom: 14 }}>
@@ -83,15 +102,23 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
 
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código, nombre o propietario…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input aria-label="Buscar código, nombre o propietario" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código, nombre o propietario…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
         <Filter label="Categoría" value={category} onChange={setCategory} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(CATEGORY_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Estado" value={status} onChange={setStatus} options={[{ value: "ALL", label: "Todos" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Criticidad" value={criticality} onChange={setCriticality} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(CRIT_LABEL).map(([value, label]) => ({ value, label }))]} />
         {initial.canCreate && <><button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Nuevo activo</button><button type="button" className="nf-app-btn-ghost" onClick={() => setImporting(true)}><Upload size={14} /> Importar CSV</button></>}
-        {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+        {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.summary.total} activos</div>
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 980 }}><thead><tr><th>Activo</th><th>Categoría</th><th>Criticidad</th><th>Clasificación</th><th>CIA</th><th>Propietario</th><th>Próxima revisión</th><th>Estado</th></tr></thead><tbody>{filtered.map((a) => <tr key={a.id} onClick={() => setSelected(a)} style={{ cursor: "pointer" }}><td><strong>{a.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{a.name}</div></td><td>{CATEGORY_LABEL[a.category]}</td><td><Badge value={CRIT_LABEL[a.criticality]} tone={critTone(a.criticality)} /></td><td>{a.classification ? CLASS_LABEL[a.classification.classification] : "—"}</td><td style={{ fontSize: 12 }}>{a.classification ? `${a.classification.confidentiality[0]}/${a.classification.integrity[0]}/${a.classification.availability[0]}` : "—"}</td><td>{a.owner?.name ?? "—"}</td><td style={{ color: a.overdue ? "#B91C1C" : undefined }}>{a.nextReviewDate ?? "—"}</td><td><Badge value={STATUS_LABEL[a.status]} tone={a.status === "ACTIVE" ? "green" : a.status === "RETIRED" ? "gray" : "blue"} /></td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay activos para los filtros seleccionados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(a) => a.id}
+        rowAction={(a) => setSelected(a)}
+        caption="Inventario de activos de información: código, categoría, criticidad, clasificación, tríada CIA, propietario, próxima revisión y estado."
+        storageKey="assets"
+        empty={<EmptyState kind="no-results" title="No hay activos para los filtros seleccionados." description="El inventario de activos sostiene el análisis de riesgos: cada activo lleva propietario, criticidad y clasificación de confidencialidad, integridad y disponibilidad." />}
+      />
     </Card>
 
     {creating && <AssetForm initial={initial} pending={isPending} onClose={() => setCreating(false)} onRun={run} />}
@@ -141,7 +168,7 @@ function ImportModal({ pending, onClose, onRun }: { pending: boolean; onClose: (
     <div className="nf-modal-header"><h3>Importar activos (CSV)</h3><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cerrar</button></div>
     <div style={{ display: "grid", gap: 12, padding: 20 }}>
       <p style={{ fontSize: 12, color: "var(--nf-ink-3)", margin: 0 }}>Columnas requeridas: <code>code, name, category</code>. Opcionales: <code>criticality, description</code>. Categorías válidas: {Object.keys(CATEGORY_LABEL).join(", ")}.</p>
-      <textarea className="nf-app-input" rows={10} value={csv} onChange={(e) => setCsv(e.target.value)} style={{ fontFamily: "monospace", fontSize: 12 }} />
+      <textarea aria-label="Archivo CSV" className="nf-app-input" rows={10} value={csv} onChange={(e) => setCsv(e.target.value)} style={{ fontFamily: "monospace", fontSize: 12 }} />
       <button type="button" className="nf-app-btn-primary" disabled={pending} onClick={() => onRun(() => importAssetsCsv({ csv }), { onSuccess: onClose, successMessage: "Importación procesada." })}><Upload size={14} /> Importar</button>
     </div>
   </div></div>;
@@ -169,12 +196,12 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         <div><strong>Proceso:</strong> {asset.process?.name ?? "—"}</div>
         <div><strong>Ubicación:</strong> {asset.location?.name ?? "—"}</div>
         <div><strong>Revisión:</strong> {asset.reviewDate ?? "—"}</div>
-        <div style={{ color: asset.overdue ? "#B91C1C" : undefined }}><strong>Próxima:</strong> {asset.nextReviewDate ?? "—"}{asset.overdue ? " (vencida)" : ""}</div>
+        <div style={{ color: asset.overdue ? "var(--nf-danger-text)" : undefined }}><strong>Próxima:</strong> {asset.nextReviewDate ?? "—"}{asset.overdue ? " (vencida)" : ""}</div>
       </div>
       {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button type="button" className="nf-app-btn-ghost" onClick={() => setEditing(true)}>Editar activo</button>
         <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={() => onRun(() => markAssetReviewed({ id: asset.id }), { successMessage: "Revisión registrada." })}><ShieldCheck size={14} /> Marcar revisado</button>
-        {initial.canDelete && <button type="button" className="nf-app-btn-ghost" disabled={pending} style={{ color: "#B91C1C" }} onClick={() => onRun(() => deleteAsset(asset.id), { onSuccess: onClose, successMessage: "Activo eliminado." })}><Trash2 size={14} /> Eliminar</button>}
+        {initial.canDelete && <button type="button" className="nf-app-btn-ghost" disabled={pending} style={{ color: "var(--nf-danger-text)" }} onClick={() => onRun(() => deleteAsset(asset.id), { onSuccess: onClose, successMessage: "Activo eliminado." })}><Trash2 size={14} /> Eliminar</button>}
       </div>}
 
       {/* Clasificación */}
@@ -185,8 +212,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
             {(["confidentiality", "integrity", "availability"] as const).map((k) => <label key={k} style={{ fontSize: 11 }}>{k === "confidentiality" ? "Confidencialidad" : k === "integrity" ? "Integridad" : "Disponibilidad"}<select className="nf-app-input" value={cls[k]} onChange={(e) => setCls((p) => ({ ...p, [k]: e.target.value as never }))}>{Object.entries(CIA_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>)}
             <label style={{ fontSize: 11 }}>Clasificación<select className="nf-app-input" value={cls.classification} onChange={(e) => setCls((p) => ({ ...p, classification: e.target.value as never }))}>{Object.entries(CLASS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
           </div>
-          <input className="nf-app-input" placeholder="Requisitos legales" value={cls.legalRequirements} onChange={(e) => setCls((p) => ({ ...p, legalRequirements: e.target.value }))} />
-          <input className="nf-app-input" placeholder="Retención" value={cls.retention} onChange={(e) => setCls((p) => ({ ...p, retention: e.target.value }))} />
+          <input aria-label="Requisitos legales" className="nf-app-input" placeholder="Requisitos legales" value={cls.legalRequirements} onChange={(e) => setCls((p) => ({ ...p, legalRequirements: e.target.value }))} />
+          <input aria-label="Retención" className="nf-app-input" placeholder="Retención" value={cls.retention} onChange={(e) => setCls((p) => ({ ...p, retention: e.target.value }))} />
           <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={() => onRun(() => upsertAssetClassification({ assetId: asset.id, confidentiality: cls.confidentiality as never, integrity: cls.integrity as never, availability: cls.availability as never, classification: cls.classification as never, legalRequirements: cls.legalRequirements || undefined, retention: cls.retention || undefined }), { successMessage: "Clasificación guardada." })}>Guardar clasificación</button>
         </div> : <div style={{ fontSize: 13 }}>{c ? `${CLASS_LABEL[c.classification]} · CIA ${c.confidentiality}/${c.integrity}/${c.availability}` : "Sin clasificar"}</div>}
       </div>
@@ -195,9 +222,9 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Riesgos asociados">
         {asset.risks.map((r) => <Row key={r.id} text={`${r.riskTitle ?? r.threat ?? "Riesgo"}${r.vulnerability ? ` · ${r.vulnerability}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetRisk(r.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select>
-          <input className="nf-app-input" placeholder="Amenaza" value={threat} onChange={(e) => setThreat(e.target.value)} style={{ maxWidth: 150 }} />
-          <input className="nf-app-input" placeholder="Vulnerabilidad" value={vuln} onChange={(e) => setVuln(e.target.value)} style={{ maxWidth: 150 }} />
+          <select aria-label="Riesgo del registro" className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select>
+          <input aria-label="Amenaza" className="nf-app-input" placeholder="Amenaza" value={threat} onChange={(e) => setThreat(e.target.value)} style={{ maxWidth: 150 }} />
+          <input aria-label="Vulnerabilidad" className="nf-app-input" placeholder="Vulnerabilidad" value={vuln} onChange={(e) => setVuln(e.target.value)} style={{ maxWidth: 150 }} />
           <button type="button" className="nf-app-btn-ghost" disabled={pending || (!riskId && !threat.trim())} onClick={() => onRun(() => addAssetRisk({ assetId: asset.id, riskId: riskId || null, threat: threat || undefined, vulnerability: vuln || undefined }), { successMessage: "Riesgo asociado." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -206,8 +233,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Controles Anexo A asociados">
         {asset.controls.map((ct) => <Row key={ct.id} text={`${ct.code} · ${ct.title} · ${CTRL_STATUS_LABEL[ct.status]}${ct.evidence ? ` · ${ct.evidence.title}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetControl(ct.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</select>
-          <select className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          <select aria-label="Control" className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</select>
+          <select aria-label="Estado del control" className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !ctrlId} onClick={() => onRun(() => upsertAssetControl({ assetId: asset.id, organizationControlId: ctrlId, status: ctrlStatus as never }), { successMessage: "Control asociado." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -217,8 +244,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         {asset.dependencies.map((d) => <Row key={d.id} text={`${DEP_LABEL[d.type]} → ${d.asset.code} ${d.asset.name}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetDependency(d.id)) : undefined} pending={pending} />)}
         {asset.dependents.map((d) => <Row key={d.id} text={`${d.asset.code} ${d.asset.name} → ${DEP_LABEL[d.type]} este activo`} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-          <select className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select>
+          <select aria-label="Tipo de dependencia" className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          <select aria-label="Activo dependiente" className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !depId} onClick={() => onRun(() => addAssetDependency({ sourceAssetId: asset.id, dependentAssetId: depId, type: depType as never }), { successMessage: "Dependencia añadida." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -235,4 +262,4 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ text, onRemove, pending }: { text: string; onRemove?: () => void; pending: boolean }) { return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13 }}><span>{text}</span>{onRemove && <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onRemove}><Trash2 size={13} /></button>}</div>; }
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

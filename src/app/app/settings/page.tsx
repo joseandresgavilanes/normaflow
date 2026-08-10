@@ -5,7 +5,7 @@ import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getAccountPayload } from "@/lib/server-queries";
 
-export const metadata = { title: "Cuenta | NormaFlow" };
+export const metadata = { title: "Cuenta" };
 
 export default async function SettingsPage() {
   const ctx = await getAppContext();

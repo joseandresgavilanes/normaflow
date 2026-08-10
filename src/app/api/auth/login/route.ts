@@ -55,7 +55,13 @@ async function signLocalResponse(account: LocalAuthAccount, request: NextRequest
 }
 
 export async function POST(request: NextRequest) {
-  const limit = takeRateLimit(`login:${clientAddress(request)}`, { limit: 10, windowMs: 15 * 60_000 });
+  // El modo demo local es imposible en producción (`src/lib/env.ts` lanza si se
+  // activa), así que ahí se afloja el límite: la suite E2E autentica una vez
+  // por caso y agotaba los 10 intentos a mitad de ejecución.
+  const limit = takeRateLimit(`login:${clientAddress(request)}`, {
+    limit: isAuthDemoMode() ? 200 : 10,
+    windowMs: 15 * 60_000,
+  });
   if (!limit.allowed) return rateLimitResponse(limit.retryAfterSeconds);
   let email: string; let password: string;
   try { ({ email, password } = parseInput(loginSchema, await request.json().catch(() => ({})))); }

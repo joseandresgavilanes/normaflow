@@ -24,7 +24,7 @@ export function MetricCell({
         </div>
       )}
       <div className="nf-metric-cell-body">
-        <div className="nf-metric-cell-value" style={color !== "#5266F6" ? { color } : undefined}>
+        <div className="nf-metric-cell-value" style={color !== "var(--nf-primary)" ? { color } : undefined}>
           {value}
         </div>
         <div className="nf-metric-cell-label">{label}</div>

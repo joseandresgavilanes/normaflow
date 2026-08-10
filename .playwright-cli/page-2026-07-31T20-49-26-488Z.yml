@@ -1,0 +1,31 @@
+- generic [active] [ref=f10e1]:
+  - generic "Language" [ref=f10e3]:
+    - group "Language" [ref=f10e9]:
+      - button "ES" [ref=f10e10] [cursor=pointer]
+      - button "EN" [pressed] [ref=f10e11] [cursor=pointer]
+      - button "PT" [ref=f10e12] [cursor=pointer]
+  - generic [ref=f10e15]:
+    - generic [ref=f10e16]:
+      - link "NormaFlow" [ref=f10e17] [cursor=pointer]:
+        - /url: /home
+        - generic [ref=f10e18]: "N"
+        - text: NormaFlow
+      - heading "Welcome back" [level=1] [ref=f10e19]
+      - paragraph [ref=f10e20]: Access your compliance dashboard
+    - generic [ref=f10e22]:
+      - generic [ref=f10e23]:
+        - generic [ref=f10e24]: Email
+        - textbox "Email" [ref=f10e25]:
+          - /placeholder: tu@empresa.com
+      - generic [ref=f10e26]:
+        - generic [ref=f10e27]: Password
+        - textbox "Password" [ref=f10e28]:
+          - /placeholder: ••••••••
+      - button "Log in" [ref=f10e29] [cursor=pointer]
+      - paragraph [ref=f10e32]:
+        - link "Forgot your password?" [ref=f10e33] [cursor=pointer]:
+          - /url: /forgot-password
+    - paragraph [ref=f10e34]:
+      - text: Don't have an account?
+      - link "Sign up free" [ref=f10e35] [cursor=pointer]:
+        - /url: /signup

@@ -15,9 +15,10 @@ export const iso42001Pack: StandardPackInput = {
   code: "PACK_ISO_42001",
   name: "ISO/IEC 42001 — Inteligencia artificial",
   version: "2023.1",
+  lifecycleStatus: "PILOT",
   description: "Paquete normativo ISO/IEC 42001:2023 (Sistema de Gestión de Inteligencia Artificial).",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "training", "suppliers", "risks", "aims",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "training", "suppliers", "risks", "aims",
   ],
   featureFlags: { aiManagement: true, humanReviewRule: true },
   editions: [

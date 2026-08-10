@@ -1,0 +1,542 @@
+/* ============================================================================
+ * NormaFlow — Superficies: Card, SectionHeader, MetricCard
+ * Consolidan 55 variantes de tarjeta y 4 componentes de métrica.
+ * ========================================================================== */
+
+.nf-card2 {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-l);
+  background: var(--nf-surface);
+}
+
+.nf-card2--pad-none .nf-card2__body { padding: 0; }
+.nf-card2--pad-sm .nf-card2__body { padding: var(--nf-space-3); }
+.nf-card2--pad-md .nf-card2__body { padding: var(--nf-space-4); }
+.nf-card2--pad-lg .nf-card2__body { padding: var(--nf-space-6); }
+
+.nf-card2__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border-bottom: 1px solid var(--nf-border-subtle);
+}
+.nf-card2__head-text { min-width: 0; }
+.nf-card2__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-lg);
+  font-weight: var(--nf-weight-semibold);
+  line-height: var(--nf-leading-snug);
+}
+.nf-card2__subtitle {
+  margin: 2px 0 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  line-height: var(--nf-leading-normal);
+}
+.nf-card2__head-action { flex: 0 0 auto; }
+.nf-card2__body { min-width: 0; flex: 1; }
+.nf-card2__foot {
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border-top: 1px solid var(--nf-border-subtle);
+  background: var(--nf-surface-muted);
+  border-radius: 0 0 var(--nf-radius-l) var(--nf-radius-l);
+}
+
+/* --------------------------------------------------------------------------
+ * SectionHeader
+ * ------------------------------------------------------------------------ */
+.nf-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nf-space-3);
+  margin-bottom: var(--nf-space-3);
+}
+.nf-section-head__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+}
+.nf-section-head__text { flex: 1; min-width: 0; }
+.nf-section-head__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-lg);
+  font-weight: var(--nf-weight-semibold);
+  line-height: var(--nf-leading-snug);
+}
+.nf-section-head__desc {
+  margin: 2px 0 0;
+  max-width: 72ch;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  line-height: var(--nf-leading-normal);
+}
+.nf-section-head__action { flex: 0 0 auto; }
+
+/* --------------------------------------------------------------------------
+ * MetricCard
+ * ------------------------------------------------------------------------ */
+.nf-metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--nf-space-3);
+}
+
+.nf-metric {
+  --nf-metric-accent: var(--nf-text-muted);
+  --nf-metric-bg: var(--nf-neutral-subtle);
+
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-3);
+  min-width: 0;
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-l);
+  background: var(--nf-surface);
+  text-decoration: none;
+}
+.nf-metric[data-tone="primary"] { --nf-metric-accent: var(--nf-primary); --nf-metric-bg: var(--nf-primary-subtle); }
+.nf-metric[data-tone="success"] { --nf-metric-accent: var(--nf-success-text); --nf-metric-bg: var(--nf-success-subtle); }
+.nf-metric[data-tone="warning"] { --nf-metric-accent: var(--nf-warning-text); --nf-metric-bg: var(--nf-warning-subtle); }
+.nf-metric[data-tone="danger"]  { --nf-metric-accent: var(--nf-danger-text);  --nf-metric-bg: var(--nf-danger-subtle); }
+.nf-metric[data-tone="info"]    { --nf-metric-accent: var(--nf-info-text);    --nf-metric-bg: var(--nf-info-subtle); }
+
+.nf-metric--link { transition: border-color var(--nf-duration-fast) var(--nf-ease-standard); }
+.nf-metric--link:hover { border-color: var(--nf-border-strong); }
+.nf-metric--link:hover .nf-metric__go { opacity: 1; transform: none; }
+
+.nf-metric__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-metric-bg);
+  color: var(--nf-metric-accent);
+}
+.nf-metric__body { display: grid; gap: 1px; min-width: 0; flex: 1; }
+.nf-metric__value {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-xl);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-tight);
+  line-height: 1.15;
+}
+.nf-metric__unit {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+}
+/* La tendencia lleva icono además de color: la dirección no puede depender
+   solo del tono. `data-good` dice si subir es bueno en ESTA métrica. */
+.nf-metric__trend { align-self: center; color: var(--nf-text-muted); }
+.nf-metric__trend[data-good="true"] { color: var(--nf-success-text); }
+.nf-metric__trend[data-good="false"] { color: var(--nf-danger-text); }
+
+.nf-metric__label {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-metric__sub {
+  color: var(--nf-text-subtle);
+  font-size: var(--nf-text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-metric__go {
+  flex: 0 0 auto;
+  color: var(--nf-text-subtle);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition:
+    opacity var(--nf-duration-fast) var(--nf-ease-standard),
+    transform var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-metric--link:focus-visible .nf-metric__go { opacity: 1; transform: none; }
+
+/* ============================================================================
+ * Dialog
+ * ========================================================================== */
+.nf-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--nf-z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--nf-space-6);
+  background: var(--nf-overlay);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nf-dialog {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - var(--nf-space-12));
+  border-radius: var(--nf-radius-l);
+  /* Token, no #fff a fuego: los modales eran lo único que impedía el tema
+     oscuro aunque los tokens ya existieran. */
+  background: var(--nf-surface);
+  box-shadow: var(--nf-elevation-4);
+  animation: nf-dialog-in var(--nf-duration-base) var(--nf-ease-out);
+}
+.nf-dialog:focus { outline: none; }
+.nf-dialog--sm { max-width: 420px; }
+.nf-dialog--md { max-width: 560px; }
+.nf-dialog--lg { max-width: 760px; }
+.nf-dialog--xl { max-width: 980px; }
+.nf-dialog--danger { border-top: 3px solid var(--nf-danger); }
+
+@keyframes nf-dialog-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.99); }
+  to { opacity: 1; transform: none; }
+}
+
+.nf-dialog__form { display: contents; }
+
+.nf-dialog__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-4) var(--nf-space-4) var(--nf-space-3);
+  border-bottom: 1px solid var(--nf-border);
+}
+.nf-dialog__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-lg);
+  font-weight: var(--nf-weight-semibold);
+  line-height: var(--nf-leading-snug);
+}
+
+.nf-dialog__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--nf-space-4);
+  display: grid;
+  gap: var(--nf-space-3);
+  align-content: start;
+}
+.nf-dialog__desc {
+  margin: 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-base);
+  line-height: var(--nf-leading-normal);
+}
+.nf-dialog__error {
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border: 1px solid var(--nf-danger-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-danger-subtle);
+  color: var(--nf-danger-text);
+  font-size: var(--nf-text-sm);
+}
+
+.nf-dialog__foot {
+  /* Pegado abajo: en formularios largos las acciones tienen que verse sin
+     tener que desplazarse hasta el final. */
+  position: sticky;
+  bottom: 0;
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border-top: 1px solid var(--nf-border);
+  background: var(--nf-surface);
+  border-radius: 0 0 var(--nf-radius-l) var(--nf-radius-l);
+}
+
+/* Confirmación de descarte, dentro del propio diálogo. */
+.nf-dialog__discard {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-6);
+  border-radius: var(--nf-radius-l);
+  background: color-mix(in srgb, var(--nf-surface) 94%, transparent);
+  backdrop-filter: blur(2px);
+  text-align: center;
+}
+.nf-dialog__discard p {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-medium);
+}
+
+/* Móvil: hoja inferior a pantalla casi completa. */
+@media (max-width: 639px) {
+  .nf-dialog-overlay { padding: 0; align-items: flex-end; }
+  .nf-dialog {
+    max-width: none;
+    max-height: 92dvh;
+    border-radius: var(--nf-radius-l) var(--nf-radius-l) 0 0;
+    animation: nf-dialog-sheet-in var(--nf-duration-base) var(--nf-ease-out);
+  }
+  @keyframes nf-dialog-sheet-in {
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: none; opacity: 1; }
+  }
+}
+
+
+/* ============================================================================
+ * Dashboard: "Requiere tu atención" y cumplimiento por norma
+ * ========================================================================== */
+
+.nf-attention {
+  margin-bottom: var(--nf-space-5);
+  padding: var(--nf-space-4);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-l);
+  background: var(--nf-surface);
+}
+.nf-attention__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  margin-bottom: var(--nf-space-3);
+}
+.nf-attention__title {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-lg);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-attention__total { color: var(--nf-text-muted); font-size: var(--nf-text-sm); }
+
+.nf-attention__clear {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  margin: 0;
+  padding: var(--nf-space-3);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-success-subtle);
+  color: var(--nf-success-text);
+  font-size: var(--nf-text-base);
+}
+
+.nf-attention__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: var(--nf-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.nf-attention__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-3);
+  border: 1px solid var(--nf-border);
+  border-left-width: 3px;
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+  text-decoration: none;
+  transition: background-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+.nf-attention__item:hover { background: var(--nf-surface-hover); }
+.nf-attention__item[data-tone="danger"] { border-left-color: var(--nf-danger-text); }
+.nf-attention__item[data-tone="warning"] { border-left-color: var(--nf-warning-text); }
+.nf-attention__item[data-tone="info"] { border-left-color: var(--nf-info-text); }
+
+.nf-attention__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--nf-radius-m);
+}
+.nf-attention__item[data-tone="danger"] .nf-attention__icon { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
+.nf-attention__item[data-tone="warning"] .nf-attention__icon { background: var(--nf-warning-subtle); color: var(--nf-warning-text); }
+.nf-attention__item[data-tone="info"] .nf-attention__icon { background: var(--nf-info-subtle); color: var(--nf-info-text); }
+
+.nf-attention__body { display: grid; gap: 1px; min-width: 0; flex: 1; }
+.nf-attention__label {
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-base);
+  font-weight: var(--nf-weight-medium);
+}
+.nf-attention__detail {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+  line-height: var(--nf-leading-normal);
+}
+.nf-attention__count {
+  flex: 0 0 auto;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-xl);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-tight);
+}
+
+/* --------------------------------------------------------------------------
+ * Gráfico de cumplimiento por norma
+ * ------------------------------------------------------------------------ */
+.nf-chart { margin: var(--nf-space-4) 0 0; }
+.nf-chart__empty {
+  margin: var(--nf-space-4) 0 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+  line-height: var(--nf-leading-normal);
+}
+
+.nf-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nf-space-4);
+  margin-bottom: var(--nf-space-3);
+}
+.nf-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+}
+.nf-chart__swatch { width: 12px; height: 12px; border-radius: 3px; }
+.nf-chart__swatch[data-kind="value"] { background: var(--nf-primary); }
+.nf-chart__swatch[data-kind="target"] {
+  width: 2px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--nf-text-secondary);
+}
+
+.nf-chart__plot { position: relative; overflow: hidden; }
+
+/* Escala del eje X, dibujada sobre el área de las barras. */
+.nf-chart__axis {
+  position: absolute;
+  inset: 0 76px 18px 96px;
+  pointer-events: none;
+}
+.nf-chart__tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--nf-border-subtle);
+}
+.nf-chart__tick-label {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  transform: translateX(-50%);
+  /* La etiqueta se pinta fuera de la línea de 1 px, sobre la superficie de la
+     tarjeta, donde `--nf-text-subtle` cumple de sobra. Pero al estar anidada
+     dentro del tick cualquier medición automática le atribuye el color de la
+     línea y la marca como fallo. Con `--nf-text-muted` pasa en los dos casos:
+     4.6:1 contra la línea y 6.56:1 contra la superficie. */
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-2xs);
+}
+/* Las etiquetas de los extremos se anclan hacia dentro: centradas sobre el
+   tick de 0 y de 100 se salían del contenedor y provocaban scroll horizontal
+   de página en móvil. */
+.nf-chart__tick:first-child .nf-chart__tick-label { transform: none; }
+.nf-chart__tick:nth-last-child(2) .nf-chart__tick-label { transform: translateX(-100%); }
+.nf-chart__target {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--nf-text-secondary);
+}
+
+.nf-chart__bars {
+  position: relative;
+  display: grid;
+  gap: var(--nf-space-2);
+  list-style: none;
+  margin: 0 0 22px;
+  padding: 0;
+}
+.nf-chart__row {
+  display: grid;
+  grid-template-columns: 88px 1fr 68px;
+  align-items: center;
+  gap: var(--nf-space-2);
+}
+.nf-chart__row-label {
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nf-chart__track {
+  position: relative;
+  height: 18px;
+  border-radius: var(--nf-radius-xs);
+  background: var(--nf-surface-sunken);
+  overflow: hidden;
+}
+.nf-chart__bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--nf-radius-xs);
+  background: var(--nf-primary);
+}
+.nf-chart__bar[data-meets] { background: var(--nf-success); }
+.nf-chart__row-value {
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  text-align: right;
+}
+
+.nf-dash-card-note {
+  margin: var(--nf-space-1) 0 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-sm);
+}
+.nf-dash-card-heading {
+  margin: 0;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-lg);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-dash-card-link {
+  color: var(--nf-text-link);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-medium);
+  text-decoration: none;
+}
+.nf-dash-card-link:hover { text-decoration: underline; }
+
+@media (max-width: 639px) {
+  .nf-chart__row { grid-template-columns: 72px 1fr 56px; }
+  .nf-chart__axis { left: 80px; right: 64px; }
+}

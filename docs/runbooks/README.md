@@ -13,6 +13,19 @@ is self-contained: **symptoms → immediate actions → resolution → verificat
 | [resend-failure.md](resend-failure.md) | Email delivery (Resend) failing |
 | [storage.md](storage.md) | Supabase Storage errors, quota, orphaned objects |
 | [security-incident.md](security-incident.md) | Suspected/confirmed security incident |
+| [iso-9001-support.md](iso-9001-support.md) | ISO 9001 customer support — clause coverage, common issues |
+| [iso-27001-support.md](iso-27001-support.md) | ISO 27001 customer support — clause coverage, common issues |
+| [iso-14001-support.md](iso-14001-support.md) | ISO 14001 customer support — clause coverage, common issues |
+| [iso-45001-support.md](iso-45001-support.md) | ISO 45001 customer support — clause coverage, common issues |
+| [sig-support.md](sig-support.md) | Sistema Integrado (9001+14001+45001) customer support |
+| [iso-22301-support.md](iso-22301-support.md) | ISO 22301 (continuidad del negocio) customer support |
+| [iso-42001-support.md](iso-42001-support.md) | ISO/IEC 42001 (gestión de IA) customer support |
+| [iso-37301-support.md](iso-37301-support.md) | ISO 37301 (compliance) customer support |
+| [iso-50001-support.md](iso-50001-support.md) | ISO 50001 (gestión energética) customer support |
+| [iso-22000-support.md](iso-22000-support.md) | ISO 22000 (inocuidad alimentaria / HACCP) customer support |
+| [iso-20000-support.md](iso-20000-support.md) | ISO/IEC 20000 (ITSM) customer support |
+| [iso-13485-support.md](iso-13485-support.md) | ISO 13485 (medical device QMS) customer support |
+| [iso-37001-support.md](iso-37001-support.md) | ISO 37001 (anti-bribery) customer support |
 
 ## On-call quick reference
 

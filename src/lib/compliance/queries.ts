@@ -8,6 +8,7 @@ import { notificationOverdue, summarizeBreaches } from "@/lib/compliance/breach"
 import { effectiveStatus, summarizeRemediation } from "@/lib/compliance/remediation";
 import { buildGoverningBodyDigest, trainingCoverage, type AnonymizedCaseView } from "@/lib/compliance/governing-body";
 import { DEFAULT_CHANNEL_CONFIG, caseIntegrity, deadlineBreaches } from "@/lib/compliance/speak-up";
+import { decryptSpeakUpField } from "@/lib/crypto/field-encryption";
 
 export type CompliancePayload = Awaited<ReturnType<typeof getCompliancePayload>>;
 
@@ -443,8 +444,14 @@ async function loadAccessibleCases(organizationId: string, userId: string, today
 
   const roleByReport = new Map(grants.map((grant) => [grant.reportId, grant.caseRole]));
   return {
+    // Descifrado solo para quien ya tiene una concesión viva sobre el caso
+    // (comprobado arriba): el receptor autorizado necesita poder contactar a
+    // un informante identificado o confidencial, no solo saber que existe.
     cases: granted.map((row) => ({
       ...row,
+      reporterName: decryptSpeakUpField(row.reporterName),
+      reporterEmail: decryptSpeakUpField(row.reporterEmail),
+      reporterPhone: decryptSpeakUpField(row.reporterPhone),
       myCaseRole: roleByReport.get(row.id) ?? null,
       deadlines: deadlineBreaches(row, today),
       integrity: caseIntegrity(row),

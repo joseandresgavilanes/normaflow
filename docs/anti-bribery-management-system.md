@@ -67,9 +67,24 @@ Quien solicita no puede aprobar (`requiresIndependentApproval`).
 
 ## Permisos
 
-Reutiliza el módulo `compliance:*` (sin un segundo motor de autorización). El
-acceso a denuncias sigue en `speakup` + necesidad de conocer. La UI se expone
-como módulo de plan `antibribery` (Growth+) y ruta `/app/antibribery`.
+Reutiliza el módulo `compliance:*` (sin un segundo motor de autorización) para
+el grueso del dominio. El acceso a denuncias sigue en `speakup` + necesidad de
+conocer. La UI se expone como módulo de plan `antibribery` (Growth+) y ruta
+`/app/antibribery`.
+
+`BeneficialOwner` (nombre legal completo y condición PEP de terceros reales)
+es la excepción: detrás de `antibribery-sensitive:*` desde esta entrega, no de
+`compliance:read` general — no otorgado a CONTRIBUTOR/VIEWER, mismo patrón que
+`safety-sensitive` (salud ocupacional) y `md-sensitive` (vigilancia de
+dispositivos médicos). `verifyBeneficialOwner` y `createBeneficialOwner`
+exigen el permiso sensible, no el genérico de compliance.
+
+## AuditLog
+
+Las 22 acciones de `antibribery.ts` escriben su `AuditLog` dentro de la misma
+`prisma.$transaction` que el registro de negocio (`writeAuditLog`). Corregido
+esta entrega: `createBeneficialOwner` marcaba `businessAssociate.ownershipKnown`
+en una escritura separada de la creación del UBO — ahora comparten transacción.
 
 ## Pack y cobertura
 
@@ -92,6 +107,7 @@ como módulo de plan `antibribery` (Growth+) y ruta `/app/antibribery`.
 | `abms-high-risk-ops` | Operaciones de alto riesgo |
 | `abms-controls` | Controles financieros y no financieros |
 | `abms-investigations` | Puentes a Investigation |
+| `abms-audit-package` | Paquete de auditoría (nuevo esta entrega) — bundle de las 9 secciones no sensibles; excluye deliberadamente `abms-beneficial-owners` (`antibribery-sensitive`, exportable por separado con ese permiso) |
 
 ## Lógica de dominio (`src/lib/antibribery/*`, pura)
 

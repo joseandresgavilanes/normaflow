@@ -48,6 +48,26 @@ export async function assertExportQuota(organizationId: string, plan: PlanKey, n
   }
 }
 
+/**
+ * Monthly per-org token budget for the AI assistant. Independent of the
+ * per-minute rate limit (src/app/api/ai/route.ts) — this caps cumulative
+ * spend across the month, not burst rate. Backed by `AIGeneratedOutput.tokensUsed`,
+ * the same governance ledger every AI call now writes to (see recordAIOutput).
+ */
+export async function assertAIBudget(organizationId: string, plan: PlanKey, now = new Date()) {
+  const limit = PLAN_LIMITS[plan].aiMonthlyTokenBudget;
+  if (limit == null) return;
+  const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const usage = await prisma.aIGeneratedOutput.aggregate({
+    where: { organizationId, generatedAt: { gte: from } },
+    _sum: { tokensUsed: true },
+  });
+  const used = usage._sum.tokensUsed ?? 0;
+  if (used >= limit) {
+    throw new PlanLimitError("aims:budget", `Has alcanzado el presupuesto mensual de ${limit.toLocaleString()} tokens de IA del plan ${PLAN_LIMITS[plan].label}. Actualiza tu plan para continuar.`);
+  }
+}
+
 export function planEntitlements(plan: string, trialEndsAt?: Date | null) {
   const key = (plan in PLAN_LIMITS ? plan : "STARTER") as PlanKey;
   const trial = isTrialActive(trialEndsAt);

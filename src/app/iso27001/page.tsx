@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createMarketingMetadata({
   title: "ISO 27001:2022 — NormaFlow",
   description: "Digitaliza tu SGSI con controles, riesgos y evidencias auditables. Compatible con ISO 27001:2022.",
-};
+  path: "/iso27001",
+});
 
 const ITEMS: { icon: keyof typeof Ic; title: string; desc: string; control: string }[] = [
   { icon: "lock",   title: "Gestión de riesgos de SI",    desc: "Metodología MAGERIT o propia. Probabilidad × impacto, tratamiento y controles Anexo A.",  control: "6.1.2" },
@@ -53,7 +55,7 @@ export default function ISO27001Page() {
                     <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent-2)" }}>
                       <Icon/>
                     </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent-2)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent-2)", border: "1px solid var(--nf-primary-border)", letterSpacing: "0.06em" }}>
                       {it.control}
                     </span>
                   </div>

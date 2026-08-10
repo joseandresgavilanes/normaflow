@@ -16,8 +16,9 @@ import { randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission, tenantData, tenantWhere } from "@/lib/permissions/server";
-import { logAuditEvent } from "@/lib/audit-log";
+import { writeAuditLog } from "@/lib/audit-log";
 import { notifyUser } from "@/lib/notify";
+import { encryptSpeakUpField, decryptSpeakUpField } from "@/lib/crypto/field-encryption";
 import {
   DEFAULT_CHANNEL_CONFIG,
   assertAdmissibilityDecision,
@@ -142,12 +143,15 @@ export async function configureSpeakUpChannel(input: z.infer<typeof configSchema
     retaliationStatement: data.retaliationStatement ?? null,
     updatedById: ctx.user.id,
   };
-  const config = await prisma.speakUpChannelConfig.upsert({
-    where: { organizationId: ctx.organization.id },
-    create: tenantData(ctx, payload),
-    update: payload,
+  const config = await prisma.$transaction(async (tx) => {
+    const row = await tx.speakUpChannelConfig.upsert({
+      where: { organizationId: ctx.organization.id },
+      create: tenantData(ctx, payload),
+      update: payload,
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: row.id, after: { allowAnonymous: data.allowAnonymous, allowConfidential: data.allowConfidential, retentionMonths: data.retentionMonths }, extra: { event: "configure_speak_up_channel" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: config.id, after: { allowAnonymous: data.allowAnonymous, allowConfidential: data.allowConfidential, retentionMonths: data.retentionMonths }, extra: { event: "configure_speak_up_channel" } });
   revalidate();
   return { id: config.id };
 }
@@ -200,6 +204,14 @@ export async function submitSpeakUpReport(input: z.infer<typeof reportSchema>) {
     reporterPhone: data.reporterPhone ?? null,
   });
   assertIdentityConsistent(data.identificationMode, identity);
+  // El nombre, correo y teléfono del informante se cifran en reposo (defensa en
+  // profundidad además de RLS): quien vuelca la base de datos no debe leerlos.
+  const storedIdentity = {
+    ...identity,
+    reporterName: encryptSpeakUpField(identity.reporterName),
+    reporterEmail: encryptSpeakUpField(identity.reporterEmail),
+    reporterPhone: encryptSpeakUpField(identity.reporterPhone),
+  };
 
   if (data.subjectUserId) {
     const subject = await prisma.membership.findFirst({ where: { organizationId: ctx.organization.id, userId: data.subjectUserId }, select: { id: true } });
@@ -251,7 +263,7 @@ export async function submitSpeakUpReport(input: z.infer<typeof reportSchema>) {
         subjectDescription: data.subjectDescription ?? null,
         subjectUserId: data.subjectUserId ?? null,
         witnesses: data.witnesses ?? null,
-        ...identity,
+        ...storedIdentity,
         reporterRelationship: data.reporterRelationship ?? (data.identificationMode === "ANONYMOUS" ? "UNDISCLOSED" : null),
         followUpCodeHash: createHash("sha256").update(followUpCode).digest("hex"),
         retaliationRisk: data.retaliationRisk,
@@ -269,15 +281,14 @@ export async function submitSpeakUpReport(input: z.infer<typeof reportSchema>) {
         grantedById: null,
       }),
     });
+    // El registro de auditoría del canal es deliberadamente pobre: quién actuó y
+    // sobre qué caso, nunca el contenido ni la identidad del informante.
+    await writeAuditLog(tx, {
+      ctx, action: "create", module: MODULE, recordId: report.id,
+      after: { code, identificationMode: data.identificationMode, category: data.category, severity: data.severity },
+      extra: { event: "submit_speak_up_report", handlerDiverted: handler.divertedFromDefault },
+    });
     return report;
-  });
-
-  // El registro de auditoría del canal es deliberadamente pobre: quién actuó y
-  // sobre qué caso, nunca el contenido ni la identidad del informante.
-  await logAuditEvent({
-    ctx, action: "create", module: MODULE, recordId: created.id,
-    after: { code, identificationMode: data.identificationMode, category: data.category, severity: data.severity },
-    extra: { event: "submit_speak_up_report", handlerDiverted: handler.divertedFromDefault },
   });
   await safeNotify({
     organizationId: ctx.organization.id, userId: handler.handlerId,
@@ -303,8 +314,10 @@ export async function acknowledgeSpeakUpReport(id: string, note?: string) {
   assertStatusTransition(report.status, "ACKNOWLEDGED");
   const acknowledgedAt = new Date();
   const late = Boolean(report.acknowledgementDueAt && acknowledgedAt > report.acknowledgementDueAt);
-  await prisma.speakUpReport.update({ where: { id }, data: { status: "ACKNOWLEDGED", acknowledgedAt } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "ACKNOWLEDGED", late }, extra: { event: "acknowledge_speak_up_report", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({ where: { id }, data: { status: "ACKNOWLEDGED", acknowledgedAt } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "ACKNOWLEDGED", late }, extra: { event: "acknowledge_speak_up_report", note } });
+  });
   if (report.reporterUserId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: report.reporterUserId, title: `Su denuncia ${report.code} fue recibida`, body: "El canal ha registrado su denuncia y está en gestión.", type: "INFO", link: "/app/compliance", idempotencyKey: `speakup:${id}:ack` });
   }
@@ -316,8 +329,10 @@ export async function startSpeakUpTriage(id: string, note?: string) {
   const ctx = await requirePermission("speakup:update");
   const { report } = await requireCaseAccess(ctx, id, "speakup:update");
   assertStatusTransition(report.status, "UNDER_TRIAGE");
-  await prisma.speakUpReport.update({ where: { id }, data: { status: "UNDER_TRIAGE" } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "UNDER_TRIAGE" }, extra: { event: "start_speak_up_triage", note } });
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({ where: { id }, data: { status: "UNDER_TRIAGE" } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "UNDER_TRIAGE" }, extra: { event: "start_speak_up_triage", note } });
+  });
   revalidate();
   return { id, status: "UNDER_TRIAGE" as SpeakUpStatus };
 }
@@ -329,11 +344,13 @@ export async function decideAdmissibility(id: string, input: { admissible: boole
   const target: SpeakUpStatus = input.admissible ? "ADMISSIBLE" : "INADMISSIBLE";
   assertStatusTransition(report.status, target);
   assertAdmissibilityDecision({ decidedById: ctx.user.id, rationale: input.rationale });
-  await prisma.speakUpReport.update({
-    where: { id },
-    data: { status: target, admissibilityById: ctx.user.id, admissibilityAt: new Date(), admissibilityRationale: input.rationale },
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({
+      where: { id },
+      data: { status: target, admissibilityById: ctx.user.id, admissibilityAt: new Date(), admissibilityRationale: input.rationale },
+    });
+    await writeAuditLog(tx, { ctx, action: "approve", module: MODULE, recordId: id, before: { status: report.status }, after: { status: target }, extra: { event: "decide_admissibility" } });
   });
-  await logAuditEvent({ ctx, action: "approve", module: MODULE, recordId: id, before: { status: report.status }, after: { status: target }, extra: { event: "decide_admissibility" } });
   revalidate();
   return { id, status: target };
 }
@@ -390,12 +407,15 @@ export async function grantCaseAccess(input: z.infer<typeof accessSchema>) {
     });
   }
 
-  const access = await prisma.speakUpCaseAccess.upsert({
-    where: { reportId_userId_caseRole: { reportId: data.reportId, userId: data.userId, caseRole: data.caseRole } },
-    create: tenantData(ctx, { reportId: data.reportId, userId: data.userId, caseRole: data.caseRole, reason: data.reason, grantedById: ctx.user.id }),
-    update: { reason: data.reason, grantedById: ctx.user.id, grantedAt: new Date(), revokedAt: null, revokedReason: null },
+  const access = await prisma.$transaction(async (tx) => {
+    const row = await tx.speakUpCaseAccess.upsert({
+      where: { reportId_userId_caseRole: { reportId: data.reportId, userId: data.userId, caseRole: data.caseRole } },
+      create: tenantData(ctx, { reportId: data.reportId, userId: data.userId, caseRole: data.caseRole, reason: data.reason, grantedById: ctx.user.id }),
+      update: { reason: data.reason, grantedById: ctx.user.id, grantedAt: new Date(), revokedAt: null, revokedReason: null },
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { case: report.code, caseRole: data.caseRole, grantedTo: data.userId }, extra: { event: "grant_case_access", reason: data.reason } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: access.id, after: { case: report.code, caseRole: data.caseRole, grantedTo: data.userId }, extra: { event: "grant_case_access", reason: data.reason } });
   await safeNotify({ organizationId: ctx.organization.id, userId: data.userId, title: `Acceso autorizado al caso ${report.code}`, body: `Se le ha autorizado como ${data.caseRole} en un caso del canal de denuncias.`, type: "INFO", link: "/app/compliance", idempotencyKey: `speakup-access:${access.id}` });
   revalidate();
   return { id: access.id };
@@ -408,8 +428,10 @@ export async function revokeCaseAccess(id: string, input: { reason: string }) {
   const access = await prisma.speakUpCaseAccess.findFirst({ where: { id, organizationId: ctx.organization.id }, include: { report: { select: { code: true } } } });
   if (!access) throw new Error("Autorización no encontrada.");
   if (access.revokedAt) throw new Error("La autorización ya estaba revocada.");
-  await prisma.speakUpCaseAccess.update({ where: { id }, data: { revokedAt: new Date(), revokedReason: reason } });
-  await logAuditEvent({ ctx, action: "delete", module: MODULE, recordId: id, before: { case: access.report.code, caseRole: access.caseRole, userId: access.userId }, after: { revoked: true }, extra: { event: "revoke_case_access", reason } });
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpCaseAccess.update({ where: { id }, data: { revokedAt: new Date(), revokedReason: reason } });
+    await writeAuditLog(tx, { ctx, action: "delete", module: MODULE, recordId: id, before: { case: access.report.code, caseRole: access.caseRole, userId: access.userId }, after: { revoked: true }, extra: { event: "revoke_case_access", reason } });
+  });
   revalidate();
   return { id, revoked: true };
 }
@@ -445,15 +467,18 @@ export async function addProtectedEvidence(input: z.infer<typeof evidenceSchema>
     if (!investigation) throw new Error("La investigación no corresponde a este caso.");
   }
   const code = await nextCode("EVD", prisma.speakUpEvidence.count({ where: { organizationId: ctx.organization.id } }));
-  const created = await prisma.speakUpEvidence.create({
-    data: tenantData(ctx, {
-      reportId: data.reportId, investigationId: data.investigationId ?? null, code, title: data.title,
-      description: data.description ?? null, fileUrl: data.fileUrl ?? null, mimeType: data.mimeType ?? null,
-      fileSize: data.fileSize ?? null, sha256: data.sha256 ?? null, collectedById: ctx.user.id,
-      collectedAt: new Date(), custodyNotes: data.custodyNotes ?? null, sealed: true,
-    }),
+  const created = await prisma.$transaction(async (tx) => {
+    const row = await tx.speakUpEvidence.create({
+      data: tenantData(ctx, {
+        reportId: data.reportId, investigationId: data.investigationId ?? null, code, title: data.title,
+        description: data.description ?? null, fileUrl: data.fileUrl ?? null, mimeType: data.mimeType ?? null,
+        fileSize: data.fileSize ?? null, sha256: data.sha256 ?? null, collectedById: ctx.user.id,
+        collectedAt: new Date(), custodyNotes: data.custodyNotes ?? null, sealed: true,
+      }),
+    });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: row.id, after: { case: report.code, code, sha256: data.sha256 ?? null }, extra: { event: "add_protected_evidence" } });
+    return row;
   });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { case: report.code, code, sha256: data.sha256 ?? null }, extra: { event: "add_protected_evidence" } });
   revalidate();
   return { id: created.id, code };
 }
@@ -533,10 +558,9 @@ export async function openInvestigation(input: z.infer<typeof investigationSchem
       });
       await tx.speakUpReport.update({ where: { id: data.reportId }, data: { status: "UNDER_INVESTIGATION" } });
     }
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: investigation.id, after: { code, case: caseCode, breachId: data.breachId ?? null, leadInvestigatorId: data.leadInvestigatorId }, extra: { event: "open_investigation" } });
     return investigation;
   });
-
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: created.id, after: { code, case: caseCode, breachId: data.breachId ?? null, leadInvestigatorId: data.leadInvestigatorId }, extra: { event: "open_investigation" } });
   if (data.leadInvestigatorId !== ctx.user.id) {
     await safeNotify({ organizationId: ctx.organization.id, userId: data.leadInvestigatorId, title: `Investigación asignada: ${code}`, body: `"${data.title}" queda bajo su dirección.`, type: "WARNING", link: "/app/compliance", idempotencyKey: `investigation:${created.id}:assigned` });
   }
@@ -558,19 +582,21 @@ export async function setInvestigationStatus(id: string, input: { to: Investigat
     });
   }
 
-  await prisma.investigation.update({
-    where: { id },
-    data: {
-      status: input.to,
-      ...(input.to === "ACTIVE" && !investigation.startedAt ? { startedAt: new Date() } : {}),
-      ...(input.to === "CONCLUDED" ? { concludedAt: new Date() } : {}),
-      ...(input.findings !== undefined ? { findings: input.findings } : {}),
-      ...(input.conclusion !== undefined ? { conclusion: input.conclusion } : {}),
-      ...(input.recommendations !== undefined ? { recommendations: input.recommendations } : {}),
-      ...(input.sanctionsRecommended !== undefined ? { sanctionsRecommended: input.sanctionsRecommended } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.investigation.update({
+      where: { id },
+      data: {
+        status: input.to,
+        ...(input.to === "ACTIVE" && !investigation.startedAt ? { startedAt: new Date() } : {}),
+        ...(input.to === "CONCLUDED" ? { concludedAt: new Date() } : {}),
+        ...(input.findings !== undefined ? { findings: input.findings } : {}),
+        ...(input.conclusion !== undefined ? { conclusion: input.conclusion } : {}),
+        ...(input.recommendations !== undefined ? { recommendations: input.recommendations } : {}),
+        ...(input.sanctionsRecommended !== undefined ? { sanctionsRecommended: input.sanctionsRecommended } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "status_change", module: MODULE, recordId: id, before: { status: investigation.status }, after: { status: input.to }, extra: { event: "investigation_status", note: input.note } });
   });
-  await logAuditEvent({ ctx, action: "status_change", module: MODULE, recordId: id, before: { status: investigation.status }, after: { status: input.to }, extra: { event: "investigation_status", note: input.note } });
   revalidate();
   return { id, status: input.to };
 }
@@ -622,9 +648,8 @@ export async function recuseInvestigator(id: string, input: { reason: string; re
         update: { revokedAt: null, revokedReason: null, grantedById: ctx.user.id, grantedAt: new Date(), reason: `Reasignación de ${investigation.code} por recusación` },
       });
     }
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { leadInvestigatorId: previousLead }, after: { leadInvestigatorId: input.reassignedToId, conflictDetected: true }, extra: { event: "recuse_investigator", reason: input.reason } });
   });
-
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { leadInvestigatorId: previousLead }, after: { leadInvestigatorId: input.reassignedToId, conflictDetected: true }, extra: { event: "recuse_investigator", reason: input.reason } });
   await safeNotify({ organizationId: ctx.organization.id, userId: input.reassignedToId, title: `Investigación reasignada: ${investigation.code}`, body: "Asume la dirección de la investigación tras una recusación por conflicto de interés.", type: "WARNING", link: "/app/compliance", idempotencyKey: `investigation:${id}:reassigned` });
   revalidate();
   return { id, leadInvestigatorId: input.reassignedToId };
@@ -641,8 +666,10 @@ export async function provideCaseFeedback(id: string, input: { summary: string }
   const summary = z.string().min(10).max(4000).parse(input.summary);
   const providedAt = new Date();
   const late = Boolean(report.feedbackDueAt && providedAt > report.feedbackDueAt);
-  await prisma.speakUpReport.update({ where: { id }, data: { feedbackProvidedAt: providedAt } });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, after: { feedbackProvidedAt: providedAt, late }, extra: { event: "provide_case_feedback" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({ where: { id }, data: { feedbackProvidedAt: providedAt } });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, after: { feedbackProvidedAt: providedAt, late }, extra: { event: "provide_case_feedback" } });
+  });
   if (report.reporterUserId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: report.reporterUserId, title: `Respuesta sobre su denuncia ${report.code}`, body: summary, type: "INFO", link: "/app/compliance", idempotencyKey: `speakup:${id}:feedback` });
   }
@@ -679,15 +706,17 @@ export async function closeSpeakUpCase(id: string, input: z.infer<typeof closure
   const config = await channelConfig(ctx.organization.id);
   const until = retentionUntil(closedAt, config);
 
-  await prisma.speakUpReport.update({
-    where: { id },
-    data: {
-      status: "CLOSED", outcome: data.outcome, closureSummary: data.closureSummary, closedAt, closedById: ctx.user.id,
-      retentionUntil: until, feedbackProvidedAt: report.feedbackProvidedAt ?? closedAt,
-      ...(data.protectionMeasures !== undefined ? { protectionMeasures: data.protectionMeasures } : {}),
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({
+      where: { id },
+      data: {
+        status: "CLOSED", outcome: data.outcome, closureSummary: data.closureSummary, closedAt, closedById: ctx.user.id,
+        retentionUntil: until, feedbackProvidedAt: report.feedbackProvidedAt ?? closedAt,
+        ...(data.protectionMeasures !== undefined ? { protectionMeasures: data.protectionMeasures } : {}),
+      },
+    });
+    await writeAuditLog(tx, { ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "CLOSED", outcome: data.outcome, retentionUntil: until }, extra: { event: "close_speak_up_case" } });
   });
-  await logAuditEvent({ ctx, action: "update", module: MODULE, recordId: id, before: { status: report.status }, after: { status: "CLOSED", outcome: data.outcome, retentionUntil: until }, extra: { event: "close_speak_up_case" } });
   if (report.reporterUserId) {
     await safeNotify({ organizationId: ctx.organization.id, userId: report.reporterUserId, title: `Su denuncia ${report.code} se ha cerrado`, body: data.closureSummary, type: "INFO", link: "/app/compliance", idempotencyKey: `speakup:${id}:closed` });
   }
@@ -723,9 +752,8 @@ export async function purgeSpeakUpCase(id: string, input: { note?: string } = {}
         allegedFacts: null, followUpCodeHash: null, protectionMeasures: null,
       },
     });
+    await writeAuditLog(tx, { ctx, action: "delete", module: MODULE, recordId: id, before: { case: report.code, retentionUntil: report.retentionUntil }, after: { purgedAt: today }, extra: { event: "purge_speak_up_case", note: input.note } });
   });
-
-  await logAuditEvent({ ctx, action: "delete", module: MODULE, recordId: id, before: { case: report.code, retentionUntil: report.retentionUntil }, after: { purgedAt: today }, extra: { event: "purge_speak_up_case", note: input.note } });
   revalidate();
   return { id, purgedAt: today };
 }
@@ -759,8 +787,10 @@ export async function raiseBreachFromCase(id: string, input: { title: string; de
     severity: data.severity,
     recurrence: false,
   });
-  await prisma.speakUpReport.update({ where: { id }, data: { breachId: breach.id } });
-  await logAuditEvent({ ctx, action: "create", module: MODULE, recordId: id, after: { breach: breach.code }, extra: { event: "raise_breach_from_case" } });
+  await prisma.$transaction(async (tx) => {
+    await tx.speakUpReport.update({ where: { id }, data: { breachId: breach.id } });
+    await writeAuditLog(tx, { ctx, action: "create", module: MODULE, recordId: id, after: { breach: breach.code }, extra: { event: "raise_breach_from_case" } });
+  });
   revalidate();
   return { id, breachId: breach.id, breachCode: breach.code };
 }

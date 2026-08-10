@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
+export const metadata = createMarketingMetadata({
   title: "ISO 9001:2015 — NormaFlow",
   description: "Implementa y mantén tu Sistema de Gestión de la Calidad con NormaFlow.",
-};
+  path: "/iso9001",
+});
 
 const ITEMS: { icon: keyof typeof Ic; title: string; desc: string; clause: string }[] = [
   { icon: "doc",    title: "Contexto y liderazgo",      desc: "Gestiona partes interesadas, alcance del SGC y política de calidad.",                clause: "4, 5" },
@@ -23,7 +25,7 @@ export default function ISO9001Page() {
           <div className="nf-iso-badge" style={{ position: "relative", left: 0, top: 0, width: 84, height: 84, margin: "0 auto 22px" }}>
             <div>
               <div className="top">ISO</div>
-              <div className="num" style={{ color: "var(--nf-accent)", fontSize: 16 }}>9001</div>
+              <div className="num" style={{ color: "var(--nf-primary-active)", fontSize: 16 }}>9001</div>
               <div className="yr">2015</div>
             </div>
           </div>
@@ -49,10 +51,10 @@ export default function ISO9001Page() {
               return (
                 <article key={it.title} className="nf-tile">
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-                    <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                    <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)" }}>
                       <Icon/>
                     </span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-accent-soft)", color: "var(--nf-accent)", border: "1px solid rgba(82, 102, 246, 0.25)", letterSpacing: "0.06em" }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, padding: "3px 8px", borderRadius: 99, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", border: "1px solid var(--nf-primary-border)", letterSpacing: "0.06em" }}>
                       Cláusula {it.clause}
                     </span>
                   </div>

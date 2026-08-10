@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { Download, Link2, Plus, Search, Siren, Trash2 } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -30,25 +32,44 @@ export default function IncidentsLiveClient({ initial }: { initial: IncidentsPay
 
   async function exportReport(format: "PDF" | "EXCEL") { setExporting(true); try { const r = await exportIncidents({ reportType: reportType as never, format }); await downloadQueuedReport(r.id); } finally { setExporting(false); } }
 
+  const columns = useMemo<DataTableColumn<Incident>[]>(() => [
+    { id: "code", header: "Incidente", primary: true, minWidth: 220, hideable: false, sortValue: (i) => i.code,
+      cell: (i) => <><strong>{i.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{i.description}</div></> },
+    { id: "detected", header: "Detectado", minWidth: 120, numeric: true, sortValue: (i) => i.detectedAt ?? "", cell: (i) => i.detectedAt ?? "—" },
+    { id: "severity", header: "Severidad", minWidth: 120, sortValue: (i) => i.severity, cell: (i) => <Badge value={SEV_LABEL[i.severity]} tone={sevTone(i.severity)} /> },
+    { id: "category", header: "Categoría", minWidth: 140, sortValue: (i) => i.category, cell: (i) => CAT_LABEL[i.category] },
+    { id: "status", header: "Estado", minWidth: 120, sortValue: (i) => i.status, cell: (i) => <Badge value={STATUS_LABEL[i.status]} tone={i.status === "CLOSED" ? "gray" : "blue"} /> },
+    { id: "owner", header: "Responsable", minWidth: 140, sortValue: (i) => i.responsible?.name ?? "", cell: (i) => i.responsible?.name ?? "—" },
+    { id: "assets", header: "Activos", align: "end", numeric: true, minWidth: 90, sortValue: (i) => i.assets.length, cell: (i) => i.assets.length },
+  ], []);
+
   return <div>
     <SectionTitle title="Incidentes de seguridad" sub="Gestión ISO 27001 de incidentes con flujo secuencial: detección, clasificación, investigación, contención, erradicación, recuperación y cierre." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
     <div className="nf-metric-strip">
       <Metric label="Incidentes" value={initial.summary.total} icon={<Siren size={19} />} />
-      <Metric label="Abiertos" value={initial.summary.open} icon={<Siren size={19} />} color="#B45309" />
-      <Metric label="Críticos abiertos" value={initial.summary.critical} icon={<Siren size={19} />} color="#B91C1C" />
-      <Metric label="Con notificación" value={initial.summary.notifiable} icon={<Siren size={19} />} color="#5266F6" />
+      <Metric label="Abiertos" value={initial.summary.open} icon={<Siren size={19} />} color="var(--nf-warning-text)" />
+      <Metric label="Críticos abiertos" value={initial.summary.critical} icon={<Siren size={19} />} color="var(--nf-danger-text)" />
+      <Metric label="Con notificación" value={initial.summary.notifiable} icon={<Siren size={19} />} color="var(--nf-primary-active)" />
     </div>
     <Card>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código o descripción…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
+        <div style={{ position: "relative", flex: 1, minWidth: 200 }}><Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} /><input aria-label="Buscar código o descripción" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar código o descripción…" className="nf-app-input" style={{ paddingLeft: 32 }} /></div>
         <Filter label="Estado" value={status} onChange={setStatus} options={[{ value: "ALL", label: "Todos" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Severidad" value={severity} onChange={setSeverity} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(SEV_LABEL).map(([value, label]) => ({ value, label }))]} />
         {initial.canCreate && <button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Registrar incidente</button>}
-        {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}><option value="incident-log">Registro</option><option value="incident-report">Informe</option></select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+        {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}><option value="incident-log">Registro</option><option value="incident-report">Informe</option></select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 940 }}><thead><tr><th>Incidente</th><th>Detectado</th><th>Severidad</th><th>Categoría</th><th>Estado</th><th>Responsable</th><th>Activos</th></tr></thead><tbody>{filtered.map((i) => <tr key={i.id} onClick={() => setSelected(i)} style={{ cursor: "pointer" }}><td><strong>{i.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{i.description}</div></td><td>{i.detectedAt ?? "—"}</td><td><Badge value={SEV_LABEL[i.severity]} tone={sevTone(i.severity)} /></td><td>{CAT_LABEL[i.category]}</td><td><Badge value={STATUS_LABEL[i.status]} tone={i.status === "CLOSED" ? "gray" : "blue"} /></td><td>{i.responsible?.name ?? "—"}</td><td>{i.assets.length}</td></tr>)}</tbody></table>{!filtered.length && <div className="nf-data-table-empty">No hay incidentes para los filtros seleccionados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={filtered}
+        rowKey={(i) => i.id}
+        rowAction={(i) => setSelected(i)}
+        caption="Incidentes de seguridad: código, fecha de detección, severidad, categoría, estado, responsable y activos afectados."
+        storageKey="incidents"
+        empty={<EmptyState kind="no-results" title="No hay incidentes para los filtros seleccionados." description="Aquí se registran los incidentes de seguridad con su severidad, los activos afectados y el responsable de la respuesta." />}
+      />
     </Card>
     {creating && <IncidentForm initial={initial} pending={isPending} onClose={() => setCreating(false)} onRun={run} />}
     {selected && <IncidentDetail incident={selected} initial={initial} pending={isPending} onClose={() => setSelected(null)} onRun={run} />}
@@ -81,29 +102,29 @@ function IncidentDetail({ incident, initial, pending, onClose, onRun }: { incide
   return <div className="nf-modal-backdrop" role="dialog" aria-modal="true"><div className="nf-modal" style={{ maxWidth: 760, width: "calc(100% - 32px)", maxHeight: "92vh", overflow: "auto" }}>
     <div className="nf-modal-header"><div><h3>{incident.code}</h3><p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--nf-ink-3)" }}>{SEV_LABEL[incident.severity]} · {CAT_LABEL[incident.category]} · {STATUS_LABEL[incident.status]}</p></div><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cerrar</button></div>
     <div style={{ display: "grid", gap: 16, padding: 20 }}>
-      <div style={{ fontSize: 13 }}>{incident.description}{incident.impact ? <div style={{ marginTop: 6 }}><strong>Impacto:</strong> {incident.impact}</div> : null}{incident.notificationRequired ? <div style={{ marginTop: 6, color: "#B45309" }}><strong>Notificación requerida:</strong> {incident.notificationDetails ?? "—"}</div> : null}</div>
+      <div style={{ fontSize: 13 }}>{incident.description}{incident.impact ? <div style={{ marginTop: 6 }}><strong>Impacto:</strong> {incident.impact}</div> : null}{incident.notificationRequired ? <div style={{ marginTop: 6, color: "var(--nf-warning-text)" }}><strong>Notificación requerida:</strong> {incident.notificationDetails ?? "—"}</div> : null}</div>
 
       {/* Workflow */}
       <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14 }}>
         <h4>Flujo de gestión</h4>
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center", fontSize: 11 }}>{initial.order.map((s) => <span key={s} style={{ padding: "3px 7px", borderRadius: 6, background: s === incident.status ? "#5266F6" : "var(--nf-app-surface-2)", color: s === incident.status ? "#fff" : "var(--nf-ink-3)" }}>{STATUS_LABEL[s]}</span>)}</div>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center", fontSize: 11 }}>{initial.order.map((s) => <span key={s} style={{ padding: "3px 7px", borderRadius: 6, background: s === incident.status ? "var(--nf-primary)" : "var(--nf-app-surface-2)", color: s === incident.status ? "#fff" : "var(--nf-ink-3)" }}>{STATUS_LABEL[s]}</span>)}</div>
         {initial.canUpdate && incident.nextStatus && <button type="button" className="nf-app-btn-primary" style={{ marginTop: 10 }} disabled={pending} onClick={() => onRun(() => transitionIncident({ id: incident.id, toStatus: incident.nextStatus as never }), { successMessage: `Avanzado a ${STATUS_LABEL[incident.nextStatus!]}.` })}>Avanzar a {STATUS_LABEL[incident.nextStatus]}</button>}
         {!incident.nextStatus && <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 8 }}>Incidente cerrado — flujo completo.</div>}
       </div>
 
       {initial.canUpdate && <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14 }}>
         <h4>Lecciones aprendidas</h4>
-        <textarea className="nf-app-input" rows={2} value={lessons} onChange={(e) => setLessons(e.target.value)} />
+        <textarea aria-label="Lecciones aprendidas" className="nf-app-input" rows={2} value={lessons} onChange={(e) => setLessons(e.target.value)} />
         <button type="button" className="nf-app-btn-ghost" style={{ marginTop: 8 }} disabled={pending} onClick={() => onRun(() => updateIncident({ id: incident.id, severity: incident.severity as never, category: incident.category as never, responsibleId: incident.responsible?.id ?? null, occurredAt: incident.occurredAt, impact: incident.impact ?? undefined, notificationRequired: incident.notificationRequired, notificationDetails: incident.notificationDetails ?? undefined, lessonsLearned: lessons || undefined }), { successMessage: "Guardado." })}>Guardar lecciones</button>
       </div>}
 
       <Section title="Activos afectados">
         {incident.assets.map((a) => <Row key={a.id} text={`${a.asset.code} · ${a.asset.name}`} onRemove={initial.canUpdate ? () => onRun(() => unlinkIncidentAsset(a.id)) : undefined} pending={pending} />)}
-        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select className="nf-app-input" value={assetId} onChange={(e) => setAssetId(e.target.value)}><option value="">Activo…</option>{initial.assetOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !assetId} onClick={() => onRun(() => linkIncidentAsset({ incidentId: incident.id, assetId }), { successMessage: "Activo vinculado." })}><Link2 size={14} /> Añadir</button></div>}
+        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select aria-label="Activo" className="nf-app-input" value={assetId} onChange={(e) => setAssetId(e.target.value)}><option value="">Activo…</option>{initial.assetOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.name}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !assetId} onClick={() => onRun(() => linkIncidentAsset({ incidentId: incident.id, assetId }), { successMessage: "Activo vinculado." })}><Link2 size={14} /> Añadir</button></div>}
       </Section>
       <Section title="Evidencias">
         {incident.evidence.map((e) => <Row key={e.id} text={e.evidence.title} onRemove={initial.canUpdate ? () => onRun(() => unlinkIncidentEvidence(e.id)) : undefined} pending={pending} />)}
-        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select className="nf-app-input" value={evidenceId} onChange={(e) => setEvidenceId(e.target.value)}><option value="">Evidencia…</option>{initial.evidenceOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !evidenceId} onClick={() => onRun(() => linkIncidentEvidence({ incidentId: incident.id, evidenceId }), { successMessage: "Evidencia vinculada." })}><Link2 size={14} /> Añadir</button></div>}
+        {initial.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 6 }}><select aria-label="Evidencia" className="nf-app-input" value={evidenceId} onChange={(e) => setEvidenceId(e.target.value)}><option value="">Evidencia…</option>{initial.evidenceOptions.map((o) => <option key={o.id} value={o.id}>{o.title}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={pending || !evidenceId} onClick={() => onRun(() => linkIncidentEvidence({ incidentId: incident.id, evidenceId }), { successMessage: "Evidencia vinculada." })}><Link2 size={14} /> Añadir</button></div>}
       </Section>
     </div>
   </div></div>;
@@ -113,4 +134,4 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Row({ text, onRemove, pending }: { text: string; onRemove?: () => void; pending: boolean }) { return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13 }}><span>{text}</span>{onRemove && <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onRemove}><Trash2 size={13} /></button>}</div>; }
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
 function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

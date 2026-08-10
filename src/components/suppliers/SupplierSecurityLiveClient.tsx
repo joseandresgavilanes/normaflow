@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Download, Handshake } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -20,20 +22,64 @@ export default function SupplierSecurityLiveClient({ initial }: { initial: Suppl
 
   async function exportReport(format: "PDF" | "EXCEL") { setExporting(true); try { const r = await exportSupplierSecurity({ format }); await downloadQueuedReport(r.id); } finally { setExporting(false); } }
 
+  const columns = useMemo<DataTableColumn<Supplier>[]>(() => [
+    {
+      id: "supplier", header: "Proveedor", primary: true, minWidth: 190, hideable: false,
+      sortValue: (s) => s.code,
+      cell: (s) => <><strong>{s.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{s.name}</div></>,
+    },
+    {
+      id: "criticality", header: "Criticidad seguridad", minWidth: 150,
+      sortValue: (s) => s.profile?.securityCriticality ?? "",
+      cell: (s) => s.profile
+        ? <Badge value={CRIT_LABEL[s.profile.securityCriticality]} tone={critTone(s.profile.securityCriticality)} />
+        : <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Sin perfil</span>,
+    },
+    {
+      id: "data", header: "Datos tratados", minWidth: 200,
+      sortValue: (s) => s.profile?.dataProcessed ?? "",
+      cell: (s) => <span style={{ fontSize: 12 }}>{s.profile?.dataProcessed ?? "—"}</span>,
+    },
+    {
+      id: "risk", header: "Riesgo", minWidth: 110,
+      sortValue: (s) => s.profile?.riskLevel ?? "",
+      cell: (s) => <span style={{ fontSize: 12 }}>{s.profile?.riskLevel ?? "—"}</span>,
+    },
+    {
+      id: "review", header: "Revisión", minWidth: 120, numeric: true,
+      sortValue: (s) => s.profile?.nextReviewDate ?? "",
+      // El rojo señala la revisión vencida, pero el dato ya lo dice: no es el único canal.
+      cell: (s) => <span style={{ color: s.profile?.reviewOverdue ? "var(--nf-danger-text)" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</span>,
+    },
+    {
+      id: "contract", header: "Vencimiento contrato", minWidth: 150, numeric: true,
+      sortValue: (s) => s.profile?.contractExpiry ?? "",
+      cell: (s) => <span style={{ color: s.profile?.contractExpiringSoon ? "var(--nf-warning-text)" : undefined }}>{s.profile?.contractExpiry ?? "—"}</span>,
+    },
+  ], []);
+
   return <div>
     <SectionTitle title="Proveedores de seguridad" sub="Perfil de seguridad de proveedores: criticidad, datos tratados, accesos, obligaciones, controles, riesgo, revisión y vencimiento contractual." />
     {error && <div className="nf-alert nf-alert--error">{error}</div>}
     {success && <div className="nf-alert nf-alert--success">{success}</div>}
     <div className="nf-metric-strip">
       <Metric label="Proveedores" value={initial.summary.total} icon={<Handshake size={19} />} />
-      <Metric label="Con perfil" value={initial.summary.profiled} icon={<Handshake size={19} />} color="#15803D" />
-      <Metric label="Críticos" value={initial.summary.critical} icon={<Handshake size={19} />} color="#B91C1C" />
-      <Metric label="Contrato por vencer" value={initial.summary.expiringSoon} icon={<Handshake size={19} />} color="#B45309" />
+      <Metric label="Con perfil" value={initial.summary.profiled} icon={<Handshake size={19} />} color="var(--nf-success-text)" />
+      <Metric label="Críticos" value={initial.summary.critical} icon={<Handshake size={19} />} color="var(--nf-danger-text)" />
+      <Metric label="Contrato por vencer" value={initial.summary.expiringSoon} icon={<Handshake size={19} />} color="var(--nf-warning-text)" />
     </div>
     {initial.summary.reviewOverdue > 0 && <div className="nf-alert nf-alert--warning" style={{ marginBottom: 14 }}>{initial.summary.reviewOverdue} proveedor(es) con revisión de seguridad vencida.</div>}
     <Card>
       {initial.canExport && <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 12 }}><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></div>}
-      <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 940 }}><thead><tr><th>Proveedor</th><th>Criticidad seguridad</th><th>Datos tratados</th><th>Riesgo</th><th>Revisión</th><th>Vencimiento contrato</th></tr></thead><tbody>{initial.suppliers.map((s) => <tr key={s.id} onClick={() => setSelected(s)} style={{ cursor: "pointer" }}><td><strong>{s.code}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3 }}>{s.name}</div></td><td>{s.profile ? <Badge value={CRIT_LABEL[s.profile.securityCriticality]} tone={critTone(s.profile.securityCriticality)} /> : <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Sin perfil</span>}</td><td style={{ fontSize: 12, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.profile?.dataProcessed ?? "—"}</td><td style={{ fontSize: 12 }}>{s.profile?.riskLevel ?? "—"}</td><td style={{ color: s.profile?.reviewOverdue ? "#B91C1C" : undefined }}>{s.profile?.nextReviewDate ?? "—"}</td><td style={{ color: s.profile?.contractExpiringSoon ? "#B45309" : undefined }}>{s.profile?.contractExpiry ?? "—"}</td></tr>)}</tbody></table>{!initial.suppliers.length && <div className="nf-data-table-empty">No hay proveedores registrados.</div>}</div>
+      <DataTable
+        columns={columns}
+        rows={initial.suppliers}
+        rowKey={(s) => s.id}
+        rowAction={(s) => setSelected(s)}
+        caption="Perfil de seguridad de proveedores: criticidad, datos tratados, nivel de riesgo, próxima revisión y vencimiento contractual."
+        storageKey="supplier-security"
+        empty={<EmptyState kind="empty" title="No hay proveedores registrados." description="Aquí se registra el perfil de seguridad de cada proveedor: qué datos trata, qué accesos tiene y cuándo vence su contrato." />}
+      />
     </Card>
     {selected && <ProfileForm supplier={selected} pending={isPending} canUpdate={initial.canUpdate} onClose={() => setSelected(null)} onRun={run} />}
   </div>;
@@ -67,4 +113,4 @@ function ProfileForm({ supplier, pending, canUpdate, onClose, onRun }: { supplie
 }
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

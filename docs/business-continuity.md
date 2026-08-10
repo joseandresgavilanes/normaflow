@@ -1,5 +1,11 @@
 # Paquete de Continuidad del Negocio (ISO 22301)
 
+Pack SPE: `PACK_ISO_22301` (familia `ISO_22301`, 33 requisitos, lifecycle **PILOT
+→ listo para promover**). Backlog: [`docs/pack-live-backlog.md`](pack-live-backlog.md).
+Runbook: [runbooks/iso-22301-support.md](runbooks/iso-22301-support.md).
+Metodología de implementación: [iso-22301-implementation-checklist.md](iso-22301-implementation-checklist.md).
+Landing comercial: `/iso22301`.
+
 Amplía el módulo `/app/continuity` existente con el ciclo completo de gestión de
 la continuidad: BIA → estrategias → planes → equipos de crisis → simulacros →
 mejora, con versionado, aprobación y **activación** del plan.
@@ -84,27 +90,61 @@ Actions (`ensureRefs`), el mismo patrón de los módulos ambiental y de SST:
 
 ## UI — `/app/continuity`
 
-Pestañas: **Planes** · **BIA y actividades** (con impacto, criticidad, MTPD/RTO/RPO
-y nivel mínimo) · **Dependencias y recursos** (marcando puntos únicos de fallo) ·
-**Estrategias** (+ procedimientos, versiones y activaciones) · **Equipos de crisis**
-(contactos escalados y árbol de comunicación jerárquico) · **Simulacros** ·
-**Brechas**. Cabecera con preparación, actividades críticas, brechas y planes
-activados.
+Pestañas: **Planes** (crear/editar BCP-DRP, vincular/desvincular procesos
+críticos, añadir escenarios, versionar, aprobar, **activar/desactivar** con
+motivo y lecciones aprendidas) · **BIA y actividades** (crear BIA y aprobarlo,
+crear/editar actividades críticas con MTPD/RTO/RPO/nivel mínimo, crear
+productos/servicios prioritarios) · **Dependencias y recursos** (añadir
+dependencias marcando puntos únicos de fallo, añadir recursos mínimos) ·
+**Estrategias** (crear estrategia, avanzar su estado propuesta→aprobada→
+implementada, crear procedimientos de recuperación, versiones y activaciones
+del plan) · **Equipos de crisis** (crear equipo, contactos escalados, árbol de
+comunicación jerárquico) · **Simulacros** (crear, iniciar, registrar
+resultado, acciones de mejora con seguimiento de estado) · **Brechas**.
+Cabecera con preparación, actividades críticas, brechas y planes activados.
+
+Las entidades BCM mantienen sus registros desde la misma pantalla: BIA,
+prioridades, dependencias, recursos, estrategias, procedimientos, equipos,
+contactos y nodos de comunicación se pueden editar con validación de
+referencias, permisos y auditoría. Las estrategias también se pueden rechazar
+o retirar. Los BIA aprobados y las versiones de plan se conservan como línea
+base histórica: no se eliminan físicamente; se edita el borrador o se crea una
+nueva versión.
+
+Las 24 acciones que antes solo existían en el backend (BIA, actividad
+crítica, producto/servicio, dependencia, recurso, estrategia, procedimiento,
+equipo de crisis, contacto, nodo de comunicación, edición de plan/DRP,
+vínculo de proceso, escenario, versión, aprobación, activación, desactivación,
+inicio de simulacro, estado de mejora) están cableadas a controles reales —
+un usuario puede completar todo el ciclo BIA → estrategia → plan → activación
+sin salir de la aplicación.
 
 ## Reportes
 
 `bcm-bia` · `bcm-critical-processes` · `bcm-rto-rpo` (con validación RTO ≤ MTPD)
-· `bcm-dependencies` · `bcm-strategies` · `bcm-plans` · `bcm-exercises` ·
-`bcm-gaps` · `bcm-audit-package` (auditoría de continuidad completa).
-Exportables a PDF/XLSX por el pipeline existente.
+· `bcm-priority-products` · `bcm-dependencies` · `bcm-strategies` · `bcm-plans`
+· `bcm-plan-versions` · `bcm-crisis-teams` · `bcm-activations` (interrupciones
+reales, resultado y lecciones aprendidas) · `bcm-exercises` · `bcm-gaps` ·
+`bcm-audit-package` (agrupa los 12 anteriores). Exportables a PDF/XLSX desde
+`/app/reporting` o desde el propio selector de `/app/continuity`.
 
 ## Seguridad
 
 RLS org-scoped en las 12 tablas nuevas, reutilizando el módulo de permisos
-`continuity:*` ya presente en la matriz (lectura `continuity:read`, escritura
-`continuity:create|update|delete`, aprobación `continuity:approve`). Todas las
-Server Actions usan `requirePermission` + validación Zod (`parseInput`) +
-transacción + `writeAuditLog` con módulo `bcm`.
+`continuity:*` ya presente en la matriz: lectura `continuity:read`, creación
+`continuity:create` (incluye `CONTRIBUTOR` desde esta entrega — antes era el
+único módulo de dominio sin el par lectura/creación para ese rol), edición
+`continuity:update`, aprobación `continuity:approve`, borrado
+`continuity:delete` (concedido vía comodín `continuity:*` a `ADMIN`/
+`MANAGER`/`COMPLIANCE_MANAGER`; ningún flujo de producto expone borrar un
+BIA/plan hoy — solo desvincular un proceso crítico, bajo `continuity:update`).
+Todas las Server Actions usan `requirePermission`/`requireAuthorization` +
+validación Zod (`parseInput`, esquemas `.strict()`) + transacción +
+`writeAuditLog` atómico con módulo `bcm`/`bcp`/`continuity_test`.
+`updateBcp`/`updateDrp` usan esquemas `.partial()` con `spread` condicional
+en el `update` de Prisma — antes de esta entrega enviaban el objeto completo
+y un campo omitido (propietario, dependencias, próxima revisión) se
+sobrescribía silenciosamente a `null`.
 
 ## Pruebas
 
@@ -119,3 +159,8 @@ aprobación → activación → cierre, estrategia y procedimiento, equipo de cr
 con árbol jerárquico, simulacro → resultado → acción de mejora, informe de
 brechas y aislamiento multi-tenant. El script se niega a ejecutarse contra una
 base gestionada.
+
+Live cross-tenant: `tests-live/bcm-tenant.spec.ts` (instalación del pack,
+tenant A/B, BIA, RTO/RPO/MTPD, activación de planes, simulacros, reportes,
+AuditLog, RLS, evidencias) — requiere credenciales `TEST_*` de un proyecto
+Supabase de pruebas.

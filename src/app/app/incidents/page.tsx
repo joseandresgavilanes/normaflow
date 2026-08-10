@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getIncidentsPayload, type IncidentsPayload } from "@/lib/actions/incidents";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Incidentes de seguridad | NormaFlow" };
+export const metadata = { title: "Incidentes de seguridad" };
 export const dynamic = "force-dynamic";
 
 export default async function IncidentsPage() {

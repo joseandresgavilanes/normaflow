@@ -45,30 +45,30 @@ export default function GapAssessmentLandingPage() {
                 "Exportación a PDF con resumen ejecutivo",
               ].map((t) => (
                 <li key={t} style={{ display: "flex", gap: 12, alignItems: "flex-start", color: "var(--nf-ink-2)", fontSize: 15 }}>
-                  <span style={{ color: "var(--nf-accent)", marginTop: 4 }}><Ic.check/></span>{t}
+                  <span style={{ color: "var(--nf-primary-active)", marginTop: 4 }}><Ic.check/></span>{t}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="nf-card" style={{ padding: 28 }}>
+          <div className="nfm-card" style={{ padding: 28 }}>
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-ink-3)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 14 }}>
               Solicitar evaluación de ejemplo
             </div>
             {sent ? (
-              <div style={{ padding: 16, borderRadius: 10, background: "var(--nf-accent-soft)", border: "1px solid rgba(82, 102, 246, 0.25)" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>● Enviado</div>
+              <div style={{ padding: 16, borderRadius: 10, background: "var(--nf-accent-soft)", border: "1px solid var(--nf-primary-border)" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--nf-primary-active)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>● Enviado</div>
                 <p style={{ margin: 0, fontSize: 14, color: "var(--nf-ink)" }}>Te enviaremos un ejemplo en menos de un día laborable.</p>
               </div>
             ) : (
               <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 <div>
                   <label className="nf-label">Empresa</label>
-                  <input required value={company} onChange={e => setCompany(e.target.value)} className="nf-input" placeholder="Tecnoserv Industrial" />
+                  <input aria-label="Tecnoserv Industrial" required value={company} onChange={e => setCompany(e.target.value)} className="nfm-input" placeholder="Tecnoserv Industrial" />
                 </div>
                 <div>
                   <label className="nf-label">Email profesional</label>
-                  <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nf-input" placeholder="maria@empresa.com" />
+                  <input aria-label="maria@empresa.com" required type="email" value={email} onChange={e => setEmail(e.target.value)} className="nfm-input" placeholder="maria@empresa.com" />
                 </div>
                 <button type="submit" className="nf-btn nf-btn--primary" style={{ justifyContent: "center", marginTop: 4 }}>
                   Enviar <Ic.arrow className="nf-arrow"/>
@@ -82,13 +82,15 @@ export default function GapAssessmentLandingPage() {
       <section className="nf-section nf-section--tight">
         <div className="nf-container" style={{ maxWidth: 920 }}>
           <h2 className="nf-h-3">Ejemplo de resultado <span style={{ color: "var(--nf-ink-3)" }}>(resumen)</span></h2>
-          <div className="nf-card" style={{ padding: 28, marginTop: 22 }}>
+          <div className="nfm-card" style={{ padding: 28, marginTop: 22 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
               {rows.map((r) => (
                 <div key={r.c}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 13 }}>
                     <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--nf-ink)" }}>{r.c}</span>
-                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)" }}>{r.s}%</span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, /* `--nf-warn` es el token de RELLENO (3.19:1): sirve para la barra de la
+                       línea siguiente, no para el número. El de texto es `--nf-warning-text`. */
+                      color: r.s >= 75 ? "var(--nf-accent)" : r.s >= 60 ? "var(--nf-warning-text)" : "var(--nf-danger-text)" }}>{r.s}%</span>
                   </div>
                   <div style={{ height: 6, background: "var(--nf-glass-2)", borderRadius: 99, overflow: "hidden" }}>
                     <div style={{ width: `${r.s}%`, height: "100%", background: r.s >= 75 ? "linear-gradient(90deg, var(--nf-accent), var(--nf-accent-2))" : r.s >= 60 ? "var(--nf-warn)" : "var(--nf-danger)", boxShadow: r.s >= 75 ? "0 0 8px var(--nf-accent)" : "none" }} />

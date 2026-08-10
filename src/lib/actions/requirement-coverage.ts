@@ -104,3 +104,122 @@ export async function unlinkRequirementCoverage(coverageId: string) {
   revalidatePath("/app/standards");
   return { id: existing.id };
 }
+
+/* ---------------------------------------------------------------------------
+ * Lectura: qué cubre un requisito y qué se le puede vincular
+ *
+ * `linkRequirementCoverage` existía desde el principio, validada y auditada,
+ * y no la importaba ningún componente: cero consumidores en todo src/. Por eso
+ * `RequirementCoverage` estaba vacía y toda métrica de cobertura, factor de
+ * reutilización o evidencia compartida entre normas salía en cero. Estas dos
+ * lecturas son lo que faltaba para poder cablear una pantalla.
+ * ------------------------------------------------------------------------ */
+
+export type CoverageLink = {
+  id: string;
+  entityType: CoverageEntityType;
+  entityId: string;
+  label: string;
+  coverageType: string | null;
+  note: string | null;
+};
+
+/** Título legible de un elemento vinculado, por tipo. */
+async function labelsFor(
+  entityType: CoverageEntityType,
+  ids: string[],
+  organizationId: string,
+): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map();
+  const where = { id: { in: ids }, organizationId };
+  const rows = await (async () => {
+    switch (entityType) {
+      case "DOCUMENT": return prisma.document.findMany({ where, select: { id: true, code: true, title: true } });
+      case "RISK": return prisma.risk.findMany({ where, select: { id: true, title: true } });
+      case "EVIDENCE": return prisma.evidenceFile.findMany({ where, select: { id: true, title: true } });
+      case "INDICATOR": return prisma.indicator.findMany({ where, select: { id: true, name: true } });
+      case "AUDIT": return prisma.audit.findMany({ where, select: { id: true, title: true } });
+      case "CAPA": return prisma.cAPA.findMany({ where, select: { id: true, code: true, title: true } });
+      case "RECORD": return prisma.record.findMany({ where, select: { id: true, code: true, name: true } });
+      case "PROCESS": return prisma.process.findMany({ where, select: { id: true, code: true, name: true } });
+      default: return [];
+    }
+  })();
+  return new Map(
+    rows.map((row) => {
+      const r = row as { id: string; code?: string | null; title?: string; name?: string };
+      const nombre = r.title ?? r.name ?? r.id;
+      return [r.id, r.code ? `${r.code} · ${nombre}` : nombre];
+    }),
+  );
+}
+
+/** Elementos que ya cubren un requisito. */
+export async function listRequirementCoverage(requirementId: string): Promise<CoverageLink[]> {
+  const ctx = await requirePermission("standards:read");
+  const id = z.string().min(1).parse(requirementId);
+
+  const links = await prisma.requirementCoverage.findMany({
+    where: { organizationId: ctx.organization.id, requirementId: id },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, entityType: true, entityId: true, coverageType: true, note: true },
+  });
+
+  // Se agrupan por tipo para resolver los títulos con una consulta por tabla
+  // en vez de una por vínculo.
+  const porTipo = new Map<CoverageEntityType, string[]>();
+  for (const link of links) {
+    porTipo.set(link.entityType, [...(porTipo.get(link.entityType) ?? []), link.entityId]);
+  }
+  const etiquetas = new Map<string, string>();
+  await Promise.all(
+    [...porTipo.entries()].map(async ([tipo, ids]) => {
+      const mapa = await labelsFor(tipo, ids, ctx.organization.id);
+      for (const [entityId, label] of mapa) etiquetas.set(`${tipo}:${entityId}`, label);
+    }),
+  );
+
+  return links.map((link) => ({
+    ...link,
+    label: etiquetas.get(`${link.entityType}:${link.entityId}`) ?? link.entityId,
+  }));
+}
+
+const searchSchema = z.object({
+  entityType: z.enum(["DOCUMENT", "RISK", "EVIDENCE", "INDICATOR", "AUDIT", "CAPA", "RECORD", "PROCESS"]),
+  query: z.string().max(120).optional(),
+});
+
+/** Candidatos vinculables de un tipo, para el buscador del diálogo. */
+export async function searchCoverageCandidates(
+  input: z.infer<typeof searchSchema>,
+): Promise<{ id: string; label: string }[]> {
+  const ctx = await requirePermission("standards:read");
+  const data = searchSchema.parse(input);
+  const organizationId = ctx.organization.id;
+  const q = data.query?.trim();
+
+  // `mode: "insensitive"` sobre el título: el usuario no recuerda el código
+  // exacto del documento que quiere vincular, recuerda cómo se llama.
+  const texto = q ? { contains: q, mode: "insensitive" as const } : undefined;
+
+  const rows = await (async () => {
+    switch (data.entityType) {
+      case "DOCUMENT": return prisma.document.findMany({ where: { organizationId, ...(texto ? { title: texto } : {}) }, take: 40, orderBy: { code: "asc" }, select: { id: true, code: true, title: true } });
+      case "RISK": return prisma.risk.findMany({ where: { organizationId, ...(texto ? { title: texto } : {}) }, take: 40, orderBy: { title: "asc" }, select: { id: true, title: true } });
+      case "EVIDENCE": return prisma.evidenceFile.findMany({ where: { organizationId, ...(texto ? { title: texto } : {}) }, take: 40, orderBy: { createdAt: "desc" }, select: { id: true, title: true } });
+      case "INDICATOR": return prisma.indicator.findMany({ where: { organizationId, ...(texto ? { name: texto } : {}) }, take: 40, orderBy: { name: "asc" }, select: { id: true, name: true } });
+      case "AUDIT": return prisma.audit.findMany({ where: { organizationId, ...(texto ? { title: texto } : {}) }, take: 40, orderBy: { title: "asc" }, select: { id: true, title: true } });
+      case "CAPA": return prisma.cAPA.findMany({ where: { organizationId, ...(texto ? { title: texto } : {}) }, take: 40, orderBy: { code: "asc" }, select: { id: true, code: true, title: true } });
+      case "RECORD": return prisma.record.findMany({ where: { organizationId, ...(texto ? { name: texto } : {}) }, take: 40, orderBy: { code: "asc" }, select: { id: true, code: true, name: true } });
+      case "PROCESS": return prisma.process.findMany({ where: { organizationId, ...(texto ? { name: texto } : {}) }, take: 40, orderBy: { code: "asc" }, select: { id: true, code: true, name: true } });
+      default: return [];
+    }
+  })();
+
+  return rows.map((row) => {
+    const r = row as { id: string; code?: string | null; title?: string; name?: string };
+    const nombre = r.title ?? r.name ?? r.id;
+    return { id: r.id, label: r.code ? `${r.code} · ${nombre}` : nombre };
+  });
+}

@@ -9,7 +9,7 @@ import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type ActionRow } from "@/context/WorkspaceStore";
 
-const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "#DC2626", HIGH: "#D97706", MEDIUM: "#5266F6", LOW: "var(--nf-ink-3)" };
+const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "var(--nf-danger)", HIGH: "var(--nf-warning)", MEDIUM: "var(--nf-primary)", LOW: "var(--nf-ink-3)" };
 const PRIORITY_LABEL: Record<string, string> = { CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja" };
 
 function clampProgress(n: number): number {
@@ -160,7 +160,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary-active)",
             }}
           >
             <ClipboardList size={22} strokeWidth={2.25} aria-hidden />
@@ -176,17 +176,17 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <Timer size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{inProgress}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En curso</div>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#314456",
+              color: "var(--nf-text-secondary)",
             }}
           >
             <Target size={22} strokeWidth={2.25} aria-hidden />
@@ -216,17 +216,17 @@ export default function ActionsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{completed}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default function ActionsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary-active)",
             }}
           >
             <Zap size={26} strokeWidth={2} aria-hidden />
@@ -266,7 +266,7 @@ export default function ActionsModule() {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map(action => {
-            const pc = PRIORITY_COLOR[action.priority] || "#5266F6";
+            const pc = PRIORITY_COLOR[action.priority] || "var(--nf-primary)";
             const overdue = action.status !== "COMPLETED" && new Date(action.due) < new Date();
             return (
               <div key={action.id} className="nf-kpi-card" onClick={() => openDetail(action)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && openDetail(action)}>
@@ -293,7 +293,7 @@ export default function ActionsModule() {
                           fontSize: 11,
                           fontWeight: 700,
                           color: "var(--nf-ink-2)",
-                          background: "#f3f6fa",
+                          background: "var(--nf-surface-muted)",
                           padding: "4px 10px",
                           borderRadius: 99,
                           border: "1px solid rgba(82, 102, 246, 0.1)",
@@ -301,7 +301,7 @@ export default function ActionsModule() {
                       >
                         {action.type === "CORRECTIVE" ? "Correctiva" : action.type === "PREVENTIVE" ? "Preventiva" : "Mejora"}
                       </span>
-                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: "#5266F6" }}>{action.code}</span>
+                      <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 600, color: "var(--nf-primary-active)" }}>{action.code}</span>
                     </div>
                     <div
                       style={{
@@ -325,7 +325,7 @@ export default function ActionsModule() {
                         <Avatar name={action.owner} size={18} />
                         <span style={{ fontWeight: 600 }}>{action.owner.split(" ")[0]}</span>
                       </span>
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "#DC2626" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: overdue ? "var(--nf-danger-text)" : "var(--nf-ink-3)", fontWeight: overdue ? 700 : 600 }}>
                         <CalendarDays size={14} strokeWidth={2.25} aria-hidden />
                         {action.due}
                       </span>
@@ -336,7 +336,7 @@ export default function ActionsModule() {
                       <span>Progreso</span>
                       <span style={{ color: pc }}>{action.progress}%</span>
                     </div>
-                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "#16A34A" : pc} height={7} railColor="#eef2f9" />
+                    <ProgressBar value={action.progress} color={action.status === "COMPLETED" ? "var(--nf-success)" : pc} height={7} railColor="var(--nf-surface-sunken)" />
                   </div>
                 </div>
               </div>
@@ -376,7 +376,7 @@ export default function ActionsModule() {
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 600,
-                    background: "#fff8f0",
+                    background: "var(--nf-warning-subtle)",
                     color: "var(--nf-ink-2)",
                     border: "1px solid #f5e0c8",
                   }}
@@ -411,7 +411,7 @@ export default function ActionsModule() {
                   borderRadius: 99,
                   fontSize: 12,
                   fontWeight: 600,
-                  background: "#f3f6fa",
+                  background: "var(--nf-surface-muted)",
                   border: "1px solid var(--nf-line)",
                   color: "var(--nf-ink-2)",
                 }}

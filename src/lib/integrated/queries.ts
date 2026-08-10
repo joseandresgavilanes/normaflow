@@ -5,6 +5,7 @@ import {
   buildMappingIndex,
   classifyRequirement,
   integrationRate,
+  isShareable,
   reuseFactor,
   type CrosswalkRow,
   type RelationType,
@@ -107,6 +108,31 @@ export async function getIntegratedPayload() {
   }
   const assignmentByReq = new Map(assignments.map((a) => [a.requirementId, a]));
 
+  // ── Elementos compartidos (la prueba de no-duplicación) — calculado antes
+  // del crosswalk para poder derivar la compartibilidad de los SPECIFIC. ──
+  const sharedEntities = [...coverageByReq.entries()]
+    .reduce((acc, [requirementId, list]) => {
+      for (const c of list) {
+        const key = `${c.entityType}:${c.entityId}`;
+        const fam = familyById.get(requirementId);
+        const entry = acc.get(key) ?? { entityType: c.entityType, entityId: c.entityId, requirements: 0, families: new Set<string>() };
+        entry.requirements += 1;
+        if (fam) entry.families.add(fam);
+        acc.set(key, entry);
+      }
+      return acc;
+    }, new Map<string, { entityType: string; entityId: string; requirements: number; families: Set<string> }>());
+  const multiNormEntities = [...sharedEntities.values()]
+    .filter((e) => e.families.size > 1)
+    .map((e) => ({
+      entityType: e.entityType, entityId: e.entityId, requirements: e.requirements,
+      families: [...e.families].sort(),
+      label: e.entityType === "DOCUMENT" ? docLabel.get(e.entityId) ?? e.entityId
+        : e.entityType === "EVIDENCE" ? evLabel.get(e.entityId) ?? e.entityId : e.entityId,
+    }))
+    .sort((a, b) => b.requirements - a.requirements);
+  const multiFamilyEntityKeys = new Set(multiNormEntities.map((e) => `${e.entityType}:${e.entityId}`));
+
   // Última evaluación GAP por edición → estado por requisito.
   const gapByReq = new Map<string, { status: string; score: number }>();
   const seenEdition = new Set<string>();
@@ -133,13 +159,15 @@ export async function getIntegratedPayload() {
     }));
     const cov = coverageByReq.get(r.id) ?? [];
     const assignment = assignmentByReq.get(r.id);
+    const kind = classifyRequirement(related, ownFamily);
     return {
       requirementId: r.id, code: r.code, title: r.title, familyCode: ownFamily,
-      kind: classifyRequirement(related, ownFamily),
+      kind,
       related,
       sharedDocuments: cov.filter((c) => c.entityType === "DOCUMENT").map((c) => docLabel.get(c.entityId) ?? c.entityId),
       sharedEvidence: cov.filter((c) => c.entityType === "EVIDENCE").map((c) => evLabel.get(c.entityId) ?? c.entityId),
       coverageCount: cov.length,
+      shareable: isShareable({ kind, requirementId: r.id }, coverageByReq, multiFamilyEntityKeys),
       responsibleId: assignment?.responsibleId ?? null,
       responsibleName: assignment?.responsible?.name ?? null,
     };
@@ -168,31 +196,8 @@ export async function getIntegratedPayload() {
     ? Math.round(compliance.reduce((s, c) => s + c.score, 0) / compliance.length)
     : 0;
 
-  // ── Elementos compartidos (la prueba de no-duplicación) ──
-  const sharedEntities = [...coverageByReq.entries()]
-    .reduce((acc, [requirementId, list]) => {
-      for (const c of list) {
-        const key = `${c.entityType}:${c.entityId}`;
-        const fam = familyById.get(requirementId);
-        const entry = acc.get(key) ?? { entityType: c.entityType, entityId: c.entityId, requirements: 0, families: new Set<string>() };
-        entry.requirements += 1;
-        if (fam) entry.families.add(fam);
-        acc.set(key, entry);
-      }
-      return acc;
-    }, new Map<string, { entityType: string; entityId: string; requirements: number; families: Set<string> }>());
-  const multiNormEntities = [...sharedEntities.values()]
-    .filter((e) => e.families.size > 1)
-    .map((e) => ({
-      entityType: e.entityType, entityId: e.entityId, requirements: e.requirements,
-      families: [...e.families].sort(),
-      label: e.entityType === "DOCUMENT" ? docLabel.get(e.entityId) ?? e.entityId
-        : e.entityType === "EVIDENCE" ? evLabel.get(e.entityId) ?? e.entityId : e.entityId,
-    }))
-    .sort((a, b) => b.requirements - a.requirements);
-
   // ── Auditorías integradas, hallazgos y CAPA multi-norma ──
-  const [audits, capas, risks, reviews] = await Promise.all([
+  const [audits, capas, risks, reviews, changeRequests, suppliers] = await Promise.all([
     prisma.audit.findMany({
       where: { organizationId },
       select: {
@@ -220,6 +225,21 @@ export async function getIntegratedPayload() {
       select: { id: true, title: true, standards: true, status: true, scheduledDate: true, heldAt: true },
       orderBy: { scheduledDate: "desc" },
       take: 20,
+    }),
+    prisma.changeRequest.findMany({
+      where: { organizationId },
+      select: { id: true, code: true, title: true, disciplines: true, standards: true, status: true },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.supplier.findMany({
+      where: { organizationId },
+      select: {
+        id: true, code: true, name: true, lastEvaluationAt: true,
+        evaluations: { select: { disciplines: true, score: true }, orderBy: { evaluatedAt: "desc" }, take: 1 },
+      },
+      orderBy: { name: "asc" },
+      take: 200,
     }),
   ]);
 
@@ -294,6 +314,17 @@ export async function getIntegratedPayload() {
       scheduledDate: r.scheduledDate?.toISOString() ?? null,
       heldAt: r.heldAt?.toISOString() ?? null,
       integrated: r.standards.length > 1,
+    })),
+    changeRequests: changeRequests.map((c) => ({
+      id: c.id, code: c.code, title: c.title, status: c.status,
+      disciplines: c.disciplines, standards: c.standards,
+      shared: c.disciplines.length > 1 || c.standards.length > 1,
+    })),
+    suppliers: suppliers.map((s) => ({
+      id: s.id, code: s.code, name: s.name,
+      lastEvaluationAt: s.lastEvaluationAt?.toISOString() ?? null,
+      lastDisciplines: s.evaluations[0]?.disciplines ?? [],
+      lastScore: s.evaluations[0]?.score ?? null,
     })),
     summary: {
       standards: orgStandards.length,

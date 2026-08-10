@@ -1,0 +1,402 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 15-energia-y-objetivos
+ *
+ * ISO 50001, objetivos y tablas específicas.
+ *
+ * Trozo literal de las líneas 5518-5910 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-modal-body .nf-app-btn-ghost {
+  border: 1px solid var(--nf-input-border) !important;
+  background: var(--nf-surface) !important;
+  color: var(--nf-ink-2) !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-body .nf-app-btn-ghost:hover:not(:disabled) {
+  border-color: var(--nf-primary-border) !important;
+  background: var(--nf-surface-muted) !important;
+}
+
+.nf-modal-body .nf-modal-actions:has(> :nth-child(2)):not(:has(> :nth-child(3))) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  padding-top: 16px !important;
+  margin-top: 8px !important;
+  border-top: 1px solid var(--nf-line) !important;
+}
+
+.nf-modal-body .nf-modal-actions:has(> :nth-child(2)):not(:has(> :nth-child(3))) > :where(button, a) {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+}
+
+.nf-energy-editor-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.nf-energy-editor-actions > button {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .nf-modal-overlay {
+    padding: 10px !important;
+  }
+
+  .nf-modal-panel {
+    width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    border-radius: 16px !important;
+  }
+
+  .nf-modal-header,
+  .nf-modal-body {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .nf-iso-create-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Misma superficie para los modales legacy que todavía no usan Modal.tsx. */
+.nf-modal-backdrop {
+  padding: 20px !important;
+  background: rgba(15, 23, 42, 0.46) !important;
+}
+
+.nf-modal-backdrop .nf-modal {
+  max-height: min(820px, calc(100vh - 32px)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.28) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24), 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  overflow: auto !important;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header {
+  min-height: 72px !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--nf-line) !important;
+  background: var(--nf-surface) !important;
+}
+
+.nf-modal-backdrop .nf-modal > .nf-modal-header > .nf-app-btn-ghost {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  border-radius: 10px !important;
+}
+
+.nf-modal-backdrop .nf-modal > :not(.nf-modal-header) {
+  box-sizing: border-box;
+}
+
+.nf-modal-backdrop .nf-modal :where(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  border-color: var(--nf-border) !important;
+  background: var(--nf-surface) !important;
+  box-shadow: none !important;
+}
+
+.nf-modal-backdrop .nf-modal :where(button, a):not(.nf-modal-close) {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+}
+
+/* Acciones de filas ISO: icono, texto y baseline compartidos. */
+.nf-table-action {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  margin: 0 6px 0 0 !important;
+  padding: 0 10px !important;
+  border: 1px solid var(--nf-input-border) !important;
+  border-radius: 9px !important;
+  background: var(--nf-surface) !important;
+  color: var(--nf-ink-2) !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-table-action:hover:not(:disabled) {
+  border-color: var(--nf-primary-border) !important;
+  background: var(--nf-surface-muted) !important;
+  color: var(--nf-ink) !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.nf-table-action--danger {
+  border-color: var(--nf-danger-border) !important;
+  background: var(--nf-surface-muted) !important;
+  color: var(--nf-danger-text) !important;
+}
+
+.nf-table-action--danger:hover:not(:disabled) {
+  border-color: #fca5a5 !important;
+  background: var(--nf-danger-subtle) !important;
+  color: var(--nf-danger-text) !important;
+}
+
+.nf-energy-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.nf-energy-table-actions .nf-table-action {
+  margin: 0 !important;
+}
+
+.nf-table-action--primary {
+  border-color: var(--nf-app-accent) !important;
+  background: var(--nf-app-accent) !important;
+  color: var(--nf-text-on-primary) !important;
+  box-shadow: 0 2px 6px rgba(79, 70, 229, .18);
+}
+
+.nf-table-action--primary:hover:not(:disabled) {
+  border-color: var(--nf-border-focus) !important;
+  background: var(--nf-primary) !important;
+  color: var(--nf-text-on-primary) !important;
+}
+
+/* Todas las tablas ISO pasan por IsoTableCard. Las acciones de fila se
+   normalizan aquí para que los cinco módulos mantengan el mismo ritmo visual,
+   incluso cuando un registro expone varias operaciones. */
+.nf-iso-data-table td:has(.nf-table-action) {
+  vertical-align: middle !important;
+  white-space: nowrap;
+}
+
+.nf-iso-data-table td > :is(span, div):has(.nf-table-action) {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.nf-iso-data-table td > :is(span, div):has(.nf-table-action) .nf-table-action {
+  margin: 0 !important;
+}
+
+/* En los formularios de creación, la salida secundaria siempre queda a la
+   izquierda y la acción principal a la derecha. Ambos ocupan exactamente la
+   mitad del footer, sin superponerse. */
+.nf-iso-create-form .nf-iso-create-fields > :where(div)[style*="display: grid"] > button:last-child {
+  grid-column: 2 !important;
+}
+
+.nf-iso-create-form > .nf-iso-create-form-actions > button {
+  grid-column: 1 !important;
+}
+
+.nf-iso-create-form .nf-iso-create-fields > button.nf-iso-create-cancel {
+  grid-column: 1 !important;
+}
+
+.nf-table-action--secondary {
+  border-color: var(--nf-border) !important;
+  background: var(--nf-surface) !important;
+  color: var(--nf-text-subtle) !important;
+}
+
+.nf-energy-review-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.nf-energy-review-status--draft { background: var(--nf-surface-hover); color: var(--nf-text-subtle); }
+.nf-energy-review-status--in_progress { background: var(--nf-warning-subtle); color: var(--nf-warning-text); }
+.nf-energy-review-status--under_review { background: var(--nf-surface-selected); color: var(--nf-primary-active); }
+.nf-energy-review-status--approved { background: var(--nf-success-subtle); color: var(--nf-success-text); }
+.nf-energy-review-status--superseded { background: var(--nf-surface-muted); color: #94a3b8; }
+
+/* Estados de ISO 50001: etiquetas legibles y consistentes en todas las tablas. */
+.nf-energy-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-secondary);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.nf-energy-status--active,
+.nf-energy-status--approved,
+.nf-energy-status--verified,
+.nf-energy-status--completed,
+.nf-energy-status--selected,
+.nf-energy-status--preferred {
+  background: var(--nf-success-subtle);
+  color: var(--nf-success-text);
+}
+
+.nf-energy-status--in_progress,
+.nf-energy-status--under_analysis,
+.nf-energy-status--under_review,
+.nf-energy-status--in_review,
+.nf-energy-status--in_implementation,
+.nf-energy-status--identified,
+.nf-energy-status--planned,
+.nf-energy-status--calculated,
+.nf-energy-status--acceptable {
+  background: var(--nf-surface-selected);
+  color: var(--nf-primary-active);
+}
+
+.nf-energy-status--draft,
+.nf-energy-status--archived,
+.nf-energy-status--superseded,
+.nf-energy-status--closed,
+.nf-energy-status--cancelled {
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-subtle);
+}
+
+.nf-energy-status--delayed,
+.nf-energy-status--changes_required,
+.nf-energy-status--rejected,
+.nf-energy-status--not_recommended {
+  background: var(--nf-warning-subtle);
+  color: var(--nf-warning-text);
+}
+
+.nf-energy-empty-cell {
+  height: 116px;
+  padding: 28px 20px !important;
+  color: var(--nf-text-subtle);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.nf-table-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.nf-iso-data-table tbody td:last-child,
+.nf-data-table tbody td:last-child {
+  vertical-align: middle;
+}
+
+/* Los programas pertenecen al objetivo: se muestran en una fila anidada que
+   ocupa la tabla completa, en lugar de amontonarse dentro de una celda. */
+.nf-objective-programs-row > td {
+  padding: 14px 18px 18px !important;
+  border-bottom: 1px solid #e5eaf2 !important;
+  background: var(--nf-surface);
+}
+
+.nf-objective-programs-panel {
+  display: grid;
+  gap: 12px;
+  margin: 0 2px;
+  padding: 16px;
+  border: 1px solid #e4eaf2;
+  border-radius: 14px;
+  background: var(--nf-surface-muted);
+}
+
+.nf-objective-programs-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--nf-ink-2);
+  font-size: 12px;
+}
+
+.nf-objective-programs-heading > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.nf-objective-programs-heading svg {
+  color: var(--nf-app-accent);
+}
+
+.nf-objective-programs-heading > span {
+  display: inline-grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--nf-surface-selected);
+  color: var(--nf-app-accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.nf-objective-programs-list {
+  display: grid;
+  gap: 8px;
+}
+
+.nf-objective-program-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #e4eaf2;
+  border-radius: 10px;
+  background: var(--nf-surface);
+}
+
+.nf-objective-program-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--nf-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.nf-objective-program-name > svg {
+  flex: 0 0 auto;
+  color: var(--nf-app-accent);
+}

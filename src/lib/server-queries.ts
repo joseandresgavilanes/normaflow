@@ -8,6 +8,7 @@ import { roleOrGroupCan } from "@/lib/permissions/matrix";
 import { planEntitlements, isTrialActive, assertPlanModule } from "@/lib/plan-entitlements";
 import { ensureDocumentTemplates } from "@/lib/document-templates";
 import { memberPayload } from "@/lib/payload-privacy";
+import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
 
 export async function getDashboardPayload() {
   const ctx = await requirePermission("dashboard:read");
@@ -239,12 +240,11 @@ export async function getDocumentsPayload() {
   const authorization = await requireAuthorization("documents:read");
   const { ctx, can } = authorization;
   const organizationId = ctx.organization.id;
-  await ensureDocumentTemplates();
   const scope = await getCollaboratorScope(ctx);
   const canCreate = can("documents:create");
   const canReadProcesses = can("processes:read");
   const canReadMembers = can("members:*");
-  const [documents, locations, personnel, members, processes, clauses, standards, templates] = await Promise.all([
+  const [documents, locations, personnel, members, processes, clauses, standards, templates, packTemplates] = await Promise.all([
     prisma.document.findMany({
       where: {
         organizationId,
@@ -291,7 +291,37 @@ export async function getDocumentsPayload() {
       include: { clause: { select: { code: true, title: true } } },
       orderBy: [{ standardCode: "asc" }, { sortOrder: "asc" }],
     }),
+    prisma.standardTemplate.findMany({
+      where: {
+        active: true,
+        edition: { orgStandards: { some: { organizationId } } },
+      },
+      include: {
+        edition: { select: { code: true, name: true } },
+        requirement: { select: { code: true, title: true } },
+      },
+      orderBy: [{ edition: { code: "asc" } }, { name: "asc" }],
+    }),
   ]);
+
+  // `ensureDocumentTemplates()` se llamaba AQUÍ, antes de leer nada. Recorre el
+  // catálogo de normas llamando a `installPack` una por una, así que cada visita
+  // a esta pantalla reinstalaba el catálogo ISO entero antes de pintar la primera
+  // fila: la ruta no llegaba a terminar de cargar nunca.
+  //
+  // Sembrar es una operación de arranque —`scripts/seed.ts`, el bootstrap de la
+  // cuenta— y no del camino de lectura. Se conserva solo como red de seguridad
+  // para una base sin sembrar, y se paga únicamente cuando de verdad no hay nada
+  // que leer, no en cada carga.
+  let documentTemplates = templates;
+  if (documentTemplates.length === 0) {
+    await ensureDocumentTemplates();
+    documentTemplates = await prisma.documentTemplate.findMany({
+      where: { isActive: true },
+      include: { clause: { select: { code: true, title: true } } },
+      orderBy: [{ standardCode: "asc" }, { sortOrder: "asc" }],
+    });
+  }
   const memberGroupPermissions = canReadMembers ? await prisma.groupMembership.findMany({
     where: { userId: { in: members.map((membership) => membership.userId) }, group: { organizationId } },
     select: { userId: true, group: { select: { permissions: { select: { permission: true } } } } },
@@ -391,20 +421,36 @@ export async function getDocumentsPayload() {
       role: m.role,
       canApprove: roleOrGroupCan(m.role, groupPermissionsByUser.get(m.userId) ?? [], "documents:approve"),
     }))),
-    templates: templates.map((template) => ({
-      id: template.id,
-      code: template.code,
-      standardCode: template.standardCode,
-      title: template.title,
-      description: template.description,
-      documentType: template.documentType,
-      clauseId: template.clauseId,
-      clauseCode: template.clause?.code ?? null,
-      clauseTitle: template.clause?.title ?? null,
-      content: template.content,
-      fields: template.fieldSchema,
-      tags: template.tags,
-    })),
+    templates: [
+      ...documentTemplates.map((template) => ({
+        id: template.id,
+        code: template.code,
+        standardCode: template.standardCode,
+        title: template.title,
+        description: template.description,
+        documentType: template.documentType,
+        clauseId: template.clauseId,
+        clauseCode: template.clause?.code ?? null,
+        clauseTitle: template.clause?.title ?? null,
+        content: template.content,
+        fields: template.fieldSchema,
+        tags: template.tags,
+      })),
+      ...packTemplates.map((template) => ({
+        id: `pack:${template.id}`,
+        code: `${template.edition?.code ?? "PACK"}-${template.requirement?.code ?? template.templateType}`.replace(/[^A-Za-z0-9.-]+/g, "-"),
+        standardCode: template.edition?.code ?? "PACK",
+        title: template.name.replace(/\s*\(plantilla\)\s*$/i, ""),
+        description: `Plantilla del Standard Pack${template.requirement ? ` · requisito ${template.requirement.code}` : ""}`,
+        documentType: packTemplateDocumentType(template.templateType),
+        clauseId: template.requirementId,
+        clauseCode: template.requirement?.code ?? null,
+        clauseTitle: template.requirement?.title ?? null,
+        content: template.content,
+        fields: [],
+        tags: ["standard-pack", (template.edition?.code ?? "pack").toLowerCase()],
+      })),
+    ],
   };
 }
 

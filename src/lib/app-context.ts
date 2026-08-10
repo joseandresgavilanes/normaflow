@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { getDemoLoginAccounts } from "@/lib/demo-accounts";
 import { demoCookieName, verifyDemoSession } from "@/lib/demo-auth";
@@ -126,7 +127,13 @@ async function emailFromSession(): Promise<string | null> {
   return null;
 }
 
-export async function getAppContext(): Promise<AppContext | null> {
+/**
+ * The app layout and each page resolve the current tenant independently.
+ * React's request cache keeps that work to one auth/tenant lookup per render,
+ * which is especially important because most pages also ask permissions to
+ * resolve their payload.
+ */
+export const getAppContext = cache(async function getAppContext(): Promise<AppContext | null> {
   const email = await emailFromSession();
   if (!email) return null;
 
@@ -168,4 +175,4 @@ export async function getAppContext(): Promise<AppContext | null> {
   } catch {
     return null;
   }
-}
+});

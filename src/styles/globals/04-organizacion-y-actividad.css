@@ -1,0 +1,405 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 04-organizacion-y-actividad
+ *
+ * Ajustes de organización y registro de actividad.
+ *
+ * Trozo literal de las líneas 1183-1578 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-data-table td {
+  padding: 14px 20px;
+  vertical-align: middle;
+  color: var(--nf-ink);
+  border-bottom: 1px solid var(--nf-line);
+  font-weight: 500;
+}
+
+.nf-data-table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.nf-data-table tbody tr:hover {
+  background: var(--nf-table-row-hover);
+}
+
+.nf-data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.nf-data-table-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--nf-ink-3);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* La geometría de `.nf-app-input` vive ahora en src/styles/forms.css, junto a
+   la del resto de controles. Aquí quedaba con `outline: none` y el foco
+   dibujado solo con box-shadow, que desaparecía sobre fondos de color. */
+select.nf-app-input {
+  cursor: pointer;
+}
+
+.nf-app-input--toolbar {
+  flex: 1;
+  min-width: 240px;
+  width: auto;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.nf-chip-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--nf-radius-pill);
+  background: var(--nf-surface);
+  border: 1px solid var(--nf-line);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nf-ink);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.nf-chip-choice--active {
+  background: var(--nf-app-accent-soft);
+  border-color: var(--nf-app-accent);
+}
+
+.nf-app-help {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nf-ink-2);
+  line-height: 1.45;
+}
+
+/* Actividad: página + hero */
+.nf-activity-page {
+  position: relative;
+}
+
+.nf-activity-page::before {
+  content: "";
+  position: absolute;
+  inset: -8px -12px auto -12px;
+  height: 180px;
+  pointer-events: none;
+  background: transparent;
+  z-index: 0;
+}
+
+.nf-activity-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nf-activity-hero {
+  margin-bottom: 4px;
+}
+
+.nf-activity-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.nf-activity-hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nf-app-accent);
+  background: var(--nf-glass);
+  border: 1px solid rgba(82, 102, 246, 0.14);
+  box-shadow: 0 1px 0 rgba(82, 102, 246, 0.05);
+}
+
+.nf-activity-hero-pill--green {
+  color: var(--nf-success-text);
+  border-color: rgba(46, 139, 87, 0.22);
+  background: var(--nf-surface);
+}
+
+.nf-activity-kpi-cell {
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nf-activity-kpi-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -22px rgba(82, 102, 246, 0.35);
+  border-color: rgba(82, 102, 246, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-activity-kpi-cell:hover {
+    transform: none;
+  }
+}
+
+.nf-activity-clear-filters {
+  margin-left: auto;
+  font-size: 12px !important;
+  padding: 7px 12px !important;
+}
+
+.nf-activity-section-head-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-activity-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nf-activity-section-icon--pulse {
+  position: relative;
+}
+
+.nf-activity-section-icon--pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 14px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  opacity: 0.7;
+  animation: nf-activity-icon-ring 2.8s ease-out infinite;
+}
+
+@keyframes nf-activity-icon-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-activity-section-icon--pulse::after {
+    animation: none;
+  }
+}
+
+.nf-activity-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nf-success-text);
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.25);
+  flex-shrink: 0;
+  animation: nf-activity-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes nf-activity-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-activity-live-dot {
+    animation: none;
+  }
+}
+
+.nf-activity-live-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nf-ink-3);
+}
+
+/* Organización — datos generales (evita grises planos) */
+.nf-org-page {
+  position: relative;
+}
+
+.nf-org-page::before {
+  content: "";
+  position: absolute;
+  inset: -8px -12px auto -12px;
+  height: 150px;
+  pointer-events: none;
+  z-index: 0;
+  background: transparent;
+}
+
+.nf-org-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+.nf-org-panel {
+  min-width: 0;
+  max-width: 720px;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  box-shadow: 0 14px 40px -28px rgba(82, 102, 246, 0.32), 0 1px 0 rgba(82, 102, 246, 0.05);
+  background: var(--nf-surface);
+}
+
+.nf-org-panel-head {
+  padding: 18px 24px 20px;
+  border-bottom: 1px solid rgba(82, 102, 246, 0.1);
+  background: transparent;
+}
+
+.nf-org-panel-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--nf-ink);
+  font-family: var(--font-manrope, Manrope), var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.nf-org-panel-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--nf-ink-2);
+  line-height: 1.45;
+}
+
+.nf-org-panel-body {
+  padding: 24px 26px 30px;
+  background: var(--nf-surface);
+}
+
+.nf-org-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr minmax(120px, 160px);
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .nf-org-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nf-org-logo-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 560px) {
+  .nf-org-logo-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nf-org-logo-preview {
+  width: 112px;
+  height: 72px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  background: var(--nf-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.nf-org-logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
+
+.nf-org-logo-placeholder {
+  color: var(--nf-ink-3);
+  opacity: 0.75;
+}
+
+.nf-org-plan-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(82, 102, 246, 0.12);
+  border-left-width: 4px;
+  border-left-color: var(--nf-success-text);
+  background: var(--nf-surface);
+  box-shadow: 0 1px 0 rgba(82, 102, 246, 0.04);
+}
+
+.nf-org-plan-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--nf-ink);
+  letter-spacing: -0.02em;
+}
+
+.nf-org-plan-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--nf-surface);
+  box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.22);
+  flex-shrink: 0;
+}
+
+.nf-org-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nf-ink-3);
+  line-height: 1.45;
+}
+
+.nf-org-hint a {
+  color: var(--nf-app-accent);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nf-org-hint a:hover {
+  text-decoration: underline;
+}
+
+.nf-org-msg-error {
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: var(--nf-surface);
+  border: 1px solid rgba(201, 60, 55, 0.25);
+  color: var(--nf-danger-text);
+  font-size: 13px;
+  font-weight: 600;
+}

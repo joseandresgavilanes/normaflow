@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { QUICK_CREATE_ACTIONS } from "@/lib/quick-actions";
 import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
@@ -46,6 +46,10 @@ export default function QuickCreateMenu() {
     router.push(`${href}?create=1`);
   }
 
+  function prefetchAction(href: string) {
+    router.prefetch(`${href}?create=1`);
+  }
+
   return (
     <div className="nf-quick-create" ref={rootRef}>
       <button
@@ -56,7 +60,10 @@ export default function QuickCreateMenu() {
         aria-label={t("quick.create")}
         onClick={() => setOpen((value) => !value)}
       >
-        {t("quick.create")}
+        <Plus size={15} strokeWidth={2.5} aria-hidden />
+        {/* En móvil solo queda el icono: la etiqueta desbordaba la píldora. El
+            nombre accesible lo aporta `aria-label`, así que no se pierde. */}
+        <span className="nf-quick-create-label">{t("quick.create")}</span>
         <ChevronDown
           size={14}
           strokeWidth={2.5}
@@ -75,6 +82,9 @@ export default function QuickCreateMenu() {
                 type="button"
                 role="menuitem"
                 className="nf-quick-create-item"
+                onMouseEnter={() => prefetchAction(action.href)}
+                onFocus={() => prefetchAction(action.href)}
+                onTouchStart={() => prefetchAction(action.href)}
                 onClick={() => navigate(action.href)}
               >
                 <span className="nf-quick-create-item-icon" aria-hidden>

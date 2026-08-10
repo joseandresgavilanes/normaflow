@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { getAppContext, type LiveAppContext } from "@/lib/app-context";
 import { GROUP_PERMISSION_ALLOWLIST, roleOrGroupCan } from "./matrix";
@@ -68,7 +69,7 @@ export async function requireLiveContext(): Promise<LiveAppContext> {
  * business-data query is executed. The only query performed here reads the
  * caller's own authorization metadata, scoped to the selected organization.
  */
-export async function getServerAuthorization(): Promise<ServerAuthorization> {
+export const getServerAuthorization = cache(async function getServerAuthorization(): Promise<ServerAuthorization> {
   const ctx = await requireLiveContext();
   const rows = await prisma.groupPermission.findMany({
     where: {
@@ -88,7 +89,7 @@ export async function getServerAuthorization(): Promise<ServerAuthorization> {
     groupPermissions,
     can: (permission) => roleOrGroupCan(ctx.role, groupPermissions, permission),
   };
-}
+});
 
 /**
  * Require a permission for the current user in the current organization.

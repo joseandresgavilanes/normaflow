@@ -9,10 +9,11 @@ export const iso13485Pack: StandardPackInput = {
   code: "PACK_ISO_13485",
   name: "ISO 13485 — Dispositivos médicos",
   version: "2016.1",
+  lifecycleStatus: "DEVELOPMENT",
   description:
     "Paquete configurable ISO 13485:2016 (SGC dispositivos médicos). Complementa — no reemplaza — obligaciones regulatorias locales.",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "risks", "suppliers", "medical-devices",
+    "gap", "documents", "audits", "nonconformities", "actions", "risks", "suppliers", "medical-devices",
   ],
   featureFlags: { medicalDeviceQms: true, designControls: true, vigilance: true },
   editions: [

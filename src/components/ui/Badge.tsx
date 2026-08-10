@@ -5,46 +5,46 @@ import { cn } from "@/lib/utils";
 
 const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
   {
-    APPROVED: { bg: "#F0FDF4", color: "#16A34A", label: "Aprobado" },
-    approved: { bg: "#F0FDF4", color: "#16A34A", label: "Aprobado" },
-    DRAFT: { bg: "#EEF2FF", color: "#5266F6", label: "Borrador" },
-    draft: { bg: "#EEF2FF", color: "#5266F6", label: "Borrador" },
-    IN_REVIEW: { bg: "#FFFBEB", color: "#D97706", label: "En revisión" },
-    in_review: { bg: "#FFFBEB", color: "#D97706", label: "En revisión" },
-    OBSOLETE: { bg: "#F5F5F5", color: "#525252", label: "Obsoleto" },
-    COMPLETED: { bg: "#F0FDF4", color: "#16A34A", label: "Completada" },
-    IN_PROGRESS: { bg: "#FFFBEB", color: "#D97706", label: "En curso" },
-    PLANNED: { bg: "#EEF2FF", color: "#5266F6", label: "Planificada" },
-    OPEN: { bg: "#FEF2F2", color: "#DC2626", label: "Abierta" },
-    CLOSED: { bg: "#F0FDF4", color: "#16A34A", label: "Cerrada" },
-    PENDING: { bg: "#EEF2FF", color: "#5266F6", label: "Pendiente" },
+    APPROVED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Aprobado" },
+    approved: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Aprobado" },
+    DRAFT: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Borrador" },
+    draft: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Borrador" },
+    IN_REVIEW: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En revisión" },
+    in_review: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En revisión" },
+    OBSOLETE: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Obsoleto" },
+    COMPLETED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Completada" },
+    IN_PROGRESS: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En curso" },
+    PLANNED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Planificada" },
+    OPEN: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Abierta" },
+    CLOSED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Cerrada" },
+    PENDING: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Pendiente" },
     PENDING_VALIDATION: {
-      bg: "#F5F3FF",
-      color: "#7C3AED",
+      bg: "var(--nf-primary-subtle)",
+      color: "var(--nf-primary-active)",
       label: "Pendiente validación",
     },
     UNDER_TREATMENT: {
-      bg: "#FFFBEB",
-      color: "#D97706",
+      bg: "var(--nf-warning-subtle)",
+      color: "var(--nf-warning-text)",
       label: "En tratamiento",
     },
-    MONITORED: { bg: "#EEF2FF", color: "#5266F6", label: "Monitoreo" },
-    MITIGATED: { bg: "#F0FDF4", color: "#16A34A", label: "Mitigado" },
-    ACCEPTED: { bg: "#F5F5F5", color: "#525252", label: "Aceptado" },
-    IDENTIFIED: { bg: "#EEF2FF", color: "#5266F6", label: "Identificado" },
-    ON_TRACK: { bg: "#F0FDF4", color: "#16A34A", label: "En objetivo" },
-    AT_RISK: { bg: "#FFFBEB", color: "#D97706", label: "En riesgo" },
-    OFF_TRACK: { bg: "#FEF2F2", color: "#DC2626", label: "Desviado" },
-    ACTIVE: { bg: "#F0FDF4", color: "#16A34A", label: "Activo" },
-    TRIALING: { bg: "#EEF2FF", color: "#5266F6", label: "Trial" },
-    CANCELLED: { bg: "#F5F5F5", color: "#525252", label: "Cancelado" },
-    CRITICAL: { bg: "#FEF2F2", color: "#DC2626", label: "Crítica" },
-    MAJOR: { bg: "#FFFBEB", color: "#D97706", label: "Mayor" },
-    MINOR: { bg: "#F5F5F5", color: "#525252", label: "Menor" },
-    IN_REVIEW_STATUS: { bg: "#F5F3FF", color: "#7C3AED", label: "En revisión" },
-    success: { bg: "#F0FDF4", color: "#16A34A", label: "OK" },
-    warning: { bg: "#FFFBEB", color: "#D97706", label: "Atención" },
-    danger: { bg: "#FEF2F2", color: "#DC2626", label: "Alerta" },
+    MONITORED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Monitoreo" },
+    MITIGATED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Mitigado" },
+    ACCEPTED: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Aceptado" },
+    IDENTIFIED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Identificado" },
+    ON_TRACK: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "En objetivo" },
+    AT_RISK: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En riesgo" },
+    OFF_TRACK: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Desviado" },
+    ACTIVE: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Activo" },
+    TRIALING: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Trial" },
+    CANCELLED: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Cancelado" },
+    CRITICAL: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Crítica" },
+    MAJOR: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "Mayor" },
+    MINOR: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Menor" },
+    IN_REVIEW_STATUS: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "En revisión" },
+    success: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "OK" },
+    warning: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "Atención" },
+    danger: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Alerta" },
   };
 
 interface BadgeProps {
@@ -62,8 +62,8 @@ export default function Badge({
 }: BadgeProps) {
   const { tx } = useI18n();
   const s = STATUS_MAP[status] ?? {
-    bg: "#F5F5F5",
-    color: "#525252",
+    bg: "var(--nf-surface-muted)",
+    color: "var(--nf-text-secondary)",
     label: label ?? status,
   };
   const displayLabel = tx(label ?? s.label);
@@ -89,10 +89,10 @@ export default function Badge({
 export function PriorityBadge({ priority }: { priority: string }) {
   const { tx } = useI18n();
   const map: Record<string, { bg: string; color: string }> = {
-    CRITICAL: { bg: "#FEF2F2", color: "#DC2626" },
-    HIGH: { bg: "#FFFBEB", color: "#D97706" },
-    MEDIUM: { bg: "#EEF2FF", color: "#5266F6" },
-    LOW: { bg: "#F5F5F5", color: "#525252" },
+    CRITICAL: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" },
+    HIGH: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)" },
+    MEDIUM: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)" },
+    LOW: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)" },
   };
   const s = map[priority] ?? map.MEDIUM;
   const labels: Record<string, string> = {

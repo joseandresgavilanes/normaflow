@@ -1,0 +1,405 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 09-esqueletos
+ *
+ * Estados de carga.
+ *
+ * Trozo literal de las líneas 3157-3546 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-dash-card-value {
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-dash-module-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-dash-module-row:last-child {
+  border-bottom: none;
+}
+
+.nf-dash-module-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nf-ink);
+}
+
+.nf-dash-module-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-dash-module-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nf-dash-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.nf-dash-table-wrap {
+  background: var(--nf-surface);
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.nf-dash-table-head {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-dash-table-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  margin: 0;
+}
+
+.nf-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.nf-dash-table th {
+  padding: 10px 24px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--nf-ink-3);
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-dash-table td {
+  padding: 14px 24px;
+  color: var(--nf-ink);
+  border-bottom: 1px solid var(--nf-line);
+  vertical-align: middle;
+}
+
+.nf-dash-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.nf-dash-table tbody tr:hover {
+  background: var(--nf-table-row-hover);
+}
+
+.nf-dash-amount-pos {
+  /* `var(--success)` es un alias heredado que resuelve al token de RELLENO:
+     3.30:1 como texto sobre superficie. */
+  color: var(--nf-success-text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-skeleton {
+  /* Era `#EBEBEB` fijo: 42 superficies claras sobre el lienzo oscuro, el
+     hallazgo más repetido del barrido. Todo estado de carga de la aplicación
+     pasa por esta clase. */
+  background: var(--nf-surface-muted);
+  border-radius: var(--nf-radius-md, 10px);
+  animation: nf-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.nf-skeleton--sm { border-radius: var(--nf-radius-sm, 8px); }
+.nf-skeleton--lg { border-radius: var(--nf-radius-lg, 12px); }
+.nf-skeleton--pill { border-radius: var(--nf-radius-pill, 999px); }
+
+@keyframes nf-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.nf-page-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.nf-page-loading-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.nf-skeleton-page-header {
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.nf-skeleton-page-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-skeleton-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.nf-skeleton-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.nf-skeleton-table-wrap {
+  padding: 20px 24px;
+}
+
+.nf-skeleton-table {
+  overflow: hidden;
+}
+
+.nf-skeleton-table-head {
+  display: grid;
+  grid-template-columns: 48px 1fr 88px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 0 16px 12px;
+  border-bottom: 1px solid var(--nf-line);
+  margin-bottom: 4px;
+}
+
+.nf-skeleton-table-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 88px 80px;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-table-row:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-metric-cell {
+  pointer-events: none;
+}
+
+.nf-skeleton-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-op-card {
+  padding: 18px;
+}
+
+.nf-skeleton-process-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 16px;
+}
+
+.nf-skeleton-process-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+}
+
+.nf-skeleton-process-accent {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--nf-surface-sunken);
+}
+
+.nf-skeleton-process-head,
+.nf-skeleton-action-main,
+.nf-skeleton-integration-top,
+.nf-skeleton-panel-head,
+.nf-skeleton-audit-program,
+.nf-skeleton-gap-summary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.nf-skeleton-mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.nf-skeleton-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.nf-skeleton-stacked-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-skeleton-course-card {
+  padding: 18px 20px;
+}
+
+.nf-skeleton-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-skeleton-action-card {
+  padding: 16px 18px;
+}
+
+.nf-skeleton-action-side {
+  display: flex;
+  flex: 0 0 150px;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.nf-skeleton-kanban {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-kanban-column {
+  padding: 14px;
+  background: var(--nf-app-surface-2);
+}
+
+.nf-skeleton-kanban-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.nf-skeleton-kanban-card {
+  padding: 14px;
+  margin-bottom: 10px;
+  border: 1px solid var(--nf-line);
+  border-radius: 10px;
+  background: var(--nf-surface);
+}
+
+.nf-skeleton-kanban-card:last-child {
+  margin-bottom: 0;
+}
+
+.nf-skeleton-risk-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-skeleton-heatmap-panel {
+  padding: 20px;
+}
+
+.nf-skeleton-panel-head {
+  margin-bottom: 16px;
+}
+
+.nf-skeleton-heatmap {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nf-skeleton-gap-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.nf-skeleton-gap-main {
+  padding: 20px;
+}
+
+.nf-skeleton-gap-summary {
+  margin-bottom: 20px;
+}
+
+.nf-skeleton-gap-counts {
+  display: flex;
+  gap: 18px;
+  text-align: center;
+}
+
+.nf-skeleton-gap-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.nf-skeleton-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nf-skeleton-progress-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-progress-row:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-integrations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-integration-card {
+  padding: 18px;
+}

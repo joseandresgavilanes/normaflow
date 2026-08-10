@@ -10,7 +10,7 @@ import {
   normalizeLocale,
   type Locale,
 } from "@/lib/i18n/config";
-import { translate, translateKnownText, type MessageKey } from "@/lib/i18n/messages";
+import { translate, translateText, type MessageKey } from "@/lib/i18n/messages";
 
 type I18nContextValue = {
   locale: Locale;
@@ -32,7 +32,7 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 function persistLocale(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE}=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`;
   window.localStorage.setItem(LOCALE_COOKIE, locale);
-  document.documentElement.lang = locale;
+  document.documentElement.lang = localeToIntl(locale);
 }
 
 export function I18nProvider({
@@ -63,7 +63,7 @@ export function I18nProvider({
       locale,
       setLocale,
       t: (key, params) => translate(locale, key, params),
-      tx: (text) => translateKnownText(locale, text),
+      tx: (text) => translateText(locale, text),
       formatDate: (date, fmt = locale === "en" ? "MM/dd/yyyy" : "dd/MM/yyyy") =>
         format(new Date(date), fmt, { locale: dateFnsLocales[locale] }),
       timeAgo: (date) =>

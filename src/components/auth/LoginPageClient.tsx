@@ -8,6 +8,7 @@ import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
 import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
 import { useI18n } from "@/context/I18nProvider";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 export type DemoLoginCredentials = {
   demo: { id: "demo-local"; email: string; password: string; name: string };
@@ -50,8 +51,8 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
 
   return <>
     <div className="nf-bg" aria-hidden="true" />
-    <div className="nf-auth-lang"><LanguageSwitcher compact /></div>
-    <div className="nf-app"><div className="nf-auth-shell"><div style={{ width: "100%", maxWidth: 440 }}>
+    <div className="nf-auth-lang"><ThemeSwitcher compact /><LanguageSwitcher compact /></div>
+    <div className="nf-app"><main className="nf-auth-shell"><div style={{ width: "100%", maxWidth: 440 }}>
       <div className="nf-auth-header">
         <Link href="/home" className="nf-logo" style={{ justifyContent: "center" }}><span className="nf-logo-mark" aria-hidden />NormaFlow</Link>
         <h1 className="nf-h-3" style={{ marginTop: 20 }}>{t("auth.login.title")}</h1><p>{t("auth.login.subtitle")}</p>
@@ -62,8 +63,8 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
           <div className="nf-auth-callout"><span className="nf-auth-callout-label">{t("auth.login.newCustomer")}</span><code>{demoAccounts.customer.email}</code> · <code>{demoAccounts.customer.password}</code><div style={{ marginTop: 6, fontSize: 11, color: "var(--nf-ink-3)" }}>{t("auth.login.customerHelp")}</div></div>
         </div>}
         <form onSubmit={handleSubmit} className="nf-auth-form">
-          <div><label className="nf-label" htmlFor="login-email">{t("common.email")}</label><input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={demoAccounts?.demo.email ?? "tu@empresa.com"} autoComplete="email" className="nf-input" /></div>
-          <div><label className="nf-label" htmlFor="login-password">{t("common.password")}</label><input id="login-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" className="nf-input" /></div>
+          <div><label className="nf-label" htmlFor="login-email">{t("common.email")}</label><input aria-label={demoAccounts?.demo.email ?? "tu@empresa.com"} id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder={demoAccounts?.demo.email ?? "tu@empresa.com"} autoComplete="email" className="nf-input" /></div>
+          <div><label className="nf-label" htmlFor="login-password">{t("common.password")}</label><input aria-label="••••••••" id="login-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" className="nf-input" /></div>
           {success && <div className="nf-auth-alert nf-auth-alert--success">{success}</div>}{error && <div className="nf-auth-alert nf-auth-alert--error">{error}</div>}
           <button type="submit" disabled={loading} className="nf-btn nf-btn--primary" style={{ width: "100%", opacity: loading ? 0.7 : 1 }}>{loading ? t("auth.login.loading") : <>{t("auth.login.submit")} <Ic.arrow className="nf-arrow" /></>}</button>
           <p style={{ margin: 0, textAlign: "center", fontSize: 13 }}><Link href="/forgot-password" style={{ color: "var(--nf-ink-3)" }}>{t("auth.login.forgot")}</Link></p>
@@ -71,7 +72,7 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
         </form>
       </div>
       <p className="nf-auth-footer">{t("auth.login.noAccount")} <Link href="/signup">{t("auth.login.signup")}</Link></p>
-    </div></div></div>
+    </div></main></div>
   </>;
 }
 

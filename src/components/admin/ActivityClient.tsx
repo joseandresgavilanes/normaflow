@@ -69,27 +69,34 @@ const ACTION_LABEL: Record<string, string> = {
   complete: "Completado",
 };
 
+/**
+ * Tono por acción, en su variante de TEXTO.
+ *
+ * Se usa como `color` sobre la superficie, así que necesita 4.5:1. Con los
+ * tokens de relleno daba 3.30:1 (éxito) y 3.19:1 (aviso) — 28 y 1 apariciones
+ * medidas en /app/activity.
+ */
 const ACTION_TONE: Record<string, string> = {
-  create: "#16A34A",
-  update: "#5266F6",
-  delete: "#DC2626",
-  deactivate: "#DC2626",
-  approve: "#16A34A",
-  reject: "#DC2626",
-  transition: "#6B3FB5",
-  submit_review: "#D97706",
-  obsolete: "#5E6B7A",
-  publish: "#16A34A",
-  invite: "#5266F6",
-  login: "#5E6B7A",
-  logout: "#5E6B7A",
-  add_entry: "#16A34A",
-  close: "#16A34A",
-  complete: "#16A34A",
+  create: "var(--nf-success-text)",
+  update: "var(--nf-primary-active)",
+  delete: "var(--nf-danger-text)",
+  deactivate: "var(--nf-danger-text)",
+  approve: "var(--nf-success-text)",
+  reject: "var(--nf-danger-text)",
+  transition: "var(--nf-primary-active)",
+  submit_review: "var(--nf-warning-text)",
+  obsolete: "var(--nf-text-secondary)",
+  publish: "var(--nf-success-text)",
+  invite: "var(--nf-primary-active)",
+  login: "var(--nf-text-secondary)",
+  logout: "var(--nf-text-secondary)",
+  add_entry: "var(--nf-success-text)",
+  close: "var(--nf-success-text)",
+  complete: "var(--nf-success-text)",
 };
 
 function actionTone(action: string): string {
-  return ACTION_TONE[action] ?? "#5E6B7A";
+  return ACTION_TONE[action] ?? "var(--nf-text-secondary)";
 }
 
 function actionLabel(action: string): string {
@@ -436,9 +443,9 @@ export default function ActivityClient({
                           </h4>
                           {e.recordLabel ? (
                             <div className="nf-app-help nf-audit-body" style={{ marginTop: 0 }}>
-                              <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{e.recordLabel}</strong>
+                              <strong style={{ color: "var(--nf-ink)" }}>{e.recordLabel}</strong>
                               {e.recordId ? (
-                                <span style={{ color: "var(--nf-ink-3, #314456)" }}> · {e.recordId}</span>
+                                <span style={{ color: "var(--nf-ink-3)" }}> · {e.recordId}</span>
                               ) : null}
                             </div>
                           ) : null}
@@ -470,10 +477,10 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center" }}>
           <ActionDot action={event.action} size={36} />
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)", marginBottom: 2 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 2 }}>
               {event.summary}
             </div>
-            <div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)" }}>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               {actionLabel(event.action)} · {moduleLabel(event.module)}
               {event.recordLabel && (
                 <>
@@ -487,7 +494,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
           <Meta label="Fecha y hora" value={<span style={{ fontFamily: "monospace" }}>{formatDate(event.at, "yyyy-MM-dd HH:mm:ss", locale)}</span>} />
-          <Meta label="Actor" value={event.actorName ?? <span style={{ color: "var(--nf-ink-4, #3d5166)" }}>Sistema</span>} />
+          <Meta label="Actor" value={event.actorName ?? <span style={{ color: "var(--nf-ink-4)" }}>Sistema</span>} />
           <Meta label="Cuándo" value={timeAgo(event.at, locale)} />
           <Meta label="ID de recurso" value={event.recordId ? <code style={{ fontSize: 11 }}>{event.recordId}</code> : "—"} />
         </div>
@@ -528,7 +535,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
                     )}
                   </div>
                   <span style={{ color: "var(--nf-ink-3)" }}>→</span>
-                  <div style={{ fontSize: 12, color: "var(--nf-accent)", fontFamily: "monospace" }}>
+                  <div style={{ fontSize: 12, color: "var(--nf-primary-active)", fontFamily: "monospace" }}>
                     {d.after === undefined ? <span style={{ color: "var(--nf-ink-4)" }}>— eliminado —</span> : formatValue(d.after)}
                   </div>
                 </div>
@@ -602,7 +609,7 @@ function Meta({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 13, color: "var(--nf-ink, #0f1b2d)" }}>{value}</div>
+      <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{value}</div>
     </div>
   );
 }

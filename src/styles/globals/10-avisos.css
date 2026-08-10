@@ -1,0 +1,416 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 10-avisos
+ *
+ * Alertas y mensajes de estado.
+ *
+ * Trozo literal de las líneas 3547-3942 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+.nf-skeleton-integration-top {
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.nf-skeleton-audit-program {
+  padding: 20px 22px;
+}
+
+.nf-skeleton-rail {
+  padding: 16px;
+}
+
+.nf-skeleton-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-rail-item:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-detail {
+  padding: 20px 24px;
+}
+
+.nf-skeleton-member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-member-row:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-activity-panel {
+  padding: 20px 24px;
+}
+
+.nf-skeleton-timeline {
+  margin-top: 8px;
+}
+
+.nf-skeleton-timeline-group {
+  margin-bottom: 24px;
+}
+
+.nf-skeleton-timeline-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-skeleton-timeline-row:last-child {
+  border-bottom: none;
+}
+
+.nf-skeleton-form {
+  padding: 24px;
+}
+
+.nf-skeleton-form-field {
+  margin-bottom: 16px;
+}
+
+.nf-skeleton-billing-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 14px;
+}
+
+.nf-skeleton-plan-card {
+  padding: 20px;
+}
+
+.nf-skeleton-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.nf-skeleton-chart-panel {
+  padding: 20px 24px;
+}
+
+.nf-skeleton-wizard-steps {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.nf-skeleton-wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 140px;
+}
+
+@media (max-width: 920px) {
+  .nf-skeleton-risk-grid,
+  .nf-skeleton-gap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .nf-skeleton-page-header {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-table-head,
+  .nf-skeleton-table-row {
+    grid-template-columns: 40px 1fr auto;
+  }
+
+  .nf-skeleton-table-head > :last-child,
+  .nf-skeleton-table-row > :last-child {
+    display: none;
+  }
+
+  .nf-skeleton-mini-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nf-skeleton-action-main {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-action-side {
+    width: 100%;
+    flex-basis: auto;
+    align-items: stretch;
+  }
+
+  .nf-skeleton-gap-summary {
+    flex-direction: column;
+  }
+
+  .nf-skeleton-gap-counts {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Modal overlay padding on phones */
+@media (max-width: 480px) {
+  .nf-modal-overlay {
+    padding: 12px !important;
+    align-items: flex-end !important;
+  }
+
+  .nf-modal-backdrop {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .nf-modal-panel {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 92dvh !important;
+  }
+
+  .nf-modal-backdrop .nf-modal {
+    max-height: 92dvh;
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+@media (max-width: 1024px) {
+}
+
+@media (min-width: 1025px) {
+}
+
+@media (max-width: 600px) {
+}
+
+/* Features page: avoid RTL column swap breaking reading order on narrow screens */
+@media (max-width: 720px) {
+}
+
+/* —— Harmonización Mercury (paneles compartidos) —— */
+.nf-operational-card :where(h3) {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.nf-filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--nf-ink-3);
+}
+
+.nf-activity-page::before,
+.nf-org-page::before {
+  display: none;
+}
+
+.nf-activity-panel,
+.nf-org-panel {
+  border-radius: 12px;
+  border: 1px solid var(--nf-line);
+  box-shadow: none;
+  background: var(--nf-surface);
+}
+
+.nf-activity-toolbar,
+.nf-org-panel-head,
+.nf-acpm-toolbar {
+  background: var(--nf-app-surface-2);
+  border-bottom: 1px solid var(--nf-line);
+}
+
+.nf-org-panel-body,
+.nf-activity-timeline-body,
+.nf-acpm-body {
+  background: var(--nf-surface);
+}
+
+.nf-audit-card,
+.nf-acpm-col,
+.nf-acpm-card-btn {
+  border-radius: 12px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+  box-shadow: none;
+}
+
+/* Cuando estas tarjetas son un `<button>` su borde ya no agrupa: delimita algo
+   pulsable, y WCAG 1.4.11 le pide 3:1. `.nf-acpm-col` se queda con el borde
+   decorativo porque es una columna, no un control. */
+button.nf-audit-card,
+.nf-acpm-card-btn {
+  border-color: var(--nf-input-border);
+}
+
+.nf-audit-card {
+  border-left-width: 3px;
+  border-left-color: var(--nf-app-accent);
+}
+
+.nf-audit-card:hover,
+.nf-acpm-card-btn:hover,
+.nf-kpi-card:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: var(--nf-border);
+}
+
+.nf-audit-day-head {
+  background: var(--nf-app-surface-2);
+  border: 1px solid var(--nf-line);
+  box-shadow: none;
+}
+
+.nf-audit-day-head-marker {
+  background: var(--nf-app-accent);
+}
+
+.nf-audit-slot-node {
+  border-color: var(--nf-app-accent);
+  box-shadow: 0 0 0 4px var(--nf-app-accent-soft);
+}
+
+.nf-app-split-2 {
+  gap: 16px;
+}
+
+/* —— Mercury design system (app-wide) —— */
+.nf-app-shell :where(h1, h2, h3, h4) {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+}
+
+.nf-app-shell strong {
+  font-weight: 600;
+}
+
+.nf-field-label,
+.nf-meta-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nf-ink-3);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.nf-meta-value {
+  margin-top: 3px;
+  font-size: 14px;
+  color: var(--nf-ink);
+  font-weight: 500;
+}
+
+.nf-alert {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--nf-line);
+}
+
+.nf-alert--error {
+  background: var(--nf-danger-subtle);
+  border-color: var(--nf-danger-border);
+  color: var(--nf-danger-text);
+}
+
+.nf-alert--success {
+  background: var(--nf-success-subtle);
+  border-color: var(--nf-success-border);
+  color: var(--nf-success-text);
+}
+
+.nf-alert--dismissible {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.nf-alert-close {
+  display: inline-grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  margin: -3px -4px -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+}
+
+.nf-alert-close:hover,
+.nf-alert-close:focus-visible {
+  background: rgba(185, 28, 28, 0.1);
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+}
+
+.nf-panel {
+  background: var(--nf-surface);
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nf-panel--padded {
+  padding: 24px;
+}
+
+.nf-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--nf-line);
+  background: var(--nf-app-surface-2);
+}
+
+.nf-panel-body {
+  padding: 20px 24px 24px;
+}
+
+.nf-panel-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  letter-spacing: -0.02em;
+}
+
+.nf-panel-sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--nf-ink-3);
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.nf-metric-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Shared overview language for the ISO module dashboards.  The individual
+   modules keep their domain-specific data, while this layer keeps the shell
+   and hierarchy consistent with the rest of the application. */

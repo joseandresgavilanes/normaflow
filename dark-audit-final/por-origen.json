@@ -1,0 +1,954 @@
+[
+  {
+    "n": 12,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.11,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(240, 242, 255)",
+      "texto": "Cláusula 4, 5",
+      "origen": "span [style: font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:99px;background:var(--nf-accent-soft]"
+    },
+    "rutas": [
+      "/iso9001",
+      "/iso14001",
+      "/iso45001",
+      "/sig",
+      "/iso22301",
+      "/iso42001",
+      "/iso37301",
+      "/iso37001"
+    ],
+    "nRutas": 12
+  },
+  {
+    "n": 7,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-chip"
+    },
+    "rutas": [
+      "/app/records",
+      "/app/training",
+      "/app/activity",
+      "/app/notifications"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 6,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline"
+    },
+    "rutas": [
+      "/app/context",
+      "/app/quality-ops",
+      "/app/reporting"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 5,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input [style: flex: 1 1 0%; min-width: 200px; padding: 8px 12px; font-size: 13px; border: 1px solid var(--nf-line); border-r]"
+    },
+    "rutas": [
+      "/app/info/positions",
+      "/app/catalogs/locations",
+      "/app/catalogs/disposition",
+      "/app/catalogs/archive-method",
+      "/app/catalogs/record-type"
+    ],
+    "nRutas": 5
+  },
+  {
+    "n": 4,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.22,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline nf-app-btn-sm"
+    },
+    "rutas": [
+      "/app/security-controls",
+      "/app/soa"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 4,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "Regístrate gratis",
+      "origen": "a"
+    },
+    "rutas": [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/legal/privacy"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 3,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.8,
+      "fg": "rgb(214, 138, 26)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "1",
+      "origen": "div.nf-iso-metric-value [style: color: rgb(214, 138, 26);]"
+    },
+    "rutas": [
+      "/app/energy",
+      "/app/itsm",
+      "/app/compliance"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 3,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-theme-switch__option"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings",
+      "/iso37301"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 3,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "ES",
+      "origen": "button.nf-lang-switcher-btn nf-lang-switcher-btn--active"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings",
+      "/iso37301"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 3,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "EN",
+      "origen": "button.nf-lang-switcher-btn"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings",
+      "/iso37301"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline [style: font-size: 12px; padding: 6px 12px; color: var(--nf-danger-text); border-color: var(--nf-border); font-weight:]"
+    },
+    "rutas": [
+      "/app/records"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-audit-card nf-audit-card--in-rail"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input [style: flex:1;min-width:200px;padding:8px 12px;font-size:13px;border:1px solid var(--nf-line);border-radius:8px;outli]"
+    },
+    "rutas": [
+      "/app/catalogs/retention",
+      "/app/info/positions"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(22, 163, 74)",
+      "texto": "XLS",
+      "origen": "span.ic"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input.nfm-input"
+    },
+    "rutas": [
+      "/demo",
+      "/solutions/gap-assessment"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-sidenav__close"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 1,
+      "fg": "",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "",
+      "origen": "input"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-sidenav__group-toggle"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-sidenav__pin"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "Asistente IA",
+      "origen": "button.nf-sidenav__ai"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-sidenav__logout"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-topbar-menu"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 1,
+      "fg": "",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "",
+      "origen": "input.nf-topbar-search-input"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-app-btn-primary nf-quick-create-trigger"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-topbar-icon-btn"
+    },
+    "rutas": [
+      "/app/billing",
+      "/app/settings"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.13,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(241, 243, 254)",
+      "texto": "read",
+      "origen": "span.nf-audit-pill nf-audit-pill--type"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(22, 163, 74)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "C",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: var(--nf-succes]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.19,
+      "fg": "rgb(217, 119, 6)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "S",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: var(--nf-warnin]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button [style: font-size: 12px; font-weight: 700; color: var(--nf-ink-2); background: var(--nf-surface); border: 1px solid va]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3,
+      "fg": "rgb(138, 150, 168)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "Plan actual",
+      "origen": "button.nf-app-btn-ghost"
+    },
+    "rutas": [
+      "/app/billing"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost"
+    },
+    "rutas": [
+      "/app/billing"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select [style: padding: 6px 8px; font-size: 12px; border: 1px solid var(--nf-line); border-radius: 6px; background: var(--nf-]"
+    },
+    "rutas": [
+      "/app/settings/users"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.32,
+      "fg": "rgb(217, 225, 235)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select.nf-app-input [style: max-width: 220px;]"
+    },
+    "rutas": [
+      "/app/continuity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.32,
+      "fg": "rgb(217, 225, 235)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input.nf-app-input nf-app-input--toolbar"
+    },
+    "rutas": [
+      "/app/itsm"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(22, 163, 74)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "14",
+      "origen": "strong [style: color: rgb(22, 163, 74);]"
+    },
+    "rutas": [
+      "/app/integrated"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.8,
+      "fg": "rgb(214, 138, 26)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "0",
+      "origen": "strong [style: color: rgb(214, 138, 26);]"
+    },
+    "rutas": [
+      "/app/integrated"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.19,
+      "fg": "rgb(217, 119, 6)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "0",
+      "origen": "strong [style: color: var(--nf-warning);]"
+    },
+    "rutas": [
+      "/app/integrated"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "ISO 9001",
+      "origen": "div [style: font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--nf-accent);letter-spacing:-0.01em]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(22, 163, 74)",
+      "texto": "Aprobado",
+      "origen": "span.chip nf-chip--ok"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.41,
+      "fg": "rgb(220, 38, 38)",
+      "bg": "rgb(254, 242, 242)",
+      "texto": "registros_riesgos.xlsx",
+      "origen": "span.nf-transform-tag chaos"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "después · conectado",
+      "origen": "div [style: position:absolute;top:-22px;left:0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;color:var]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.38,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "↳",
+      "origen": "span [style: color:var(--nf-accent);width:12px;flex-shrink:0]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.38,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "03 dic",
+      "origen": "span [style: color:var(--nf-accent)]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.04,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "MT",
+      "origen": "div [style: width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.0]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.11,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(240, 242, 255)",
+      "texto": "Manufactura",
+      "origen": "span [style: padding:4px 10px;border-radius:99px;background:var(--nf-accent-soft);color:var(--nf-accent);border:1px solid r]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.04,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "MT",
+      "origen": "div [style: width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.0]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "Crear cuenta · 14 días gratis",
+      "origen": "a [style: color:var(--nf-accent)]"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select.nfm-select"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "textarea",
+      "origen": "textarea.nfm-textarea"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.19,
+      "fg": "rgb(217, 119, 6)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "60 %",
+      "origen": "span [style: font-family:var(--font-mono);font-weight:700;color:var(--nf-warn)]"
+    },
+    "rutas": [
+      "/solutions/gap-assessment"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.88,
+      "fg": "rgb(94, 107, 122)",
+      "bg": "rgb(32, 35, 40)",
+      "texto": "R",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: rgba(94, 107, 1]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "Contactar ventas",
+      "origen": "button.nf-app-btn-primary"
+    },
+    "rutas": [
+      "/app/billing"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 1,
+      "fg": "",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "",
+      "origen": "input.nf-app-input [style: width:100%;box-sizing:border-box]"
+    },
+    "rutas": [
+      "/app/settings"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span.tl [style: background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span [style: width:9px;height:9px;border-radius:50%;background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "Producto",
+      "origen": "button.nf-nav-trigger "
+    },
+    "rutas": [
+      "/iso37301"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.863,
+      "fg": "",
+      "bg": "rgb(239, 239, 239)",
+      "texto": "",
+      "origen": "button.nf-nav-burger"
+    },
+    "rutas": [
+      "/iso37301"
+    ],
+    "nRutas": 1
+  }
+]

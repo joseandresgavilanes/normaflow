@@ -11,6 +11,7 @@ export const iso27001Pack: StandardPackInput = {
   code: "PACK_ISO_27001",
   name: "ISO 27001 — Seguridad de la Información",
   version: "2022.1",
+  lifecycleStatus: "LIVE",
   description: "Paquete normativo ISO 27001:2022 (Seguridad de la Información).",
   requiredModules: ["gap", "documents", "risks", "risk-treatment", "soa", "security-controls", "assets", "incidents"],
   featureFlags: { informationSecurity: true, annexA: true },

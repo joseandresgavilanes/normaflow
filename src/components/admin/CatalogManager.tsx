@@ -83,7 +83,7 @@ export default function CatalogManager({
     },
   ];
   if (fields.some((f) => f.key === "code")) {
-    columns.unshift({ key: "code", label: "Código", render: (_, r) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "#5266F6", fontWeight: 700 }}>{r.code ?? "—"}</span> });
+    columns.unshift({ key: "code", label: "Código", render: (_, r) => <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700 }}>{r.code ?? "—"}</span> });
   }
   if (fields.some((f) => f.key === "months")) {
     columns.push({
@@ -178,7 +178,7 @@ export default function CatalogManager({
 
       <Card>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-          <input
+          <input aria-label="Buscar"
             type="search"
             placeholder="Buscar…"
             value={search}
@@ -188,7 +188,9 @@ export default function CatalogManager({
               minWidth: 200,
               padding: "8px 12px",
               fontSize: 13,
-              border: "1px solid var(--nf-line)",
+              // `--nf-line` es el borde decorativo (1.27:1): un campo de
+              // búsqueda necesita el de control.
+              border: "1px solid var(--nf-input-border)",
               borderRadius: 8,
               outline: "none",
             }}

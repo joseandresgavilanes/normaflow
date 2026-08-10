@@ -1,10 +1,12 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Seguridad — NormaFlow",
+export const metadata = createMarketingMetadata({
+  title: "Seguridad de la plataforma | NormaFlow",
   description: "Prácticas de seguridad de la plataforma NormaFlow.",
-};
+  path: "/legal/security",
+});
 
 const PRACTICES: { icon: keyof typeof Ic; t: string; d: string }[] = [
   { icon: "lock",   t: "Cifrado en tránsito y reposo", d: "TLS para todas las comunicaciones. Datos en reposo cifrados en bases gestionadas con aislamiento por organización." },
@@ -26,12 +28,12 @@ export default function SecurityPage() {
             Resumen técnico para equipos de compliance e IT que evalúan NormaFlow.
           </p>
 
-          <div className="nf-grid-2" style={{ marginTop: 40 }}>
+          <div className="nfm-grid-2" style={{ marginTop: 40 }}>
             {PRACTICES.map((p) => {
               const Icon = Ic[p.icon];
               return (
                 <article key={p.t} className="nf-tile">
-                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-accent)" }}>
+                  <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", color: "var(--nf-primary-active)" }}>
                     <Icon/>
                   </span>
                   <div className="nf-h-4" style={{ marginTop: 14 }}>{p.t}</div>
@@ -41,14 +43,14 @@ export default function SecurityPage() {
             })}
           </div>
 
-          <div className="nf-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "#fff" }}>
+          <div className="nfm-card" style={{ marginTop: 32, padding: 24, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ width: 36, height: 36, borderRadius: 10, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))", color: "var(--nf-text-on-primary)" }}>
               <Ic.mail/>
             </span>
             <div style={{ flex: 1, minWidth: 240 }}>
               <div className="nf-h-4">Informes de vulnerabilidad</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)", marginTop: 4 }}>
-                Para reportes responsables o preguntas de debida diligencia, escribe a <a href="mailto:security@normaflow.io" style={{ color: "var(--nf-accent)" }}>security@normaflow.io</a>.
+                Para reportes responsables o preguntas de debida diligencia, escribe a <a href="mailto:security@normaflow.io" style={{ color: "var(--nf-primary-active)" }}>security@normaflow.io</a>.
               </div>
             </div>
           </div>

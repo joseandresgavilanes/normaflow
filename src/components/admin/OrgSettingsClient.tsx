@@ -6,6 +6,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { useAdminMock } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
+import { Field as UiField } from "@/components/ui/Field";
 
 function isLikelyImageUrl(url: string) {
   const u = url.trim().toLowerCase();
@@ -95,7 +96,7 @@ export default function OrgSettingsClient() {
         <div className="nf-org-panel-body">
           <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <Field label="Nombre de la organización">
-              <input
+              <input aria-label="Nombre"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={!canEdit}
@@ -117,7 +118,7 @@ export default function OrgSettingsClient() {
                 />
               </Field>
               <Field label="País (ISO)">
-                <input
+                <input aria-label="País"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   disabled={!canEdit}
@@ -127,7 +128,7 @@ export default function OrgSettingsClient() {
                 />
               </Field>
               <Field label="Tamaño">
-                <select value={size} onChange={(e) => setSize(e.target.value)} disabled={!canEdit} className="nf-app-input w-full">
+                <select aria-label="Selecciona un tamaño" value={size} onChange={(e) => setSize(e.target.value)} disabled={!canEdit} className="nf-app-input w-full">
                   <option value="">Selecciona un tamaño</option>
                   <option value="1-10">1–10 personas</option>
                   <option value="11-50">11–50 personas</option>
@@ -140,21 +141,21 @@ export default function OrgSettingsClient() {
 
             <div className="nf-org-grid-2">
               <Field label="Nombre de contacto">
-                <input value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="Responsable del sistema" />
+                <input aria-label="Responsable del sistema" value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="Responsable del sistema" />
               </Field>
               <Field label="Email de contacto">
-                <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="calidad@empresa.com" />
+                <input aria-label="calidad@empresa.com" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="calidad@empresa.com" />
               </Field>
               <Field label="Teléfono">
-                <input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" />
+                <input aria-label="Teléfono de contacto" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" />
               </Field>
               <Field label="Sitio web">
-                <input type="url" value={website} onChange={(e) => setWebsite(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="https://empresa.com" />
+                <input aria-label="https://empresa.com" type="url" value={website} onChange={(e) => setWebsite(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" placeholder="https://empresa.com" />
               </Field>
             </div>
 
             <Field label="Dirección">
-              <textarea value={address} onChange={(e) => setAddress(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" rows={2} />
+              <textarea aria-label="Dirección" value={address} onChange={(e) => setAddress(e.target.value)} disabled={!canEdit} className="nf-app-input w-full" rows={2} />
             </Field>
 
             <Field label="Normas activas">
@@ -165,9 +166,9 @@ export default function OrgSettingsClient() {
                 ].map(([code, label, detail]) => {
                   const checked = standards.includes(code);
                   return (
-                    <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "border-indigo-300 bg-indigo-50" : "border-gray-200 bg-white"}`}>
+                    <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "nf-border-primary nf-primary-subtle-bg" : "nf-border-line nf-surface-bg"}`}>
                       <input type="checkbox" checked={checked} disabled={!canEdit || (checked && standards.length === 1)} onChange={() => setStandards((current) => checked ? current.filter((item) => item !== code) : [...current, code])} className="mt-1 accent-indigo-600" />
-                      <span><strong className="block text-sm text-gray-900">{label}</strong><span className="text-xs text-gray-500">{detail}</span></span>
+                      <span><strong className="block text-sm nf-text-primary-fg">{label}</strong><span className="text-xs nf-text-subtle-fg">{detail}</span></span>
                     </label>
                   );
                 })}
@@ -176,7 +177,7 @@ export default function OrgSettingsClient() {
 
             <Field label="Logo (URL)">
               <div className="nf-org-logo-row">
-                <input
+                <input aria-label="https://"
                   value={logoUrl}
                   onChange={(e) => setLogoUrl(e.target.value)}
                   disabled={!canEdit}
@@ -235,12 +236,8 @@ export default function OrgSettingsClient() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="nf-org-field-label">{label}</label>
-      {children}
-    </div>
-  );
+  // Antes: <label> sin htmlFor, que no asocia con ningún control.
+  return <UiField label={label}>{children}</UiField>;
 }
 
 function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number }) {
@@ -249,7 +246,7 @@ function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number })
   const pct = max === null ? 0 : Math.min(100, (usedUsers / max) * 100);
   const atLimit = max !== null && usedUsers >= max;
   const nearLimit = max !== null && !atLimit && pct >= 80;
-  const barColor = atLimit ? "#DC2626" : nearLimit ? "#D97706" : "var(--nf-accent)";
+  const barColor = atLimit ? "var(--nf-danger)" : nearLimit ? "var(--nf-warning)" : "var(--nf-accent)";
 
   return (
     <div className="nf-org-plan-card" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
@@ -263,12 +260,12 @@ function PlanUsageCard({ plan, usedUsers }: { plan: string; usedUsers: number })
               : "Plan personalizado · usuarios ilimitados."}
           </p>
         </div>
-        <Globe size={22} strokeWidth={2} style={{ color: "#5266F6", opacity: 0.35, flexShrink: 0 }} aria-hidden />
+        <Globe size={22} strokeWidth={2} style={{ color: "var(--nf-primary-active)", opacity: 0.35, flexShrink: 0 }} aria-hidden />
       </div>
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 6 }}>
           <span>Usuarios activos</span>
-          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "#DC2626" : "var(--nf-ink-2)", fontWeight: 700 }}>
+          <span style={{ fontFamily: "ui-monospace, monospace", color: atLimit ? "var(--nf-danger-text)" : "var(--nf-ink-2)", fontWeight: 700 }}>
             {usedUsers} / {max === null ? "∞" : max}
           </span>
         </div>

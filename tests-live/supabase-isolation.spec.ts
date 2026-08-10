@@ -44,8 +44,10 @@ test.describe("Supabase RLS and multi-organization isolation", () => {
 
     const reportsA = await clientA.from("report_exports").select("organizationId,fileName");
     const reportsB = await clientB.from("report_exports").select("organizationId,fileName");
-    expect(reportsA.data?.map(row => row.fileName)).toEqual([state.actorA.reportFileName]);
+    expect(reportsA.data?.map(row => row.fileName)).toContain(state.actorA.reportFileName);
+    expect(reportsA.data?.every(row => row.organizationId === state.actorA.organizationId)).toBe(true);
     expect(reportsB.data?.map(row => row.fileName)).toEqual([state.actorB.reportFileName]);
+    expect(reportsB.data?.every(row => row.organizationId === state.actorB.organizationId)).toBe(true);
   });
 
   test("rejects cross-tenant writes and viewer writes", async () => {

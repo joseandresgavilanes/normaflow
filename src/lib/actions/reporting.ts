@@ -155,8 +155,12 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     const names = await orgUserNames(organizationId);
     return (await prisma.environmentalEmergencyScenario.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(e => ({ codigo: e.code, escenario: e.scenario, impacto: e.impact ?? "", controles: e.controls ?? "", plan: e.responsePlan ?? "", responsable: e.responsibleId ? (names.get(e.responsibleId) ?? "") : "", ultimo_simulacro: rowDate(e.lastDrillAt), proximo_simulacro: rowDate(e.nextDrillAt), resultados: e.drillResults ?? "" }));
   }
+  if (reportId === "env-biodiversity") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.environmentalBiodiversityRecord.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(b => ({ codigo: b.code, sitio: b.site, ecosistema: b.ecosystemType ?? "", area_protegida: b.protectedArea ? (b.protectedAreaName ?? "Sí") : "No", especie_habitat: b.speciesOrHabitat ?? "", impacto: b.impactDescription ?? "", mitigacion: b.mitigationMeasures ?? "", frecuencia_monitoreo: b.monitoringFrequency ?? "", estado: b.status, responsable: b.responsibleId ? (names.get(b.responsibleId) ?? "") : "", ultimo_monitoreo: rowDate(b.lastMonitoredAt), proximo_monitoreo: rowDate(b.nextMonitoringAt) }));
+  }
   if (reportId === "env-audit-package") {
-    const sections: ReportId[] = ["env-aspects-impacts", "env-significant-aspects", "env-legal-obligations", "env-compliance-evaluation", "env-objectives", "env-resource-consumption", "env-waste", "env-emissions", "env-emergencies"];
+    const sections: ReportId[] = ["env-aspects-impacts", "env-significant-aspects", "env-legal-obligations", "env-compliance-evaluation", "env-objectives", "env-resource-consumption", "env-waste", "env-emissions", "env-emergencies", "env-biodiversity"];
     const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
     return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
   }
@@ -208,6 +212,20 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     const ind = computeSafetyIndicators({ accidentsWithLostTime: accidentsLostTime, totalAccidents: accidents, lostDays, nearMisses, inspections, overdueActions: overdue, hoursWorked });
     return [{ periodo: `${filters.from} → ${filters.to}`, horas_hombre: hoursWorked, accidentes: accidents, indice_frecuencia: ind.frequencyIndex, indice_gravedad: ind.severityIndex, indice_accidentabilidad: ind.accidentRate, dias_perdidos: ind.lostDays, casi_accidentes: ind.nearMisses, inspecciones: ind.inspections, acciones_vencidas: ind.overdueActions }];
   }
+  if (reportId === "safety-surveillance") {
+    // Sensitive: health/medical data about named workers. Gated a second time
+    // at queue time in exportReport() (safety-sensitive:read) — never bundled
+    // into safety-audit-package (data minimization: a general compendium
+    // should not carry medical data by default).
+    const { decryptHealthField } = await import("@/lib/crypto/field-encryption");
+    const names = await orgUserNames(organizationId);
+    return (await prisma.occupationalHealthSurveillance.findMany({ where: { organizationId }, orderBy: { code: "asc" } })).map(s => ({
+      codigo: s.code, trabajador: s.workerName ?? (s.personnelId ? (names.get(s.personnelId) ?? "") : ""),
+      exposicion: decryptHealthField(s.exposure) ?? "", protocolo: decryptHealthField(s.protocol) ?? "",
+      aptitud: s.fitness, restricciones: decryptHealthField(s.restrictions) ?? "",
+      examinado_el: rowDate(s.examinedAt), proxima_revision: rowDate(s.nextReviewDate),
+    }));
+  }
   if (reportId === "safety-audit-package") {
     const sections: ReportId[] = ["safety-hazard-matrix", "safety-critical-risks", "safety-inspections", "safety-ppe", "safety-permits", "safety-incidents", "safety-investigation", "safety-drills", "safety-indicators", "safety-contractors"];
     const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
@@ -217,6 +235,14 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
   if (reportId === "sig-crosswalk") {
     const { getIntegratedCrosswalkRows } = await import("@/lib/integrated/report-data");
     return getIntegratedCrosswalkRows(organizationId, filters.standardCode);
+  }
+  if (reportId === "sig-compliance-by-standard") {
+    const { getComplianceByStandardRows } = await import("@/lib/integrated/report-data");
+    return getComplianceByStandardRows(organizationId);
+  }
+  if (reportId === "sig-common-requirements") {
+    const { getCommonRequirementRows } = await import("@/lib/integrated/report-data");
+    return getCommonRequirementRows(organizationId, filters.standardCode);
   }
   if (reportId === "sig-scope-policy") {
     const system = await prisma.integratedSystem.findUnique({ where: { organizationId }, include: { standards: true, policyApprovedBy: { select: { name: true } } } });
@@ -291,6 +317,7 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
   if (reportId === "sig-system-package") {
     const sections: ReportId[] = [
       "sig-scope-policy", "sig-interested-parties", "sig-objectives", "sig-crosswalk",
+      "sig-compliance-by-standard", "sig-common-requirements",
       "sig-shared-elements", "sig-integrated-audit", "sig-integrated-capa", "sig-management-review",
     ];
     const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
@@ -344,6 +371,14 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
       })),
     ];
   }
+  if (reportId === "bcm-priority-products") {
+    return (await prisma.productServicePriority.findMany({ where: { organizationId }, include: { bia: { select: { code: true } } }, orderBy: [{ priority: "asc" }, { code: "asc" }] })).map(x => ({
+      prioridad: x.priority, codigo: x.code, producto_servicio: x.name, bia: x.bia.code,
+      criticidad: x.criticality, mtpd_min: x.mtpdMinutes ?? "", rto_min: x.rtoMinutes ?? "",
+      nivel_minimo: x.minimumServiceLevel ?? "", porcentaje_ingresos: x.revenueShare ?? "",
+      clientes_afectados: x.customersAffected ?? "",
+    }));
+  }
   if (reportId === "bcm-strategies") {
     const names = await orgUserNames(organizationId);
     return (await prisma.continuityStrategy.findMany({ where: { organizationId }, include: { activity: { select: { code: true, name: true } } }, orderBy: { code: "asc" } })).map(s => ({
@@ -366,6 +401,37 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
       aprobado_por: p.approvedById ? names.get(p.approvedById) ?? "" : "", aprobado_el: rowDate(p.approvedAt),
       activado: p.activated ? "SI" : "NO", activado_el: rowDate(p.activatedAt),
       proxima_revision: rowDate(p.nextReviewDate),
+    }));
+  }
+  if (reportId === "bcm-plan-versions") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.continuityPlanVersion.findMany({ where: { organizationId }, include: { plan: { select: { code: true, title: true } } }, orderBy: [{ planId: "asc" }, { createdAt: "desc" }] })).map(v => ({
+      plan: v.plan.code, version: v.version, cambios: v.changeSummary ?? "",
+      aprobada_por: v.approvedById ? names.get(v.approvedById) ?? "" : "", aprobada_el: rowDate(v.approvedAt),
+      creada_el: rowDate(v.createdAt),
+    }));
+  }
+  if (reportId === "bcm-crisis-teams") {
+    const teams = await prisma.crisisTeam.findMany({
+      where: { organizationId },
+      include: { leader: { select: { name: true } }, deputy: { select: { name: true } }, contacts: { orderBy: { escalationOrder: "asc" } } },
+      orderBy: { code: "asc" },
+    });
+    return teams.flatMap(t => {
+      if (!t.contacts.length) return [{ equipo: `${t.code} · ${t.name}`, lider: t.leader?.name ?? "", suplente: t.deputy?.name ?? "", regla_activacion: t.activationRule ?? "", punto_encuentro: t.meetingPoint ?? "", orden: "" as string | number, contacto: "", rol: "", tipo: "" as string, telefono: "" }];
+      return t.contacts.map(c => ({
+        equipo: `${t.code} · ${t.name}`, lider: t.leader?.name ?? "", suplente: t.deputy?.name ?? "",
+        regla_activacion: t.activationRule ?? "", punto_encuentro: t.meetingPoint ?? "",
+        orden: c.escalationOrder, contacto: c.name, rol: c.role ?? "", tipo: c.type, telefono: c.primaryPhone ?? "",
+      }));
+    });
+  }
+  if (reportId === "bcm-activations") {
+    const names = await orgUserNames(organizationId);
+    return (await prisma.planActivation.findMany({ where: { organizationId, activatedAt: range }, include: { plan: { select: { code: true } }, scenario: { select: { title: true } } }, orderBy: { activatedAt: "desc" } })).map(a => ({
+      plan: a.plan.code, motivo: a.reason, escenario: a.scenario?.title ?? "",
+      activado_por: a.activatedById ? names.get(a.activatedById) ?? "" : "", activado_el: a.activatedAt.toISOString(),
+      desactivado_el: a.deactivatedAt?.toISOString() ?? "", resultado: a.outcome ?? "", lecciones_aprendidas: a.lessonsLearned ?? "",
     }));
   }
   if (reportId === "bcm-exercises") {
@@ -395,7 +461,10 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     return getContinuityGapRows(organizationId);
   }
   if (reportId === "bcm-audit-package") {
-    const sections: ReportId[] = ["bcm-bia", "bcm-critical-processes", "bcm-rto-rpo", "bcm-dependencies", "bcm-strategies", "bcm-plans", "bcm-exercises", "bcm-gaps"];
+    const sections: ReportId[] = [
+      "bcm-bia", "bcm-critical-processes", "bcm-rto-rpo", "bcm-priority-products", "bcm-dependencies",
+      "bcm-strategies", "bcm-plans", "bcm-plan-versions", "bcm-crisis-teams", "bcm-activations", "bcm-exercises", "bcm-gaps",
+    ];
     const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
     return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
   }
@@ -478,6 +547,11 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     const { getComplianceManagementReviewRows } = await import("@/lib/compliance/report-data");
     return getComplianceManagementReviewRows(organizationId);
   }
+  if (reportId === "compliance-audit-package") {
+    const sections: ReportId[] = ["compliance-obligations", "compliance-risks", "compliance-evaluations", "compliance-calendar", "compliance-speak-up", "compliance-investigations", "compliance-breaches", "compliance-remediation", "compliance-management-review"];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap(group => group.rows.map(row => ({ seccion: group.section, ...row })));
+  }
   // ── ISO 37001 anti-bribery reports (extension of compliance) ──
   if (reportId === "abms-risk-map") {
     const { getBriberyRiskMapRows } = await import("@/lib/antibribery/report-data");
@@ -518,6 +592,19 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
   if (reportId === "abms-investigations") {
     const { getAbmsInvestigationRows } = await import("@/lib/antibribery/report-data");
     return getAbmsInvestigationRows(organizationId);
+  }
+  if (reportId === "abms-audit-package") {
+    // abms-beneficial-owners is antibribery-sensitive:* (UBO/PEP data of real
+    // third parties) — never bundled into a general audit package, same rule
+    // as safety-audit-package excluding safety-surveillance and
+    // md-audit-package excluding its four vigilance sections.
+    const sections: ReportId[] = [
+      "abms-risk-map", "abms-third-parties", "abms-due-diligence",
+      "abms-gifts", "abms-donations", "abms-conflicts", "abms-high-risk-ops",
+      "abms-controls", "abms-investigations",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
   }
   // ── ISO 50001 energy management reports ──
   if (reportId === "enms-energy-review") {
@@ -642,6 +729,14 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     const { getItsmServicePerformanceRows } = await import("@/lib/itsm/report-data");
     return getItsmServicePerformanceRows(organizationId);
   }
+  if (reportId === "itsm-audit-package") {
+    const sections: ReportId[] = [
+      "itsm-sla", "itsm-incidents", "itsm-problems", "itsm-changes",
+      "itsm-availability", "itsm-capacity", "itsm-continuity", "itsm-suppliers",
+    ];
+    const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
+    return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
+  }
   // ── ISO 13485 medical device QMS reports ──
   if (reportId === "md-design-history") {
     const { getMdDesignHistoryRows } = await import("@/lib/medical-devices/report-data");
@@ -684,10 +779,14 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
     return getMdRecallRows(organizationId);
   }
   if (reportId === "md-audit-package") {
+    // md-complaints/md-surveillance/md-events/md-recalls are md-sensitive:* —
+    // never bundled into a general audit package (data minimization: a
+    // compendium requested with plain medical-devices:export should not
+    // silently carry vigilance/adverse-event data), same rule as
+    // safety-audit-package excluding safety-surveillance.
     const sections: ReportId[] = [
       "md-design-history", "md-master-record", "md-risks", "md-validations",
-      "md-suppliers", "md-batches", "md-complaints", "md-surveillance",
-      "md-events", "md-recalls",
+      "md-suppliers", "md-batches",
     ];
     const groups = await Promise.all(sections.map(async (section) => ({ section, rows: await reportRows(section, organizationId, filters) })));
     return groups.flatMap((group) => group.rows.map((row) => ({ seccion: group.section, ...row })));
@@ -703,6 +802,14 @@ export async function filterSummary(filters: ReportFilters) {
 export async function exportReport(input: { reportId: string; title: string; format: ExportFormat; filters: ReportFilters }) {
   input = parseInput(reportRequestSchema, input) as typeof input;
   const ctx = await requirePermission("reporting:export");
+  // Sensitive health data: the worker generates rows outside any request
+  // context (no session to check), so this queue-time gate is the only
+  // enforcement point — never bundled into safety-audit-package either.
+  if (input.reportId === "safety-surveillance") await requirePermission("safety-sensitive:read");
+  if (["md-complaints", "md-surveillance", "md-events", "md-recalls"].includes(input.reportId)) {
+    await requirePermission("md-sensitive:read");
+  }
+  if (input.reportId === "abms-beneficial-owners") await requirePermission("antibribery-sensitive:read");
   await assertExportQuota(ctx.organization.id, ctx.organization.plan);
   if (!REPORT_IDS.includes(input.reportId as ReportId)) throw new Error("Tipo de informe no válido.");
   if (!("PDF" === input.format || "EXCEL" === input.format)) throw new Error("Formato no válido.");

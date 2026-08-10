@@ -11,7 +11,8 @@
  */
 import assert from "node:assert/strict";
 import { PrismaClient } from "@prisma/client";
-import { installAllPacks, installPack, parsePackManifest } from "../src/lib/standard-packs";
+import { installAllPacks, installPack, parsePackManifest, STANDARD_PACKS } from "../src/lib/standard-packs";
+import { materializePackTemplateContent } from "../src/lib/standard-packs/template-content";
 import { iso9001Pack } from "../src/lib/standard-packs/iso-9001-2015.pack";
 import { adoptStandardForOrganization } from "../src/lib/standards-adoption";
 
@@ -36,6 +37,24 @@ async function main() {
     assert.doesNotThrow(() => parsePackManifest(iso9001Pack));
   });
 
+  await t("every authored pack template materializes usable NormaFlow-owned content", async () => {
+    for (const pack of STANDARD_PACKS) {
+      for (const edition of pack.editions) {
+        for (const template of edition.templates ?? []) {
+          const content = materializePackTemplateContent({
+            familyCode: edition.familyCode,
+            requirementCode: template.requirementCode,
+            templateType: template.templateType ?? "DOCUMENT",
+            name: template.name,
+            content: template.content,
+          });
+          assert.ok(content.length >= 300, `${pack.code}/${template.name} must contain usable starter content`);
+          assert.match(content, /\{\{ORGANIZATION_NAME\}\}/, `${pack.code}/${template.name} must be adaptable`);
+        }
+      }
+    }
+  });
+
   await t("installAllPacks is idempotent", async () => {
     await installAllPacks(prisma);
     const first = await prisma.standardRequirement.count();
@@ -43,6 +62,12 @@ async function main() {
     const second = await prisma.standardRequirement.count();
     assert.equal(first, second);
     assert.ok(first >= 70, "expected the full requirement trees");
+  });
+
+  await t("installed Standard Pack templates are non-empty and linked to an edition", async () => {
+    const templates = await prisma.standardTemplate.findMany({ select: { content: true, editionId: true } });
+    assert.ok(templates.length >= 50, "expected the complete cross-pack template catalog");
+    assert.ok(templates.every((template) => template.editionId && template.content.trim().length >= 300));
   });
 
   await t("deterministic ids preserve legacy cl- codes and family-level code", async () => {
@@ -54,6 +79,9 @@ async function main() {
   });
 
   // org fixtures
+  // The database is disposable (guarded above); reset only this suite's two
+  // tenant fixtures so repeated audit runs remain deterministic.
+  await prisma.organization.deleteMany({ where: { slug: { in: ["it-a", "it-b"] } } });
   const orgA = await prisma.organization.upsert({ where: { slug: "it-a" }, update: {}, create: { name: "A", slug: "it-a", plan: "GROWTH" } });
   const orgB = await prisma.organization.upsert({ where: { slug: "it-b" }, update: {}, create: { name: "B", slug: "it-b", plan: "GROWTH" } });
   const userA = await prisma.user.upsert({ where: { email: "it-a@x.com" }, update: {}, create: { email: "it-a@x.com", name: "UA" } });

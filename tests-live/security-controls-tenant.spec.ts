@@ -48,11 +48,13 @@ test.describe("ISO 27001 controls live tenant boundary", () => {
     const own = controls.data?.[0]?.id;
     expect(own).toBeTruthy();
     const viewerUpdate = await viewer.from("organization_controls").update({ status: "IMPLEMENTED" }).eq("id", own).select("id");
-    expect(viewerUpdate.error).not.toBeNull();
+    expect(viewerUpdate.error).toBeNull();
+    expect(viewerUpdate.data).toEqual([]);
     const auditor = await actorClient(state.actorAAuditor);
     const auditorRead = await auditor.from("organization_controls").select("id").limit(1);
     expect(auditorRead.error).toBeNull();
     const auditorUpdate = await auditor.from("organization_controls").update({ status: "IMPLEMENTED" }).eq("id", auditorRead.data?.[0]?.id).select("id");
-    expect(auditorUpdate.error).not.toBeNull();
+    expect(auditorUpdate.error).toBeNull();
+    expect(auditorUpdate.data).toEqual([]);
   });
 });

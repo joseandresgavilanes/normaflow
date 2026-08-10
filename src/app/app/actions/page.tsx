@@ -6,6 +6,12 @@ import { ACPMLiveClient } from "@/components/acpm/ACPMLiveClient";
 
 export const metadata = { title: "ACPM — Plan de Acción" };
 
+// El cliente lee `?detail=` con useSearchParams para que el detalle de una
+// CAPA sea enlazable. En render estático eso exige una frontera de Suspense;
+// la página ya es dinámica porque resuelve la organización desde la cookie,
+// pero se declara para no depender de un efecto secundario.
+export const dynamic = "force-dynamic";
+
 export default async function ActionsPage() {
   const context = await getAppContext();
   if (context?.mode === "live") {

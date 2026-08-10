@@ -15,7 +15,7 @@ export default function Card({
     <div
       onClick={onClick}
       className={cn(
-        "bg-white border border-[color:var(--nf-line,#e8e8e8)] rounded-xl p-6 min-w-0 max-w-full box-border",
+        "nf-surface-bg border border-[color: var(--nf-line)] rounded-xl p-6 min-w-0 max-w-full box-border",
         onClick && "cursor-pointer hover:border-[#d4d4d4] transition-colors",
         className,
       )}

@@ -1,0 +1,2510 @@
+[
+  {
+    "n": 114,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.48,
+      "fg": "rgb(204, 210, 253)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-sidenav__ai"
+    },
+    "rutas": [
+      "/app/dashboard",
+      "/app/setup",
+      "/app/standards",
+      "/app/context",
+      "/app/quality-ops",
+      "/app/design-dev",
+      "/app/gap",
+      "/app/documents"
+    ],
+    "nRutas": 57
+  },
+  {
+    "n": 114,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "input",
+      "origen": "input.nf-topbar-search-input"
+    },
+    "rutas": [
+      "/app/dashboard",
+      "/app/setup",
+      "/app/standards",
+      "/app/context",
+      "/app/quality-ops",
+      "/app/design-dev",
+      "/app/gap",
+      "/app/documents"
+    ],
+    "nRutas": 57
+  },
+  {
+    "n": 114,
+    "clase": "anillo de foco bajo 3:1",
+    "ejemplo": {
+      "clase": "anillo de foco bajo 3:1",
+      "valor": 1.44,
+      "fg": "rgb(59, 75, 216)",
+      "bg": "rgb(82, 102, 246)",
+      "texto": "N",
+      "origen": "a.nf-sidenav__brand"
+    },
+    "rutas": [
+      "/app/dashboard",
+      "/app/setup",
+      "/app/standards",
+      "/app/context",
+      "/app/quality-ops",
+      "/app/design-dev",
+      "/app/gap",
+      "/app/documents"
+    ],
+    "nRutas": 57
+  },
+  {
+    "n": 114,
+    "clase": "sin anillo de foco",
+    "ejemplo": {
+      "clase": "sin anillo de foco",
+      "valor": 3,
+      "fg": "rgb(26, 26, 26)",
+      "bg": "",
+      "texto": "INPUT",
+      "origen": "input."
+    },
+    "rutas": [
+      "/app/dashboard",
+      "/app/setup",
+      "/app/standards",
+      "/app/context",
+      "/app/quality-ops",
+      "/app/design-dev",
+      "/app/gap",
+      "/app/documents"
+    ],
+    "nRutas": 57
+  },
+  {
+    "n": 79,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost"
+    },
+    "rutas": [
+      "/app/dashboard",
+      "/app/context",
+      "/app/quality-ops",
+      "/app/design-dev",
+      "/app/gap",
+      "/app/records",
+      "/app/training",
+      "/app/changes"
+    ],
+    "nRutas": 40
+  },
+  {
+    "n": 52,
+    "clase": "anillo de foco bajo 3:1",
+    "ejemplo": {
+      "clase": "anillo de foco bajo 3:1",
+      "valor": 1.44,
+      "fg": "rgb(59, 75, 216)",
+      "bg": "rgb(82, 102, 246)",
+      "texto": "ES",
+      "origen": "button.nf-lang-switcher-btn nf-lang-switcher-btn--active"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/iso9001",
+      "/iso27001"
+    ],
+    "nRutas": 26
+  },
+  {
+    "n": 46,
+    "clase": "anillo de foco bajo 3:1",
+    "ejemplo": {
+      "clase": "anillo de foco bajo 3:1",
+      "valor": 1.44,
+      "fg": "rgb(59, 75, 216)",
+      "bg": "rgb(82, 102, 246)",
+      "texto": "Demo gratuita",
+      "origen": "a.nf-btn nf-btn--primary nf-btn--sm"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 34,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-dt__tool"
+    },
+    "rutas": [
+      "/app/records",
+      "/app/actions",
+      "/app/evidence",
+      "/app/security-controls",
+      "/app/assets",
+      "/app/soa",
+      "/app/risk-treatment",
+      "/app/incidents"
+    ],
+    "nRutas": 17
+  },
+  {
+    "n": 28,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost nf-app-btn-sm"
+    },
+    "rutas": [
+      "/app/processes",
+      "/app/risks",
+      "/app/suppliers",
+      "/app/audit-program",
+      "/app/audits",
+      "/app/management-review",
+      "/app/nonconformities",
+      "/app/indicators"
+    ],
+    "nRutas": 14
+  },
+  {
+    "n": 26,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.22,
+      "fg": "rgb(254, 226, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger"
+    },
+    "rutas": [
+      "/app/processes",
+      "/app/risks",
+      "/app/suppliers",
+      "/app/audit-program",
+      "/app/management-review",
+      "/app/nonconformities",
+      "/app/indicators",
+      "/app/info/positions"
+    ],
+    "nRutas": 13
+  },
+  {
+    "n": 23,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.929,
+      "fg": "",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "",
+      "origen": "header.nf-nav"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 23,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.14,
+      "fg": "rgb(242, 243, 245)",
+      "bg": "rgb(229, 229, 227)",
+      "texto": "NormaFlow",
+      "origen": "a.nf-logo"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 23,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.14,
+      "fg": "rgb(242, 243, 245)",
+      "bg": "rgb(229, 229, 227)",
+      "texto": "NormaFlow",
+      "origen": "a.nf-logo"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 23,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.06,
+      "fg": "rgb(155, 161, 171)",
+      "bg": "rgb(229, 229, 227)",
+      "texto": "Producto",
+      "origen": "button.nf-nav-trigger "
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 23,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Demo gratuita",
+      "origen": "a.nf-btn nf-btn--primary nf-btn--sm"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig"
+    ],
+    "nRutas": 23
+  },
+  {
+    "n": 18,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.13,
+      "fg": "rgb(0, 0, 0)",
+      "bg": "rgb(18, 19, 22)",
+      "texto": "control continuo.",
+      "origen": "span.nf-grad-text"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso14001",
+      "/iso45001",
+      "/sig",
+      "/iso22301"
+    ],
+    "nRutas": 18
+  },
+  {
+    "n": 18,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.13,
+      "fg": "rgba(0, 0, 0, 0)",
+      "bg": "rgb(18, 19, 22)",
+      "texto": "control continuo.",
+      "origen": "span.nf-grad-text"
+    },
+    "rutas": [
+      "/home",
+      "/pricing",
+      "/features",
+      "/iso9001",
+      "/iso14001",
+      "/iso45001",
+      "/sig",
+      "/iso22301"
+    ],
+    "nRutas": 18
+  },
+  {
+    "n": 16,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Solicitar demo gratuita",
+      "origen": "a.nf-btn nf-btn--primary"
+    },
+    "rutas": [
+      "/home",
+      "/features",
+      "/iso9001",
+      "/iso27001",
+      "/iso14001",
+      "/iso45001",
+      "/sig",
+      "/iso22301"
+    ],
+    "nRutas": 16
+  },
+  {
+    "n": 13,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.53,
+      "fg": "rgb(220, 38, 38)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "Eliminar",
+      "origen": "button.nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger"
+    },
+    "rutas": [
+      "/app/processes",
+      "/app/risks",
+      "/app/suppliers",
+      "/app/audit-program",
+      "/app/management-review",
+      "/app/nonconformities",
+      "/app/indicators",
+      "/app/info/positions"
+    ],
+    "nRutas": 13
+  },
+  {
+    "n": 12,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input [style: flex: 1 1 0%; min-width: 200px; padding: 8px 12px; font-size: 13px; border: 1px solid var(--nf-line); border-r]"
+    },
+    "rutas": [
+      "/app/info/positions",
+      "/app/catalogs/locations",
+      "/app/catalogs/retention",
+      "/app/catalogs/disposition",
+      "/app/catalogs/archive-method",
+      "/app/catalogs/record-type"
+    ],
+    "nRutas": 6
+  },
+  {
+    "n": 12,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.11,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(240, 242, 255)",
+      "texto": "Cláusula 4, 5",
+      "origen": "span [style: font-family:var(--font-mono);font-size:10px;padding:3px 8px;border-radius:99px;background:var(--nf-accent-soft]"
+    },
+    "rutas": [
+      "/iso9001",
+      "/iso14001",
+      "/iso45001",
+      "/sig",
+      "/iso22301",
+      "/iso42001",
+      "/iso37301",
+      "/iso37001"
+    ],
+    "nRutas": 12
+  },
+  {
+    "n": 8,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-chip"
+    },
+    "rutas": [
+      "/app/records",
+      "/app/training",
+      "/app/activity",
+      "/app/notifications"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 6,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline"
+    },
+    "rutas": [
+      "/app/context",
+      "/app/quality-ops",
+      "/app/reporting"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 6,
+    "clase": "anillo de foco bajo 3:1",
+    "ejemplo": {
+      "clase": "anillo de foco bajo 3:1",
+      "valor": 1.44,
+      "fg": "rgb(59, 75, 216)",
+      "bg": "rgb(82, 102, 246)",
+      "texto": "Entrar",
+      "origen": "button.nf-btn nf-btn--primary"
+    },
+    "rutas": [
+      "/login",
+      "/signup",
+      "/forgot-password"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 5,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.9,
+      "fg": "",
+      "bg": "rgb(241, 243, 255)",
+      "texto": "",
+      "origen": "span.nf-iso-subsection-mark"
+    },
+    "rutas": [
+      "/app/itsm",
+      "/app/medical-devices",
+      "/app/safety",
+      "/app/aims",
+      "/app/compliance"
+    ],
+    "nRutas": 5
+  },
+  {
+    "n": 4,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.22,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline nf-app-btn-sm"
+    },
+    "rutas": [
+      "/app/security-controls",
+      "/app/soa"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 4,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost nf-app-btn-sm nf-iso-table-export"
+    },
+    "rutas": [
+      "/app/continuity",
+      "/app/itsm"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 4,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.8,
+      "fg": "rgb(214, 138, 26)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "1",
+      "origen": "div.nf-iso-metric-value [style: color: rgb(214, 138, 26);]"
+    },
+    "rutas": [
+      "/app/energy",
+      "/app/food-safety",
+      "/app/itsm",
+      "/app/compliance"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 4,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "Regístrate gratis",
+      "origen": "a"
+    },
+    "rutas": [
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/legal/privacy"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 4,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input.nfm-input"
+    },
+    "rutas": [
+      "/demo",
+      "/solutions/gap-assessment"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 4,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.13,
+      "fg": "rgb(0, 0, 0)",
+      "bg": "rgb(18, 19, 22)",
+      "texto": "cada paso conectado.",
+      "origen": "span.nf-grad-text-cool"
+    },
+    "rutas": [
+      "/home",
+      "/iso27001",
+      "/blog",
+      "/legal/security"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 4,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.13,
+      "fg": "rgba(0, 0, 0, 0)",
+      "bg": "rgb(18, 19, 22)",
+      "texto": "cada paso conectado.",
+      "origen": "span.nf-grad-text-cool"
+    },
+    "rutas": [
+      "/home",
+      "/iso27001",
+      "/blog",
+      "/legal/security"
+    ],
+    "nRutas": 4
+  },
+  {
+    "n": 3,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.885,
+      "fg": "",
+      "bg": "rgb(238, 242, 249)",
+      "texto": "",
+      "origen": "div [style: background: rgb(238, 242, 249); border-radius: 99px; height: 7px; overflow: hidden; width: 100%;]"
+    },
+    "rutas": [
+      "/app/gap",
+      "/app/audit-program",
+      "/app/billing"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 3,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.902,
+      "fg": "",
+      "bg": "rgb(234, 247, 239)",
+      "texto": "",
+      "origen": "div.nf-iso-metric-icon [style: color: var(--nf-success-text); background: rgb(234, 247, 239);]"
+    },
+    "rutas": [
+      "/app/energy",
+      "/app/medical-devices",
+      "/app/compliance"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 3,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Entrar",
+      "origen": "button.nf-btn nf-btn--primary [style: width:100%;opacity:1]"
+    },
+    "rutas": [
+      "/login",
+      "/signup",
+      "/forgot-password"
+    ],
+    "nRutas": 3
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "button",
+      "origen": "button.nf-iso-tab"
+    },
+    "rutas": [
+      "/app/standards"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.19,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "button",
+      "origen": "button [style: padding: 7px 18px; border-radius: 8px; border: 1px solid var(--nf-line); background: transparent; color: var(-]"
+    },
+    "rutas": [
+      "/app/gap"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-ghost [style: font-size: 12px; padding: 6px 12px; flex-shrink: 0;]"
+    },
+    "rutas": [
+      "/app/records"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-audit-card nf-audit-card--in-rail"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.34,
+      "fg": "rgb(100, 116, 139)",
+      "bg": "rgb(241, 245, 249)",
+      "texto": "histórico",
+      "origen": "span [style: background: rgb(241, 245, 249); color: rgb(100, 116, 139); font-size: 11px; font-weight: 700; padding: 2px 9px]"
+    },
+    "rutas": [
+      "/app/environment"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(22, 163, 74)",
+      "texto": "XLS",
+      "origen": "span.ic"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.58,
+      "fg": "rgb(180, 83, 9)",
+      "bg": "rgb(217, 119, 6)",
+      "texto": "Pendiente",
+      "origen": "span.chip [style: background:var(--nf-warning);color:var(--nf-warning-text)]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(22, 163, 74)",
+      "texto": "Aprobado",
+      "origen": "span.chip nf-chip--ok"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.58,
+      "fg": "rgb(180, 83, 9)",
+      "bg": "rgb(217, 119, 6)",
+      "texto": "Requiere aprobación",
+      "origen": "span [style: font-size:9px;font-family:var(--font-mono);padding:3px 7px;border-radius:99px;background:var(--nf-warning);col]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.41,
+      "fg": "rgb(220, 38, 38)",
+      "bg": "rgb(254, 242, 242)",
+      "texto": "registros_riesgos.xlsx",
+      "origen": "span.nf-transform-tag chaos"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.58,
+      "fg": "rgb(180, 83, 9)",
+      "bg": "rgb(217, 119, 6)",
+      "texto": "● Requiere aprobación",
+      "origen": "span [style: color:var(--nf-warning-text);padding:2px 6px;border-radius:99px;border:1px solid var(--nf-warning);background:]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-btn nf-btn--ghost nf-btn--sm"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select.nfm-select"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "textarea",
+      "origen": "textarea.nfm-textarea"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton [style: width: min(100%, 260px); height: 28px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton [style: width: min(100%, 480px); height: 14px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--pill [style: width: 132px; height: 36px; flex-shrink: 0;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--pill [style: width: 40px; height: 40px; flex-shrink: 0;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 48px; height: 22px; margin-bottom: 6px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 72%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton [style: flex: 1 1 0%; min-width: 200px; height: 36px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton [style: width: 132px; height: 36px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 18%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 28%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 14%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 12%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 8%; height: 12px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--pill [style: width: 36px; height: 36px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 55%; height: 14px; margin-bottom: 6px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 35%; height: 11px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--pill [style: width: 72px; height: 24px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--pill [style: width: 64px; height: 32px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 63%; height: 14px; margin-bottom: 6px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 45%; height: 11px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.831,
+      "fg": "",
+      "bg": "rgb(235, 235, 235)",
+      "texto": "",
+      "origen": "div.nf-skeleton nf-skeleton--sm [style: width: 71%; height: 14px; margin-bottom: 6px;]"
+    },
+    "rutas": [
+      "/app/documents",
+      "/app/integrated"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.14,
+      "fg": "rgb(255, 132, 124)",
+      "bg": "rgb(255, 240, 239)",
+      "texto": "20",
+      "origen": "div [style: width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center; font-size: 20px; font-weig]"
+    },
+    "rutas": [
+      "/app/risks"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.09,
+      "fg": "rgb(176, 186, 255)",
+      "bg": "rgb(198, 198, 199)",
+      "texto": "Tecnoserv Industrial S.A.",
+      "origen": "span [style: display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:]"
+    },
+    "rutas": [
+      "/app/settings"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.9,
+      "fg": "",
+      "bg": "rgb(241, 243, 255)",
+      "texto": "",
+      "origen": "span.nf-iso-table-card-mark"
+    },
+    "rutas": [
+      "/app/continuity",
+      "/app/itsm"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.954,
+      "fg": "",
+      "bg": "rgb(248, 250, 252)",
+      "texto": "",
+      "origen": "th"
+    },
+    "rutas": [
+      "/app/continuity",
+      "/app/itsm"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.902,
+      "fg": "",
+      "bg": "rgb(234, 247, 239)",
+      "texto": "",
+      "origen": "div.nf-iso-metric-icon [style: color:var(--nf-success-text);background:#eaf7ef]"
+    },
+    "rutas": [
+      "/app/itsm",
+      "/app/safety"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Más popular",
+      "origen": "span.nf-popular-badge"
+    },
+    "rutas": [
+      "/home",
+      "/pricing"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Probar 14 días",
+      "origen": "a.nf-btn nf-btn--primary [style: justify-content:center]"
+    },
+    "rutas": [
+      "/home",
+      "/pricing"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 2,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Enviar solicitud",
+      "origen": "button.nf-btn nf-btn--primary [style: justify-content:center;margin-top:4px]"
+    },
+    "rutas": [
+      "/demo",
+      "/solutions/gap-assessment"
+    ],
+    "nRutas": 2
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.57,
+      "fg": "rgb(240, 196, 194)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button.nf-app-btn-outline [style: font-size: 12px; padding: 6px 12px; color: var(--nf-danger-text); border-color: rgb(240, 196, 194); font-weigh]"
+    },
+    "rutas": [
+      "/app/records"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.13,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(241, 243, 254)",
+      "texto": "commercial_entitlements_sync",
+      "origen": "span.nf-audit-pill nf-audit-pill--type"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(22, 163, 74)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "C",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: var(--nf-succes]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.19,
+      "fg": "rgb(217, 119, 6)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "S",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: var(--nf-warnin]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "button",
+      "origen": "button [style: font-size: 12px; font-weight: 700; color: var(--nf-ink-2); background: var(--nf-surface); border: 1px solid va]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3,
+      "fg": "rgb(138, 150, 168)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "Plan actual",
+      "origen": "button.nf-app-btn-ghost"
+    },
+    "rutas": [
+      "/app/billing"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.27,
+      "fg": "rgb(228, 228, 226)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select [style: padding: 6px 8px; font-size: 12px; border: 1px solid var(--nf-line); border-radius: 6px; background: var(--nf-]"
+    },
+    "rutas": [
+      "/app/settings/users"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.32,
+      "fg": "rgb(217, 225, 235)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "select",
+      "origen": "select.nf-app-input [style: max-width: 220px;]"
+    },
+    "rutas": [
+      "/app/continuity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.94,
+      "fg": "rgb(202, 138, 4)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "9 kWh",
+      "origen": "div.nf-iso-metric-value [style: color: rgb(202, 138, 4);]"
+    },
+    "rutas": [
+      "/app/energy"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.32,
+      "fg": "rgb(217, 225, 235)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "input",
+      "origen": "input.nf-app-input nf-app-input--toolbar"
+    },
+    "rutas": [
+      "/app/itsm"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(22, 163, 74)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "14",
+      "origen": "strong [style: color: rgb(22, 163, 74);]"
+    },
+    "rutas": [
+      "/app/integrated"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.8,
+      "fg": "rgb(214, 138, 26)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "0",
+      "origen": "strong [style: color: rgb(214, 138, 26);]"
+    },
+    "rutas": [
+      "/app/integrated"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "ISO 9001",
+      "origen": "div [style: font-family:var(--font-display);font-weight:700;font-size:15px;color:var(--nf-accent);letter-spacing:-0.01em]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "después · conectado",
+      "origen": "div [style: position:absolute;top:-22px;left:0;font-family:var(--font-mono);font-size:10px;letter-spacing:0.16em;color:var]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.38,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "↳",
+      "origen": "span [style: color:var(--nf-accent);width:12px;flex-shrink:0]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.38,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "03 dic",
+      "origen": "span [style: color:var(--nf-accent)]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.04,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "MT",
+      "origen": "div [style: width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.0]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.11,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(240, 242, 255)",
+      "texto": "Manufactura",
+      "origen": "span [style: padding:4px 10px;border-radius:99px;background:var(--nf-accent-soft);color:var(--nf-accent);border:1px solid r]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.04,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(250, 250, 250)",
+      "texto": "MT",
+      "origen": "div [style: width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.0]"
+    },
+    "rutas": [
+      "/cases"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 4.27,
+      "fg": "rgb(82, 102, 246)",
+      "bg": "rgb(247, 247, 245)",
+      "texto": "Crear cuenta · 14 días gratis",
+      "origen": "a [style: color:var(--nf-accent)]"
+    },
+    "rutas": [
+      "/demo"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.19,
+      "fg": "rgb(217, 119, 6)",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "60 %",
+      "origen": "span [style: font-family:var(--font-mono);font-weight:700;color:var(--nf-warn)]"
+    },
+    "rutas": [
+      "/solutions/gap-assessment"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.871,
+      "fg": "",
+      "bg": "rgb(240, 240, 240)",
+      "texto": "",
+      "origen": "div [style: background: rgb(240, 240, 240); border-radius: 99px; height: 10px; overflow: hidden; width: 100%;]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.947,
+      "fg": "",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "",
+      "origen": "div [style: display: flex; align-items: flex-start; gap: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(-]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.05,
+      "fg": "rgb(242, 243, 245)",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "Activa tus normas ISO",
+      "origen": "div [style: font-weight: 600; color: var(--nf-ink);]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.05,
+      "fg": "rgb(242, 243, 245)",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "Activa tus normas ISO",
+      "origen": "div [style: font-weight: 600; color: var(--nf-ink);]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.47,
+      "fg": "rgb(155, 161, 171)",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "Adopta ISO 9001 / ISO 27001 para generar",
+      "origen": "div [style: font-size: 12px; color: var(--nf-ink-3); margin-top: 4px;]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.76,
+      "fg": "rgb(176, 186, 255)",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "Ir al módulo →",
+      "origen": "a [style: font-size: 12px; color: var(--nf-primary-active); font-weight: 600; margin-top: 8px; display: inline-block;]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.02,
+      "fg": "rgb(138, 145, 156)",
+      "bg": "rgb(246, 250, 247)",
+      "texto": "Peso 3",
+      "origen": "span [style: font-size: 11px; color: var(--nf-ink-4); font-weight: 600;]"
+    },
+    "rutas": [
+      "/app/setup"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.885,
+      "fg": "",
+      "bg": "rgb(238, 242, 249)",
+      "texto": "",
+      "origen": "div [style: background: rgb(238, 242, 249); border-radius: 99px; height: 10px; overflow: hidden; width: 100%;]"
+    },
+    "rutas": [
+      "/app/gap"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "ISO 9001:2015",
+      "origen": "button [style: padding: 7px 18px; border-radius: 8px; border: 1px solid var(--nf-primary); background: var(--nf-primary); col]"
+    },
+    "rutas": [
+      "/app/gap"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.898,
+      "fg": "",
+      "bg": "rgb(255, 240, 239)",
+      "texto": "20",
+      "origen": "div [style: width: 48px; height: 48px; border-radius: 13px; display: grid; place-items: center; font-size: 20px; font-weig]"
+    },
+    "rutas": [
+      "/app/risks"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.869,
+      "fg": "",
+      "bg": "rgb(237, 240, 245)",
+      "texto": "",
+      "origen": "div [style: height: 6px; background: rgb(237, 240, 245); border-radius: 9px; margin-top: 4px;]"
+    },
+    "rutas": [
+      "/app/security-controls"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.907,
+      "fg": "",
+      "bg": "rgb(245, 243, 255)",
+      "texto": "",
+      "origen": "div [style: width: 44px; height: 44px; border-radius: 12px; background: rgb(245, 243, 255); display: flex; align-items: ce]"
+    },
+    "rutas": [
+      "/app/reporting"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Exportar PDF",
+      "origen": "button [style: padding: 9px 14px; border-radius: 10px; border-width: medium; border-style: none; border-color: currentcolor; ]"
+    },
+    "rutas": [
+      "/app/reporting"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.88,
+      "fg": "rgb(94, 107, 122)",
+      "bg": "rgb(32, 35, 40)",
+      "texto": "C",
+      "origen": "span [style: width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; background: rgba(94, 107, 1]"
+    },
+    "rutas": [
+      "/app/activity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.84,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(240, 180, 95)",
+      "texto": "Nuevo",
+      "origen": "span [style: margin-left:8px;font-size:10px;font-weight:600;letter-spacing:-0.01em;text-transform:none;vertical-align:middl]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.84,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(240, 180, 95)",
+      "texto": "Nuevo",
+      "origen": "span [style: margin-left:8px;font-size:10px;font-weight:600;letter-spacing:-0.01em;text-transform:none;vertical-align:middl]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Ver detalle →",
+      "origen": "a [style: font-size:13px;color:#fff;font-weight:700;text-decoration:none;background:var(--nf-app-accent);padding:8px 14p]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.8,
+      "fg": "rgb(65, 70, 79)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "button",
+      "origen": "button [style: font-size:12px;font-weight:700;color:var(--nf-ink-2);background:var(--nf-surface);border:1px solid var(--nf-li]"
+    },
+    "rutas": [
+      "/app/notifications"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 1,
+      "fg": "",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "Tecnoserv Industrial S.A.",
+      "origen": "span [style: display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:]"
+    },
+    "rutas": [
+      "/app/settings"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.01,
+      "fg": "rgb(194, 198, 205)",
+      "bg": "rgb(198, 198, 199)",
+      "texto": "ORG ADMIN",
+      "origen": "span [style: display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;font-size:12px;font-weight:]"
+    },
+    "rutas": [
+      "/app/settings"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Guardar nombre",
+      "origen": "button [style: width:100%;max-width:280px;background:var(--nf-primary);color:#fff;border:none;border-radius:10px;padding:12px]"
+    },
+    "rutas": [
+      "/app/settings"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "borde de control bajo 3:1",
+    "ejemplo": {
+      "clase": "borde de control bajo 3:1",
+      "valor": 1.8,
+      "fg": "rgb(65, 70, 79)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "select",
+      "origen": "select [style: padding:6px 8px;font-size:12px;border:1px solid var(--nf-line);border-radius:6px;background:var(--nf-app-surfa]"
+    },
+    "rutas": [
+      "/app/settings/users"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 1,
+      "fg": "",
+      "bg": "rgb(255, 255, 255)",
+      "texto": "0",
+      "origen": "span [style: font-size: 12px; font-weight: 700; color: var(--nf-primary-active); background: rgba(255, 255, 255, 0.75); pad]"
+    },
+    "rutas": [
+      "/app/settings/groups"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.06,
+      "fg": "rgb(176, 186, 255)",
+      "bg": "rgb(196, 196, 197)",
+      "texto": "0",
+      "origen": "span [style: font-size: 12px; font-weight: 700; color: var(--nf-primary-active); background: rgba(255, 255, 255, 0.75); pad]"
+    },
+    "rutas": [
+      "/app/settings/groups"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.869,
+      "fg": "",
+      "bg": "rgb(237, 240, 245)",
+      "texto": "",
+      "origen": "div [style: height: 10px; overflow: hidden; border-radius: 99px; background: rgb(237, 240, 245);]"
+    },
+    "rutas": [
+      "/app/continuity"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.941,
+      "fg": "",
+      "bg": "rgb(255, 248, 230)",
+      "texto": "",
+      "origen": "div.nf-iso-metric-icon [style: color: var(--nf-warning-text); background: rgb(255, 248, 230);]"
+    },
+    "rutas": [
+      "/app/environment"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.908,
+      "fg": "",
+      "bg": "rgb(241, 245, 249)",
+      "texto": "histórico",
+      "origen": "span [style: background: rgb(241, 245, 249); color: rgb(100, 116, 139); font-size: 11px; font-weight: 700; padding: 2px 9px]"
+    },
+    "rutas": [
+      "/app/environment"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.928,
+      "fg": "",
+      "bg": "rgb(254, 249, 195)",
+      "texto": "",
+      "origen": "div [style: width: 40px; height: 40px; border-radius: 10px; background: rgb(254, 249, 195); display: grid; place-items: ce]"
+    },
+    "rutas": [
+      "/app/energy"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.928,
+      "fg": "",
+      "bg": "rgb(254, 249, 195)",
+      "texto": "",
+      "origen": "div.nf-iso-metric-icon [style: color: rgb(202, 138, 4); background: rgb(254, 249, 195);]"
+    },
+    "rutas": [
+      "/app/energy"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.882,
+      "fg": "",
+      "bg": "rgb(204, 251, 241)",
+      "texto": "",
+      "origen": "div [style: width: 40px; height: 40px; border-radius: 10px; background: rgb(204, 251, 241); display: grid; place-items: ce]"
+    },
+    "rutas": [
+      "/app/food-safety"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.05,
+      "fg": "rgb(15, 23, 42)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "1",
+      "origen": "span [style: font-weight:600;color:#0f172a]"
+    },
+    "rutas": [
+      "/app/itsm"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.05,
+      "fg": "rgb(15, 23, 42)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "1",
+      "origen": "span [style: font-weight:600;color:#0f172a]"
+    },
+    "rutas": [
+      "/app/itsm"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 2.25,
+      "fg": "rgb(71, 85, 105)",
+      "bg": "rgb(26, 28, 32)",
+      "texto": "0",
+      "origen": "div.nf-iso-metric-value [style: color: rgb(71, 85, 105);]"
+    },
+    "rutas": [
+      "/app/aims"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.825,
+      "fg": "",
+      "bg": "rgb(255, 228, 230)",
+      "texto": "",
+      "origen": "div [style: width: 40px; height: 40px; border-radius: 10px; background: rgb(255, 228, 230); display: grid; place-items: ce]"
+    },
+    "rutas": [
+      "/app/antibribery"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.884,
+      "fg": "",
+      "bg": "rgb(245, 239, 255)",
+      "texto": "",
+      "origen": "div.nf-iso-metric-icon [style: color: var(--nf-primary-active); background: rgb(245, 239, 255);]"
+    },
+    "rutas": [
+      "/app/antibribery"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span.tl [style: background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.91,
+      "fg": "",
+      "bg": "rgb(254, 242, 242)",
+      "texto": "",
+      "origen": "div.ic-wrap [style: color:var(--nf-danger-text)]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.91,
+      "fg": "",
+      "bg": "rgb(254, 242, 242)",
+      "texto": "registros_riesgos.xlsx",
+      "origen": "span.nf-transform-tag chaos"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span [style: width:9px;height:9px;border-radius:50%;background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.963,
+      "fg": "",
+      "bg": "rgb(255, 251, 235)",
+      "texto": "",
+      "origen": "div.nf-ai-human-callout"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.941,
+      "fg": "",
+      "bg": "rgb(255, 248, 230)",
+      "texto": "Requiere aprobación humana",
+      "origen": "span.nf-ai-pill"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "texto casi invisible",
+    "ejemplo": {
+      "clase": "texto casi invisible",
+      "valor": 1.65,
+      "fg": "rgb(194, 198, 205)",
+      "bg": "rgb(255, 251, 235)",
+      "texto": "Cada sugerencia se marca como tal hasta ",
+      "origen": "p"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 1.65,
+      "fg": "rgb(194, 198, 205)",
+      "bg": "rgb(255, 251, 235)",
+      "texto": "Cada sugerencia se marca como tal hasta ",
+      "origen": "p"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.01,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(123, 139, 255)",
+      "texto": "Aprobar y guardar",
+      "origen": "button.nf-btn nf-btn--primary nf-btn--sm"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.896,
+      "fg": "",
+      "bg": "rgb(242, 243, 245)",
+      "texto": "SaaS · mensual",
+      "origen": "button [style: padding:8px 18px;font-size:13px;font-weight:600;border-radius:999px;border:none;cursor:pointer;background:var(]"
+    },
+    "rutas": [
+      "/pricing"
+    ],
+    "nRutas": 1
+  }
+]

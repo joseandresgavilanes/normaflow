@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Archive, Download, Eye, FileDown, FileText, Loader2, Search, ShieldCheck } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { ConfirmActionModal, PromptActionModal } from "@/components/ui/ActionDialogs";
 import { NF_INPUT_CLASS, ModalField, modalInputStyle } from "@/components/ui/ModalForm";
@@ -31,7 +33,7 @@ const TYPES: { value: EvidenceType; label: string }[] = [
 ];
 const TYPE_LABEL = new Map(TYPES.map((item) => [item.value, item.label]));
 const STATUS_LABEL: Record<EvidenceStatus, string> = { VALID: "Vigente", EXPIRED: "Vencida", PENDING_REVIEW: "Pendiente de revisión" };
-const STATUS_COLOR: Record<EvidenceStatus, string> = { VALID: "#15803D", EXPIRED: "#B91C1C", PENDING_REVIEW: "#B45309" };
+const STATUS_COLOR: Record<EvidenceStatus, string> = { VALID: "var(--nf-success-text)", EXPIRED: "var(--nf-danger-text)", PENDING_REVIEW: "var(--nf-warning-text)" };
 
 export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePayload }) {
   const { run, isPending, error, setError, success } = useServerAction();
@@ -99,15 +101,34 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
     pending: initial.evidence.filter((row) => row.status === "PENDING_REVIEW").length,
   };
 
+  const columns = useMemo<DataTableColumn<EvidenceRow>[]>(() => [
+    { id: "title", header: "Título", primary: true, minWidth: 230, hideable: false, sortValue: (r) => r.title,
+      cell: (r) => <><strong>{r.title}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>{r.fileSize ? `${Math.ceil(r.fileSize / 1024)} KB` : "Archivo"} · cargada {formatDate(r.createdAt)}</div></> },
+    { id: "type", header: "Tipo", minWidth: 130, sortValue: (r) => r.evidenceType,
+      cell: (r) => TYPE_LABEL.get(r.evidenceType) ?? r.evidenceType },
+    { id: "standard", header: "Norma / cláusula", minWidth: 160, sortValue: (r) => r.standardCode ?? "",
+      cell: (r) => <>{r.standardCode ?? "—"}{r.clauseName && <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{r.clauseName}</div>}</> },
+    { id: "process", header: "Proceso", minWidth: 140, sortValue: (r) => r.processName ?? "", cell: (r) => r.processName ?? "—" },
+    // Esta celda faltaba: la cabecera declaraba 8 columnas y las filas pintaban
+    // 7, así que todo el contenido salía corrido una posición a la izquierda.
+    { id: "responsible", header: "Responsable", minWidth: 140, sortValue: (r) => r.responsibleName ?? "", cell: (r) => r.responsibleName ?? "—" },
+    { id: "status", header: "Estado", minWidth: 130, sortValue: (r) => r.status,
+      cell: (r) => <StatusBadge status={r.status as EvidenceStatus} /> },
+    { id: "expires", header: "Vence", minWidth: 140, numeric: true, sortValue: (r) => r.expiresAt ?? "",
+      cell: (r) => <span style={{ color: r.status === "EXPIRED" ? "var(--nf-danger-text)" : "var(--nf-ink-2)" }}>{r.expiresAt ? formatDate(r.expiresAt) : "Sin vencimiento"}</span> },
+    { id: "actions", header: "Acciones", minWidth: 90, hideable: false,
+      cell: (r) => <button type="button" className="nf-app-btn-ghost" disabled={previewBusy === r.id} aria-label={`Previsualizar ${r.title}`} onClick={(event) => { event.stopPropagation(); void openPreview(r); }}>{previewBusy === r.id ? <Loader2 size={14} className="nf-icon-spin" /> : <Eye size={14} />}</button> },
+  ], [previewBusy, openPreview]);
+
   return (
     <div>
       <SectionTitle title="Repositorio de Evidencias" sub="Fuente única de evidencia para auditorías ISO, con vínculos, vencimientos y trazabilidad." action={initial.access.canCreate ? "+ Subir evidencia" : undefined} onAction={initial.access.canCreate ? () => { setError(""); setCreating(true); } : undefined} />
 
       <div className="nf-metric-strip">
         <Stat label="Total" value={stats.total} icon={<FileText size={20} />} />
-        <Stat label="Vigentes" value={stats.valid} icon={<ShieldCheck size={20} />} color="#15803D" />
-        <Stat label="Por revisar" value={stats.pending} icon={<Loader2 size={20} />} color="#B45309" />
-        <Stat label="Vencidas" value={stats.expired} icon={<Archive size={20} />} color="#B91C1C" />
+        <Stat label="Vigentes" value={stats.valid} icon={<ShieldCheck size={20} />} color="var(--nf-success-text)" />
+        <Stat label="Por revisar" value={stats.pending} icon={<Loader2 size={20} />} color="var(--nf-warning-text)" />
+        <Stat label="Vencidas" value={stats.expired} icon={<Archive size={20} />} color="var(--nf-danger-text)" />
       </div>
 
       {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -117,7 +138,7 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
           <div style={{ position: "relative", flex: 1, minWidth: 240 }}>
             <Search size={15} style={{ position: "absolute", left: 10, top: 11, color: "var(--nf-ink-3)" }} aria-hidden />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar título, descripción o vínculo…" className="nf-app-input" style={{ ...modalInputStyle, paddingLeft: 32 }} />
+            <input aria-label="Buscar título, descripción o vínculo" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar título, descripción o vínculo…" className="nf-app-input" style={{ ...modalInputStyle, paddingLeft: 32 }} />
           </div>
           <FilterSelect label="Estado" value={status} onChange={(value) => setStatus(value as EvidenceStatus | "ALL")} options={[{ value: "ALL", label: "Todos los estados" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
           <FilterSelect label="Tipo" value={type} onChange={(value) => setType(value as EvidenceType | "ALL")} options={[{ value: "ALL", label: "Todos los tipos" }, ...TYPES]} />
@@ -128,23 +149,15 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
           {initial.access.canExport && <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportIndex("EXCEL")}><FileDown size={14} />{exportBusy === "EXCEL" ? "Generando…" : "Excel"}</button><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportIndex("PDF")}><FileDown size={14} />{exportBusy === "PDF" ? "Generando…" : "PDF"}</button></div>}
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, fontSize: 12, color: "var(--nf-ink-3)" }}><span>{filtered.length} de {initial.evidence.length} evidencias</span><span>Vencimientos y revisiones controlados por fecha</span></div>
-        <div className="nf-data-table-wrap">
-          <table className="nf-data-table" style={{ minWidth: 920 }}>
-            <thead><tr><th>Título</th><th>Tipo</th><th>Norma / cláusula</th><th>Proceso</th><th>Responsable</th><th>Estado</th><th>Vence</th><th /></tr></thead>
-            <tbody>
-              {filtered.map((row) => <tr key={row.id} onClick={() => setDetail(row)} style={{ cursor: "pointer" }}>
-                <td><strong>{row.title}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>{row.fileSize ? `${Math.ceil(row.fileSize / 1024)} KB` : "Archivo"} · cargada {formatDate(row.createdAt)}</div></td>
-                <td>{TYPE_LABEL.get(row.evidenceType) ?? row.evidenceType}</td>
-                <td>{row.standardCode ?? "—"}{row.clauseName && <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{row.clauseName}</div>}</td>
-                <td>{row.processName ?? "—"}</td>
-                <td><StatusBadge status={row.status as EvidenceStatus} /></td>
-                <td style={{ color: row.status === "EXPIRED" ? "#B91C1C" : "var(--nf-ink-2)" }}>{row.expiresAt ? formatDate(row.expiresAt) : "Sin vencimiento"}</td>
-                <td><button type="button" className="nf-app-btn-ghost" disabled={previewBusy === row.id} onClick={(event) => { event.stopPropagation(); void openPreview(row); }}>{previewBusy === row.id ? <Loader2 size={14} className="nf-icon-spin" /> : <Eye size={14} />}</button></td>
-              </tr>)}
-            </tbody>
-          </table>
-          {filtered.length === 0 && <div className="nf-data-table-empty">No hay evidencias para los filtros seleccionados.</div>}
-        </div>
+        <DataTable
+          columns={columns}
+          rows={filtered}
+          rowKey={(r) => r.id}
+          rowAction={(r) => setDetail(r)}
+          caption="Repositorio de evidencias: título, tipo, norma y cláusula, proceso, responsable, estado y vencimiento."
+          storageKey="evidence-repository"
+          empty={<EmptyState kind="no-results" title="No hay evidencias para los filtros seleccionados." description="Las evidencias respaldan el cumplimiento de cada requisito: se asocian a una norma, un proceso y un responsable, y pueden caducar." />}
+        />
       </Card>
 
       <EvidenceCreateModal initial={initial} open={creating} isPending={isPending} onClose={() => !isPending && setCreating(false)} onSubmit={(input) => run(() => createEvidence(input), { onSuccess: () => setCreating(false), successMessage: "Evidencia cargada y registrada." })} />
@@ -158,11 +171,11 @@ export function EvidenceRepositoryLiveClient({ initial }: { initial: EvidencePay
 
 function EvidenceCreateModal({ initial, open, isPending, onClose, onSubmit }: { initial: EvidencePayload; open: boolean; isPending: boolean; onClose: () => void; onSubmit: (input: CreateEvidenceInput) => void }) {
   return <Modal open={open} onClose={onClose} title="Subir evidencia" width={760}><form className="nf-modal-form" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const file = form.get("file"); if (!(file instanceof File) || !file.size) return; const input: CreateEvidenceInput = { title: String(form.get("title") ?? ""), description: String(form.get("description") ?? ""), evidenceType: String(form.get("evidenceType") ?? "OTHER") as EvidenceType, processId: String(form.get("processId") ?? "") || undefined, standardCode: String(form.get("standardCode") ?? "") || undefined, clauseId: String(form.get("clauseId") ?? "") || undefined, responsibleId: String(form.get("responsibleId") ?? "") || undefined, issuedAt: String(form.get("issuedAt") ?? "") || undefined, expiresAt: String(form.get("expiresAt") ?? "") || undefined, file, links: { documentIds: form.getAll("documentIds").map(String), riskIds: form.getAll("riskIds").map(String), auditIds: form.getAll("auditIds").map(String), findingIds: form.getAll("findingIds").map(String), nonconformityIds: form.getAll("nonconformityIds").map(String), indicatorIds: form.getAll("indicatorIds").map(String), managementReviewIds: form.getAll("managementReviewIds").map(String) } }; onSubmit(input); }} style={{ display: "grid", gap: 13 }}>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><Field label="Título *"><input name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} /></Field><Field label="Tipo de evidencia *"><select name="evidenceType" defaultValue="OTHER" className={NF_INPUT_CLASS} style={modalInputStyle}>{TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div>
-    <Field label="Descripción"><textarea name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}><Field label="Norma"><select name="standardCode" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.standards.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></Field><Field label="Cláusula"><select name="clauseId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.clauses.map((item) => <option key={item.id} value={item.id}>{item.standardCode.replace("_", " ")} · {item.code}</option>)}</select></Field><Field label="Proceso"><select name="processId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.targets.process.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></Field></div>
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}><Field label="Responsable"><select name="responsibleId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.members.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Fecha de emisión"><input name="issuedAt" type="date" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field><Field label="Fecha de vencimiento"><input name="expiresAt" type="date" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field></div>
-    <Field label="Archivo *"><input name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}><Field label="Título *"><input aria-label="Título" name="title" required className={NF_INPUT_CLASS} style={modalInputStyle} /></Field><Field label="Tipo de evidencia *"><select aria-label="Tipo de evidencia" name="evidenceType" defaultValue="OTHER" className={NF_INPUT_CLASS} style={modalInputStyle}>{TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div>
+    <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}><Field label="Norma"><select aria-label="Código de norma" name="standardCode" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.standards.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}</select></Field><Field label="Cláusula"><select aria-label="Cláusula" name="clauseId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.clauses.map((item) => <option key={item.id} value={item.id}>{item.standardCode.replace("_", " ")} · {item.code}</option>)}</select></Field><Field label="Proceso"><select aria-label="Proceso" name="processId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.targets.process.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></Field></div>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}><Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className={NF_INPUT_CLASS} style={modalInputStyle}><option value="">—</option>{initial.members.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></Field><Field label="Fecha de emisión"><input aria-label="Fecha de emisión" name="issuedAt" type="date" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field><Field label="Fecha de vencimiento"><input aria-label="Fecha de caducidad" name="expiresAt" type="date" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field></div>
+    <Field label="Archivo *"><input aria-label="Archivo" name="file" type="file" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*" className={NF_INPUT_CLASS} style={modalInputStyle} /></Field>
     <div><div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink-2)", marginBottom: 7 }}>Vincular con registros</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>{(["documentIds", "riskIds", "auditIds", "findingIds", "nonconformityIds", "indicatorIds", "managementReviewIds"] as const).map((name) => <MultiSelect key={name} name={name} label={linkLabel(name)} options={initial.targets[targetKey(name)]} />)}</div></div>
     <div className="nf-modal-actions"><button type="button" className="nf-app-btn-ghost" onClick={onClose} disabled={isPending}>Cancelar</button><button type="submit" className="nf-app-btn-primary" disabled={isPending}>{isPending ? "Cargando…" : "Subir y registrar evidencia"}</button></div>
   </form></Modal>;

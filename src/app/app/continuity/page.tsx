@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getContinuityPayload, type ContinuityPayload } from "@/lib/actions/continuity";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Continuidad de negocio | NormaFlow" };
+export const metadata = { title: "Continuidad de negocio" };
 export const dynamic = "force-dynamic";
 
 export default async function ContinuityPage() {
@@ -28,10 +28,10 @@ async function renderLive() {
 
 function demoPayload(): ContinuityPayload {
   return {
-    canCreate: false, canUpdate: false, canExport: false,
+    canCreate: false, canUpdate: false, canApprove: false, canDelete: false, canExport: false,
     summary: { bcps: 1, drps: 1, tests: 1, testsPassed: 1, openImprovements: 1 },
     bcps: [{
-      id: "demo-b1", code: "BCP-001", title: "Continuidad de servicios críticos", scope: "Operaciones y atención al cliente", owner: { id: "u1", name: "Dirección" }, status: "APPROVED", rtoMinutes: 240, rpoMinutes: 60, dependencies: "Proveedor cloud", nextReviewDate: "2027-01-01",
+      id: "demo-b1", code: "BCP-001", title: "Continuidad de servicios críticos", scope: "Operaciones y atención al cliente", owner: { id: "u1", name: "Dirección" }, status: "APPROVED", version: "1.0", rtoMinutes: 240, rpoMinutes: 60, dependencies: "Proveedor cloud", nextReviewDate: "2027-01-01",
       criticalProcesses: [{ id: "cp1", process: { id: "p1", name: "Atención al cliente" }, rtoMinutes: 240, rpoMinutes: 60 }],
       scenarios: [{ id: "s1", title: "Caída del centro de datos", description: null, type: "Tecnológico" }],
       tests: [{ id: "t1", title: "Simulacro de failover", type: "FAILOVER", status: "COMPLETED", plannedDate: "2026-05-01", executedDate: "2026-05-03", responsible: { id: "u1", name: "Dirección" }, scenario: { id: "s1", title: "Caída del centro de datos" }, results: [{ id: "r1", outcome: "PASSED", rtoAchievedMinutes: 210, rpoAchievedMinutes: 55, summary: "Objetivos cumplidos", testedBy: { id: "u1", name: "Dirección" }, testedAt: "2026-05-03T00:00:00.000Z", evidence: null, improvementActions: [{ id: "ia1", description: "Automatizar el failover de DNS", responsible: null, targetDate: "2026-09-01", status: "OPEN" }] }] }],
@@ -52,7 +52,7 @@ function demoBcm() {
     bias: [{
       id: "demo-bia", code: "BIA-001", title: "BIA corporativo 2026", scope: "Operaciones críticas",
       methodology: "Escala 1-5 por categoría de impacto", version: "1.0", status: "APPROVED" as const,
-      owner: { id: "u1", name: "Dirección" }, approvedBy: { id: "u1", name: "Dirección" },
+      owner: { id: "u1", name: "Dirección" }, approvedBy: { id: "u1", name: "Dirección" }, evidenceId: null,
       approvedAt: "2026-03-01", performedAt: "2026-02-15", nextReviewDate: "2027-02-15", activityCount: 2,
     }],
     activities: [
@@ -81,7 +81,7 @@ function demoBcm() {
         gaps,
       },
     ],
-    productPriorities: [{ id: "demo-ps1", code: "PS-001", name: "Servicio de soporte 24/7", priority: 1, criticality: "CRITICAL" as const, mtpdMinutes: 480, rtoMinutes: 240, minimumServiceLevel: "Cobertura de incidencias críticas", revenueShare: 45, customersAffected: 1200 }],
+    productPriorities: [{ id: "demo-ps1", code: "PS-001", name: "Servicio de soporte 24/7", priority: 1, criticality: "CRITICAL" as const, mtpdMinutes: 480, rtoMinutes: 240, minimumServiceLevel: "Cobertura de incidencias críticas", revenueShare: 45, customersAffected: 1200, description: null, notes: null }],
     strategies: [{ id: "st1", code: "EST-001", title: "Sitio alterno de operación", type: "RELOCATION" as const, status: "IMPLEMENTED" as const, achievesRtoMinutes: 180, achievesRpoMinutes: 60, cost: 24000, owner: null, activity: { id: "demo-a1", code: "ACT-001", name: "Atención al cliente" }, description: null }],
     recoveryProcedures: [{ id: "rp1", code: "PR-001", title: "Reanudación de atención al cliente", objective: "Restablecer el servicio en el sitio alterno", order: 1, version: "1.0", estimatedMinutes: 180, responsible: null, activity: { id: "demo-a1", code: "ACT-001", name: "Atención al cliente" }, documentId: null }],
     crisisTeams: [{

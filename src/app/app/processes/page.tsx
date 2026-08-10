@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getProcessesPayload } from "@/lib/server-queries";
 
-export const metadata = { title: "Procesos | NormaFlow" };
+export const metadata = { title: "Procesos" };
 export const dynamic = "force-dynamic";
 
 export default async function ProcessesPage() {

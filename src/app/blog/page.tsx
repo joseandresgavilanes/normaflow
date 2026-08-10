@@ -2,17 +2,27 @@ import Link from "next/link";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { BLOG_POSTS } from "@/lib/blog-posts";
 import { Ic } from "@/components/marketing/nf/Icons";
+import JsonLd from "@/components/seo/JsonLd";
+import { absoluteUrl, createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Recursos y blog — NormaFlow",
+export const metadata = createMarketingMetadata({
+  title: "Blog sobre ISO, auditorías y cumplimiento | NormaFlow",
   description: "Artículos sobre ISO 9001, ISO 27001, auditorías, indicadores e implementación de sistemas de gestión.",
-};
+  path: "/blog",
+});
 
 const categories = Array.from(new Set(BLOG_POSTS.map(p => p.category)));
 
 export default function BlogPage() {
   return (
     <MarketingLayout>
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Blog sobre ISO, auditorías y cumplimiento",
+        url: absoluteUrl("/blog"),
+        hasPart: BLOG_POSTS.map((post) => ({ "@type": "Article", headline: post.title, url: absoluteUrl(`/blog/${post.slug}`) })),
+      }} />
       <section className="nf-section">
         <div className="nf-container" style={{ maxWidth: 900 }}>
           <span className="nf-eyebrow"><span className="dot"/> Recursos</span>
@@ -38,15 +48,15 @@ export default function BlogPage() {
             <Link
               key={post.slug}
               href={`/blog/${post.slug}`}
-              className="nf-card"
+              className="nfm-card"
               style={{ display: "block", padding: "clamp(20px, 3vw, 28px)", color: "inherit" }}
             >
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-accent)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{post.category}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--nf-primary-active)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{post.category}</div>
               <h2 className="nf-h-3" style={{ marginBottom: 10 }}>{post.title}</h2>
               <p style={{ fontSize: 15, color: "var(--nf-ink-2)", lineHeight: 1.65, margin: "0 0 14px" }}>{post.excerpt}</p>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--nf-ink-3)" }}>
                 <span>{post.date} · {post.readTime}</span>
-                <span style={{ color: "var(--nf-accent)", display: "inline-flex", alignItems: "center", gap: 6 }}>Leer <Ic.arrow/></span>
+                <span style={{ color: "var(--nf-primary-active)", display: "inline-flex", alignItems: "center", gap: 6 }}>Leer <Ic.arrow/></span>
               </div>
             </Link>
           ))}

@@ -1,0 +1,50 @@
+[
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span.tl [style: background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "superficie clara en oscuro",
+    "ejemplo": {
+      "clase": "superficie clara en oscuro",
+      "valor": 0.572,
+      "fg": "",
+      "bg": "rgb(254, 188, 46)",
+      "texto": "",
+      "origen": "span [style: width:9px;height:9px;border-radius:50%;background:#febc2e]"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  },
+  {
+    "n": 1,
+    "clase": "contraste bajo el mínimo",
+    "ejemplo": {
+      "clase": "contraste bajo el mínimo",
+      "valor": 3.3,
+      "fg": "rgb(255, 255, 255)",
+      "bg": "rgb(22, 163, 74)",
+      "texto": "XLS",
+      "origen": "span.ic"
+    },
+    "rutas": [
+      "/home"
+    ],
+    "nRutas": 1
+  }
+]

@@ -1,0 +1,412 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 02-shell-heredado
+ *
+ * Cabecera, creación rápida e idioma: capa anterior al shell nuevo.
+ *
+ * Trozo literal de las líneas 396-791 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-topbar-search {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* El borde identifica el campo: token fuerte, no el decorativo. */
+.nf-topbar-search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 40px;
+  border-radius: 10px;
+  border: 1px solid var(--nf-border-strong);
+  background: var(--nf-surface);
+  font-size: 14px;
+  color: var(--nf-ink);
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-topbar-search-input::placeholder {
+  color: var(--nf-ink-4);
+}
+
+.nf-topbar-search-input:focus {
+  border-color: var(--nf-app-accent);
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
+}
+
+.nf-topbar-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--nf-ink-4);
+  pointer-events: none;
+}
+
+.nf-topbar-search-kbd {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--nf-ink-4);
+  background: var(--nf-app-surface-1);
+  border: 1px solid var(--nf-line);
+  border-radius: 6px;
+  padding: 2px 6px;
+  pointer-events: none;
+}
+
+.nf-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.nf-lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 4px 5px 4px 9px;
+  border: 1px solid var(--nf-line);
+  border-radius: 8px;
+  background: var(--nf-glass);
+  color: var(--nf-ink-3);
+  box-shadow: 0 1px 2px rgba(15, 27, 45, 0.04);
+}
+
+.nf-lang-switcher--compact {
+  min-height: 30px;
+  padding: 3px 4px 3px 7px;
+}
+
+.nf-lang-switcher-options {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.nf-lang-switcher-btn {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  min-width: 26px;
+  padding: 6px 7px;
+}
+
+.nf-lang-switcher-btn:hover {
+  color: var(--nf-ink);
+  background: var(--nf-app-panel);
+}
+
+.nf-lang-switcher-btn--active {
+  color: var(--nf-text-on-primary);
+  background: var(--nf-primary);
+}
+
+.nf-auth-lang {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 20;
+}
+
+.nf-quick-create {
+  position: relative;
+}
+
+.nf-quick-create-trigger {
+  gap: 6px;
+}
+
+.nf-quick-create-trigger svg:last-child {
+  transition: transform 0.15s ease;
+}
+
+.nf-quick-create-chevron--open {
+  transform: rotate(180deg);
+}
+
+.nf-quick-create-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  min-width: 280px;
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.nf-quick-create-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.nf-quick-create-item:hover,
+.nf-quick-create-item:focus-visible {
+  background: var(--nf-app-surface-1);
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+}
+
+.nf-quick-create-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--nf-app-surface-2);
+  color: var(--nf-ink-2);
+  flex-shrink: 0;
+}
+
+.nf-quick-create-item-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nf-quick-create-item-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  line-height: 1.3;
+}
+
+.nf-quick-create-item-desc {
+  font-size: 11px;
+  color: var(--nf-ink-3);
+  line-height: 1.35;
+}
+
+.nf-topbar-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.nf-topbar-icon-btn:hover {
+  background: var(--nf-app-surface-1);
+}
+
+.nf-topbar-icon-btn--active {
+  background: var(--nf-app-accent-soft);
+  color: var(--nf-app-accent);
+}
+
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidenav__org-name, .nf-sidenav__org-control, .nf-sidenav__profile) {
+  filter: blur(6px);
+  user-select: none;
+}
+
+.nf-private-mode :where(.nf-app-main-inner, .nf-sidenav__org-name, .nf-sidenav__org-control, .nf-sidenav__profile) :where(a, button, input, textarea, select) {
+  pointer-events: none;
+}
+
+.nf-topbar-menu {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+  cursor: pointer;
+  flex-shrink: 0;
+  color: var(--nf-ink);
+}
+
+@media (max-width: 768px) {
+  .nf-topbar {
+    padding: 0 12px 0 10px;
+    gap: 8px;
+  }
+
+  .nf-topbar-search {
+    display: none;
+  }
+
+  .nf-topbar-menu {
+    display: flex;
+  }
+}
+
+/* App sidebar */
+.nf-app-split-2 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .nf-app-split-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Admin: grupos — rail + panel, detalle miembros | permisos */
+.nf-groups-admin {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 900px) {
+  .nf-groups-admin {
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  }
+}
+
+.nf-groups-detail-split {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+
+@media (min-width: 960px) {
+  .nf-groups-detail-split {
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  }
+}/* —— App content: títulos,
+tablas {
+  font-family: var(--font-inter, Inter), system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--nf-ink);
+  margin: 0;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+/* Reset mínimo — conserva aspecto de botón reconocible */
+.nf-app-shell :where(button, input[type="button"], input[type="submit"], input[type="reset"]) {
+  font-family: inherit;
+}
+
+/* ─── Botones pill (modales, CTAs, barras de acción) ─── */
+.nf-app-btn-ghost,
+.nf-app-btn-outline,
+.nf-app-btn-primary,
+.nf-app-btn-success,
+.nf-app-btn-danger,
+.nf-app-btn-soft-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 32px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+  font-family: inherit;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+/* Compacto en tablas / tarjetas */
+.nf-app-btn-ghost.nf-app-btn-sm,
+.nf-app-btn-outline.nf-app-btn-sm,
+.nf-app-btn-primary.nf-app-btn-sm,
+.nf-app-btn-success.nf-app-btn-sm,
+.nf-app-btn-danger.nf-app-btn-sm {
+  padding: 6px 10px;
+  min-height: 28px;
+  font-size: 11px;
+  border-radius: 8px;
+}
+
+a.nf-app-btn-ghost,
+a.nf-app-btn-outline,
+a.nf-app-btn-primary,
+a.nf-app-btn-success,
+a.nf-app-btn-danger,
+a.nf-app-btn-soft-success {
+  display: inline-flex;
+}
+
+.nf-app-btn-ghost {
+  color: var(--nf-ink);
+  background: var(--nf-surface);
+  /* Es un botón: el borde es lo que lo identifica, así que necesita 3:1. */
+  border-color: var(--nf-border-strong);
+}
+
+.nf-app-btn-ghost:hover:not(:disabled) {
+  border-color: var(--nf-input-border-hover);
+  background: var(--nf-app-surface-1);
+}
+
+.nf-app-btn-ghost:disabled {
+  color: var(--nf-text-secondary);
+  border-color: var(--nf-border);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.nf-app-btn-outline {
+  /* `--nf-line` es el borde DECORATIVO (1.19:1 claro, 1.96:1 oscuro): agrupa,
+     no delimita nada pulsable. El límite de un control necesita 3:1 por WCAG
+     1.4.11, y para eso está `--nf-input-border`. */
+  border-color: var(--nf-input-border);
+  background: var(--nf-surface);
+  color: var(--nf-ink-2);
+}
+
+.nf-app-btn-outline:hover:not(:disabled) {
+  border-color: var(--nf-input-border-hover);
+  color: var(--nf-ink);
+  background: var(--nf-app-surface-1);
+}
+
+.nf-app-btn-outline:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}

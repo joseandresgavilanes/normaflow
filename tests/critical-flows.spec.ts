@@ -48,7 +48,7 @@ test.describe("flujos críticos de NormaFlow", () => {
     const dialog = page.getByRole("dialog");
     await dialog.locator("input").first().fill("Riesgo E2E QA");
     await dialog.getByRole("button", { name: "Guardar" }).click();
-    await expect(page.getByText("Riesgo E2E QA", { exact: true })).toBeVisible();
+    await expect(page.getByLabel("Listado").getByText("Riesgo E2E QA", { exact: true })).toBeVisible();
   });
 
   test("crea documento, evidencia y verifica superficies de aprobación", async ({ authenticatedPage: page }) => {
@@ -76,7 +76,11 @@ test.describe("flujos críticos de NormaFlow", () => {
 
     await page.goto("/app/actions");
     await expect(page.getByRole("heading", { name: /Plan de acción/i })).toBeVisible();
-    await expect(page.getByText(/Solicitud|Análisis|Implementación|Verificación|Cerrada/).first()).toBeVisible();
+    // Acotado al contenido: "Implementación" es también un elemento del
+    // sidebar, y ahí vive dentro de un grupo plegado (oculto).
+    await expect(
+      page.locator("#nf-main").getByText(/Solicitud|Análisis|Implementación|Verificación|Cerrada/).first(),
+    ).toBeVisible();
   });
 
   test("recorre KPI, reportes y exportes disponibles", async ({ authenticatedPage: page }) => {
@@ -94,20 +98,23 @@ test.describe("flujos críticos de NormaFlow", () => {
     await expect(pdf).toBeVisible();
     await expect(xlsx).toBeVisible();
     await pdf.click();
-    await expect(page.getByText(/Generado: Informe GAP Assessment \(PDF, demo\)/i)).toBeVisible();
+    await expect(page.locator(".nf-toast").filter({ hasText: /Generado: Informe GAP Assessment \(PDF, demo\)/i })).toBeVisible();
     await xlsx.click();
-    await expect(page.getByText(/Generado: Informe GAP Assessment \(EXCEL, demo\)/i)).toBeVisible();
+    await expect(page.locator(".nf-toast").filter({ hasText: /Generado: Informe GAP Assessment \(EXCEL, demo\)/i })).toBeVisible();
   });
 
   test("cambia de organización y no mezcla datos del workspace", async ({ authenticatedPage: page }) => {
-    await page.goto("/app/documents");
+    await page.goto("/app/risks");
     const sourceRow = page.locator("tbody tr").first();
     const sourceText = await sourceRow.innerText();
-    const orgSelector = page.locator(".nf-sidebar-org select");
+    // El selector de organización dejó de estar duplicado: hay un único
+    // control en la cabecera del sidebar (antes: marca truncada con chevron
+    // inerte + caja "Organización" con su propio select).
+    const orgSelector = page.locator(".nf-sidenav__org-control select");
     await expect(orgSelector).toBeVisible();
     await orgSelector.selectOption({ label: "Logística Norte S.L." });
     await expect(orgSelector).toHaveValue("org_logistica");
-    await expect(page.locator(".nf-sidebar-brand-name")).toContainText("Logística Norte");
+    await expect(orgSelector.locator("option:checked")).toContainText("Logística Norte");
 
     await expect(page.locator("tbody tr").first()).not.toContainText(sourceText);
   });

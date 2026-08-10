@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getAssetsPayload, type AssetsPayload } from "@/lib/actions/assets";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Activos de información | NormaFlow" };
+export const metadata = { title: "Activos de información" };
 export const dynamic = "force-dynamic";
 
 export default async function AssetsPage() {

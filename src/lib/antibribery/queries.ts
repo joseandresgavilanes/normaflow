@@ -16,12 +16,12 @@ export async function getAntibriberyPayload() {
   const organizationId = auth.ctx.organization.id;
   const userId = auth.ctx.user.id;
   const canApprove = auth.can("compliance:approve");
+  const canSensitive = auth.can("antibribery-sensitive:read");
 
   const [
     assessments,
     associates,
     dueDiligence,
-    owners,
     gifts,
     donations,
     conflicts,
@@ -43,11 +43,6 @@ export async function getAntibriberyPayload() {
       where: { organizationId },
       include: { associate: { select: { code: true, name: true, riskTier: true, isPublicOfficial: true, interactsWithPEPs: true } } },
       orderBy: [{ updatedAt: "desc" }, { code: "asc" }],
-    }),
-    prisma.beneficialOwner.findMany({
-      where: { organizationId },
-      include: { associate: { select: { code: true, name: true } } },
-      orderBy: { code: "asc" },
     }),
     prisma.giftHospitalityRecord.findMany({
       where: { organizationId },
@@ -80,6 +75,16 @@ export async function getAntibriberyPayload() {
     prisma.antiBriberyInvestigation.findMany({ where: { organizationId }, orderBy: { code: "asc" } }),
     prisma.user.findMany({ where: { memberships: { some: { organizationId } } }, select: { id: true, name: true } }),
   ]);
+
+  // Beneficiario final (UBO/PEP) es información personal real de terceros —
+  // detrás de antibribery-sensitive:read, no del compliance:read general.
+  const owners = canSensitive
+    ? await prisma.beneficialOwner.findMany({
+        where: { organizationId },
+        include: { associate: { select: { code: true, name: true } } },
+        orderBy: { code: "asc" },
+      })
+    : [];
 
   const assessmentRows = assessments.map((row) => {
     const computed = computeBriberyRisk({
@@ -121,6 +126,9 @@ export async function getAntibriberyPayload() {
       update: auth.can("compliance:update"),
       approve: canApprove,
       export: auth.can("compliance:export"),
+      sensitiveRead: canSensitive,
+      sensitiveCreate: auth.can("antibribery-sensitive:create"),
+      sensitiveUpdate: auth.can("antibribery-sensitive:update"),
     },
     members,
     assessments: assessmentRows,
@@ -145,7 +153,8 @@ export async function getAntibriberyPayload() {
       highRiskAssociates: associates.filter((r) => r.riskTier === "HIGH" || r.riskTier === "CRITICAL").length,
       dueDiligenceOpen: dueDiligence.filter((r) => !["APPROVED", "REJECTED"].includes(r.status)).length,
       dueDiligenceOverdue: dueDiligence.filter((r) => r.nextReviewDate && r.nextReviewDate < new Date() && r.status === "APPROVED").length,
-      pepOwners: owners.filter((r) => r.isPep).length,
+      pepOwners: canSensitive ? owners.filter((r) => r.isPep).length : 0,
+      sensitiveLocked: !canSensitive,
       giftsPending: gifts.filter((r) => !["APPROVED", "REJECTED"].includes(r.status)).length,
       donationsPolitical: donations.filter((r) => r.politicalDonation).length,
       facilitationOpen: facilitation.filter((r) => !["CLOSED", "DISMISSED"].includes(r.status)).length,

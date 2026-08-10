@@ -8,9 +8,10 @@ export const iso50001Pack: StandardPackInput = {
   code: "PACK_ISO_50001",
   name: "ISO 50001 — Energía",
   version: "2018.1",
+  lifecycleStatus: "DEVELOPMENT",
   description: "Paquete normativo ISO 50001:2018 (Sistema de Gestión de la Energía).",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "energy",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "energy",
   ],
   featureFlags: { energyManagement: true, enpiFormulas: true },
   editions: [

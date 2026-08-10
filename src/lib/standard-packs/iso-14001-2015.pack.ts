@@ -11,9 +11,10 @@ export const iso14001Pack: StandardPackInput = {
   code: "PACK_ISO_14001",
   name: "ISO 14001 — Medio ambiente",
   version: "2015.1",
+  lifecycleStatus: "PILOT",
   description: "Paquete normativo ISO 14001:2015 (Gestión Ambiental).",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "environment",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "environment",
   ],
   featureFlags: { environmentalManagement: true },
   editions: [

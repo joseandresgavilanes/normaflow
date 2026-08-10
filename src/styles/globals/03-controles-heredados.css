@@ -1,0 +1,408 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 03-controles-heredados
+ *
+ * Botones, chips y tablas del sistema antiguo.
+ *
+ * Trozo literal de las líneas 792-1182 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+
+.nf-app-btn-primary {
+  color: var(--nf-text-on-primary);
+  background: var(--nf-app-accent);
+  border-color: var(--nf-app-accent);
+}
+
+.nf-app-btn-primary:hover:not(:disabled) {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.nf-app-btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Navegación interna de módulos ISO: misma jerarquía visual que el dashboard. */
+.nf-iso-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.nf-iso-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 8px 12px;
+  /* Pestaña = control: el borde es lo que la identifica, necesita 3:1. */
+  border: 1px solid var(--nf-border-strong);
+  border-radius: 9px;
+  background: var(--nf-surface);
+  color: var(--nf-ink-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.nf-iso-tab:hover:not(:disabled):not([aria-selected="true"]) {
+  border-color: var(--nf-primary-border);
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+
+.nf-iso-tab[aria-selected="true"] {
+  border-color: var(--nf-app-accent);
+  background: var(--nf-app-accent-soft);
+  /* `--nf-app-accent` es el alias del relleno de marca: como texto sobre su
+     propio fondo suave daba 4.11:1. El tono de texto da 5.92:1. */
+  color: var(--nf-primary-active);
+  font-weight: var(--nf-weight-semibold);
+  box-shadow: var(--nf-elevation-1);
+}
+
+.nf-iso-tab:focus-visible {
+  outline: 2px solid var(--nf-app-accent);
+  outline-offset: 2px;
+}
+
+.nf-app-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+}
+
+.nf-app-btn-success {
+  color: var(--nf-text-on-primary);
+  background: var(--nf-success);
+  border-color: var(--nf-success-text);
+}
+
+.nf-app-btn-success:hover:not(:disabled) {
+  background: var(--nf-success-text);
+  border-color: var(--nf-success-text);
+}
+
+.nf-app-btn-success:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nf-app-btn-danger {
+  color: var(--nf-text-on-primary);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.nf-app-btn-danger:hover:not(:disabled) {
+  background: var(--nf-danger-text);
+  border-color: var(--nf-danger-text);
+}
+
+.nf-app-btn-danger:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.nf-app-btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+}
+
+.nf-app-btn-soft-success {
+  color: var(--nf-success-text);
+  background: #16A34A18;
+  border-color: #16A34A40;
+}
+
+.nf-app-btn-soft-success:hover:not(:disabled) {
+  background: #16A34A28;
+  border-color: #16A34A55;
+}
+
+.nf-app-btn-ghost--danger {
+  color: var(--nf-danger-text);
+  /* `--nf-danger-border` delimita un chip de fondo sutil, no un control:
+     sobre la superficie se queda por debajo de 3:1. */
+  border-color: var(--nf-danger-text);
+}
+
+.nf-app-btn-ghost--danger:hover:not(:disabled) {
+  background: var(--nf-danger-subtle);
+  border-color: #FCA5A5;
+  color: var(--nf-danger-text);
+}
+
+/* Acciones de texto en filas densas (no son botones pill) */
+.nf-text-action {
+  display: inline;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  margin: 0;
+  min-height: unset;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--nf-app-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.nf-text-action:hover:not(:disabled) {
+  color: var(--primary-dark);
+}
+
+.nf-text-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nf-text-action--danger {
+  color: var(--nf-danger-text);
+}
+
+.nf-text-action--danger:hover:not(:disabled) {
+  color: var(--nf-danger-text);
+}
+
+.nf-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+  color: var(--nf-ink-3);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nf-icon-btn:hover:not(:disabled) {
+  background: var(--nf-app-surface-1);
+  border-color: var(--nf-border);
+  color: var(--nf-ink);
+}
+
+/* Ancla padding/tipo sobre el reset * { padding: 0 } de @layer base */
+.nf-app-shell .nf-app-btn-ghost,
+.nf-app-shell .nf-app-btn-outline,
+.nf-app-shell .nf-app-btn-primary,
+.nf-app-shell .nf-app-btn-success,
+.nf-app-shell .nf-app-btn-danger,
+.nf-app-shell .nf-app-btn-soft-success {
+  padding: 8px 14px;
+  font-size: 12px;
+  min-height: 32px;
+}
+
+.nf-app-shell .nf-app-btn-ghost.nf-app-btn-sm,
+.nf-app-shell .nf-app-btn-outline.nf-app-btn-sm,
+.nf-app-shell .nf-app-btn-primary.nf-app-btn-sm,
+.nf-app-shell .nf-app-btn-success.nf-app-btn-sm,
+.nf-app-shell .nf-app-btn-danger.nf-app-btn-sm {
+  padding: 6px 10px;
+  font-size: 11px;
+  min-height: 28px;
+}
+
+/* Botones de formulario/modal y CTAs «Crear» de módulo — misma altura que `.nf-app-input` */
+.nf-app-shell :is(.nf-modal-actions, .nf-modal-form, .nf-modal-body form, .nf-section-title) :is(
+  .nf-app-btn-ghost,
+  .nf-app-btn-outline,
+  .nf-app-btn-primary,
+  .nf-app-btn-danger,
+  .nf-app-btn-success
+):not(.nf-app-btn-sm) {
+  padding: var(--nf-form-control-py) var(--nf-form-control-px);
+  min-height: var(--nf-form-control-min-height);
+  font-size: var(--nf-form-control-font-size);
+  line-height: var(--nf-form-control-line-height);
+  border-radius: var(--nf-form-control-radius);
+}
+
+.nf-action-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.nf-action-bar :where(.nf-app-btn-ghost, .nf-app-btn-outline, .nf-app-btn-primary, .nf-app-btn-success, .nf-app-btn-danger, .nf-app-btn-soft-success) {
+  padding: 7px 13px;
+  min-height: 32px;
+  font-size: 12px;
+}
+
+.nf-action-bar .nf-app-input {
+  min-height: 32px;
+  width: auto;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@keyframes nf-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nf-icon-spin {
+  animation: nf-icon-spin 0.75s linear infinite;
+}
+
+.nf-app-btn-primary:focus-visible,
+.nf-app-btn-danger:focus-visible,
+.nf-app-btn-success:focus-visible,
+.nf-app-btn-soft-success:focus-visible,
+.nf-app-btn-outline:focus-visible,
+.nf-app-btn-ghost:focus-visible,
+.nf-icon-btn:focus-visible {
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+  box-shadow: 0 0 0 3px var(--nf-app-accent-soft);
+}
+
+.nf-filter-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nf-ink-2);
+  margin-right: 6px;
+}
+
+.nf-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--nf-input-border);
+  background: var(--nf-surface);
+  color: var(--nf-ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.nf-chip:hover:not(:disabled):not(.nf-chip--on) {
+  border-color: var(--nf-input-border-hover);
+  color: var(--nf-ink);
+  background: var(--nf-app-surface-1);
+}
+
+.nf-chip--on {
+  background: var(--nf-app-accent);
+  border-color: var(--nf-app-accent);
+  color: var(--nf-text-on-primary);
+  box-shadow: none;
+}
+
+.nf-chip--on:hover:not(:disabled) {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: var(--nf-text-on-primary);
+}
+
+.nf-chip:focus-visible,
+.nf-app-btn-outline:focus-visible,
+.nf-app-btn-ghost:focus-visible {
+  /* El foco lo pinta `:focus-visible` de tokens.css; anularlo aquí lo
+     dejaba invisible en 114 campos. */
+  box-shadow: 0 0 0 3px rgba(82, 102, 246, 0.22);
+}
+
+/* Indicadores / KPIs — tarjetas y resumen */
+.nf-kpi-card {
+  border-radius: 12px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+
+.nf-kpi-card:hover {
+  border-color: var(--nf-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.nf-kpi-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 12px;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  margin-bottom: 22px;
+}
+
+.nf-kpi-summary-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: var(--nf-surface);
+  border: 1px solid var(--nf-line);
+  min-width: 0;
+}
+
+.nf-kpi-summary-cell :where(strong) {
+  color: var(--nf-ink);
+  font-weight: 800;
+}
+
+.nf-data-table-wrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--nf-line);
+  background: var(--nf-surface);
+}
+
+.nf-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.nf-data-table thead tr {
+  background: var(--nf-app-surface-2);
+}
+
+.nf-data-table th {
+  padding: 11px 20px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--nf-ink-3);
+  border-bottom: 1px solid var(--nf-line);
+  white-space: nowrap;
+}

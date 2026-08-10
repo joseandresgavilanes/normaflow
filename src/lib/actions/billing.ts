@@ -7,6 +7,7 @@ import { getStripe, isPlanCheckoutConfigured, PLANS, stripePriceIdForPlan } from
 import { logAuditEvent } from "@/lib/audit-log";
 import { parseInput } from "@/lib/validation/common";
 import { billingPlanSchema } from "@/lib/validation/p1";
+import { syncCommercialPackEntitlements } from "@/lib/standard-packs";
 
 type CheckoutPlan = "STARTER" | "GROWTH";
 
@@ -80,7 +81,13 @@ export async function changePlan(plan: CheckoutPlan) {
     prisma.subscription.update({ where: { organizationId: ctx.organization.id }, data: { plan } }),
     prisma.organization.update({ where: { id: ctx.organization.id }, data: { plan } }),
   ]);
-  await logAuditEvent({ ctx, action: "plan_change", module: "billing", recordId: current.stripeSubscriptionId, before: { plan: current.plan }, after: { plan } });
+  const entitlementSync = await syncCommercialPackEntitlements({
+    organizationId: ctx.organization.id,
+    plan,
+    trialEndsAt: ctx.organization.trialEndsAt,
+    grantedById: ctx.user.id,
+  });
+  await logAuditEvent({ ctx, action: "plan_change", module: "billing", recordId: current.stripeSubscriptionId, before: { plan: current.plan }, after: { plan, packEntitlements: entitlementSync.enabledCodes } });
   return { updated: true, plan };
 }
 

@@ -1,3 +1,18 @@
+/**
+ * Casos ILUSTRATIVOS, no clientes reales.
+ *
+ * Las empresas y las personas de esta lista salen de los datos demo del
+ * producto (src/lib/demo-data.ts, src/lib/demo/organizations.ts): "Tecnoserv
+ * Industrial S.A." es la organización de ejemplo y "María Torres" su usuaria
+ * de ejemplo. Describen escenarios de uso plausibles, no resultados obtenidos
+ * por clientes.
+ *
+ * Por eso las páginas que los consumen los rotulan como ejemplos y no los
+ * emiten como `Article` de schema.org. Cuando haya clientes con autorización
+ * por escrito para aparecer, se sustituyen y se retira `illustrative`.
+ */
+export const ILLUSTRATIVE_CASES = true;
+
 export const MARKETING_CASES = [
   {
     slug: "tecnoserv-industrial",
@@ -11,7 +26,7 @@ export const MARKETING_CASES = [
     person: "María Torres",
     role: "Directora de Calidad",
     initials: "MT",
-    color: "#123C66",
+    color: "var(--nf-primary-active)",
     challenge:
       "Documentación dispersa en carpetas de red y correo. Cada auditoría suponía semanas de búsqueda de evidencias.",
     solution:
@@ -32,7 +47,7 @@ export const MARKETING_CASES = [
     person: "Carlos Méndez",
     role: "Responsable de Calidad",
     initials: "CM",
-    color: "#2E8B57",
+    color: "var(--nf-success-text)",
     challenge: "Primera certificación ISO 9001 con equipo reducido y procesos en varias delegaciones.",
     solution: "Plantillas por cláusula, indicadores compartidos y auditorías internas con checklist único.",
     metrics: [
@@ -52,7 +67,7 @@ export const MARKETING_CASES = [
     person: "Ana García",
     role: "CISO y DPO",
     initials: "AG",
-    color: "#D68A1A",
+    color: "var(--nf-warning)",
     challenge: "Cumplir prescripciones de clientes enterprise y preparar certificación ISO 27001 sin ampliar plantilla.",
     solution: "Registro de riesgos con controles del Anexo A, evidencias por control y auditorías internas semestrales.",
     metrics: [

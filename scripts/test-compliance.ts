@@ -435,6 +435,16 @@ async function main() {
     update: {},
     create: { email: "cmp-subject@x.com", name: "Persona Señalada" },
   });
+  // DB triggers require leadInvestigatorId/ownerId/etc. to be an active org
+  // member (see 20260724180000_compliance_management_system.sql "Lead
+  // investigator is not an active organization member"). Without this, that
+  // trigger — not the CHECK constraint under test — is what rejects the insert.
+  for (const u of [owner, handler, subject]) {
+    await prisma.membership.upsert({
+      where: { userId_organizationId: { userId: u.id, organizationId: orgA.id } },
+      update: {}, create: { userId: u.id, organizationId: orgA.id, role: "ORG_ADMIN" },
+    });
+  }
 
   await t("jurisdiction + source + obligation register persists with owner", async () => {
     const jurisdiction = await prisma.jurisdiction.create({

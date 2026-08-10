@@ -3,6 +3,8 @@ import Link from "next/link";
 import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -182,6 +184,29 @@ export default function TrainingModule() {
     showToast("Asignaciones generadas por cambio documental");
   }
 
+
+  type AssignmentRow = (typeof trainingAssignments)[number];
+  const assignmentColumns = useMemo<DataTableColumn<AssignmentRow>[]>(() => [
+    { id: "person", header: "Persona", primary: true, minWidth: 190, hideable: false, sortValue: (a) => a.assigneeName,
+      cell: (a) => <><div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{a.assigneeName}</div><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeEmail}</div></> },
+    { id: "course", header: "Curso", minWidth: 130, sortValue: (a) => a.courseId,
+      cell: (a) => trainingCourses.find((c) => c.id === a.courseId)?.code ?? a.courseId },
+    { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.status,
+      cell: (a) => <Badge status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"} label={STATUS_LABEL[a.status] ?? a.status} /> },
+    { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
+    { id: "process", header: "Proceso", minWidth: 120, sortValue: (a) => a.processCode ?? "",
+      cell: (a) => a.processCode
+        ? <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-primary-active)", textDecoration: "none" }}>{a.processCode}</Link>
+        : <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span> },
+    { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
+      cell: (a) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}</span> },
+    { id: "actions", header: "Acciones", minWidth: 150, hideable: false,
+      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
+        {perm.training.manage && <button type="button" onClick={() => openEditProcess(a)} className="nf-text-action" style={{ marginRight: 10 }}>Proceso</button>}
+        {a.status !== "COMPLETED" && perm.training.manage && <button type="button" onClick={() => markComplete(a)} className="nf-text-action">Completar</button>}
+      </span> },
+  ], [perm.training.manage, trainingCourses, openEditProcess, markComplete]);
+
   return (
     <div>
       <SectionTitle
@@ -205,17 +230,17 @@ export default function TrainingModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
             }}
           >
             <PieChart size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.pct}%</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.pct}%</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Cumplimiento global</div>
           </div>
         </div>
@@ -229,13 +254,13 @@ export default function TrainingModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary-active)",
             }}
           >
             <BookOpen size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.done}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.done}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Completadas</div>
           </div>
         </div>
@@ -245,17 +270,17 @@ export default function TrainingModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FEF2F2",
+              background: "var(--nf-danger-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#DC2626",
+              color: "var(--nf-danger-text)",
             }}
           >
             <GraduationCap size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.overdue}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.overdue}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Vencidas / riesgo</div>
           </div>
         </div>
@@ -265,17 +290,17 @@ export default function TrainingModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
             }}
           >
             <ScrollText size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.retr}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{compliance.retr}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Reacreditación</div>
           </div>
         </div>
@@ -303,7 +328,7 @@ export default function TrainingModule() {
       {tab === "catalog" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {trainingCourses.map((c, idx) => {
-            const accent = ["#5266F6", "#16A34A", "#D97706", "#6B3FB5"][idx % 4];
+            const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)", "var(--nf-primary-active)"][idx % 4];
             return (
               <Card key={c.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14, border: "1px solid var(--nf-line)", boxShadow: "0 12px 36px -24px rgba(82, 102, 246, 0.18)" }}>
                 
@@ -315,7 +340,7 @@ export default function TrainingModule() {
                       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.55, fontWeight: 500 }}>{c.description}</p>
                       <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                         {c.standardTags.map(t => (
-                          <span key={t} style={{ fontSize: 11, fontWeight: 700, background: "#f0f4ff", color: "#5266F6", padding: "4px 10px", borderRadius: 99 }}>
+                          <span key={t} style={{ fontSize: 11, fontWeight: 700, background: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", padding: "4px 10px", borderRadius: 99 }}>
                             {t}
                           </span>
                         ))}
@@ -324,7 +349,7 @@ export default function TrainingModule() {
                       <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 12, fontWeight: 500 }}>
                         Documentos:{" "}
                         {c.linkedDocumentCodes.map(code => (
-                          <Link key={code} href="/app/documents" style={{ color: "#5266F6", fontWeight: 700, marginRight: 8 }}>
+                          <Link key={code} href="/app/documents" style={{ color: "var(--nf-primary-active)", fontWeight: 700, marginRight: 8 }}>
                             {code}
                           </Link>
                         ))}
@@ -339,9 +364,9 @@ export default function TrainingModule() {
                           style={{
                             padding: "10px 12px",
                             borderRadius: 10,
-                            border: "1px solid #16A34A",
+                            border: "1px solid var(--nf-success)",
                             background: "#16A34A12",
-                            color: "#1f6f45",
+                            color: "var(--nf-success-text)",
                             fontSize: 12,
                             fontWeight: 700,
                             cursor: "pointer",
@@ -364,70 +389,14 @@ export default function TrainingModule() {
 
       {tab === "assignments" && (
         <Card style={{ padding: 0, overflow: "hidden" }}>
-          <div className="nf-data-table-wrap" style={{ border: "none", boxShadow: "none", borderRadius: 0 }}>
-            <table className="nf-data-table" style={{ fontSize: 13 }}>
-              <thead>
-                <tr>
-                  <th>Persona</th>
-                  <th>Curso</th>
-                  <th>Estado</th>
-                  <th>Vence</th>
-                  <th>Proceso</th>
-                  <th>Origen</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {trainingAssignments.map(a => {
-                  const course = trainingCourses.find(c => c.id === a.courseId);
-                  return (
-                    <tr key={a.id}>
-                      <td>
-                        <div style={{ fontWeight: 600, color: "var(--nf-ink)" }}>{a.assigneeName}</div>
-                        <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeEmail}</div>
-                      </td>
-                      <td>{course?.code ?? a.courseId}</td>
-                      <td>
-                        <Badge
-                          status={a.status === "COMPLETED" ? "ON_TRACK" : a.status === "OVERDUE" || a.status === "RETRAINING_REQUIRED" ? "OFF_TRACK" : "AT_RISK"}
-                          label={STATUS_LABEL[a.status] ?? a.status}
-                        />
-                      </td>
-                      <td>{formatDate(a.dueAt)}</td>
-                      <td>
-                        {a.processCode ? (
-                          <Link href="/app/processes" style={{ fontSize: 12, fontWeight: 700, color: "#5266F6", textDecoration: "none" }}>
-                            {a.processCode}
-                          </Link>
-                        ) : (
-                          <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
-                        {a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}
-                      </td>
-                      <td style={{ whiteSpace: "nowrap" }}>
-                        {perm.training.manage && (
-                          <button
-                            type="button"
-                            onClick={() => openEditProcess(a)}
-                            className="nf-text-action" style={{ marginRight: 10 }}
-                          >
-                            Proceso
-                          </button>
-                        )}
-                        {a.status !== "COMPLETED" && perm.training.manage && (
-                          <button type="button" onClick={() => markComplete(a)} className="nf-text-action">
-                            Completar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={assignmentColumns}
+            rows={trainingAssignments}
+            rowKey={(a) => a.id}
+            caption="Asignaciones de formación: persona, curso, estado, vencimiento, proceso asociado y origen de la asignación."
+            storageKey="training-assignments"
+            empty={<EmptyState kind="empty" title="No hay asignaciones de formación." description="Las asignaciones enlazan a cada persona con los cursos que debe completar y su fecha límite." />}
+          />
         </Card>
       )}
 
@@ -435,7 +404,7 @@ export default function TrainingModule() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 14 }}>
           {demoPeople.map((p, i) => {
             const mine = trainingAssignments.filter(a => a.assigneeEmail === p.email);
-            const accent = ["#5266F6", "#16A34A", "#D97706"][i % 3];
+            const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)"][i % 3];
             return (
               <Card key={p.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14 }}>
                 
@@ -463,7 +432,7 @@ export default function TrainingModule() {
                   <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink-2)", marginBottom: 10 }}>
                     {mine.filter(m => m.status === "COMPLETED").length}/{mine.length} completadas
                   </div>
-                  <Link href="/app/activity" style={{ fontSize: 12, color: "#5266F6", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
+                  <Link href="/app/activity" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
                     Historial →
                   </Link>
                 </div>
@@ -487,7 +456,7 @@ export default function TrainingModule() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "#5266F6",
+                  color: "var(--nf-primary-active)",
                 }}
               >
                 <PieChart size={22} strokeWidth={2.25} aria-hidden />
@@ -502,7 +471,7 @@ export default function TrainingModule() {
               <li>Asignaciones activas: {trainingAssignments.filter(a => a.status !== "COMPLETED").length}</li>
               <li>Recordatorios pendientes: {trainingAssignments.filter(a => !a.reminderSent && a.status === "ASSIGNED").length}</li>
             </ul>
-            <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "#5266F6", textDecoration: "none" }}>
+            <Link href="/app/reporting" style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-primary-active)", textDecoration: "none" }}>
               Incluir en pack de auditoría →
             </Link>
           </div>
@@ -581,7 +550,7 @@ export default function TrainingModule() {
       <Modal open={!!editAssign} onClose={() => setEditAssign(null)} title="Enlace con proceso" width={420}>
         {editAssign && (
           <div className="nf-modal-form">
-            <p style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-2)", margin: 0 }}>
               {editAssign.assigneeName} · {trainingCourses.find(c => c.id === editAssign.courseId)?.code}
             </p>
             <label>Proceso

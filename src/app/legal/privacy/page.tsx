@@ -1,9 +1,11 @@
 import MarketingLayout from "@/components/layout/MarketingLayout";
+import { createMarketingMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Política de privacidad — NormaFlow",
+export const metadata = createMarketingMetadata({
+  title: "Política de privacidad | NormaFlow",
   description: "Cómo tratamos los datos personales en NormaFlow.",
-};
+  path: "/legal/privacy",
+});
 
 export default function PrivacyPage() {
   return (

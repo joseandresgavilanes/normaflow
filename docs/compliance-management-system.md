@@ -1,5 +1,11 @@
 # Paquete de Gestión de Compliance (ISO 37301)
 
+Pack SPE: `PACK_ISO_37301` (familia `ISO_37301`, lifecycle **PILOT → listo
+para promover**). Backlog: [`docs/pack-live-backlog.md`](pack-live-backlog.md).
+Runbook: [runbooks/iso-37301-support.md](runbooks/iso-37301-support.md).
+Checklist de implementación: [iso-37301-implementation-checklist.md](iso-37301-implementation-checklist.md).
+Landing comercial: `/iso37301`.
+
 Módulo `/app/compliance`: sistema de gestión de compliance — registro de
 obligaciones → jurisdicciones y fuentes → aplicabilidad → riesgos → controles →
 calendario y alertas → evaluación del cumplimiento → cambios regulatorios →
@@ -44,6 +50,14 @@ RECEIVED → ACKNOWLEDGED → UNDER_TRIAGE → ADMISSIBLE | INADMISSIBLE
    siquiera el comodín `*` salta la necesidad de conocer.
 4. **CHECK constraints** — anonimato, admisibilidad motivada, cierre completo,
    purga tras retención, independencia de la investigación.
+5. **Cifrado de campo** (defensa en profundidad, no sustituye lo anterior) —
+   el nombre, correo y teléfono del informante se cifran en reposo
+   (AES-256-GCM, `src/lib/crypto/field-encryption.ts`, clave
+   `SPEAKUP_DATA_ENCRYPTION_KEY`) antes de escribirse en `SpeakUpReport`, y
+   se descifran solo para quien ya tiene una concesión viva sobre el caso.
+   Protege el contenido de la columna ante un volcado de base de datos o una
+   RLS mal configurada; no reemplaza el TLS de transporte ni el cifrado de
+   disco de Supabase, que son capas ya cubiertas.
 
 El informe exportable del canal (`compliance-speak-up`) sale **solo agregado**:
 categoría, estado, modo, severidad y contadores. Sin códigos de caso, sin
@@ -94,7 +108,27 @@ Referencias por **id escalar validado por organización** en las Server Actions:
 15 pestañas: Panel, Obligaciones, Fuentes y jurisdicciones, Riesgos, Controles,
 Evaluaciones, Calendario, Cambios regulatorios, Conflictos de interés, Canal de
 denuncias, Investigaciones, Incumplimientos, Remediación, Formación, Órgano de
-gobierno.
+gobierno. Las 31 de 49 acciones que antes solo existían en el backend —
+incluida `submitSpeakUpReport`, la presentación de una denuncia, la función
+central del canal — están cableadas a controles reales en
+`ComplianceClient.tsx`.
+
+### Mantenimiento y CRUD
+
+Cada registro operativo tiene ahora una ruta de mantenimiento visible en la
+tabla, además del alta: edición auditada de jurisdicciones, fuentes,
+obligaciones, riesgos, controles, evaluaciones en borrador, vencimientos,
+cambios regulatorios, incumplimientos abiertos, planes en borrador, formación
+e informes en borrador. El calendario permite cancelar un vencimiento, y un
+control puede desactivarse sin borrarlo. Una obligación se sustituye, no se
+elimina, para conservar el texto histórico y su fecha de vigencia.
+
+No se ofrece un `DELETE` físico para declaraciones de conflicto, denuncias,
+investigaciones, incumplimientos cerrados, remediaciones aprobadas ni reportes
+presentados: son evidencia del sistema de gestión. Esos registros se manejan
+mediante revisión, recusación, cierre, purga posterior a retención o
+sustitución, siempre con `AuditLog` y las restricciones de separación de
+funciones correspondientes.
 
 ## Reportes (`compliance-*`)
 
@@ -109,6 +143,7 @@ gobierno.
 | `compliance-breaches` | Severidad, causa raíz, notificación |
 | `compliance-remediation` | Avance y verificación de eficacia |
 | `compliance-management-review` | Digest + informes al órgano de gobierno |
+| `compliance-audit-package` | Las nueve secciones anteriores combinadas en un solo export |
 
 ## Permisos
 
@@ -126,6 +161,14 @@ gobierno.
 
 Migración: `20260724180000_compliance_management_system`.
 
+## AuditLog
+
+`writeAuditLog` se ejecuta dentro de la misma `prisma.$transaction` que la
+escritura de negocio, en las 49 acciones de `compliance.ts` y `speak-up.ts` —
+nunca puede persistir el cambio sin su rastro de auditoría, ni al revés. El
+registro de auditoría del canal es deliberadamente pobre: quién actuó y sobre
+qué caso, nunca el contenido de la denuncia ni la identidad del informante.
+
 ## Tests
 
 ```bash
@@ -135,3 +178,10 @@ DATABASE_URL=<postgres desechable> npm run test:compliance
 El script se niega a correr contra Supabase/pooler/AWS. Incluye aserciones de
 lógica pura y CHECKs de base (anonimato, independencia, revisión, verificador ≠
 responsable).
+
+Cobertura live cross-tenant: [`tests-live/compliance-tenant.spec.ts`](../tests-live/compliance-tenant.spec.ts)
+— instalación del pack, tenant A/B, denuncias, anonimato, acceso restringido
+por necesidad de conocer (una concesión viva en `SpeakUpCaseAccess`, no basta
+el permiso `speakup:read`), investigaciones, AuditLog append-only, reportes y
+permisos. Requiere credenciales `TEST_*` de Supabase, nunca el proyecto de
+producción.

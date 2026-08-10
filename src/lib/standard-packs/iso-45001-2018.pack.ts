@@ -11,9 +11,10 @@ export const iso45001Pack: StandardPackInput = {
   code: "PACK_ISO_45001",
   name: "ISO 45001 — Seguridad y salud",
   version: "2018.1",
+  lifecycleStatus: "PILOT",
   description: "Paquete normativo ISO 45001:2018 (Seguridad y Salud en el Trabajo).",
   requiredModules: [
-    "gap", "documents", "audits", "nc", "capa", "indicators", "mgmt-review", "training", "suppliers", "safety",
+    "gap", "documents", "audits", "nonconformities", "actions", "indicators", "management-review", "training", "suppliers", "safety",
   ],
   featureFlags: { occupationalSafety: true },
   editions: [

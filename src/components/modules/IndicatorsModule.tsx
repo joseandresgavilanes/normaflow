@@ -58,7 +58,7 @@ function MiniSpark({ chartId, data, color }: { chartId: string; data: number[]; 
       </defs>
       <polygon points={areaPts} fill={`url(#${gid})`} stroke="none" />
       <polyline points={linePts} fill="none" stroke={color} strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastXi} cy={lastYi} r="3.5" fill="#fff" stroke={color} strokeWidth="2" />
+      <circle cx={lastXi} cy={lastYi} r="3.5" fill="var(--nf-surface)" stroke={color} strokeWidth="2" />
     </svg>
   );
 }
@@ -220,18 +220,18 @@ export default function IndicatorsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#F0FDF4",
+              background: "var(--nf-success-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#1f6f45",
+              color: "var(--nf-success-text)",
               flexShrink: 0,
             }}
           >
             <TrendingUp size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#16A34A", letterSpacing: "-0.03em", lineHeight: 1 }}>{onTrack}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-success-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{onTrack}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En objetivo</div>
           </div>
         </div>
@@ -241,18 +241,18 @@ export default function IndicatorsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FFFBEB",
+              background: "var(--nf-warning-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#9a6510",
+              color: "var(--nf-warning-text)",
               flexShrink: 0,
             }}
           >
             <AlertTriangle size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#D97706", letterSpacing: "-0.03em", lineHeight: 1 }}>{atRisk}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-warning-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{atRisk}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>En riesgo</div>
           </div>
         </div>
@@ -262,18 +262,18 @@ export default function IndicatorsModule() {
               width: 44,
               height: 44,
               borderRadius: 12,
-              background: "#FEF2F2",
+              background: "var(--nf-danger-subtle)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#a32a26",
+              color: "var(--nf-danger-text)",
               flexShrink: 0,
             }}
           >
             <TrendingDown size={22} strokeWidth={2.25} aria-hidden />
           </div>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 26, fontWeight: 600, color: "#DC2626", letterSpacing: "-0.03em", lineHeight: 1 }}>{offTrack}</div>
+            <div style={{ fontSize: 26, fontWeight: 600, color: "var(--nf-danger-text)", letterSpacing: "-0.03em", lineHeight: 1 }}>{offTrack}</div>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 2 }}>Desviados</div>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function IndicatorsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary-active)",
               flexShrink: 0,
             }}
           >
@@ -312,7 +312,7 @@ export default function IndicatorsModule() {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#5266F6",
+              color: "var(--nf-primary-active)",
             }}
           >
             <Target size={28} strokeWidth={2} aria-hidden />
@@ -324,14 +324,14 @@ export default function IndicatorsModule() {
         </Card>
       ) : visibleIndicators.length === 0 ? (
         <Card style={{ padding: 36, textAlign: "center", color: "var(--nf-ink-3)" }}>
-          <Activity size={32} strokeWidth={2} style={{ color: "#5266F6", marginBottom: 12 }} aria-hidden />
+          <Activity size={32} strokeWidth={2} style={{ color: "var(--nf-primary-active)", marginBottom: 12 }} aria-hidden />
           <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--nf-ink)" }}>Nada en esta vista</p>
           <p style={{ margin: "8px 0 0", fontSize: 14 }}>Prueba otro filtro o crea un KPI nuevo.</p>
         </Card>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 18 }}>
           {visibleIndicators.map(ind => {
-            const color = ind.status === "ON_TRACK" ? "#16A34A" : ind.status === "AT_RISK" ? "#D97706" : "#DC2626";
+            const color = ind.status === "ON_TRACK" ? "var(--nf-success)" : ind.status === "AT_RISK" ? "var(--nf-warning)" : "var(--nf-danger)";
             const pct = Math.min((ind.value / ind.target) * 100, 100);
             const Icon = statusIcon(ind.status);
             return (
@@ -363,7 +363,7 @@ export default function IndicatorsModule() {
                         {ind.owner && (
                           <>
                             <span style={{ opacity: 0.45 }}>·</span>
-                            <span style={{ color: "#5266F6", fontWeight: 700 }}>{ind.owner}</span>
+                            <span style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>{ind.owner}</span>
                           </>
                         )}
                       </div>
@@ -407,7 +407,7 @@ export default function IndicatorsModule() {
                             alignItems: "center",
                             gap: 4,
                             fontWeight: 700,
-                            color: ind.trend === "up" ? "#16A34A" : "#DC2626",
+                            color: ind.trend === "up" ? "var(--nf-success-text)" : "var(--nf-danger-text)",
                           }}
                         >
                           {ind.trend === "up" ? <TrendingUp size={14} strokeWidth={2.5} aria-hidden /> : <TrendingDown size={14} strokeWidth={2.5} aria-hidden />}
@@ -423,7 +423,7 @@ export default function IndicatorsModule() {
                       <span>Cumplimiento de meta</span>
                       <span style={{ color }}>{Math.round(pct)}%</span>
                     </div>
-                    <ProgressBar value={pct} color={color} height={7} railColor="#eef2f9" />
+                    <ProgressBar value={pct} color={color} height={7} railColor="var(--nf-surface-sunken)" />
                   </div>
 
                   {ind.clause && (
@@ -434,7 +434,7 @@ export default function IndicatorsModule() {
                           fontSize: 12,
                           fontWeight: 700,
                           background: "var(--nf-app-accent-soft)",
-                          color: "#5266F6",
+                          color: "var(--nf-primary-active)",
                           padding: "4px 10px",
                           borderRadius: 8,
                           border: "1px solid rgba(82, 102, 246, 0.15)",
@@ -576,7 +576,7 @@ export default function IndicatorsModule() {
                   fontSize: 12,
                   fontWeight: 600,
                   background: "rgba(46, 139, 87, 0.1)",
-                  color: "#1f5f3f",
+                  color: "var(--nf-text-secondary)",
                   border: "1px solid rgba(46, 139, 87, 0.2)",
                 }}
               >
@@ -592,7 +592,7 @@ export default function IndicatorsModule() {
                     borderRadius: 99,
                     fontSize: 12,
                     fontWeight: 600,
-                    background: "#f3f6fa",
+                    background: "var(--nf-surface-muted)",
                     color: "var(--nf-ink-2)",
                     border: "1px solid var(--nf-line)",
                   }}
@@ -604,7 +604,7 @@ export default function IndicatorsModule() {
             </div>
             {detail.objective && (
               <p style={{ fontSize: 13, color: "var(--nf-ink-3)", background: "var(--nf-app-surface-2)", padding: "12px 14px", borderRadius: 12, lineHeight: 1.55, border: "1px solid rgba(82, 102, 246, 0.08)" }}>
-                <strong style={{ color: "#5266F6" }}>Objetivo:</strong> {detail.objective}
+                <strong style={{ color: "var(--nf-primary-active)" }}>Objetivo:</strong> {detail.objective}
               </p>
             )}
             <p style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 12 }}>
@@ -634,8 +634,8 @@ export default function IndicatorsModule() {
             </label>
             <div style={{ marginBottom: 16, paddingTop: 14, borderTop: "1px solid var(--nf-line)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#5266F6", letterSpacing: "-0.02em" }}>Procesos enlazados</span>
-                <Link href="/app/processes" style={{ fontSize: 12, color: "#5266F6", fontWeight: 700 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-primary-active)", letterSpacing: "-0.02em" }}>Procesos enlazados</span>
+                <Link href="/app/processes" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700 }}>
                   Mapa de procesos →
                 </Link>
               </div>
@@ -660,8 +660,8 @@ export default function IndicatorsModule() {
                 onClick={saveProcessLink}
                 style={{
                   marginBottom: 12,
-                  background: "#f0f4fa",
-                  color: "#5266F6",
+                  background: "var(--nf-surface-selected)",
+                  color: "var(--nf-primary-active)",
                   border: "1px solid rgba(82, 102, 246, 0.15)",
                   borderRadius: 8,
                   padding: "8px 12px",
@@ -704,9 +704,9 @@ export default function IndicatorsModule() {
                   borderRadius: 10,
                   fontSize: 13,
                   fontWeight: 700,
-                  color: "#5266F6",
+                  color: "var(--nf-primary-active)",
                   textDecoration: "none",
-                  background: "#fff",
+                  background: "var(--nf-surface)",
                 }}
               >
                 Informes

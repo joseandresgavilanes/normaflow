@@ -1,10 +1,20 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { getAppContext } from "@/lib/app-context";
-import { getAdminPayload, type AdminPayload } from "@/lib/server-queries";
+import { getServerAuthorization } from "@/lib/permissions/server";
 import AppRoot from "@/components/app/AppRoot";
+import { getServerLocale } from "@/lib/i18n/server";
+import { translateKnownText } from "@/lib/i18n/messages";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getServerLocale();
+  const title = translateKnownText(locale, "Área privada | NormaFlow");
+  return { title: { default: title, template: "%s | NormaFlow" }, robots: { index: false, follow: false } };
+}
 
 function serializeContext(
   ctx: NonNullable<Awaited<ReturnType<typeof getAppContext>>>,
+  groupPermissions: readonly string[] = [],
 ) {
   if (ctx.mode === "live") {
     return {
@@ -19,6 +29,7 @@ function serializeContext(
       },
       role: ctx.role,
       memberships: ctx.memberships,
+      groupPermissions,
     };
   }
   if (ctx.mode === "needs_organization") {
@@ -45,21 +56,15 @@ export default async function AppLayout({
   const ctx = await getAppContext();
   if (!ctx) redirect("/login");
 
-  // En modo live el payload administrativo es obligatorio. Si Prisma falla,
-  // AppRoot muestra un error explícito y nunca activa el provider mock.
-  let adminPayload: AdminPayload | null = null;
-  if (ctx.mode === "live") {
-    try {
-      adminPayload = await getAdminPayload();
-    } catch (err) {
-      console.error("[app-layout] getAdminPayload failed:", err);
-    }
-  }
+  // The sidebar only needs the lightweight permission list. The large admin
+  // payload is loaded lazily by the admin pages that actually consume it.
+  const groupPermissions = ctx.mode === "live"
+    ? (await getServerAuthorization()).groupPermissions
+    : [];
 
   return (
     <AppRoot
-      initial={serializeContext(ctx)}
-      adminPayload={adminPayload}
+      initial={serializeContext(ctx, groupPermissions)}
     >
       {children}
     </AppRoot>

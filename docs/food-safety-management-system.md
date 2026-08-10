@@ -25,6 +25,17 @@ PCC → límites → monitoreo → desviaciones / correcciones → validación /
 Los alérgenos se vinculan a productos y materias primas por `allergenCodes[]`
 (códigos de `Allergen`), sin tabla de unión.
 
+### Comunicación de cadena (§7.4)
+
+Reutiliza el modelo genérico `CommunicationRecord` (el mismo que usa
+quality-ops) en vez de duplicarlo, etiquetando cada fila con
+`standards: ["ISO_22000"]` — acción `recordChainCommunication`, gated por
+`food-safety:create`. La política RLS de `communication_records` acepta
+`food-safety:read`/`food-safety:create` como alternativa a
+`quality-ops:*` (migración `20260725050000_food_safety_chain_communication`),
+para que un cliente ISO 22000 sin el módulo `quality-ops` activado también
+pueda usarla.
+
 ## Evaluación de peligros
 
 `src/lib/food-safety/hazard.ts`:
@@ -55,10 +66,39 @@ proveedor → lote MP → intermedio (proceso) → terminado → cliente / distr
 `runTraceabilityTest()` / acción `runFoodTraceabilityTest` ejecuta ambos sentidos.
 Un retiro expande lotes afectados con la misma gráfica y marca `RECALLED`.
 
+## Atomicidad
+
+Las 29 acciones de `food-safety.ts` escriben su `AuditLog` dentro de la misma
+`prisma.$transaction` que el registro de negocio (`writeAuditLog`, no el patrón
+`logAuditEvent` no atómico). Además, cuatro acciones que hacían una segunda
+escritura de negocio relacionada ahora quedan atómicas entre sí:
+`createMonitoringRecord` (abre `Deviation` automáticamente si el valor está
+fuera de límite y se pidió `autoOpenDeviation`), `createWithdrawalRecall`
+(marca los lotes afectados como `RECALLED`), `createFoodSafetyCorrection` y
+`verifyFoodSafetyCorrection` (actualizan el estado de la `Deviation` padre).
+
+## UI
+
+Las 13 pestañas (Panel, Productos y MP, Flujos, Peligros, PRP/OPRP, PCC,
+Monitoreo, Desviaciones, Trazabilidad, Retiros, Alérgenos, Emergencias y
+Comunicación de cadena) incluyen edición desde la fila para los registros de
+configuración y archivado reversible para productos, materias primas,
+alérgenos, peligros, PRP/OPRP, PCC y planes de monitoreo. Flujos aprobados,
+lecturas, correcciones, lotes, retiros y comunicaciones conservan su historial
+mediante aprobación, transición o nuevos registros.
+
+## Notificaciones
+
+`createPrerequisiteProgram`, `createOperationalPrp` y `createMonitoringPlan`
+notifican al responsable asignado (`responsibleId`). Desviaciones, retiros y
+emergencias no tienen un campo de responsable individual en el modelo (son
+gestión de equipo), así que no se fuerza un destinatario artificial.
+
 ## Permisos
 
 Módulo `food-safety` (`read|create|update|approve|delete|export|*`). RLS en la
-migración `20260724210000_food_safety_management`.
+migración `20260724210000_food_safety_management` (más la ampliación de
+`communication_records` en `20260725050000_food_safety_chain_communication`).
 
 ## Pack
 

@@ -7,9 +7,11 @@ interface ProgressBarProps {
 }
 export default function ProgressBar({
   value,
-  color = "#5266F6",
+  color = "var(--nf-primary)",
   height = 6,
-  railColor = "#F0F0F0",
+  // El carril por defecto era `#F0F0F0` fijo: en oscuro quedaba una barra
+  // clara sobre el lienzo. Los siete consumidores lo pasaban a mano.
+  railColor = "var(--nf-surface-sunken)",
 }: ProgressBarProps) {
   return (
     <div

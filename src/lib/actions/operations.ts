@@ -25,7 +25,7 @@ import { notifyUser } from "@/lib/notify";
 import { assertCollaboratorCanAccess, assertCollaboratorProcessAccess } from "@/lib/permissions/scope";
 import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
-import { checklistIsReady, criticalFindingsHaveActionPlan } from "@/lib/audit-workflow";
+import { assertAuditIndependence, checklistIsReady, criticalFindingsHaveActionPlan } from "@/lib/audit-workflow";
 import {
   createSignedEvidenceUrl,
   deleteEvidenceFile,
@@ -78,9 +78,13 @@ function refresh(...paths: string[]) {
 }
 
 async function assertProcess(organizationId: string, processId?: string | null) {
-  if (!processId) return;
-  const process = await prisma.process.findFirst({ where: { id: processId, organizationId }, select: { id: true } });
+  if (!processId) return null;
+  const process = await prisma.process.findFirst({
+    where: { id: processId, organizationId },
+    select: { id: true, ownerId: true },
+  });
   if (!process) throw new Error("El proceso no pertenece a la organización.");
+  return process;
 }
 
 async function assertMember(organizationId: string, userId?: string | null) {
@@ -380,7 +384,12 @@ async function auditData(
   existing?: { startedAt: Date | null; completedAt: Date | null },
 ) {
   await assertMember(organizationId, input.auditorId);
-  await assertProcess(organizationId, input.processId);
+  const process = await assertProcess(organizationId, input.processId);
+  assertAuditIndependence({
+    auditorId: input.auditorId,
+    processOwnerId: process?.ownerId,
+    auditeeIds: input.auditeeIds,
+  });
   const participantIds = [...new Set([input.auditorId, ...(input.auditeeIds ?? [])].filter(Boolean))] as string[];
   if (participantIds.length) {
     const activeMembers = await prisma.membership.count({ where: { organizationId, active: true, userId: { in: participantIds } } });

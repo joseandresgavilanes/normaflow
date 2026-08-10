@@ -7,7 +7,7 @@ import { getStandardsEnginePayload, type StandardsEnginePayload } from "@/lib/st
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { STANDARD_PACKS } from "@/lib/standard-packs";
 
-export const metadata = { title: "Normas ISO | NormaFlow" };
+export const metadata = { title: "Normas ISO" };
 export const dynamic = "force-dynamic";
 
 export default async function StandardsPage() {

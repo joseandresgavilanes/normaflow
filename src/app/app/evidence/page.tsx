@@ -6,7 +6,7 @@ import { getAppContext } from "@/lib/app-context";
 import { isAuthorizationError } from "@/lib/permissions/server";
 import { getEvidencePayload } from "@/lib/server-queries";
 
-export const metadata = { title: "Evidencias | NormaFlow" };
+export const metadata = { title: "Evidencias" };
 export const dynamic = "force-dynamic";
 
 export default async function EvidencePage() {

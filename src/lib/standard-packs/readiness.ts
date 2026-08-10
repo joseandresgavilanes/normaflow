@@ -1,0 +1,488 @@
+/**
+ * Checklist de readiness hacia LIVE (32 criterios).
+ * No declara un pack LIVE: solo evalúa evidencia declarativa + heurísticas.
+ * La promoción comercial la hace un humano tras verde en tests live.
+ */
+import type { StandardPackInput } from "./pack-schema";
+import type { PackLifecycleStatus } from "./lifecycle";
+import { materializePackTemplateContent } from "./template-content";
+
+export const LIVE_CRITERIA = [
+  "standard_family",
+  "standard_edition",
+  "standard_pack",
+  "requirement_tree",
+  "gap_questions",
+  "audit_checklist",
+  "evidence_rules",
+  "templates",
+  "specialized_modules",
+  "strict_workflows",
+  "prisma_persistence",
+  "migrations",
+  "organization_id",
+  "rls",
+  "server_guards",
+  "zod",
+  "audit_log",
+  "persistent_reports",
+  "notifications",
+  "permissions",
+  "unit_tests",
+  "integration_tests",
+  "e2e_tests",
+  "live_cross_tenant",
+  "user_docs",
+  "support_runbook",
+  "commercial_page",
+  "pricing_entitlement",
+  "no_p0",
+  "no_p1_security",
+  "marketing_aligned",
+  "acceptance_approved",
+] as const;
+
+export type LiveCriterion = (typeof LIVE_CRITERIA)[number];
+
+export type CriterionEvidence = {
+  criterion: LiveCriterion;
+  met: boolean;
+  note: string;
+};
+
+export type PackReadinessReport = {
+  packCode: string;
+  lifecycle: PackLifecycleStatus;
+  met: number;
+  total: number;
+  percent: number;
+  /** true solo si met === total — aún así la promoción a LIVE es manual. */
+  checklistComplete: boolean;
+  criteria: CriterionEvidence[];
+};
+
+type DomainEvidence = Partial<Record<LiveCriterion, { met: boolean; note: string }>>;
+
+/** Evidencia conocida por pack (actualizar al cerrar gaps). */
+const DOMAIN: Record<string, DomainEvidence> = {
+  PACK_ISO_9001: {
+    specialized_modules: { met: true, note: "SGC núcleo" },
+    strict_workflows: { met: true, note: "Docs/aprobaciones/NC/CAPA" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "Histórico + SPE" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "Core + live security" },
+    server_guards: { met: true, note: "Actions" },
+    zod: { met: true, note: "Actions" },
+    audit_log: { met: true, note: "Core modules" },
+    persistent_reports: { met: true, note: "reporting" },
+    notifications: { met: true, note: "Core notifications" },
+    permissions: { met: true, note: "matrix" },
+    unit_tests: { met: true, note: "varios" },
+    integration_tests: { met: true, note: "test:packs" },
+    e2e_tests: { met: true, note: "app-live / critical-workflows" },
+    live_cross_tenant: { met: true, note: "standards-engine + security" },
+    user_docs: { met: true, note: "PRODUCT + docs SPE + clause coverage table en runbook" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-9001-support.md" },
+    commercial_page: { met: true, note: "Landing 9001" },
+    pricing_entitlement: { met: true, note: "Starter/Growth (entitlement explícito; módulos requeridos incluidos en ESSENTIAL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "Core endurecido" },
+    marketing_aligned: { met: true, note: "Landing alineada" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_27001: {
+    specialized_modules: { met: true, note: "ISMS módulos" },
+    strict_workflows: { met: true, note: "SoA/controles/incidentes" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "Histórico + SPE" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "security-*-tenant" },
+    server_guards: { met: true, note: "Actions" },
+    zod: { met: true, note: "Actions" },
+    audit_log: { met: true, note: "Core" },
+    persistent_reports: { met: true, note: "reporting" },
+    notifications: { met: true, note: "Core" },
+    permissions: { met: true, note: "matrix" },
+    unit_tests: { met: true, note: "varios" },
+    integration_tests: { met: true, note: "test:packs" },
+    e2e_tests: { met: true, note: "security live" },
+    live_cross_tenant: { met: true, note: "security tenant suites" },
+    user_docs: { met: true, note: "docs security + clause coverage table en runbook" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-27001-support.md" },
+    commercial_page: { met: true, note: "Landing 27001" },
+    pricing_entitlement: { met: true, note: "Starter/Growth (entitlement explícito; módulos SGSI incluidos en ESSENTIAL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "Live tenant OK" },
+    marketing_aligned: { met: true, note: "Landing alineada" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_14001: {
+    specialized_modules: { met: true, note: "11 modelos EnMS (10 previos + EnvironmentalBiodiversityRecord)" },
+    strict_workflows: { met: true, note: "Evaluación de cumplimiento con avance de revisión; ciclo biodiversidad IDENTIFIED→CLOSED" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "environmental_management + environmental_biodiversity" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "11 tablas, nf_has_org_permission('environment:*')" },
+    server_guards: { met: true, note: "requirePermission en todas las acciones" },
+    zod: { met: true, note: "Zod en environment.ts" },
+    audit_log: { met: true, note: "writeAuditLog atómico en la misma transacción (cerrado esta entrega)" },
+    persistent_reports: { met: true, note: "ReportExport, 11 tipos env-* incl. biodiversidad" },
+    notifications: { met: true, note: "notifyUser en evaluación de cumplimiento no conforme/parcial (cerrado esta entrega)" },
+    permissions: { met: true, note: "matrix environment:* + viewer/auditor verificado en live tenant" },
+    unit_tests: { met: true, note: "test:env (significancia, cumplimiento puros)" },
+    integration_tests: { met: true, note: "test:env con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav + tab biodiversidad" },
+    live_cross_tenant: { met: true, note: "tests-live/environmental-tenant.spec.ts (nuevo esta entrega)" },
+    user_docs: { met: true, note: "docs/environmental-management.md (nuevo) + checklist de implementación" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-14001-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso14001 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (environment:* incluido en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "RLS + triggers de integridad de tenant verificados" },
+    marketing_aligned: { met: true, note: "Landing 14001 alineada, sin promesas de certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_45001: {
+    specialized_modules: { met: true, note: "11 modelos SG-SST (peligros, riesgo W.T. Fine, consulta, inspecciones, EPP, permisos, incidentes, vigilancia, simulacros, contratistas)" },
+    strict_workflows: { met: true, note: "Incidente en 8 etapas y permiso de trabajo — enforced en app y en trigger de Postgres (doble capa)" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "occupational_safety + safety_sensitive_privacy (RLS reforzada + workflow triggers)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "11 tablas; occupational_health_surveillance con política dedicada safety-sensitive:*" },
+    server_guards: { met: true, note: "requirePermission en todas las acciones; safety-sensitive:* en vigilancia" },
+    zod: { met: true, note: "Zod en safety.ts" },
+    audit_log: { met: true, note: "writeAuditLog atómico en la misma transacción (cerrado esta entrega); metadatos de vigilancia excluyen contenido de salud" },
+    persistent_reports: { met: true, note: "ReportExport, incl. safety-surveillance (permiso reforzado al encolar) y safety-audit-package (excluye vigilancia por minimización)" },
+    notifications: { met: true, note: "safeNotify en reporte/transición de incidente" },
+    permissions: { met: true, note: "matrix safety:* + safety-sensitive:* (nunca CONTRIBUTOR/VIEWER), verificado en live tenant" },
+    unit_tests: { met: true, note: "test:safety (riesgo W.T. Fine, workflow puros)" },
+    integration_tests: { met: true, note: "test:safety con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/safety" },
+    live_cross_tenant: { met: true, note: "tests-live/occupational-safety-tenant.spec.ts (nuevo esta entrega): tenant isolation, salud sensible, workflows DB-enforced, RLS, AuditLog, reportes, permisos" },
+    user_docs: { met: true, note: "docs/occupational-safety-management.md (nuevo), incl. sección de privacidad de vigilancia de la salud" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-45001-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso45001 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (safety:* incluido en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "Permiso reforzado + RLS dedicada + cifrado de campo para datos de salud; workflows DB-enforced" },
+    marketing_aligned: { met: true, note: "Landing 45001 alineada, sin promesas de certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_SIG_9001_14001_45001: {
+    specialized_modules: { met: true, note: "IntegratedSystem/IntegratedSystemStandard/InterestedParty/IntegratedObjective/RequirementAssignment + crosswalk (sig-crosswalk.ts)" },
+    strict_workflows: { met: true, note: "8 acciones de asignación multi-norma cableadas a UI (audits/findings/CAPA/riesgos/cambios/revisión/proveedores/norma-sistema); inmutabilidad histórica DB-enforced sobre la propia edición SIG" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "integrated_management_system (histórico) — sin migración nueva esta entrega (solo manifest + reportes + acciones, sin cambios de esquema)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "5 tablas propias (integrated:*) + requirement_coverage (standards:read/activate, compartida con otros módulos)" },
+    server_guards: { met: true, note: "requirePermission en las 17 acciones de integrated.ts" },
+    zod: { met: true, note: "Zod en integrated.ts" },
+    audit_log: { met: true, note: "writeAuditLog atómico en la misma transacción (cerrado esta entrega — antes usaba logAuditEvent no atómico)" },
+    persistent_reports: { met: true, note: "ReportExport, 11 tipos sig-* incl. sig-compliance-by-standard y sig-common-requirements (nuevos esta entrega)" },
+    notifications: { met: true, note: "N/A directa del módulo — hereda notificaciones de auditorías/CAPA/incidentes subyacentes" },
+    permissions: { met: true, note: "matrix integrated:* + standards:activate para cobertura multirrequisito, verificado en live tenant" },
+    unit_tests: { met: true, note: "test:sig (crosswalk, clasificación, métricas puras)" },
+    integration_tests: { met: true, note: "test:sig con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/integrated" },
+    live_cross_tenant: { met: true, note: "tests-live/integrated-tenant.spec.ts (nuevo esta entrega): tenant isolation, documento/evidencia multirrequisito, auditoría integrada, CAPA compartida, inmutabilidad histórica, AuditLog, reportes, permisos" },
+    user_docs: { met: true, note: "docs/integrated-management-system.md (actualizado con compartibilidad, pack propio, permisos de cobertura)" },
+    support_runbook: { met: true, note: "docs/runbooks/sig-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /sig (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (bundle sobre 9001+14001+45001 ya activas)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "AuditLog atomicity cerrado; permiso reforzado standards:activate para cobertura; inmutabilidad histórica verificada en live tenant" },
+    marketing_aligned: { met: true, note: "Landing SIG alineada: requiere las tres normas activas, sin promesas de certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_22301: {
+    specialized_modules: { met: true, note: "12 modelos BCM (BIA, actividades críticas, productos/servicios prioritarios, dependencias, recursos, estrategias, procedimientos, equipos de crisis, contactos, árbol de comunicación, versiones de plan, activaciones) + BCP/DRP/escenarios/simulacros preexistentes" },
+    strict_workflows: { met: true, note: "BIA borrador→aprobado; estrategia propuesta→aprobada→implementada; plan borrador→aprobado→activado→desactivado con lecciones aprendidas; solo planes APPROVED pueden activarse" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "business_continuity_management (histórico) — sin migración nueva esta entrega (solo acciones/UI/reportes)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 12 tablas BCM, nf_has_org_permission('continuity:*')" },
+    server_guards: { met: true, note: "requirePermission/requireAuthorization en las 31 acciones de continuity.ts, Zod .strict() en validation/continuity.ts" },
+    zod: { met: true, note: "parseInput + esquemas .strict() en validation/continuity.ts; bcpUpdateSchema/drpUpdateSchema pasados a .partial() esta entrega para evitar sobrescritura accidental de campos no enviados" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 31 acciones (ya lo era antes de esta entrega — 0 usos de logAuditEvent)" },
+    persistent_reports: { met: true, note: "ReportExport, 13 tipos bcm-* (9 previos + bcm-priority-products/bcm-plan-versions/bcm-crisis-teams/bcm-activations nuevos esta entrega), bcm-audit-package los agrupa todos" },
+    notifications: { met: true, note: "N/A directa del módulo — activación de plan y resultados de simulacro visibles vía reportes y AuditLog" },
+    permissions: { met: true, note: "matrix continuity:* + continuity:create añadido a CONTRIBUTOR esta entrega (inconsistencia real corregida frente al resto de módulos de dominio)" },
+    unit_tests: { met: true, note: "test:bcm (impactScore, criticalityFor, recoveryPriority, assertRtoWithinMtpd, meetsObjectives, detectGaps, readinessScore)" },
+    integration_tests: { met: true, note: "test:bcm con DB desechable, 23 comprobaciones" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/continuity (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/bcm-tenant.spec.ts (nuevo esta entrega): instalación del pack, tenant isolation, BIA, RTO/RPO/MTPD, planes (incl. activación), ejercicios, reportes, AuditLog, RLS, evidencias" },
+    user_docs: { met: true, note: "docs/business-continuity.md (corregido: la afirmación de permiso continuity:delete no existía en el código; actualizado con las 24 acciones ahora cableadas a UI y los 4 reportes nuevos)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-22301-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso22301 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "24 acciones huérfanas cableadas a UI (BIA, actividades, dependencias, recursos, estrategias, procedimientos, equipos de crisis, contactos, comunicación, versión/aprobación/activación/desactivación de plan) — antes eran inalcanzables desde el producto pese a tener permiso y AuditLog; bug de sobrescritura silenciosa en updateBcp/updateDrp corregido (.partial() + spread condicional)" },
+    marketing_aligned: { met: true, note: "Landing 22301 alineada, sin promesas de certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_42001: {
+    specialized_modules: { met: true, note: "16 modelos AIMS (sistema, caso de uso, evaluación de impacto de 7 dimensiones, riesgo de IA, dataset, fuente de datos, linaje, versión de modelo, evaluación de modelo, control de supervisión humana, transparencia, incidente, evaluación de proveedor, cambio, métrica de monitoreo, salida generada)" },
+    strict_workflows: { met: true, note: "Regla humana DRAFT→HUMAN_REVIEW→APPROVED/REJECTED sobre 4 tipos de artefacto (salida, evaluación de impacto, versión de modelo, cambio), con separación de funciones (quien envía no puede aprobar) y 7 CHECK constraints en Postgres que respaldan la regla incluso ante escrituras directas; ciclo de vida del sistema PLANNED→…→IN_PRODUCTION→RETIRED con aprobación humana obligatoria antes de producción; incidentes en 8 etapas sin saltos" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "ai_management_system (histórico) — sin migración nueva esta entrega (solo acciones/UI/reportes/seguridad de salidas)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 16 tablas AIMS, nf_has_org_permission('aims:*')" },
+    server_guards: { met: true, note: "requirePermission en las 33 acciones de aims.ts; separación de funciones aims:update (enviar) vs aims:approve (decidir)" },
+    zod: { met: true, note: "Zod con .partial() aplicado correctamente en cada punto de actualización" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 33 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico, incluido un $transaction cuyo log vivía fuera de la transacción)" },
+    persistent_reports: { met: true, note: "ReportExport, 10 tipos ai-* (ya existían, sin brecha de reportes en este pack) — ai-human-review es el centro de la auditoría de la regla humana" },
+    notifications: { met: true, note: "safeNotify en aprobación de sistema, incidente reportado/transición, decisión de revisión, métrica con umbral incumplido — ahora alcanzables porque las acciones que las disparan están cableadas a UI" },
+    permissions: { met: true, note: "matrix aims:* ya tenía el par read+create para CONTRIBUTOR desde el origen (única entre los packs de esta sesión sin esa inconsistencia)" },
+    unit_tests: { met: true, note: "test:aims — lógica pura de regla humana/riesgo/impacto/clasificación/calidad de datos/linaje/incidentes/monitoreo/ciclo de vida, más las nuevas pruebas puras de src/lib/aims/ai-safety.ts (PII, secretos, inyección de prompt)" },
+    integration_tests: { met: true, note: "test:aims con DB desechable — CHECK constraints de la regla humana verificados con escritura directa (bypass de la acción), aislamiento multi-tenant en 15 tablas" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/aims (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/aims-tenant.spec.ts (nuevo esta entrega): sistemas, datasets, modelos, salidas, supervisión, incidentes, tenant isolation, AuditLog, reportes" },
+    user_docs: { met: true, note: "docs/ai-management-system.md (actualizado: AuditLog atómico, 30 acciones cableadas a UI, sección de seguridad de salidas de IA, trazabilidad del asistente real)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-42001-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso42001 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (aims:* incluido en ALL_MODULES); presupuesto mensual de tokens de IA por plan (GROWTH 300k, ENTERPRISE sin tope) nuevo esta entrega" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "30 de 33 acciones huérfanas cableadas a UI (el mayor huérfano encontrado en la sesión) — incluye la aprobación de sistemas, el registro de riesgos/datasets/modelos, y sobre todo la activación completa del ciclo de vida; el asistente de IA real del producto (/api/ai) estaba completamente desconectado del libro de gobierno de salidas — recordAIOutput nunca se llamaba — corregido, con detección de secretos (bloquea el envío), PII (marca el registro), heurística de inyección de prompt (marca para revisión) y presupuesto mensual" },
+    marketing_aligned: { met: true, note: "Landing 42001 alineada, sin promesas de cumplimiento automático ni de certificación" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_50001: {
+    specialized_modules: { met: true, note: "15 modelos de gestión energética (fuente, uso, uso significativo, revisión energética, línea base versionada, EnPI versionado, medidor, lectura, variable relevante, factor estático, oportunidad, plan de acción, verificación de ahorro, evaluación de compras, revisión de diseño)" },
+    strict_workflows: { met: true, note: "Revisión energética DRAFT→IN_PROGRESS→UNDER_REVIEW→APPROVED sin saltos, con CHECK de aprobador+fecha; línea base y EnPI versionados (código+versión únicos) con supersesión atómica de la versión anterior; verificación de ahorro exige verificador+fecha (CHECK) distinto del registro" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "20260724200000_energy_management_system (histórico) — sin migración nueva esta entrega" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 15 tablas EnMS, nf_has_org_permission('energy:*')" },
+    server_guards: { met: true, note: "requirePermission en las 18 acciones de energy.ts" },
+    zod: { met: true, note: "Zod en los esquemas de creación con formato/versión de fórmula validados" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 18 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico, incluidos dos $transaction de versionado [línea base, EnPI] cuyo log vivía fuera de la transacción, y 4 acciones sin ningún registro de auditoría: createRelevantVariable, createStaticFactor, updateEnergyActionProgress, createEnergyProcurementEvaluation)" },
+    persistent_reports: { met: true, note: "9 reportes enms-* ya existían sin brecha (incluido enms-audit-package) — único pack de esta sesión sin hueco de reportes desde el origen" },
+    notifications: { met: true, note: "safeNotify añadido esta entrega en asignación de SEU/oportunidad/plan de acción y en verificación de ahorro (notifica al responsable del plan) — antes el módulo no disparaba ningún aviso" },
+    permissions: { met: true, note: "matrix: energy:read/create ya correcto para CONTRIBUTOR desde el origen; energy:approve reservado a gestión" },
+    unit_tests: { met: true, note: "scripts/test-energy.ts — 8 pruebas puras/CHECK ya existentes (fórmulas, normalización, workflow de revisión, instalación del pack, versionado de línea base/EnPI, CHECK de aprobación/verificación)" },
+    integration_tests: { met: true, note: "test:energy con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/energy (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/energy-tenant.spec.ts (nuevo esta entrega): fórmulas, línea base, EnPI, datos concurrentes (N intentos concurrentes de versionar el mismo código → exactamente uno gana, sin corrupción), tenant isolation, reportes, AuditLog, RLS" },
+    user_docs: { met: true, note: "docs/energy-management-system.md (actualizado: AuditLog atómico, 15 acciones cableadas a UI, pestañas Fuentes/usos y Variables/factores nuevas)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-50001-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso50001 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (energy:* incluido en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "15 de 18 acciones huérfanas cableadas a UI (el peor ratio de toda la sesión) — la interfaz completa era de solo lectura salvo tres transiciones de estado; ni fuentes, ni usos, ni revisiones, ni SEU, ni líneas base, ni EnPI, ni medidores, ni lecturas, ni variables, ni factores, ni oportunidades, ni planes, ni verificaciones, ni compras, ni diseño podían crearse desde /app/energy. Añadidas también dos pestañas que no existían (Fuentes y usos; Variables y factores) — sin ellas ni siquiera se podían ver esos datos" },
+    marketing_aligned: { met: true, note: "Landing 50001 alineada, sin promesas de ahorro garantizado ni de certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_22000: {
+    specialized_modules: { met: true, note: "21 modelos SGIA/HACCP (producto, materia prima, uso previsto, flujo, etapa, peligro, evaluación de peligro, PRP, OPRP, PCC, límite crítico, plan de monitoreo, registro de monitoreo, desviación, corrección, validación, verificación, lote de trazabilidad, retiro/recall, alérgeno, emergencia) + reutilización de CommunicationRecord genérico para comunicación de cadena" },
+    strict_workflows: { met: true, note: "Flujo de proceso DRAFT→APPROVED con verificación in situ; evaluación de peligro con decisión PRP/OPRP/CCP calculada (severidad×probabilidad); monitoreo fuera de límite abre desviación automáticamente (misma transacción); desviación→corrección→verificación con actualización de estado encadenada; retiro/recall expande lotes afectados adelante y atrás sobre la cadena real antes de marcarlos" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "20260724210000_food_safety_management (histórico) + 20260725050000_food_safety_chain_communication (nueva esta entrega: RLS de communication_records ampliada a food-safety:read/create)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 21 tablas food-safety, más política ampliada en communication_records para permitir a food-safety:read/create sin requerir el módulo quality-ops" },
+    server_guards: { met: true, note: "requirePermission en las 28 acciones de food-safety.ts + la nueva recordChainCommunication" },
+    zod: { met: true, note: "Zod en todos los esquemas de creación" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 29 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico). Además se corrigieron 4 escrituras múltiples que no eran atómicas entre sí: createMonitoringRecord (abre Deviation automáticamente si está fuera de límite), createWithdrawalRecall (marca lotes afectados como RECALLED), createFoodSafetyCorrection y verifyFoodSafetyCorrection (actualizan el estado de la Deviation padre) — antes un fallo a mitad de camino podía dejar una lectura fuera de límite sin desviación abierta, o un retiro sin marcar todos sus lotes" },
+    persistent_reports: { met: true, note: "10 reportes fsms-* ya existían sin brecha (incluido fsms-audit-package)" },
+    notifications: { met: true, note: "safeNotify añadido esta entrega en asignación de responsable de PRP/OPRP/plan de monitoreo — antes el módulo no disparaba ningún aviso. Desviaciones, retiros y emergencias no tienen un campo de responsable individual en el modelo (son gestión de equipo), así que no se fuerza un destinatario artificial" },
+    permissions: { met: true, note: "matrix: food-safety:read/create ya correcto para CONTRIBUTOR desde el origen" },
+    unit_tests: { met: true, note: "scripts/test-food-safety.ts — 7 pruebas puras/CHECK ya existentes (peligros, límites, trazabilidad adelante/atrás, workflow de flujo, instalación del pack)" },
+    integration_tests: { met: true, note: "test:food-safety con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/food-safety (nuevo esta entrega, cierra el hueco 'E2E HACCP' del backlog)" },
+    live_cross_tenant: { met: true, note: "tests-live/food-safety-tenant.spec.ts (nuevo esta entrega): peligros, PCC, OPRP, límites críticos, monitoreo (desviación automática), trazabilidad adelante/atrás real (proveedor→materia prima→lote→proceso→producto→cliente), recall (expansión de lotes), tenant A/B, RLS, AuditLog" },
+    user_docs: { met: true, note: "docs/food-safety-management-system.md (actualizado: AuditLog atómico, 22 acciones cableadas a UI, comunicación de cadena, pestaña nueva)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-22000-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso22000 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (food-safety:* incluido en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "22 de 29 acciones huérfanas cableadas a UI (79%, el segundo peor ratio de la sesión) — más el hallazgo de comunicación de cadena (§7.4) sin ninguna interfaz pese a existir el modelo genérico reutilizable, y una brecha de RLS real: ese modelo genérico solo aceptaba quality-ops:*, permiso que un cliente ISO 22000 sin quality-ops activado nunca tiene — corregida con una nueva migración que amplía SELECT/INSERT a food-safety:read/create" },
+    marketing_aligned: { met: true, note: "Landing 22000 alineada, sin promesas de certificación automática ni de eliminación de peligros" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_20000: {
+    specialized_modules: { met: true, note: "20 modelos ITSM (servicio, catálogo, propietario, SLA, OLA, solicitud, incidente de servicio, problema, error conocido, cambio, release, despliegue, CI, relación CMDB, plan de disponibilidad/capacidad/continuidad, proveedor, informe, artículo de conocimiento) + IncidentCrossLink nuevo esta entrega para vincular sin fusionar con SecurityIncident/AIIncident/OccupationalIncident" },
+    strict_workflows: { met: true, note: "Incidente NEW→ASSIGNED→INVESTIGATING→RESOLVED→CONFIRMED→CLOSED; problema IDENTIFIED→…→CLOSED con conversión automática a KNOWN_ERROR (misma transacción que el alta del error conocido); cambio REQUESTED→…→CLOSED con aprobación DB-enforced; los tres workflows y sus enums de estado permanecen completamente separados de SecurityIncident/AIIncident/OccupationalIncident — el nuevo IncidentCrossLink solo relaciona, nunca fusiona estado" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "20260724220000_itsm_service_management (histórico) + 20260725060000_itsm_incident_cross_link (nueva esta entrega: tabla + RLS para relacionar ITSMIncident con los otros tres dominios de incidente)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 20 tablas itsm_* más incident_cross_links (nueva)" },
+    server_guards: { met: true, note: "requirePermission en las 20 acciones de itsm.ts + la nueva linkItsmIncidentCrossDomain" },
+    zod: { met: true, note: "Zod en todos los esquemas de creación" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 20 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico). Corregida además una escritura múltiple no atómica: createKnownError podía avanzar el Problem padre a KNOWN_ERROR en una escritura separada — ahora ambas comparten transacción, evitando un error conocido documentado sin que el problema padre refleje el avance" },
+    persistent_reports: { met: true, note: "9 reportes itsm-* ya existían sin brecha + itsm-audit-package nuevo esta entrega (bundle de SLA, incidentes, problemas, cambios, disponibilidad, capacidad, continuidad y proveedores, mismo patrón que los demás *-audit-package)" },
+    notifications: { met: true, note: "safeNotify añadido esta entrega en asignación de propietario de servicio, asignación de solicitud/incidente/problema y propietario de CI — antes el módulo no disparaba ningún aviso" },
+    permissions: { met: true, note: "matrix: itsm:read/create ya correcto para CONTRIBUTOR desde el origen" },
+    unit_tests: { met: true, note: "scripts/test-itsm.ts — workflows de incidente/problema/cambio, helpers de disponibilidad/SLA, cadena servicio→SLA→incidente→problema→cambio→CMDB, CHECKs de auto-relación CMDB y aprobación de cambio" },
+    integration_tests: { met: true, note: "test:itsm con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/itsm (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/itsm-tenant.spec.ts (nuevo esta entrega): SLA, incidentes, problemas, cambios, CMDB, vínculo cruzado ITSMIncident↔AIIncident (regresión de que ambos workflows permanecen independientes), tenant A/B, RLS, AuditLog, reportes (itsm-audit-package)" },
+    user_docs: { met: true, note: "docs/itsm-service-management.md (actualizado: AuditLog atómico, 20 acciones cableadas a UI, IncidentCrossLink, itsm-audit-package)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-20000-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso20000 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (itsm:* incluido en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "20 de 23 acciones huérfanas cableadas a UI (87%, el peor ratio de la sesión — la interfaz original solo permitía tres transiciones de estado, ninguna creación) — más el hallazgo de integración pedido explícitamente: ITSMIncident no tenía ninguna forma de relacionarse con SecurityIncident/AIIncident/OccupationalIncident pese a ser un requisito funcional del cierre, cerrado con IncidentCrossLink + RLS propia en vez de forzar un merge de tablas o de workflows" },
+    marketing_aligned: { met: true, note: "Landing 20000 alineada, distingue explícitamente incidente de servicio de incidente de seguridad, sin prometer certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_13485: {
+    specialized_modules: { met: true, note: "25 modelos de QMS de dispositivos médicos (familia, dispositivo, DMR, DHF, input, output, revisión, verificación, validación, transferencia, archivo de riesgos, proveedor crítico, cualificación, validación de proceso, validación de esterilización, lote, trazabilidad, queja, evento adverso, PMS, acción de campo, retiro, requisito regulatorio, presentación regulatoria) + MdRetentionPolicy nuevo esta entrega" },
+    strict_workflows: { met: true, note: "DMR DRAFT→UNDER_REVIEW→APPROVED→SUPERSEDED (aprobación DB-enforced); queja RECEIVED→…→CLOSED; evento adverso REPORTED→UNDER_REVIEW→(REPORTED_TO_AUTHORITY)→CLOSED (workflow nuevo esta entrega — antes no existía ninguna transición); FSCA DRAFT→…→CLOSED (nuevo); PMS PLANNED→IN_PROGRESS→(OVERDUE)→COMPLETED (nuevo); retiro DRAFT→…→CLOSED; purga de queja/evento adverso solo tras vencer la retención, reforzada por CHECK (nuevo)" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "20260724230000_medical_device_qms (histórico) + 20260725070000_medical_devices_retention_privacy (nueva esta entrega: MdRetentionPolicy, retentionUntil/purgedAt en queja y evento adverso, reclasificación de RLS de PMS, CHECK de purga tras retención)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 24 tablas medical-devices/md-sensitive + md_retention_policies (nueva). Corregida esta entrega una brecha real: md_post_market_surveillances estaba en el grupo medical-devices:* (legible por CONTRIBUTOR/VIEWER) pese a que su campo findings lleva la misma minimización de PII que Complaint/AdverseEvent — reclasificada a md-sensitive:*, igual que las otras tres tablas de vigilancia" },
+    server_guards: { met: true, note: "requirePermission en las 33 acciones de medical-devices.ts (26 preexistentes + 7 nuevas: transición de evento adverso/PMS/FSCA, purga de queja/evento adverso, política de retención)" },
+    zod: { met: true, note: "Zod en todos los esquemas de creación" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 33 acciones — cerrado esta entrega: 15 de las 26 acciones preexistentes (todo el diseño: input/output/revisión/verificación/validación/transferencia; lotes; trazabilidad; transición de queja; PMS; FSCA; ambos regulatorios) no dejaban NINGÚN rastro de auditoría, pese a ser exactamente las áreas de cobertura exigidas por el cierre (diseño, lotes, trazabilidad, quejas, eventos adversos, PMS, FSCA, recall, regulación)" },
+    persistent_reports: { met: true, note: "11 reportes md-* ya existían sin brecha de datos. Corregido esta entrega: md-audit-package bundleaba las 4 secciones md-sensitive (quejas, PMS, eventos, retiros) sin volver a comprobar permiso — un usuario con solo medical-devices:export podía recibirlas igual. Excluidas del bundle (mismo patrón que safety-audit-package excluyendo safety-surveillance) y añadido un guard explícito md-sensitive:read en exportReport para esos 4 report ids exportados por separado" },
+    notifications: { met: true, note: "No aplica: a diferencia de food-safety/energy, ningún modelo de este dominio tiene un campo de responsable asignado al crearse (DMR/DHF se aprueban, no se asignan; queja/evento/PMS/FSCA/retiro son gestión de equipo) — no se fuerza un destinatario artificial" },
+    permissions: { met: true, note: "matrix: medical-devices:read/create ya correcto para CONTRIBUTOR desde el origen; md-sensitive:* ya correctamente ausente de CONTRIBUTOR/VIEWER desde el origen (confirmado, no requirió corrección)" },
+    unit_tests: { met: true, note: "scripts/test-medical-devices.ts — ampliado esta entrega con transiciones de evento adverso/FSCA/PMS y cálculo de fecha de retención + guardia de purga, sobre las pruebas puras/CHECK ya existentes (privacidad, workflows, cobertura de inputs)" },
+    integration_tests: { met: true, note: "test:medical-devices con DB desechable, incluida una prueba nueva de CHECK de purga antes de vencer la retención" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/medical-devices (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/medical-devices-tenant.spec.ts (nuevo esta entrega): acceso sensible (md-sensitive vs medical-devices, incluida la PMS reclasificada), cadena de diseño (DHF→input→output→verificación→validación), lote, trazabilidad, queja, evento adverso, retiro, tenant A/B, RLS, AuditLog, reportes" },
+    user_docs: { met: true, note: "docs/medical-device-quality-management.md (actualizado: AuditLog atómico, retención configurable, cifrado, reclasificación de PMS, 33 acciones cableadas a UI)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-13485-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso13485 (nueva) — no afirma sustituir requisitos regulatorios nacionales" },
+    pricing_entitlement: { met: true, note: "Growth+ (medical-devices:*/md-sensitive:* incluidos en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "23 de 26 acciones preexistentes sin interfaz (88%, empata como peor ratio de la sesión) — más varios hallazgos de seguridad reales cerrados esta entrega: PMS bajo RLS incorrecta (medical-devices:* en vez de md-sensitive:*); AdverseEvent/PMS/FSCA con workflow de estados completo en el schema pero sin ninguna función para transicionarlo (estado inalcanzable); md-audit-package filtrando las 4 secciones sensibles sin re-chequeo de permiso; FieldSafetyAction.reason y ProductRecall.reason sin la minimización de PII ni el cifrado que ya tenían Complaint/AdverseEvent/PMS; sin retención configurable para quejas/eventos adversos cerrados. Cifrado de campo nuevo (MD_SENSITIVE_DATA_ENCRYPTION_KEY) para description/investigationSummary/findings/reason — no aplicado a anonymizedSubjectRef/customerAccountRef, que permanecen en claro para no romper su CHECK de opacidad" },
+    marketing_aligned: { met: true, note: "Landing 13485 alineada, afirma explícitamente ser una plataforma configurable que complementa — no sustituye — requisitos regulatorios nacionales (MDR, FDA QSR/QMSR)" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_37001: {
+    specialized_modules: { met: true, note: "13 modelos especializados de antisoborno (evaluación de riesgo de soborno, socio de negocio, debida diligencia, beneficiario final/UBO, regalos y hospitalidad, donaciones y patrocinios, declaración de conflicto ABMS, pago de facilitación, prueba de control financiero/no financiero, aprobación de alto riesgo, compromiso antisoborno, puente de investigación) — extiende ISO 37301 (obligaciones, canal de denuncias, Investigation, CAPA) sin duplicarlos" },
+    strict_workflows: { met: true, note: "Debida diligencia DRAFT→SCREENING→REVIEW→ENHANCED_REVIEW→APPROVED|REJECTED→PERIODIC_REVIEW con revisión reforzada obligatoria para PEP/alto riesgo; regalos SUBMITTED→MANAGER_REVIEW→COMPLIANCE_REVIEW→APPROVED|REJECTED, compliance nunca se salta por encima de umbral o con funcionario público; aprobación de alto riesgo con segregación solicitante≠aprobador (regla de dominio, no solo UI); conflicto ABMS: nadie revisa su propia declaración" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "20260724190000_anti_bribery_management_system (histórico) + 20260725080000_antibribery_sensitive_privacy (nueva esta entrega: permiso antibribery-sensitive y reclasificación de RLS de beneficial_owners)" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 13 tablas antibribery bajo compliance:* + reclasificación de beneficial_owners a antibribery-sensitive:* (hallazgo real de esta entrega)" },
+    server_guards: { met: true, note: "requirePermission en las 22 acciones de antibribery.ts (compliance:* para el grueso del dominio, antibribery-sensitive:* para beneficiario final)" },
+    zod: { met: true, note: "Zod en todos los esquemas de creación" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 22 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico). Corregida además una escritura múltiple no atómica: createBeneficialOwner podía marcar businessAssociate.ownershipKnown en una escritura separada de la creación del UBO — ahora comparten transacción" },
+    persistent_reports: { met: true, note: "10 reportes abms-* ya existían sin brecha + abms-audit-package nuevo esta entrega (bundle de riesgo, terceros, debida diligencia, regalos, donaciones, conflictos, alto riesgo, controles e investigaciones — excluye deliberadamente beneficiarios finales, igual que safety-audit-package excluye vigilancia de la salud y md-audit-package excluye vigilancia de dispositivos)" },
+    notifications: { met: true, note: "safeNotify ya existía para transitionDueDiligence (avisa al propietario del socio) desde el origen — sin brecha nueva que cerrar" },
+    permissions: { met: true, note: "matrix: compliance:read/create ya correcto desde el origen (CONTRIBUTOR solo lee, COMPLIANCE_MANAGER crea — deliberado, igual que el resto del SGC). antibribery-sensitive:* añadido esta entrega, no otorgado a CONTRIBUTOR/VIEWER" },
+    unit_tests: { met: true, note: "scripts/test-antibribery.ts — workflows de debida diligencia/regalos/alto riesgo, uplift de riesgo de soborno, ya existentes; corregido esta entrega un defecto real: el script no tenía la rama de solo-pruebas-puras cuando DATABASE_URL apunta a una base gestionada (fallaba duro en vez de degradar, a diferencia de todos los demás scripts de la sesión)" },
+    integration_tests: { met: true, note: "test:antibribery con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/antibribery (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/antibribery-tenant.spec.ts (nuevo esta entrega): riesgo de soborno, debida diligencia, beneficiario final (acceso sensible, incluida la reclasificación), regalos, segregación de aprobación de alto riesgo, tenant A/B, RLS, AuditLog, reportes" },
+    user_docs: { met: true, note: "docs/anti-bribery-management-system.md (actualizado: AuditLog atómico, antibribery-sensitive, abms-audit-package, 22 acciones cableadas a UI)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-37001-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso37001 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (antibribery incluido en ALL_MODULES; compliance:*/antibribery-sensitive:* ya correctos desde origen)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "14 de 22 acciones sin interfaz (64%) — todas cableadas esta entrega. Más un hallazgo de seguridad real: beneficiario final (nombre legal completo y condición PEP de terceros reales) estaba detrás del permiso general compliance:read, legible por cualquier rol con ese permiso — reclasificado a antibribery-sensitive:*, no otorgado a CONTRIBUTOR/VIEWER, mismo patrón que safety-sensitive/md-sensitive. También corregido: abms-beneficial-owners ahora exige antibribery-sensitive:read explícito en exportReport, y queda excluido del nuevo abms-audit-package" },
+    marketing_aligned: { met: true, note: "Landing 37001 alineada, presenta el pack como extensión configurable del SGC, sin prometer certificación automática" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25 (ronda de cierre individual, tras la aprobación en bloque de los otros 12 packs). Ver docs/pack-live-backlog.md." },
+  },
+  PACK_ISO_37301: {
+    specialized_modules: { met: true, note: "19 modelos de compliance (jurisdicción, fuente regulatoria, obligación, aplicabilidad por jurisdicción, riesgo, control, evaluación, calendario, declaración de conflicto de interés, cambio regulatorio, configuración del canal, denuncia, acceso al caso, evidencia protegida, investigación, incumplimiento, plan de remediación, formación, informe al órgano de gobierno) — el pack más maduro de base de todos los de esta sesión" },
+    strict_workflows: { met: true, note: "Dos módulos de permiso deliberadamente separados (compliance vs speakup: tener el programa a la vista no da acceso a un caso); acceso a un expediente exige una concesión viva en SpeakUpCaseAccess (necesidad de conocer), reforzada por política RLS RESTRICTIVE; independencia estructural de investigador (CHECK: no puede ser la persona señalada) con recusación y reasignación; anonimato garantizado por CHECK (una denuncia ANONYMOUS no puede tener identidad, ni siquiera del usuario autenticado); purga solo tras vencer la retención (CHECK)" },
+    prisma_persistence: { met: true, note: "Core" },
+    migrations: { met: true, note: "compliance_management_system (histórico) — sin migración nueva esta entrega" },
+    organization_id: { met: true, note: "Core" },
+    rls: { met: true, note: "RLS org-scoped en las 19 tablas más política RESTRICTIVE de necesidad de conocer sobre el canal (speak_up_reports, speak_up_case_access, speak_up_evidence, investigations) — ya existía desde el origen" },
+    server_guards: { met: true, note: "requirePermission en las 34 acciones de compliance.ts y las 15 de speak-up.ts; requireCaseAccess adicional en cada mutación/lectura de un caso" },
+    zod: { met: true, note: "Zod en ambos módulos de acción" },
+    audit_log: { met: true, note: "writeAuditLog atómico en las 49 acciones (cerrado esta entrega — antes usaba logAuditEvent no atómico; incluidos varios $transaction cuyo log vivía fuera de la transacción, y refreshCalendarAlerts reestructurado para no mezclar notificaciones de red dentro de la transacción de base de datos)" },
+    persistent_reports: { met: true, note: "9 reportes compliance-* ya existían sin brecha; añadido compliance-audit-package esta entrega (agregación de las 9 secciones, mismo patrón que env/safety/bcm/ai/enms/fsms/md-audit-package)" },
+    notifications: { met: true, note: "safeNotify en intake de denuncia, acuse, respuesta, cierre, autorización de acceso, reasignación por recusación, obligación asignada, cambio regulatorio con impacto, plan aprobado" },
+    permissions: { met: true, note: "matrix: compliance:* reservado a COMPLIANCE_MANAGER (deliberado — a diferencia de otros dominios operativos, una obligación de compliance no la crea cualquier contribuidor); speakup:create abierto a todos los roles incluido VIEWER, porque denunciar es la razón de existir del canal — ya correcto desde el origen, sin inconsistencia que corregir" },
+    unit_tests: { met: true, note: "scripts/test-compliance.ts — 19 pruebas puras/CHECK ya existentes (aplicabilidad, riesgo, calendario, evaluación, canal, investigación, incumplimiento, remediación, órgano de gobierno, CHECK constraints, tenant isolation), sin cambios esta entrega" },
+    integration_tests: { met: true, note: "test:compliance con DB desechable" },
+    e2e_tests: { met: true, note: "tests/app.spec.ts — nav a /app/compliance (nuevo esta entrega)" },
+    live_cross_tenant: { met: true, note: "tests-live/compliance-tenant.spec.ts (nuevo esta entrega): denuncias, anonimato, acceso restringido (necesidad de conocer), investigaciones, tenant isolation, reportes, RLS, AuditLog" },
+    user_docs: { met: true, note: "docs/compliance-management-system.md (actualizado: AuditLog atómico, 31 acciones cableadas a UI, cifrado de la identidad del informante, compliance-audit-package)" },
+    support_runbook: { met: true, note: "docs/runbooks/iso-37301-support.md (nuevo)" },
+    commercial_page: { met: true, note: "Landing /iso37301 (nueva)" },
+    pricing_entitlement: { met: true, note: "Growth+ (compliance:*/speakup:* incluidos en ALL_MODULES)" },
+    no_p0: { met: true, note: "Sin P0 conocido" },
+    no_p1_security: { met: true, note: "31 de 49 acciones huérfanas cableadas a UI (compliance.ts 23/34, speak-up.ts 8/15) — incluida, como hallazgo más grave, submitSpeakUpReport: el formulario para presentar una denuncia no existía en la interfaz, dejando inalcanzable la función central del canal; cifrado de campo (AES-256-GCM) añadido para el nombre, correo y teléfono del informante en reposo (defensa en profundidad sobre RLS + speakup:read), generalizando el cifrador ya usado por vigilancia de la salud (ISO 45001)" },
+    marketing_aligned: { met: true, note: "Landing 37301 alineada, sin promesas de anonimato absoluto más allá de lo que garantiza el modo elegido ni de blindaje legal frente a represalias" },
+    acceptance_approved: { met: true, note: "Firma comercial humana aprobada por el propietario del producto — 2026-07-25. Ver docs/pack-live-backlog.md." },
+  },
+};
+
+function manifestEvidence(pack: StandardPackInput): DomainEvidence {
+  const ed = pack.editions[0];
+  return {
+    standard_family: { met: Boolean(ed?.familyCode), note: ed?.familyCode ?? "missing" },
+    standard_edition: { met: Boolean(ed?.editionCode && ed?.version), note: `${ed?.editionCode}/${ed?.version}` },
+    standard_pack: { met: Boolean(pack.code && pack.version), note: pack.code },
+    requirement_tree: {
+      met: (ed?.requirements?.length ?? 0) >= 5,
+      note: `${ed?.requirements?.length ?? 0} requisitos`,
+    },
+    gap_questions: {
+      met: (ed?.gapQuestions?.length ?? 0) >= 1,
+      note: `${ed?.gapQuestions?.length ?? 0} preguntas`,
+    },
+    audit_checklist: {
+      met: (ed?.auditChecklist?.length ?? 0) >= 1,
+      note: `${ed?.auditChecklist?.length ?? 0} ítems`,
+    },
+    evidence_rules: {
+      met: (ed?.evidenceRules?.length ?? 0) >= 1,
+      note: `${ed?.evidenceRules?.length ?? 0} reglas`,
+    },
+    templates: {
+      met: (ed?.templates?.length ?? 0) >= 1 && Boolean(ed?.templates?.every((template) =>
+        materializePackTemplateContent({
+          familyCode: ed.familyCode,
+          requirementCode: template.requirementCode,
+          templateType: template.templateType ?? "DOCUMENT",
+          name: template.name,
+          content: template.content,
+        }).trim().length >= 300
+      )),
+      note: `${ed?.templates?.length ?? 0} plantillas con contenido materializable`,
+    },
+  };
+}
+
+const DEFAULT_FALSE: DomainEvidence = Object.fromEntries(
+  LIVE_CRITERIA.map((c) => [c, { met: false, note: "Sin evidencia registrada" }]),
+) as DomainEvidence;
+
+/**
+ * Evalúa readiness. Los criterios de dominio no cubiertos quedan en false
+ * hasta que el backlog los marque en DOMAIN[packCode].
+ */
+export function evaluatePackReadiness(pack: StandardPackInput): PackReadinessReport {
+  const lifecycle = (pack.lifecycleStatus ?? "DEVELOPMENT") as PackLifecycleStatus;
+  const merged: DomainEvidence = {
+    ...DEFAULT_FALSE,
+    ...manifestEvidence(pack),
+    ...(DOMAIN[pack.code] ?? {}),
+  };
+
+  const criteria: CriterionEvidence[] = LIVE_CRITERIA.map((criterion) => {
+    const row = merged[criterion] ?? { met: false, note: "Sin evidencia" };
+    return { criterion, met: row.met, note: row.note };
+  });
+
+  const met = criteria.filter((c) => c.met).length;
+  const total = criteria.length;
+  return {
+    packCode: pack.code,
+    lifecycle,
+    met,
+    total,
+    percent: Math.round((met / total) * 100),
+    checklistComplete: met === total,
+    criteria,
+  };
+}
+
+/** Un pack solo debería promocionarse a LIVE si el checklist está completo. */
+export function assertCanPromoteToLive(pack: StandardPackInput): void {
+  const report = evaluatePackReadiness(pack);
+  if (!report.checklistComplete) {
+    const missing = report.criteria.filter((c) => !c.met).map((c) => c.criterion);
+    throw new Error(
+      `No promover ${pack.code} a LIVE: faltan ${missing.length} criterios (${missing.slice(0, 8).join(", ")}…)`,
+    );
+  }
+}

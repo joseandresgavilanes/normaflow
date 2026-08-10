@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, Eye, Menu, Search } from "lucide-react";
@@ -9,6 +9,7 @@ import QuickCreateMenu from "@/components/layout/QuickCreateMenu";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 const PAGE_TITLE_KEYS: Record<string, MessageKey> = {
   "/app/dashboard": "nav.home",
@@ -60,6 +61,7 @@ export default function AppTopbar({
   const ws = useWorkspaceOptional();
   const { t } = useI18n();
   const [privateMode, setPrivateMode] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
   const displayName = ws?.state.session.name ?? userName;
   const unread = ws?.state.notifications.filter((n) => !n.read).length ?? 0;
   const pageTitle = PAGE_TITLE_KEYS[pathname] ? t(PAGE_TITLE_KEYS[pathname]) : "NormaFlow";
@@ -70,6 +72,17 @@ export default function AppTopbar({
       document.body.classList.remove("nf-private-mode");
     };
   }, [privateMode]);
+
+  useEffect(() => {
+    function focusSearch(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", focusSearch);
+    return () => document.removeEventListener("keydown", focusSearch);
+  }, []);
 
   return (
     <header className="nf-topbar">
@@ -87,6 +100,7 @@ export default function AppTopbar({
       <div className="nf-topbar-search">
         <Search size={16} strokeWidth={2} className="nf-topbar-search-icon" aria-hidden />
         <input
+          ref={searchRef}
           type="search"
           className="nf-topbar-search-input"
           placeholder={t("topbar.searchIn", { page: pageTitle.toLowerCase() })}
@@ -101,6 +115,7 @@ export default function AppTopbar({
       </div>
 
       <div className="nf-topbar-actions">
+        <ThemeSwitcher compact />
         <LanguageSwitcher compact />
         <QuickCreateMenu />
         <button
@@ -129,7 +144,7 @@ export default function AppTopbar({
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: "#5266F6",
+                background: "var(--nf-primary)",
                 border: "2px solid var(--bg)",
               }}
             />

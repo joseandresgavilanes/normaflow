@@ -79,6 +79,11 @@ export default async function globalSetup() {
     const actorAAuditor = await createMember("a-auditor", "AUDITOR", actorA);
     const actorBAdmin = await createMember("b-admin", "ORG_ADMIN", actorB);
     await installAllPacks(prisma);
+    const iso9001 = await prisma.standardEdition.findFirstOrThrow({ where: { family: { code: "ISO_9001" } }, select: { id: true } });
+    await prisma.organizationStandard.createMany({
+      data: [actorA.organizationId, actorB.organizationId].map((organizationId) => ({ organizationId, standardId: iso9001.id })),
+      skipDuplicates: true,
+    });
     await ensureSecurityControlCatalog(prisma);
     await ensureOrganizationControlSet(actorA.organizationId, prisma);
     await ensureOrganizationControlSet(actorB.organizationId, prisma);

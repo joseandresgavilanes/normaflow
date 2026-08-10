@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, Download, FilePlus2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import Card from "@/components/ui/Card";
+import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
+import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
@@ -39,6 +41,69 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
   const plan = initial.plan;
   const planEditable = plan?.editable ?? false;
 
+  const columns = useMemo<DataTableColumn<Item>[]>(() => [
+    {
+      id: "reference",
+      header: "Ref.",
+      primary: true,
+      hideable: false,
+      minWidth: 110,
+      sortValue: (row) => row.reference,
+      cell: (row) => <strong>{row.reference}</strong>,
+    },
+    {
+      id: "title",
+      header: "Riesgo",
+      minWidth: 240,
+      sortValue: (row) => row.title,
+      cell: (row) => <>{row.title}<div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.threat ?? ""}</div></>,
+    },
+    {
+      id: "asset",
+      header: "Activo",
+      minWidth: 140,
+      sortValue: (row) => row.asset,
+      cell: (row) => <span style={{ fontSize: 12 }}>{row.asset ?? "—"}</span>,
+    },
+    {
+      id: "inherentRisk",
+      header: "Inherente",
+      align: "end",
+      numeric: true,
+      sortValue: (row) => row.inherentRisk,
+      cell: (row) => <Badge value={String(row.inherentRisk)} tone={riskTone(row.inherentRisk)} />,
+    },
+    {
+      id: "treatment",
+      header: "Tratamiento",
+      minWidth: 120,
+      sortValue: (row) => TREATMENT_LABEL[row.treatment] ?? row.treatment,
+      cell: (row) => TREATMENT_LABEL[row.treatment],
+    },
+    {
+      id: "residualRisk",
+      header: "Residual",
+      align: "end",
+      numeric: true,
+      sortValue: (row) => row.residualRisk,
+      cell: (row) => (row.residualRisk != null ? <Badge value={String(row.residualRisk)} tone={riskTone(row.residualRisk)} /> : "—"),
+    },
+    {
+      id: "owner",
+      header: "Propietario",
+      minWidth: 140,
+      sortValue: (row) => row.owner?.name ?? null,
+      cell: (row) => row.owner?.name ?? "—",
+    },
+    {
+      id: "status",
+      header: "Estado",
+      minWidth: 140,
+      sortValue: (row) => ITEM_STATUS_LABEL[row.status] ?? row.status,
+      cell: (row) => <Badge value={ITEM_STATUS_LABEL[row.status]} tone={row.status === "CLOSED" ? "gray" : row.status === "ACCEPTED" ? "green" : "blue"} />,
+    },
+  ], []);
+
   async function exportReport(format: "PDF" | "EXCEL") {
     setExporting(true);
     try {
@@ -55,7 +120,7 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
     <MethodologyCard initial={initial} pending={isPending} onRun={run} />
 
     {!plan && <Card><div style={{ textAlign: "center", padding: 30 }}>
-      <ShieldAlert size={34} style={{ color: "#5266F6" }} />
+      <ShieldAlert size={34} style={{ color: "var(--nf-primary-active)" }} />
       <h3 style={{ margin: "12px 0 6px" }}>Sin plan de tratamiento de riesgos</h3>
       <p style={{ fontSize: 13, color: "var(--nf-ink-3)", maxWidth: 520, margin: "0 auto 16px" }}>Crea un plan para registrar los riesgos, su tratamiento y la aceptación del riesgo residual.</p>
       {initial.canUpdate && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => createRiskTreatmentPlan({ title: "Plan de tratamiento de riesgos" }), { successMessage: "Plan creado." })}><FilePlus2 size={15} /> Crear plan v1</button>}
@@ -64,10 +129,10 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
     {plan && <>
       <div className="nf-metric-strip">
         <Metric label="Riesgos" value={initial.summary.total} icon={<ShieldAlert size={19} />} />
-        <Metric label="Inherente alto" value={initial.summary.highInherent} icon={<ShieldAlert size={19} />} color="#B91C1C" />
-        <Metric label="Residual alto" value={initial.summary.highResidual} icon={<ShieldAlert size={19} />} color="#B45309" />
-        <Metric label="Aceptados" value={initial.summary.accepted} icon={<CheckCircle2 size={19} />} color="#15803D" />
-        <Metric label="Cerrados" value={initial.summary.closed} icon={<ShieldCheck size={19} />} color="#667085" />
+        <Metric label="Inherente alto" value={initial.summary.highInherent} icon={<ShieldAlert size={19} />} color="var(--nf-danger-text)" />
+        <Metric label="Residual alto" value={initial.summary.highResidual} icon={<ShieldAlert size={19} />} color="var(--nf-warning-text)" />
+        <Metric label="Aceptados" value={initial.summary.accepted} icon={<CheckCircle2 size={19} />} color="var(--nf-success-text)" />
+        <Metric label="Cerrados" value={initial.summary.closed} icon={<ShieldCheck size={19} />} color="var(--nf-text-secondary)" />
       </div>
 
       <Card>
@@ -80,11 +145,20 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {initial.canUpdate && planEditable && <button type="button" className="nf-app-btn-ghost" disabled={isPending} onClick={() => setCreating(true)}><Plus size={14} /> Añadir riesgo</button>}
             {initial.canApprove && planEditable && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => approveRiskTreatmentPlan({ id: plan.id }), { successMessage: "Plan aprobado." })}><CheckCircle2 size={14} /> Aprobar plan</button>}
-            {initial.canExport && <><select className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 180 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+            {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 180 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
           </div>
         </div>
 
-        <div className="nf-data-table-wrap"><table className="nf-data-table" style={{ minWidth: 980 }}><thead><tr><th>Ref.</th><th>Riesgo</th><th>Activo</th><th>Inherente</th><th>Tratamiento</th><th>Residual</th><th>Propietario</th><th>Estado</th></tr></thead><tbody>{initial.items.map((row) => <tr key={row.id} onClick={() => setSelected(row)} style={{ cursor: "pointer" }}><td><strong>{row.reference}</strong></td><td>{row.title}<div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{row.threat ?? ""}</div></td><td style={{ fontSize: 12 }}>{row.asset ?? "—"}</td><td><Badge value={String(row.inherentRisk)} tone={riskTone(row.inherentRisk)} /></td><td>{TREATMENT_LABEL[row.treatment]}</td><td>{row.residualRisk != null ? <Badge value={String(row.residualRisk)} tone={riskTone(row.residualRisk)} /> : "—"}</td><td>{row.owner?.name ?? "—"}</td><td><Badge value={ITEM_STATUS_LABEL[row.status]} tone={row.status === "CLOSED" ? "gray" : row.status === "ACCEPTED" ? "green" : "blue"} /></td></tr>)}</tbody></table>{!initial.items.length && <div className="nf-data-table-empty">Sin riesgos registrados todavía.</div>}</div>
+        <DataTable
+          columns={columns}
+          rows={initial.items}
+          rowKey={(row) => row.id}
+          rowAction={(row) => setSelected(row)}
+          caption="Registro de riesgos del plan de tratamiento: referencia, riesgo, activo, riesgo inherente, tratamiento, riesgo residual, propietario y estado."
+          storageKey="risk-treatment-items"
+          empty={<EmptyState kind="empty" title="Sin riesgos registrados todavía." description="Aquí se registran los riesgos del plan: activo, amenaza y vulnerabilidad, con su riesgo inherente, el tratamiento elegido y el riesgo residual aceptado." />}
+          pageSize={25}
+        />
       </Card>
     </>}
 
@@ -102,7 +176,7 @@ function MethodologyCard({ initial, pending, onRun }: { initial: RiskTreatmentPa
 
   return <Card style={{ marginBottom: 16 }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-      <div><strong>Metodología</strong> {m ? <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>· {m.title} (v{m.version}) · umbral de aceptación ≤ {m.acceptanceThreshold ?? "—"}</span> : <span style={{ fontSize: 12, color: "#B45309" }}>· sin definir</span>}</div>
+      <div><strong>Metodología</strong> {m ? <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>· {m.title} (v{m.version}) · umbral de aceptación ≤ {m.acceptanceThreshold ?? "—"}</span> : <span style={{ fontSize: 12, color: "var(--nf-warning-text)" }}>· sin definir</span>}</div>
       {initial.canUpdate && <button type="button" className="nf-app-btn-ghost" onClick={() => setOpen((v) => !v)}>{open ? "Cerrar" : m ? "Editar" : "Definir"}</button>}
     </div>
     {open && initial.canUpdate && <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -190,4 +264,4 @@ function ItemDetail({ row, initial, pending, onClose, onRun }: { row: Item; init
 }
 
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["#15803D", "#e8f5ee"], gray: ["#667085", "#f1f3f5"], amber: ["#B45309", "#fff8e6"], red: ["#B91C1C", "#fff0f0"], blue: ["#5266F6", "#eef0ff"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }
+function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", marginLeft: 8 }}>{value}</span>; }

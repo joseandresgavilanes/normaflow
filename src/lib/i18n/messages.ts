@@ -61,6 +61,9 @@ export const messages = {
     "nav.aims": "Inteligencia artificial",
     "nav.compliance": "Compliance",
     "nav.antibribery": "Antisoborno",
+    "nav.context": "Contexto",
+    "nav.qualityOps": "Requisitos operativos",
+    "nav.designDev": "Diseño y desarrollo",
     "nav.integrated": "Sistema integrado",
     "nav.supplierSecurity": "Proveedores de seguridad",
     "nav.integrations": "Integraciones",
@@ -71,8 +74,71 @@ export const messages = {
     "nav.settings": "Cuenta",
     "nav.ai": "Asistente IA",
     "nav.generalInfo": "Información general",
+    "nav.iso50001": "ISO 50001",
+    "nav.energy.panel": "Panel",
+    "nav.energy.sources": "Fuentes y usos",
+    "nav.energy.review": "Revisión energética",
+    "nav.energy.seu": "Usos significativos",
+    "nav.energy.baseline": "Línea base",
+    "nav.energy.enpi": "EnPI",
+    "nav.energy.meters": "Medidores y lecturas",
+    "nav.energy.variables": "Variables y factores",
+    "nav.energy.opportunities": "Oportunidades",
+    "nav.energy.actions": "Acciones",
+    "nav.energy.savings": "Ahorros",
+    "nav.energy.procurement": "Compras",
+    "nav.energy.design": "Diseño",
     "nav.catalogs": "Catálogos",
     "nav.admin": "Administración",
+    "nav.group.home": "Inicio",
+    "nav.group.system": "Sistema de gestión",
+    "nav.group.risk": "Riesgo y cumplimiento",
+    "nav.group.evaluation": "Evaluación",
+    "nav.group.improvement": "Mejora",
+    "nav.group.people": "Personas y terceros",
+    "nav.group.standards": "Normas",
+    "nav.group.admin": "Administración",
+    "nav.pinned": "Fijados",
+    "nav.pin": "Fijar en el menú",
+    "nav.unpin": "Quitar de fijados",
+    "nav.filter.label": "Filtrar navegación",
+    "nav.filter.placeholder": "Filtrar menú…",
+    "nav.filter.empty": "Ningún módulo coincide con «{query}».",
+    "nav.locked": "Disponible desde el plan Growth",
+    "nav.lockedBadge": "Growth",
+    "nav.skipToContent": "Saltar al contenido",
+    "theme.label": "Tema visual",
+    "theme.light": "Claro",
+    "theme.dark": "Oscuro",
+    "theme.system": "Sistema",
+    "workflow.stateOf": "Estado de",
+    "workflow.done": "completado",
+    "workflow.current": "paso actual",
+    "workflow.pending": "pendiente",
+    "workflow.exit": "salida del flujo",
+    "detail.history": "Historial",
+    "detail.overview": "Resumen",
+    "detail.noHistory": "Todavía no hay movimientos registrados.",
+    "detail.by": "por",
+    "detail.changed": "cambió",
+    "form.required": "obligatorio",
+    "form.optional": "(opcional)",
+    "form.errorSummary": "Revisa estos campos antes de continuar:",
+    "form.stepperLabel": "Progreso del formulario",
+    "form.stepOf": "paso {n} de {total}",
+    "form.stepDone": "completado",
+    "form.stepError": "con errores",
+    "form.autosaveSaving": "Guardando…",
+    "form.autosavePending": "Cambios sin guardar",
+    "form.autosaveSaved": "Guardado a las",
+    "form.autosaveError": "No se pudo guardar",
+    "nav.primaryLabel": "Navegación principal",
+    "nav.expandGroup": "Desplegar {group}",
+    "nav.collapseGroup": "Plegar {group}",
+    "breadcrumb.label": "Ruta de navegación",
+    "breadcrumb.home": "Inicio",
+    "dashboard.title": "Panel de control",
+    "dashboard.subtitle": "Estado del sistema de gestión de {org}",
     "nav.positions": "Cargos",
     "nav.personnel": "Personal",
     "nav.locations": "Lugares",
@@ -217,6 +283,8 @@ export const messages = {
     "ai.api.unauthorized": "No autorizado",
     "ai.api.plan": "El asistente IA está disponible en los planes Growth y Enterprise. Amplía tu plan en Facturación.",
     "ai.api.rateLimited": "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo.",
+    "ai.api.secretsDetected": "El mensaje parece contener una credencial o clave secreta. Elimínala antes de enviarlo — nunca compartas contraseñas, claves de API o tokens con el asistente.",
+    "ai.api.budgetExceeded": "Se alcanzó el presupuesto mensual de uso de IA de tu plan. Contacta a tu administrador o amplía el plan en Facturación.",
     "ai.api.messageRequired": "Message required",
     "ai.api.invalidKey": "El servicio de IA no está configurado correctamente (clave de API inválida). Contacta al administrador.",
     "ai.api.processingError": "Error al procesar la solicitud",
@@ -286,6 +354,9 @@ export const messages = {
     "nav.aims": "Artificial Intelligence",
     "nav.compliance": "Compliance",
     "nav.antibribery": "Anti-bribery",
+    "nav.context": "Context",
+    "nav.qualityOps": "Operational requirements",
+    "nav.designDev": "Design & development",
     "nav.integrated": "Integrated System",
     "nav.supplierSecurity": "Security Suppliers",
     "nav.integrations": "Integrations",
@@ -296,8 +367,71 @@ export const messages = {
     "nav.settings": "Account",
     "nav.ai": "AI Assistant",
     "nav.generalInfo": "General information",
+    "nav.iso50001": "ISO 50001",
+    "nav.energy.panel": "Panel",
+    "nav.energy.sources": "Sources & uses",
+    "nav.energy.review": "Energy review",
+    "nav.energy.seu": "Significant uses",
+    "nav.energy.baseline": "Baseline",
+    "nav.energy.enpi": "EnPI",
+    "nav.energy.meters": "Meters & readings",
+    "nav.energy.variables": "Variables & factors",
+    "nav.energy.opportunities": "Opportunities",
+    "nav.energy.actions": "Actions",
+    "nav.energy.savings": "Savings",
+    "nav.energy.procurement": "Procurement",
+    "nav.energy.design": "Design",
     "nav.catalogs": "Catalogs",
     "nav.admin": "Administration",
+    "nav.group.home": "Home",
+    "nav.group.system": "Management system",
+    "nav.group.risk": "Risk & compliance",
+    "nav.group.evaluation": "Evaluation",
+    "nav.group.improvement": "Improvement",
+    "nav.group.people": "People & third parties",
+    "nav.group.standards": "Standards",
+    "nav.group.admin": "Administration",
+    "nav.pinned": "Pinned",
+    "nav.pin": "Pin to menu",
+    "nav.unpin": "Unpin",
+    "nav.filter.label": "Filter navigation",
+    "nav.filter.placeholder": "Filter menu…",
+    "nav.filter.empty": "No module matches “{query}”.",
+    "nav.locked": "Available from the Growth plan",
+    "nav.lockedBadge": "Growth",
+    "nav.skipToContent": "Skip to content",
+    "theme.label": "Visual theme",
+    "theme.light": "Light",
+    "theme.dark": "Dark",
+    "theme.system": "System",
+    "workflow.stateOf": "State of",
+    "workflow.done": "completed",
+    "workflow.current": "current step",
+    "workflow.pending": "pending",
+    "workflow.exit": "flow exit",
+    "detail.history": "History",
+    "detail.overview": "Overview",
+    "detail.noHistory": "No activity recorded yet.",
+    "detail.by": "by",
+    "detail.changed": "changed",
+    "form.required": "required",
+    "form.optional": "(optional)",
+    "form.errorSummary": "Check these fields before continuing:",
+    "form.stepperLabel": "Form progress",
+    "form.stepOf": "step {n} of {total}",
+    "form.stepDone": "completed",
+    "form.stepError": "has errors",
+    "form.autosaveSaving": "Saving…",
+    "form.autosavePending": "Unsaved changes",
+    "form.autosaveSaved": "Saved at",
+    "form.autosaveError": "Could not save",
+    "nav.primaryLabel": "Main navigation",
+    "nav.expandGroup": "Expand {group}",
+    "nav.collapseGroup": "Collapse {group}",
+    "breadcrumb.label": "Breadcrumb",
+    "breadcrumb.home": "Home",
+    "dashboard.title": "Dashboard",
+    "dashboard.subtitle": "Management system status for {org}",
     "nav.positions": "Positions",
     "nav.personnel": "Personnel",
     "nav.locations": "Locations",
@@ -442,6 +576,8 @@ export const messages = {
     "ai.api.unauthorized": "Unauthorized",
     "ai.api.plan": "The AI assistant is available on Growth and Enterprise plans. Upgrade your plan in Billing.",
     "ai.api.rateLimited": "Too many requests. Wait a moment and try again.",
+    "ai.api.secretsDetected": "Your message appears to contain a credential or secret key. Remove it before sending — never share passwords, API keys or tokens with the assistant.",
+    "ai.api.budgetExceeded": "Your plan's monthly AI usage budget has been reached. Contact your administrator or upgrade your plan in Billing.",
     "ai.api.messageRequired": "Message required",
     "ai.api.invalidKey": "The AI service is not configured correctly (invalid API key). Contact the administrator.",
     "ai.api.processingError": "Error processing the request",
@@ -511,6 +647,9 @@ export const messages = {
     "nav.aims": "Inteligência artificial",
     "nav.compliance": "Compliance",
     "nav.antibribery": "Antissuborno",
+    "nav.context": "Contexto",
+    "nav.qualityOps": "Requisitos operacionais",
+    "nav.designDev": "Design e desenvolvimento",
     "nav.integrated": "Sistema integrado",
     "nav.supplierSecurity": "Fornecedores de segurança",
     "nav.integrations": "Integrações",
@@ -521,8 +660,71 @@ export const messages = {
     "nav.settings": "Conta",
     "nav.ai": "Assistente IA",
     "nav.generalInfo": "Informações gerais",
+    "nav.iso50001": "ISO 50001",
+    "nav.energy.panel": "Painel",
+    "nav.energy.sources": "Fontes e usos",
+    "nav.energy.review": "Revisão energética",
+    "nav.energy.seu": "Usos significativos",
+    "nav.energy.baseline": "Linha de base",
+    "nav.energy.enpi": "EnPI",
+    "nav.energy.meters": "Medidores e leituras",
+    "nav.energy.variables": "Variáveis e fatores",
+    "nav.energy.opportunities": "Oportunidades",
+    "nav.energy.actions": "Ações",
+    "nav.energy.savings": "Economias",
+    "nav.energy.procurement": "Compras",
+    "nav.energy.design": "Projeto",
     "nav.catalogs": "Catálogos",
     "nav.admin": "Administração",
+    "nav.group.home": "Início",
+    "nav.group.system": "Sistema de gestão",
+    "nav.group.risk": "Risco e conformidade",
+    "nav.group.evaluation": "Avaliação",
+    "nav.group.improvement": "Melhoria",
+    "nav.group.people": "Pessoas e terceiros",
+    "nav.group.standards": "Normas",
+    "nav.group.admin": "Administração",
+    "nav.pinned": "Fixados",
+    "nav.pin": "Fixar no menu",
+    "nav.unpin": "Desafixar",
+    "nav.filter.label": "Filtrar navegação",
+    "nav.filter.placeholder": "Filtrar menu…",
+    "nav.filter.empty": "Nenhum módulo corresponde a «{query}».",
+    "nav.locked": "Disponível a partir do plano Growth",
+    "nav.lockedBadge": "Growth",
+    "nav.skipToContent": "Ir para o conteúdo",
+    "theme.label": "Tema visual",
+    "theme.light": "Claro",
+    "theme.dark": "Escuro",
+    "theme.system": "Sistema",
+    "workflow.stateOf": "Estado de",
+    "workflow.done": "concluído",
+    "workflow.current": "passo atual",
+    "workflow.pending": "pendente",
+    "workflow.exit": "saída do fluxo",
+    "detail.history": "Histórico",
+    "detail.overview": "Resumo",
+    "detail.noHistory": "Ainda não há movimentos registrados.",
+    "detail.by": "por",
+    "detail.changed": "alterou",
+    "form.required": "obrigatório",
+    "form.optional": "(opcional)",
+    "form.errorSummary": "Confira estes campos antes de continuar:",
+    "form.stepperLabel": "Progresso do formulário",
+    "form.stepOf": "passo {n} de {total}",
+    "form.stepDone": "concluído",
+    "form.stepError": "com erros",
+    "form.autosaveSaving": "Salvando…",
+    "form.autosavePending": "Alterações não salvas",
+    "form.autosaveSaved": "Salvo às",
+    "form.autosaveError": "Não foi possível salvar",
+    "nav.primaryLabel": "Navegação principal",
+    "nav.expandGroup": "Expandir {group}",
+    "nav.collapseGroup": "Recolher {group}",
+    "breadcrumb.label": "Trilha de navegação",
+    "breadcrumb.home": "Início",
+    "dashboard.title": "Painel de controlo",
+    "dashboard.subtitle": "Estado do sistema de gestão de {org}",
     "nav.positions": "Cargos",
     "nav.personnel": "Pessoal",
     "nav.locations": "Locais",
@@ -667,6 +869,8 @@ export const messages = {
     "ai.api.unauthorized": "Não autorizado",
     "ai.api.plan": "O assistente IA está disponível nos planos Growth e Enterprise. Faça upgrade do seu plano em Faturamento.",
     "ai.api.rateLimited": "Muitas solicitações. Aguarde um momento e tente novamente.",
+    "ai.api.secretsDetected": "A mensagem parece conter uma credencial ou chave secreta. Remova-a antes de enviar — nunca compartilhe senhas, chaves de API ou tokens com o assistente.",
+    "ai.api.budgetExceeded": "O orçamento mensal de uso de IA do seu plano foi atingido. Contate seu administrador ou faça upgrade do plano em Faturamento.",
     "ai.api.messageRequired": "Mensagem obrigatória",
     "ai.api.invalidKey": "O serviço de IA não está configurado corretamente (chave de API inválida). Contate o administrador.",
     "ai.api.processingError": "Erro ao processar a solicitação",
@@ -684,6 +888,38 @@ type KnownTextTranslation = Partial<Record<Locale, string>>;
 const SUPPORTED_MESSAGE_LOCALES = SUPPORTED_LOCALES;
 
 const knownTextTranslations: Record<string, KnownTextTranslation> = {
+  // Panel: "Requiere tu atención". Se registran como frases COMPLETAS; si no,
+  // el traductor por fragmentos las deja a medias ("Nonconformities abiertas").
+  "Requiere tu atención": { en: "Needs your attention", "pt-BR": "Requer sua atenção" },
+  "No hay asuntos vencidos ni críticos. El sistema está al día.": { en: "Nothing overdue or critical. The system is up to date.", "pt-BR": "Nada vencido ou crítico. O sistema está em dia." },
+  "asunto": { en: "item", "pt-BR": "assunto" },
+  "asuntos": { en: "items", "pt-BR": "assuntos" },
+  "Acciones críticas vencidas": { en: "Overdue critical actions", "pt-BR": "Ações críticas vencidas" },
+  "Pasaron su fecha compromiso y siguen abiertas.": { en: "Past their committed date and still open.", "pt-BR": "Passaram do prazo e continuam abertas." },
+  "Riesgos críticos": { en: "Critical risks", "pt-BR": "Riscos críticos" },
+  "Superan el umbral aceptado y necesitan tratamiento.": { en: "Above the accepted threshold and need treatment.", "pt-BR": "Acima do limite aceito e precisam de tratamento." },
+  "No conformidades abiertas": { en: "Open nonconformities", "pt-BR": "Não conformidades abertas" },
+  "Sin cerrar: requieren causa raíz y acción correctiva.": { en: "Unclosed: they need root cause and corrective action.", "pt-BR": "Em aberto: exigem causa raiz e ação corretiva." },
+  "Formación vencida": { en: "Overdue training", "pt-BR": "Formação vencida" },
+  "Personas con capacitación caducada o sin completar.": { en: "People with expired or incomplete training.", "pt-BR": "Pessoas com treinamento vencido ou incompleto." },
+  "Indicadores fuera de meta": { en: "Indicators off target", "pt-BR": "Indicadores fora da meta" },
+  "Su último valor no alcanza el objetivo fijado.": { en: "Their latest value falls short of the set target.", "pt-BR": "Seu último valor não atinge a meta definida." },
+  "Documentos en revisión": { en: "Documents under review", "pt-BR": "Documentos em revisão" },
+  "Esperan aprobación para pasar a vigentes.": { en: "Awaiting approval to become effective.", "pt-BR": "Aguardando aprovação para entrar em vigor." },
+  "Documentos por revisar pronto": { en: "Documents due for review soon", "pt-BR": "Documentos a revisar em breve" },
+  "Su fecha de revisión vence en los próximos 60 días.": { en: "Their review date falls within the next 60 days.", "pt-BR": "A data de revisão vence nos próximos 60 dias." },
+  "Auditorías planificadas": { en: "Planned audits", "pt-BR": "Auditorias planejadas" },
+  "Programadas y pendientes de ejecutar.": { en: "Scheduled and pending execution.", "pt-BR": "Agendadas e pendentes de execução." },
+  // Gráfico de cumplimiento por norma
+  "Cumplimiento actual": { en: "Current compliance", "pt-BR": "Conformidade atual" },
+  "Meta": { en: "Target", "pt-BR": "Meta" },
+  // "Activo" como SUSTANTIVO. El diccionario de palabras sueltas lo traducía
+  // como adjetivo ("Active"), que en una cabecera de inventario es incorrecto.
+  "Activo de información": { en: "Information asset", "pt-BR": "Ativo de informação" },
+  "Cumplimiento por norma": { en: "Compliance by standard", "pt-BR": "Conformidade por norma" },
+  "Nivel de cumplimiento por norma, en porcentaje, frente a la meta.": { en: "Compliance level per standard, as a percentage, against the target.", "pt-BR": "Nível de conformidade por norma, em porcentagem, frente à meta." },
+  "Todavía no hay evaluación GAP de ninguna norma. Complétala para ver el nivel de cumplimiento.": { en: "No GAP assessment has been completed for any standard yet. Complete one to see the compliance level.", "pt-BR": "Ainda não há avaliação GAP de nenhuma norma. Conclua uma para ver o nível de conformidade." },
+  "Media de las normas con evaluación GAP completada.": { en: "Average across standards with a completed GAP assessment.", "pt-BR": "Média das normas com avaliação GAP concluída." },
   "Asistente IA · Anexo A 2022 actualizado": {
     en: "AI assistant · Annex A 2022 updated",
     "pt-BR": "Assistente IA · Anexo A 2022 atualizado",
@@ -2516,7 +2752,318 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
     en: "Got it",
     "pt-BR": "Entendi",
   },
+  // Shared navigation and UI labels. These are kept here as a compatibility
+  // catalog for legacy/demo components that still provide human-readable
+  // labels instead of MessageKey values.
+  "Normas": { en: "Standards", "pt-BR": "Normas" },
+  "Recursos": { en: "Resources", "pt-BR": "Recursos" },
+  "Sistemas de gestión": { en: "Management systems", "pt-BR": "Sistemas de gestão" },
+  "Una plataforma para cada estándar.": { en: "One platform for every standard.", "pt-BR": "Uma plataforma para cada norma." },
+  "Explora el enfoque que necesita tu organización.": { en: "Explore the approach your organization needs.", "pt-BR": "Explore a abordagem que sua organização precisa." },
+  "Fundamentos": { en: "Foundations", "pt-BR": "Fundamentos" },
+  "Resiliencia y tecnología": { en: "Resilience & technology", "pt-BR": "Resiliência e tecnologia" },
+  "Especializadas": { en: "Specialized", "pt-BR": "Especializadas" },
+  "Panel": { en: "Dashboard", "pt-BR": "Painel" },
+  "Planes": { en: "Plans", "pt-BR": "Planos" },
+  "BIA y actividades": { en: "BIA & activities", "pt-BR": "BIA e atividades" },
+  "Dependencias y recursos": { en: "Dependencies & resources", "pt-BR": "Dependências e recursos" },
+  "Estrategias": { en: "Strategies", "pt-BR": "Estratégias" },
+  "Equipos de crisis": { en: "Crisis teams", "pt-BR": "Equipes de crise" },
+  "Simulacros": { en: "Drills", "pt-BR": "Simulados" },
+  "Brechas": { en: "Gaps", "pt-BR": "Lacunas" },
+  "Aspectos e impactos": { en: "Aspects & impacts", "pt-BR": "Aspectos e impactos" },
+  "Cumplimiento legal": { en: "Legal compliance", "pt-BR": "Conformidade legal" },
+  "Objetivos": { en: "Objectives", "pt-BR": "Objetivos" },
+  "Residuos": { en: "Waste", "pt-BR": "Resíduos" },
+  "Emergencias": { en: "Emergencies", "pt-BR": "Emergências" },
+  "Biodiversidad": { en: "Biodiversity", "pt-BR": "Biodiversidade" },
+  "Catálogo": { en: "Catalog", "pt-BR": "Catálogo" },
+  "Solicitudes": { en: "Requests", "pt-BR": "Solicitações" },
+  "Incidentes": { en: "Incidents", "pt-BR": "Incidentes" },
+  "Problemas": { en: "Problems", "pt-BR": "Problemas" },
+  "Cambios / Releases": { en: "Changes / releases", "pt-BR": "Mudanças / releases" },
+  "Conocimiento": { en: "Knowledge", "pt-BR": "Conhecimento" },
+  "Dispositivos": { en: "Devices", "pt-BR": "Dispositivos" },
+  "Expediente maestro": { en: "Master record", "pt-BR": "Arquivo mestre" },
+  "Diseño (DHF)": { en: "Design (DHF)", "pt-BR": "Design (DHF)" },
+  "Validaciones": { en: "Validations", "pt-BR": "Validações" },
+  "Lotes / traza": { en: "Batches / traceability", "pt-BR": "Lotes / rastreabilidade" },
+  "Vigilancia": { en: "Surveillance", "pt-BR": "Vigilância" },
+  "Regulatorio": { en: "Regulatory", "pt-BR": "Regulatório" },
+  "Peligros y riesgos": { en: "Hazards & risks", "pt-BR": "Perigos e riscos" },
+  "Consulta trabajadores": { en: "Worker consultation", "pt-BR": "Consulta aos trabalhadores" },
+  "Inspecciones": { en: "Inspections", "pt-BR": "Inspeções" },
+  "Permisos": { en: "Permits", "pt-BR": "Permissões" },
+  "Contratistas": { en: "Contractors", "pt-BR": "Contratados" },
+  "Vigilancia salud": { en: "Health surveillance", "pt-BR": "Vigilância da saúde" },
+  "Inventario IA": { en: "AI inventory", "pt-BR": "Inventário de IA" },
+  "Revisión humana": { en: "Human review", "pt-BR": "Revisão humana" },
+  "Evaluación de impacto": { en: "Impact assessment", "pt-BR": "Avaliação de impacto" },
+  "Transparencia": { en: "Transparency", "pt-BR": "Transparência" },
+  "Obligaciones": { en: "Obligations", "pt-BR": "Obrigações" },
+  "Fuentes y jurisdicciones": { en: "Sources & jurisdictions", "pt-BR": "Fontes e jurisdições" },
+  "Evaluaciones": { en: "Assessments", "pt-BR": "Avaliações" },
+  "Calendario": { en: "Calendar", "pt-BR": "Calendário" },
+  "Cambios regulatorios": { en: "Regulatory changes", "pt-BR": "Mudanças regulatórias" },
+  "Conflictos de interés": { en: "Conflicts of interest", "pt-BR": "Conflitos de interesse" },
+  "Canal de denuncias": { en: "Speak-up channel", "pt-BR": "Canal de denúncias" },
+  "Investigaciones": { en: "Investigations", "pt-BR": "Investigações" },
+  "Incumplimientos": { en: "Breaches", "pt-BR": "Descumprimentos" },
+  "Remediación": { en: "Remediation", "pt-BR": "Remediação" },
+  "Órgano de gobierno": { en: "Governing body", "pt-BR": "Órgão de governança" },
+  "Riesgo de soborno": { en: "Bribery risk", "pt-BR": "Risco de suborno" },
+  "Socios de negocio": { en: "Business associates", "pt-BR": "Parceiros de negócio" },
+  "Debida diligencia": { en: "Due diligence", "pt-BR": "Due diligence" },
+  "Beneficiarios": { en: "Beneficial owners", "pt-BR": "Beneficiários" },
+  "Regalos": { en: "Gifts", "pt-BR": "Presentes" },
+  "Donaciones": { en: "Donations", "pt-BR": "Doações" },
+  "Facilitación": { en: "Facilitation payments", "pt-BR": "Facilitação" },
+  "Aprobaciones": { en: "Approvals", "pt-BR": "Aprovações" },
+  "Compromisos": { en: "Commitments", "pt-BR": "Compromissos" },
+  "Panel integrado": { en: "Integrated dashboard", "pt-BR": "Painel integrado" },
+  "Alcance y política": { en: "Scope & policy", "pt-BR": "Escopo e política" },
+  "Partes interesadas": { en: "Interested parties", "pt-BR": "Partes interessadas" },
+  "Matriz de correspondencia": { en: "Crosswalk matrix", "pt-BR": "Matriz de correspondência" },
+  "Auditoría integrada": { en: "Integrated audit", "pt-BR": "Auditoria integrada" },
+  "Elementos compartidos": { en: "Shared elements", "pt-BR": "Elementos compartilhados" },
+  "Abrir": { en: "Open", "pt-BR": "Abrir" },
+  "Cerrar": { en: "Close", "pt-BR": "Fechar" },
+  "Registrar": { en: "Register", "pt-BR": "Registrar" },
+  "Todas": { en: "All", "pt-BR": "Todas" },
+  "Todos": { en: "All", "pt-BR": "Todos" },
+  "Sin evaluar": { en: "Not assessed", "pt-BR": "Não avaliado" },
+  "No hay registros en esta tabla.": { en: "There are no records in this table.", "pt-BR": "Não há registros nesta tabela." },
+  "No hay resultados para los filtros seleccionados.": { en: "No results for the selected filters.", "pt-BR": "Não há resultados para os filtros selecionados." },
+  "Buscar en esta tabla…": { en: "Search this table…", "pt-BR": "Pesquisar nesta tabela…" },
+  "Descargar la vista actual en CSV": { en: "Download the current view as CSV", "pt-BR": "Baixar a visualização atual em CSV" },
+  "Nuevo": { en: "New", "pt-BR": "Novo" },
+  "Nueva": { en: "New", "pt-BR": "Nova" },
+  "Ver detalle": { en: "View details", "pt-BR": "Ver detalhes" },
+  "Guardar cambios": { en: "Save changes", "pt-BR": "Salvar alterações" },
+  "Todos los estados": { en: "All statuses", "pt-BR": "Todos os status" },
+  "Todos los tipos": { en: "All types", "pt-BR": "Todos os tipos" },
+  "Sin propietario": { en: "No owner", "pt-BR": "Sem proprietário" },
+  "Sin evidencia": { en: "No evidence", "pt-BR": "Sem evidência" },
+  "Sin actividad": { en: "No activity", "pt-BR": "Sem atividade" },
+  "Sin escenario": { en: "No scenario", "pt-BR": "Sem cenário" },
+  "Sin fecha": { en: "No date", "pt-BR": "Sem data" },
+  "Ninguno": { en: "None", "pt-BR": "Nenhum" },
+  "No hay procesos críticos vinculados.": { en: "No critical processes linked.", "pt-BR": "Nenhum processo crítico vinculado." },
+  "No hay escenarios registrados.": { en: "No scenarios recorded.", "pt-BR": "Nenhum cenário registrado." },
+  "No hay pruebas registradas.": { en: "No tests recorded.", "pt-BR": "Nenhum teste registrado." },
+  "Sin versiones registradas.": { en: "No versions recorded.", "pt-BR": "Nenhuma versão registrada." },
+  "Sin contactos.": { en: "No contacts.", "pt-BR": "Nenhum contato." },
+  "No hay brechas que coincidan con el filtro.": { en: "No gaps match the filter.", "pt-BR": "Nenhuma lacuna corresponde ao filtro." },
+  "Sin brechas de continuidad detectadas.": { en: "No continuity gaps detected.", "pt-BR": "Nenhuma lacuna de continuidade detectada." },
+  "Todos los riesgos": { en: "All risks", "pt-BR": "Todos os riscos" },
+  "Solo puntos únicos de fallo": { en: "Single points of failure only", "pt-BR": "Somente pontos únicos de falha" },
+  "Sin punto único de fallo": { en: "No single point of failure", "pt-BR": "Sem ponto único de falha" },
+  "Preparación de continuidad": { en: "Continuity readiness", "pt-BR": "Preparação de continuidade" },
+  "Lectura ejecutiva de la capacidad de respuesta y recuperación.": { en: "Executive view of response and recovery capability.", "pt-BR": "Visão executiva da capacidade de resposta e recuperação." },
+  "Actividades críticas": { en: "Critical activities", "pt-BR": "Atividades críticas" },
+  "Puntos únicos de fallo": { en: "Single points of failure", "pt-BR": "Pontos únicos de falha" },
+  "Brechas abiertas": { en: "Open gaps", "pt-BR": "Lacunas abertas" },
+  "Seguimiento de pruebas": { en: "Test tracking", "pt-BR": "Acompanhamento de testes" },
+  "Señales para priorizar la próxima revisión.": { en: "Signals to prioritize the next review.", "pt-BR": "Sinais para priorizar a próxima revisão." },
+  "Pruebas registradas": { en: "Recorded tests", "pt-BR": "Testes registrados" },
+  "Mejoras abiertas": { en: "Open improvements", "pt-BR": "Melhorias abertas" },
+  "Planes activados": { en: "Activated plans", "pt-BR": "Planos ativados" },
+  "Actividades evaluadas": { en: "Assessed activities", "pt-BR": "Atividades avaliadas" },
+  "Planes de continuidad": { en: "Continuity plans", "pt-BR": "Planos de continuidade" },
+  "Estado, objetivos de recuperación y cobertura de procesos críticos.": { en: "Status, recovery objectives, and critical process coverage.", "pt-BR": "Status, objetivos de recuperação e cobertura de processos críticos." },
+  "Planes de recuperación (DRP)": { en: "Recovery plans (DRP)", "pt-BR": "Planos de recuperação (DRP)" },
+  "RTO (min)": { en: "RTO (min)", "pt-BR": "RTO (min)" },
+  "RPO (min)": { en: "RPO (min)", "pt-BR": "RPO (min)" },
+  "Alcance": { en: "Scope", "pt-BR": "Escopo" },
+  "Resultado": { en: "Result", "pt-BR": "Resultado" },
+  "Lecciones aprendidas": { en: "Lessons learned", "pt-BR": "Lições aprendidas" },
+  "Título del escenario": { en: "Scenario title", "pt-BR": "Título do cenário" },
+  "Crear escenario": { en: "Create scenario", "pt-BR": "Criar cenário" },
+  "Resumen de cambios": { en: "Change summary", "pt-BR": "Resumo das alterações" },
+  "Contenido de la versión": { en: "Version content", "pt-BR": "Conteúdo da versão" },
+  "Crear versión": { en: "Create version", "pt-BR": "Criar versão" },
+  "Título de la prueba": { en: "Test title", "pt-BR": "Título do teste" },
+  "Crear prueba": { en: "Create test", "pt-BR": "Criar teste" },
+  "Iniciar": { en: "Start", "pt-BR": "Iniciar" },
+  "Resultado: superada": { en: "Result: passed", "pt-BR": "Resultado: aprovada" },
+  "parcial": { en: "partial", "pt-BR": "parcial" },
+  "fallida": { en: "failed", "pt-BR": "falhou" },
+  "+ Acción de mejora": { en: "+ Improvement action", "pt-BR": "+ Ação de melhoria" },
+  "Nueva BIA": { en: "New BIA", "pt-BR": "Nova BIA" },
+  "Crear BIA": { en: "Create BIA", "pt-BR": "Criar BIA" },
+  "Nueva actividad": { en: "New activity", "pt-BR": "Nova atividade" },
+  "Crear actividad": { en: "Create activity", "pt-BR": "Criar atividade" },
+  "Criticidad": { en: "Criticality", "pt-BR": "Criticidade" },
+  "Nivel mínimo": { en: "Minimum level", "pt-BR": "Nível mínimo" },
+  "Producto / servicio": { en: "Product / service", "pt-BR": "Produto / serviço" },
+  "Clientes": { en: "Customers", "pt-BR": "Clientes" },
+  "Nueva dependencia": { en: "New dependency", "pt-BR": "Nova dependência" },
+  "Crear dependencia": { en: "Create dependency", "pt-BR": "Criar dependência" },
+  "Punto único de fallo": { en: "Single point of failure", "pt-BR": "Ponto único de falha" },
+  "Recurso alterno": { en: "Alternate resource", "pt-BR": "Recurso alternativo" },
+  "Nuevo recurso": { en: "New resource", "pt-BR": "Novo recurso" },
+  "Normal": { en: "Normal", "pt-BR": "Normal" },
+  "Mínimo": { en: "Minimum", "pt-BR": "Mínimo" },
+  "Crear recurso": { en: "Create resource", "pt-BR": "Criar recurso" },
+  "Nueva estrategia": { en: "New strategy", "pt-BR": "Nova estratégia" },
+  "Crear estrategia": { en: "Create strategy", "pt-BR": "Criar estratégia" },
+  "Rechazar": { en: "Reject", "pt-BR": "Rejeitar" },
+  "Retirar": { en: "Withdraw", "pt-BR": "Retirar" },
+  "Nuevo procedimiento": { en: "New procedure", "pt-BR": "Novo procedimento" },
+  "Crear procedimiento": { en: "Create procedure", "pt-BR": "Criar procedimento" },
+  "Nuevo equipo": { en: "New team", "pt-BR": "Nova equipe" },
+  "Crear equipo": { en: "Create team", "pt-BR": "Criar equipe" },
+  "Propósito": { en: "Purpose", "pt-BR": "Finalidade" },
+  "Regla de activación": { en: "Activation rule", "pt-BR": "Regra de ativação" },
+  "Punto de encuentro": { en: "Meeting point", "pt-BR": "Ponto de encontro" },
+  "Editar equipo": { en: "Edit team", "pt-BR": "Editar equipe" },
+  "Nuevo contacto": { en: "New contact", "pt-BR": "Novo contato" },
+  "Crear contacto": { en: "Create contact", "pt-BR": "Criar contato" },
+  "Árbol de comunicación": { en: "Communication tree", "pt-BR": "Árvore de comunicação" },
+  "Visualiza la cascada de avisos y el orden de escalamiento.": { en: "View the notification cascade and escalation order.", "pt-BR": "Visualize a cascata de avisos e a ordem de escalonamento." },
+  "Nuevo nodo": { en: "New node", "pt-BR": "Novo nó" },
+  "El árbol aún está vacío": { en: "The tree is still empty", "pt-BR": "A árvore ainda está vazia" },
+  "Añade un nodo raíz para comenzar la cascada de comunicación.": { en: "Add a root node to start the communication cascade.", "pt-BR": "Adicione um nó raiz para iniciar a cascata de comunicação." },
+  "Etiqueta": { en: "Label", "pt-BR": "Rótulo" },
+  "Canal": { en: "Channel", "pt-BR": "Canal" },
+  "Audiencia": { en: "Audience", "pt-BR": "Público" },
+  "Demora máxima (min)": { en: "Maximum delay (min)", "pt-BR": "Atraso máximo (min)" },
+  "Crear nodo": { en: "Create node", "pt-BR": "Criar nó" },
+  "Contacto pendiente de asignar": { en: "Contact pending assignment", "pt-BR": "Contato pendente de atribuição" },
+  "Grado de preparación": { en: "Readiness level", "pt-BR": "Nível de preparação" },
+  "Brecha": { en: "Gap", "pt-BR": "Lacuna" },
+  "Detalle": { en: "Details", "pt-BR": "Detalhes" },
+  "Iniciar sesión | NormaFlow": { en: "Sign in | NormaFlow", "pt-BR": "Entrar | NormaFlow" },
+  "Crear cuenta gratuita | NormaFlow": { en: "Create free account | NormaFlow", "pt-BR": "Criar conta gratuita | NormaFlow" },
+  "Recuperar contraseña | NormaFlow": { en: "Recover password | NormaFlow", "pt-BR": "Recuperar senha | NormaFlow" },
+  "Autenticación | NormaFlow": { en: "Authentication | NormaFlow", "pt-BR": "Autenticação | NormaFlow" },
+  "Área privada | NormaFlow": { en: "Private workspace | NormaFlow", "pt-BR": "Área privada | NormaFlow" },
+  "Precios del software de gestión ISO | NormaFlow": { en: "ISO management software pricing | NormaFlow", "pt-BR": "Preços do software de gestão ISO | NormaFlow" },
+  "Casos de éxito de software ISO | NormaFlow": { en: "ISO software success stories | NormaFlow", "pt-BR": "Cases de sucesso do software ISO | NormaFlow" },
+  "Funcionalidades del software ISO | NormaFlow": { en: "ISO software features | NormaFlow", "pt-BR": "Funcionalidades do software ISO | NormaFlow" },
+  "Blog sobre ISO, auditorías y cumplimiento | NormaFlow": { en: "ISO, audit & compliance blog | NormaFlow", "pt-BR": "Blog sobre ISO, auditorias e conformidade | NormaFlow" },
+  "Seguridad de la plataforma | NormaFlow": { en: "Platform security | NormaFlow", "pt-BR": "Segurança da plataforma | NormaFlow" },
+  "Política de privacidad | NormaFlow": { en: "Privacy policy | NormaFlow", "pt-BR": "Política de privacidade | NormaFlow" },
+  "Términos de uso | NormaFlow": { en: "Terms of use | NormaFlow", "pt-BR": "Termos de uso | NormaFlow" },
+  "Solicita una demo de NormaFlow | Software ISO": { en: "Request a NormaFlow demo | ISO software", "pt-BR": "Solicite uma demonstração do NormaFlow | Software ISO" },
+  "NormaFlow — Software ISO 9001 e ISO 27001 para empresas": { en: "NormaFlow — ISO 9001 & ISO 27001 software for companies", "pt-BR": "NormaFlow — Software ISO 9001 e ISO 27001 para empresas" },
+  "Digitaliza tu sistema de gestión. Auditorías, riesgos, documentos y cumplimiento ISO en una plataforma. Sin hojas de cálculo, sin caos.": { en: "Digitize your management system. Audits, risks, documents, and ISO compliance in one platform. No spreadsheets, no chaos.", "pt-BR": "Digitalize seu sistema de gestão. Auditorias, riscos, documentos e conformidade ISO em uma plataforma. Sem planilhas, sem caos." },
+  "Planes de NormaFlow para equipos que gestionan calidad, seguridad y cumplimiento. Prueba de 14 días sin tarjeta de crédito.": { en: "NormaFlow plans for teams managing quality, security, and compliance. 14-day trial with no credit card.", "pt-BR": "Planos do NormaFlow para equipes que gerenciam qualidade, segurança e conformidade. Teste de 14 dias sem cartão de crédito." },
+  "Resultados y experiencias de equipos que gestionan calidad, seguridad y cumplimiento con NormaFlow.": { en: "Results and experiences from teams managing quality, security, and compliance with NormaFlow.", "pt-BR": "Resultados e experiências de equipes que gerenciam qualidade, segurança e conformidade com o NormaFlow." },
+  "Documentos, riesgos, auditorías, CAPA, indicadores, evidencias y asistente IA para gestionar tu sistema ISO.": { en: "Documents, risks, audits, CAPA, indicators, evidence, and an AI assistant for managing your ISO system.", "pt-BR": "Documentos, riscos, auditorias, CAPA, indicadores, evidências e assistente de IA para gerenciar seu sistema ISO." },
+  "Prácticas de seguridad de la plataforma NormaFlow.": { en: "Security practices for the NormaFlow platform.", "pt-BR": "Práticas de segurança da plataforma NormaFlow." },
+  "Cómo tratamos los datos personales en NormaFlow.": { en: "How we process personal data at NormaFlow.", "pt-BR": "Como tratamos os dados pessoais no NormaFlow." },
+  "Condiciones de uso del servicio NormaFlow.": { en: "Terms governing use of the NormaFlow service.", "pt-BR": "Condições de uso do serviço NormaFlow." },
 };
+
+// UI text still emitted as literals by the domain modules. Keep this separate
+// from the legacy compatibility map so duplicate labels do not obscure the
+// canonical entries above.
+const domainUiTranslations: Record<string, KnownTextTranslation> = {
+  "Sistema de Gestión de Inteligencia Artificial": { en: "Artificial Intelligence Management System", "pt-BR": "Sistema de Gestão de Inteligência Artificial" },
+  "ISO/IEC 42001:2023 — visión general de inventario, impacto, datos, modelos, supervisión e incidentes.": { en: "ISO/IEC 42001:2023 — overview of inventory, impact, data, models, oversight, and incidents.", "pt-BR": "ISO/IEC 42001:2023 — visão geral de inventário, impacto, dados, modelos, supervisão e incidentes." },
+  "Sistemas y casos de uso": { en: "Systems & use cases", "pt-BR": "Sistemas e casos de uso" },
+  "Inventario de sistemas de IA, propósito, clasificación y estado operativo.": { en: "Inventory of AI systems, purpose, classification, and operational status.", "pt-BR": "Inventário de sistemas de IA, finalidade, classificação e status operacional." },
+  "Salidas y revisión humana": { en: "Outputs & human review", "pt-BR": "Saídas e revisão humana" },
+  "Resultados de IA sujetos a revisión, aprobación y trazabilidad humana.": { en: "AI outputs subject to human review, approval, and traceability.", "pt-BR": "Resultados de IA sujeitos a revisão, aprovação e rastreabilidade humana." },
+  "Evaluaciones de impacto": { en: "Impact assessments", "pt-BR": "Avaliações de impacto" },
+  "Evaluación de impactos, medidas de mitigación y decisión de uso.": { en: "Assessment of impacts, mitigation measures, and use decisions.", "pt-BR": "Avaliação de impactos, medidas de mitigação e decisão de uso." },
+  "Riesgos de inteligencia artificial": { en: "Artificial intelligence risks", "pt-BR": "Riscos de inteligência artificial" },
+  "Riesgos, niveles residuales y aceptación por sistema.": { en: "Risks, residual levels, and acceptance by system.", "pt-BR": "Riscos, níveis residuais e aceitação por sistema." },
+  "Datasets y calidad de datos": { en: "Datasets & data quality", "pt-BR": "Datasets e qualidade dos dados" },
+  "Conjuntos de datos, procedencia, calidad, privacidad y sesgo.": { en: "Datasets, provenance, quality, privacy, and bias.", "pt-BR": "Conjuntos de dados, origem, qualidade, privacidade e viés." },
+  "Modelos y versiones": { en: "Models & versions", "pt-BR": "Modelos e versões" },
+  "Versionado, evaluación, validación y promoción a producción.": { en: "Versioning, evaluation, validation, and promotion to production.", "pt-BR": "Versionamento, avaliação, validação e promoção para produção." },
+  "Supervisión humana": { en: "Human oversight", "pt-BR": "Supervisão humana" },
+  "Controles, responsables y evidencias de supervisión humana.": { en: "Controls, owners, and evidence of human oversight.", "pt-BR": "Controles, responsáveis e evidências de supervisão humana." },
+  "Registros para explicar sistemas, decisiones y comunicación a las partes interesadas.": { en: "Records for explaining systems, decisions, and communication to interested parties.", "pt-BR": "Registros para explicar sistemas, decisões e comunicação às partes interessadas." },
+  "Incidentes de IA": { en: "AI incidents", "pt-BR": "Incidentes de IA" },
+  "Incidentes, notificación, investigación y acciones de respuesta.": { en: "Incidents, notification, investigation, and response actions.", "pt-BR": "Incidentes, notificação, investigação e ações de resposta." },
+  "Proveedores de IA": { en: "AI suppliers", "pt-BR": "Fornecedores de IA" },
+  "Evaluación y seguimiento de proveedores que soportan sistemas de IA.": { en: "Assessment and monitoring of suppliers supporting AI systems.", "pt-BR": "Avaliação e acompanhamento de fornecedores que apoiam sistemas de IA." },
+  "Cambios de IA": { en: "AI changes", "pt-BR": "Mudanças de IA" },
+  "Solicitudes de cambio, impacto, revisión e implementación controlada.": { en: "Change requests, impact, review, and controlled implementation.", "pt-BR": "Solicitações de mudança, impacto, revisão e implementação controlada." },
+  "Monitoreo y desempeño": { en: "Monitoring & performance", "pt-BR": "Monitoramento e desempenho" },
+  "Métricas, umbrales, desviaciones y detección de deriva.": { en: "Metrics, thresholds, deviations, and drift detection.", "pt-BR": "Métricas, limites, desvios e detecção de deriva." },
+  "Continuidad de negocio": { en: "Business continuity", "pt-BR": "Continuidade de negócios" },
+  "BCP y DRP con RTO/RPO, procesos críticos, escenarios, pruebas, resultados y acciones de mejora.": { en: "BCP and DRP with RTO/RPO, critical processes, scenarios, tests, results, and improvement actions.", "pt-BR": "BCP e DRP com RTO/RPO, processos críticos, cenários, testes, resultados e ações de melhoria." },
+  "Análisis de impacto, actividades críticas, MTPD, RTO y RPO.": { en: "Business impact analysis, critical activities, MTPD, RTO, and RPO.", "pt-BR": "Análise de impacto, atividades críticas, MTPD, RTO e RPO." },
+  "Dependencias, recursos necesarios y puntos únicos de fallo.": { en: "Dependencies, required resources, and single points of failure.", "pt-BR": "Dependências, recursos necessários e pontos únicos de falha." },
+  "Estrategias de continuidad, mitigación y recuperación por actividad crítica.": { en: "Continuity, mitigation, and recovery strategies by critical activity.", "pt-BR": "Estratégias de continuidade, mitigação e recuperação por atividade crítica." },
+  "Equipos, contactos y canales para coordinar la respuesta ante una interrupción.": { en: "Teams, contacts, and channels for coordinating the response to a disruption.", "pt-BR": "Equipes, contatos e canais para coordenar a resposta a uma interrupção." },
+  "Pruebas de continuidad, resultados, objetivos RTO/RPO y acciones de mejora.": { en: "Continuity tests, results, RTO/RPO objectives, and improvement actions.", "pt-BR": "Testes de continuidade, resultados, objetivos RTO/RPO e ações de melhoria." },
+  "Brechas de preparación, criticidad, responsables y seguimiento de cierre.": { en: "Preparedness gaps, criticality, owners, and closure tracking.", "pt-BR": "Lacunas de preparação, criticidade, responsáveis e acompanhamento do fechamento." },
+  "Aspectos e impactos ambientales": { en: "Environmental aspects & impacts", "pt-BR": "Aspectos e impactos ambientais" },
+  "Evaluación de aspectos, impactos, controles operativos y significancia.": { en: "Assessment of aspects, impacts, operational controls, and significance.", "pt-BR": "Avaliação de aspectos, impactos, controles operacionais e significância." },
+  "Cumplimiento legal": { en: "Legal compliance", "pt-BR": "Conformidade legal" },
+  "Obligaciones aplicables, evidencias, evaluaciones y acciones de cumplimiento.": { en: "Applicable obligations, evidence, assessments, and compliance actions.", "pt-BR": "Obrigações aplicáveis, evidências, avaliações e ações de conformidade." },
+  "Energía y desempeño": { en: "Energy & performance", "pt-BR": "Energia e desempenho" },
+  "Usos significativos de energía, líneas base, indicadores y planes de acción.": { en: "Significant energy uses, baselines, indicators, and action plans.", "pt-BR": "Usos significativos de energia, linhas de base, indicadores e planos de ação." },
+  "Seguridad y salud en el trabajo": { en: "Occupational health & safety", "pt-BR": "Saúde e segurança ocupacional" },
+  "Peligros, riesgos, controles, incidentes, inspecciones y participación de trabajadores.": { en: "Hazards, risks, controls, incidents, inspections, and worker participation.", "pt-BR": "Perigos, riscos, controles, incidentes, inspeções e participação dos trabalhadores." },
+  "Seguridad alimentaria": { en: "Food safety", "pt-BR": "Segurança de alimentos" },
+  "Peligros, programas prerrequisito, puntos críticos, verificación y comunicación en la cadena.": { en: "Hazards, prerequisite programs, critical points, verification, and supply-chain communication.", "pt-BR": "Perigos, programas de pré-requisitos, pontos críticos, verificação e comunicação na cadeia." },
+  "Dispositivos médicos": { en: "Medical devices", "pt-BR": "Dispositivos médicos" },
+  "Expediente maestro, diseño, proveedores, validaciones, vigilancia y trazabilidad regulatoria.": { en: "Master record, design, suppliers, validations, surveillance, and regulatory traceability.", "pt-BR": "Arquivo mestre, design, fornecedores, validações, vigilância e rastreabilidade regulatória." },
+  "Sistema integrado de gestión": { en: "Integrated management system", "pt-BR": "Sistema integrado de gestão" },
+  "Mapa de procesos, riesgos y oportunidades, objetivos, indicadores y revisión por la dirección.": { en: "Process map, risks and opportunities, objectives, indicators, and management review.", "pt-BR": "Mapa de processos, riscos e oportunidades, objetivos, indicadores e análise crítica pela direção." },
+  "Gestión de servicios TI": { en: "IT service management", "pt-BR": "Gestão de serviços de TI" },
+  "Catálogo, solicitudes, incidentes, problemas, cambios, conocimiento y niveles de servicio.": { en: "Catalog, requests, incidents, problems, changes, knowledge, and service levels.", "pt-BR": "Catálogo, solicitações, incidentes, problemas, mudanças, conhecimento e níveis de serviço." },
+  "Antisoborno": { en: "Anti-bribery", "pt-BR": "Antissuborno" },
+  "Riesgos de soborno, debida diligencia, conflictos, investigaciones y canal de denuncias.": { en: "Bribery risks, due diligence, conflicts, investigations, and speak-up channel.", "pt-BR": "Riscos de suborno, due diligence, conflitos, investigações e canal de denúncias." },
+  "siempre bajo control.": { en: "always under control.", "pt-BR": "sempre sob controle." },
+  "No hay proveedores registrados.": { en: "No suppliers registered.", "pt-BR": "Nenhum fornecedor registrado." },
+  "No hay integraciones configuradas.": { en: "No integrations configured.", "pt-BR": "Nenhuma integração configurada." },
+  "No hay evidencias cargadas.": { en: "No evidence uploaded.", "pt-BR": "Nenhuma evidência carregada." },
+  "No hay no conformidades registradas.": { en: "No nonconformities registered.", "pt-BR": "Nenhuma não conformidade registrada." },
+  "No hay auditorías registradas.": { en: "No audits registered.", "pt-BR": "Nenhuma auditoria registrada." },
+  "No hay registros.": { en: "No records.", "pt-BR": "Nenhum registro." },
+  "Aún no hay sincronizaciones reportadas por un adaptador.": { en: "No synchronization runs have been reported by an adapter yet.", "pt-BR": "Nenhuma sincronização foi reportada por um adaptador ainda." },
+  "Aún no hay fechas de planeamiento.": { en: "There are no planning dates yet.", "pt-BR": "Ainda não há datas de planejamento." },
+};
+
+const commonWordTranslations: Record<string, KnownTextTranslation> = {
+  "Acción": { en: "Action", "pt-BR": "Ação" }, "Acciones": { en: "Actions", "pt-BR": "Ações" },
+  "Actividad": { en: "Activity", "pt-BR": "Atividade" }, "Actividades": { en: "Activities", "pt-BR": "Atividades" },
+  "Activo": { en: "Active", "pt-BR": "Ativo" }, "Activa": { en: "Active", "pt-BR": "Ativa" },
+  "Administración": { en: "Administration", "pt-BR": "Administração" }, "Administrador": { en: "Administrator", "pt-BR": "Administrador" },
+  "Aprobado": { en: "Approved", "pt-BR": "Aprovado" }, "Aprobada": { en: "Approved", "pt-BR": "Aprovada" }, "Aprobados": { en: "Approved", "pt-BR": "Aprovados" },
+  "Borrador": { en: "Draft", "pt-BR": "Rascunho" }, "Brecha": { en: "Gap", "pt-BR": "Lacuna" }, "Brechas": { en: "Gaps", "pt-BR": "Lacunas" },
+  "Causa": { en: "Cause", "pt-BR": "Causa" }, "Categoría": { en: "Category", "pt-BR": "Categoria" },
+  "Cerrar": { en: "Close", "pt-BR": "Fechar" }, "Cerrado": { en: "Closed", "pt-BR": "Fechado" }, "Código": { en: "Code", "pt-BR": "Código" },
+  "Completada": { en: "Completed", "pt-BR": "Concluída" }, "Completado": { en: "Completed", "pt-BR": "Concluído" },
+  "Conformidad": { en: "Compliance", "pt-BR": "Conformidade" }, "Conforme": { en: "Compliant", "pt-BR": "Conforme" },
+  "Conectado": { en: "Connected", "pt-BR": "Conectado" }, "Conexión": { en: "Connection", "pt-BR": "Conexão" },
+  "Control": { en: "Control", "pt-BR": "Controle" }, "Controles": { en: "Controls", "pt-BR": "Controles" },
+  "Creado": { en: "Created", "pt-BR": "Criado" }, "Crear": { en: "Create", "pt-BR": "Criar" },
+  "Datos": { en: "Data", "pt-BR": "Dados" }, "Descripción": { en: "Description", "pt-BR": "Descrição" },
+  "Documento": { en: "Document", "pt-BR": "Documento" }, "Documentos": { en: "Documents", "pt-BR": "Documentos" },
+  "Editar": { en: "Edit", "pt-BR": "Editar" }, "Eliminado": { en: "Deleted", "pt-BR": "Excluído" }, "Eliminar": { en: "Delete", "pt-BR": "Excluir" },
+  "Empresa": { en: "Company", "pt-BR": "Empresa" }, "Evidencia": { en: "Evidence", "pt-BR": "Evidência" }, "Evidencias": { en: "Evidence", "pt-BR": "Evidências" },
+  "Estado": { en: "Status", "pt-BR": "Status" }, "Externo": { en: "External", "pt-BR": "Externo" },
+  "Fecha": { en: "Date", "pt-BR": "Data" }, "Fechas": { en: "Dates", "pt-BR": "Datas" }, "Finalizado": { en: "Finished", "pt-BR": "Finalizado" },
+  "Guardar": { en: "Save", "pt-BR": "Salvar" }, "Historial": { en: "History", "pt-BR": "Histórico" },
+  "Indicador": { en: "Indicator", "pt-BR": "Indicador" }, "Indicadores": { en: "Indicators", "pt-BR": "Indicadores" },
+  "Interno": { en: "Internal", "pt-BR": "Interno" }, "Investigación": { en: "Investigation", "pt-BR": "Investigação" },
+  "Lista": { en: "List", "pt-BR": "Lista" }, "Medida": { en: "Measure", "pt-BR": "Medida" }, "Medidas": { en: "Measures", "pt-BR": "Medidas" },
+  "Mejora": { en: "Improvement", "pt-BR": "Melhoria" }, "Mejoras": { en: "Improvements", "pt-BR": "Melhorias" },
+  "Nivel": { en: "Level", "pt-BR": "Nível" }, "Niveles": { en: "Levels", "pt-BR": "Níveis" },
+  "No": { en: "No", "pt-BR": "Não" }, "Observación": { en: "Observation", "pt-BR": "Observação" }, "Observaciones": { en: "Observations", "pt-BR": "Observações" },
+  "Pendiente": { en: "Pending", "pt-BR": "Pendente" }, "Pendientes": { en: "Pending", "pt-BR": "Pendentes" },
+  "Persona": { en: "Person", "pt-BR": "Pessoa" }, "Personas": { en: "People", "pt-BR": "Pessoas" }, "Plan": { en: "Plan", "pt-BR": "Plano" },
+  "Proceso": { en: "Process", "pt-BR": "Processo" }, "Procesos": { en: "Processes", "pt-BR": "Processos" }, "Proveedor": { en: "Supplier", "pt-BR": "Fornecedor" }, "Proveedores": { en: "Suppliers", "pt-BR": "Fornecedores" },
+  "Rechazado": { en: "Rejected", "pt-BR": "Rejeitado" }, "Registro": { en: "Record", "pt-BR": "Registro" }, "Registros": { en: "Records", "pt-BR": "Registros" },
+  "Revisión": { en: "Review", "pt-BR": "Revisão" }, "Revisiones": { en: "Reviews", "pt-BR": "Revisões" }, "Riesgo": { en: "Risk", "pt-BR": "Risco" }, "Riesgos": { en: "Risks", "pt-BR": "Riscos" },
+  "Responsable": { en: "Owner", "pt-BR": "Responsável" }, "Resultado": { en: "Result", "pt-BR": "Resultado" }, "Resultados": { en: "Results", "pt-BR": "Resultados" },
+  "Salud": { en: "Health", "pt-BR": "Saúde" }, "Seguridad": { en: "Security", "pt-BR": "Segurança" }, "Seleccionar": { en: "Select", "pt-BR": "Selecionar" },
+  "Sin": { en: "Without", "pt-BR": "Sem" }, "Sistema": { en: "System", "pt-BR": "Sistema" }, "Sistemas": { en: "Systems", "pt-BR": "Sistemas" },
+  "Solicitud": { en: "Request", "pt-BR": "Solicitação" }, "Solicitudes": { en: "Requests", "pt-BR": "Solicitações" }, "Supervisor": { en: "Supervisor", "pt-BR": "Supervisor" },
+  "Tarea": { en: "Task", "pt-BR": "Tarefa" }, "Tareas": { en: "Tasks", "pt-BR": "Tarefas" }, "Tipo": { en: "Type", "pt-BR": "Tipo" },
+  "Total": { en: "Total", "pt-BR": "Total" }, "Usuario": { en: "User", "pt-BR": "Usuário" }, "Usuarios": { en: "Users", "pt-BR": "Usuários" },
+  "Validación": { en: "Validation", "pt-BR": "Validação" }, "Validaciones": { en: "Validations", "pt-BR": "Validações" },
+};
+
+const fragmentEntriesByLocale = new Map<Locale, Array<[string, string]>>();
 
 export function translate(locale: Locale, key: MessageKey, params?: Params) {
   const template = messages[locale][key] ?? messages[DEFAULT_LOCALE][key] ?? key;
@@ -2528,21 +3075,107 @@ export function translate(locale: Locale, key: MessageKey, params?: Params) {
   });
 }
 
+/**
+ * Textos que YA son la forma correcta en `locale`.
+ *
+ * Sin esta comprobación, la búsqueda inversa por valor reescribe cadenas que
+ * ya estaban bien: `nav.compliance` vale "Compliance" en español, pero
+ * `commonWordTranslations` declara `"Conformidad": { en: "Compliance" }`, así
+ * que "Compliance" se encontraba como valor inglés y se "reparaba" a
+ * "Conformidad" — en la propia interfaz en español.
+ */
+const localeValueSets = new Map<Locale, Set<string>>();
+
+function valuesForLocale(locale: Locale): Set<string> {
+  let set = localeValueSets.get(locale);
+  if (set) return set;
+  set = new Set<string>();
+  for (const key of Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[]) {
+    const value = messages[locale][key];
+    if (value) set.add(value.trim());
+  }
+  for (const catalog of [knownTextTranslations, domainUiTranslations, commonWordTranslations]) {
+    for (const [base, values] of Object.entries(catalog)) {
+      set.add((locale === DEFAULT_LOCALE ? base : values[locale] ?? base).trim());
+    }
+  }
+  localeValueSets.set(locale, set);
+  return set;
+}
+
 export function translateKnownText(locale: Locale, text: string) {
   const clean = text.trim();
   if (!clean) return text;
-  const directKnown = knownTextTranslations[clean];
-  if (directKnown) return locale === DEFAULT_LOCALE ? clean : directKnown[locale] ?? clean;
-  const knownBase = Object.entries(knownTextTranslations).find(([, values]) =>
-    Object.values(values).some((value) => value === clean),
-  )?.[0];
-  if (knownBase) {
-    if (locale === DEFAULT_LOCALE) return knownBase;
-    return knownTextTranslations[knownBase]?.[locale] ?? knownBase;
+  // Ya está en la forma correcta para este idioma: no tocarlo.
+  if (valuesForLocale(locale).has(clean)) return text;
+  const catalogs = [knownTextTranslations, domainUiTranslations, commonWordTranslations];
+  for (const catalog of catalogs) {
+    const directKnown = catalog[clean];
+    if (directKnown) return locale === DEFAULT_LOCALE ? clean : directKnown[locale] ?? clean;
+    const knownBase = Object.entries(catalog).find(([, values]) =>
+      Object.values(values).some((value) => value === clean),
+    )?.[0];
+    if (knownBase) {
+      if (locale === DEFAULT_LOCALE) return knownBase;
+      return catalog[knownBase]?.[locale] ?? knownBase;
+    }
   }
 
   const entries = Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[];
   const match = entries.find((key) => messages[DEFAULT_LOCALE][key] === clean)
     ?? entries.find((key) => SUPPORTED_MESSAGE_LOCALES.some((item) => messages[item][key] === clean));
   return match ? messages[locale][match] ?? clean : text;
+}
+
+/**
+ * Translates a text node that contains one or more known phrases. Legacy
+ * screens often split a sentence across nested spans, so exact-match-only
+ * translation leaves visible fragments behind. Longest-first replacement
+ * keeps phrases such as "No hay registros..." ahead of individual labels.
+ */
+export function translateText(locale: Locale, text: string) {
+  const exact = translateKnownText(locale, text);
+  if (exact !== text) return exact;
+  // La sustitución por fragmentos no es idempotente: aplicada dos veces sobre
+  // el mismo nodo produce texto duplicado ("Política de Information
+  // Información"). Si el texto ya contiene una forma válida del idioma actual,
+  // se deja intacto.
+  if (valuesForLocale(locale).has(text.trim())) return text;
+
+  let entries = fragmentEntriesByLocale.get(locale);
+  if (!entries) {
+    const sourceEntries = new Map<string, string>();
+    for (const catalog of [knownTextTranslations, domainUiTranslations, commonWordTranslations]) {
+      for (const [base, values] of Object.entries(catalog)) {
+        sourceEntries.set(base, locale === DEFAULT_LOCALE ? base : values[locale] ?? base);
+        for (const sourceLocale of SUPPORTED_MESSAGE_LOCALES) {
+          const source = sourceLocale === DEFAULT_LOCALE ? base : values[sourceLocale];
+          if (source) sourceEntries.set(source, locale === DEFAULT_LOCALE ? base : values[locale] ?? base);
+        }
+      }
+    }
+    for (const key of Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[]) {
+      const base = messages[DEFAULT_LOCALE][key];
+      for (const sourceLocale of SUPPORTED_MESSAGE_LOCALES) {
+        const source = messages[sourceLocale][key];
+        sourceEntries.set(source, messages[locale][key] ?? base);
+      }
+    }
+    entries = [...sourceEntries.entries()]
+      .filter(([source]) => source.length > 2 && /\s/.test(source))
+      .sort(([a], [b]) => b.length - a.length);
+    fragmentEntriesByLocale.set(locale, entries);
+  }
+
+  return entries
+    // Fragment replacement is intentionally limited to phrases and word
+    // boundaries. Replacing a phrase inside a larger word would make the
+    // operation non-idempotent (for example, "e a" inside "Create account").
+    .filter(([source]) => text.includes(source))
+    .reduce((current, [source, target]) => {
+      const escaped = source.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const leftBoundary = /^[\p{L}\p{N}]/u.test(source) ? "(?<![\\p{L}\\p{N}])" : "";
+      const rightBoundary = /[\p{L}\p{N}]$/u.test(source) ? "(?![\\p{L}\\p{N}])" : "";
+      return current.replace(new RegExp(`${leftBoundary}${escaped}${rightBoundary}`, "gu"), target);
+    }, text);
 }

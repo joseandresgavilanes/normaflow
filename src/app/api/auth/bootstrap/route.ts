@@ -12,6 +12,7 @@ import type { z } from "zod";
 import { clientAddress, rateLimitResponse, takeRateLimit } from "@/lib/rate-limit";
 import { parseInput } from "@/lib/validation/common";
 import { bootstrapSchema } from "@/lib/validation/workflows";
+import { installAllPacks, syncCommercialPackEntitlements } from "@/lib/standard-packs";
 
 async function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -142,6 +143,24 @@ export async function POST(request: NextRequest) {
   if (created) {
     // Adopción de normas: catálogo global + evaluación GAP inicial por norma.
     // Fuera de la transacción principal — es idempotente y no debe bloquear el alta.
+    await installAllPacks();
+    const entitlementSync = await syncCommercialPackEntitlements({
+      organizationId: created.organizationId,
+      plan: "STARTER",
+      trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000),
+      grantedById: created.userId,
+    });
+    await prisma.auditLog.create({
+      data: {
+        organizationId: created.organizationId,
+        userId: created.userId,
+        action: "create",
+        module: "packs",
+        recordId: "COMMERCIAL_ONBOARDING",
+        metadata: { event: "sync_commercial_pack_entitlements", enabledCodes: entitlementSync.enabledCodes },
+      },
+    });
+
     for (const spec of standardSpecs) {
       try {
         const standard = await ensureStandardCatalog(spec);

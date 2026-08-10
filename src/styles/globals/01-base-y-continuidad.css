@@ -1,0 +1,404 @@
+/* ============================================================================
+ * NormaFlow — globals, parte 01-base-y-continuidad
+ *
+ * Reset, utilidades base y el módulo de continuidad (ISO 22301).
+ *
+ * Trozo literal de las líneas 1-395 del globals.css original. NO se
+ * reordena nada: el orden es lo único que mantiene la cascada intacta.
+ * ========================================================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Los design tokens viven en `src/styles/tokens.css`, importado antes que este
+   fichero desde `src/app/layout.tsx`. No declarar tokens aquí. */
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-inter, Inter), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-inter, Inter), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  a { color: inherit; }
+  button {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+  input, textarea, select { font-family: inherit; }
+}
+.nf-form-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.nf-form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.nf-acpm-verification-box { display: grid; gap: 10px; padding: 14px; border: 1px solid #F3C56B; border-radius: 10px; background: var(--nf-warning-subtle); }
+
+/* Business continuity plan detail modal */
+.nf-continuity-plan-card {
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  padding: 16px;
+  background: var(--surface);
+}
+.nf-continuity-plan-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.nf-continuity-plan-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.nf-continuity-plan-card-title strong { font-weight: 750; }
+.nf-continuity-plan-card-meta {
+  margin-top: 7px;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.nf-continuity-plan-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nf-continuity-detail {
+  display: grid;
+  gap: 16px;
+}
+.nf-continuity-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #dfe5ff;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--nf-primary-subtle) 0%, var(--nf-surface) 72%);
+}
+.nf-continuity-detail-hero-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
+  color: var(--nf-primary-active);
+  background: var(--nf-primary-subtle-hover);
+}
+.nf-continuity-detail-hero-copy { min-width: 0; flex: 1; }
+.nf-continuity-detail-eyebrow {
+  color: var(--nf-primary-active);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.nf-continuity-detail-hero-title {
+  margin: 3px 0 0;
+  color: var(--nf-ink);
+  font-size: 20px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+.nf-continuity-detail-hero-subtitle {
+  margin: 5px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+}
+.nf-continuity-detail-hero-status {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.nf-continuity-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(250px, .65fr);
+  align-items: start;
+  gap: 16px;
+}
+.nf-continuity-detail-column {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.nf-continuity-detail-section {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--nf-line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.nf-continuity-detail-section-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.nf-continuity-detail-section-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  color: var(--nf-primary-active);
+  background: var(--nf-surface-selected);
+}
+.nf-continuity-detail-section-title {
+  margin: 0;
+  color: var(--nf-ink);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.nf-continuity-detail-section-description {
+  margin: 3px 0 0;
+  color: var(--nf-ink-3);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.nf-continuity-detail-section-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.nf-continuity-detail-copy {
+  margin: 0;
+  padding: 11px 12px;
+  border-left:  3px solid var(--nf-primary);
+  border-radius: 0 8px 8px 0;
+  background: var(--nf-surface-muted);
+  color: var(--nf-ink-2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.nf-continuity-detail-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.nf-continuity-detail-metric {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #eef2f6;
+  border-radius: 9px;
+  background: var(--nf-surface-muted);
+}
+.nf-continuity-detail-metric-label {
+  margin-bottom: 4px;
+  color: var(--nf-ink-3);
+  font-size: 11px;
+}
+.nf-continuity-detail-metric-value {
+  color: var(--nf-ink);
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.nf-continuity-detail-list {
+  display: grid;
+  gap: 8px;
+}
+.nf-continuity-detail-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid #eef2f6;
+  border-radius: 9px;
+  background: var(--nf-surface-muted);
+  font-size: 12.5px;
+}
+.nf-continuity-detail-list-item > span { min-width: 0; }
+.nf-continuity-detail-empty {
+  color: var(--nf-ink-3);
+  font-size: 12.5px;
+}
+.nf-continuity-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.nf-continuity-detail-form-stack {
+  display: grid;
+  gap: 8px;
+}
+.nf-continuity-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px;
+  border: 1px solid #e5eaf2;
+  border-radius: 12px;
+  background: var(--nf-surface-muted);
+}
+.nf-continuity-filter-search {
+  position: relative;
+  display: flex;
+  flex: 1 1 280px;
+  align-items: center;
+  min-width: min(280px, 100%);
+  color: var(--nf-ink-3);
+}
+.nf-continuity-filter-search > svg {
+  position: absolute;
+  left: 11px;
+  pointer-events: none;
+}
+.nf-continuity-filter-search .nf-app-input {
+  width: 100%;
+  min-height: 38px;
+  padding-left: 34px;
+  padding-right: 34px;
+}
+.nf-continuity-filter-bar > .nf-app-input {
+  flex: 0 1 190px;
+  min-width: 160px;
+}
+.nf-continuity-filter-clear {
+  position: absolute;
+  right: 6px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  min-height: 28px !important;
+  place-items: center;
+  padding: 0 !important;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nf-ink-3);
+  cursor: pointer;
+}
+.nf-continuity-filter-clear:hover {
+  background: var(--nf-app-surface-1);
+  color: var(--nf-ink);
+}
+@media (max-width: 720px) {.nf-form-grid-2,
+.nf-form-grid-3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .nf-continuity-detail-grid { grid-template-columns: 1fr; }
+  .nf-continuity-detail-hero { flex-wrap: wrap; }
+  .nf-continuity-detail-hero-status { justify-content: flex-start; width: 100%; padding-left: 56px; }
+}
+@media (max-width: 520px) {
+  .nf-continuity-plan-card-head { flex-direction: column; }
+  .nf-continuity-plan-card-actions { justify-content: flex-start; }
+  .nf-continuity-detail-metrics { grid-template-columns: 1fr; }
+  .nf-continuity-detail-hero-status { padding-left: 0; }
+}
+
+/* —— App shell (Mercury-inspired) —— */
+.nf-app-shell {
+  display: flex;
+  background: var(--nf-background);
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family: var(--nf-font-sans);
+  /* Los tokens se heredan de :root (src/styles/tokens.css). Antes se
+     redeclaraban aquí y en .nf-modal-overlay, lo que desincronizaba los
+     modales —que se renderizan en un portal fuera de este shell— cada vez
+     que se tocaba un valor. */
+}
+
+.nf-app-main {
+  flex: 1;
+  margin-left: var(--nf-sidebar-width);
+  min-width: 0;
+  background: var(--bg);
+}
+
+.nf-app-main-inner {
+  padding: 32px 40px 48px;
+  max-width: 1200px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  color: var(--nf-ink);
+}
+
+/* Tarjetas operativas (riesgos, procesos, cambios, proveedores…) */
+.nf-operational-card {
+  color: var(--nf-ink-2);
+}
+
+.nf-operational-card :where(h3) {
+  color: var(--nf-ink);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.nf-operational-card :where(code) {
+  color: var(--nf-ink-2);
+  font-size: 11px;
+}
+
+.nf-operational-card :where(strong) {
+  color: var(--nf-ink);
+}
+
+/* Badges de estado en filas flex de tarjetas (evita estiramiento vertical) */
+.nf-status-badge {
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: fit-content;
+  max-width: 100%;
+  line-height: 1.25;
+}
+
+.nf-export-history :where(strong),
+.nf-billing-invoices :where(strong),
+.nf-billing-plans :where(strong) {
+  color: var(--nf-ink);
+  font-weight: 700;
+}
+
+.nf-billing-plans :where(li) {
+  color: var(--nf-ink-2);
+}
+
+@media (max-width: 768px) {
+  .nf-app-main {
+    margin-left: 0;
+  }
+
+  .nf-app-main-inner {
+    padding: 16px 14px 24px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Top bar */
+.nf-topbar {
+  height: 64px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--nf-line);
+  display: flex;
+  align-items: center;
+  padding: 0 40px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  min-width: 0;
+}

@@ -5,7 +5,7 @@ import { getAppContext } from "@/lib/app-context";
 import { getSetupPayload } from "@/lib/server-queries";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Implementación | NormaFlow" };
+export const metadata = { title: "Implementación" };
 
 export default async function SetupPage() {
   const ctx = await getAppContext();

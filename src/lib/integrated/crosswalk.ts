@@ -45,6 +45,13 @@ export type CrosswalkRow = {
   sharedDocuments: string[];
   sharedEvidence: string[];
   coverageCount: number;
+  /**
+   * Compartibilidad práctica: EQUIVALENT/PARTIAL siempre lo son por estructura
+   * de cláusula (Anexo SL). Un requisito SPECIFIC solo es "compartible" si,
+   * en la práctica, algún elemento que lo cubre también cubre un requisito de
+   * otra norma (evidencia real de reutilización, no solo estructura).
+   */
+  shareable: boolean;
   responsibleId: string | null;
   responsibleName: string | null;
 };
@@ -81,6 +88,23 @@ export function classifyRequirement(
   if (!external.length) return "SPECIFIC";
   if (external.some((r) => r.relationType === "EQUIVALENT")) return "EQUIVALENT";
   return "PARTIAL";
+}
+
+/**
+ * Compartibilidad de un requisito, para la clasificación de 5 categorías del
+ * crosswalk: equivalente / parcialmente equivalente / específico, cruzada con
+ * compartible / no compartible. EQUIVALENT y PARTIAL son compartibles por
+ * estructura (Anexo SL); un SPECIFIC solo lo es si, en la práctica, un
+ * elemento que lo cubre también cubre un requisito de otra familia.
+ */
+export function isShareable(
+  row: { kind: RequirementKind; requirementId: string },
+  coverageByRequirement: Map<string, { entityType: string; entityId: string }[]>,
+  multiFamilyEntityKeys: Set<string>,
+): boolean {
+  if (row.kind !== "SPECIFIC") return true;
+  const entities = coverageByRequirement.get(row.requirementId) ?? [];
+  return entities.some((e) => multiFamilyEntityKeys.has(`${e.entityType}:${e.entityId}`));
 }
 
 /**
