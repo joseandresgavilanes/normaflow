@@ -55,7 +55,7 @@ const SECTION_META: Record<Tab, { title: string; sub: string }> = {
   knowledge: { title: "Conocimiento y reportes", sub: "Artículos de conocimiento y reportes de desempeño del servicio." },
 };
 
-const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
+const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRadius: 14, padding: 18, background: "var(--nf-surface)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
@@ -169,7 +169,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <IsoSectionHeader headingLevel={1} icon={Server} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
-        action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
+        action={demo ? <span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>Demo</span> : undefined} />
 
       {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
@@ -404,7 +404,7 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
               {initial.crossLinks.map((l) => (
                 <tr key={l.id}>
                   <td style={td}>{l.itsmIncident.code}</td>
-                  <td style={td}><span style={chip("#eef2ff", "#4f46e5")}>{itsmLabel(l.targetDomain)}</span></td>
+                  <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{itsmLabel(l.targetDomain)}</span></td>
                   <td style={td}>{l.targetLabel}</td>
                   <td style={td}>{l.relationType ?? "—"}</td>
                   <td style={td}>{l.notes ?? "—"}</td>

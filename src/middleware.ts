@@ -15,7 +15,11 @@ function secure(response: NextResponse) {
     "font-src 'self' data: https:",
     "style-src 'self' 'unsafe-inline' https:",
     `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
-    "connect-src 'self' https: wss:",
+    // `ws:` solo en desarrollo: el websocket de recarga en caliente de Next va
+    // sin cifrar contra localhost, y sin esta excepción la CSP lo bloqueaba —
+    // en producción sigue exigiéndose `wss:`. Mismo criterio que la línea de
+    // `script-src` con 'unsafe-eval'.
+    `connect-src 'self' https: wss:${process.env.NODE_ENV === "development" ? " ws:" : ""}`,
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
     "upgrade-insecure-requests",
   ].join("; ");

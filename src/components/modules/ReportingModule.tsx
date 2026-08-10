@@ -373,7 +373,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
       </div>
 
       {live && <div style={{ marginTop: 26 }}>
-        <h3 style={{ fontSize: 16, marginBottom: 12, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Historial de exportaciones</h3>
+        <h3 style={{ fontSize: 16, marginBottom: 12, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Historial de exportaciones</h3>
         <Card style={{ padding: 0, overflow: "hidden" }} className="nf-export-history">
           {liveData.exports.length ? liveData.exports.map((item, index) => (
             <div
@@ -381,7 +381,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               className="nf-export-history-row"
               style={{
                 padding: "12px 16px",
-                borderBottom: index < liveData.exports.length - 1 ? "1px solid var(--nf-line, #b8c8d9)" : "none",
+                borderBottom: index < liveData.exports.length - 1 ? "1px solid var(--nf-line)" : "none",
                 display: "flex",
                 justifyContent: "space-between",
                 gap: 12,
@@ -390,13 +390,13 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
               }}
             >
               <div style={{ minWidth: 0 }}>
-                <strong style={{ display: "block", color: "var(--nf-ink, #0f1b2d)", fontWeight: 700, fontSize: 14, wordBreak: "break-all" }}>{item.fileName}</strong>
-                <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2, #223648)" }}>{item.generatedBy} · {new Date(item.createdAt).toLocaleString("es-ES")}</div>
+                <strong style={{ display: "block", color: "var(--nf-ink)", fontWeight: 700, fontSize: 14, wordBreak: "break-all" }}>{item.fileName}</strong>
+                <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2)" }}>{item.generatedBy} · {new Date(item.createdAt).toLocaleString("es-ES")}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><span className="nf-chip nf-chip--on">{item.format} · {item.rowCount} filas · {item.status}</span>{item.hasContent && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" onClick={() => { setBusy(`download-${item.id}`); void downloadReportExport(item.id).then(result => download(result.url, result.fileName)).catch(error => showToast(error instanceof Error ? error.message : "No se pudo descargar el informe")).finally(() => setBusy(null)); }}>{busy === `download-${item.id}` ? "Descargando…" : "Descargar"}</button>}</div>
-              {item.status === "FAILED" && item.error && <p style={{ margin: 0, color: "var(--nf-danger, #b42318)", fontSize: 12 }}>Error: {item.error}</p>}
+              {item.status === "FAILED" && item.error && <p style={{ margin: 0, color: "var(--nf-danger)", fontSize: 12 }}>Error: {item.error}</p>}
             </div>
-          )) : <p className="nf-app-help" style={{ padding: 18, margin: 0, color: "var(--nf-ink-2, #223648)" }}>Todavía no se generaron informes.</p>}
+          )) : <p className="nf-app-help" style={{ padding: 18, margin: 0, color: "var(--nf-ink-2)" }}>Todavía no se generaron informes.</p>}
         </Card>
       </div>}
     </div>

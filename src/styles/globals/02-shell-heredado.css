@@ -115,7 +115,7 @@
 
 .nf-lang-switcher-btn--active {
   color: var(--nf-text-on-primary);
-  background: var(--nf-primary, #5266F6);
+  background: var(--nf-primary);
 }
 
 .nf-auth-lang {
@@ -380,7 +380,7 @@ a.nf-app-btn-soft-success {
 }
 
 .nf-app-btn-ghost:hover:not(:disabled) {
-  border-color: var(--nf-border);
+  border-color: var(--nf-input-border-hover);
   background: var(--nf-app-surface-1);
 }
 
@@ -392,13 +392,16 @@ a.nf-app-btn-soft-success {
 }
 
 .nf-app-btn-outline {
-  border-color: var(--nf-line);
+  /* `--nf-line` es el borde DECORATIVO (1.19:1 claro, 1.96:1 oscuro): agrupa,
+     no delimita nada pulsable. El límite de un control necesita 3:1 por WCAG
+     1.4.11, y para eso está `--nf-input-border`. */
+  border-color: var(--nf-input-border);
   background: var(--nf-surface);
   color: var(--nf-ink-2);
 }
 
 .nf-app-btn-outline:hover:not(:disabled) {
-  border-color: var(--nf-border);
+  border-color: var(--nf-input-border-hover);
   color: var(--nf-ink);
   background: var(--nf-app-surface-1);
 }

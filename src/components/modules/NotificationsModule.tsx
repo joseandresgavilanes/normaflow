@@ -316,7 +316,7 @@ export default function NotificationsModule({ serverItems }: { serverItems?: Not
                           fontWeight: 700,
                           color: "var(--nf-ink-2)",
                           background: "var(--nf-surface)",
-                          border: "1px solid var(--nf-line)",
+                          border: "1px solid var(--nf-input-border)",
                           borderRadius: 10,
                           padding: "8px 14px",
                           cursor: "pointer",

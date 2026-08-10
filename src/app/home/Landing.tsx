@@ -526,7 +526,7 @@ function MiniViz({ kind }: { kind: string }) {
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 6, alignItems: "center", padding: "4px 6px", borderRadius: 4, background: "var(--nf-surface-muted)", border: "1px solid var(--nf-line)" }}>
             <span style={{ color: "var(--nf-ink-2)" }}>{t}</span>
             <span style={{ color: "var(--nf-ink-3)" }}>{w}</span>
-            <span style={{ color: st === "danger" ? "var(--nf-danger-text)" : st === "warn" ? "var(--nf-warning-text)" : "var(--nf-accent)" }}>{d}</span>
+            <span style={{ color: st === "danger" ? "var(--nf-danger-text)" : st === "warn" ? "var(--nf-warning-text)" : "var(--nf-primary-active)" }}>{d}</span>
           </div>
         ))}
       </div>
@@ -794,7 +794,7 @@ function ScreenCapa() {
             "El procedimiento no incluía revisión cruzada de alertas.",
           ].map((t, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, padding: 10, borderRadius: 8, background: i === 4 ? "var(--nf-success-bg)" : "var(--nf-surface-muted)", border: i === 4 ? "1px solid var(--nf-success-border)" : "1px solid var(--nf-line)" }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 4 ? "var(--nf-success)" : "var(--nf-glass-2)", color: i === 4 ? "#fff" : "var(--nf-ink-2)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
+              <span style={{ width: 22, height: 22, borderRadius: 6, background: i === 4 ? "var(--nf-success-text)" : "var(--nf-glass-2)", color: i === 4 ? "var(--nf-c-neutral-0)" : "var(--nf-ink-2)", display: "grid", placeItems: "center", fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 700 }}>{i + 1}</span>
               <span style={{ fontSize: 13, color: "var(--nf-ink)", lineHeight: 1.45 }}>{t}</span>
             </div>
           ))}

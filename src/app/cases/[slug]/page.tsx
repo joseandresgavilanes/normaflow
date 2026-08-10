@@ -86,7 +86,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ slu
             &ldquo;{c.quote}&rdquo;
           </blockquote>
           <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
-            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.04 30))", display: "grid", placeItems: "center", color: "var(--nf-c-neutral-0)", fontFamily: "var(--font-display)", fontWeight: 700 }}>{c.initials}</div>
+            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.55 0.04 30), oklch(0.45 0.06 30))", display: "grid", placeItems: "center", color: "var(--nf-c-neutral-0)", fontFamily: "var(--font-display)", fontWeight: 700 }}>{c.initials}</div>
             <div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, color: "var(--nf-ink)" }}>{c.person}</div>
               <div style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>{c.role}</div>

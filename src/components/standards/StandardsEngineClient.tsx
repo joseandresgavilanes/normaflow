@@ -34,7 +34,7 @@ const GAP_SUBTLE: Record<string, string> = {
   NOT_EVALUATED: "var(--nf-surface-muted)",
 };
 
-const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
+const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRadius: 14, padding: 18, background: "var(--nf-surface)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99 });
 
 export default function StandardsEngineClient({ initial, demo = false }: { initial: StandardsEnginePayload; demo?: boolean }) {
@@ -117,11 +117,11 @@ function PanelTab({ payload }: { payload: StandardsEnginePayload }) {
         {payload.active.map((a) => (
           <div key={a.orgStandardId} style={card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div><strong style={{ fontSize: 16 }}>{a.name} {a.editionCode}</strong><span style={{ color: "var(--nf-ink-3,#8794a5)", marginLeft: 8, fontSize: 12 }}>{a.implementationStatus}</span></div>
+              <div><strong style={{ fontSize: 16 }}>{a.name} {a.editionCode}</strong><span style={{ color: "var(--nf-ink-3)", marginLeft: 8, fontSize: 12 }}>{a.implementationStatus}</span></div>
               <span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{a.score == null ? "Sin evaluar" : `${Math.round(a.score)}% GAP`}</span>
             </div>
             <Bar pct={a.score ?? 0} />
-            <div style={{ fontSize: 12, color: "var(--nf-ink-2,#5e6b7a)", marginTop: 8 }}>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-2)", marginTop: 8 }}>
               {a.coveredRequirements}/{a.requirementCount} requisitos con evidencia · Responsable: {a.responsibleName ?? "—"}{a.certified && " · ✅ Certificada"}
             </div>
           </div>
@@ -159,10 +159,10 @@ function CatalogTab({ payload, onActivate, onInstall, pending, demo }: {
             </div>
             <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
               {f.editions.map((e) => (
-                <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 11px", border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 10 }}>
+                <div key={e.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "9px 11px", border: "1px solid var(--nf-line)", borderRadius: 10 }}>
                   <div>
                     <strong style={{ fontSize: 13 }}>Edición {e.editionCode}</strong>
-                    <span style={{ display: "block", fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)" }}>{e.requirementCount} requisitos · {e.status}</span>
+                    <span style={{ display: "block", fontSize: 11.5, color: "var(--nf-ink-3)" }}>{e.requirementCount} requisitos · {e.status}</span>
                   </div>
                   {e.active
                     ? <span style={chip("var(--nf-success-subtle)", "var(--nf-success-text)")}><Check size={11} style={{ verticalAlign: -1 }} /> Activa</span>
@@ -187,7 +187,7 @@ const activeColumns: DataTableColumn<ActiveRow>[] = [
   { id: "name", header: "Norma", primary: true, minWidth: 190, hideable: false, sortValue: (a) => `${a.name} ${a.editionCode}`,
     cell: (a) => <strong>{a.name} {a.editionCode}</strong> },
   { id: "scope", header: "Alcance", minWidth: 220, sortValue: (a) => a.scope ?? "",
-    cell: (a) => <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{a.scope ?? "—"}</span> },
+    cell: (a) => <span style={{ color: "var(--nf-ink-2)" }}>{a.scope ?? "—"}</span> },
   { id: "responsible", header: "Responsable", minWidth: 150, sortValue: (a) => a.responsibleName ?? "", cell: (a) => a.responsibleName ?? "—" },
   { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.implementationStatus,
     cell: (a) => <span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{a.implementationStatus}</span> },
@@ -261,10 +261,10 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
         <select aria-label="Filtrar por nivel" value={levelFilter} onChange={(e) => setLevelFilter(Number(e.target.value))} className="nf-app-input" style={{ maxWidth: 160 }}>
           <option value={0}>Todos los niveles</option><option value={1}>Nivel 1 (capítulo)</option><option value={2}>Nivel 2</option><option value={3}>Nivel 3</option>
         </select>
-        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2,#5e6b7a)" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2)" }}>
           <input type="checkbox" checked={onlyGaps} onChange={(e) => setOnlyGaps(e.target.checked)} /> Solo brechas
         </label>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>{rows.length} requisitos</span>
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3)" }}>{rows.length} requisitos</span>
       </div>
       <DataTable
         columns={requirementColumns(onCoverage)}
@@ -273,7 +273,7 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
         caption="Requisitos de la norma: código, título, obligatoriedad, estado de la evaluación GAP y evidencia que lo cubre."
         storageKey="standards-requirements"
       />
-      {currentMatrix && <p style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>Un mismo documento, riesgo o evidencia puede cubrir requisitos de varias normas. Pulsa en la columna Evidencia para vincular o revisar la cobertura de un requisito.</p>}
+      {currentMatrix && <p style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Un mismo documento, riesgo o evidencia puede cubrir requisitos de varias normas. Pulsa en la columna Evidencia para vincular o revisar la cobertura de un requisito.</p>}
     </div>
   );
 }
@@ -297,13 +297,13 @@ function CorrespondenceTab({ payload }: { payload: StandardsEnginePayload }) {
 }
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return <div style={card}><div style={{ fontSize: 12, color: "var(--nf-ink-3,#8794a5)", fontWeight: 600 }}>{label}</div><div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{value}{sub && <span style={{ fontSize: 13, color: "var(--nf-primary-active)", marginLeft: 6 }}>{sub}</span>}</div></div>;
+  return <div style={card}><div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>{label}</div><div style={{ fontSize: 26, fontWeight: 800, marginTop: 4 }}>{value}{sub && <span style={{ fontSize: 13, color: "var(--nf-primary-active)", marginLeft: 6 }}>{sub}</span>}</div></div>;
 }
 function Bar({ pct }: { pct: number }) {
-  return <div style={{ height: 7, background: "var(--nf-line,#e8edf5)", borderRadius: 8, marginTop: 10, overflow: "hidden" }}><div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: pct >= 70 ? "var(--nf-success)" : "var(--nf-primary)" }} /></div>;
+  return <div style={{ height: 7, background: "var(--nf-line)", borderRadius: 8, marginTop: 10, overflow: "hidden" }}><div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: pct >= 70 ? "var(--nf-success)" : "var(--nf-primary)" }} /></div>;
 }
 function Empty({ text }: { text: string }) {
-  return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3,#8794a5)", padding: 40 }}>{text}</div>;
+  return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3)", padding: 40 }}>{text}</div>;
 }
 
 const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "var(--nf-text-on-primary)", border: "none", borderRadius: 9, padding: "7px 14px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };

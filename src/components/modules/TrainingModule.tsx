@@ -550,7 +550,7 @@ export default function TrainingModule() {
       <Modal open={!!editAssign} onClose={() => setEditAssign(null)} title="Enlace con proceso" width={420}>
         {editAssign && (
           <div className="nf-modal-form">
-            <p style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--nf-ink-2)", margin: 0 }}>
               {editAssign.assigneeName} · {trainingCourses.find(c => c.id === editAssign.courseId)?.code}
             </p>
             <label>Proceso

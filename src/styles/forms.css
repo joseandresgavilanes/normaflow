@@ -39,7 +39,7 @@
 
 .nf-input:hover:not(:disabled),
 .nf-app-input:hover:not(:disabled) {
-  border-color: var(--nf-c-neutral-500);
+  border-color: var(--nf-input-border-hover);
 }
 
 .nf-input:focus-visible,

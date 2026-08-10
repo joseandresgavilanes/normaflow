@@ -60,7 +60,7 @@ const INCIDENT_FLOW = ["REPORTED", "TRIAGED", "INVESTIGATING", "ROOT_CAUSE", "AC
 const ACCEPT_LABEL: Record<string, string> = { ACCEPTABLE: "Aceptable", TOLERABLE: "Tolerable", NOT_ACCEPTABLE: "No aceptable" };
 const QUALITY_LABEL: Record<string, string> = { NOT_ASSESSED: "Sin valorar", POOR: "Pobre", ACCEPTABLE: "Aceptable", GOOD: "Buena", EXCELLENT: "Excelente" };
 
-const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
+const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRadius: 14, padding: 18, background: "var(--nf-surface)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
@@ -107,7 +107,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
   return (
     <div className="nf-iso-module" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
       <IsoSectionHeader headingLevel={1} icon={BrainCircuit} title={SECTION_META[tab].title} description={SECTION_META[tab].sub}
-        action={demo ? <span style={chip("#eef2ff", "#4f46e5")}>Demo</span> : undefined} />
+        action={demo ? <span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>Demo</span> : undefined} />
 
       {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}
 
@@ -120,11 +120,11 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
       {tab === "panel" ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         <Stat label="Sistemas de IA" value={s.systems} />
         <Stat label="En producción" value={s.inProduction} />
-        <Stat label="Riesgo alto" value={s.highRisk} accent={s.highRisk ? "#ea580c" : undefined} />
+        <Stat label="Riesgo alto" value={s.highRisk} accent={s.highRisk ? "var(--nf-warning-text)" : undefined} />
         <Stat label="Sin salvaguardas" value={s.systemsMissingSafeguards} accent={s.systemsMissingSafeguards ? "var(--nf-danger-text)" : undefined} />
         <Stat label="Pendientes de revisión" value={s.outputsAwaitingReview} accent={s.outputsAwaitingReview ? "var(--nf-warning-text)" : undefined} />
-        <Stat label="Incidentes abiertos" value={s.openIncidents} accent={s.openIncidents ? "#ea580c" : undefined} />
-      </div> : <IsoSectionMetrics items={tab === "systems" ? [{ label: "Sistemas registrados", value: s.systems }, { label: "En producción", value: s.inProduction }, { label: "Casos de uso", value: s.useCases }] : tab === "outputs" ? [{ label: "Salidas registradas", value: initial.outputs.length }, { label: "Pendientes de revisión", value: s.outputsAwaitingReview, accent: s.outputsAwaitingReview ? "var(--nf-warning-text)" : undefined }, { label: "Aprobadas", value: s.outputsApproved }] : tab === "impact" ? [{ label: "Evaluaciones aprobadas", value: s.approvedAssessments }, { label: "Pendientes", value: s.pendingAssessments, accent: s.pendingAssessments ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "risks" ? [{ label: "Riesgos registrados", value: s.risks }, { label: "No aceptables", value: s.unacceptableRisks, accent: s.unacceptableRisks ? "var(--nf-danger-text)" : undefined }, { label: "Riesgo alto", value: s.highRisk, accent: s.highRisk ? "#ea580c" : undefined }] : tab === "datasets" ? [{ label: "Datasets", value: s.datasets }, { label: "Con datos personales", value: s.datasetsWithPersonalData }, { label: "Sin revisión de sesgo", value: s.datasetsWithoutBiasReview, accent: s.datasetsWithoutBiasReview ? "var(--nf-warning-text)" : undefined }] : tab === "models" ? [{ label: "Modelos registrados", value: s.models }, { label: "En producción", value: s.modelsInProduction }, { label: "Esperando revisión", value: s.modelsAwaitingReview, accent: s.modelsAwaitingReview ? "var(--nf-warning-text)" : undefined }] : tab === "oversight" ? [{ label: "Controles humanos", value: s.controls }, { label: "Sistemas sin salvaguardas", value: s.systemsMissingSafeguards, accent: s.systemsMissingSafeguards ? "var(--nf-danger-text)" : undefined }, { label: "Incumplimientos", value: s.humanRuleViolations, accent: s.humanRuleViolations ? "var(--nf-danger-text)" : undefined }] : tab === "transparency" ? [{ label: "Registros de transparencia", value: s.transparencyRecords }, { label: "Sistemas", value: s.systems }, { label: "Salidas aprobadas", value: s.outputsApproved }] : tab === "incidents" ? [{ label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "#ea580c" : undefined }, { label: "Requieren notificación", value: s.incidentsRequiringNotification, accent: s.incidentsRequiringNotification ? "var(--nf-danger-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "suppliers" ? [{ label: "Proveedores evaluados", value: s.suppliers }, { label: "Pendientes", value: s.suppliersPending, accent: s.suppliersPending ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "changes" ? [{ label: "Cambios registrados", value: initial.changes.length }, { label: "Esperando revisión", value: s.changesAwaitingReview, accent: s.changesAwaitingReview ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : [{ label: "Métricas registradas", value: initial.metrics.length }, { label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "#ea580c" : undefined }, { label: "Sistemas en producción", value: s.inProduction }]} />}
+        <Stat label="Incidentes abiertos" value={s.openIncidents} accent={s.openIncidents ? "var(--nf-warning-text)" : undefined} />
+      </div> : <IsoSectionMetrics items={tab === "systems" ? [{ label: "Sistemas registrados", value: s.systems }, { label: "En producción", value: s.inProduction }, { label: "Casos de uso", value: s.useCases }] : tab === "outputs" ? [{ label: "Salidas registradas", value: initial.outputs.length }, { label: "Pendientes de revisión", value: s.outputsAwaitingReview, accent: s.outputsAwaitingReview ? "var(--nf-warning-text)" : undefined }, { label: "Aprobadas", value: s.outputsApproved }] : tab === "impact" ? [{ label: "Evaluaciones aprobadas", value: s.approvedAssessments }, { label: "Pendientes", value: s.pendingAssessments, accent: s.pendingAssessments ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "risks" ? [{ label: "Riesgos registrados", value: s.risks }, { label: "No aceptables", value: s.unacceptableRisks, accent: s.unacceptableRisks ? "var(--nf-danger-text)" : undefined }, { label: "Riesgo alto", value: s.highRisk, accent: s.highRisk ? "var(--nf-warning-text)" : undefined }] : tab === "datasets" ? [{ label: "Datasets", value: s.datasets }, { label: "Con datos personales", value: s.datasetsWithPersonalData }, { label: "Sin revisión de sesgo", value: s.datasetsWithoutBiasReview, accent: s.datasetsWithoutBiasReview ? "var(--nf-warning-text)" : undefined }] : tab === "models" ? [{ label: "Modelos registrados", value: s.models }, { label: "En producción", value: s.modelsInProduction }, { label: "Esperando revisión", value: s.modelsAwaitingReview, accent: s.modelsAwaitingReview ? "var(--nf-warning-text)" : undefined }] : tab === "oversight" ? [{ label: "Controles humanos", value: s.controls }, { label: "Sistemas sin salvaguardas", value: s.systemsMissingSafeguards, accent: s.systemsMissingSafeguards ? "var(--nf-danger-text)" : undefined }, { label: "Incumplimientos", value: s.humanRuleViolations, accent: s.humanRuleViolations ? "var(--nf-danger-text)" : undefined }] : tab === "transparency" ? [{ label: "Registros de transparencia", value: s.transparencyRecords }, { label: "Sistemas", value: s.systems }, { label: "Salidas aprobadas", value: s.outputsApproved }] : tab === "incidents" ? [{ label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "var(--nf-warning-text)" : undefined }, { label: "Requieren notificación", value: s.incidentsRequiringNotification, accent: s.incidentsRequiringNotification ? "var(--nf-danger-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "suppliers" ? [{ label: "Proveedores evaluados", value: s.suppliers }, { label: "Pendientes", value: s.suppliersPending, accent: s.suppliersPending ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : tab === "changes" ? [{ label: "Cambios registrados", value: initial.changes.length }, { label: "Esperando revisión", value: s.changesAwaitingReview, accent: s.changesAwaitingReview ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas", value: s.systems }] : [{ label: "Métricas registradas", value: initial.metrics.length }, { label: "Incidentes abiertos", value: s.openIncidents, accent: s.openIncidents ? "var(--nf-warning-text)" : undefined }, { label: "Sistemas en producción", value: s.inProduction }]} />}
 
       {tab === "panel" && (
         <>
@@ -187,7 +187,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}><span style={toneChip(LEVEL_COLORS[system.criticality])}>{system.criticality}</span></td>
                 <td style={td}><span style={toneChip(CLASS_COLORS[system.classification])}>{CLASS_LABEL[system.classification]}</span></td>
                 <td style={td}>{system.autonomy}</td>
-                <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{STATUS_LABEL[system.status] ?? system.status}</span></td>
+                <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{STATUS_LABEL[system.status] ?? system.status}</span></td>
                 <td style={td}>{system.missingSafeguards.length ? <span style={{ color: "var(--nf-danger-text)" }}>{system.missingSafeguards.join(", ")}</span> : <span style={{ color: "var(--nf-success-text)" }}>completas</span>}</td>
                 {(canUpdate || canApprove) && (
                   <td style={td}>
@@ -434,7 +434,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{fmt(incident.detectedAt)}</td>
                 <td style={td}>{incident.affectedCount ?? "—"}</td>
                 <td style={td}>{incident.notificationRequired ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Requerida</span> : "—"}</td>
-                <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{INCIDENT_LABEL[incident.status] ?? incident.status}</span></td>
+                <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{INCIDENT_LABEL[incident.status] ?? incident.status}</span></td>
                 {(canUpdate || canManage) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("incident", incident as unknown as Record<string, unknown>)}>Editar</button>}{canManage && (next ? <button disabled={pending} onClick={() => run(() => transitionAIIncident(incident.id, { to: next as never }))} style={miniBtn}><ArrowRight size={12} /> {INCIDENT_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
               </tr>
             );
@@ -457,7 +457,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{supplier.code}</td>
                 <td style={td}>{supplier.supplierName}</td>
                 <td style={td}>{supplier.serviceType}</td>
-                <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{supplier.outcome}</span></td>
+                <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{supplier.outcome}</span></td>
                 <td style={td}>{supplier.score ?? "—"}</td>
                 <td style={td}>{supplier.usesCustomerDataForTraining ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                 <td style={td}>{fmt(supplier.assessedAt)}</td>
@@ -828,7 +828,7 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
         <td style={td}>{code}</td>
         <td style={td}>{model.modelName}<div style={{ color: "var(--nf-text-subtle)", fontSize: 11 }}>{model.algorithm ?? model.provider ?? "—"}</div></td>
         <td style={td}>{model.version}</td>
-        <td style={td}><span style={chip("#eef2ff", "#4338ca")}>{model.stage}</span></td>
+        <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{model.stage}</span></td>
         <td style={td}><span style={toneChip(REVIEW_COLORS[model.reviewStatus])}>{REVIEW_LABEL[model.reviewStatus]}</span></td>
         <td style={td}>{model.lastEvaluation ? `${model.lastEvaluation.outcome} · ${fmt(model.lastEvaluation.evaluatedAt)}` : "—"}</td>
         <td style={td}>{pct(model.lastEvaluation?.accuracy)}</td>

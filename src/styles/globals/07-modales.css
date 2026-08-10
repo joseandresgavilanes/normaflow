@@ -288,7 +288,7 @@
 
 .nf-modal-close:hover {
   background: var(--nf-app-surface-1);
-  border-color: var(--nf-border);
+  border-color: var(--nf-input-border-hover);
   color: var(--nf-ink);
 }
 

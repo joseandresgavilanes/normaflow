@@ -33,7 +33,7 @@ const CONDITION_LABEL: Record<string, string> = { NORMAL: "Normal", ABNORMAL: "A
 const WASTE_LABEL: Record<string, string> = { NON_HAZARDOUS: "No peligroso", HAZARDOUS: "Peligroso", RECYCLABLE: "Reciclable", INERT: "Inerte", SPECIAL: "Especial" };
 const BIODIVERSITY_STATUS_LABEL: Record<string, string> = { IDENTIFIED: "Identificado", MONITORING: "En monitoreo", MITIGATED: "Mitigado", CLOSED: "Cerrado" };
 
-const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
+const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRadius: 14, padding: 18, background: "var(--nf-surface)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
@@ -103,7 +103,7 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
           <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>{SECTION_META[tab].sub}</p>
         </div>
-        {demo && <span style={{ ...chip("#eef2ff", "#4f46e5"), marginLeft: "auto" }}>Demo</span>}
+        {demo && <span style={{ ...chip("var(--nf-primary-subtle)", "var(--nf-primary-active)"), marginLeft: "auto" }}>Demo</span>}
       </header>
 
       {error && <div style={{ ...card, borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}>{error}</div>}

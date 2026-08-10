@@ -95,7 +95,7 @@ export default function AIPanel({
               {t("ai.title")}
             </span>
           </div>
-          <div style={{ fontSize: 11, color: "var(--nf-ink-2, #223648)", marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: "var(--nf-ink-2)", marginTop: 2 }}>
             {t("ai.humanReview")}
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function AIPanel({
             borderRadius: 8,
             padding: "10px 14px",
             fontSize: 13,
-            color: "var(--nf-ink-2, #223648)",
+            color: "var(--nf-ink-2)",
             border: "1px solid var(--nf-border)",
           }}
         >
@@ -140,7 +140,7 @@ export default function AIPanel({
             style={{
               fontSize: 12,
               fontWeight: 500,
-              color: "var(--nf-ink-2, #223648)",
+              color: "var(--nf-ink-2)",
               display: "block",
               marginBottom: 6,
             }}
@@ -174,7 +174,7 @@ export default function AIPanel({
             <p
               style={{
                 fontSize: 13,
-                color: "var(--nf-ink-2, #223648)",
+                color: "var(--nf-ink-2)",
                 lineHeight: 1.6,
                 marginBottom: 0,
               }}
@@ -186,7 +186,7 @@ export default function AIPanel({
 
         {loading && (
           <div style={{ textAlign: "center", padding: "24px 0" }}>
-            <div style={{ fontSize: 13, color: "var(--nf-ink-2, #223648)", marginBottom: 10 }}>
+            <div style={{ fontSize: 13, color: "var(--nf-ink-2)", marginBottom: 10 }}>
               {t("ai.loadingContext")}
             </div>
             <div

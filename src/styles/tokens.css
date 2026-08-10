@@ -89,6 +89,10 @@
   /* El borde ES lo que identifica el control, así que va al token fuerte
      (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
   --nf-input-border: var(--nf-border-strong);
+  /* El hover de los controles apuntaba directo a `--nf-c-neutral-500`, que
+     solo está declarado en `:root`: en oscuro se colaba un valor de la
+     paleta clara. Este token sí existe en las tres apariencias. */
+  --nf-input-border-hover: var(--nf-c-neutral-500);
 
   /* Tabla de datos */
   /* La cabecera se separa de las filas sin recurrir a un borde grueso. */
@@ -410,6 +414,7 @@
   /* El borde ES lo que identifica el control, así que va al token fuerte
      (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
   --nf-input-border: var(--nf-border-strong);
+  --nf-input-border-hover: #868d98; /* 5.10:1 sobre superficie */
 
   /* Tabla de datos */
   /* La cabecera se separa de las filas sin recurrir a un borde grueso. */
@@ -730,6 +735,7 @@
     /* El borde ES lo que identifica el control, así que va al token fuerte
      (3.23:1 en claro, 3.47:1 en oscuro) y no al decorativo. */
     --nf-input-border: var(--nf-border-strong);
+    --nf-input-border-hover: #868d98; /* 5.10:1 sobre superficie */
 
     /* Tabla de datos */
     /* La cabecera se separa de las filas sin recurrir a un borde grueso. */

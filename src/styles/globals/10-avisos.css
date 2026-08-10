@@ -247,6 +247,14 @@
   box-shadow: none;
 }
 
+/* Cuando estas tarjetas son un `<button>` su borde ya no agrupa: delimita algo
+   pulsable, y WCAG 1.4.11 le pide 3:1. `.nf-acpm-col` se queda con el borde
+   decorativo porque es una columna, no un control. */
+button.nf-audit-card,
+.nf-acpm-card-btn {
+  border-color: var(--nf-input-border);
+}
+
 .nf-audit-card {
   border-left-width: 3px;
   border-left-color: var(--nf-app-accent);

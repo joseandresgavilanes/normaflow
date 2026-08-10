@@ -297,7 +297,7 @@
   justify-content: center;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--nf-line);
+  border: 1px solid var(--nf-input-border);
   background: var(--nf-surface);
   color: var(--nf-ink-2);
   font-size: 12px;
@@ -310,7 +310,7 @@
 }
 
 .nf-chip:hover:not(:disabled):not(.nf-chip--on) {
-  border-color: var(--nf-border);
+  border-color: var(--nf-input-border-hover);
   color: var(--nf-ink);
   background: var(--nf-app-surface-1);
 }

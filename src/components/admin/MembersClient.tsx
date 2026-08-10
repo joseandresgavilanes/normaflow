@@ -105,7 +105,7 @@ export default function MembersClient() {
             value={r.role}
             disabled={isPending}
             onChange={(e) => changeRole(r, e.target.value as Role)}
-            style={{ padding: "6px 8px", fontSize: 12, border: "1px solid var(--nf-line)", borderRadius: 6, background: "var(--nf-app-surface-1)" }}
+            style={{ padding: "6px 8px", fontSize: 12, border: "1px solid var(--nf-input-border)", borderRadius: 6, background: "var(--nf-app-surface-1)" }}
           >
             {ASSIGNABLE_ROLES.map((rl) => <option key={rl} value={rl}>{ROLE_LABELS[rl]}</option>)}
           </select>

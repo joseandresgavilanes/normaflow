@@ -350,7 +350,7 @@
   margin: 0 2px 2px;
   border: 1px solid #e5eaf2;
   border-radius: 14px;
-  background: var(--nf-surface, #fff);
+  background: var(--nf-surface);
 }
 
 .nf-iso-table-card .nf-iso-data-table {

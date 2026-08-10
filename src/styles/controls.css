@@ -209,6 +209,10 @@
 .nf-primary-fg { color: var(--nf-primary-active); }
 
 .nf-border-line { border-color: var(--nf-border); }
+/* Pareja de `.nf-border-line` para las listas separadas: `divide-y` de Tailwind
+   pone el borde en los hijos, así que el color hay que darlo ahí. Era la última
+   clase de utilidad con color fijo del repositorio (`divide-gray-100`). */
+.nf-divide-line > * + * { border-color: var(--nf-border); }
 .nf-border-primary { border-color: var(--nf-primary-border); }
 
 /* Últimas utilidades de color fijo que quedaban en administración. */

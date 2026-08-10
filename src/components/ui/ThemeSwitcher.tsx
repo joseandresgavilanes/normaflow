@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useI18n } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export function ThemeSwitcher({
   className?: string;
 }) {
   const { t } = useI18n();
+  const router = useRouter();
   const [theme, setTheme] = useState<ThemePreference>(initial ?? "system");
   const [elegido, setElegido] = useState(Boolean(initial));
   const [, startTransition] = useTransition();
@@ -51,18 +53,29 @@ export function ThemeSwitcher({
     setTheme(actual === "light" || actual === "dark" ? actual : "system");
   }, [elegido]);
 
-  useEffect(() => {
-    if (!elegido) return;
+  function aplicar(value: ThemePreference) {
     const root = document.documentElement;
-    if (theme === "system") root.removeAttribute("data-theme");
-    else root.setAttribute("data-theme", theme);
-  }, [elegido, theme]);
+    if (value === "system") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", value);
+  }
 
   function elegir(value: ThemePreference) {
     setElegido(true);
     setTheme(value);
-    startTransition(() => {
-      void setThemePreference(value);
+    // El atributo se pone AQUÍ, no en un efecto: guardar la preferencia es una
+    // server action y su transición vuelve a renderizar la ruta con la cookie
+    // anterior, lo que revertía el atributo antes de que la nueva llegara.
+    // Aplicarlo en el manejador también da respuesta inmediata al clic.
+    aplicar(value);
+    startTransition(async () => {
+      await setThemePreference(value);
+      // `layout.tsx` pinta `data-theme` en <html>: el atributo lo gobierna
+      // React, no este componente. Sin refrescar, el árbol de cliente sigue
+      // creyendo el tema anterior, y cualquier re-render posterior del layout
+      // —otra server action, una navegación blanda— revertiría el atributo que
+      // acabamos de poner a mano. El refresco vuelve a renderizarlo ya con la
+      // cookie nueva, así que servidor y cliente dicen lo mismo.
+      router.refresh();
     });
   }
 

@@ -188,7 +188,9 @@ export default function CatalogManager({
               minWidth: 200,
               padding: "8px 12px",
               fontSize: 13,
-              border: "1px solid var(--nf-line)",
+              // `--nf-line` es el borde decorativo (1.27:1): un campo de
+              // búsqueda necesita el de control.
+              border: "1px solid var(--nf-input-border)",
               borderRadius: 8,
               outline: "none",
             }}

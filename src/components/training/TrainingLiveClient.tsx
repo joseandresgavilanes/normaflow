@@ -174,9 +174,9 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
   type AssignmentRow = (typeof assignments)[number];
   const assignmentColumns = useMemo<DataTableColumn<AssignmentRow>[]>(() => [
     { id: "person", header: "Persona", primary: true, minWidth: 190, hideable: false, sortValue: (a) => a.assigneeName,
-      cell: (a) => <><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{a.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{a.assigneeRole || a.assigneeEmail || "—"}</div></> },
+      cell: (a) => <><strong style={{ color: "var(--nf-ink)" }}>{a.assigneeName}</strong><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.assigneeRole || a.assigneeEmail || "—"}</div></> },
     { id: "course", header: "Curso", minWidth: 180, sortValue: (a) => a.courseCode,
-      cell: (a) => <><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)" }}>{a.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)" }}>{a.courseTitle}</div></> },
+      cell: (a) => <><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>{a.courseCode}</span><div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{a.courseTitle}</div></> },
     { id: "status", header: "Estado", minWidth: 140, sortValue: (a) => a.status,
       cell: (a) => <Badge status={assignmentBadgeStatus(a.status)} label={STATUS_LABEL[a.status] ?? a.status} /> },
     { id: "due", header: "Vence", minWidth: 120, numeric: true, sortValue: (a) => String(a.dueAt ?? ""), cell: (a) => formatDate(a.dueAt) },
@@ -265,12 +265,12 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
                           {!course.active && <Badge status="OBSOLETE" label="Archivado" />}
                           {course.autoAssignOnDocApproval && <Badge status="ON_TRACK" label="Autoasignación" />}
                         </div>
-                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{course.title}</h3>
-                        <p style={{ margin: 0, color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{course.description || "Sin descripción."}</p>
-                        <div style={{ marginTop: 10, fontSize: 12, color: "var(--nf-ink-2, #223648)", fontWeight: 500 }}>
+                        <h3 style={{ margin: "8px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{course.title}</h3>
+                        <p style={{ margin: 0, color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.55 }}>{course.description || "Sin descripción."}</p>
+                        <div style={{ marginTop: 10, fontSize: 12, color: "var(--nf-ink-2)", fontWeight: 500 }}>
                           Plazo: {course.defaultDueDays} días · Vigencia: {course.defaultValidityMonths} meses · Destinatarios: {course.audiencePersonnelIds.length}
                         </div>
-                        <div style={{ marginTop: 6, fontSize: 12, color: "var(--nf-ink-2, #223648)", fontWeight: 500 }}>
+                        <div style={{ marginTop: 6, fontSize: 12, color: "var(--nf-ink-2)", fontWeight: 500 }}>
                           Documentos: {linkedDocs.length ? linkedDocs.map((document) => document.code).join(", ") : "ninguno"}
                         </div>
                       </div>
@@ -312,7 +312,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
             {personnel.map((person) => {
               const rows = assignments.filter((assignment) => assignment.personnelId === person.id);
               const done = rows.filter((assignment) => assignment.status === "COMPLETED").length;
-              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="var(--nf-primary-active)" /><div><strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{done}/{rows.length} completadas</div></Card>;
+              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="var(--nf-primary-active)" /><div><strong style={{ color: "var(--nf-ink)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2)" }}>{done}/{rows.length} completadas</div></Card>;
             })}
           </div>
         )
@@ -320,9 +320,9 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "compliance" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
-          <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
-          <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink, #0f1b2d)", fontWeight: 500, paddingLeft: 20 }}>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
+          <p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
+          <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink)", fontWeight: 500, paddingLeft: 20 }}>
             <li>Cursos activos: {activeCourses.length}</li>
             <li>Cursos obligatorios: {activeCourses.filter((course) => course.mandatory).length}</li>
             <li>Asignaciones activas: {activeAssignments.length}</li>
@@ -334,11 +334,11 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "trail" && (
         <Card>
-          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
-          {!auditEvents.length ? <p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13 }}>Todavía no hay eventos.</p> : auditEvents.map((event) => (
-            <div key={event.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--nf-line, #b8c8d9)", fontSize: 13, color: "var(--nf-ink-2, #223648)" }}>
-              <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{event.actorName}</strong> · {event.action.replaceAll("_", " ")} · {event.module === "training_course" ? "curso" : "asignación"}
-              <div style={{ fontSize: 11, color: "var(--nf-ink-3, #314456)", marginTop: 3 }}>{formatDate(event.createdAt)}</div>
+          <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Eventos de capacitación</h3>
+          {!auditEvents.length ? <p style={{ color: "var(--nf-ink-2)", fontSize: 13 }}>Todavía no hay eventos.</p> : auditEvents.map((event) => (
+            <div key={event.id} style={{ padding: "10px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13, color: "var(--nf-ink-2)" }}>
+              <strong style={{ color: "var(--nf-ink)" }}>{event.actorName}</strong> · {event.action.replaceAll("_", " ")} · {event.module === "training_course" ? "curso" : "asignación"}
+              <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 3 }}>{formatDate(event.createdAt)}</div>
             </div>
           ))}
         </Card>
@@ -349,7 +349,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       </Modal>
 
       <Modal open={archivingCourse != null} onClose={() => !isPending && setArchivingCourse(null)} title={archivingCourse?.active ? "Archivar curso" : "Reactivar curso"} width={430}>
-        <p style={{ marginTop: 0, color: "var(--nf-ink-2, #223648)" }}>Las asignaciones históricas se conservarán. {archivingCourse?.active ? "El curso dejará de estar disponible para nuevas asignaciones." : "El curso volverá a estar disponible."}</p>
+        <p style={{ marginTop: 0, color: "var(--nf-ink-2)" }}>Las asignaciones históricas se conservarán. {archivingCourse?.active ? "El curso dejará de estar disponible para nuevas asignaciones." : "El curso volverá a estar disponible."}</p>
         <div className="nf-modal-actions">
           <ModalCancelButton onClick={() => setArchivingCourse(null)} disabled={isPending} />
           <button
@@ -380,7 +380,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={completingAssignment != null} onClose={() => !isPending && setCompletingAssignment(null)} title="Completar formación" width={520}>
         <ModalForm onSubmit={submitCompletion}>
-          <p style={{ marginTop: 0, fontSize: 13, color: "var(--nf-ink-2, #223648)", fontWeight: 600 }}>{completingAssignment?.assigneeName} · {completingAssignment?.courseCode}</p>
+          <p style={{ marginTop: 0, fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 600 }}>{completingAssignment?.assigneeName} · {completingAssignment?.courseCode}</p>
           <ModalField label="Nota de evidencia"><textarea aria-label="Resultado, evaluación, responsable" name="evidenceNote" rows={4} placeholder="Resultado, evaluación, responsable…" className="nf-app-input" /></ModalField>
           <ModalField label="Enlace a evidencia"><input aria-label="https://" type="url" name="evidenceUrl" placeholder="https://…" className="nf-app-input" /></ModalField>
           <div className="nf-modal-field-hint">Es obligatorio indicar una nota o un enlace.</div>
@@ -417,7 +417,7 @@ function CourseForm({ course, payload, isPending, error, onSubmit, onCancel }: {
 }
 
 function ChoiceList({ title, emptyText, items, name, selected }: { title: string; emptyText: string; items: { id: string; label: string }[]; name: string; selected: string[] }) {
-  return <fieldset style={{ border: "1px solid var(--nf-line, #b8c8d9)", borderRadius: 8, padding: 12 }}><legend style={{ padding: "0 5px", fontSize: 12, fontWeight: 700, color: "var(--nf-ink-2, #223648)" }}>{title}</legend>{items.length ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8, maxHeight: 150, overflow: "auto" }}>{items.map((item) => <label key={item.id} style={checkLabel}><input type="checkbox" name={name} value={item.id} defaultChecked={selected.includes(item.id)} /> {item.label}</label>)}</div> : <div style={{ fontSize: 12, color: "var(--nf-ink-2, #223648)" }}>{emptyText}</div>}</fieldset>;
+  return <fieldset style={{ border: "1px solid var(--nf-line)", borderRadius: 8, padding: 12 }}><legend style={{ padding: "0 5px", fontSize: 12, fontWeight: 700, color: "var(--nf-ink-2)" }}>{title}</legend>{items.length ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 8, maxHeight: 150, overflow: "auto" }}>{items.map((item) => <label key={item.id} style={checkLabel}><input type="checkbox" name={name} value={item.id} defaultChecked={selected.includes(item.id)} /> {item.label}</label>)}</div> : <div style={{ fontSize: 12, color: "var(--nf-ink-2)" }}>{emptyText}</div>}</fieldset>;
 }
 
 function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: string; label: string; color: string }) {
@@ -433,7 +433,7 @@ function Kpi({ icon, value, label, color }: { icon: React.ReactNode; value: stri
 }
 
 function EmptyState({ title, text, action, actionLabel, href }: { title: string; text: string; action?: () => void; actionLabel: string; href?: string }) {
-  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="var(--nf-primary-active)" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink, #0f1b2d)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2, #223648)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
+  return <Card style={{ textAlign: "center", padding: 36 }}><GraduationCap size={34} color="var(--nf-primary-active)" /><h3 style={{ margin: "12px 0 6px", fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>{title}</h3><p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.55 }}>{text}</p>{action && <button type="button" className="nf-app-btn-primary" onClick={action}>{actionLabel}</button>}{href && <Link href={href} className="nf-app-btn-primary">{actionLabel}</Link>}</Card>;
 }
 
 function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onCancel: () => void; disabled?: boolean }) {
@@ -445,4 +445,4 @@ function FormFooter({ isPending, onCancel, disabled }: { isPending: boolean; onC
   );
 }
 
-const checkLabel: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--nf-ink, #0f1b2d)", lineHeight: 1.4, fontWeight: 500 };
+const checkLabel: React.CSSProperties = { display: "flex", alignItems: "flex-start", gap: 7, fontSize: 12, color: "var(--nf-ink)", lineHeight: 1.4, fontWeight: 500 };

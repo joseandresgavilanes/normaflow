@@ -21,7 +21,7 @@
 }
 
 .nf-data-table tbody tr:hover {
-  background: var(--nf-table-row-hover, #f5f8fc);
+  background: var(--nf-table-row-hover);
 }
 
 .nf-data-table tbody tr:last-child td {

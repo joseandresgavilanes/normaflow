@@ -305,7 +305,7 @@
 
 .nf-skeleton-kanban-column {
   padding: 14px;
-  background: var(--nf-app-surface-2, #f8fafc);
+  background: var(--nf-app-surface-2);
 }
 
 .nf-skeleton-kanban-head {

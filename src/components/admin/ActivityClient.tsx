@@ -443,9 +443,9 @@ export default function ActivityClient({
                           </h4>
                           {e.recordLabel ? (
                             <div className="nf-app-help nf-audit-body" style={{ marginTop: 0 }}>
-                              <strong style={{ color: "var(--nf-ink, #0f1b2d)" }}>{e.recordLabel}</strong>
+                              <strong style={{ color: "var(--nf-ink)" }}>{e.recordLabel}</strong>
                               {e.recordId ? (
-                                <span style={{ color: "var(--nf-ink-3, #314456)" }}> · {e.recordId}</span>
+                                <span style={{ color: "var(--nf-ink-3)" }}> · {e.recordId}</span>
                               ) : null}
                             </div>
                           ) : null}
@@ -477,10 +477,10 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
         <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 14, alignItems: "center" }}>
           <ActionDot action={event.action} size={36} />
           <div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--nf-ink, #0f1b2d)", marginBottom: 2 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 2 }}>
               {event.summary}
             </div>
-            <div style={{ fontSize: 12, color: "var(--nf-ink-3, #314456)" }}>
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>
               {actionLabel(event.action)} · {moduleLabel(event.module)}
               {event.recordLabel && (
                 <>
@@ -494,7 +494,7 @@ function EventDetailModal({ event, onClose }: { event: AuditTrailEntry | null; o
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
           <Meta label="Fecha y hora" value={<span style={{ fontFamily: "monospace" }}>{formatDate(event.at, "yyyy-MM-dd HH:mm:ss", locale)}</span>} />
-          <Meta label="Actor" value={event.actorName ?? <span style={{ color: "var(--nf-ink-4, #3d5166)" }}>Sistema</span>} />
+          <Meta label="Actor" value={event.actorName ?? <span style={{ color: "var(--nf-ink-4)" }}>Sistema</span>} />
           <Meta label="Cuándo" value={timeAgo(event.at, locale)} />
           <Meta label="ID de recurso" value={event.recordId ? <code style={{ fontSize: 11 }}>{event.recordId}</code> : "—"} />
         </div>
@@ -609,7 +609,7 @@ function Meta({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <div style={{ fontSize: 10, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 13, color: "var(--nf-ink, #0f1b2d)" }}>{value}</div>
+      <div style={{ fontSize: 13, color: "var(--nf-ink)" }}>{value}</div>
     </div>
   );
 }

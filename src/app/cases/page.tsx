@@ -62,7 +62,7 @@ export default function CasesPage() {
 
                 <div style={{ background: "var(--nf-glass-2)", border: "1px solid var(--nf-line)", borderRadius: 16, padding: 24 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.7 0.06 30), oklch(0.55 0.04 30))", display: "grid", placeItems: "center", color: "var(--nf-c-neutral-0)", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
+                    <div style={{ width: 48, height: 48, borderRadius: "50%", background: "linear-gradient(135deg, oklch(0.55 0.04 30), oklch(0.45 0.06 30))", display: "grid", placeItems: "center", color: "var(--nf-c-neutral-0)", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15 }}>
                       {c.initials}
                     </div>
                     <div>

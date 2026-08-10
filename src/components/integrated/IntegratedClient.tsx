@@ -40,16 +40,16 @@ const DISCIPLINE_LABEL: Record<string, string> = {
   QUALITY: "Calidad", ENVIRONMENT: "Ambiente", SAFETY: "Seguridad y salud", SECURITY: "Seguridad de la información",
 };
 const DISCIPLINE_COLOR: Record<string, string> = {
-  QUALITY: "var(--nf-primary-active)", ENVIRONMENT: "var(--nf-primary-active)", SAFETY: "var(--nf-warning)", SECURITY: "var(--nf-success-text)",
+  QUALITY: "var(--nf-primary-active)", ENVIRONMENT: "var(--nf-primary-active)", SAFETY: "var(--nf-warning-text)", SECURITY: "var(--nf-success-text)",
 };
 const KIND_LABEL: Record<string, string> = {
   EQUIVALENT: "Equivalente", PARTIAL: "Parcialmente equivalente", SPECIFIC: "Específico",
 };
 const KIND_COLOR: Record<string, string> = { EQUIVALENT: "var(--nf-success-text)", PARTIAL: "var(--nf-warning-text)", SPECIFIC: "var(--nf-primary-active)" };
 
-const card: React.CSSProperties = { border: "1px solid var(--nf-line, #e5eaf2)", borderRadius: 14, padding: 18, background: "var(--nf-surface, #fff)" };
+const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRadius: 14, padding: 18, background: "var(--nf-surface)" };
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
-const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 9, fontSize: 13, fontFamily: "inherit" };
+const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: "9px 11px", border: "1px solid var(--nf-line)", borderRadius: 9, fontSize: 13, fontFamily: "inherit" };
 const primaryBtn: React.CSSProperties = { background: "var(--nf-primary)", color: "var(--nf-text-on-primary)", border: "none", borderRadius: 9, padding: "8px 15px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const ghostBtn: React.CSSProperties = { background: "var(--nf-surface)", color: "var(--nf-primary-active)", border: "1px solid #cdd6f8", borderRadius: 9, padding: "7px 13px", fontWeight: 700, fontSize: 12.5, cursor: "pointer" };
 const dangerBtn: React.CSSProperties = { background: "none", color: "var(--nf-danger-text)", border: "1px solid #f2c4c4", borderRadius: 8, padding: "4px 9px", fontWeight: 700, fontSize: 11.5, cursor: "pointer" };
@@ -117,7 +117,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
             <div key={c.familyCode}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 5 }}>
                 <span><strong>{c.familyCode.replace("_", " ")}</strong> <span style={toneChip(DISCIPLINE_COLOR[c.discipline])}>{DISCIPLINE_LABEL[c.discipline]}</span></span>
-                <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{c.score}% · {c.covered}/{c.total} con evidencia</span>
+                <span style={{ color: "var(--nf-ink-2)" }}>{c.score}% · {c.covered}/{c.total} con evidencia</span>
               </div>
               <Bar pct={c.score} color={DISCIPLINE_COLOR[c.discipline]} />
             </div>
@@ -132,7 +132,7 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
           <Row label="Equivalentes" value={s.equivalent} color="var(--nf-success-text)" />
           <Row label="Parcialmente equivalentes" value={s.partial} color="var(--nf-warning-text)" />
           <Row label="Específicos de una norma" value={s.specific} color="var(--nf-primary-active)" />
-          <p style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", marginTop: 10, marginBottom: 0 }}>
+          <p style={{ fontSize: 11.5, color: "var(--nf-ink-3)", marginTop: 10, marginBottom: 0 }}>
             Los requisitos equivalentes se cubren una sola vez para todas las normas.
           </p>
         </section>
@@ -168,7 +168,7 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
     <div style={{ display: "grid", gap: 16 }}>
       <section style={card}>
         <h2 style={{ fontSize: 15, margin: "0 0 4px" }}>Alcance integrado</h2>
-        <p style={{ fontSize: 12.5, color: "var(--nf-ink-2,#5e6b7a)", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 12.5, color: "var(--nf-ink-2)", margin: "0 0 12px" }}>
           Un solo alcance para las tres normas; cada una puede añadir su nota y exclusiones.
         </p>
         <label style={{ fontSize: 12, fontWeight: 700 }}>Alcance</label>
@@ -183,7 +183,7 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
 
       <section style={card}>
         <h2 style={{ fontSize: 15, margin: "0 0 4px" }}>Política integrada</h2>
-        <p style={{ fontSize: 12.5, color: "var(--nf-ink-2,#5e6b7a)", margin: "0 0 12px" }}>
+        <p style={{ fontSize: 12.5, color: "var(--nf-ink-2)", margin: "0 0 12px" }}>
           Documento único que declara el compromiso de calidad, ambiente y SST.
           {p.system?.policyApprovedAt && <> · Aprobada el {new Date(p.system.policyApprovedAt).toLocaleDateString()} por {p.system.policyApprovedByName ?? "—"}.</>}
         </p>
@@ -234,7 +234,7 @@ function SystemStandardRow({ standard, entry, members, canUpdate, pending, run }
   const [responsibleId, setResponsibleId] = useState(entry?.responsibleId ?? "");
 
   return (
-    <div style={{ border: "1px solid var(--nf-line,#e5eaf2)", borderRadius: 10, padding: 12 }}>
+    <div style={{ border: "1px solid var(--nf-line)", borderRadius: 10, padding: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
         <span style={toneChip(DISCIPLINE_COLOR[standard.discipline])}>{standard.familyCode.replace("_", " ")}</span>
         {canUpdate && (
@@ -309,11 +309,11 @@ function PartiesTab({ p, canManage, pending, run }: { p: IntegratedPayload; canM
           <strong key="c">{party.code}</strong>,
           party.name,
           party.type ?? "—",
-          <span key="n" style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{party.needs ?? "—"}</span>,
+          <span key="n" style={{ color: "var(--nf-ink-2)" }}>{party.needs ?? "—"}</span>,
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {party.disciplines.length
               ? party.disciplines.map((d) => <span key={d} style={toneChip(DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)
-              : <span style={chip("#f0f3f8", "#8794a5")}>Todas</span>}
+              : <span style={chip("var(--nf-surface-muted)", "var(--nf-text-secondary)")}>Todas</span>}
           </span>,
           canManage ? <span key="x"><EditPartyButton party={party} pending={pending} run={run} /><button type="button" style={dangerBtn} disabled={pending} onClick={() => setPartyToDelete(party)}>Eliminar</button></span> : null,
         ])}
@@ -489,13 +489,13 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
           <option value="PARTIAL">Parcialmente equivalente</option>
           <option value="SPECIFIC">Específico</option>
         </select>
-        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2,#5e6b7a)" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2)" }}>
           <input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} /> Solo sin evidencia
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2,#5e6b7a)" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2)" }}>
           <input type="checkbox" checked={onlyNotShareable} onChange={(e) => setOnlyNotShareable(e.target.checked)} /> Solo no compartibles
         </label>
-        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3,#8794a5)" }}>{rows.length} requisitos</span>
+        <span style={{ marginLeft: "auto", fontSize: 12, color: "var(--nf-ink-3)" }}>{rows.length} requisitos</span>
         </div>
       </div>
 
@@ -521,11 +521,11 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
                   {r.related.length ? r.related.map((rel) => (
                     <div key={rel.requirementId} style={{ fontSize: 11.5 }}>
                       {rel.familyCode.replace("_", " ")} <strong>{rel.code}</strong>
-                      <span style={{ color: "var(--nf-ink-3,#8794a5)" }}> · {rel.relationType === "EQUIVALENT" ? "equiv." : "parcial"}{rel.equivalencePercent != null && ` ${rel.equivalencePercent}%`}</span>
+                      <span style={{ color: "var(--nf-ink-3)" }}> · {rel.relationType === "EQUIVALENT" ? "equiv." : "parcial"}{rel.equivalencePercent != null && ` ${rel.equivalencePercent}%`}</span>
                     </div>
-                  )) : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>— específico</span>}
+                  )) : <span style={{ color: "var(--nf-ink-3)" }}>— específico</span>}
                 </td>
-                <td>{r.sharedDocuments.length ? r.sharedDocuments.join(", ") : <span style={{ color: "var(--nf-ink-3,#8794a5)" }}>—</span>}</td>
+                <td>{r.sharedDocuments.length ? r.sharedDocuments.join(", ") : <span style={{ color: "var(--nf-ink-3)" }}>—</span>}</td>
                 <td>{r.sharedEvidence.length ? r.sharedEvidence.join(", ") : <span style={{ color: "var(--nf-danger-text)" }}>falta</span>}</td>
                 <td>
                   {canUpdate ? (
@@ -540,7 +540,7 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
             ))}
             {!rows.length && <tr><td colSpan={8}>No hay requisitos para los filtros seleccionados.</td></tr>}
       </IsoTableCard>
-      <p style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", margin: 0 }}>
+      <p style={{ fontSize: 11.5, color: "var(--nf-ink-3)", margin: 0 }}>
         Los requisitos <strong>equivalentes</strong> se satisfacen una sola vez: el mismo documento o evidencia
         cubre la cláusula en todas las normas correspondientes.
       </p>
@@ -565,7 +565,7 @@ function AuditTab({ p, canUpdate, canManage, pending, run }: {
 
       <section>
         <h3 style={{ fontSize: 14, margin: "0 0 6px" }}>Auditorías — marca las normas que cubre cada una</h3>
-        <p style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", margin: "0 0 10px" }}>Dos o más normas convierten la auditoría en integrada automáticamente.</p>
+        <p style={{ fontSize: 11.5, color: "var(--nf-ink-3)", margin: "0 0 10px" }}>Dos o más normas convierten la auditoría en integrada automáticamente.</p>
         <Table
           head={["Auditoría", "Normas", "Estado", "Hallazgos", "Multi-norma"]}
           rows={p.audits.map((a) => [
@@ -663,7 +663,7 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
   return (
     <section>
       <h3 style={{ fontSize: 14, margin: "0 0 6px" }}>Proveedores integrados — una evaluación, tres dimensiones</h3>
-      <p style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", margin: "0 0 10px" }}>
+      <p style={{ fontSize: 11.5, color: "var(--nf-ink-3)", margin: "0 0 10px" }}>
         Informa al menos una dimensión; la nota global es la media de las informadas.
       </p>
       {canManage && (
@@ -719,7 +719,7 @@ function StandardsToggle({ value, options, disabled, onChange }: { value: string
           </button>
         );
       })}
-      {!options.length && <span style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)" }}>Sin normas activas</span>}
+      {!options.length && <span style={{ fontSize: 11.5, color: "var(--nf-ink-3)" }}>Sin normas activas</span>}
     </div>
   );
 }
@@ -775,29 +775,29 @@ function SharedTab({ p }: { p: IntegratedPayload }) {
 function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
     <div style={card}>
-      <div style={{ fontSize: 11.5, color: "var(--nf-ink-3,#8794a5)", fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 11.5, color: "var(--nf-ink-3)", fontWeight: 600 }}>{label}</div>
       <div style={{ fontSize: 24, fontWeight: 800, marginTop: 3, color: accent }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "var(--nf-ink-3,#8794a5)" }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{sub}</div>}
     </div>
   );
 }
 function Row({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 13 }}>
-      <span style={{ color: "var(--nf-ink-2,#5e6b7a)" }}>{label}</span>
+      <span style={{ color: "var(--nf-ink-2)" }}>{label}</span>
       <strong style={{ color }}>{value}</strong>
     </div>
   );
 }
 function Bar({ pct, color = "#5266F6" }: { pct: number; color?: string }) {
   return (
-    <div style={{ height: 7, background: "var(--nf-line,#e8edf5)", borderRadius: 8, overflow: "hidden" }}>
+    <div style={{ height: 7, background: "var(--nf-line)", borderRadius: 8, overflow: "hidden" }}>
       <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: color }} />
     </div>
   );
 }
 function Empty({ text }: { text: string }) {
-  return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3,#8794a5)", padding: 32, fontSize: 13 }}>{text}</div>;
+  return <div style={{ ...card, textAlign: "center", color: "var(--nf-ink-3)", padding: 32, fontSize: 13 }}>{text}</div>;
 }
 function ModalError() {
   const [message, setMessage] = useState("");
