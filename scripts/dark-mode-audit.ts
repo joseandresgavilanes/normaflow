@@ -82,6 +82,9 @@ export type Diagnostico = {
   bordesDebiles: Culpable[];
   focoInvisible: Culpable[];
   svgFijo: number;
+  svgCulpables?: string[];
+  noMedibles?: string[];
+  sondaOk: boolean;
   erroresConsola: string[];
 };
 
@@ -150,6 +153,7 @@ const SONDA = `() => {
   const textoInvisible = [];
   const contrasteBajo = [];
   const bordesDebiles = [];
+  const noMedibles = [];
   const vistos = new Set();
 
   const lienzo = fondoEfectivo(document.body);
@@ -181,7 +185,22 @@ const SONDA = `() => {
       // color. Medirlo como negro marcaba invisible cada titular del hero.
       // Sin acentos graves: este comentario vive dentro de una plantilla.
       const recortado = (cs.webkitBackgroundClip || cs.backgroundClip) === 'text';
-      const fg = recortado ? null : canal(cs.color);
+      // Un degradado propio no se puede evaluar: backgroundColor vale
+      // transparent y fondoEfectivo sigue subiendo hasta el primer fondo OPACO,
+      // que no es el que se ve. El numero que saldria de ahi es falso, asi que
+      // estos elementos van a un cubo aparte: ni fallo ni aprobado.
+      //
+      // El texto recortado queda fuera del cubo porque ya tiene su propio
+      // criterio arriba: ahi el degradado ES el texto, y es un patron conocido.
+      const degradado = !recortado && cs.backgroundImage !== 'none' && !!cs.backgroundImage;
+      if (degradado) {
+        const k = 'nm|' + origen(el);
+        if (!vistos.has(k)) {
+          vistos.add(k);
+          noMedibles.push(origen(el) + ' — texto ' + cs.color + ' sobre ' + cs.backgroundImage.slice(0, 60));
+        }
+      }
+      const fg = (recortado || degradado) ? null : canal(cs.color);
       if (fg && fg.a < 0.05) continue;
       const bg = fondoEfectivo(el);
       if (fg) {
@@ -216,7 +235,17 @@ const SONDA = `() => {
 
     // 4. Borde de un control: WCAG 1.4.11 pide 3:1 cuando identifica el
     //    componente. Solo se miran los controles reales.
-    if (/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName)) {
+    //
+    //    Los INACTIVOS quedan fuera: 1.4.11 los exime literalmente («inactive
+    //    user interface components ... have no contrast requirement»), y su
+    //    borde apagado es precisamente lo que comunica que no se puede pulsar.
+    //    Sin esta salvedad la sonda pedía subir el contraste del botón del plan
+    //    actual en /app/billing, que va deshabilitado a propósito.
+    // Sin anotaciones de tipo: esto vive dentro de una plantilla que se evalua
+    // en el navegador, asi que tsc no la revisa y una asercion la rompe al
+    // ejecutarse. Tampoco acentos graves aqui: cerrarian la plantilla.
+    const inactivo = el.disabled === true || el.getAttribute('aria-disabled') === 'true';
+    if (!inactivo && /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName)) {
       const bw = parseFloat(cs.borderTopWidth) || 0;
       if (bw > 0) {
         const bc = canal(cs.borderTopColor);
@@ -238,18 +267,24 @@ const SONDA = `() => {
   }
 
   // 5. SVG con color fijo en atributo: no hereda currentColor ni el tema.
-  const svgFijo = [...document.querySelectorAll('[fill],[stroke]')]
+  const svgCulpables = [...document.querySelectorAll('[fill],[stroke]')]
     .filter((e) => /^#|^rgb/.test(e.getAttribute('fill') || '') || /^#|^rgb/.test(e.getAttribute('stroke') || ''))
-    .length;
+    .map((e) => e.tagName.toLowerCase()
+      + (e.getAttribute('fill') ? ' fill=' + e.getAttribute('fill') : '')
+      + (e.getAttribute('stroke') ? ' stroke=' + e.getAttribute('stroke') : '')
+      + ' dentro de ' + (e.closest('[class]') ? (e.closest('[class]').getAttribute('class') || '').slice(0, 60) : '?'));
+  const svgFijo = svgCulpables.length;
 
   return {
     temaAplicado: document.documentElement.dataset.theme || null,
     lumLienzo: +lumLienzo.toFixed(3),
+    noMedibles: noMedibles.slice(0, 20),
     superficiesClaras: superficiesClaras.slice(0, 40),
     textoInvisible: textoInvisible.slice(0, 40),
     contrasteBajo: contrasteBajo.slice(0, 40),
     bordesDebiles: bordesDebiles.slice(0, 20),
     svgFijo,
+    svgCulpables: svgCulpables.slice(0, 10),
   };
 }`;
 
@@ -343,10 +378,15 @@ async function auditarRuta(page: Page, ruta: string, tema: "light" | "dark"): Pr
 
   let sonda: Record<string, unknown> = {};
   let foco: Culpable[] = [];
+  // Si la sonda falla, TODOS los contadores salen a cero y el barrido parece
+  // limpio. Es el peor fallo posible en una herramienta de medida, así que se
+  // registra aparte y hace que el proceso termine en error.
+  let sondaOk = true;
   try {
     sonda = (await page.evaluate(`(${SONDA})()`)) as Record<string, unknown>;
     foco = (await page.evaluate(`(${SONDA_FOCO})()`)) as Culpable[];
   } catch (e) {
+    sondaOk = false;
     errores.push(`sonda falló: ${(e as Error).message.slice(0, 120)}`);
   }
 
@@ -356,6 +396,7 @@ async function auditarRuta(page: Page, ruta: string, tema: "light" | "dark"): Pr
     ruta,
     tema,
     estado,
+    sondaOk,
     temaAplicado: (sonda.temaAplicado as string) ?? null,
     superficiesClaras: (sonda.superficiesClaras as Culpable[]) ?? [],
     textoInvisible: (sonda.textoInvisible as Culpable[]) ?? [],
@@ -363,11 +404,25 @@ async function auditarRuta(page: Page, ruta: string, tema: "light" | "dark"): Pr
     bordesDebiles: (sonda.bordesDebiles as Culpable[]) ?? [],
     focoInvisible: foco ?? [],
     svgFijo: (sonda.svgFijo as number) ?? 0,
+    svgCulpables: (sonda.svgCulpables as string[]) ?? [],
+    noMedibles: (sonda.noMedibles as string[]) ?? [],
     erroresConsola: errores,
   };
 }
 
 async function main() {
+  // Las dos sondas viajan como cadena, así que TypeScript no las revisa: un
+  // `as`, un tipo o un acento grave las rompen y `page.evaluate` devuelve el
+  // valor por defecto, es decir, ceros que parecen un barrido limpio. Se
+  // comprueba aquí, antes de arrancar el navegador y de tardar media hora.
+  for (const [nombre, cuerpo] of [["SONDA", SONDA], ["SONDA_FOCO", SONDA_FOCO]] as const) {
+    try {
+      new Function(`return ${cuerpo}`);
+    } catch (e) {
+      throw new Error(`${nombre} no es JavaScript válido: ${(e as Error).message}`);
+    }
+  }
+
   fs.mkdirSync(OUT, { recursive: true });
   const navegador = await chromium.launch();
   const resultados: Diagnostico[] = [];
@@ -395,7 +450,8 @@ async function main() {
         ` bor=${String(d.bordesDebiles.length).padStart(2)}` +
         ` foco=${String(d.focoInvisible.length).padStart(2)}` +
         ` svg=${d.svgFijo}` +
-        (d.temaAplicado !== tema && tema === "dark" ? "  ⚠ tema no aplicado" : ""),
+        (!d.sondaOk ? "  ✗✗ SONDA ROTA: los ceros no valen" : "") +
+        (d.sondaOk && d.temaAplicado !== tema && tema === "dark" ? "  ⚠ tema no aplicado" : ""),
       );
     }
     await ctx.close();
@@ -436,6 +492,17 @@ async function main() {
   }
   console.log(`rutas sin tema aplicado en oscuro: ${resultados.filter((d) => d.tema === "dark" && d.temaAplicado !== "dark").length}`);
   console.log(`SVG con color fijo: ${suma((d) => d.svgFijo)}`);
+  const roto = resultados.filter((d) => !d.sondaOk);
+  if (roto.length) {
+    console.log(`\n✗✗ la sonda falló en ${roto.length} de ${resultados.length} cargas.`);
+    console.log(`   ${roto[0].erroresConsola.find((e) => e.startsWith("sonda falló")) ?? ""}`);
+    console.log("   Los totales de arriba NO son una medición: son el valor por defecto.");
+    process.exitCode = 1;
+  }
+  const nm = new Set(resultados.flatMap((d) => d.noMedibles ?? []));
+  // No es un fallo ni un aprobado: es lo que la sonda no puede juzgar.
+  console.log(`no medibles (fondo con degradado): ${nm.size}`);
+  for (const x of [...nm].slice(0, 5)) console.log(`    ${x}`);
   console.log(`\ncausas distintas: ${ranking.length} → ${path.join(OUT, "por-origen.json")}`);
   console.log("top 15 causas:");
   for (const r of ranking.slice(0, 15)) {

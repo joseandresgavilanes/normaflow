@@ -62,14 +62,28 @@ test.describe("Tema visual", () => {
     await page.goto("/app/dashboard");
     expect(await temaAplicado(page)).toBe("light");
 
+    // Por nombre accesible y no por índice: el orden de las opciones es un
+    // detalle de presentación y el nombre es lo que ve quien usa la interfaz.
     const conmutador = page.locator(".nf-theme-switch").last();
-    await conmutador.getByRole("radio").nth(1).click();
+    await expect(conmutador).toBeVisible();
+    // En el HTML del servidor la opción marcada es `system`; solo tras hidratar
+    // el componente lee `data-theme` y marca la real. Esperar a que la opción
+    // clara aparezca marcada es la prueba de que ya hay hidratación: pulsar
+    // antes es un clic sobre un botón que todavía no escucha.
+    await expect(conmutador.getByRole("radio", { name: /claro|light/i }))
+      .toHaveAttribute("aria-checked", "true", { timeout: 15000 });
+    await conmutador.getByRole("radio", { name: /oscuro|dark|escuro/i }).click();
 
-    await expect.poll(() => temaAplicado(page)).toBe("dark");
+    await expect.poll(() => temaAplicado(page), { timeout: 10000 }).toBe("dark");
     // La cookie es lo que hace que el SERVIDOR pinte el tema en la siguiente
-    // carga; sin ella habría destello en cada navegación.
-    const cookies = await page.context().cookies();
-    expect(cookies.find((c) => c.name === COOKIE)?.value).toBe("dark");
+    // carga; sin ella habría destello en cada navegación. Se sondea en vez de
+    // leerse una vez: el atributo se aplica en el propio clic —de ahí que la
+    // comprobación anterior pase al instante— pero la cookie la escribe una
+    // server action, y leerla acto seguido la encuentra todavía sin cambiar.
+    await expect
+      .poll(async () => (await page.context().cookies()).find((c) => c.name === COOKIE)?.value,
+            { timeout: 15000 })
+      .toBe("dark");
   });
 
   test("la preferencia sobrevive a la recarga y llega en el HTML inicial", async () => {
@@ -178,8 +192,15 @@ test.describe("Tema visual", () => {
 
   test("la tabla de datos es legible en oscuro", async () => {
     await fijarTema(page, "dark");
-    await page.goto("/app/documents");
+    // `/app/records` y no `/app/documents`: esta última se queda en su
+    // `loading.tsx` indefinidamente —82 esqueletos, cero filas, medido a los
+    // 75 s— porque su componente de servidor reinstala el catálogo de normas
+    // entero en cada petición. El caso pasaba mirando una pantalla de carga,
+    // que es la peor forma de pasar: sin tabla no había nada que comprobar.
+    await page.goto("/app/records");
     await page.waitForSelector("#nf-main", { timeout: 30000 });
+    // Sin filas reales el bucle de abajo recorre un conjunto vacío y aprueba.
+    await expect(page.locator("table tbody tr").first()).toBeVisible({ timeout: 30000 });
 
     const claras = await page.evaluate(() => {
       const lum = (c: string) => {

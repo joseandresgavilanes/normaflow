@@ -94,6 +94,16 @@ const SONDA = `() => {
     if (!texto) continue;
     const cs = getComputedStyle(e);
     if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) < 0.3) continue;
+    // El patrón de texto con degradado recortado (background-clip: text) EXIGE
+    // color: transparent, porque lo pinta el fondo. Medirlo como negro marcaba
+    // invisible cada titular del hero.
+    if ((cs.webkitBackgroundClip || cs.backgroundClip) === 'text') continue;
+    // Un degradado propio no es evaluable: backgroundColor vale transparent y la
+    // sonda seguiría subiendo hasta un fondo opaco que no es el que se ve. Los
+    // avatares de /cases daban 1.04:1 por eso, con un número que era falso.
+    if (cs.backgroundImage && cs.backgroundImage !== 'none') continue;
+    const alfaTexto = canal(cs.color);
+    if (alfaTexto && alfaTexto.a < 0.05) continue;
     const lf = lum(cs.color), lb = lum(fondo(e));
     if (lf === null || lb === null) continue;
     const cr = (Math.max(lf, lb) + 0.05) / (Math.min(lf, lb) + 0.05);

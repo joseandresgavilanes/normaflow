@@ -66,7 +66,12 @@ async function main() {
       for (const ruta of objetivo) {
         const nombre = ruta.replace(/^\//, "").replace(/\//g, "-") || "raiz";
         try {
-          await page.goto(BASE + ruta, { waitUntil: "domcontentloaded", timeout: 60000 });
+          // `commit` y no `domcontentloaded`: en /app/documents la respuesta HTML
+          // no se cierra nunca —el documento se queda en readyState "loading"—,
+          // así que ese evento no llega y la captura se perdía por timeout. Lo
+          // que de verdad indica que la pantalla está pintada es su landmark.
+          await page.goto(BASE + ruta, { waitUntil: "commit", timeout: 60000 });
+          await page.waitForSelector(ruta.startsWith("/app/") ? "#nf-main" : "main", { timeout: 60000 });
           await page.waitForTimeout(800);
           const aplicado = await page.evaluate(() => document.documentElement.dataset.theme ?? "sistema");
           if (aplicado !== tema) {

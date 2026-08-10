@@ -172,7 +172,7 @@ daltonismo— y `#0F766E` estaba asignado a dos normas a la vez.
 | `#ffffff` en `@media print` | `14-armonizacion.css` | El blanco es el papel, no una superficie del tema |
 | Degradados decorativos (39) | hero, tarjetas de marketing | Son ilustración, no superficie; se recortan con `overflow-x: clip` |
 | Sombras `rgba(0,0,0,α)` (19) | elevaciones | La sombra es negra en los dos temas; lo que cambia es la opacidad, ya tokenizada |
-| `fill`/`stroke` con hex (3) | SVG de marca | `var()` no es válido en un atributo de presentación cuando el SVG se sirve como fichero |
+| `fill`/`stroke` con hex (3) | SVG de marca servidos como fichero | `var()` no resuelve en un atributo de presentación cuando el SVG no está en el documento. **La excepción acaba ahí:** un icono renderizado en línea sí hereda la cascada, y `<ShieldBan color="#9f1239">` en `/app/antibribery` se estaba amparando en esta fila sin derecho — ahora usa `var(--nf-danger-text)` |
 | Semáforo del mockup `#ff5f57 #febc2e #28c840` | hero de `/home` | Reproducen los botones de una ventana de macOS: son parte de la ilustración |
 
 ## 8. Lo que sigue abierto
@@ -180,3 +180,19 @@ daltonismo— y `#0F766E` estaba asignado a dos normas a la vez.
 Se documenta en [`docs/dark-mode-visual-qa.md`](dark-mode-visual-qa.md) con la
 medición posterior. No quedan TODOs genéricos del tipo «dark mode later» en el
 código.
+
+Dos cosas encontradas al cerrar la verificación quedan **fuera** del alcance del
+tema, y se anotan aquí para que no se pierdan:
+
+1. **`/app/documents` no cierra su respuesta HTML.** El contenido se pinta, pero
+   `document.readyState` se queda en `loading` indefinidamente y la única
+   petición sin terminar es el propio documento: el stream de RSC nunca se
+   cierra. Ninguna de las otras 82 rutas se comporta así. Rompe cualquier
+   herramienta que espere `load` o `domcontentloaded`.
+   `scripts/dark-mode-shots.ts` se cambió a `commit` + espera del landmark para
+   poder capturarla, pero eso es un parche de la herramienta, no del defecto.
+2. **La CSP bloqueaba el websocket de recarga en caliente en desarrollo.**
+   `connect-src` permitía `wss:` pero no `ws:`, y el socket de Next va sin
+   cifrar contra localhost. Corregido en `src/middleware.ts` con el mismo
+   criterio que ya se usaba para `'unsafe-eval'`: la excepción existe solo
+   cuando `NODE_ENV === "development"`; en producción sigue exigiéndose `wss:`.
