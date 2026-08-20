@@ -9,6 +9,8 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { exportSupplierSecurity, upsertSupplierSecurityProfile, type SupplierSecurityPayload } from "@/lib/actions/supplier-security";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 const CRIT_LABEL: Record<string, string> = { LOW: "Baja", MEDIUM: "Media", HIGH: "Alta", CRITICAL: "Crítica" };
 function critTone(c: string): "green" | "amber" | "red" | "blue" { return c === "CRITICAL" ? "red" : c === "HIGH" ? "amber" : c === "LOW" ? "green" : "blue"; }
@@ -96,7 +98,7 @@ function ProfileForm({ supplier, pending, canUpdate, onClose, onRun }: { supplie
     <div className="nf-modal-header"><div><h3>{supplier.code} · {supplier.name}</h3><p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--nf-ink-3)" }}>Perfil de seguridad del proveedor</p></div><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cerrar</button></div>
     <div style={{ display: "grid", gap: 12, padding: 20 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label>Criticidad de seguridad<select className="nf-app-input" value={f.securityCriticality} onChange={(e) => set("securityCriticality", e.target.value)} disabled={!canUpdate}>{Object.entries(CRIT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label>Criticidad de seguridad<Picker aria-label="Criticidad de seguridad" className="nf-app-input" value={f.securityCriticality} onChange={(e) => set("securityCriticality", e.target.value)} disabled={!canUpdate}>{Object.entries(CRIT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
         <label>Nivel de riesgo<input className="nf-app-input" value={f.riskLevel} onChange={(e) => set("riskLevel", e.target.value)} disabled={!canUpdate} /></label>
       </div>
       <label>Datos tratados<textarea className="nf-app-input" rows={2} value={f.dataProcessed} onChange={(e) => set("dataProcessed", e.target.value)} disabled={!canUpdate} /></label>
@@ -104,8 +106,8 @@ function ProfileForm({ supplier, pending, canUpdate, onClose, onRun }: { supplie
       <label>Obligaciones contractuales de seguridad<textarea className="nf-app-input" rows={2} value={f.obligations} onChange={(e) => set("obligations", e.target.value)} disabled={!canUpdate} /></label>
       <label>Controles aplicados<textarea className="nf-app-input" rows={2} value={f.controls} onChange={(e) => set("controls", e.target.value)} disabled={!canUpdate} /></label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label>Próxima revisión<input className="nf-app-input" type="date" value={f.nextReviewDate ?? ""} onChange={(e) => set("nextReviewDate", e.target.value)} disabled={!canUpdate} /></label>
-        <label>Vencimiento contractual<input className="nf-app-input" type="date" value={f.contractExpiry ?? ""} onChange={(e) => set("contractExpiry", e.target.value)} disabled={!canUpdate} /></label>
+        <label>Próxima revisión<DateField className="nf-app-input" value={f.nextReviewDate ?? ""} onChange={(e) => set("nextReviewDate", e.target.value)} disabled={!canUpdate} /></label>
+        <label>Vencimiento contractual<DateField className="nf-app-input" value={f.contractExpiry ?? ""} onChange={(e) => set("contractExpiry", e.target.value)} disabled={!canUpdate} /></label>
       </div>
       {canUpdate && <button type="button" className="nf-app-btn-primary" disabled={pending} onClick={() => onRun(() => upsertSupplierSecurityProfile({ supplierId: supplier.id, securityCriticality: f.securityCriticality as never, dataProcessed: f.dataProcessed || undefined, accessGranted: f.accessGranted || undefined, obligations: f.obligations || undefined, controls: f.controls || undefined, riskLevel: f.riskLevel || undefined, nextReviewDate: f.nextReviewDate || null, contractExpiry: f.contractExpiry || null, notes: f.notes || undefined }), { onSuccess: onClose, successMessage: "Perfil guardado." })}>Guardar perfil</button>}
     </div>

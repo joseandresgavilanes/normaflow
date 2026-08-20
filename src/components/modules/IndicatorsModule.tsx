@@ -12,12 +12,15 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
+import EntityTable from "@/components/ui/EntityTable";
+import { CellTitle, ProgressCell } from "@/components/operations/OperationalUi";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type IndicatorRow } from "@/context/WorkspaceStore";
 import { processesLinkedToIndicator } from "@/lib/process-linking";
+import Picker from "@/components/ui/Picker";
 
 type StatusFilter = "ALL" | IndicatorRow["status"];
 
@@ -329,126 +332,35 @@ export default function IndicatorsModule() {
           <p style={{ margin: "8px 0 0", fontSize: 14 }}>Prueba otro filtro o crea un KPI nuevo.</p>
         </Card>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 18 }}>
-          {visibleIndicators.map(ind => {
-            const color = ind.status === "ON_TRACK" ? "var(--nf-success)" : ind.status === "AT_RISK" ? "var(--nf-warning)" : "var(--nf-danger)";
-            const pct = Math.min((ind.value / ind.target) * 100, 100);
-            const Icon = statusIcon(ind.status);
-            return (
-              <div key={ind.id} className="nf-kpi-card" onClick={() => openDetail(ind)} role="button" tabIndex={0} onKeyDown={e => (e.key === "Enter" || e.key === " ") && openDetail(ind)}>
-                
-                <div style={{ padding: "16px 18px 18px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, marginBottom: 14 }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 600,
-                          color: "var(--nf-ink)",
-                          marginBottom: 6,
-                          lineHeight: 1.25,
-                          letterSpacing: "-0.02em",
-                          fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
-                        }}
-                      >
-                        {ind.name}
-                      </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", fontSize: 12, color: "var(--nf-ink-3)" }}>
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <CalendarClock size={13} strokeWidth={2.25} aria-hidden />
-                          {ind.period}
-                        </span>
-                        <span style={{ opacity: 0.45 }}>·</span>
-                        <span>{freqLabel(ind.frequency)}</span>
-                        {ind.owner && (
-                          <>
-                            <span style={{ opacity: 0.45 }}>·</span>
-                            <span style={{ color: "var(--nf-primary-active)", fontWeight: 700 }}>{ind.owner}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
-                      <div
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 11,
-                          background: `${color}18`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color,
-                        }}
-                      >
-                        <Icon size={20} strokeWidth={2.25} aria-hidden />
-                      </div>
-                      <Badge status={ind.status} />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
-                    <div>
-                      <div style={{ fontSize: 38, fontWeight: 600, color, lineHeight: 1, letterSpacing: "-0.04em" }}>
-                        {ind.value}
-                        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--nf-ink-3)", marginLeft: 4 }}>{ind.unit}</span>
-                      </div>
-                      <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 6, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                        <span>
-                          Meta{" "}
-                          <strong style={{ color: "var(--nf-ink)" }}>
-                            {ind.target}
-                            {ind.unit}
-                          </strong>
-                        </span>
-                        <span
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 4,
-                            fontWeight: 700,
-                            color: ind.trend === "up" ? "var(--nf-success-text)" : "var(--nf-danger-text)",
-                          }}
-                        >
-                          {ind.trend === "up" ? <TrendingUp size={14} strokeWidth={2.5} aria-hidden /> : <TrendingDown size={14} strokeWidth={2.5} aria-hidden />}
-                          Tendencia
-                        </span>
-                      </div>
-                    </div>
-                    <MiniSpark chartId={ind.id} data={ind.history} color={color} />
-                  </div>
-
-                  <div style={{ marginBottom: 4 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 6, fontWeight: 600 }}>
-                      <span>Cumplimiento de meta</span>
-                      <span style={{ color }}>{Math.round(pct)}%</span>
-                    </div>
-                    <ProgressBar value={pct} color={color} height={7} railColor="var(--nf-surface-sunken)" />
-                  </div>
-
-                  {ind.clause && (
-                    <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em" }}>ISO</span>
-                      <span
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 700,
-                          background: "var(--nf-app-accent-soft)",
-                          color: "var(--nf-primary-active)",
-                          padding: "4px 10px",
-                          borderRadius: 8,
-                          border: "1px solid rgba(82, 102, 246, 0.15)",
-                        }}
-                      >
-                        Cláusula {ind.clause}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <EntityTable
+          caption="Indicadores"
+          rows={visibleIndicators}
+          rowKey={(row) => row.id}
+          rowAction={(row) => openDetail(row)}
+          storageKey="demo-indicators"
+          searchText={(row) => `${row.name} ${row.owner ?? ""} ${row.period}`}
+          searchPlaceholder="Buscar por nombre o responsable…"
+          filters={[
+            { id: "status", label: "Estado", value: (row) => row.status },
+            { id: "frequency", label: "Frecuencia", value: (row) => row.frequency, format: (value) => freqLabel(value as typeof visibleIndicators[number]["frequency"]) },
+          ]}
+          emptyTitle="Todavía no hay indicadores"
+          emptyDescription="Un indicador necesita meta, unidad y frecuencia para poder seguirse."
+          columns={[
+            {
+              id: "name", header: "Indicador", primary: true, minWidth: 240, sortValue: (row) => row.name,
+              cell: (row) => <CellTitle title={row.name} meta={`${row.period} · ${freqLabel(row.frequency)}`} />,
+            },
+            { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+            { id: "value", header: "Valor", numeric: true, align: "end", sortValue: (row) => row.value, cell: (row) => `${row.value}${row.unit ?? ""}` },
+            { id: "target", header: "Meta", numeric: true, align: "end", hideable: true, sortValue: (row) => row.target, cell: (row) => `${row.target}${row.unit ?? ""}` },
+            {
+              id: "progress", header: "Cumplimiento", numeric: true, sortValue: (row) => (row.target ? row.value / row.target : 0),
+              cell: (row) => <ProgressCell value={Math.round(Math.min((row.value / row.target) * 100, 100))} />,
+            },
+            { id: "owner", header: "Responsable", hideable: true, sortValue: (row) => row.owner ?? "", cell: (row) => row.owner || "Sin responsable" },
+          ]}
+        />
       )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nuevo KPI" width={500}>
@@ -486,7 +398,7 @@ export default function IndicatorsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
               Frecuencia
-              <select
+              <Picker aria-label="Frecuencia"
                 className="nf-app-input"
                 value={newForm.frequency}
                 onChange={e => setNewForm({ ...newForm, frequency: e.target.value as IndicatorRow["frequency"] })}
@@ -494,7 +406,7 @@ export default function IndicatorsModule() {
               >
                 <option value="monthly">Mensual</option>
                 <option value="quarterly">Trimestral</option>
-              </select>
+              </Picker>
             </label>
             <label style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
               Periodo (etiqueta)
@@ -517,7 +429,7 @@ export default function IndicatorsModule() {
           </label>
           <label style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>
             Proceso asociado
-            <select
+            <Picker aria-label="Proceso asociado"
               className="nf-app-input"
               value={newForm.linkedProcessCode}
               onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })}
@@ -529,7 +441,7 @@ export default function IndicatorsModule() {
                   {p.code} — {p.name}
                 </option>
               ))}
-            </select>
+            </Picker>
           </label>
           <div className="nf-modal-actions">
             <button type="button" className="nf-app-btn-ghost" onClick={() => setCreateOpen(false)}>Cancelar</button>
@@ -641,7 +553,7 @@ export default function IndicatorsModule() {
               </div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", display: "block", marginBottom: 8 }}>
                 Proceso principal
-                <select
+                <Picker aria-label="Proceso principal"
                   className="nf-app-input"
                   value={processLinkDraft}
                   onChange={e => setProcessLinkDraft(e.target.value)}
@@ -653,7 +565,7 @@ export default function IndicatorsModule() {
                       {p.code} — {p.name}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </label>
               <button
                 type="button"

@@ -13,6 +13,7 @@ import {
   Loader2,
   Pencil,
   Plus,
+  Replace,
   Send,
   Upload,
   XCircle,
@@ -22,6 +23,7 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import ClausePicker from "@/components/ui/ClausePicker";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { ModalField, NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
 import {
@@ -46,6 +48,11 @@ import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/li
 import { useServerAction } from "@/hooks/useServerAction";
 import { formatDate, timeAgo } from "@/lib/utils";
 import type { TemplateField } from "@/lib/document-templates";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import FileImportArea from "@/components/ui/FileImportArea";
+import DateField from "@/components/ui/DateField";
+import { RowAction } from "@/components/ui/RowActions";
 
 type Status = "ALL" | "DRAFT" | "IN_REVIEW" | "APPROVED" | "OBSOLETE";
 
@@ -227,15 +234,11 @@ export default function DocumentsLiveClient({
       key: "actions",
       label: "",
       render: (_, d) => (
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
+        <div className="nf-row-actions">
           {initial.access.canObsolete && d.status === "APPROVED" && !d.supersededById && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); setError(""); setSupersedeFor(d); }} className="nf-app-btn-ghost">
-              Reemplazar
-            </button>
+            <RowAction icon={Replace} label="Reemplazar" onClick={() => { setError(""); setSupersedeFor(d); }} />
           )}
-          <button type="button" onClick={(e) => { e.stopPropagation(); setDetail(d); }} className="nf-app-btn-ghost">
-            Ver
-          </button>
+          <RowAction icon={Eye} label="Ver" tone="primary" onClick={() => setDetail(d)} />
         </div>
       ),
     },
@@ -248,7 +251,7 @@ export default function DocumentsLiveClient({
       <SectionTitle
         title="Control de Documentos"
         sub="Lista maestra del SGC con versionado, flujo de aprobación y trazabilidad ISO."
-        action={canCreate ? "+ Nuevo documento" : undefined}
+        action={canCreate ? "Nuevo documento" : undefined}
         onAction={canCreate ? () => { setCreating(true); setError(""); } : undefined}
       />
 
@@ -272,36 +275,33 @@ export default function DocumentsLiveClient({
             className="nf-app-input nf-app-input--toolbar"
             style={{ flex: 1, minWidth: 240 }}
           />
-          <select aria-label="Filtrar por estado" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
+          <Picker aria-label="Filtrar por estado" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
             {(["ALL", "DRAFT", "IN_REVIEW", "APPROVED", "OBSOLETE"] as Status[]).map((s) => (
               <option key={s} value={s}>{STATUS_LABEL[s]}</option>
             ))}
-          </select>
-          <select aria-label="Filtrar por tipo" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as "ALL" | DocumentType)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
+          </Picker>
+          <Picker aria-label="Filtrar por tipo" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as "ALL" | DocumentType)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }}>
             <option value="ALL">Todos los tipos</option>
             {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-          </select>
-          <select value={standardFilter} onChange={(e) => { setStandardFilter(e.target.value); setClauseFilter("ALL"); }} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por norma">
+          </Picker>
+          <Picker value={standardFilter} onChange={(e) => { setStandardFilter(e.target.value); setClauseFilter("ALL"); }} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por norma">
             <option value="ALL">Todas las normas</option>
             {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
-          </select>
-          <select value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por cláusula">
+          </Picker>
+          <Picker value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por cláusula">
             <option value="ALL">Todas las cláusulas</option>
             {clauses.filter((clause) => standardFilter === "ALL" || clause.standardCode === standardFilter).map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode.replace("_", " ")} · {clause.code}</option>)}
-          </select>
-          <select value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por proceso">
+          </Picker>
+          <Picker value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por proceso">
             <option value="ALL">Todos los procesos</option>
             {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
-          </select>
-          <select value={ownerFilter} onChange={(e) => setOwnerFilter(e.target.value)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Filtrar por responsable">
-            <option value="ALL">Todos los responsables</option>
-            {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
-          </select>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Ordenar documentos">
+          </Picker>
+          <PersonPicker people={members} valueField="userId" value={ownerFilter} onValueChange={(personId) => setOwnerFilter(personId)} emptyValue="ALL" placeholder="Todos los responsables" ariaLabel="Filtrar por responsable" style={{ width: "auto", minWidth: 140 }} />
+          <Picker value={sortBy} onChange={(e) => setSortBy(e.target.value as DocumentSortKey)} className={NF_INPUT_CLASS} style={{ width: "auto", minWidth: 140 }} aria-label="Ordenar documentos">
             {DOCUMENT_SORT_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
-          </select>
+          </Picker>
           <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{filtered.length} de {documents.length}</span>
           {(standardFilter !== "ALL" || clauseFilter !== "ALL" || processFilter !== "ALL" || ownerFilter !== "ALL" || statusFilter !== "ALL" || typeFilter !== "ALL" || search) && (
             <button type="button" className="nf-app-btn-ghost" onClick={() => { setSearch(""); setStatusFilter("ALL"); setTypeFilter("ALL"); setStandardFilter("ALL"); setClauseFilter("ALL"); setProcessFilter("ALL"); setOwnerFilter("ALL"); }}>
@@ -620,46 +620,51 @@ function DocumentFormModal({
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Tipo">
-            <select aria-label="Tipo" name="type" defaultValue={editing?.type ?? "PROCEDURE"} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Tipo" name="type" defaultValue={editing?.type ?? "PROCEDURE"} className={NF_INPUT_CLASS} style={modalInputStyle}>
               {DOC_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
+            </Picker>
           </Field>
           <Field label="Norma">
-            <select aria-label="Código de norma" name="standardCode" defaultValue={editing?.standardCode ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Código de norma" name="standardCode" defaultValue={editing?.standardCode ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Ninguna —</option>
               {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
-            </select>
+            </Picker>
           </Field>
           <Field label="Ubicación / sede">
-            <select aria-label="Ubicación" name="locationId" defaultValue={editing?.locationId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Ubicación" name="locationId" defaultValue={editing?.locationId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">—</option>
               {locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-            </select>
+            </Picker>
           </Field>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Proceso relacionado">
-            <select aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin proceso —</option>
               {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
-            </select>
+            </Picker>
           </Field>
-          <Field label="Cláusula aplicable">
-            <select aria-label="Cláusula" name="clauseId" defaultValue={editing?.clauseId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">— Sin cláusula —</option>
-              {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode.replace("_", " ")} · {clause.code} — {clause.title}</option>)}
-            </select>
-          </Field>
+          <ClausePicker
+            clauses={clauses}
+            defaultClauseId={editing?.clauseId ?? ""}
+            inputClassName={NF_INPUT_CLASS}
+            inputStyle={modalInputStyle}
+          />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable del documento">
-            <select aria-label="Responsable" name="ownerId" defaultValue={editing?.ownerId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">— Usuario actual —</option>
-              {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
-            </select>
+            <PersonPicker
+              name="ownerId"
+              people={members}
+              defaultValue={editing?.ownerId ?? ""}
+              valueField="userId"
+              placeholder="Usuario actual"
+              ariaLabel="Responsable"
+              style={modalInputStyle}
+            />
           </Field>
           <Field label="Próxima revisión">
-            <input aria-label="Fecha de revisión" name="reviewDate" type="date" defaultValue={editing?.reviewDate?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+            <DateField aria-label="Fecha de revisión" name="reviewDate" defaultValue={editing?.reviewDate?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
         </div>
         <Field label="Etiquetas (separadas por coma)">
@@ -667,22 +672,34 @@ function DocumentFormModal({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Responsable elaboración">
-            <select aria-label="Responsable de elaboración" name="responsibleElaborationId" defaultValue={editing?.responsibleElaborationId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">—</option>
-              {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
-            </select>
+            <PersonPicker
+              name="responsibleElaborationId"
+              people={personnel}
+              defaultValue={editing?.responsibleElaborationId ?? ""}
+              placeholder="Sin asignar"
+              ariaLabel="Responsable de elaboración"
+              style={modalInputStyle}
+            />
           </Field>
           <Field label="Responsable aprobación">
-            <select aria-label="Responsable de aprobación" name="responsibleApprovalId" defaultValue={editing?.responsibleApprovalId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">—</option>
-              {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
-            </select>
+            <PersonPicker
+              name="responsibleApprovalId"
+              people={personnel}
+              defaultValue={editing?.responsibleApprovalId ?? ""}
+              placeholder="Sin asignar"
+              ariaLabel="Responsable de aprobación"
+              style={modalInputStyle}
+            />
           </Field>
           <Field label="Custodio">
-            <select aria-label="Custodio" name="custodianId" defaultValue={editing?.custodianId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">—</option>
-              {personnel.map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
-            </select>
+            <PersonPicker
+              name="custodianId"
+              people={personnel}
+              defaultValue={editing?.custodianId ?? ""}
+              placeholder="Sin asignar"
+              ariaLabel="Custodio"
+              style={modalInputStyle}
+            />
           </Field>
         </div>
         <Field label="Ubicación física">
@@ -761,9 +778,9 @@ function TemplateCreateModal({
           style={{ display: "flex", flexDirection: "column", gap: 14 }}
         >
           <Field label="Plantilla ISO">
-            <select value={template.id} onChange={(event) => setTemplateId(event.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Plantilla ISO" value={template.id} onChange={(event) => setTemplateId(event.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
               {templates.map((item) => <option key={item.id} value={item.id}>{item.standardCode.replace("_", " ")} · {item.title}</option>)}
-            </select>
+            </Picker>
           </Field>
           <div style={{ padding: "10px 12px", borderRadius: 8, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)", fontSize: 12, color: "var(--nf-ink-2)" }}>
             <strong>{template.code}</strong> · {template.description} {template.clauseCode && `· Cláusula ${template.clauseCode}`}
@@ -774,16 +791,21 @@ function TemplateCreateModal({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <Field label="Proceso relacionado">
-              <select aria-label="Proceso" name="processId" defaultValue="" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <Picker aria-label="Proceso" name="processId" defaultValue="" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="">— Sin proceso —</option>
                 {processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}
-              </select>
+              </Picker>
             </Field>
             <Field label="Responsable">
-              <select aria-label="Responsable" name="ownerId" defaultValue="" className={NF_INPUT_CLASS} style={modalInputStyle}>
-                <option value="">— Usuario actual —</option>
-                {members.map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}
-              </select>
+              <PersonPicker
+                name="ownerId"
+                people={members}
+                defaultValue=""
+                valueField="userId"
+                placeholder="Usuario actual"
+                ariaLabel="Responsable"
+                style={modalInputStyle}
+              />
             </Field>
           </div>
           <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 12 }}>
@@ -841,10 +863,10 @@ function ContentEditorModal({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", gap: 12 }}>
             <Field label="Descripción del cambio *"><input aria-label="Qué se adaptó o actualizó" value={changeDescription} onChange={(event) => setChangeDescription(event.target.value)} required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Qué se adaptó o actualizó" /></Field>
             <Field label="Tipo de versión">
-              <select aria-label="Incremento de versión" value={bump} onChange={(event) => setBump(event.target.value as "minor" | "major")} className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <Picker aria-label="Incremento de versión" value={bump} onChange={(event) => setBump(event.target.value as "minor" | "major")} className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="minor">Minor · {nextMinor(doc.currentVersion)}</option>
                 <option value="major">Mayor</option>
-              </select>
+              </Picker>
             </Field>
           </div>
           <div className="nf-modal-actions">
@@ -896,9 +918,15 @@ function UploadVersionModal({
           <p style={{ margin: 0, fontSize: 13, color: "var(--nf-ink-2)" }}>
             Versión actual: <strong>v{doc.currentVersion}</strong>. Sube el archivo correspondiente a la nueva versión.
           </p>
-          <Field label="Archivo *">
-            <input type="file" required onChange={(e) => setFile(e.target.files?.[0] ?? null)} className={NF_INPUT_CLASS} style={modalInputStyle} />
-          </Field>
+          <FileImportArea
+            label="Archivo *"
+            required
+            maxSizeMB={50}
+            file={file}
+            onFileChange={setFile}
+            hint="Sustituye al archivo de la versión anterior, que queda archivado."
+            compact
+          />
           <Field label="Tipo de versión">
             <div style={{ display: "flex", gap: 8 }}>
               <label className={radioChoiceClass(bump === "minor")}>
@@ -1064,12 +1092,12 @@ function SupersedeForm({ current, options, isPending, onCancel, onConfirm }: {
         El documento de reemplazo tomará su lugar{current.processCode ? ` y su proceso (${current.processCode})` : ""}.
       </p>
       <ModalField label="Documento de reemplazo">
-        <select aria-label="Selecciona el documento que lo reemplaza" value={newId} onChange={(e) => setNewId(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
+        <Picker aria-label="Selecciona el documento que lo reemplaza" value={newId} onChange={(e) => setNewId(e.target.value)} className={NF_INPUT_CLASS} style={modalInputStyle}>
           <option value="">Selecciona el documento que lo reemplaza…</option>
           {options.map((d) => (
             <option key={d.id} value={d.id}>{d.code} — {d.title} (v{d.currentVersion})</option>
           ))}
-        </select>
+        </Picker>
       </ModalField>
       <textarea aria-label="Motivo del reemplazo (opcional)" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Motivo del reemplazo (opcional)" className={NF_INPUT_CLASS} style={modalInputStyle} />
       <div className="nf-modal-actions">

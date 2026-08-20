@@ -20,17 +20,21 @@ import {
 } from "@/lib/actions/management-review";
 import type { ManagementReviewPayload } from "@/lib/server-queries";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
+import { formatDate } from "@/lib/format/datetime";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import DateField from "@/components/ui/DateField";
 import {
-  CardActions,
-  EmptyOperational,
+  CellTitle,
+  CountCell,
   Field,
   FormModal,
-  inputStyle,
   Meta,
-  OperationalCard,
-  OperationalGrid,
   OperationalHeader,
   OperationalMessages,
+  RowActions,
+  inputStyle,
 } from "./OperationalUi";
 
 type ReviewRow = ManagementReviewPayload["reviews"][number];
@@ -70,7 +74,7 @@ const NEXT_STATUS: Partial<Record<ManagementReviewStatus, ManagementReviewStatus
 };
 
 function fmtDate(iso: string | null) {
-  return iso ? new Date(iso).toLocaleDateString("es") : "—";
+  return iso ? formatDate(iso) : "—";
 }
 
 export function ManagementReviewLive({ initial }: { initial: ManagementReviewPayload }) {
@@ -151,51 +155,49 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
     <div>
       <OperationalHeader
         title="Revisión por la dirección"
-        subtitle={`${initial.reviews.length} revisiones · ISO 9001 cláusula 9.3`}
+        subtitle="Revisiones por la dirección con entradas, decisiones y acciones acordadas (cláusula 9.3)."
         canCreate={canManage}
         actionLabel="Nueva revisión"
         onCreate={() => { setError(""); setCreating(true); }}
       />
       <OperationalMessages error={error} success={success} />
 
-      {initial.reviews.length === 0 ? (
-        <EmptyOperational>Aún no hay revisiones por la dirección. Crea la primera para registrar entradas (9.3.2) y decisiones (9.3.3).</EmptyOperational>
-      ) : (
-        <OperationalGrid>
-          {initial.reviews.map(row => (
-            <OperationalCard key={row.id} onClick={() => setDetailId(row.id)}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <div style={{ minWidth: 0 }}>
-                  <h3 style={{ margin: "0 0 6px", fontSize: 18, color: "var(--nf-ink)" }}>{row.title}</h3>
-                  <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Programada: {fmtDate(row.scheduledDate)} · {row.chairName ?? "Sin presidente"}</div>
-                </div>
-                <Badge status={statusBadge(row.status)} label={STATUS_LABELS[row.status]} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, marginTop: 13 }}>
-                {[["Entradas", row.inputs.length], ["Decisiones", row.decisions.length], ["Acciones", row.actionCount]].map(([label, value]) => (
-                  <div key={String(label)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}>
-                    <strong style={{ display: "block", color: "var(--nf-primary-active)" }}>{value}</strong>
-                    <span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-              {canManage && (
-                <CardActions canUpdate canDelete pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
-              )}
-            </OperationalCard>
-          ))}
-        </OperationalGrid>
-      )}
+      <EntityTable
+          caption="Revisiones por la dirección"
+          rows={initial.reviews}
+          rowKey={(row) => row.id}
+          rowAction={(row) => setDetailId(row.id)}
+          storageKey="management-reviews"
+          searchText={(row) => `${row.title} ${row.chairName ?? ""}`}
+          searchPlaceholder="Buscar por título o presidente…"
+          filters={[{ id: "status", label: "Estado", value: (row) => row.status, format: (value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] ?? value }]}
+          emptyTitle="Todavía no hay revisiones"
+          emptyDescription="La revisión por la dirección recoge entradas, decisiones y acciones con trazabilidad."
+          columns={[
+            {
+              id: "title", header: "Revisión", primary: true, minWidth: 240, sortValue: (row) => row.title,
+              cell: (row) => <CellTitle title={row.title} meta={`Programada ${fmtDate(row.scheduledDate)}`} />,
+            },
+            { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={statusBadge(row.status)} label={STATUS_LABELS[row.status]} /> },
+            { id: "chair", header: "Presidente", hideable: true, sortValue: (row) => row.chairName ?? "", cell: (row) => row.chairName ?? "Sin presidente" },
+            { id: "inputs", header: "Entradas", numeric: true, align: "end", hideable: true, sortValue: (row) => row.inputs.length, cell: (row) => <CountCell value={row.inputs.length} /> },
+            { id: "decisions", header: "Decisiones", numeric: true, align: "end", hideable: true, sortValue: (row) => row.decisions.length, cell: (row) => <CountCell value={row.decisions.length} /> },
+            { id: "actions", header: "Acciones", numeric: true, align: "end", hideable: true, sortValue: (row) => row.actionCount, cell: (row) => <CountCell value={row.actionCount} /> },
+          ]}
+          actions={canManage ? (row) => (
+            <RowActions canUpdate canDelete pending={isPending} onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
+          ) : undefined}
+        />
 
       {/* Create / edit */}
       <FormModal open={creating || !!editing} title={editing ? "Editar revisión" : "Nueva revisión por la dirección"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submitReview}>
         <Field label="Título"><input aria-label="Revisión por la dirección 2026" name="title" className="nf-app-input" style={inputStyle} defaultValue={editing?.title ?? ""} required placeholder="Revisión por la dirección 2026" /></Field>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Fecha programada"><input aria-label="Fecha prevista" name="scheduledDate" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.scheduledDate?.slice(0, 10) ?? ""} /></Field>
-          <Field label="Presidente / responsable"><select aria-label="Presidente" name="chairId" className="nf-app-input" style={inputStyle} defaultValue={editing?.chairId ?? ""}><option value="">Sin asignar</option>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+          <Field label="Fecha programada"><DateField aria-label="Fecha prevista" name="scheduledDate" className="nf-app-input" style={inputStyle} defaultValue={editing?.scheduledDate?.slice(0, 10) ?? ""} /></Field>
+          <Field label="Presidente / responsable"><PersonPicker name="chairId" people={initial.members} defaultValue={editing?.chairId ?? ""} placeholder="Sin asignar" ariaLabel="Presidente" style={inputStyle} /></Field>
         </div>
-        {initial.standards.length > 0 && <Field label="Normas incluidas"><select aria-label="Normas" name="standards" multiple className="nf-app-input" style={{ ...inputStyle, minHeight: 90 }} defaultValue={editing?.standards ?? []}>{initial.standards.map(s => <option key={s.code} value={s.code}>{s.code} · {s.name}{s.version ? ` (${s.version})` : ""}</option>)}</select><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>⌘/Ctrl + clic para seleccionar varias.</span></Field>}
-        {initial.members.length > 0 && <Field label="Participantes internos"><select aria-label="Participantes" name="participantIds" multiple className="nf-app-input" style={{ ...inputStyle, minHeight: 90 }} defaultValue={editing?.participants.map(p => p.id) ?? []}>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>Los participantes quedan trazados como miembros activos del tenant.</span></Field>}
+        {initial.standards.length > 0 && <Field label="Normas incluidas"><Picker aria-label="Normas" name="standards" multiple className="nf-app-input" style={{ ...inputStyle, minHeight: 90 }} defaultValue={editing?.standards ?? []}>{initial.standards.map(s => <option key={s.code} value={s.code}>{s.code} · {s.name}{s.version ? ` (${s.version})` : ""}</option>)}</Picker><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>⌘/Ctrl + clic para seleccionar varias.</span></Field>}
+        {initial.members.length > 0 && <Field label="Participantes internos"><PersonPicker name="participantIds" people={initial.members} defaultValue={editing?.participants.map(p => p.id) ?? []} multiple placeholder="Sin seleccionar" ariaLabel="Participantes" style={inputStyle} /><span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>Los participantes quedan trazados como miembros activos del tenant.</span></Field>}
         <Field label="Asistentes (separados por comas)"><input aria-label="Dirección general, Calidad, Operaciones" name="attendees" className="nf-app-input" style={inputStyle} defaultValue={editing?.attendees.join(", ") ?? ""} placeholder="Dirección general, Calidad, Operaciones" /></Field>
       </FormModal>
 
@@ -238,22 +240,22 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
               {canManage && detail.status !== "COMPLETED" && detail.status !== "CANCELLED" && (
                 <form onSubmit={e => addInput(e, detail.id)} style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select aria-label="Tema" name="topic" className="nf-app-input" style={inputStyle} defaultValue="AUDIT_RESULTS">
+                    <Picker aria-label="Tema" name="topic" className="nf-app-input" style={inputStyle} defaultValue="AUDIT_RESULTS">
                       {Object.entries(TOPIC_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    </Picker>
                     <button type="submit" className="nf-app-btn-outline" disabled={isPending}>Añadir entrada</button>
                   </div>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select aria-label="Vincular auditoría" name="auditId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular auditoría…</option>{initial.sources.audits.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-                    <select aria-label="Vincular KPI" name="indicatorId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular KPI…</option>{initial.sources.indicators.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+                    <Picker aria-label="Vincular auditoría" name="auditId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular auditoría…</option>{initial.sources.audits.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Picker>
+                    <Picker aria-label="Vincular KPI" name="indicatorId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular KPI…</option>{initial.sources.indicators.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</Picker>
                   </div>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select aria-label="Vincular riesgo" name="riskId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular riesgo…</option>{initial.sources.risks.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-                    <select aria-label="Vincular NC" name="nonconformityId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular NC…</option>{initial.sources.nonconformities.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
+                    <Picker aria-label="Vincular riesgo" name="riskId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular riesgo…</option>{initial.sources.risks.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Picker>
+                    <Picker aria-label="Vincular NC" name="nonconformityId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular NC…</option>{initial.sources.nonconformities.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Picker>
                   </div>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select aria-label="Vincular acción" name="actionId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular acción…</option>{initial.sources.actions.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-                    <select aria-label="Vincular CAPA" name="capaId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular CAPA…</option>{initial.sources.capas.map(item => <option key={item.id} value={item.id}>{item.code} · {item.title}</option>)}</select>
+                    <Picker aria-label="Vincular acción" name="actionId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular acción…</option>{initial.sources.actions.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</Picker>
+                    <Picker aria-label="Vincular CAPA" name="capaId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Vincular CAPA…</option>{initial.sources.capas.map(item => <option key={item.id} value={item.id}>{item.code} · {item.title}</option>)}</Picker>
                   </div>
                   <textarea aria-label="Resumen / datos de la entrada" name="content" className="nf-app-input" style={inputStyle} rows={2} placeholder="Resumen / datos de la entrada…" required />
                 </form>
@@ -280,11 +282,11 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                 <form onSubmit={e => addDecision(e, detail.id)} style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
                     <input aria-label="Tema / asunto" name="dtopic" className="nf-app-input" style={inputStyle} placeholder="Tema / asunto" required />
-                    <select aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue=""><option value="">Responsable…</option>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+                    <PersonPicker name="ownerId" people={initial.members} defaultValue="" placeholder="Responsable…" ariaLabel="Responsable" style={inputStyle} />
                   </div>
                   <textarea aria-label="Decisión / acción acordada" name="decision" className="nf-app-input" style={inputStyle} rows={2} placeholder="Decisión / acción acordada…" required />
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <input aria-label="Fecha de vencimiento" name="dueDate" type="date" className="nf-app-input" style={inputStyle} />
+                    <DateField aria-label="Fecha de vencimiento" name="dueDate" className="nf-app-input" style={inputStyle} />
                     <button type="submit" className="nf-app-btn-outline" disabled={isPending}>Registrar decisión</button>
                   </div>
                 </form>
@@ -292,7 +294,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
             </section>
 
             <section>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong style={{ fontSize: 14 }}>Evidencias vinculadas · {detail.evidenceLinks.length}</strong>{canManage && <select aria-label="Vincular evidencia" className="nf-app-input" style={{ ...inputStyle, maxWidth: 280 }} defaultValue="" onChange={event => { const evidenceId = event.target.value; if (evidenceId) run(() => linkReviewEvidence(detail.id, evidenceId), { successMessage: "Evidencia vinculada." }); event.currentTarget.value = ""; }}><option value="">Vincular evidencia…</option>{initial.evidenceFiles.filter(file => !detail.evidenceLinks.some(link => link.id === file.id)).map(file => <option key={file.id} value={file.id}>{file.title}</option>)}</select>}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong style={{ fontSize: 14 }}>Evidencias vinculadas · {detail.evidenceLinks.length}</strong>{canManage && <Picker resetOnSelect aria-label="Vincular evidencia" className="nf-app-input" style={{ ...inputStyle, maxWidth: 280 }} defaultValue="" onChange={event => { const evidenceId = event.target.value; if (evidenceId) run(() => linkReviewEvidence(detail.id, evidenceId), { successMessage: "Evidencia vinculada." }); }}><option value="">Vincular evidencia…</option>{initial.evidenceFiles.filter(file => !detail.evidenceLinks.some(link => link.id === file.id)).map(file => <option key={file.id} value={file.id}>{file.title}</option>)}</Picker>}</div>
               {detail.evidenceLinks.length > 0 ? <ul style={{ margin: "9px 0 0" }}>{detail.evidenceLinks.map(link => <li key={link.id}>{link.title} · {link.evidenceType}</li>)}</ul> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin evidencias vinculadas.</p>}
             </section>
 
@@ -306,7 +308,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
           </div>
         )}
       </Modal>
-      <FormModal open={!!actionDecision} title="Crear acción en Plan de Acción" pending={isPending} error={error} onClose={() => setActionDecision(null)} onSubmit={event => { event.preventDefault(); if (!actionDecision) return; const fd = new FormData(event.currentTarget); run(() => createReviewAction(actionDecision.id, { title: String(fd.get("actionTitle") ?? ""), description: String(fd.get("actionDescription") ?? ""), ownerId: String(fd.get("actionOwnerId") ?? "") || undefined, dueDate: String(fd.get("actionDueDate") ?? "") || undefined, priority: fd.get("actionPriority") as Priority }), { onSuccess: () => setActionDecision(null), successMessage: "Acción creada en Plan de Acción." }); }}><Field label="Acción"><input aria-label="Título de la acción" name="actionTitle" className="nf-app-input" style={inputStyle} defaultValue={actionDecision?.decision ?? ""} required /></Field><Field label="Descripción"><textarea aria-label="Descripción de la acción" name="actionDescription" className="nf-app-input" style={inputStyle} rows={3} /></Field><div className="nf-grid-2" style={{ gap: 8 }}><select aria-label="Responsable" name="actionOwnerId" className="nf-app-input" style={inputStyle} defaultValue={actionDecision?.ownerId ?? ""}><option value="">Responsable…</option>{initial.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select><select aria-label="Prioridad de la acción" name="actionPriority" className="nf-app-input" style={inputStyle} defaultValue={Priority.MEDIUM}>{Object.values(Priority).map(value => <option key={value}>{value}</option>)}</select></div><Field label="Fecha objetivo"><input aria-label="Vencimiento de la acción" name="actionDueDate" type="date" className="nf-app-input" style={inputStyle} /></Field></FormModal>
+      <FormModal open={!!actionDecision} title="Crear acción en Plan de Acción" pending={isPending} error={error} onClose={() => setActionDecision(null)} onSubmit={event => { event.preventDefault(); if (!actionDecision) return; const fd = new FormData(event.currentTarget); run(() => createReviewAction(actionDecision.id, { title: String(fd.get("actionTitle") ?? ""), description: String(fd.get("actionDescription") ?? ""), ownerId: String(fd.get("actionOwnerId") ?? "") || undefined, dueDate: String(fd.get("actionDueDate") ?? "") || undefined, priority: fd.get("actionPriority") as Priority }), { onSuccess: () => setActionDecision(null), successMessage: "Acción creada en Plan de Acción." }); }}><Field label="Acción"><input aria-label="Título de la acción" name="actionTitle" className="nf-app-input" style={inputStyle} defaultValue={actionDecision?.decision ?? ""} required /></Field><Field label="Descripción"><textarea aria-label="Descripción de la acción" name="actionDescription" className="nf-app-input" style={inputStyle} rows={3} /></Field><div className="nf-grid-2" style={{ gap: 8 }}><PersonPicker name="actionOwnerId" people={initial.members} defaultValue={actionDecision?.ownerId ?? ""} placeholder="Responsable…" ariaLabel="Responsable" style={inputStyle} /><Picker aria-label="Prioridad de la acción" name="actionPriority" className="nf-app-input" style={inputStyle} defaultValue={Priority.MEDIUM}>{Object.values(Priority).map(value => <option key={value}>{value}</option>)}</Picker></div><Field label="Fecha objetivo"><DateField aria-label="Vencimiento de la acción" name="actionDueDate" className="nf-app-input" style={inputStyle} /></Field></FormModal>
       <ConfirmActionModal
         open={!!confirmDelete}
         title="Eliminar revisión"

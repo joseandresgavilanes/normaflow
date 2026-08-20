@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import InfoTip from "@/components/ui/InfoTip";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/context/I18nProvider";
 
@@ -26,6 +27,7 @@ export function Card({
   children,
   /** Cabecera opcional: título, subtítulo y acción alineada a la derecha. */
   title,
+  /** Se pide con el icono de ayuda del encabezado; no ocupa una línea fija. */
   subtitle,
   action,
   footer,
@@ -51,15 +53,19 @@ export function Card({
   const { tx } = useI18n();
   const Heading = `h${headingLevel}` as "h2" | "h3" | "h4";
   const label = typeof title === "string" ? tx(title) : title;
-  const sub = typeof subtitle === "string" ? tx(subtitle) : subtitle;
 
   return (
     <Tag id={id} className={cn("nf-card2", `nf-card2--pad-${padding}`, className)}>
       {(title || action) && (
         <div className="nf-card2__head">
-          <div className="nf-card2__head-text">
+          <div className="nf-card2__head-text nf-heading-row">
             {title && <Heading className="nf-card2__title">{label}</Heading>}
-            {subtitle && <p className="nf-card2__subtitle">{sub}</p>}
+            {/* El texto va sin traducir: `InfoTip` lo pasa por `tx` una sola
+                vez. Un subtítulo enriquecido (nodo) no cabe en un globo y se
+                queda a la vista. */}
+            {subtitle && (typeof subtitle === "string"
+              ? <InfoTip text={subtitle} label={typeof title === "string" ? title : undefined} />
+              : <span className="nf-card2__subtitle">{subtitle}</span>)}
           </div>
           {action && <div className="nf-card2__head-action">{action}</div>}
         </div>
@@ -96,11 +102,14 @@ export function SectionHeader({
           <Icon size={16} strokeWidth={1.9} />
         </span>
       )}
-      <div className="nf-section-head__text">
+      <div className="nf-section-head__text nf-heading-row">
         <Heading className="nf-section-head__title">{tx(title)}</Heading>
-        {/* La descripción es texto visible, no un tooltip: antes vivía tras un
-            icono de información que exigía hover o foco para leerse. */}
-        {description && <p className="nf-section-head__desc">{tx(description)}</p>}
+        {/* La descripción va tras el icono de ayuda. No es el tooltip de CSS
+            que se quitó en su día —aquel solo respondía al ratón y lo recortaba
+            el primer contenedor con overflow—: `InfoTip` es un botón real,
+            alcanzable con teclado y toque, y su texto está siempre enlazado con
+            `aria-describedby` aunque el globo esté cerrado. */}
+        {description && <InfoTip text={description} label={title} />}
       </div>
       {action && <div className="nf-section-head__action">{action}</div>}
     </header>

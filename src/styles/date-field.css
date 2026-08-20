@@ -1,0 +1,271 @@
+/* ============================================================================
+ * NormaFlow — campo de fecha
+ *
+ * Hoja de `DateField`, que sustituye a `<input type="date">`. El disparador
+ * reutiliza `.nf-app-input`: hereda alto, borde, radio y foco del resto de
+ * campos, así que en el formulario no se distingue de uno normal hasta que se
+ * abre. Aquí solo va lo que un `<input>` no trae — el calendario.
+ * ========================================================================== */
+
+.nf-datefield {
+  position: relative;
+  display: block;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.nf-datefield__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nf-datefield__trigger[aria-expanded="true"] {
+  border-color: var(--nf-focus-ring);
+}
+
+.nf-datefield__icon {
+  flex: none;
+  color: var(--nf-text-subtle);
+}
+
+.nf-datefield__value {
+  flex: 1;
+  min-width: 0;
+  color: var(--nf-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-datefield__placeholder {
+  flex: 1;
+  min-width: 0;
+  color: var(--nf-text-subtle);
+}
+
+/* El aspa se superpone al campo por la derecha. Solo aparece cuando hay fecha:
+   un botón de borrar sobre un campo vacío es un objetivo que no hace nada. */
+.nf-datefield__clear {
+  position: absolute;
+  top: 50%;
+  right: var(--nf-space-2);
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nf-radius-full);
+  background: transparent;
+  color: var(--nf-text-subtle);
+  cursor: pointer;
+}
+.nf-datefield__clear:hover {
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-primary);
+}
+.nf-datefield__clear:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+/* Sitio para el aspa: sin esto tapa la última cifra del año. */
+.nf-datefield:has(.nf-datefield__clear) .nf-datefield__trigger {
+  padding-right: calc(var(--nf-space-6) + 4px);
+}
+
+/* El campo que viaja en el formulario. Recortado, no oculto: `type="hidden"`
+   —y `readonly`— quedan fuera de la validación del navegador, y este campo
+   puede ser obligatorio. */
+.nf-datefield__native {
+  position: absolute;
+  left: var(--nf-space-3);
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nf-datefield__error {
+  display: block;
+  margin-top: var(--nf-space-1);
+  color: var(--nf-danger-text);
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+}
+
+/* ── Calendario ───────────────────────────────────────────────────────────── */
+
+.nf-datefield__panel {
+  position: fixed;
+  /* Misma capa que el panel de `Picker`: por encima del modal (5000) y del
+     aviso de error del formulario (5100). El token `--nf-z-popover` vale 700 y
+     el modal heredado se pinta en 5000, así que aquí no sirve. */
+  z-index: 5200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-3);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-l);
+  background: var(--nf-surface-raised);
+  box-shadow: var(--nf-elevation-3);
+  animation: nf-datefield-in var(--nf-duration-fast) var(--nf-ease-out);
+}
+.nf-datefield__panel:focus {
+  outline: none;
+}
+
+@keyframes nf-datefield-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+
+.nf-datefield__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-2);
+}
+
+.nf-datefield__month {
+  flex: 1;
+  text-align: center;
+  color: var(--nf-text-primary);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+}
+/* El nombre del mes llega en minúscula en español y portugués. Se levanta solo
+   la inicial: con `text-transform: capitalize` salía «Agosto De 2026», porque
+   esa regla capitaliza todas las palabras, preposición incluida. */
+.nf-datefield__month::first-letter {
+  text-transform: uppercase;
+}
+
+.nf-datefield__nav {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--nf-radius-s);
+  background: transparent;
+  color: var(--nf-text-secondary);
+  cursor: pointer;
+}
+.nf-datefield__nav:hover {
+  background: var(--nf-surface-hover);
+  border-color: var(--nf-border);
+  color: var(--nf-text-primary);
+}
+.nf-datefield__nav:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
+.nf-datefield__weekdays,
+.nf-datefield__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.nf-datefield__weekdays span {
+  padding: var(--nf-space-1) 0;
+  text-align: center;
+  color: var(--nf-text-subtle);
+  font-size: var(--nf-text-2xs);
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: var(--nf-tracking-wide);
+  text-transform: uppercase;
+}
+
+.nf-datefield__empty {
+  /* Ocupa su celda sin dibujar nada: el mes tiene que empezar en su día. */
+  display: block;
+}
+
+.nf-datefield__day {
+  display: grid;
+  place-items: center;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--nf-radius-s);
+  background: transparent;
+  color: var(--nf-text-primary);
+  font-family: inherit;
+  font-size: var(--nf-text-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--nf-duration-instant) var(--nf-ease-standard);
+}
+.nf-datefield__day:hover:not(:disabled) {
+  background: var(--nf-surface-hover);
+}
+.nf-datefield__day:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: -1px;
+}
+.nf-datefield__day:disabled {
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+
+/* Hoy se marca con el borde; el día elegido, con el relleno. Dos señales
+   distintas para que se distingan cuando coinciden. */
+.nf-datefield__day[data-today] {
+  border-color: var(--nf-primary-border);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-datefield__day[data-selected] {
+  background: var(--nf-primary);
+  border-color: var(--nf-primary);
+  color: var(--nf-on-primary);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-datefield__day[data-selected]:hover:not(:disabled) {
+  background: var(--nf-primary-hover);
+}
+
+.nf-datefield__foot {
+  display: flex;
+  gap: var(--nf-space-2);
+  padding-top: var(--nf-space-2);
+  border-top: 1px solid var(--nf-border-subtle);
+}
+
+.nf-datefield__action {
+  flex: 1;
+  min-height: 30px;
+  padding: 0 var(--nf-space-2);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  font-family: inherit;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  cursor: pointer;
+}
+.nf-datefield__action:hover:not(:disabled) {
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-primary);
+}
+.nf-datefield__action:disabled {
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+.nf-datefield__action:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}

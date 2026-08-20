@@ -16,6 +16,7 @@ import { useWorkspace } from "@/context/WorkspaceStore";
 import type { GapClauseState } from "@/lib/demo/seed-entities";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import type { ClauseStatus } from "@prisma/client";
+import Picker from "@/components/ui/Picker";
 
 type GapRow = (typeof DEMO_GAP)["iso9001"][number];
 type LiveGapRow = NonNullable<GapPayload["iso9001"]>[number];
@@ -550,7 +551,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
 
             <div>
               <label className="nf-modal-field-label" htmlFor="gap-status">Estado</label>
-              <select aria-label="Estado"
+              <Picker aria-label="Estado"
                 id="gap-status"
                 value={editStatus}
                 disabled={isPending}
@@ -561,7 +562,7 @@ export default function GapModule({ live }: { live?: GapPayload | null }) {
                 {CLAUSE_STATUS_OPTIONS.map(o => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
-              </select>
+              </Picker>
             </div>
 
             <div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Ban, CircleCheck, Send, Trash2 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
@@ -13,6 +14,8 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { Field as UiField } from "@/components/ui/Field";
+import Picker from "@/components/ui/Picker";
+import { RowAction } from "@/components/ui/RowActions";
 
 type Role = OrgMemberMockRow["role"];
 
@@ -101,14 +104,14 @@ export default function MembersClient() {
       label: "Rol",
       render: (_, r) => (
         canEdit && !r.isSelf ? (
-          <select aria-label="Rol"
+          <Picker aria-label="Rol"
             value={r.role}
             disabled={isPending}
             onChange={(e) => changeRole(r, e.target.value as Role)}
             style={{ padding: "6px 8px", fontSize: 12, border: "1px solid var(--nf-input-border)", borderRadius: 6, background: "var(--nf-app-surface-1)" }}
           >
             {ASSIGNABLE_ROLES.map((rl) => <option key={rl} value={rl}>{ROLE_LABELS[rl]}</option>)}
-          </select>
+          </Picker>
         ) : (
           <Badge status="ACTIVE" label={ROLE_LABELS[r.role]} />
         )
@@ -122,28 +125,34 @@ export default function MembersClient() {
       label: "",
       render: (_, r) =>
         r.isSelf ? null : (
-          <div className="flex justify-end gap-2" style={{ flexWrap: "wrap" }}>
+          <div className="nf-row-actions">
             {admin.resendMemberInvite && (
-              <button type="button" disabled={isPending} onClick={() => startTransition(async () => {
+              <RowAction icon={Send} label="Reenviar" disabled={isPending} onClick={() => startTransition(async () => {
                 try {
                   await admin.resendMemberInvite?.(r.membershipId);
                   setSuccess("Invitación reenviada.");
                 } catch (err: unknown) {
                   setError(err instanceof Error ? err.message : "No se pudo reenviar la invitación.");
                 }
-              })} className="nf-app-btn-ghost">Reenviar</button>
+              })} />
             )}
             {admin.setMemberActive && (
-              <button type="button" disabled={isPending} onClick={() => startTransition(async () => {
-                try {
-                  await admin.setMemberActive?.(r.membershipId, r.active === false);
-                  setSuccess(r.active === false ? "Usuario activado." : "Usuario desactivado.");
-                } catch (err: unknown) {
-                  setError(err instanceof Error ? err.message : "No se pudo actualizar el estado.");
-                }
-              })} className={r.active === false ? "nf-app-btn-primary" : "nf-app-btn-ghost"}>{r.active === false ? "Activar" : "Desactivar"}</button>
+              <RowAction
+                icon={r.active === false ? CircleCheck : Ban}
+                label={r.active === false ? "Activar" : "Desactivar"}
+                tone={r.active === false ? "success" : "danger"}
+                disabled={isPending}
+                onClick={() => startTransition(async () => {
+                  try {
+                    await admin.setMemberActive?.(r.membershipId, r.active === false);
+                    setSuccess(r.active === false ? "Usuario activado." : "Usuario desactivado.");
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : "No se pudo actualizar el estado.");
+                  }
+                })}
+              />
             )}
-            <button type="button" onClick={() => setConfirmRemove(r)} className="nf-app-btn-danger">Quitar</button>
+            <RowAction icon={Trash2} label="Quitar" tone="danger" onClick={() => setConfirmRemove(r)} />
           </div>
         ),
     });
@@ -165,7 +174,7 @@ export default function MembersClient() {
         setSuccess(
           isDemoMode
             ? "Invitación simulada: la persona se añadió al listado (sin correo real)."
-            : "Invitación enviada. La persona recibirá un correo de Supabase para establecer su contraseña."
+            : "Invitación enviada. La persona recibirá un correo para establecer su contraseña."
         );
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "No se pudo invitar.");
@@ -178,7 +187,7 @@ export default function MembersClient() {
       <SectionTitle
         title="Usuarios y roles"
         sub="Personas con acceso a esta organización en NormaFlow."
-        action={canEdit ? (atLimit ? "Límite alcanzado" : "+ Invitar persona") : undefined}
+        action={canEdit ? (atLimit ? "Límite alcanzado" : "Invitar persona") : undefined}
         onAction={canEdit && !atLimit ? () => { setInviting(true); setError(""); setSuccess(""); } : undefined}
       />
 
@@ -256,14 +265,14 @@ export default function MembersClient() {
             <input aria-label="maria@empresa.com" name="email" type="email" required className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="maria@empresa.com" />
           </Field>
           <Field label="Rol">
-            <select aria-label="Rol" name="role" defaultValue="CONTRIBUTOR" className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Rol" name="role" defaultValue="CONTRIBUTOR" className={NF_INPUT_CLASS} style={modalInputStyle}>
               {ASSIGNABLE_ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
-            </select>
+            </Picker>
           </Field>
           <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-4)" }}>
             {isDemoMode
               ? "Modo demo: se añade al listado sin enviar correo real."
-              : `Se enviará un correo de Supabase para establecer contraseña y acceder a ${orgName}.`}
+              : `Se enviará un correo de un correo para establecer contraseña y acceder a ${orgName}.`}
           </p>
           <div className="nf-modal-actions">
             <button type="button" onClick={() => setInviting(false)} disabled={isPending} className="nf-app-btn-ghost">Cancelar</button>

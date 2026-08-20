@@ -3,13 +3,17 @@
 import { useMemo, useState, useTransition } from "react";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import PageHeader from "@/components/layout/PageHeader";
-import { Library, ShieldCheck, GitCompareArrows, Grid3x3, LayoutDashboard, Check, Download , Link2} from "lucide-react";
+import { Check, Download , Link2} from "lucide-react";
 import type { StandardsEnginePayload } from "@/lib/standards-engine";
 import { activateStandard } from "@/lib/actions/standards";
 import { installStandardPack } from "@/lib/actions/standard-packs";
 import { CoverageDialog } from "@/components/standards/CoverageDialog";
 import { CrosswalkMatrix } from "@/components/standards/CrosswalkMatrix";
+import { useModuleSection } from "@/hooks/useModuleSection";
+import { formatDate } from "@/lib/format/datetime";
+import Picker from "@/components/ui/Picker";
 
+/** Las etiquetas de estas secciones viven en `SECTIONS["/app/standards"]`. */
 type Tab = "panel" | "catalog" | "active" | "matrix" | "correspondence";
 
 /**
@@ -38,7 +42,8 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRa
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99 });
 
 export default function StandardsEngineClient({ initial, demo = false }: { initial: StandardsEnginePayload; demo?: boolean }) {
-  const [tab, setTab] = useState<Tab>("panel");
+  // La navegación entre secciones es del sidebar: aquí solo se lee `?section=`.
+  const [tab] = useModuleSection<Tab>("panel");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [matrixEdition, setMatrixEdition] = useState<string>(initial.matrix[0]?.editionId ?? "");
@@ -46,13 +51,6 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
   const [levelFilter, setLevelFilter] = useState<number | 0>(0);
   const [onlyGaps, setOnlyGaps] = useState(false);
 
-  const tabs: { id: Tab; label: string; Icon: typeof Library }[] = [
-    { id: "panel", label: "Panel integrado", Icon: LayoutDashboard },
-    { id: "catalog", label: "Catálogo", Icon: Library },
-    { id: "active", label: "Normas activas", Icon: ShieldCheck },
-    { id: "matrix", label: "Matriz de requisitos", Icon: Grid3x3 },
-    { id: "correspondence", label: "Correspondencias", Icon: GitCompareArrows },
-  ];
 
   function run(fn: () => Promise<unknown>) {
     setError(null);
@@ -78,12 +76,6 @@ export default function StandardsEngineClient({ initial, demo = false }: { initi
       />
 
       {error && <div role="alert" style={{ ...card, borderColor: "#f2b8b8", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", marginBottom: 16 }}>{error}</div>}
-
-      <nav className="nf-iso-tabs" role="tablist" aria-label="Secciones del motor de normas" style={{ marginBottom: 20 }}>
-        {tabs.map(({ id, label, Icon }) => (
-          <button key={id} type="button" role="tab" className="nf-iso-tab" aria-selected={tab === id} onClick={() => setTab(id)}><Icon size={16} /> {label}</button>
-        ))}
-      </nav>
 
       {tab === "panel" && <PanelTab payload={initial} />}
       {tab === "catalog" && <CatalogTab payload={initial} pending={pending} demo={demo} onActivate={(familyCode, editionCode) => run(() => activateStandard({ familyCode, editionCode }))} onInstall={(code) => run(() => installStandardPack(code))} />}
@@ -194,7 +186,7 @@ const activeColumns: DataTableColumn<ActiveRow>[] = [
   { id: "gap", header: "GAP", minWidth: 90, numeric: true, align: "end", sortValue: (a) => a.score ?? null,
     cell: (a) => (a.score == null ? "—" : `${Math.round(a.score)}%`) },
   { id: "audit", header: "Próx. auditoría", minWidth: 140, numeric: true, sortValue: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).getTime() : null),
-    cell: (a) => (a.nextAuditDate ? new Date(a.nextAuditDate).toLocaleDateString() : "—") },
+    cell: (a) => (a.nextAuditDate ? formatDate(a.nextAuditDate) : "—") },
 ];
 
 function requirementColumns(onCoverage: (row: RequirementRow) => void): DataTableColumn<RequirementRow>[] { return [
@@ -255,12 +247,12 @@ function MatrixTab({ payload, currentMatrix, rows, matrixEdition, setMatrixEditi
   return (
     <div style={{ display: "grid", gap: 14 }}>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
-        <select aria-label="Edición de la matriz" value={matrixEdition} onChange={(e) => setMatrixEdition(e.target.value)} className="nf-app-input" style={{ maxWidth: 260 }}>
+        <Picker aria-label="Edición de la matriz" value={matrixEdition} onChange={(e) => setMatrixEdition(e.target.value)} className="nf-app-input" style={{ maxWidth: 260 }}>
           {payload.matrix.map((m) => <option key={m.editionId} value={m.editionId}>{m.label}</option>)}
-        </select>
-        <select aria-label="Filtrar por nivel" value={levelFilter} onChange={(e) => setLevelFilter(Number(e.target.value))} className="nf-app-input" style={{ maxWidth: 160 }}>
+        </Picker>
+        <Picker aria-label="Filtrar por nivel" value={levelFilter} onChange={(e) => setLevelFilter(Number(e.target.value))} className="nf-app-input" style={{ maxWidth: 160 }}>
           <option value={0}>Todos los niveles</option><option value={1}>Nivel 1 (capítulo)</option><option value={2}>Nivel 2</option><option value={3}>Nivel 3</option>
-        </select>
+        </Picker>
         <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2)" }}>
           <input type="checkbox" checked={onlyGaps} onChange={(e) => setOnlyGaps(e.target.checked)} /> Solo brechas
         </label>

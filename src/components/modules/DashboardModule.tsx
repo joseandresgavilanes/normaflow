@@ -20,11 +20,13 @@ import {
 import Badge from "@/components/ui/Badge";
 import AttentionSection, { type AttentionItem } from "@/components/dashboard/AttentionSection";
 import ComplianceByStandard from "@/components/dashboard/ComplianceByStandard";
+import StackedBar from "@/components/charts/StackedBar";
 import PageHeader from "@/components/layout/PageHeader";
 import { useI18n } from "@/context/I18nProvider";
 import ProgressBar from "@/components/ui/ProgressBar";
 import type { DashboardPayload } from "@/lib/server-queries";
 import { useWorkspace } from "@/context/WorkspaceStore";
+import { formatDate } from "@/lib/format/datetime";
 
 function avgGap(rows: { score: number }[]) {
   if (!rows.length) return 0;
@@ -56,6 +58,11 @@ export default function DashboardModule({
 
   const overdue = isLive ? live.overdueCritical : overdueWs;
   const criticalRisks = isLive ? live.criticalRisks : criticalWs;
+  const riskLevels = isLive ? live.riskLevels : {
+    critical: criticalWs,
+    high: state.risks.filter(r => r.score >= 8 && r.score < 15).length,
+    moderate: state.risks.filter(r => r.score < 8).length,
+  };
   const docsPending = isLive ? live.documentsInReview : docsPendingWs;
   const openNcs = isLive ? live.openNcs : openNcsWs;
   const globalPct = isLive ? live.globalPct : globalWs;
@@ -77,10 +84,14 @@ export default function DashboardModule({
   // No existe serie histórica de cumplimiento en ninguna parte del sistema,
   // así que el panel compara el estado ACTUAL por norma en lugar de fingir una
   // tendencia.
-  const standards = [
-    { code: "ISO 9001", name: "ISO 9001:2015 · Calidad", pct: iso9001Pct ?? null },
-    { code: "ISO 27001", name: "ISO 27001:2022 · Seguridad de la información", pct: iso27001Pct ?? null },
-  ];
+  /* En live salen todas las normas activas de la organización; el espacio demo
+     no tiene motor de normas y se queda con las dos que sabe calcular. */
+  const standards = isLive && live.standardScores.length > 0
+    ? live.standardScores
+    : [
+      { code: "ISO 9001", name: "ISO 9001:2015 · Calidad", pct: iso9001Pct ?? null },
+      { code: "ISO 27001", name: "ISO 27001:2022 · Seguridad de la información", pct: iso27001Pct ?? null },
+    ];
 
   const trainingOverdue = isLive
     ? live.trainingOverdue
@@ -167,6 +178,33 @@ export default function DashboardModule({
         </div>
       </div>
 
+      {/* Los dos repartos que la fila de avisos no puede dar: esa fila cuenta
+          lo que está mal (críticos, vencidos) y aquí se ve sobre qué total.
+          Nada de series inventadas: el sistema no guarda histórico de estas
+          cifras, así que no hay tendencia que dibujar. */}
+      <div className="nf-chart-grid-2">
+        <StackedBar
+          title="Riesgos por nivel"
+          subtitle="Reparto del inventario según probabilidad × impacto."
+          segments={[
+            { label: "Crítico (≥15)", value: riskLevels.critical, color: "var(--nf-series-1)" },
+            { label: "Alto (8–14)", value: riskLevels.high, color: "var(--nf-series-2)" },
+            { label: "Moderado (<8)", value: riskLevels.moderate, color: "var(--nf-series-3)" },
+          ]}
+          empty="No hay riesgos evaluados todavía."
+        />
+        <StackedBar
+          title="Formación del equipo"
+          subtitle="Estado de las asignaciones de capacitación."
+          segments={[
+            { label: "Vencida", value: trainingOverdue, color: "var(--nf-series-1)" },
+            { label: "Pendiente", value: Math.max(trainTotal - trainDone - trainingOverdue, 0), color: "var(--nf-series-2)" },
+            { label: "Al día", value: trainDone, color: "var(--nf-series-3)" },
+          ]}
+          empty="Sin asignaciones de formación."
+        />
+      </div>
+
       <div className="nf-dash-table-wrap">
         <div className="nf-dash-table-head">
           <h3 className="nf-dash-table-title">Actividad reciente</h3>
@@ -193,7 +231,7 @@ export default function DashboardModule({
                 return (
                   <tr key={i}>
                     <td style={{ color: "var(--nf-ink-3)", fontSize: 13 }}>
-                      {new Date(a.time).toLocaleDateString("es-ES", { month: "short", day: "numeric", year: "numeric" })}
+                      {formatDate(a.time)}
                     </td>
                     <td>
                       <div style={{ fontWeight: 500 }}>{a.user.split(" ")[0]} · {a.action}</div>

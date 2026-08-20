@@ -18,9 +18,15 @@ const PALETA = [
   { fondo: "var(--nf-danger-subtle)", texto: "var(--nf-danger-text)", borde: "var(--nf-danger-border)" },
 ];
 
-interface AvatarProps { name: string; size?: number; className?: string; }
+interface AvatarProps {
+  name: string;
+  size?: number;
+  className?: string;
+  /** URL firmada de la foto. Sin ella —o si falla la carga— se pintan las iniciales. */
+  src?: string | null;
+}
 
-export default function Avatar({ name, size = 32, className }: AvatarProps) {
+export default function Avatar({ name, size = 32, className, src }: AvatarProps) {
   const initials = name?.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() || "?";
   const tono = PALETA[(name?.charCodeAt(0) ?? 0) % PALETA.length];
   return (
@@ -34,7 +40,18 @@ export default function Avatar({ name, size = 32, className }: AvatarProps) {
         fontSize: size * 0.35, fontWeight: 600, flexShrink: 0, userSelect: "none",
       }}
     >
-      {initials}
+      {/* La URL firmada caduca; si expira o falla, la imagen se retira y quedan
+          las iniciales debajo en vez de un icono de imagen rota. */}
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          width={size}
+          height={size}
+          style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+          onError={(event) => { event.currentTarget.style.display = "none"; }}
+        />
+      ) : initials}
     </div>
   );
 }

@@ -2,10 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  LayoutDashboard, Cross, FileStack, PenTool, ShieldAlert, Truck,
-  FlaskConical, Boxes, Siren, Eye, Undo2, Scale, ArrowRight, Check, Plus, X, Settings,
-} from "lucide-react";
+import { ArrowRight, Boxes, Check, ChevronRight, Cross, Eye, FileStack, FlaskConical, LayoutDashboard, PenTool, Pencil, Plus, Scale, Settings, ShieldAlert, Siren, Truck, Undo2, X } from "lucide-react";
 import type { MedicalDevicesPayload } from "@/lib/medical-devices/queries";
 import {
   transitionComplaint,
@@ -44,6 +41,9 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
+import Meter from "@/components/charts/Meter";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 import type {
   MdComplaintStatus, MdRecallStatus, MdRecordStatus,
   MdAdverseEventStatus, MdFsaStatus, MdPmsStatus,
@@ -70,8 +70,6 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRa
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontWeight: 600, fontSize: 12, cursor: "pointer", marginRight: 4 };
-const dangerBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
@@ -80,7 +78,7 @@ type Runner = (action: () => Promise<unknown>) => void;
 type Devices = MedicalDevicesPayload["devices"];
 type MedicalDeviceEditorKind = "family" | "device" | "dmr" | "dhf" | "input" | "output" | "review" | "verification" | "validation" | "transfer" | "risk" | "supplier" | "qualification" | "processValidation" | "sterilizationValidation" | "batch" | "trace" | "complaint" | "adverseEvent" | "pms" | "fieldAction" | "recall" | "requirement" | "submission";
 
-/** Modal "+ Nuevo X" form shell shared by every creation form in this module. */
+/** Modal "Nuevo X" form shell shared by every creation form in this module. */
 function NewFormToggle({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [closeRequested, setCloseRequested] = useState(false);
@@ -171,7 +169,19 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de dispositivos médicos</strong><span>Accesos directos a calidad, diseño y vigilancia.</span></div><IsoQuickCreate modulePath="/app/medical-devices" items={[{ label: "Nueva familia", description: "Crear familia de dispositivos", section: "devices", Icon: Cross }, { label: "Nuevo dispositivo", description: "Registrar dispositivo", section: "devices", Icon: Cross }, { label: "Nuevo expediente maestro (DMR)", description: "Crear expediente maestro", section: "dmr", Icon: FileStack }, { label: "Nuevo DHF", description: "Abrir expediente de diseño", section: "design", Icon: PenTool }, { label: "Nuevo archivo de riesgos", description: "Registrar riesgo de dispositivo", section: "risks", Icon: ShieldAlert }, { label: "Nuevo proveedor crítico", description: "Calificar proveedor", section: "suppliers", Icon: Truck }, { label: "Nueva validación", description: "Registrar validación", section: "validations", Icon: FlaskConical }, { label: "Nuevo lote", description: "Registrar lote", section: "batches", Icon: Boxes }, { label: "Nueva queja", description: "Registrar queja", section: "vigilance", Icon: Siren }, { label: "Nuevo requisito regulatorio", description: "Agregar requisito", section: "regulatory", Icon: Scale }]} /></div>
+          <div className="nf-chart-grid-2">
+            <Meter
+              title="Expedientes maestros (DMR)"
+              subtitle="Cuántos dispositivos del inventario tienen el DMR aprobado."
+              label="con DMR aprobado"
+              restLabel="Sin aprobar"
+              value={s.dmrsApproved}
+              total={s.devices}
+              empty="Aún no hay dispositivos registrados."
+              action={{ label: "Abrir dispositivos", href: "/app/medical-devices?section=devices" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de dispositivos médicos</strong></div><IsoQuickCreate modulePath="/app/medical-devices" items={[{ label: "Nueva familia", description: "Crear familia de dispositivos", section: "devices", Icon: Cross }, { label: "Nuevo dispositivo", description: "Registrar dispositivo", section: "devices", Icon: Cross }, { label: "Nuevo expediente maestro (DMR)", description: "Crear expediente maestro", section: "dmr", Icon: FileStack }, { label: "Nuevo DHF", description: "Abrir expediente de diseño", section: "design", Icon: PenTool }, { label: "Nuevo archivo de riesgos", description: "Registrar riesgo de dispositivo", section: "risks", Icon: ShieldAlert }, { label: "Nuevo proveedor crítico", description: "Calificar proveedor", section: "suppliers", Icon: Truck }, { label: "Nueva validación", description: "Registrar validación", section: "validations", Icon: FlaskConical }, { label: "Nuevo lote", description: "Registrar lote", section: "batches", Icon: Boxes }, { label: "Nueva queja", description: "Registrar queja", section: "vigilance", Icon: Siren }, { label: "Nuevo requisito regulatorio", description: "Agregar requisito", section: "regulatory", Icon: Scale }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><FileStack size={16} aria-hidden />Expediente y diseño (§4.2, §7.3)</h3>
@@ -258,7 +268,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                   <td style={td}>
                     {live && can.update && <EditButton onClick={() => setEditor({ kind: "dmr", value: r as any })} />}
                     {live && next && can.approve && (
-                      <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionDeviceMasterRecord(r.id, next))}>
+                      <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionDeviceMasterRecord(r.id, next))}>
                         <ArrowRight size={12} /> {next} <Check size={12} />
                       </button>
                     )}
@@ -532,12 +542,12 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                     <td style={td}>
                       {live && can.sensitiveUpdate && <EditButton onClick={() => setEditor({ kind: "complaint", value: c as any })} />}
                       {live && next && can.sensitiveUpdate && (
-                        <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionComplaint(c.id, next))}>
+                        <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionComplaint(c.id, next))}>
                           <ArrowRight size={12} /> {next}
                         </button>
                       )}
                       {live && purgeable && can.sensitiveDelete && (
-                        <button disabled={pending} style={dangerBtn} onClick={() => setPurgeTarget({ id: c.id, kind: "complaint", label: c.code })}>
+                        <button disabled={pending} className="nf-row-action" data-tone="danger" onClick={() => setPurgeTarget({ id: c.id, kind: "complaint", label: c.code })} data-nf-no-action-icon><ChevronRight size={14} strokeWidth={2} aria-hidden />
                           <X size={12} /> Purgar
                         </button>
                       )}
@@ -562,12 +572,12 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                     <td style={td}>
                       {live && can.sensitiveUpdate && <EditButton onClick={() => setEditor({ kind: "adverseEvent", value: e as any })} />}
                       {live && next && can.sensitiveUpdate && (
-                        <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionAdverseEvent(e.id, next))}>
+                        <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionAdverseEvent(e.id, next))}>
                           <ArrowRight size={12} /> {next}
                         </button>
                       )}
                       {live && purgeable && can.sensitiveDelete && (
-                        <button disabled={pending} style={dangerBtn} onClick={() => setPurgeTarget({ id: e.id, kind: "adverseEvent", label: e.code })}>
+                        <button disabled={pending} className="nf-row-action" data-tone="danger" onClick={() => setPurgeTarget({ id: e.id, kind: "adverseEvent", label: e.code })} data-nf-no-action-icon><ChevronRight size={14} strokeWidth={2} aria-hidden />
                           <X size={12} /> Purgar
                         </button>
                       )}
@@ -588,7 +598,7 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                     <td style={td}>
                       {live && can.sensitiveUpdate && <EditButton onClick={() => setEditor({ kind: "pms", value: p as any })} />}
                       {live && next && can.sensitiveUpdate && (
-                        <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionPostMarketSurveillance(p.id, next))}>
+                        <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionPostMarketSurveillance(p.id, next))}>
                           <ArrowRight size={12} /> {next}
                         </button>
                       )}
@@ -615,12 +625,12 @@ export default function MedicalDevicesClient({ initial, demo = false }: { initia
                     <td style={td}>
                       {live && can.sensitiveUpdate && <EditButton onClick={() => setEditor({ kind: isRecall ? "recall" : "fieldAction", value: row as any })} />}
                       {live && isRecall && nextRecall && can.sensitiveUpdate && (
-                        <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionProductRecall(row.id, nextRecall))}>
+                        <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionProductRecall(row.id, nextRecall))}>
                           <Undo2 size={12} /> {nextRecall}
                         </button>
                       )}
                       {live && !isRecall && nextFsa && can.sensitiveUpdate && (
-                        <button disabled={pending} style={miniBtn} onClick={() => run(() => transitionFieldSafetyAction(row.id, nextFsa))}>
+                        <button disabled={pending} className="nf-row-action" onClick={() => run(() => transitionFieldSafetyAction(row.id, nextFsa))}>
                           <ArrowRight size={12} /> {nextFsa}
                         </button>
                       )}
@@ -703,12 +713,12 @@ function Table({ headers, children }: { headers: string[]; children: React.React
 }
 
 function EditButton({ onClick }: { onClick: () => void }) {
-  return <button type="button" style={miniBtn} onClick={onClick}>Editar</button>;
+  return <button type="button" className="nf-row-action" onClick={onClick} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>;
 }
 
 function RecordTransitionButton({ row, pending, approve, onTransition }: { row: any; pending: boolean; approve: boolean; onTransition: (to: MdRecordStatus) => void }) {
   const next = nextRecordStatuses(row.status as MdRecordStatus)[0];
-  return next && (next !== "APPROVED" || approve) ? <button type="button" disabled={pending} style={miniBtn} onClick={() => onTransition(next)}><ArrowRight size={12} /> {next}</button> : null;
+  return next && (next !== "APPROVED" || approve) ? <button type="button" disabled={pending} className="nf-row-action" onClick={() => onTransition(next)}><ArrowRight size={12} /> {next}</button> : null;
 }
 
 type MdEditorField = { key: string; label: string; type?: "text" | "textarea" | "number" | "date" | "select" | "checkbox"; options?: string[]; span?: number };
@@ -776,12 +786,12 @@ function MedicalDeviceRecordEditor({ kind, value, families, devices, dhfs, suppl
       {fieldsFor.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "var(--nf-text-secondary)" }}>
         <span>{field.label}</span>
         {field.type === "textarea" ? <textarea style={{ ...input, minHeight: 70 }} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />
-          : field.type === "select" ? <select style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{dynamicOptions(field.key).length ? dynamicOptions(field.key).map((item: any) => <option key={item.id} value={item.id}>{labelFor(field.key, item)}</option>) : (field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</select>
+          : field.type === "select" ? <Picker aria-label={field.label} style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{dynamicOptions(field.key).length ? dynamicOptions(field.key).map((item: any) => <option key={item.id} value={item.id}>{labelFor(field.key, item)}</option>) : (field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</Picker>
           : field.type === "checkbox" ? <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />
           : <input style={input} type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />}
       </label>)}
     </div>
-    <div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" style={{ ...miniBtn, background: "var(--nf-surface)" }} onClick={onCancel}>Cancelar</button><button type="button" disabled={pending || !valid} style={primaryBtn} onClick={() => onSave(payload)}>Guardar cambios</button></div>
+    <div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" className="nf-row-action" onClick={onCancel} data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden />Cancelar</button><button type="button" disabled={pending || !valid} style={primaryBtn} onClick={() => onSave(payload)}>Guardar cambios</button></div>
   </div>;
 }
 
@@ -819,7 +829,7 @@ function NewDeviceForm({ families, pending, run, onDone }: { families: MedicalDe
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del dispositivo" style={input} placeholder="Nombre del dispositivo" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Familia" style={input} value={f.familyId} onChange={(e) => set("familyId", e.target.value)}><option value="">Familia…</option>{families.map((fam) => <option key={fam.id} value={fam.id}>{fam.code} — {fam.name}</option>)}</select>
+        <Picker aria-label="Familia" style={input} value={f.familyId} onChange={(e) => set("familyId", e.target.value)}><option value="">Familia…</option>{families.map((fam) => <option key={fam.id} value={fam.id}>{fam.code} — {fam.name}</option>)}</Picker>
         <input aria-label="Clasificación (p. ej. IIa)" style={input} placeholder="Clasificación (p. ej. IIa)" value={f.classification} onChange={(e) => set("classification", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -838,7 +848,7 @@ function NewDmrForm({ devices, pending, run, onDone }: { devices: Devices; pendi
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 60px", gap: 8 }}>
-        <select aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</select>
+        <Picker aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</Picker>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <input aria-label="Ver." style={input} placeholder="Ver." value={f.version} onChange={(e) => set("version", e.target.value)} />
       </div>
@@ -856,7 +866,7 @@ function NewDhfForm({ devices, pending, run, onDone }: { devices: Devices; pendi
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</select>
+        <Picker aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</Picker>
         <input aria-label="Título del DHF" style={input} placeholder="Título del DHF" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <button disabled={pending || !f.deviceId || !f.title} style={primaryBtn} onClick={() => { run(() => createDesignHistoryFile({ deviceId: f.deviceId, title: f.title })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -869,7 +879,7 @@ function NewDesignInputForm({ dhfs, pending, run, onDone }: { dhfs: MedicalDevic
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+      <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
       <input aria-label="Requisito" style={input} placeholder="Requisito" value={f.requirement} onChange={(e) => set("requirement", e.target.value)} />
       <input aria-label="Fuente" style={input} placeholder="Fuente" value={f.source} onChange={(e) => set("source", e.target.value)} />
       <button disabled={pending || !f.dhfId || !f.requirement} style={primaryBtn} onClick={() => { run(() => createDesignInput({ dhfId: f.dhfId, requirement: f.requirement, source: f.source || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -882,7 +892,7 @@ function NewDesignOutputForm({ dhfs, pending, run, onDone }: { dhfs: MedicalDevi
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+      <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
       <input aria-label="Descripción del output" style={input} placeholder="Descripción del output" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <input aria-label="Códigos de inputs enlazados (coma)" style={input} placeholder="Códigos de inputs enlazados (coma)" value={f.linkedInputCodes} onChange={(e) => set("linkedInputCodes", e.target.value)} />
       <button disabled={pending || !f.dhfId || !f.description} style={primaryBtn} onClick={() => { run(() => createDesignOutput({ dhfId: f.dhfId, description: f.description, linkedInputCodes: f.linkedInputCodes ? f.linkedInputCodes.split(",").map((s) => s.trim()).filter(Boolean) : [] })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -896,11 +906,11 @@ function NewDesignReviewForm({ dhfs, pending, run, onDone }: { dhfs: MedicalDevi
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Resultado" style={input} value={f.outcome} onChange={(e) => set("outcome", e.target.value)}>
+        <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Resultado" style={input} value={f.outcome} onChange={(e) => set("outcome", e.target.value)}>
           <option value="PENDING">Pendiente</option><option value="APPROVED">Aprobada</option>
           <option value="APPROVED_WITH_ACTIONS">Aprobada con acciones</option><option value="REJECTED">Rechazada</option>
-        </select>
+        </Picker>
       </div>
       <input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       <button disabled={pending || !f.dhfId} style={primaryBtn} onClick={() => { run(() => createDesignReview({ dhfId: f.dhfId, outcome: f.outcome, findings: f.findings || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -914,8 +924,8 @@ function NewDesignVerificationForm({ dhfs, pending, run, onDone }: { dhfs: Medic
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></select>
+        <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></Picker>
       </div>
       <input aria-label="Método" style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
       <input aria-label="Criterio de aceptación" style={input} placeholder="Criterio de aceptación" value={f.acceptanceCriteria} onChange={(e) => set("acceptanceCriteria", e.target.value)} />
@@ -930,8 +940,8 @@ function NewDesignValidationForm({ dhfs, pending, run, onDone }: { dhfs: Medical
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></select>
+        <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></Picker>
       </div>
       <input aria-label="Método" style={input} placeholder="Método" value={f.method} onChange={(e) => set("method", e.target.value)} />
       <input aria-label="Referencia de necesidad de usuario" style={input} placeholder="Referencia de necesidad de usuario" value={f.userNeedsRef} onChange={(e) => set("userNeedsRef", e.target.value)} />
@@ -946,7 +956,7 @@ function NewDesignTransferForm({ dhfs, pending, run, onDone }: { dhfs: MedicalDe
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="DHF" style={input} value={f.dhfId} onChange={(e) => set("dhfId", e.target.value)}><option value="">DHF…</option>{dhfs.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Sede receptora" style={input} placeholder="Sede receptora" value={f.receivingSite} onChange={(e) => set("receivingSite", e.target.value)} />
       </div>
       <input aria-label="Resumen de checklist" style={input} placeholder="Resumen de checklist" value={f.checklistSummary} onChange={(e) => set("checklistSummary", e.target.value)} />
@@ -963,7 +973,7 @@ function NewRiskFileForm({ devices, pending, run, onDone }: { devices: Devices; 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</select>
+        <Picker aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code} — {d.name}</option>)}</Picker>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <input aria-label="Metodología (p. ej. ISO 14971 configurable)" style={input} placeholder="Metodología (p. ej. ISO 14971 configurable)" value={f.methodology} onChange={(e) => set("methodology", e.target.value)} />
@@ -980,7 +990,7 @@ function NewCriticalSupplierForm({ pending, run, onDone }: { pending: boolean; r
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}><option value="LOW">Baja</option><option value="MEDIUM">Media</option><option value="HIGH">Alta</option><option value="CRITICAL">Crítica</option></select>
+        <Picker aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}><option value="LOW">Baja</option><option value="MEDIUM">Media</option><option value="HIGH">Alta</option><option value="CRITICAL">Crítica</option></Picker>
       </div>
       <input aria-label="Tipo de servicio / componente" style={input} placeholder="Tipo de servicio / componente" value={f.serviceType} onChange={(e) => set("serviceType", e.target.value)} />
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createCriticalSupplier({ name: f.name, serviceType: f.serviceType || undefined, criticality: f.criticality })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -994,9 +1004,9 @@ function NewQualificationForm({ suppliers, pending, run, onDone }: { suppliers: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Proveedor" style={input} value={f.criticalSupplierId} onChange={(e) => set("criticalSupplierId", e.target.value)}><option value="">Proveedor…</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</select>
-        <select aria-label="Estado" style={input} value={f.status} onChange={(e) => set("status", e.target.value)}><option value="PENDING">Pendiente</option><option value="QUALIFIED">Cualificado</option><option value="CONDITIONAL">Condicional</option><option value="DISQUALIFIED">Descalificado</option><option value="EXPIRED">Vencido</option></select>
-        <input aria-label="Próxima revisión" style={input} type="date" value={f.nextReviewAt} onChange={(e) => set("nextReviewAt", e.target.value)} />
+        <Picker aria-label="Proveedor" style={input} value={f.criticalSupplierId} onChange={(e) => set("criticalSupplierId", e.target.value)}><option value="">Proveedor…</option>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}</Picker>
+        <Picker aria-label="Estado" style={input} value={f.status} onChange={(e) => set("status", e.target.value)}><option value="PENDING">Pendiente</option><option value="QUALIFIED">Cualificado</option><option value="CONDITIONAL">Condicional</option><option value="DISQUALIFIED">Descalificado</option><option value="EXPIRED">Vencido</option></Picker>
+        <DateField aria-label="Próxima revisión" style={input} value={f.nextReviewAt} onChange={(e) => set("nextReviewAt", e.target.value)} />
       </div>
       <input aria-label="Alcance" style={input} placeholder="Alcance" value={f.scope} onChange={(e) => set("scope", e.target.value)} />
       <button disabled={pending || !f.criticalSupplierId} style={primaryBtn} onClick={() => { run(() => createSupplierQualification({ criticalSupplierId: f.criticalSupplierId, scope: f.scope || undefined, status: f.status, nextReviewAt: f.nextReviewAt || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1011,8 +1021,8 @@ function NewProcessValidationForm({ devices, pending, run, onDone }: { devices: 
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></Picker>
       </div>
       <input aria-label="Referencia de protocolo (IQ/OQ/PQ)" style={input} placeholder="Referencia de protocolo (IQ/OQ/PQ)" value={f.protocolRef} onChange={(e) => set("protocolRef", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createProcessValidation({ title: f.title, deviceId: f.deviceId || undefined, protocolRef: f.protocolRef || undefined, result: f.result })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1027,8 +1037,8 @@ function NewSterilizationValidationForm({ devices, pending, run, onDone }: { dev
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Método de esterilización" style={input} placeholder="Método de esterilización" value={f.method} onChange={(e) => set("method", e.target.value)} />
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Resultado" style={input} value={f.result} onChange={(e) => set("result", e.target.value)}><option value="PENDING">Pendiente</option><option value="PASS">Pasa</option><option value="FAIL">Falla</option><option value="CONDITIONAL">Condicional</option></Picker>
       </div>
       <input aria-label="Nivel de garantía de esterilidad (SAL)" style={input} placeholder="Nivel de garantía de esterilidad (SAL)" value={f.sterilityAssuranceLevel} onChange={(e) => set("sterilityAssuranceLevel", e.target.value)} />
       <button disabled={pending || !f.method} style={primaryBtn} onClick={() => { run(() => createSterilizationValidation({ method: f.method, deviceId: f.deviceId || undefined, sterilityAssuranceLevel: f.sterilityAssuranceLevel || undefined, result: f.result })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1042,13 +1052,13 @@ function NewBatchForm({ devices, pending, run, onDone }: { devices: Devices; pen
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Número de lote" style={input} placeholder="Número de lote" value={f.lotNumber} onChange={(e) => set("lotNumber", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Cantidad" style={input} type="number" placeholder="Cantidad" value={f.quantity} onChange={(e) => set("quantity", e.target.value)} />
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
-        <input aria-label="Caduca" style={input} type="date" placeholder="Caduca" value={f.expiryAt} onChange={(e) => set("expiryAt", e.target.value)} />
+        <DateField aria-label="Caduca" style={input} placeholder="Caduca" value={f.expiryAt} onChange={(e) => set("expiryAt", e.target.value)} />
       </div>
       <button disabled={pending || !f.deviceId || !f.lotNumber} style={primaryBtn} onClick={() => { run(() => createProductionBatch({ deviceId: f.deviceId, lotNumber: f.lotNumber, quantity: f.quantity ? Number(f.quantity) : undefined, unit: f.unit || undefined, expiryAt: f.expiryAt || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1060,7 +1070,7 @@ function NewTraceabilityForm({ batches, pending, run, onDone }: { batches: Medic
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select aria-label="Lote" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.code} — {b.lotNumber}</option>)}</select>
+      <Picker aria-label="Lote" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.code} — {b.lotNumber}</option>)}</Picker>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input aria-label="Lote de componente" style={input} placeholder="Lote de componente" value={f.componentLot} onChange={(e) => set("componentLot", e.target.value)} />
         <input aria-label="Lote de proveedor" style={input} placeholder="Lote de proveedor" value={f.supplierLot} onChange={(e) => set("supplierLot", e.target.value)} />
@@ -1099,13 +1109,13 @@ function NewComplaintForm({ devices, batches, pending, run, onDone }: { devices:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Lote (opcional)" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote (opcional)…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.lotNumber}</option>)}</select>
-        <select aria-label="Fuente" style={input} value={f.source} onChange={(e) => set("source", e.target.value)}>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Lote (opcional)" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote (opcional)…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.lotNumber}</option>)}</Picker>
+        <Picker aria-label="Fuente" style={input} value={f.source} onChange={(e) => set("source", e.target.value)}>
           <option value="CUSTOMER">Cliente</option><option value="DISTRIBUTOR">Distribuidor</option>
           <option value="HEALTHCARE_PROFESSIONAL">Profesional sanitario</option><option value="AUTHORITY">Autoridad</option>
           <option value="INTERNAL">Interno</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
       </div>
       <input aria-label="Categoría" style={input} placeholder="Categoría" value={f.category} onChange={(e) => set("category", e.target.value)} />
       <textarea aria-label="Descripción (sin PII clínica — usar referencia opaca)" style={{ ...input, minHeight: 60 }} placeholder="Descripción (sin PII clínica — usar referencia opaca)" value={f.description} onChange={(e) => set("description", e.target.value)} />
@@ -1123,12 +1133,12 @@ function NewAdverseEventForm({ devices, batches, complaints, pending, run, onDon
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
-        <select aria-label="Lote (opcional)" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote (opcional)…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.lotNumber}</option>)}</select>
-        <select aria-label="Queja relacionada (opcional)" style={input} value={f.complaintId} onChange={(e) => set("complaintId", e.target.value)}><option value="">Queja relacionada (opcional)…</option>{complaints.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
+        <Picker aria-label="Lote (opcional)" style={input} value={f.batchId} onChange={(e) => set("batchId", e.target.value)}><option value="">Lote (opcional)…</option>{batches.map((b) => <option key={b.id} value={b.id}>{b.lotNumber}</option>)}</Picker>
+        <Picker aria-label="Queja relacionada (opcional)" style={input} value={f.complaintId} onChange={(e) => set("complaintId", e.target.value)}><option value="">Queja relacionada (opcional)…</option>{complaints.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}><option value="MINOR">Menor</option><option value="MODERATE">Moderado</option><option value="SERIOUS">Grave</option><option value="DEATH">Muerte</option></select>
+        <Picker aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}><option value="MINOR">Menor</option><option value="MODERATE">Moderado</option><option value="SERIOUS">Grave</option><option value="DEATH">Muerte</option></Picker>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.reportable} onChange={(e) => set("reportable", e.target.checked)} /> Reportable a autoridad</label>
       </div>
       <textarea aria-label="Descripción (sin PII clínica — usar referencia opaca)" style={{ ...input, minHeight: 60 }} placeholder="Descripción (sin PII clínica — usar referencia opaca)" value={f.description} onChange={(e) => set("description", e.target.value)} />
@@ -1144,12 +1154,12 @@ function NewPmsForm({ devices, pending, run, onDone }: { devices: Devices; pendi
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Dispositivo" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <DateField aria-label="Inicio del periodo" style={input} value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <DateField aria-label="Fin del periodo" style={input} value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
       </div>
       <textarea aria-label="Hallazgos (sin PII clínica)" style={{ ...input, minHeight: 50 }} placeholder="Hallazgos (sin PII clínica)" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
       <button disabled={pending || !f.deviceId || !f.title || !f.periodStart || !f.periodEnd} style={primaryBtn} onClick={() => { run(() => createPostMarketSurveillance({ deviceId: f.deviceId, title: f.title, periodStart: f.periodStart, periodEnd: f.periodEnd, findings: f.findings || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1163,9 +1173,9 @@ function NewFieldSafetyActionForm({ devices, pending, run, onDone }: { devices: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Tipo de acción" style={input} value={f.actionType} onChange={(e) => set("actionType", e.target.value)}><option value="FSCA">FSCA</option><option value="FSN">FSN</option><option value="ADVISORY">Aviso</option><option value="OTHER">Otro</option></select>
+        <Picker aria-label="Tipo de acción" style={input} value={f.actionType} onChange={(e) => set("actionType", e.target.value)}><option value="FSCA">FSCA</option><option value="FSN">FSN</option><option value="ADVISORY">Aviso</option><option value="OTHER">Otro</option></Picker>
       </div>
       <textarea aria-label="Motivo (sin PII clínica)" style={{ ...input, minHeight: 50 }} placeholder="Motivo (sin PII clínica)" value={f.reason} onChange={(e) => set("reason", e.target.value)} />
       <input aria-label="Lotes afectados (coma)" style={input} placeholder="Lotes afectados (coma)" value={f.lotNumbers} onChange={(e) => set("lotNumbers", e.target.value)} />
@@ -1180,7 +1190,7 @@ function NewRecallForm({ devices, pending, run, onDone }: { devices: Devices; pe
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <textarea aria-label="Motivo del retiro" style={{ ...input, minHeight: 50 }} placeholder="Motivo del retiro" value={f.reason} onChange={(e) => set("reason", e.target.value)} />
@@ -1215,7 +1225,7 @@ function NewRegulatorySubmissionForm({ devices, pending, run, onDone }: { device
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Dispositivo (opcional)" style={input} value={f.deviceId} onChange={(e) => set("deviceId", e.target.value)}><option value="">Dispositivo (opcional)…</option>{devices.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
         <input aria-label="Jurisdicción" style={input} placeholder="Jurisdicción" value={f.jurisdiction} onChange={(e) => set("jurisdiction", e.target.value)} />
         <input aria-label="Tipo de presentación" style={input} placeholder="Tipo de presentación" value={f.submissionType} onChange={(e) => set("submissionType", e.target.value)} />
       </div>

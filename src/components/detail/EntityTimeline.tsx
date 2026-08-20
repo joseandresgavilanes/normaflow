@@ -13,6 +13,7 @@ import {
 import { useI18n } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/ui/EmptyState";
+import { formatDate, formatDateTime } from "@/lib/format/datetime";
 
 /**
  * Historial de una entidad, leído del rastro de auditoría real.
@@ -91,7 +92,7 @@ function valorLegible(v: unknown): string {
   if (v === null || v === undefined || v === "") return "—";
   if (typeof v === "boolean") return v ? "sí" : "no";
   if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-    return new Date(v).toLocaleDateString();
+    return formatDate(v);
   }
   return String(v).slice(0, 80);
 }
@@ -131,7 +132,9 @@ export function EntityTimeline({
               <p className="nf-timeline__head">
                 <strong>{entry.by}</strong> {VERBO[entry.action] ?? entry.action.replace(/_/g, " ")}
                 <time className="nf-timeline__time" dateTime={entry.at}>
-                  {fecha.toLocaleDateString()} · {fecha.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {/* La traza de auditoría es donde más importa la zona: es la
+                      que se exporta como evidencia de cuándo pasó cada cosa. */}
+                  {formatDateTime(entry.at)}
                 </time>
               </p>
               {entry.changes.length > 0 && (

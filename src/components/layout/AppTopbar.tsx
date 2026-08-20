@@ -3,13 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bell, Eye, Menu, Search } from "lucide-react";
-import Avatar from "@/components/ui/Avatar";
-import LanguageSwitcher from "@/components/i18n/LanguageSwitcher";
+import ProfileMenu from "@/components/layout/ProfileMenu";
 import QuickCreateMenu from "@/components/layout/QuickCreateMenu";
+import { setPrivateMode as setPrivateModePreference } from "@/lib/actions/preferences";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import type { MessageKey } from "@/lib/i18n/messages";
-import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 
 const PAGE_TITLE_KEYS: Record<string, MessageKey> = {
   "/app/dashboard": "nav.home",
@@ -60,18 +59,26 @@ export default function AppTopbar({
   const router = useRouter();
   const ws = useWorkspaceOptional();
   const { t } = useI18n();
+  /* El estado inicial se lee de la clase que ya pintó el servidor desde la
+     cookie, igual que hace `ThemeSwitcher` con `data-theme`: así el conmutador
+     aparece en la posición correcta sin arrastrar la cookie por el layout. */
   const [privateMode, setPrivateMode] = useState(false);
+  useEffect(() => {
+    setPrivateMode(document.body.classList.contains("nf-private-mode"));
+  }, []);
   const searchRef = useRef<HTMLInputElement>(null);
   const displayName = ws?.state.session.name ?? userName;
   const unread = ws?.state.notifications.filter((n) => !n.read).length ?? 0;
   const pageTitle = PAGE_TITLE_KEYS[pathname] ? t(PAGE_TITLE_KEYS[pathname]) : "NormaFlow";
 
-  useEffect(() => {
-    document.body.classList.toggle("nf-private-mode", privateMode);
-    return () => {
-      document.body.classList.remove("nf-private-mode");
-    };
-  }, [privateMode]);
+  function togglePrivateMode() {
+    const next = !privateMode;
+    setPrivateMode(next);
+    // La clase se aplica aquí, no en un efecto: el efecto de limpieza la
+    // quitaba al desmontar y el modo se perdía en cada navegación.
+    document.body.classList.toggle("nf-private-mode", next);
+    void setPrivateModePreference(next);
+  }
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -114,9 +121,10 @@ export default function AppTopbar({
         <span className="nf-topbar-search-kbd">⌘ K</span>
       </div>
 
+      {/* El tema y el idioma se han ido al menú de la cuenta: eran dos
+          conmutadores permanentes para ajustes que se tocan una vez, y dejaban
+          la barra sin sitio para lo que sí se usa a diario. */}
       <div className="nf-topbar-actions">
-        <ThemeSwitcher compact />
-        <LanguageSwitcher compact />
         <QuickCreateMenu />
         <button
           type="button"
@@ -124,7 +132,7 @@ export default function AppTopbar({
           title={t("topbar.privateMode")}
           aria-label={t("topbar.privateMode")}
           aria-pressed={privateMode}
-          onClick={() => setPrivateMode((value) => !value)}
+          onClick={togglePrivateMode}
         >
           <Eye size={18} strokeWidth={1.75} aria-hidden />
         </button>
@@ -150,9 +158,12 @@ export default function AppTopbar({
             />
           )}
         </Link>
-        <Link href="/app/settings" title={displayName} aria-label={t("common.account")}>
-          <Avatar name={displayName} size={32} />
-        </Link>
+        <ProfileMenu
+          userName={displayName}
+          email={ws?.state.session.email}
+          roleLabel={roleLabel}
+          organizationName={ws?.state.session.orgName}
+        />
       </div>
     </header>
   );

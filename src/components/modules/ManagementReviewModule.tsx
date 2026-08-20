@@ -5,9 +5,16 @@ import { ManagementReviewStatus, ManagementReviewTopic } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import SectionTitle from "@/components/ui/SectionTitle";
-import Card from "@/components/ui/Card";
+import EntityTable from "@/components/ui/EntityTable";
+import {
+  CellTitle,
+  CountCell,
+} from "@/components/operations/OperationalUi";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import { TOPIC_LABELS } from "@/components/operations/ManagementReviewLive";
+import { formatDate } from "@/lib/format/datetime";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 type DemoInput = { id: string; topic: ManagementReviewTopic; content: string };
 type DemoDecision = { id: string; topic: string; decision: string; owner: string; dueDate: string | null };
@@ -34,7 +41,7 @@ function statusBadge(s: ManagementReviewStatus) {
   return s === "COMPLETED" ? "ON_TRACK" : s === "CANCELLED" ? "OFF_TRACK" : s === "IN_PROGRESS" ? "IN_PROGRESS" : "AT_RISK";
 }
 const NEXT_STATUS: Partial<Record<ManagementReviewStatus, ManagementReviewStatus>> = { PLANNED: "IN_PROGRESS", IN_PROGRESS: "COMPLETED" };
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("es") : "—");
+const fmt = (iso: string | null) => (iso ? formatDate(iso) : "—");
 let counter = 0;
 const uid = (p: string) => `${p}-${Date.now()}-${counter++}`;
 
@@ -119,38 +126,42 @@ export default function ManagementReviewModule() {
     <div>
       <SectionTitle
         title="Revisión por la dirección"
-        sub={`${reviews.length} revisiones · ISO 9001 cláusula 9.3`}
-        action="+ Nueva revisión"
+        meta={<>
+          <span className="nf-page-header__chip">{reviews.length} revisiones</span>
+          <span className="nf-page-header__chip">ISO 9001 · 9.3</span>
+        </>}
+        action="Nueva revisión"
         onAction={() => setCreating(true)}
       />
 
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))" }}>
-        {reviews.map(r => (
-          <Card key={r.id} style={{ cursor: "pointer" }} onClick={() => setDetailId(r.id)}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <h3 style={{ margin: "0 0 6px", fontSize: 18, color: "var(--nf-ink)" }}>{r.title}</h3>
-                <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Programada: {fmt(r.scheduledDate)} · {r.chair || "Sin presidente"}</div>
-              </div>
-              <Badge status={statusBadge(r.status)} label={STATUS_LABELS[r.status]} />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, marginTop: 13 }}>
-              {[["Entradas", r.inputs.length], ["Decisiones", r.decisions.length], ["Acciones", r.decisions.length]].map(([l, v]) => (
-                <div key={String(l)} style={{ background: "var(--nf-app-surface-1)", borderRadius: 9, padding: "8px 4px", textAlign: "center" }}>
-                  <strong style={{ display: "block", color: "var(--nf-primary-active)" }}>{v}</strong>
-                  <span style={{ fontSize: 9, color: "var(--nf-ink-3)", textTransform: "none" }}>{l}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ))}
-      </div>
+      <EntityTable
+        caption="Revisiones por la dirección"
+        rows={reviews}
+        rowKey={(row) => row.id}
+        rowAction={(row) => setDetailId(row.id)}
+        storageKey="demo-management-reviews"
+        searchText={(row) => `${row.title} ${row.chair ?? ""}`}
+        searchPlaceholder="Buscar por título o presidente…"
+        filters={[{ id: "status", label: "Estado", value: (row) => row.status, format: (value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] ?? value }]}
+        emptyTitle="Todavía no hay revisiones"
+        emptyDescription="La revisión por la dirección recoge entradas, decisiones y acciones con trazabilidad."
+        columns={[
+          {
+            id: "title", header: "Revisión", primary: true, minWidth: 240, sortValue: (row) => row.title,
+            cell: (row) => <CellTitle title={row.title} meta={`Programada ${fmt(row.scheduledDate)}`} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={statusBadge(row.status)} label={STATUS_LABELS[row.status]} /> },
+          { id: "chair", header: "Presidente", hideable: true, sortValue: (row) => row.chair ?? "", cell: (row) => row.chair || "Sin presidente" },
+          { id: "inputs", header: "Entradas", numeric: true, align: "end", hideable: true, sortValue: (row) => row.inputs.length, cell: (row) => <CountCell value={row.inputs.length} /> },
+          { id: "decisions", header: "Decisiones", numeric: true, align: "end", hideable: true, sortValue: (row) => row.decisions.length, cell: (row) => <CountCell value={row.decisions.length} /> },
+        ]}
+      />
 
       <Modal open={creating} onClose={() => setCreating(false)} title="Nueva revisión por la dirección" width={520}>
         <form className="nf-modal-form" onSubmit={submitCreate}>
           <label style={{ fontSize: 13, fontWeight: 700 }}>Título<input name="title" className="nf-app-input" style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }} required /></label>
           <div className="nf-grid-2" style={{ gap: 12 }}>
-            <label style={{ fontSize: 13, fontWeight: 700 }}>Fecha programada<input name="scheduledDate" type="date" className="nf-app-input" style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }} /></label>
+            <label style={{ fontSize: 13, fontWeight: 700 }}>Fecha programada<DateField name="scheduledDate" className="nf-app-input" style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }} /></label>
             <label style={{ fontSize: 13, fontWeight: 700 }}>Presidente<input name="chair" className="nf-app-input" style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }} /></label>
           </div>
           <label style={{ fontSize: 13, fontWeight: 700 }}>Asistentes (separados por comas)<input name="attendees" className="nf-app-input" style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }} /></label>
@@ -185,9 +196,9 @@ export default function ManagementReviewModule() {
               {detail.status !== "COMPLETED" && detail.status !== "CANCELLED" && (
                 <form onSubmit={e => addInput(e, detail.id)} style={{ display: "grid", gap: 8, marginTop: 10 }}>
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <select aria-label="Tema" name="topic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} defaultValue="AUDIT_RESULTS">
+                    <Picker aria-label="Tema" name="topic" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} defaultValue="AUDIT_RESULTS">
                       {Object.entries(TOPIC_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                    </select>
+                    </Picker>
                     <button type="submit" className="nf-app-btn-outline">Añadir entrada</button>
                   </div>
                   <textarea aria-label="Resumen de la entrada" name="content" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Resumen de la entrada…" required />
@@ -215,7 +226,7 @@ export default function ManagementReviewModule() {
                   </div>
                   <textarea aria-label="Decisión / acción" name="decision" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} rows={2} placeholder="Decisión / acción…" required />
                   <div className="nf-grid-2" style={{ gap: 8 }}>
-                    <input aria-label="Fecha de vencimiento" name="dueDate" type="date" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} />
+                    <DateField aria-label="Fecha de vencimiento" name="dueDate" className="nf-app-input" style={{ width: "100%", boxSizing: "border-box" }} />
                     <button type="submit" className="nf-app-btn-outline">Registrar decisión</button>
                   </div>
                 </form>

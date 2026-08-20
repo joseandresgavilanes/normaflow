@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures/normaflow";
+import { test, expect, elegirEnPicker } from "./fixtures/normaflow";
 
 test.describe("flujos críticos de NormaFlow", () => {
   test("registro de usuario y creación/configuración de organización", async ({ authenticatedPage: page }) => {
@@ -21,32 +21,36 @@ test.describe("flujos críticos de NormaFlow", () => {
     await expect(dialog.getByRole("heading", { name: "Invitar persona" })).toBeVisible();
     await dialog.locator("input[name='name']").fill("QA Invitado");
     await dialog.locator("input[name='email']").fill(`qa-${Date.now()}@example.com`);
-    await dialog.getByRole("combobox").selectOption("AUDITOR");
+    await elegirEnPicker(dialog.getByRole("combobox"), /Auditor/i);
     await dialog.getByRole("button", { name: "Invitar" }).click();
     await expect(page.getByText(/Invitación simulada|QA Invitado/i).first()).toBeVisible();
 
     const row = page.getByRole("row").filter({ hasText: "QA Invitado" });
     await expect(row).toBeVisible();
-    await row.getByRole("combobox").selectOption("VIEWER");
-    await expect(row.getByRole("combobox")).toHaveValue("VIEWER");
+    await elegirEnPicker(row.getByRole("combobox"), /^Visor$/);
+    await expect(row.getByRole("combobox")).toContainText("Visor");
   });
 
   test("crea un proceso y lo muestra en el mapa de procesos", async ({ authenticatedPage: page }) => {
     await page.goto("/app/processes");
     await page.getByRole("button", { name: /Nuevo proceso/i }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.locator("input").nth(0).fill("Proceso E2E QA");
-    await dialog.locator("input").nth(1).fill("QA-PROC");
+    // Se excluyen los espejos de valor de `Picker` y `DateField`: son inputs
+    // recortados que solo existen para el envío del formulario, y al contarlos
+    // por posición se colaban antes que los campos de texto de verdad.
+    const campos = dialog.locator("input:not(.nf-picker__native):not(.nf-datefield__native)");
+    await campos.nth(0).fill("Proceso E2E QA");
+    await campos.nth(1).fill("QA-PROC");
     await dialog.locator("textarea").first().fill("Proceso creado automáticamente por Playwright.");
     await dialog.getByRole("button", { name: "Crear" }).click();
-    await expect(page.getByText("Proceso E2E QA", { exact: true })).toBeVisible();
+    await expect(page.getByText("Proceso E2E QA", { exact: true }).first()).toBeVisible();
   });
 
   test("crea un riesgo y conserva su puntuación", async ({ authenticatedPage: page }) => {
     await page.goto("/app/risks");
     await page.getByRole("button", { name: /Nuevo Riesgo/i }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.locator("input").first().fill("Riesgo E2E QA");
+    await dialog.locator("input:not(.nf-picker__native):not(.nf-datefield__native)").first().fill("Riesgo E2E QA");
     await dialog.getByRole("button", { name: "Guardar" }).click();
     await expect(page.getByLabel("Listado").getByText("Riesgo E2E QA", { exact: true })).toBeVisible();
   });
@@ -87,9 +91,9 @@ test.describe("flujos críticos de NormaFlow", () => {
     await page.goto("/app/indicators");
     await page.getByRole("button", { name: /Nuevo KPI/i }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.locator("input").first().fill("KPI E2E QA");
+    await dialog.locator("input:not(.nf-picker__native):not(.nf-datefield__native)").first().fill("KPI E2E QA");
     await dialog.getByRole("button", { name: "Crear KPI" }).click();
-    await expect(page.getByText("KPI E2E QA", { exact: true })).toBeVisible();
+    await expect(page.getByText("KPI E2E QA", { exact: true }).first()).toBeVisible();
 
     await page.goto("/app/reporting");
     await expect(page.getByRole("heading", { name: /Informes y paquetes de auditoría/i })).toBeVisible();
@@ -105,17 +109,21 @@ test.describe("flujos críticos de NormaFlow", () => {
 
   test("cambia de organización y no mezcla datos del workspace", async ({ authenticatedPage: page }) => {
     await page.goto("/app/risks");
-    const sourceRow = page.locator("tbody tr").first();
+    // Acotado al registro de riesgos. `tbody tr` a secas cazaba la primera fila
+    // del mapa de calor —cinco celdas que dicen «N riesgos»— y esa no cambia al
+    // cambiar de organización, así que la comparación no probaba nada.
+    const registro = page.getByLabel("Listado");
+    const sourceRow = registro.locator("tbody tr").first();
+    await expect(sourceRow).toBeVisible();
     const sourceText = await sourceRow.innerText();
     // El selector de organización dejó de estar duplicado: hay un único
     // control en la cabecera del sidebar (antes: marca truncada con chevron
     // inerte + caja "Organización" con su propio select).
-    const orgSelector = page.locator(".nf-sidenav__org-control select");
+    const orgSelector = page.locator(".nf-sidenav__org-control").getByRole("combobox");
     await expect(orgSelector).toBeVisible();
-    await orgSelector.selectOption({ label: "Logística Norte S.L." });
-    await expect(orgSelector).toHaveValue("org_logistica");
-    await expect(orgSelector.locator("option:checked")).toContainText("Logística Norte");
+    await elegirEnPicker(orgSelector, /Logística Norte/);
+    await expect(orgSelector).toContainText("Logística Norte");
 
-    await expect(page.locator("tbody tr").first()).not.toContainText(sourceText);
+    await expect(registro.locator("tbody tr").first()).not.toContainText(sourceText);
   });
 });

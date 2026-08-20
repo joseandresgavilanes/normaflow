@@ -33,6 +33,9 @@ import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { Field as UiField } from "@/components/ui/Field";
 import { WorkflowStepper } from "@/components/ui/WorkflowStepper";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 const STAGES: { key: ACPMStage; label: string; sub: string }[] = [
   { key: "REQUEST",           label: "Solicitud",             sub: "Apertura" },
@@ -223,7 +226,7 @@ export default function ACPMClient() {
                 aria-label="Filtrar ACPMs"
               />
             </div>
-            <select
+            <Picker
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
               className="nf-app-input"
@@ -234,8 +237,8 @@ export default function ACPMClient() {
               <option value="CORRECTIVE">Correctiva</option>
               <option value="PREVENTIVE">Preventiva</option>
               <option value="IMPROVEMENT">Mejora</option>
-            </select>
-            <select
+            </Picker>
+            <Picker
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as typeof priorityFilter)}
               className="nf-app-input"
@@ -247,7 +250,7 @@ export default function ACPMClient() {
               <option value="HIGH">Alta</option>
               <option value="MEDIUM">Media</option>
               <option value="LOW">Baja</option>
-            </select>
+            </Picker>
             <div className="nf-acpm-view-switch" role="group" aria-label="Vista">
               <button
                 type="button"
@@ -437,34 +440,36 @@ export default function ACPMClient() {
           </Field>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
             <Field label="Tipo">
-              <select aria-label="Tipo" name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <Picker aria-label="Tipo" name="type" defaultValue="CORRECTIVE" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
                 <option value="IMPROVEMENT">Mejora</option>
-              </select>
+              </Picker>
             </Field>
             <Field label="Prioridad">
-              <select aria-label="Prioridad" name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
+              <Picker aria-label="Prioridad" name="priority" defaultValue="MEDIUM" className={NF_INPUT_CLASS} style={modalInputStyle}>
                 <option value="CRITICAL">Crítica</option>
                 <option value="HIGH">Alta</option>
                 <option value="MEDIUM">Media</option>
                 <option value="LOW">Baja</option>
-              </select>
+              </Picker>
             </Field>
             <Field label="Fecha objetivo">
-              <input aria-label="Fecha de vencimiento" type="date" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <DateField aria-label="Fecha de vencimiento" name="dueDate" className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Origen">
             <input aria-label="Auditoría interna, Voz del cliente, Reporte, etc." name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
           <Field label="Responsable de la acción">
-            <select aria-label="Responsable" name="ownerId" className={NF_INPUT_CLASS} style={modalInputStyle} defaultValue="">
-              <option value="">— Sin asignar por ahora —</option>
-              {personnel.filter((person) => person.active).map((person) => (
-                <option key={person.id} value={person.id}>{person.firstName} {person.lastName}</option>
-              ))}
-            </select>
+            <PersonPicker
+              name="ownerId"
+              people={personnel.filter((person) => person.active)}
+              defaultValue=""
+              placeholder="Sin asignar por ahora"
+              ariaLabel="Responsable"
+              style={modalInputStyle}
+            />
           </Field>
           {createError && <div className="nf-modal-error">{createError}</div>}
           <div className="nf-modal-actions">
@@ -786,22 +791,21 @@ function StageEditor({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable">
-            <select aria-label="Responsable"
-              disabled={!canEdit}
+            <PersonPicker
+              people={personnel.filter((p) => p.active)}
               defaultValue={acpm.ownerId ?? ""}
-              onChange={(e) => onPatch("ownerId", e.target.value || null)}
-              className={NF_INPUT_CLASS} style={modalInputStyle}
-            >
-              <option value="">— Sin asignar —</option>
-              {personnel.filter((p) => p.active).map((p) => <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>)}
-            </select>
+              onValueChange={(personId) => onPatch("ownerId", personId || null)}
+              disabled={!canEdit}
+              placeholder="Sin asignar"
+              ariaLabel="Responsable"
+              style={modalInputStyle}
+            />
           </Field>
           <Field label="Fecha objetivo">
-            <input
-              type="date"
+            <DateField
               disabled={!canEdit}
               defaultValue={acpm.dueDate?.slice(0, 10) ?? ""}
-              onBlur={(e) => onPatch("dueDate", e.target.value || null)}
+              onChange={(e) => onPatch("dueDate", e.target.value || null)}
               className={NF_INPUT_CLASS} style={modalInputStyle}
             />
           </Field>
@@ -855,11 +859,10 @@ function StageEditor({
           />
         </Field>
         <Field label="Fecha de verificación">
-          <input
-            type="date"
+          <DateField
             disabled={!canEdit}
             defaultValue={acpm.effectivenessAt?.slice(0, 10) ?? ""}
-            onBlur={(e) => onPatch("effectivenessAt", e.target.value || null)}
+            onChange={(e) => onPatch("effectivenessAt", e.target.value || null)}
             className={NF_INPUT_CLASS} style={modalInputStyle}
           />
         </Field>

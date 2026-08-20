@@ -70,9 +70,17 @@ export default function Modal({
   useLayoutEffect(() => {
     if (!open) return undefined;
     setZIndex(pushModalLayer());
+    /* Marca en el body que hay un modal abierto. Sin esto, un aviso de error
+       de la página se pinta DETRÁS de la capa del modal: el usuario ve el
+       formulario sin reaccionar y el motivo escondido, que es justo cuando más
+       falta hace leerlo. La clase permite sacarlo por encima. */
+    document.body.classList.add("nf-modal-open");
     return () => {
       popModalLayer();
-      if (modalLayerDepth() === 0) document.body.style.overflow = "";
+      if (modalLayerDepth() === 0) {
+        document.body.style.overflow = "";
+        document.body.classList.remove("nf-modal-open");
+      }
     };
   }, [open]);
 

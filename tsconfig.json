@@ -31,10 +31,13 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    ".next-design-qa/types/**/*.ts",
+    ".next-playwright-live/types/**/*.ts",
     ".next-playwright/types/**/*.ts",
+    ".next-prod-qa/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-playwright-live/types/**/*.ts"
+    ".next-build-check/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

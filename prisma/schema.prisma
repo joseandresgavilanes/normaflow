@@ -75,6 +75,7 @@ model Organization {
   notifications                 Notification[]
   notificationDeliveryJobs      NotificationDeliveryJob[]
   notificationPreferences       NotificationPreference[]
+  approvalDelegations           ApprovalDelegation[]
   subscription                  Subscription?
   billingInvoices               BillingInvoice[]
   reportExports                 ReportExport[]
@@ -336,6 +337,8 @@ model User {
   notifications                  Notification[]
   notificationDeliveryJobs       NotificationDeliveryJob[]
   notificationPreferences        NotificationPreference[]
+  delegationsGranted             ApprovalDelegation[]          @relation("DelegationFrom")
+  delegationsReceived            ApprovalDelegation[]          @relation("DelegationTo")
   auditLogs                      AuditLog[]
   onboardingMetricEvents         OnboardingMetricEvent[]
   sentInvites                    MemberInvite[]                @relation("InvitedBy")
@@ -2022,6 +2025,36 @@ model Notification {
   @@unique([organizationId, idempotencyKey])
   @@index([userId, read, createdAt])
   @@map("notifications")
+}
+
+/// Ausencia declarada: quién cubre las tareas de alguien mientras no está.
+///
+/// Solo enruta AVISOS. No concede permisos: en un sistema de gestión, que un
+/// ajuste de cuenta pudiera otorgarse a sí mismo capacidad de aprobación
+/// rompería la segregación de funciones que la propia norma exige. El
+/// suplente actúa con los permisos que ya tiene su rol.
+model ApprovalDelegation {
+  id             String    @id @default(cuid())
+  organizationId String
+  /// Quien se ausenta.
+  fromUserId     String
+  /// Quien recibe los avisos durante la ausencia.
+  toUserId       String
+  startsAt       DateTime
+  endsAt         DateTime
+  reason         String?
+  /// Revocada a mano antes de que expire.
+  revokedAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fromUser     User         @relation("DelegationFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser       User         @relation("DelegationTo", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  /// La consulta caliente: "¿quién cubre a esta persona ahora mismo?", en cada aviso.
+  @@index([organizationId, fromUserId, startsAt, endsAt])
+  @@map("approval_delegations")
 }
 
 model NotificationPreference {

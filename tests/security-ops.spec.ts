@@ -53,13 +53,16 @@ test.describe("operaciones de seguridad", () => {
     await page.fill("input[type='password']", "NormaFlow2025!");
     await page.click("button[type='submit']");
     await page.waitForURL(/\/app\/dashboard/);
+    // `.first()`: `DataTable` pinta cada fila dos veces —la tabla de escritorio
+    // y la lista de tarjetas de móvil viven las dos en el DOM y es el CSS quien
+    // enseña una u otra—, así que sin acotar hay violación de modo estricto.
     await page.goto("/app/incidents");
-    await expect(page.getByText("INC-001")).toBeVisible();
+    await expect(page.getByText("INC-001").first()).toBeVisible();
     await page.goto("/app/vulnerabilities");
-    await expect(page.getByText("VULN-001")).toBeVisible();
+    await expect(page.getByText("VULN-001").first()).toBeVisible();
     await page.goto("/app/continuity");
     await expect(page.getByText("BCP-001").first()).toBeVisible();
     await page.goto("/app/suppliers/security");
-    await expect(page.getByText("PROV-001")).toBeVisible();
+    await expect(page.getByText("PROV-001").first()).toBeVisible();
   });
 });

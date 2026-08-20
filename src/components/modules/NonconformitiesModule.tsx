@@ -13,6 +13,8 @@ import { useWorkspace, type ActionRow, type NcRow } from "@/context/WorkspaceSto
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import type { Column } from "@/components/ui/Table";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 // Se pintan como texto sobre superficie: los rellenos dan 3.19:1.
 const SEV_COLORS: Record<string, string> = { CRITICAL: "var(--nf-danger-text)", MAJOR: "var(--nf-warning-text)", MINOR: "var(--nf-text-secondary)" };
@@ -344,7 +346,7 @@ export default function NonconformitiesModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Origen
-              <select
+              <Picker aria-label="Origen"
                 className="nf-app-input"
                 value={form.source}
                 onChange={e => {
@@ -361,11 +363,11 @@ export default function NonconformitiesModule() {
                 <option value="INTERNAL_AUDIT">Auditoría interna</option>
                 <option value="CUSTOMER_COMPLAINT">Reclamación cliente</option>
                 <option value="MANAGEMENT_REVIEW">Revisión dirección</option>
-              </select>
+              </Picker>
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Severidad
-              <select
+              <Picker aria-label="Severidad"
                 className="nf-app-input"
                 value={form.severity}
                 onChange={e => setForm({ ...form, severity: e.target.value as NcRow["severity"] })}
@@ -374,14 +376,14 @@ export default function NonconformitiesModule() {
                 <option value="MINOR">Menor</option>
                 <option value="MAJOR">Mayor</option>
                 <option value="CRITICAL">Crítica</option>
-              </select>
+              </Picker>
             </label>
           </div>
           {form.source === "INTERNAL_AUDIT" && (
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
                 Auditoría relacionada
-                <select
+                <Picker aria-label="Auditoría relacionada"
                   className="nf-app-input"
                   value={form.auditId}
                   onChange={e => setForm({ ...form, auditId: e.target.value })}
@@ -392,7 +394,7 @@ export default function NonconformitiesModule() {
                       {audit.title}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </label>
               <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
                 Cláusula
@@ -418,9 +420,8 @@ export default function NonconformitiesModule() {
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Fecha límite
-              <input
+              <DateField
                 className="nf-app-input"
-                type="date"
                 value={form.due}
                 onChange={e => setForm({ ...form, due: e.target.value })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}

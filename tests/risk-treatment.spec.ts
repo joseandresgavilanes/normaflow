@@ -43,6 +43,9 @@ test.describe("tratamiento de riesgos", () => {
     await page.waitForURL(/\/app\/dashboard/);
     await page.goto("/app/risk-treatment");
     await expect(page.getByText("Tratamiento de riesgos").first()).toBeVisible();
-    await expect(page.getByText("R-001")).toBeVisible();
+    // `.first()`: `DataTable` pinta cada fila dos veces —la tabla de escritorio
+    // y la lista de tarjetas de móvil viven las dos en el DOM y es el CSS quien
+    // enseña una u otra—, así que sin acotar hay violación de modo estricto.
+    await expect(page.getByText("R-001").first()).toBeVisible();
   });
 });

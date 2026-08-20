@@ -8,6 +8,8 @@ import Avatar from "@/components/ui/Avatar";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type ActionRow } from "@/context/WorkspaceStore";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 const PRIORITY_COLOR: Record<string, string> = { CRITICAL: "var(--nf-danger)", HIGH: "var(--nf-warning)", MEDIUM: "var(--nf-primary)", LOW: "var(--nf-ink-3)" };
 const PRIORITY_LABEL: Record<string, string> = { CRITICAL: "Crítica", HIGH: "Alta", MEDIUM: "Media", LOW: "Baja" };
@@ -436,7 +438,7 @@ export default function ActionsModule() {
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, display: "block", marginBottom: 16, color: "var(--nf-ink)" }}>
               Estado
-              <select
+              <Picker aria-label="Estado"
                 className="nf-app-input"
                 value={selected.status}
                 onChange={e => applyStatusChange(e.target.value as ActionRow["status"])}
@@ -447,7 +449,7 @@ export default function ActionsModule() {
                 <option value="IN_REVIEW">En revisión</option>
                 <option value="COMPLETED">Completada</option>
                 <option value="CANCELLED">Cancelada</option>
-              </select>
+              </Picker>
             </label>
             <button
               type="button"
@@ -474,7 +476,7 @@ export default function ActionsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Prioridad
-              <select
+              <Picker aria-label="Prioridad"
                 className="nf-app-input"
                 value={newForm.priority}
                 onChange={e => setNewForm({ ...newForm, priority: e.target.value as ActionRow["priority"] })}
@@ -484,11 +486,11 @@ export default function ActionsModule() {
                 <option value="MEDIUM">Media</option>
                 <option value="HIGH">Alta</option>
                 <option value="CRITICAL">Crítica</option>
-              </select>
+              </Picker>
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Tipo
-              <select
+              <Picker aria-label="Tipo"
                 className="nf-app-input"
                 value={newForm.type}
                 onChange={e => setNewForm({ ...newForm, type: e.target.value as ActionRow["type"] })}
@@ -497,7 +499,7 @@ export default function ActionsModule() {
                 <option value="CORRECTIVE">Correctiva</option>
                 <option value="PREVENTIVE">Preventiva</option>
                 <option value="IMPROVEMENT">Mejora</option>
-              </select>
+              </Picker>
             </label>
           </div>
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
@@ -512,9 +514,8 @@ export default function ActionsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Vencimiento
-              <input
+              <DateField
                 className="nf-app-input"
-                type="date"
                 value={newForm.due}
                 onChange={e => setNewForm({ ...newForm, due: e.target.value })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}

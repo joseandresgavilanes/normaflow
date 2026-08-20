@@ -23,54 +23,8 @@
   transform: translateY(1px);
 }
 
-/* Navegación interna de módulos ISO: misma jerarquía visual que el dashboard. */
-.nf-iso-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
-.nf-iso-tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 8px 12px;
-  /* Pestaña = control: el borde es lo que la identifica, necesita 3:1. */
-  border: 1px solid var(--nf-border-strong);
-  border-radius: 9px;
-  background: var(--nf-surface);
-  color: var(--nf-ink-2);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.nf-iso-tab:hover:not(:disabled):not([aria-selected="true"]) {
-  border-color: var(--nf-primary-border);
-  background: var(--nf-app-surface-1);
-  color: var(--nf-ink);
-}
-
-.nf-iso-tab[aria-selected="true"] {
-  border-color: var(--nf-app-accent);
-  background: var(--nf-app-accent-soft);
-  /* `--nf-app-accent` es el alias del relleno de marca: como texto sobre su
-     propio fondo suave daba 4.11:1. El tono de texto da 5.92:1. */
-  color: var(--nf-primary-active);
-  font-weight: var(--nf-weight-semibold);
-  box-shadow: var(--nf-elevation-1);
-}
-
-.nf-iso-tab:focus-visible {
-  outline: 2px solid var(--nf-app-accent);
-  outline-offset: 2px;
-}
+/* `.nf-iso-tabs` / `.nf-iso-tab` se retiran con la navegación interna de las
+   normas: las secciones se recorren desde el sidebar, no desde la página. */
 
 .nf-app-btn-primary:disabled {
   opacity: 0.55;

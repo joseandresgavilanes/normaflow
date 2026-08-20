@@ -220,3 +220,47 @@
 .nf-danger-subtle-bg { background: var(--nf-danger-subtle); }
 .nf-success-border-line { border-color: var(--nf-success-border); }
 .nf-danger-border-line { border-color: var(--nf-danger-border); }
+
+/* ── Subnavegación dentro de la página ────────────────────────────────────── */
+/* Solo la usan los módulos que NO son normas: las ISO recorren sus secciones
+   desde el sidebar y no repiten esa lista dentro de la página. */
+
+.nf-page-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nf-space-1);
+  margin-bottom: var(--nf-space-5);
+  border-bottom: 1px solid var(--nf-border);
+}
+
+.nf-page-tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-secondary);
+  padding: var(--nf-space-2) var(--nf-space-3);
+  /* El subrayado ocupa su sitio desde el principio: si solo apareciera en la
+     pestaña activa, el texto daría un salto de 2px al cambiar de pestaña. */
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.nf-page-tab:hover {
+  color: var(--nf-text-primary);
+}
+
+.nf-page-tab[aria-selected="true"] {
+  color: var(--nf-primary-active);
+  border-bottom-color: var(--nf-primary);
+  font-weight: var(--nf-weight-semibold);
+}
+
+.nf-page-tab:focus-visible {
+  outline: var(--nf-focus-ring);
+  outline-offset: -2px;
+  border-radius: var(--nf-radius-xs) var(--nf-radius-xs) 0 0;
+}

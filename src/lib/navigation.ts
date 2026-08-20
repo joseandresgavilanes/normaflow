@@ -63,11 +63,14 @@ import type { MessageKey } from "@/lib/i18n/messages";
  * Dos correcciones estructurales:
  *
  *  1. Los 35 enlaces planos se agrupan en 8 secciones semánticas.
- *  2. Cada norma pasa a ser UN destino. Los ~143 subitems `?section=` se
- *     eliminan porque eran enlaces muertos: ningún cliente de norma lee el
- *     parámetro (`useSearchParams` = 0 en los 11), así que todos renderizaban
- *     el panel y el sidebar resaltaba una sección que nunca se abría. La
- *     navegación intra-norma es responsabilidad de las pestañas de la página.
+ *  2. Cada norma pasa a ser UN destino. Sus secciones (`?section=`) solo se
+ *     despliegan bajo la norma abierta, en vez de los ~143 subitems que antes
+ *     convivían en la misma columna.
+ *
+ * El sidebar es la única navegación entre secciones de UNA NORMA: esas páginas
+ * no repiten la lista como pestañas. El resto de módulos —cuenta, contexto,
+ * requisitos operativos— no cuelga del sidebar y lleva su propia
+ * subnavegación dentro de la página (`PageTabs`).
  */
 
 export type NavSection = {
@@ -114,6 +117,10 @@ const s = (section: string, label: string): NavSection => ({ section, label });
  * cambiar la vista del módulo — no son anclas decorativas.
  */
 const SECTIONS: Record<string, NavSection[]> = {
+  "/app/standards": [
+    s("panel", "Panel integrado"), s("catalog", "Catálogo"), s("active", "Normas activas"),
+    s("matrix", "Matriz de requisitos"), s("correspondence", "Correspondencias"),
+  ],
   "/app/continuity": [
     s("panel", "Panel"), s("plans", "Planes"), s("bia", "BIA y actividades"),
     s("dependencies", "Dependencias y recursos"), s("strategies", "Estrategias"),

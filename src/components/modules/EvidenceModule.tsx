@@ -93,7 +93,7 @@ export default function EvidenceModule() {
       <SectionTitle
         title="Repositorio de evidencias"
         sub="Pruebas vinculadas a auditorías, riesgos y documentos · Vista previa según tipo de archivo"
-        action="+ Subir evidencia"
+        action="Subir evidencia"
         onAction={() => document.getElementById("evidence-import-input")?.click()}
       />
 
@@ -103,6 +103,7 @@ export default function EvidenceModule() {
           file={null}
           onFileChange={handleEvidencePick}
           label="Zona de carga"
+          maxSizeMB={50}
           hint="Los archivos se procesan en el navegador; no se suben a servidor en esta sesión local."
           compact
           disabled={busy}

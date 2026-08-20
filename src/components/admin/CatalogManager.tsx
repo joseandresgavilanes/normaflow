@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Ban, Pencil } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import { NF_INPUT_CLASS, modalInputStyle } from "@/components/ui/ModalForm";
+import { RowAction } from "@/components/ui/RowActions";
 import { formatDate } from "@/lib/utils";
 
 export type CatalogRow = {
@@ -109,30 +111,16 @@ export default function CatalogManager({
       key: "actions",
       label: "",
       render: (_, r) => (
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+        <div className="nf-row-actions">
+          <RowAction
+            icon={Pencil}
+            label="Editar"
+            onClick={() => {
               setEditing(r);
               setFormError("");
             }}
-            className="nf-app-btn-ghost nf-app-btn-sm"
-          >
-            Editar
-          </button>
-          {r.active && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmDelete(r);
-              }}
-              className="nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger"
-            >
-              Desactivar
-            </button>
-          )}
+          />
+          {r.active && <RowAction icon={Ban} label="Desactivar" tone="danger" onClick={() => setConfirmDelete(r)} />}
         </div>
       ),
     });
@@ -172,7 +160,7 @@ export default function CatalogManager({
       <SectionTitle
         title={title}
         sub={subtitle}
-        action={canEdit ? "+ Nuevo" : undefined}
+        action={canEdit ? "Nuevo" : undefined}
         onAction={canEdit ? () => { setCreating(true); setFormError(""); } : undefined}
       />
 

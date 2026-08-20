@@ -5,17 +5,20 @@ import {
   AlertTriangle,
   Archive,
   ArchiveX,
+  Ban,
   ClipboardList,
   Clock,
   FileDown,
   Eye,
   Loader2,
   Paperclip,
+  Pencil,
   Plus,
   X,
 } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
+import { RowAction } from "@/components/ui/RowActions";
 import DataTable, { type Column } from "@/components/ui/Table";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -26,6 +29,10 @@ import { formatDate, timeAgo } from "@/lib/utils";
 import { exportRecordsMatrix } from "@/lib/actions/records";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { Field as UiField } from "@/components/ui/Field";
+import ClausePicker from "@/components/ui/ClausePicker";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 type Status = "ALL" | "ACTIVE" | "INACTIVE" | "DUE_SOON" | "OVERDUE";
 
@@ -210,41 +217,23 @@ export default function RecordsClient() {
       key: "actions",
       label: "",
       render: (_, r) => (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexWrap: "wrap", alignItems: "center" }}
-        >
-          <button
-            type="button"
-            className="nf-app-btn-ghost"
-            style={{ fontSize: 12, padding: "6px 12px", flexShrink: 0 }}
-            onClick={() => setDetail(r)}
-          >
-            Detalle
-          </button>
+        <div onKeyDown={(e) => e.stopPropagation()} className="nf-row-actions">
+          <RowAction icon={Eye} label="Detalle" tone="primary" onClick={() => setDetail(r)} />
           {canEdit && (
             <>
-              <button
-                type="button"
-                className="nf-app-btn-ghost"
-                style={{ fontSize: 12, padding: "6px 12px", flexShrink: 0 }}
+              <RowAction
+                icon={Pencil}
+                label="Editar"
                 onClick={() => {
                   setEditing(r);
                   setFormError("");
                 }}
-              >
-                Editar
-              </button>
+              />
+              {/* «Desactivar» no es «activar»: el adivinador de iconos por texto
+                  le ponía el triángulo de reproducir porque una palabra contiene
+                  a la otra. Aquí el icono se declara. */}
               {r.active && (
-                <button
-                  type="button"
-                  className="nf-app-btn-outline"
-                  style={{ fontSize: 12, padding: "6px 12px", color: "var(--nf-danger-text)", borderColor: "var(--nf-input-border)", fontWeight: 700, flexShrink: 0 }}
-                  onClick={() => setConfirmDeactivate(r)}
-                >
-                  Desactivar
-                </button>
+                <RowAction icon={Ban} label="Desactivar" tone="danger" onClick={() => setConfirmDeactivate(r)} />
               )}
             </>
           )}
@@ -418,7 +407,7 @@ export default function RecordsClient() {
               className="nf-app-input"
               style={{ flex: 1, minWidth: 220, boxSizing: "border-box" }}
             />
-            <select aria-label="Filtrar por tipo"
+            <Picker aria-label="Filtrar por tipo"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="nf-app-input"
@@ -430,15 +419,15 @@ export default function RecordsClient() {
                   {t.code ? `${t.code} · ` : ""}{t.name}
                 </option>
               ))}
-            </select>
-            <select aria-label="Filtrar por proceso" value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            </Picker>
+            <Picker aria-label="Filtrar por proceso" value={processFilter} onChange={(e) => setProcessFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todos los procesos</option>
               {processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} · ` : ""}{process.name}</option>)}
-            </select>
-            <select aria-label="Filtrar por cláusula" value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
+            </Picker>
+            <Picker aria-label="Filtrar por cláusula" value={clauseFilter} onChange={(e) => setClauseFilter(e.target.value)} className="nf-app-input" style={{ minWidth: 180, maxWidth: "100%", cursor: "pointer", boxSizing: "border-box" }}>
               <option value="ALL">Todas las cláusulas ISO</option>
               {admin.state.clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code}</option>)}
-            </select>
+            </Picker>
             {admin.mode === "live" && perm.can("records:export") && <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportMatrix("EXCEL")}><FileDown size={14} />{exportBusy === "EXCEL" ? "Generando…" : "Excel"}</button><button type="button" className="nf-app-btn-ghost" disabled={exportBusy != null} onClick={() => void exportMatrix("PDF")}><FileDown size={14} />{exportBusy === "PDF" ? "Generando…" : "PDF"}</button></div>}
             <span style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink-3)", whiteSpace: "nowrap" }}>
               {filtered.length} de {records.length}
@@ -604,89 +593,91 @@ function RecordFormModal({
               </Field>
             </div>
             <Field label="Proceso relacionado">
-              <select aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+              <Picker aria-label="Proceso" name="processId" defaultValue={editing?.processId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                 <option value="">— Sin proceso relacionado —</option>
                 {processes.map((process) => (
                   <option key={process.id} value={process.id}>
                     {process.code ? `${process.code} — ` : ""}{process.name}
                   </option>
                 ))}
-              </select>
+              </Picker>
             </Field>
-            <Field label="Cláusula ISO relacionada">
-              <select aria-label="Cláusula" name="clauseId" defaultValue={editing?.clauseId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
-                <option value="">— Sin cláusula relacionada —</option>
-                {clauses.map((clause) => <option key={clause.id} value={clause.id}>{clause.standardCode} · {clause.code} — {clause.title}</option>)}
-              </select>
-            </Field>
+            <ClausePicker
+              clauses={clauses}
+              defaultClauseId={editing?.clauseId ?? ""}
+              labelClause="Cláusula ISO relacionada"
+              inputClassName="nf-app-input"
+              inputStyle={{ ...inputFieldStyle, cursor: "pointer" }}
+            />
           </FormSection>
 
           <FormSection title="Clasificación y custodio">
             <div className="nf-grid-2" style={{ gap: 12 }}>
               <Field label="Tipo de registro">
-                <select aria-label="Tipo de registro" name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <Picker aria-label="Tipo de registro" name="recordTypeId" defaultValue={editing?.recordTypeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">— Sin tipo —</option>
                   {recordTypes.filter((t) => t.active).map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.code ? `${t.code} · ` : ""}{t.name}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </Field>
               <Field label="Custodio">
-                <select aria-label="Custodio" name="custodianId" defaultValue={editing?.custodianId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
-                  <option value="">— Sin custodio asignado —</option>
-                  {personnel
-                    .filter((p) => p.active)
-                    .map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.firstName} {p.lastName}
-                      </option>
-                    ))}
-                </select>
+                <PersonPicker
+                  name="custodianId"
+                  people={personnel.filter((p) => p.active)}
+                  defaultValue={editing?.custodianId ?? ""}
+                  placeholder="Sin custodio asignado"
+                  ariaLabel="Custodio"
+                  style={{ ...inputFieldStyle, cursor: "pointer" }}
+                />
               </Field>
             </div>
             <Field label="Revisor asignado">
-              <select aria-label="Revisor" name="reviewerId" defaultValue={editing?.reviewerId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
-                <option value="">— Seleccionar revisor —</option>
-                {members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER" || m.role === "AUDITOR").map((member) => (
-                  <option key={member.userId} value={member.userId}>{member.name} · {member.role}</option>
-                ))}
-              </select>
+              <PersonPicker
+                name="reviewerId"
+                people={members.filter((m) => m.role === "ORG_ADMIN" || m.role === "COMPLIANCE_MANAGER" || m.role === "AUDITOR")}
+                defaultValue={editing?.reviewerId ?? ""}
+                valueField="userId"
+                placeholder="Seleccionar revisor"
+                ariaLabel="Revisor"
+                style={{ ...inputFieldStyle, cursor: "pointer" }}
+              />
             </Field>
           </FormSection>
 
           <FormSection title="Retención y archivo">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))", gap: 12 }}>
               <Field label="Tiempo de retención">
-                <select aria-label="Tiempo de retención" name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <Picker aria-label="Tiempo de retención" name="retentionTimeId" defaultValue={editing?.retentionTimeId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {retentionTimes.filter((r) => r.active).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </Field>
               <Field label="Disposición">
-                <select aria-label="Disposición" name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <Picker aria-label="Disposición" name="dispositionId" defaultValue={editing?.dispositionId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {dispositions.filter((d) => d.active).map((d) => (
                     <option key={d.id} value={d.id}>
                       {d.name}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </Field>
               <Field label="Método de archivo">
-                <select aria-label="Método de archivo" name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
+                <Picker aria-label="Método de archivo" name="archiveMethodId" defaultValue={editing?.archiveMethodId ?? ""} className="nf-app-input" style={{ ...inputFieldStyle, cursor: "pointer" }}>
                   <option value="">—</option>
                   {archiveMethods.filter((a) => a.active).map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}
                     </option>
                   ))}
-                </select>
+                </Picker>
               </Field>
             </div>
           </FormSection>
@@ -1013,17 +1004,18 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Referencia</label><input aria-label="LOTE-…, INC-" name="reference" placeholder="LOTE-…, INC-…" className="nf-app-input" style={inputFieldStyle} /></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><input aria-label="Fecha de entrada" name="entryDate" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Fecha del registro *</label><DateField aria-label="Fecha de entrada" name="entryDate" required defaultValue={new Date().toISOString().slice(0, 10)} className="nf-app-input" style={inputFieldStyle} /></div>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><select aria-label="Responsable" name="responsibleId" required defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} className="nf-app-input" style={inputFieldStyle}>{admin.state.members.filter((member) => member.active !== false).map((member) => <option key={member.userId} value={member.userId}>{member.name}</option>)}</select></div>
-                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><select aria-label="Estado" name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></select></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Responsable *</label><PersonPicker name="responsibleId" people={admin.state.members.filter((member) => member.active !== false)} defaultValue={admin.state.members.find((member) => member.isSelf)?.userId ?? ""} valueField="userId" required ariaLabel="Responsable" style={inputFieldStyle} /></div>
+                  <div><label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 6 }}>Estado</label><Picker aria-label="Estado" name="status" defaultValue="VALID" className="nf-app-input" style={inputFieldStyle}><option value="DRAFT">Borrador</option><option value="VALID">Vigente</option><option value="EXPIRED">Vencido</option><option value="ARCHIVED">Archivado</option></Picker></div>
                 </div>
                 <FileImportArea
                   baseId={`record-entry-${recordId}`}
                   file={entryFile}
                   onFileChange={setEntryFile}
                   label="Archivo adjunto (opcional)"
+                  maxSizeMB={50}
                   zoneNote={admin.mode === "live" ? "Un solo archivo · máximo 50 MB" : undefined}
                   hint={admin.mode === "live" ? "El archivo se subirá al repositorio privado de la organización." : "El archivo se guarda solo en esta sesión del navegador."}
                   compact

@@ -2,50 +2,9 @@
 
 import { useI18n } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
-
-const STATUS_MAP: Record<string, { bg: string; color: string; label: string }> =
-  {
-    APPROVED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Aprobado" },
-    approved: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Aprobado" },
-    DRAFT: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Borrador" },
-    draft: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Borrador" },
-    IN_REVIEW: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En revisión" },
-    in_review: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En revisión" },
-    OBSOLETE: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Obsoleto" },
-    COMPLETED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Completada" },
-    IN_PROGRESS: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En curso" },
-    PLANNED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Planificada" },
-    OPEN: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Abierta" },
-    CLOSED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Cerrada" },
-    PENDING: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Pendiente" },
-    PENDING_VALIDATION: {
-      bg: "var(--nf-primary-subtle)",
-      color: "var(--nf-primary-active)",
-      label: "Pendiente validación",
-    },
-    UNDER_TREATMENT: {
-      bg: "var(--nf-warning-subtle)",
-      color: "var(--nf-warning-text)",
-      label: "En tratamiento",
-    },
-    MONITORED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Monitoreo" },
-    MITIGATED: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Mitigado" },
-    ACCEPTED: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Aceptado" },
-    IDENTIFIED: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Identificado" },
-    ON_TRACK: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "En objetivo" },
-    AT_RISK: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "En riesgo" },
-    OFF_TRACK: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Desviado" },
-    ACTIVE: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "Activo" },
-    TRIALING: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "Trial" },
-    CANCELLED: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Cancelado" },
-    CRITICAL: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Crítica" },
-    MAJOR: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "Mayor" },
-    MINOR: { bg: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", label: "Menor" },
-    IN_REVIEW_STATUS: { bg: "var(--nf-primary-subtle)", color: "var(--nf-primary-active)", label: "En revisión" },
-    success: { bg: "var(--nf-success-subtle)", color: "var(--nf-success-text)", label: "OK" },
-    warning: { bg: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", label: "Atención" },
-    danger: { bg: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", label: "Alerta" },
-  };
+/* El catálogo se comparte con los gráficos y las tablas: vivía aquí y por eso
+   cualquier otra pantalla pintaba el enum crudo. */
+import { STATUS_STYLES } from "@/lib/status-labels";
 
 interface BadgeProps {
   status: string;
@@ -61,7 +20,7 @@ export default function Badge({
   className,
 }: BadgeProps) {
   const { tx } = useI18n();
-  const s = STATUS_MAP[status] ?? {
+  const s = STATUS_STYLES[status] ?? {
     bg: "var(--nf-surface-muted)",
     color: "var(--nf-text-secondary)",
     label: label ?? status,

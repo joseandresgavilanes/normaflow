@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import MarketingLayout from "@/components/layout/MarketingLayout";
 import { Ic } from "@/components/marketing/nf/Icons";
+import Picker from "@/components/ui/Picker";
 
 const schema = z.object({
   name: z.string().min(2, "Indica tu nombre"),
@@ -87,11 +88,11 @@ export default function DemoPage() {
                   </div>
                   <div>
                     <label className="nf-label">Tamaño</label>
-                    <select aria-label="Empleados" {...register("employees")} className="nfm-select">
+                    <Picker aria-label="Empleados" {...register("employees")} className="nfm-select">
                       <option value="1-49">1 – 49</option>
                       <option value="50-250">50 – 250</option>
                       <option value="250+">Más de 250</option>
-                    </select>
+                    </Picker>
                   </div>
                 </div>
                 <div>

@@ -16,6 +16,7 @@ import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import { WorkflowStepper } from "@/components/ui/WorkflowStepper";
+import Picker from "@/components/ui/Picker";
 import {
   changeCategoryOptions,
   changeTypeOptions,
@@ -237,7 +238,7 @@ export default function ChangeControlModule() {
       <SectionTitle
         title="Control de cambios"
         sub="Evaluación de impacto, aprobadores, tareas, evidencias y trazabilidad completa"
-        action={perm.changes.manage ? "+ Nueva solicitud" : undefined}
+        action={perm.changes.manage ? "Nueva solicitud" : undefined}
         onAction={perm.changes.manage ? () => setCreateOpen(true) : undefined}
       />
 
@@ -446,7 +447,7 @@ export default function ChangeControlModule() {
         </label>
         <div className="nf-grid-2" style={{ gap: 12 }}>
           <label>Categoría
-            <select
+            <Picker aria-label="Categoría"
               value={form.category}
               onChange={e => setForm({ ...form, category: e.target.value })}
               className="nf-app-input"
@@ -455,10 +456,10 @@ export default function ChangeControlModule() {
               {changeCategoryOptions().map(option => (
                 <option key={option} value={option}>{option}</option>
               ))}
-            </select>
+            </Picker>
           </label>
           <label>Tipo de cambio
-            <select
+            <Picker aria-label="Tipo de cambio"
               value={form.changeType}
               onChange={e => setForm({ ...form, changeType: e.target.value })}
               className="nf-app-input"
@@ -467,7 +468,7 @@ export default function ChangeControlModule() {
               {changeTypeOptions().map(option => (
                 <option key={option} value={option}>{option}</option>
               ))}
-            </select>
+            </Picker>
           </label>
         </div>
         <label>Motivo / justificación
@@ -480,7 +481,7 @@ export default function ChangeControlModule() {
         />
         </label>
         <label>Impacto
-        <select
+        <Picker aria-label="Impacto"
           value={form.impact}
           onChange={e => setForm({ ...form, impact: e.target.value as ChangeRequestRow["impact"] })}
           className="nf-app-input"
@@ -489,7 +490,7 @@ export default function ChangeControlModule() {
           <option value="MEDIUM">Medio</option>
           <option value="HIGH">Alto</option>
           <option value="CRITICAL">Crítico</option>
-        </select>
+        </Picker>
         </label>
         <div>
           <div className="nf-modal-field-label" style={{ marginBottom: 8 }}>Procesos afectados</div>

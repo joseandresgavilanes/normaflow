@@ -14,17 +14,19 @@ import {
   type OpportunityInput,
 } from "@/lib/actions/opportunities";
 import type { OpportunitiesPayload } from "@/lib/server-queries";
+import { formatDate } from "@/lib/format/datetime";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import DateField from "@/components/ui/DateField";
 import {
-  CardActions,
-  EmptyOperational,
+  CellTitle,
   Field,
   FormModal,
   inputStyle,
   Meta,
-  OperationalCard,
-  OperationalGrid,
   OperationalHeader,
   OperationalMessages,
+  RowActions,
 } from "./OperationalUi";
 
 type Row = OpportunitiesPayload["opportunities"][number];
@@ -88,29 +90,63 @@ export function OpportunitiesLive({ initial }: { initial: OpportunitiesPayload }
   return <div>
     <OperationalHeader
       title="Oportunidades"
-      subtitle={`${initial.opportunities.length} oportunidades · análisis de materialización y aprobación trazable`}
+      subtitle="Oportunidades de mejora con revisor, análisis de materialización y aprobación trazable (cláusula 6.1)."
       canCreate={initial.access.canCreate}
       actionLabel="Nueva oportunidad"
       onCreate={() => { setError(""); setCreating(true); }}
     />
     <OperationalMessages error={error} success={success} />
-    {initial.opportunities.length === 0 ? (
-      <EmptyOperational>No hay oportunidades. Registra una oportunidad y asígnale un revisor antes de enviarla a aprobación.</EmptyOperational>
-    ) : <OperationalGrid>{initial.opportunities.map((opportunity) => <OperationalCard key={opportunity.id} onClick={() => setDetail(opportunity)}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-        <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{opportunity.standardCode ?? "Sin norma"} · {opportunity.category}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{opportunity.title}</h3><div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>Revisor: {opportunity.reviewerName ?? "Sin asignar"}</div></div>
-        <Badge status={opportunity.status} />
-      </div>
-      <div style={{ marginTop: 12, fontSize: 12, color: "var(--nf-ink-3)" }}>{opportunity.materializationPlan ? "Plan de materialización documentado" : "Plan pendiente"}{opportunity.dueDate ? ` · vence ${new Date(opportunity.dueDate).toLocaleDateString("es")}` : ""}</div>
-      <CardActions canUpdate={initial.access.canUpdate && opportunity.status !== OpportunityStatus.MATERIALIZED && opportunity.status !== OpportunityStatus.CLOSED} canDelete={initial.access.canDelete && (opportunity.status === OpportunityStatus.IDENTIFIED || opportunity.status === OpportunityStatus.REJECTED)} pending={isPending} onEdit={() => { setError(""); setEditing(opportunity); }} onDelete={() => run(() => deleteOpportunity(opportunity.id), { onSuccess: () => setDetail(null), successMessage: "Oportunidad eliminada." })} />
-    </OperationalCard>)}</OperationalGrid>}
+    <EntityTable
+      caption="Oportunidades"
+      rows={initial.opportunities}
+      rowKey={(row) => row.id}
+      rowAction={(row) => setDetail(row)}
+      storageKey="opportunities"
+      searchText={(row) => `${row.title} ${row.description ?? ""} ${row.category ?? ""} ${row.reviewerName ?? ""}`}
+      searchPlaceholder="Buscar por título, categoría o revisor…"
+      filters={[
+        { id: "status", label: "Estado", value: (row) => row.status },
+        { id: "standard", label: "Norma", value: (row) => row.standardCode, format: (value) => value.replaceAll("_", " ") },
+        { id: "category", label: "Categoría", value: (row) => row.category, format: (value) => value },
+      ]}
+      emptyTitle="Todavía no hay oportunidades"
+      emptyDescription="Registra una oportunidad y asígnale un revisor antes de enviarla a aprobación."
+      columns={[
+        {
+          id: "title", header: "Oportunidad", primary: true, minWidth: 240,
+          sortValue: (row) => row.title,
+          cell: (row) => <CellTitle title={row.title} meta={`${row.standardCode?.replaceAll("_", " ") ?? "Sin norma"} · ${row.category}`} />,
+        },
+        { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+        { id: "reviewer", header: "Revisor", hideable: true, sortValue: (row) => row.reviewerName ?? "", cell: (row) => row.reviewerName ?? "Sin asignar" },
+        {
+          id: "plan", header: "Materialización", hideable: true,
+          sortValue: (row) => (row.materializationPlan ? 1 : 0),
+          cell: (row) => row.materializationPlan ? "Plan documentado" : "Plan pendiente",
+        },
+        {
+          id: "due", header: "Vencimiento", hideable: true, numeric: true,
+          sortValue: (row) => row.dueDate ?? "",
+          cell: (row) => row.dueDate ? formatDate(row.dueDate) : "—",
+        },
+      ]}
+      actions={(row) => (
+        <RowActions
+          canUpdate={initial.access.canUpdate && row.status !== OpportunityStatus.MATERIALIZED && row.status !== OpportunityStatus.CLOSED}
+          canDelete={initial.access.canDelete && (row.status === OpportunityStatus.IDENTIFIED || row.status === OpportunityStatus.REJECTED)}
+          pending={isPending}
+          onEdit={() => { setError(""); setEditing(row); }}
+          onDelete={() => run(() => deleteOpportunity(row.id), { onSuccess: () => setDetail(null), successMessage: "Oportunidad eliminada." })}
+        />
+      )}
+    />
 
     <FormModal open={creating || !!editing} title={editing ? "Editar oportunidad" : "Nueva oportunidad"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submit}>
       <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} defaultValue={row?.title ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Norma / versión"><input aria-label="ISO_9001:2015" name="standardCode" className="nf-app-input" style={inputStyle} placeholder="ISO_9001:2015" defaultValue={row?.standardCode ?? ""} /></Field><Field label="Categoría"><input aria-label="Cliente, proceso, tecnología" name="category" required className="nf-app-input" style={inputStyle} placeholder="Cliente, proceso, tecnología…" defaultValue={row?.category ?? ""} /></Field></div>
       <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={row?.description ?? ""} /></Field>
-      <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Fuente"><input aria-label="Auditoría, análisis de contexto" name="source" className="nf-app-input" style={inputStyle} placeholder="Auditoría, análisis de contexto…" defaultValue={row?.source ?? ""} /></Field><Field label="Fecha objetivo"><input aria-label="Fecha de vencimiento" name="dueDate" type="date" className="nf-app-input" style={inputStyle} defaultValue={row?.dueDate?.slice(0, 10) ?? ""} /></Field></div>
-      <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Responsable"><select aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={row?.ownerId ?? ""}><option value="">Sin asignar</option>{memberRows.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field><Field label="Revisor obligatorio"><select aria-label="Seleccionar revisor" name="reviewerId" required className="nf-app-input" style={inputStyle} defaultValue={row?.reviewerId ?? ""}><option value="">Seleccionar revisor…</option>{memberRows.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></Field></div>
+      <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Fuente"><input aria-label="Auditoría, análisis de contexto" name="source" className="nf-app-input" style={inputStyle} placeholder="Auditoría, análisis de contexto…" defaultValue={row?.source ?? ""} /></Field><Field label="Fecha objetivo"><DateField aria-label="Fecha de vencimiento" name="dueDate" className="nf-app-input" style={inputStyle} defaultValue={row?.dueDate?.slice(0, 10) ?? ""} /></Field></div>
+      <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Responsable"><Picker aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={row?.ownerId ?? ""}><option value="">Sin asignar</option>{memberRows.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</Picker></Field><Field label="Revisor obligatorio"><Picker aria-label="Seleccionar revisor" name="reviewerId" required className="nf-app-input" style={inputStyle} defaultValue={row?.reviewerId ?? ""}><option value="">Seleccionar revisor…</option>{memberRows.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</Picker></Field></div>
       <Field label="Análisis de materialización"><textarea aria-label="¿Qué evidencia demostrará que la oportunidad se materializó?" name="materializationAnalysis" rows={3} className="nf-app-input" style={inputStyle} placeholder="¿Qué evidencia demostrará que la oportunidad se materializó?" defaultValue={row?.materializationAnalysis ?? ""} /></Field>
       <Field label="Plan de materialización"><textarea aria-label="Acciones, responsables, recursos y criterios de éxito." name="materializationPlan" rows={3} className="nf-app-input" style={inputStyle} placeholder="Acciones, responsables, recursos y criterios de éxito." defaultValue={row?.materializationPlan ?? ""} /></Field>
       <Field label="Evidencia / resultado"><textarea aria-label="Evidencia de materialización" name="materializationEvidence" rows={2} className="nf-app-input" style={inputStyle} defaultValue={row?.materializationEvidence ?? ""} /></Field>

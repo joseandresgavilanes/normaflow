@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Ban, Pencil } from "lucide-react";
 import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import DataTable, { type Column } from "@/components/ui/Table";
@@ -12,6 +13,9 @@ import { formatDate } from "@/lib/utils";
 import { useAdminMock, type PersonnelMockRow } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { Field as UiField } from "@/components/ui/Field";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
+import { RowAction } from "@/components/ui/RowActions";
 
 export default function PersonnelClient() {
   const admin = useAdminMock();
@@ -81,9 +85,9 @@ export default function PersonnelClient() {
       key: "actions",
       label: "",
       render: (_, r) => (
-        <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-          <button type="button" onClick={(e) => { e.stopPropagation(); setEditing(r); setFormError(""); }} className="nf-app-btn-ghost">Editar</button>
-          {r.active && <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDeactivate(r); }} className="nf-app-btn-danger">Desactivar</button>}
+        <div className="nf-row-actions">
+          <RowAction icon={Pencil} label="Editar" onClick={() => { setEditing(r); setFormError(""); }} />
+          {r.active && <RowAction icon={Ban} label="Desactivar" tone="danger" onClick={() => setConfirmDeactivate(r)} />}
         </div>
       ),
     });
@@ -121,7 +125,7 @@ export default function PersonnelClient() {
       <SectionTitle
         title="Personal"
         sub="Personas que pertenecen a la organización, con o sin acceso al sistema (ISOTech § 11.3)."
-        action={canEdit ? "+ Nueva persona" : undefined}
+        action={canEdit ? "Nueva persona" : undefined}
         onAction={canEdit ? () => { setCreating(true); setFormError(""); } : undefined}
       />
 
@@ -167,14 +171,14 @@ export default function PersonnelClient() {
               <input aria-label="Identificación" name="identification" defaultValue={editing?.identification ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
             <Field label="Fecha de alta">
-              <input aria-label="Fecha de alta" type="date" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
+              <DateField aria-label="Fecha de alta" name="hiredAt" defaultValue={editing?.hiredAt?.slice(0, 10) ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
             </Field>
           </div>
           <Field label="Cargo">
-            <select aria-label="Puesto" name="positionId" defaultValue={editing?.positionId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
+            <Picker aria-label="Puesto" name="positionId" defaultValue={editing?.positionId ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
               <option value="">— Sin cargo —</option>
               {positions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+            </Picker>
           </Field>
 
           {formError && (

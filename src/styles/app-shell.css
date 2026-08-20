@@ -534,12 +534,21 @@
   letter-spacing: var(--nf-tracking-tight);
   line-height: var(--nf-leading-tight);
 }
-.nf-page-header__subtitle {
-  margin: var(--nf-space-1) 0 0;
-  color: var(--nf-text-muted);
-  font-size: var(--nf-text-base);
-  line-height: var(--nf-leading-normal);
-  max-width: 68ch;
+
+/* Cabecera de SECCIÓN: la que encabeza el contenido de una pestaña dentro de
+   una página que ya tiene su título. Baja un escalón de tamaño y se queda sin
+   la línea inferior, que es la que separa la cabecera de la página del resto.
+   Con el mismo tamaño que el `<h1>` —y justo debajo— la pantalla parecía tener
+   dos títulos, que es exactamente lo que se ve en «Contexto de la organización
+   / Partes interesadas». */
+.nf-page-header[data-level="2"] {
+  padding-bottom: 0;
+  margin-bottom: var(--nf-space-3);
+  border-bottom: 0;
+}
+.nf-page-header[data-level="2"] .nf-page-header__title {
+  font-size: var(--nf-text-lg);
+  letter-spacing: var(--nf-tracking-normal);
 }
 .nf-page-header__meta {
   display: flex;
@@ -547,6 +556,21 @@
   align-items: center;
   gap: var(--nf-space-2);
   margin-top: var(--nf-space-2);
+}
+/* Dato de cabecera: el conteo o la norma que antes iban dentro del subtítulo.
+   Se queda a la vista porque informa; la explicación es la que se pide. */
+.nf-page-header__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  padding: 2px var(--nf-space-2);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .nf-page-header__actions {
   display: flex;

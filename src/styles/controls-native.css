@@ -1,0 +1,366 @@
+/* ============================================================================
+ * NormaFlow — controles nativos redibujados
+ *
+ * El sistema de diseño llegaba hasta el borde del campo y se paraba ahí: la
+ * casilla, el radio, las flechas del número, la aspa del buscador, el botón de
+ * fichero, la barra de rango y el asa del textarea seguían siendo cromo del
+ * navegador. Eso significa cuatro aspectos distintos en Chrome, Firefox, Safari
+ * y Edge, ninguno de ellos con los tokens del producto y varios ilegibles en
+ * tema oscuro (la casilla nativa de Chrome se pinta con el gris del sistema
+ * operativo, no con el del tema).
+ *
+ * Aquí se redibujan todos con selectores de ELEMENTO, no de clase: hay 79
+ * casillas, 155 campos numéricos y 189 áreas de texto repartidos por el
+ * producto con marcados distintos, y ninguno tendría que cambiar para verse
+ * bien. Al ser especificidad 0-0-1, cualquier clase existente sigue mandando
+ * sobre el tamaño o el color si ya lo fijaba.
+ *
+ * Se carga después de `forms.css` y de las hojas de módulo.
+ * ========================================================================== */
+
+/* --------------------------------------------------------------------------
+ * Casilla y radio
+ *
+ * `accent-color` solo tiñe la marca: la caja, el radio y el foco los sigue
+ * dibujando el sistema operativo. Con `appearance: none` la caja es nuestra y
+ * la marca se pinta con `mask`, así que hereda el token de contraste correcto
+ * en claro y en oscuro en vez de ser un PNG blanco a fuego.
+ * ------------------------------------------------------------------------ */
+
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  /* La marca se sitúa en absoluto con `inset: 0` y no como hijo centrado de una
+     rejilla: así su tamaño sale de la caja y no de una pista que se ajusta al
+     contenido —donde un `width: 100%` se resolvería contra cero y la marca no
+     llegaría a pintarse—. */
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1.5px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-xs);
+  background: var(--nf-input-bg);
+  color: var(--nf-on-primary);
+  cursor: pointer;
+  /* Sin esto el navegador reserva el alto de una línea de texto y la casilla
+     baila respecto a su etiqueta. */
+  vertical-align: middle;
+  transition:
+    background-color var(--nf-duration-fast) var(--nf-ease-standard),
+    border-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+input[type="radio"] {
+  border-radius: var(--nf-radius-full);
+}
+
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--nf-input-border-hover);
+}
+
+input[type="checkbox"]::before,
+input[type="radio"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: currentColor;
+  /* La marca crece desde el centro. Sin transición el cambio es un salto y en
+     una lista de veinte casillas no se ve cuál se acaba de tocar. */
+  transform: scale(0);
+  transition: transform var(--nf-duration-instant) var(--nf-ease-out);
+}
+
+input[type="checkbox"]::before {
+  -webkit-mask: var(--nf-check-mark) center / 76% no-repeat;
+  mask: var(--nf-check-mark) center / 76% no-repeat;
+}
+
+/* El punto ocupa poco menos de la mitad del círculo: menos no se ve, más lo
+   llena y deja de leerse como radio. */
+input[type="radio"]::before {
+  inset: 26%;
+  border-radius: var(--nf-radius-full);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked,
+input[type="checkbox"]:indeterminate {
+  background-color: var(--nf-primary);
+  border-color: var(--nf-primary);
+}
+
+input[type="checkbox"]:checked::before,
+input[type="radio"]:checked::before,
+input[type="checkbox"]:indeterminate::before {
+  transform: scale(1);
+}
+
+/* Indeterminado: el guion dice «algunos», que no es ni sí ni no. Antes el
+   estado existía en la lógica de la tabla pero se pintaba igual que vacío. */
+input[type="checkbox"]:indeterminate::before {
+  -webkit-mask: var(--nf-dash-mark) center / 62% no-repeat;
+  mask: var(--nf-dash-mark) center / 62% no-repeat;
+}
+
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+}
+
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  background-color: var(--nf-disabled-bg);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+input[type="checkbox"]:disabled:checked,
+input[type="radio"]:disabled:checked {
+  background-color: var(--nf-disabled-border);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-surface);
+}
+
+/* --------------------------------------------------------------------------
+ * Campo numérico
+ *
+ * Las flechas nativas miden 12 px de ancho, cambian de forma en cada navegador
+ * y desaparecen en Firefox salvo al pasar el ratón. Se retiran: el valor se
+ * escribe, y las flechas del teclado y la rueda siguen funcionando igual.
+ * ------------------------------------------------------------------------ */
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+  /* Cifras de ancho fijo: en una columna de puntuaciones o de importes, los
+     dígitos proporcionales hacen bailar la coma decimal. */
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Buscador
+ *
+ * El aspa de Chrome y Safari no se retira: se repinta. Retirarla dejaba sin
+ * forma de vaciar el campo a los seis buscadores del producto que no dibujan
+ * la suya —quedaba seleccionar el texto y borrarlo—, y quitar función para
+ * ganar coherencia es un mal cambio. Repintada, hace lo mismo que hacía pero
+ * con el grosor, el radio y el color del sistema de diseño.
+ *
+ * El resto de adornos de WebKit sí se van: no hacen nada.
+ * ------------------------------------------------------------------------ */
+
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-left: var(--nf-space-1);
+  background-color: var(--nf-text-subtle);
+  -webkit-mask: var(--nf-close-mark) center / contain no-repeat;
+  mask: var(--nf-close-mark) center / contain no-repeat;
+  cursor: pointer;
+}
+input[type="search"]::-webkit-search-cancel-button:hover {
+  background-color: var(--nf-text-primary);
+}
+
+/* Los campos que ya dibujan su propia aspa la ocultan: dos aspas a un píxel una
+   de otra es peor que ninguna. */
+input[type="search"][data-nf-clear="propio"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Fecha y hora nativas
+ *
+ * `DateField` sustituye a `<input type="date">` en el producto, pero el
+ * elemento sigue existiendo dentro del propio componente y en cualquier campo
+ * sin migrar. El icono nativo del calendario se pinta con el color del sistema
+ * operativo —negro sobre fondo oscuro— así que se recolorea.
+ * ------------------------------------------------------------------------ */
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: var(--nf-radius-xs);
+  opacity: 0.65;
+  filter: var(--nf-icon-filter);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background: var(--nf-surface-hover);
+}
+
+/* Los campos vacíos enseñan «dd/mm/aaaa» con el color del sistema; se iguala
+   al del resto de marcadores de posición. */
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: inherit;
+}
+
+/* --------------------------------------------------------------------------
+ * Área de texto
+ * ------------------------------------------------------------------------ */
+
+textarea {
+  /* Nunca horizontal: al ensancharla se rompe la rejilla del formulario y el
+     usuario no puede devolverla a su sitio. */
+  resize: vertical;
+}
+
+/* El suelo solo se impone a las áreas que no declaran `rows`. Quien pidió dos
+   filas las quiere: forzarle 76 px dejaría una caja del doble de alto que su
+   contenido al lado de un campo de una línea. */
+textarea:not([rows]) {
+  min-height: 76px;
+}
+
+/* Crece con el contenido donde el navegador lo admite; el `min-height` sigue
+   marcando el suelo y el tope evita que un texto largo empuje los botones del
+   formulario fuera de la pantalla. */
+@supports (field-sizing: content) {
+  textarea:not([rows]) {
+    field-sizing: content;
+    max-height: 40vh;
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Selector de fichero
+ *
+ * El botón «Seleccionar archivo» y su texto «Sin archivos seleccionados» son
+ * cromo del navegador y salen en su idioma, no en el de la interfaz.
+ * `FileImportArea` es el camino recomendado; esto ordena lo que quede suelto.
+ * ------------------------------------------------------------------------ */
+
+input[type="file"] {
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-secondary);
+}
+
+input[type="file"]::file-selector-button {
+  margin-right: var(--nf-space-3);
+  padding: 0 var(--nf-space-3);
+  min-height: var(--nf-control-height-sm);
+  border: 1px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-surface);
+  color: var(--nf-text-primary);
+  font-family: inherit;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--nf-surface-hover);
+}
+
+/* --------------------------------------------------------------------------
+ * Barra de rango
+ * ------------------------------------------------------------------------ */
+
+input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+}
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-surface-sunken);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border: 2px solid var(--nf-surface);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-primary);
+  box-shadow: var(--nf-elevation-1);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--nf-surface);
+  border-radius: var(--nf-radius-full);
+  background: var(--nf-primary);
+}
+
+input[type="range"]:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: var(--nf-focus-ring-offset);
+  border-radius: var(--nf-radius-s);
+}
+
+/* --------------------------------------------------------------------------
+ * Autorrelleno
+ *
+ * Chrome pinta el campo autorrellenado de amarillo con `background-color`
+ * !important desde el agente de usuario. No hay forma de sobrescribirlo: se
+ * tapa con una sombra interior del grosor del campo, que es la técnica que
+ * usan las bibliotecas de formularios.
+ * ------------------------------------------------------------------------ */
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--nf-text-primary);
+  -webkit-box-shadow: 0 0 0 40px var(--nf-input-bg) inset;
+  caret-color: var(--nf-text-primary);
+  /* La transición larga evita el destello amarillo del primer cuadro. */
+  transition: background-color 100000s ease-in-out 0s;
+}
+
+/* --------------------------------------------------------------------------
+ * Selección de texto y barras de desplazamiento
+ * ------------------------------------------------------------------------ */
+
+::selection {
+  background: var(--nf-primary-subtle);
+  color: var(--nf-text-primary);
+}
+
+/* Las barras del sistema operativo se pintan claras sobre el tema oscuro.
+   `scrollbar-color` se hereda, así que declararlo en la raíz llega a todos los
+   contenedores con scroll sin recurrir al selector universal. */
+:root {
+  scrollbar-color: var(--nf-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+}

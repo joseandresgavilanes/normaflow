@@ -1,3 +1,4 @@
+import InfoTip from "@/components/ui/InfoTip";
 import { cn } from "@/lib/utils";
 
 export function IsoDashboard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -20,9 +21,9 @@ export function IsoDashboardCard({
   return (
     <section className={cn("nf-iso-dashboard-card", className)}>
       <div className="nf-iso-dashboard-card-head">
-        <div>
+        <div className="nf-heading-row">
           <h2 className="nf-iso-dashboard-card-title">{title}</h2>
-          {subtitle && <p className="nf-iso-dashboard-card-subtitle">{subtitle}</p>}
+          {subtitle && <InfoTip text={subtitle} label={title} />}
         </div>
         {action}
       </div>

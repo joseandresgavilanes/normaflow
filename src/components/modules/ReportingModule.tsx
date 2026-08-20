@@ -9,6 +9,9 @@ import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import { downloadReportExport, exportReport, getReportExportStatus } from "@/lib/actions/reporting";
 import type { ReportFilters } from "@/lib/reporting-contract";
 import type { ReportingPayload } from "@/lib/server-queries";
+import { formatDateTime } from "@/lib/format/datetime";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 const REPORTS = [
   { id: "gap", title: "Informe GAP Assessment", desc: "Brechas, score y estado por cláusula ISO.", accent: "var(--nf-primary)", formats: ["PDF", "EXCEL"] },
@@ -305,15 +308,15 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             <span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
               Desde
             </span>
-            <input type="date" className="nf-app-input" value={from} onChange={e => setFrom(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
+            <DateField className="nf-app-input" value={from} onChange={e => setFrom(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
           </label>
-          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Norma</span><select className="nf-app-input" value={standardCode} onChange={e => setStandardCode(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todas las normas</option>{liveData.standards.map(item => <option key={item.standard.code} value={item.standard.code}>{item.standard.code} · {item.standard.name}</option>)}</select></label>}
-          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Estado</span><select className="nf-app-input" value={status} onChange={e => setStatus(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todos los estados</option><option value="COMPLETED">Completado</option><option value="IN_PROGRESS">En curso</option><option value="PENDING">Pendiente</option><option value="OPEN">Abierto</option><option value="APPROVED">Aprobado</option></select></label>}
+          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Norma</span><Picker aria-label="Norma" className="nf-app-input" value={standardCode} onChange={e => setStandardCode(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todas las normas</option>{liveData.standards.map(item => <option key={item.standard.code} value={item.standard.code}>{item.standard.code} · {item.standard.name}</option>)}</Picker></label>}
+          {live && <label style={{ display: "block" }}><span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>Estado</span><Picker aria-label="Estado" className="nf-app-input" value={status} onChange={e => setStatus(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }}><option value="">Todos los estados</option><option value="COMPLETED">Completado</option><option value="IN_PROGRESS">En curso</option><option value="PENDING">Pendiente</option><option value="OPEN">Abierto</option><option value="APPROVED">Aprobado</option></Picker></label>}
           <label style={{ display: "block" }}>
             <span className="nf-filter-label" style={{ display: "block", marginBottom: 8 }}>
               Hasta
             </span>
-            <input type="date" className="nf-app-input" value={to} onChange={e => setTo(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
+            <DateField className="nf-app-input" value={to} onChange={e => setTo(e.target.value)} style={{ width: "100%", boxSizing: "border-box" }} />
           </label>
         </div>
         <p className="nf-app-help" style={{ margin: "14px 0 0", lineHeight: 1.55 }}>
@@ -391,7 +394,7 @@ export default function ReportingModule({ liveData }: { liveData?: ReportingPayl
             >
               <div style={{ minWidth: 0 }}>
                 <strong style={{ display: "block", color: "var(--nf-ink)", fontWeight: 700, fontSize: 14, wordBreak: "break-all" }}>{item.fileName}</strong>
-                <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2)" }}>{item.generatedBy} · {new Date(item.createdAt).toLocaleString("es-ES")}</div>
+                <div className="nf-app-help" style={{ marginTop: 4, color: "var(--nf-ink-2)" }}>{item.generatedBy} · {formatDateTime(item.createdAt)}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><span className="nf-chip nf-chip--on">{item.format} · {item.rowCount} filas · {item.status}</span>{item.hasContent && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" onClick={() => { setBusy(`download-${item.id}`); void downloadReportExport(item.id).then(result => download(result.url, result.fileName)).catch(error => showToast(error instanceof Error ? error.message : "No se pudo descargar el informe")).finally(() => setBusy(null)); }}>{busy === `download-${item.id}` ? "Descargando…" : "Descargar"}</button>}</div>
               {item.status === "FAILED" && item.error && <p style={{ margin: 0, color: "var(--nf-danger)", fontSize: 12 }}>Error: {item.error}</p>}

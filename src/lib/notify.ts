@@ -2,6 +2,7 @@ import "server-only";
 import { Prisma, type NotificationType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { enqueueExternalNotificationEmail, enqueueNotificationDelivery } from "@/lib/notification-delivery";
+import { activeDelegateFor } from "@/lib/delegation";
 
 export type NotifyInput = {
   organizationId: string;
@@ -61,6 +62,40 @@ export async function notifyUser(input: NotifyInput): Promise<void> {
       disabledTypes: preference?.disabledTypes ?? [],
     });
   });
+
+  /* Fuera de la transacción a propósito: la delegación es un reenvío de
+     cortesía, y si falla no debe tumbar el aviso al destinatario original —que
+     es el que la acción de negocio acaba de garantizar. */
+  await forwardToDelegate(input, type, idempotencyKey);
+}
+
+/**
+ * Reenvía el aviso a quien cubre al destinatario durante su ausencia.
+ *
+ * El aviso del suplente es una notificación propia, no una copia: pasa por sus
+ * preferencias de correo y por su buzón, y lleva escrito a quién sustituye.
+ * Sin eso, el suplente recibiría avisos sin saber por qué le llegan.
+ */
+async function forwardToDelegate(input: NotifyInput, type: NotificationType, idempotencyKey: string | null): Promise<void> {
+  try {
+    const delegateId = await activeDelegateFor(input.organizationId, input.userId);
+    if (!delegateId) return;
+    const holder = await prisma.user.findUnique({ where: { id: input.userId }, select: { name: true } });
+    await notifyUser({
+      organizationId: input.organizationId,
+      userId: delegateId,
+      title: `[Suplencia de ${holder?.name ?? "un compañero"}] ${input.title}`,
+      body: input.body,
+      type,
+      link: input.link,
+      email: input.email,
+      // Clave propia: si se reutilizara la del titular, la deduplicación por
+      // organización descartaría uno de los dos avisos.
+      idempotencyKey: idempotencyKey ? `delegate:${idempotencyKey}` : undefined,
+    });
+  } catch (error) {
+    console.error("[notify] no se pudo reenviar al suplente", error);
+  }
 }
 
 /** Queue an email-only notification for personnel without a NormaFlow login. */

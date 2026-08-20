@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useI18n } from "@/context/I18nProvider";
+import Picker from "@/components/ui/Picker";
 
 /**
  * Barra de filtros horizontal.
@@ -43,11 +44,25 @@ export default function FilterBar({
             <Search size={15} strokeWidth={2} aria-hidden />
             <input
               type="search"
+              data-nf-clear="propio"
               value={search ?? ""}
               onChange={(event) => onSearch(event.target.value)}
               placeholder={tx(searchPlaceholder)}
               aria-label={tx(searchLabel)}
             />
+            {/* Aspa propia, y por eso el campo desactiva la nativa: esta existe
+                también en Firefox, que no trae ninguna. */}
+            {search && (
+              <button
+                type="button"
+                data-nf-no-action-icon
+                className="nf-filterbar__search-clear"
+                aria-label={tx("Borrar búsqueda")}
+                onClick={() => onSearch("")}
+              >
+                <X size={13} strokeWidth={2.4} aria-hidden />
+              </button>
+            )}
           </div>
         )}
         {children}
@@ -109,9 +124,9 @@ export function FilterSelect({
   return (
     <label className="nf-filterbar__select">
       <span className="nf-filterbar__select-label">{tx(label)}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)}>
+      <Picker aria-label={label} value={value} onChange={(event) => onChange(event.target.value)}>
         {children}
-      </select>
+      </Picker>
     </label>
   );
 }

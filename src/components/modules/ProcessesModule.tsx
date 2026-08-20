@@ -4,10 +4,16 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowDownToLine, ArrowUpFromLine, BarChart3, ChevronRight, FileText, GitBranch, GitPullRequest, GraduationCap, Layers, Plus, Shield, Target } from "lucide-react";
 import Card from "@/components/ui/Card";
+import EntityTable from "@/components/ui/EntityTable";
+import {
+  CellTitle,
+  CountCell,
+} from "@/components/operations/OperationalUi";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Modal from "@/components/ui/Modal";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
+import Picker from "@/components/ui/Picker";
 import {
   useWorkspace,
   type ProcessRow,
@@ -510,7 +516,7 @@ export default function ProcessesModule() {
     <div>
       <SectionTitle
         title="Mapa de procesos"
-        sub={`${processes.length} procesos en el espacio de trabajo`}
+        meta={<span className="nf-page-header__chip">{processes.length} procesos</span>}
         action={
           <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
             <Plus size={17} strokeWidth={2.25} aria-hidden />
@@ -625,294 +631,45 @@ export default function ProcessesModule() {
           <p style={{ margin: "8px 0 0", fontSize: 14, color: "var(--nf-ink-3)" }}>Crea el primero para enlazar documentos, riesgos e indicadores.</p>
         </Card>
       ) : (
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))" }}>
-          {processes.map(p => {
-            const { label: typeLabel, color: accent, soft: accentSoft, gradientEnd } = processTypeMeta(p.type);
-            const stats = getProcessLinkStats(p, documents, risks, indicators, changeRequests, trainingAssignments);
-            const maxIo = 4;
-            const inShown = p.inputs.slice(0, maxIo);
-            const outShown = p.outputs.slice(0, maxIo);
-            const inMore = Math.max(0, p.inputs.length - inShown.length);
-            const outMore = Math.max(0, p.outputs.length - outShown.length);
-
-            const metricCell = (Icon: LucideIcon, label: string, value: number, color: string) => (
-              <div
-                key={label}
-                style={{
-                  textAlign: "center",
-                  padding: "10px 6px",
-                  borderRadius: 12,
-                  background: "var(--nf-surface)",
-                  border: "1px solid rgba(82, 102, 246, 0.08)",
-                  minWidth: 0,
-                }}
-              >
-                <Icon size={17} strokeWidth={2.25} aria-hidden style={{ color, display: "block", margin: "0 auto 6px" }} />
-                <div style={{ fontSize: 18, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</div>
-                <div style={{ fontSize: 9, fontWeight: 600, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginTop: 4 }}>{label}</div>
-              </div>
-            );
-
-            return (
-              <div
-                key={p.id}
-                className="nf-kpi-card"
-                onClick={() => setDetail(p)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => (e.key === "Enter" || e.key === " ") && setDetail(p)}
-                style={{ overflow: "hidden", borderRadius: 16 }}
-              >
-                
-                <div style={{ padding: 0 }}>
-                  <div
-                    style={{
-                      padding: "20px 20px 18px",
-                      background: "var(--nf-surface)",
-                      borderBottom: "1px solid rgba(82, 102, 246, 0.07)",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
-                          <span
-                            style={{
-                              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                              fontSize: 12,
-                              fontWeight: 600,
-                              color: accent,
-                              background: "var(--nf-surface)",
-                              border: `1.5px solid ${accent}35`,
-                              padding: "5px 11px",
-                              borderRadius: 10,
-                              letterSpacing: "0.02em",
-                              boxShadow: "0 1px 0 rgba(82, 102, 246, 0.06)",
-                            }}
-                          >
-                            {p.code || "—"}
-                          </span>
-                          <span
-                            style={{
-                              fontSize: 11,
-                              fontWeight: 600,
-                              letterSpacing: "-0.01em",
-                              textTransform: "none",
-                              background: `${accent}22`,
-                              color: accent,
-                              padding: "5px 11px",
-                              borderRadius: 99,
-                            }}
-                          >
-                            {typeLabel}
-                          </span>
-                        </div>
-                        <h3
-                          style={{
-                            fontSize: 19,
-                            fontWeight: 600,
-                            color: "var(--nf-ink)",
-                            margin: "0 0 10px",
-                            letterSpacing: "-0.03em",
-                            lineHeight: 1.25,
-                            fontFamily: "var(--font-inter, Inter), system-ui, sans-serif",
-                          }}
-                        >
-                          {p.name}
-                        </h3>
-                        {p.description ? (
-                          <p
-                            style={{
-                              fontSize: 13,
-                              color: "var(--nf-ink-2)",
-                              margin: 0,
-                              lineHeight: 1.55,
-                              fontWeight: 500,
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {p.description}
-                          </p>
-                        ) : (
-                          <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, fontStyle: "italic", fontWeight: 500 }}>Sin descripción breve.</p>
-                        )}
-                      </div>
-                      <div style={{ flexShrink: 0, textAlign: "center", width: 72 }}>
-                        <Avatar name={p.owner} size={52} />
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink)", marginTop: 8, lineHeight: 1.2 }}>{p.owner.split(" ")[0]}</div>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: "-0.01em", marginTop: 2 }}>Responsable</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(64px, 1fr))",
-                      gap: 8,
-                      padding: "14px 16px",
-                      background: "var(--nf-app-surface-2)",
-                      borderBottom: "1px solid rgba(82, 102, 246, 0.07)",
-                    }}
-                  >
-                    {metricCell(FileText, "Docs", stats.docs, "var(--nf-primary)")}
-                    {metricCell(Shield, "Riesgos", stats.risks, "var(--nf-danger)")}
-                    {metricCell(BarChart3, "KPIs", stats.indicators, "var(--nf-success)")}
-                    {metricCell(GitPullRequest, "Cambios", stats.changes, "var(--nf-warning)")}
-                    {metricCell(GraduationCap, "Formación", stats.training, "var(--nf-primary-active)")}
-                  </div>
-
-                  <div style={{ padding: "16px 18px 6px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 14 }}>
-                    <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 10,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: "var(--nf-primary-active)",
-                          letterSpacing: "-0.01em",
-                          textTransform: "none",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 8,
-                            background: "rgba(82, 102, 246, 0.1)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <ArrowDownToLine size={15} strokeWidth={2.25} aria-hidden />
-                        </span>
-                        Entradas
-                      </div>
-                      {p.inputs.length === 0 ? (
-                        <span style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 500 }}>—</span>
-                      ) : (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {inShown.map((t, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: "var(--nf-ink)",
-                                background: "var(--nf-surface)",
-                                border: "1px solid rgba(82, 102, 246, 0.12)",
-                                padding: "5px 10px",
-                                borderRadius: 8,
-                                maxWidth: "100%",
-                                lineHeight: 1.35,
-                              }}
-                            >
-                              {t}
-                            </span>
-                          ))}
-                          {inMore > 0 && (
-                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{inMore}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 10,
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: "var(--nf-success-text)",
-                          letterSpacing: "-0.01em",
-                          textTransform: "none",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: 28,
-                            height: 28,
-                            borderRadius: 8,
-                            background: "rgba(46, 139, 87, 0.12)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <ArrowUpFromLine size={15} strokeWidth={2.25} aria-hidden />
-                        </span>
-                        Salidas
-                      </div>
-                      {p.outputs.length === 0 ? (
-                        <span style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 500 }}>—</span>
-                      ) : (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                          {outShown.map((t, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: "var(--nf-ink)",
-                                background: "var(--nf-surface)",
-                                border: "1px solid rgba(46, 139, 87, 0.22)",
-                                padding: "5px 10px",
-                                borderRadius: 8,
-                                maxWidth: "100%",
-                                lineHeight: 1.35,
-                              }}
-                            >
-                              {t}
-                            </span>
-                          ))}
-                          {outMore > 0 && (
-                            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--nf-ink-3)", alignSelf: "center" }}>+{outMore}</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      padding: "12px 18px 16px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      gap: 12,
-                      flexWrap: "wrap",
-                      background: "var(--nf-surface-muted)",
-                    }}
-                  >
-                    <span style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>Vínculos con documentos, riesgos y más — vista detallada en el modal.</span>
-                    <span
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: "var(--nf-primary-active)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 4,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Abrir ficha
-                      <ChevronRight size={18} strokeWidth={2.5} aria-hidden />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <EntityTable
+          caption="Procesos"
+          rows={processes}
+          rowKey={(row) => row.id}
+          rowAction={(row) => setDetail(row)}
+          storageKey="demo-processes"
+          searchText={(row) => `${row.code ?? ""} ${row.name} ${row.owner ?? ""}`}
+          searchPlaceholder="Buscar por código, nombre o responsable…"
+          filters={[
+            { id: "type", label: "Tipo", value: (row) => row.type, format: (value) => processTypeMeta(value as ProcessRow["type"]).label },
+            { id: "owner", label: "Responsable", value: (row) => row.owner, format: (value) => value },
+          ]}
+          emptyTitle="Todavía no hay procesos"
+          emptyDescription="El mapa de procesos es la base sobre la que cuelgan documentos, riesgos e indicadores."
+          columns={[
+            {
+              id: "name", header: "Proceso", primary: true, minWidth: 240, sortValue: (row) => row.name,
+              cell: (row) => <CellTitle title={row.name} meta={`${row.code ?? "Sin código"} · ${processTypeMeta(row.type).label}`} />,
+            },
+            { id: "owner", header: "Responsable", sortValue: (row) => row.owner ?? "", cell: (row) => row.owner || "Sin responsable" },
+            {
+              id: "documents", header: "Docs", numeric: true, align: "end", hideable: true,
+              sortValue: (row) => getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).docs,
+              cell: (row) => <CountCell value={getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).docs} />,
+            },
+            {
+              id: "risks", header: "Riesgos", numeric: true, align: "end", hideable: true,
+              sortValue: (row) => getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).risks,
+              cell: (row) => <CountCell value={getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).risks} />,
+            },
+            {
+              id: "indicators", header: "KPIs", numeric: true, align: "end", hideable: true,
+              sortValue: (row) => getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).indicators,
+              cell: (row) => <CountCell value={getProcessLinkStats(row, documents, risks, indicators, changeRequests, trainingAssignments).indicators} />,
+            },
+            { id: "inputs", header: "Entradas", numeric: true, align: "end", hideable: true, defaultHidden: true, sortValue: (row) => row.inputs.length, cell: (row) => <CountCell value={row.inputs.length} /> },
+            { id: "outputs", header: "Salidas", numeric: true, align: "end", hideable: true, defaultHidden: true, sortValue: (row) => row.outputs.length, cell: (row) => <CountCell value={row.outputs.length} /> },
+          ]}
+        />
       )}
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={700}>
@@ -968,7 +725,7 @@ export default function ProcessesModule() {
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Tipo
-              <select
+              <Picker aria-label="Tipo"
                 className="nf-app-input"
                 value={form.type}
                 onChange={e => setForm({ ...form, type: e.target.value })}
@@ -977,7 +734,7 @@ export default function ProcessesModule() {
                 <option value="core">Core</option>
                 <option value="support">Soporte</option>
                 <option value="strategic">Estratégico</option>
-              </select>
+              </Picker>
             </label>
           </div>
           <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>

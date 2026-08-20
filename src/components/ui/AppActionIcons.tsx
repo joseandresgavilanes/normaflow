@@ -3,21 +3,35 @@
 import { createElement, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
+  Archive,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
+  Ban,
   Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
   CircleArrowRight,
   Download,
   Eye,
   ExternalLink,
+  Flag,
+  FlaskConical,
+  Gauge,
   Link2,
   Pencil,
   Play,
   Plus,
+  Replace,
+  RotateCcw,
   Save,
   Search,
   Send,
+  ShieldCheck,
+  SlidersHorizontal,
   Trash2,
+  UserRoundCog,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -38,26 +52,57 @@ function iconForButton(button: HTMLElement): LucideIcon | null {
   if (!text || button.dataset.nfNoActionIcon === "true") return null;
   if (button.querySelector("svg, [data-nf-action-icon]")) return null;
 
+  // El ORDEN es el contrato de esta función: lo específico antes que lo
+  // genérico, porque unos verbos contienen a otros. «Desactivar» contiene
+  // «activar» y durante un tiempo dar de baja un registro se anunció con el
+  // triángulo de reproducir.
+  if (/(desactivar|deshabilitar|dar de baja|disable|deactivate)/.test(text)) return Ban;
+  if (/(reactivar|reabrir|reopen|restaurar|restore|revertir)/.test(text)) return RotateCcw;
+  if (/(revocar|revoke|retirar|anular|withdraw)/.test(text)) return Ban;
+  if (/(inadmitir|descartar|discard|dismiss)/.test(text)) return X;
+
   if (/(editar|edit|modificar)/.test(text)) return Pencil;
   if (/(ver detalle|detalle|detail)/.test(text)) return Eye;
+  // «Ocultar» y «Mostrar» son el mismo control en dos estados: el icono tiene
+  // que decir en cuál está, no cuál es el botón.
+  if (/(ocultar|hide|contraer|collapse)/.test(text)) return ChevronUp;
+  if (/(mostrar|ver más|expandir|expand)/.test(text)) return ChevronDown;
+  if (/(gestionar|manage|configurar|configure|ajustar)/.test(text)) return SlidersHorizontal;
   if (/(abrir|open)/.test(text)) return ExternalLink;
   if (/(eliminar|delete|borrar|quitar|remove)/.test(text)) return Trash2;
   if (/(cancelar|cerrar|close)/.test(text)) return X;
   if (/(rechazar|reject|devolver)/.test(text)) return X;
   if (/(guardar|save|actualizar|update)/.test(text)) return Save;
-  if (/(aprobar|approve|confirmar|confirm|aceptar|accept|verificar|verify)/.test(text)) return Check;
-  if (/(exportar|export|excel|pdf|descargar|download)/.test(text)) return Download;
-  if (/(revisar|review|buscar|search)/.test(text)) return Search;
-  if (/(enviar|send|notificar|notify)/.test(text)) return Send;
+  if (/(aprobar|approve|confirmar|confirm|aceptar|accept|verificar|verify|autorizar|authorize|admitir|validar)/.test(text)) return Check;
+  if (/(exportar|export|excel|pdf|descargar|download|csv)/.test(text)) return Download;
+  if (/(evaluar|evaluación|assess|valorar|calificar|puntuar|medir|measure)/.test(text)) return Gauge;
+  if (/(probar|test|ensayar|simular|simulate)/.test(text)) return FlaskConical;
+  if (/(revisar|review|buscar|search|triage|analizar)/.test(text)) return Search;
+  if (/(enviar|send|notificar|notify|comunicar|responder|reply)/.test(text)) return Send;
+  if (/(sustituir|reemplazar|replace|superseder)/.test(text)) return Replace;
+  if (/(reasignar|asignar|assign|delegar|derivar)/.test(text)) return UserRoundCog;
+  if (/(mitigar|mitigate|tratar|remediar|corregir|subsanar)/.test(text)) return ShieldCheck;
+  if (/(promover|promote|publicar|publish|liberar|release)/.test(text)) return ArrowUpRight;
+  if (/(marcar|mark|señalar|flag)/.test(text)) return Flag;
   if (/(activar|iniciar|start|ejecutar|run)/.test(text)) return Play;
   if (/(atrás|atras|back|anterior|previous)/.test(text)) return ArrowLeft;
   if (/(avanzar|continuar|siguiente|next)/.test(text)) return ArrowRight;
   if (/(vincular|link|relacionar)/.test(text)) return Link2;
-  if (/(crear|nuevo|new|añadir|agregar|add|registrar|record|solicitar|request|reportar|declarar)/.test(text)) return Plus;
+  if (/(archivar|archive|obsolet)/.test(text)) return Archive;
+  // Raíces, no palabras exactas: «crear», «creación rápida» y «nueva auditoría»
+  // son el mismo gesto y antes solo la primera se reconocía — las otras dos
+  // recibían el «+» de rebote, por ser el botón primario de su fila.
+  if (/(crea|nuev[oa]s?|new|añadir|agregar|add|registrar|record|solicitar|request|reportar|declarar|planificar)/.test(text)) return Plus;
   if (className.includes("nf-app-btn-danger")) return Trash2;
   if (className.includes("nf-app-btn-success")) return Check;
-  if (className.includes("nf-app-btn-primary")) return Plus;
-  if (className.includes("nf-app-btn-outline")) return ExternalLink;
+
+  // Última red, y SOLO para las acciones de fila: en una tabla la columna es
+  // una rejilla de botones y el que sale pelado se lee como texto suelto, no
+  // como algo pulsable. El resto del producto sigue sin icono cuando no hay
+  // verbo reconocido: deducirlo de la clase convertía cualquier botón primario
+  // en un «+» —«GAP Assessment» prometía crear algo solo por ser el destacado
+  // de su fila—. El icono describe lo que el botón hace, y eso lo dice su texto.
+  if (className.includes("nf-row-action")) return ChevronRight;
   return className.includes("nf-text-action") ? CircleArrowRight : null;
 }
 

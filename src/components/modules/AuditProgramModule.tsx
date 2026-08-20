@@ -3,12 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { AuditProgramStatus } from "@prisma/client";
 import Badge from "@/components/ui/Badge";
-import Card from "@/components/ui/Card";
+import EntityTable from "@/components/ui/EntityTable";
+import { CellTitle, ProgressCell } from "@/components/operations/OperationalUi";
 import Modal from "@/components/ui/Modal";
 import ProgressBar from "@/components/ui/ProgressBar";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useWorkspace } from "@/context/WorkspaceStore";
 import { PROGRAM_STATUS_LABELS, AUDIT_STATUS_LABELS } from "@/components/operations/AuditProgramLive";
+import { formatDate } from "@/lib/format/datetime";
 
 type DemoAudit = { id: string; title: string; status: string; progress: number; type: string; scheduledDate: string | null };
 type DemoProgram = {
@@ -26,7 +28,7 @@ const NEXT_ACTIONS: Record<AuditProgramStatus, { to: AuditProgramStatus; label: 
   COMPLETED: [],
   CANCELLED: [{ to: "DRAFT", label: "Reabrir como borrador" }],
 };
-const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString("es") : "—");
+const fmt = (iso: string | null) => (iso ? formatDate(iso) : "—");
 let counter = 0;
 const uid = (p: string) => `${p}-${Date.now()}-${counter++}`;
 const avg = (a: DemoAudit[]) => (a.length ? Math.round(a.reduce((s, x) => s + x.progress, 0) / a.length) : 0);
@@ -81,28 +83,43 @@ export default function AuditProgramModule() {
 
   return (
     <div>
-      <SectionTitle title="Programa anual de auditorías" sub={`${programs.length} programas · ISO 9001 cláusula 9.2.2`} action="+ Nuevo programa" onAction={() => setCreating(true)} />
+      <SectionTitle
+        title="Programa anual de auditorías"
+        meta={<>
+          <span className="nf-page-header__chip">{programs.length} programas</span>
+          <span className="nf-page-header__chip">ISO 9001 · 9.2.2</span>
+        </>}
+        action="Nuevo programa"
+        onAction={() => setCreating(true)}
+      />
 
-      <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))" }}>
-        {programs.map(p => (
-          <Card key={p.id} style={{ cursor: "pointer" }} onClick={() => setDetailId(p.id)}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: "ui-monospace, monospace", color: "var(--nf-primary-active)", fontSize: 12, fontWeight: 600 }}>{p.year}</div>
-                <h3 style={{ margin: "6px 0 5px", fontSize: 18, color: "var(--nf-ink)" }}>{p.title}</h3>
-                <div style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{p.audits.filter(a => a.status === "COMPLETED").length}/{p.audits.length} auditorías completadas</div>
-              </div>
-              <Badge status={programBadge(p.status)} label={PROGRAM_STATUS_LABELS[p.status]} />
-            </div>
-            <div style={{ marginTop: 13 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 4 }}>
-                <span>Avance del programa</span><span style={{ fontWeight: 700 }}>{avg(p.audits)}%</span>
-              </div>
-              <ProgressBar value={avg(p.audits)} color={avg(p.audits) >= 80 ? "var(--nf-success)" : avg(p.audits) >= 40 ? "var(--nf-warning)" : "var(--nf-primary)"} height={7} railColor="var(--nf-surface-sunken)" />
-            </div>
-          </Card>
-        ))}
-      </div>
+      <EntityTable
+        caption="Programas de auditoría"
+        rows={programs}
+        rowKey={(row) => row.id}
+        rowAction={(row) => setDetailId(row.id)}
+        storageKey="demo-audit-programs"
+        searchText={(row) => `${row.title} ${row.year}`}
+        searchPlaceholder="Buscar por título o año…"
+        filters={[
+          { id: "status", label: "Estado", value: (row) => row.status, format: (value) => PROGRAM_STATUS_LABELS[value as keyof typeof PROGRAM_STATUS_LABELS] ?? value },
+          { id: "year", label: "Año", value: (row) => String(row.year), format: (value) => value },
+        ]}
+        emptyTitle="Todavía no hay programas"
+        emptyDescription="El programa anual agrupa las auditorías del año y su avance."
+        columns={[
+          {
+            id: "title", header: "Programa", primary: true, minWidth: 240, sortValue: (row) => row.title,
+            cell: (row) => <CellTitle title={row.title} meta={String(row.year)} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={programBadge(row.status)} label={PROGRAM_STATUS_LABELS[row.status]} /> },
+          {
+            id: "audits", header: "Auditorías", numeric: true, align: "end", sortValue: (row) => row.audits.length,
+            cell: (row) => `${row.audits.filter((a) => a.status === "COMPLETED").length}/${row.audits.length}`,
+          },
+          { id: "progress", header: "Avance", numeric: true, sortValue: (row) => avg(row.audits), cell: (row) => <ProgressCell value={avg(row.audits)} /> },
+        ]}
+      />
 
       <Modal open={creating} onClose={() => setCreating(false)} title="Nuevo programa anual" width={540}>
         <form className="nf-modal-form" onSubmit={submitCreate}>

@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
-import Card from "@/components/ui/Card";
+import EntityTable from "@/components/ui/EntityTable";
+import { CellTitle } from "@/components/operations/OperationalUi";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import { useWorkspace, type IntegrationInstanceRow, type IntegrationKey } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import { formatDateTime } from "@/lib/format/datetime";
 
 function statusBadge(s: IntegrationInstanceRow["status"]) {
   if (s === "CONNECTED") return <Badge status="ON_TRACK" label="Conectada" />;
@@ -51,21 +53,32 @@ export default function IntegrationsModule() {
     <div>
       <SectionTitle title="Integraciones" sub="Catálogo de conectores para evidencias, identidad y operación — estados operativos simulados" />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", gap: 14 }}>
-        {state.integrations.map(int => (
-          <Card key={int.key} style={{ cursor: "pointer" }} onClick={() => setDetail(int)}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", textTransform: "none", letterSpacing: 0.5 }}>{int.category}</div>
-                <h3 style={{ margin: "4px 0 8px", fontSize: 16, color: "var(--nf-ink)" }}>{int.name}</h3>
-                <p style={{ fontSize: 13, color: "var(--nf-ink-3)", margin: 0, lineHeight: 1.45 }}>{int.description}</p>
-              </div>
-              {statusBadge(int.status)}
-            </div>
-            {int.lastSyncAt && <div style={{ fontSize: 11, color: "var(--nf-ink-4)", marginTop: 10 }}>Última sync: {new Date(int.lastSyncAt).toLocaleString("es-ES")}</div>}
-          </Card>
-        ))}
-      </div>
+      <EntityTable
+        caption="Integraciones"
+        rows={state.integrations}
+        rowKey={(row) => row.key}
+        rowAction={(row) => setDetail(row)}
+        storageKey="demo-integrations"
+        searchText={(row) => `${row.name} ${row.category} ${row.description}`}
+        searchPlaceholder="Buscar por nombre o categoría…"
+        filters={[
+          { id: "status", label: "Estado", value: (row) => row.status },
+          { id: "category", label: "Categoría", value: (row) => row.category, format: (value) => value },
+        ]}
+        emptyTitle="Todavía no hay integraciones"
+        columns={[
+          {
+            id: "name", header: "Integración", primary: true, minWidth: 220, sortValue: (row) => row.name,
+            cell: (row) => <CellTitle title={row.name} meta={row.category} />,
+          },
+          { id: "status", header: "Estado", cell: (row) => statusBadge(row.status) },
+          { id: "description", header: "Qué aporta", hideable: true, minWidth: 280, cell: (row) => row.description },
+          {
+            id: "sync", header: "Última sincronización", numeric: true, hideable: true, sortValue: (row) => row.lastSyncAt ?? "",
+            cell: (row) => row.lastSyncAt ? formatDateTime(row.lastSyncAt) : "—",
+          },
+        ]}
+      />
 
       <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.name ?? ""} width={560}>
         {detail && (

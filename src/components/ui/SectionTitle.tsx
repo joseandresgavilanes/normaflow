@@ -23,19 +23,29 @@ import { useI18n } from "@/context/I18nProvider";
 
 interface SectionTitleProps {
   title: string;
+  /** Explicación de la pantalla. Va detrás del icono de ayuda, no como párrafo. */
   sub?: string;
+  /**
+   * Dato que sí tiene que verse: un conteo, una media, la norma que aplica.
+   * `sub` se puede esconder porque explica; esto no, porque informa.
+   */
+  meta?: ReactNode;
   action?: ReactNode;
   onAction?: () => void;
   /** Por defecto `nf-app-btn-ghost`; usa `nf-app-btn-primary` para CTAs destacadas. */
   actionButtonClass?: string;
+  /** 2 cuando esto encabeza una sección de una página que ya tiene su `<h1>`. */
+  headingLevel?: 1 | 2;
 }
 
 export default function SectionTitle({
   title,
   sub,
+  meta,
   action,
   onAction,
   actionButtonClass,
+  headingLevel,
 }: SectionTitleProps) {
   const { tx } = useI18n();
   // Se conserva el comportamiento previo: una acción sin manejador se renderiza
@@ -47,6 +57,8 @@ export default function SectionTitle({
     <PageHeader
       title={title}
       subtitle={sub}
+      meta={meta}
+      headingLevel={headingLevel}
       actions={
         action ? (
           <button

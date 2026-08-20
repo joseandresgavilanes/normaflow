@@ -15,11 +15,13 @@ export type DemoLoginCredentials = {
   customer: { id: "customer-local"; email: string; password: string; name: string };
 };
 
-function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
+function LoginForm({ demoAccounts, home }: { demoAccounts?: DemoLoginCredentials; home: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t, tx } = useI18n();
-  const next = searchParams.get("next") || "/app/dashboard";
+  /* `next` manda sobre la preferencia: si llegas a /login por haber pedido una
+     página concreta, ahí es donde quieres volver. */
+  const next = searchParams.get("next") || home;
   const authError = searchParams.get("error");
   const emailParam = searchParams.get("email") ?? "";
   const invited = searchParams.get("invited") === "1";
@@ -43,7 +45,7 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
       const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) { setError(typeof data.error === "string" ? tx(data.error) : t("error.loginFailed")); return; }
-      router.push(next.startsWith("/") ? next : "/app/dashboard");
+      router.push(next.startsWith("/") ? next : home);
       router.refresh();
     } catch { setError(t("error.loginUnexpected")); }
     finally { setLoading(false); }
@@ -76,6 +78,6 @@ function LoginForm({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
   </>;
 }
 
-export default function LoginPageClient({ demoAccounts }: { demoAccounts?: DemoLoginCredentials }) {
-  return <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--nf-bg-0)" }} />}><LoginForm demoAccounts={demoAccounts} /></Suspense>;
+export default function LoginPageClient({ demoAccounts, home = "/app/dashboard" }: { demoAccounts?: DemoLoginCredentials; home?: string }) {
+  return <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--nf-bg-0)" }} />}><LoginForm demoAccounts={demoAccounts} home={home} /></Suspense>;
 }

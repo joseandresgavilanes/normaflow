@@ -8,11 +8,11 @@ import {
   type InputHTMLAttributes,
   type ReactElement,
   type ReactNode,
-  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from "react";
 import { useI18n } from "@/context/I18nProvider";
 import { cn } from "@/lib/utils";
+import Picker, { type PickerProps } from "@/components/ui/Picker";
 
 /**
  * Campo de formulario del producto.
@@ -217,7 +217,7 @@ export function SelectField({
   children,
   ...select
 }: BaseControl &
-  Omit<SelectHTMLAttributes<HTMLSelectElement>, "className"> & { children: ReactNode }) {
+  Omit<PickerProps, "className"> & { children: ReactNode }) {
   return (
     <Field
       label={label}
@@ -229,9 +229,9 @@ export function SelectField({
       className={className}
       span={span}
     >
-      <select {...select} required={required} className="nf-input nf-input--select">
+      <Picker {...select} required={required} aria-label={select["aria-label"] ?? label} className="nf-input nf-input--select">
         {children}
-      </select>
+      </Picker>
     </Field>
   );
 }

@@ -22,8 +22,26 @@ import {
   TabsSkeleton,
 } from "./primitives";
 
+/**
+ * Envoltorio de todo esqueleto de página.
+ *
+ * Lleva el anuncio de carga porque las piezas no pueden: cada `Skeleton` es
+ * `aria-hidden` —son cajas grises, no contenido—, así que sin esto la espera es
+ * silencio absoluto para un lector de pantalla: la región principal se queda
+ * vacía y el contenido aparece de golpe sin avisar. WCAG 4.1.3 (AA) pide que
+ * un cambio de estado se anuncie sin robar el foco, y eso es exactamente un
+ * `role="status"`.
+ *
+ * El texto va en `.nf-sr-only`: quien ve la pantalla ya tiene las cajas grises
+ * diciéndole lo mismo.
+ */
 function PageShell({ children }: { children: React.ReactNode }) {
-  return <div className="nf-page-loading">{children}</div>;
+  return (
+    <div className="nf-page-loading" role="status" aria-live="polite" aria-busy="true">
+      <span className="nf-sr-only">Cargando…</span>
+      {children}
+    </div>
+  );
 }
 
 /** Fallback genérico — tabla con filtros */

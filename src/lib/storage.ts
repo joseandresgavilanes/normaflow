@@ -29,6 +29,11 @@ export const DOCUMENTS_BUCKET =
   process.env.SUPABASE_DOCUMENTS_BUCKET ?? "documents";
 export const EVIDENCE_BUCKET =
   process.env.SUPABASE_EVIDENCE_BUCKET ?? "evidence";
+/* Bucket propio y no el de documentos: un avatar no es evidencia, no cuenta
+   contra la cuota documental de la organización y no debe aparecer en ningún
+   listado de archivos del sistema de gestión. */
+export const AVATARS_BUCKET =
+  process.env.SUPABASE_AVATARS_BUCKET ?? "avatars";
 
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
@@ -304,5 +309,72 @@ export async function ensureEvidenceBucket(): Promise<void> {
     throw new StorageError(
       `El bucket "${EVIDENCE_BUCKET}" no existe. Crealo en Supabase: Storage → New bucket → nombre "${EVIDENCE_BUCKET}" → privado.`
     );
+  }
+}
+
+
+/** Solo imágenes, y pequeñas: un avatar no necesita más. */
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+const AVATAR_MIMES = ["image/png", "image/jpeg", "image/webp"];
+
+/**
+ * Sube la foto de perfil.
+ *
+ * La ruta lleva el prefijo `org-<id>/` como el resto del almacenamiento, así
+ * que `assertTenantStoragePath` la valida igual y una organización no puede
+ * firmar la foto de otra. `upsert` en true: cambiar de foto sustituye la
+ * anterior en vez de dejar huérfanos acumulándose.
+ */
+export async function uploadAvatarFile(args: {
+  organizationId: string;
+  userId: string;
+  file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
+}): Promise<{ path: string }> {
+  const { file } = args;
+  if (!AVATAR_MIMES.includes(file.type)) {
+    throw new StorageError("La foto debe ser PNG, JPG o WebP.");
+  }
+  if (file.size > AVATAR_MAX_BYTES) {
+    throw new StorageError("La foto no puede superar 2 MB.");
+  }
+
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = `org-${args.organizationId}/avatars/${args.userId}.${extension}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const { error } = await supabase.storage.from(AVATARS_BUCKET).upload(path, buffer, {
+    contentType: file.type,
+    upsert: true,
+    cacheControl: "3600",
+  });
+  if (error) throw new StorageError(`No se pudo subir la foto: ${error.message}`, error);
+  return { path };
+}
+
+/** URL firmada de la foto. Devuelve null en vez de lanzar: sin foto se pintan las iniciales. */
+export async function createSignedAvatarUrl(path: string, organizationId: string, expiresInSeconds = 3600): Promise<string | null> {
+  try {
+    assertTenantStoragePath(organizationId, path);
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return null;
+    const { data, error } = await supabase.storage.from(AVATARS_BUCKET).createSignedUrl(path, expiresInSeconds);
+    return error || !data ? null : data.signedUrl;
+  } catch {
+    return null;
+  }
+}
+
+/** Quita la foto del almacenamiento. Los fallos no bloquean: la referencia ya se borró. */
+export async function deleteAvatarFile(path: string, organizationId: string): Promise<void> {
+  try {
+    assertTenantStoragePath(organizationId, path);
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return;
+    await supabase.storage.from(AVATARS_BUCKET).remove([path]);
+  } catch {
+    /* huérfano en el bucket: preferible a un error al usuario */
   }
 }

@@ -9,7 +9,13 @@
  * ------------------------------------------------------------------------ */
 .nf-dt {
   --nf-dt-row-h: var(--nf-row-height-default);
-  border: 1px solid var(--nf-border);
+  /* Mismo envoltorio que las tablas que ya existían en Registros y Documentos:
+     16 px de radio, el borde de las tarjetas y su sombra de un píxel. Allí la
+     tabla iba dentro de una `Card`, así que los dos bordes coinciden y se ve
+     una sola caja; las tablas nuevas van sueltas y necesitan ese envoltorio
+     ellas mismas. Sin esto, unas se veían como tarjeta y otras como una caja
+     de líneas finas dentro de la página. */
+  border: 1px solid var(--nf-line);
   border-radius: var(--nf-radius-l);
   background: var(--nf-surface);
   overflow: hidden; /* recorta el scroll interno a las esquinas redondeadas */
@@ -24,11 +30,14 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--nf-space-3);
-  padding: var(--nf-space-3);
-  border-bottom: 1px solid var(--nf-border);
+  /* El mismo aire que la cabecera de filtros de Registros: 14 arriba, 18 a los
+     lados. Con 12 en todo, la barra iba apretada contra el borde. */
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--nf-line);
   background: var(--nf-surface);
 }
 .nf-dt__toolbar-main { flex: 1; min-width: 0; }
+.nf-dt__toolbar-main .nf-picker { flex: 0 0 auto; }
 .nf-dt__toolbar-tools {
   display: flex;
   align-items: center;
@@ -295,6 +304,28 @@
      dejaba invisible en 114 campos. */
 }
 
+.nf-filterbar__search-clear {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nf-radius-full);
+  background: transparent;
+  color: var(--nf-text-subtle);
+  cursor: pointer;
+}
+.nf-filterbar__search-clear:hover {
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-primary);
+}
+.nf-filterbar__search-clear:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
 .nf-filterbar__select {
   display: inline-flex;
   align-items: center;
@@ -414,6 +445,19 @@
   }
   .nf-dt__card-field dd[data-numeric] { font-variant-numeric: tabular-nums; }
 
+  /* Las acciones ocupan su propia fila al pie de la tarjeta, separadas de los
+     datos por una línea: en el móvil no compiten por el ancho con ningún
+     campo y quedan a la altura del pulgar. */
+  .nf-dt__card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nf-space-2);
+    margin-top: var(--nf-space-1);
+    padding-top: var(--nf-space-2);
+    border-top: 1px solid var(--nf-border-subtle);
+  }
+  .nf-dt__card-actions .nf-row-actions { flex-wrap: wrap; justify-content: flex-start; }
+
   .nf-dt__toolbar { flex-direction: column; align-items: stretch; }
   .nf-dt__toolbar-tools { justify-content: flex-end; }
   .nf-filterbar__search { max-width: none; }
@@ -506,3 +550,90 @@
 }
 .nf-iso-table-card-filters > * { flex: 0 1 auto; min-width: 0; }
 .nf-iso-table-card-filters :where(select, input) { max-width: 220px; }
+
+/* Celda principal: el título manda y el dato que lo sitúa va debajo, más
+   pequeño, para no gastar una columna entera en un código. */
+.nf-cell-title {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+}
+.nf-cell-title__main {
+  font-weight: var(--nf-weight-medium);
+  color: inherit;
+}
+.nf-cell-title__meta {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-muted);
+}
+
+.nf-cell-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  min-width: 96px;
+}
+.nf-cell-progress__track {
+  flex: 1;
+  height: 6px;
+  min-width: 48px;
+  border-radius: 999px;
+  background: var(--nf-surface-selected);
+  overflow: hidden;
+}
+.nf-cell-progress__fill {
+  display: block;
+  height: 100%;
+  background: var(--nf-success);
+}
+
+.nf-cell-score {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  padding: 2px 8px;
+  border-radius: var(--nf-radius-sm);
+  font-weight: var(--nf-weight-semibold);
+}
+.nf-cell-score[data-tone="danger"] { background: var(--nf-danger-subtle); color: var(--nf-danger-text); }
+.nf-cell-score[data-tone="warning"] { background: var(--nf-warning-subtle); color: var(--nf-warning-text); }
+.nf-cell-score[data-tone="success"] { background: var(--nf-success-subtle); color: var(--nf-success-text); }
+
+/* --------------------------------------------------------------------------
+ * Reparto del ancho
+ *
+ * Con `table-layout: auto` el navegador repartía el sobrante a partes iguales:
+ * «Docs», «Riesgos» y «KPIs» —una cifra de un dígito— se quedaban con el mismo
+ * ancho que el nombre del proceso, que es lo único que se lee de verdad. Las
+ * columnas cortas se ciñen a su contenido y la principal absorbe el resto.
+ * ---------------------------------------------------------------------- */
+
+.nf-dt__th[data-numeric],
+.nf-dt__td[data-numeric],
+.nf-dt__th[data-align="end"],
+.nf-dt__td[data-align="end"] {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.nf-dt__th[data-primary],
+.nf-dt__td[data-primary] { width: auto; }
+
+/* Un cero es ausencia de dato, no un dato: se atenúa para que la vista caiga
+   en las filas que sí tienen algo. */
+.nf-dt__zero { color: var(--nf-text-subtle); }
+
+/* Cabecera: versalitas cortas y alineadas con su columna. Antes pesaba lo
+   mismo que el dato y la tabla no tenía jerarquía vertical. */
+
+
+/* La celda principal lleva dos líneas: necesita respirar más que una de texto
+   suelto, o el título y su código se tocan. */
+.nf-dt__td:has(.nf-cell-title) { padding-top: 8px; padding-bottom: 8px; }
+.nf-cell-title__main { line-height: 1.3; }
+.nf-cell-title__meta { line-height: 1.35; }
+
+
+

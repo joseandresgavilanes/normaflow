@@ -4,6 +4,8 @@ import { useState, type FormEvent } from "react";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
 import SectionTitle from "@/components/ui/SectionTitle";
+import PageTabs from "@/components/ui/PageTabs";
+import { useModuleSection } from "@/hooks/useModuleSection";
 import { useServerAction } from "@/hooks/useServerAction";
 import {
   createCustomerRequirement, updateCustomerRequirement, deleteCustomerRequirement,
@@ -13,9 +15,19 @@ import {
   createCommunicationRecord, updateCommunicationRecord, deleteCommunicationRecord,
 } from "@/lib/actions/quality-operations";
 import type { QualityOperationsPayload } from "@/lib/quality-operations/queries";
+import { formatDate } from "@/lib/format/datetime";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import DateField from "@/components/ui/DateField";
 import {
-  CardActions, EmptyOperational, Field, FormModal, inputStyle, Meta,
-  OperationalCard, OperationalGrid, OperationalHeader, OperationalMessages,
+  CellTitle,
+  Field,
+  FormModal,
+  Meta,
+  OperationalHeader,
+  OperationalMessages,
+  RowActions,
+  inputStyle,
 } from "./OperationalUi";
 
 type Requirement = QualityOperationsPayload["requirements"][number];
@@ -25,17 +37,18 @@ type Feedback = QualityOperationsPayload["feedback"][number];
 type Communication = QualityOperationsPayload["communications"][number];
 type Tab = "requirements" | "property" | "preservation" | "feedback" | "communication";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "requirements", label: "Requisitos del cliente" },
-  { key: "property", label: "Propiedad del cliente" },
-  { key: "preservation", label: "Preservación" },
-  { key: "feedback", label: "Satisfacción del cliente" },
-  { key: "communication", label: "Comunicación" },
+/** No es una norma: su navegación vive dentro de la página. */
+const TABS = [
+  { id: "requirements" as const, label: "Requisitos del cliente" },
+  { id: "property" as const, label: "Propiedad del cliente" },
+  { id: "preservation" as const, label: "Preservación" },
+  { id: "feedback" as const, label: "Satisfacción del cliente" },
+  { id: "communication" as const, label: "Comunicación" },
 ];
 
 export function QualityOperationsLive({ initial }: { initial: QualityOperationsPayload }) {
   const { run, isPending, error, setError, success } = useServerAction();
-  const [tab, setTab] = useState<Tab>("requirements");
+  const [tab, setTab] = useModuleSection<Tab>("requirements");
   const [creating, setCreating] = useState(false);
   const [editingReq, setEditingReq] = useState<Requirement | null>(null);
   const [editingPres, setEditingPres] = useState<Preservation | null>(null);
@@ -48,24 +61,22 @@ export function QualityOperationsLive({ initial }: { initial: QualityOperationsP
 
   return <div>
     <SectionTitle title="Requisitos operativos" sub="Cláusulas 7.2, 7.4, 8.5.3, 8.5.4 y 9.1.2 — antes solo texto libre, ahora datos estructurados y trazables." />
-    <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-      {TABS.map((t) => <button key={t.key} type="button" className={tab === t.key ? "nf-app-btn-primary" : "nf-app-btn-outline"} onClick={() => setTab(t.key)}>{t.label}</button>)}
-    </div>
+    <PageTabs tabs={TABS} active={tab} onChange={setTab} label="Secciones de requisitos operativos" />
     <OperationalMessages error={error} success={success} />
 
-    {tab === "requirements" && <RequirementsTab initial={initial} run={run} isPending={isPending} setError={setError} creating={creating} editing={editingReq} setEditing={setEditingReq} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} />}
-    {tab === "property" && <PropertyTab initial={initial} run={run} isPending={isPending} setError={setError} creating={creating} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} memberOptions={memberOptions} />}
-    {tab === "preservation" && <PreservationTab initial={initial} run={run} isPending={isPending} setError={setError} creating={creating} editing={editingPres} setEditing={setEditingPres} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} memberOptions={memberOptions} />}
-    {tab === "feedback" && <FeedbackTab initial={initial} run={run} isPending={isPending} setError={setError} creating={creating} openCreate={openCreate} closeForm={closeForm} />}
-    {tab === "communication" && <CommunicationTab initial={initial} run={run} isPending={isPending} setError={setError} creating={creating} editing={editingComm} setEditing={setEditingComm} openCreate={openCreate} closeForm={closeForm} memberOptions={memberOptions} />}
+    {tab === "requirements" && <RequirementsTab initial={initial} run={run} isPending={isPending} error={error} setError={setError} creating={creating} editing={editingReq} setEditing={setEditingReq} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} />}
+    {tab === "property" && <PropertyTab initial={initial} run={run} isPending={isPending} error={error} setError={setError} creating={creating} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} memberOptions={memberOptions} />}
+    {tab === "preservation" && <PreservationTab initial={initial} run={run} isPending={isPending} error={error} setError={setError} creating={creating} editing={editingPres} setEditing={setEditingPres} openCreate={openCreate} closeForm={closeForm} processOptions={processOptions} memberOptions={memberOptions} />}
+    {tab === "feedback" && <FeedbackTab initial={initial} run={run} isPending={isPending} error={error} setError={setError} creating={creating} openCreate={openCreate} closeForm={closeForm} />}
+    {tab === "communication" && <CommunicationTab initial={initial} run={run} isPending={isPending} error={error} setError={setError} creating={creating} editing={editingComm} setEditing={setEditingComm} openCreate={openCreate} closeForm={closeForm} memberOptions={memberOptions} />}
   </div>;
 }
 
 type RunFn = ReturnType<typeof useServerAction>["run"];
 
 // ─── 1. Requisitos del cliente ───────────────────────
-function RequirementsTab({ initial, run, isPending, setError, creating, editing, setEditing, openCreate, closeForm, processOptions }: {
-  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; setError: (v: string) => void;
+function RequirementsTab({ initial, run, isPending, error, setError, creating, editing, setEditing, openCreate, closeForm, processOptions }: {
+  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; error: string; setError: (v: string) => void;
   creating: boolean; editing: Requirement | null; setEditing: (v: Requirement | null) => void;
   openCreate: () => void; closeForm: () => void; processOptions: QualityOperationsPayload["processes"];
 }) {
@@ -84,32 +95,49 @@ function RequirementsTab({ initial, run, isPending, setError, creating, editing,
     });
   }
   return <>
-    <OperationalHeader title="Requisitos del cliente" subtitle="Requisitos especificados, implícitos y legales/reglamentarios aplicables al producto o servicio (§7.2)." canCreate={initial.access.canCreate} actionLabel="Nuevo requisito" onCreate={openCreate} />
-    {initial.requirements.length === 0 ? <EmptyOperational>No hay requisitos de cliente registrados.</EmptyOperational> : <OperationalGrid>
-      {initial.requirements.map((r) => <OperationalCard key={r.id}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{r.code} · {r.source ?? "Sin fuente"}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{r.title}</h3></div>
-          <Badge status={r.status} />
-        </div>
-        <div style={{ marginTop: 12, fontSize: 12, color: "var(--nf-ink-3)" }}>{r.description ?? "Sin descripción"}</div>
-        <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(r); }} onDelete={() => run(() => deleteCustomerRequirement(r.id), { successMessage: "Requisito eliminado." })} />
-      </OperationalCard>)}
-    </OperationalGrid>}
-    <FormModal open={creating || !!editing} title={editing ? "Editar requisito" : "Nuevo requisito del cliente"} pending={isPending} error="" onClose={closeForm} onSubmit={submit}>
+    <OperationalHeader headingLevel={2} title="Requisitos del cliente" subtitle="Requisitos especificados, implícitos y legales/reglamentarios aplicables al producto o servicio (§7.2)." canCreate={initial.access.canCreate} actionLabel="Nuevo requisito" onCreate={openCreate} />
+    <EntityTable
+        caption="Requisitos del cliente"
+        rows={initial.requirements}
+        rowKey={(row) => row.id}
+        storageKey="customer-requirements"
+        searchText={(row) => `${row.code} ${row.title} ${row.description ?? ""} ${row.source ?? ""}`}
+        searchPlaceholder="Buscar por código, título o fuente…"
+        filters={[
+          { id: "status", label: "Estado", value: (row) => row.status },
+          { id: "source", label: "Fuente", value: (row) => row.source, format: (value) => value },
+        ]}
+        emptyTitle="Todavía no hay requisitos"
+        emptyDescription="Recoge lo que el cliente pide —contrato, pliego, norma— antes de comprometerte con ello."
+        columns={[
+          {
+            id: "title", header: "Requisito", primary: true, minWidth: 240, sortValue: (row) => row.title,
+            cell: (row) => <CellTitle title={row.title} meta={`${row.code} · ${row.source ?? "Sin fuente"}`} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+          { id: "description", header: "Descripción", hideable: true, minWidth: 260, cell: (row) => row.description ?? "Sin descripción" },
+        ]}
+        actions={(row) => (
+          <RowActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending}
+            onEdit={() => { setError(""); setEditing(row); }}
+            onDelete={() => run(() => deleteCustomerRequirement(row.id), { successMessage: "Requisito eliminado." })} />
+        )}
+      />
+    <FormModal open={creating || !!editing} title={editing ? "Editar requisito" : "Nuevo requisito del cliente"} pending={isPending} error={error} onClose={closeForm} onSubmit={submit}>
       <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} defaultValue={editing?.title ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <Field label="Fuente"><input aria-label="Cliente, contrato, licitación" name="source" className="nf-app-input" style={inputStyle} placeholder="Cliente, contrato, licitación…" defaultValue={editing?.source ?? ""} /></Field>
-        <Field label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+        <Field label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Picker></Field>
       </div>
       <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editing?.description ?? ""} /></Field>
-      <Field label="Estado"><select aria-label="Estado" name="status" className="nf-app-input" style={inputStyle} defaultValue={editing?.status ?? "OPEN"}><option value="OPEN">Abierto</option><option value="REVIEWED">Revisado</option><option value="MET">Cumplido</option></select></Field>
+      <Field label="Estado"><Picker aria-label="Estado" name="status" className="nf-app-input" style={inputStyle} defaultValue={editing?.status ?? "OPEN"}><option value="OPEN">Abierto</option><option value="REVIEWED">Revisado</option><option value="MET">Cumplido</option></Picker></Field>
     </FormModal>
   </>;
 }
 
 // ─── 2. Propiedad del cliente ────────────────────────
-function PropertyTab({ initial, run, isPending, setError, creating, openCreate, closeForm, processOptions, memberOptions }: {
-  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; setError: (v: string) => void;
+function PropertyTab({ initial, run, isPending, error, setError, creating, openCreate, closeForm, processOptions, memberOptions }: {
+  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; error: string; setError: (v: string) => void;
   creating: boolean; openCreate: () => void; closeForm: () => void;
   processOptions: QualityOperationsPayload["processes"]; memberOptions: { id: string; name: string }[];
 }) {
@@ -127,27 +155,42 @@ function PropertyTab({ initial, run, isPending, setError, creating, openCreate, 
     run(() => createCustomerProperty(input), { onSuccess: closeForm, successMessage: "Propiedad del cliente registrada." });
   }
   return <>
-    <OperationalHeader title="Propiedad del cliente" subtitle="Bienes del cliente bajo custodia, control y trazabilidad de incidentes (§8.5.3)." canCreate={initial.access.canCreate} actionLabel="Nueva propiedad" onCreate={openCreate} />
-    {initial.properties.length === 0 ? <EmptyOperational>No hay propiedad de cliente registrada.</EmptyOperational> : <OperationalGrid>
-      {initial.properties.map((p) => <OperationalCard key={p.id}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{p.code} · {p.customerName}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{p.description}</h3></div>
-          <Badge status={p.status} />
-        </div>
-        {initial.access.canUpdate && p.status === "IN_CUSTODY" && <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => run(() => transitionCustomerProperty(p.id, { status: "RETURNED" }), { successMessage: "Propiedad devuelta al cliente." })}>Marcar devuelta</button>
-          <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => setReporting(p)}>Reportar incidente</button>
-        </div>}
-        <CardActions canUpdate={false} canDelete={initial.access.canDelete && p.status !== "IN_CUSTODY"} pending={isPending} onEdit={() => {}} onDelete={() => run(() => deleteCustomerProperty(p.id), { successMessage: "Registro eliminado." })} />
-      </OperationalCard>)}
-    </OperationalGrid>}
-    <FormModal open={creating} title="Nueva propiedad del cliente" pending={isPending} error="" onClose={closeForm} onSubmit={submit}>
+    <OperationalHeader headingLevel={2} title="Propiedad del cliente" subtitle="Bienes del cliente bajo custodia, control y trazabilidad de incidentes (§8.5.3)." canCreate={initial.access.canCreate} actionLabel="Nueva propiedad" onCreate={openCreate} />
+    <EntityTable
+        caption="Propiedad del cliente"
+        rows={initial.properties}
+        rowKey={(row) => row.id}
+        storageKey="customer-properties"
+        searchText={(row) => `${row.code} ${row.customerName} ${row.description}`}
+        searchPlaceholder="Buscar por código, cliente o descripción…"
+        filters={[{ id: "status", label: "Estado", value: (row) => row.status }]}
+        emptyTitle="Todavía no hay propiedad del cliente"
+        emptyDescription="Registra lo que el cliente deja bajo tu custodia y en qué estado se devuelve."
+        columns={[
+          {
+            id: "description", header: "Propiedad", primary: true, minWidth: 240, sortValue: (row) => row.description,
+            cell: (row) => <CellTitle title={row.description} meta={`${row.code} · ${row.customerName}`} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+        ]}
+        actions={(row) => (
+          <RowActions canUpdate={false} canDelete={initial.access.canDelete && row.status !== "IN_CUSTODY"} pending={isPending}
+            onEdit={() => {}} onDelete={() => run(() => deleteCustomerProperty(row.id), { successMessage: "Registro eliminado." })}
+            extra={initial.access.canUpdate && row.status === "IN_CUSTODY" ? (
+              <>
+                <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={isPending} onClick={() => run(() => transitionCustomerProperty(row.id, { status: "RETURNED" }), { successMessage: "Propiedad devuelta al cliente." })}>Devolver</button>
+                <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={isPending} onClick={() => setReporting(row)}>Incidente</button>
+              </>
+            ) : undefined} />
+        )}
+      />
+    <FormModal open={creating} title="Nueva propiedad del cliente" pending={isPending} error={error} onClose={closeForm} onSubmit={submit}>
       <Field label="Descripción del bien"><input aria-label="Descripción" name="description" required className="nf-app-input" style={inputStyle} /></Field>
       <Field label="Cliente"><input aria-label="Cliente" name="customerName" required className="nf-app-input" style={inputStyle} /></Field>
       <Field label="Condición al recibir"><textarea aria-label="Estado a la recepción" name="conditionOnReceipt" rows={2} className="nf-app-input" style={inputStyle} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
-        <Field label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+        <Field label="Responsable"><Picker aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Picker></Field>
+        <Field label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Picker></Field>
       </div>
     </FormModal>
     <Modal open={!!reporting} onClose={() => setReporting(null)} title="Reportar incidente" width={520}>{reporting && <form onSubmit={(e) => {
@@ -162,8 +205,8 @@ function PropertyTab({ initial, run, isPending, setError, creating, openCreate, 
 }
 
 // ─── 3. Preservación ──────────────────────────────────
-function PreservationTab({ initial, run, isPending, setError, creating, editing, setEditing, openCreate, closeForm, processOptions, memberOptions }: {
-  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; setError: (v: string) => void;
+function PreservationTab({ initial, run, isPending, error, setError, creating, editing, setEditing, openCreate, closeForm, processOptions, memberOptions }: {
+  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; error: string; setError: (v: string) => void;
   creating: boolean; editing: Preservation | null; setEditing: (v: Preservation | null) => void;
   openCreate: () => void; closeForm: () => void;
   processOptions: QualityOperationsPayload["processes"]; memberOptions: { id: string; name: string }[];
@@ -185,17 +228,31 @@ function PreservationTab({ initial, run, isPending, setError, creating, editing,
     });
   }
   return <>
-    <OperationalHeader title="Preservación" subtitle="Identificación, manipulación, embalaje, almacenamiento, transmisión y protección de salidas (§8.5.4)." canCreate={initial.access.canCreate} actionLabel="Nuevo registro" onCreate={openCreate} />
-    {initial.preservation.length === 0 ? <EmptyOperational>No hay registros de preservación.</EmptyOperational> : <OperationalGrid>
-      {initial.preservation.map((r) => <OperationalCard key={r.id}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{r.code}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{r.itemDescription}</h3></div>
-          <Badge status={r.status} />
-        </div>
-        <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(r); }} onDelete={() => run(() => deletePreservationRecord(r.id), { successMessage: "Registro eliminado." })} />
-      </OperationalCard>)}
-    </OperationalGrid>}
-    <FormModal open={creating || !!editing} title={editing ? "Editar registro" : "Nuevo registro de preservación"} pending={isPending} error="" onClose={closeForm} onSubmit={submit}>
+    <OperationalHeader headingLevel={2} title="Preservación" subtitle="Identificación, manipulación, embalaje, almacenamiento, transmisión y protección de salidas (§8.5.4)." canCreate={initial.access.canCreate} actionLabel="Nuevo registro" onCreate={openCreate} />
+    <EntityTable
+        caption="Preservación"
+        rows={initial.preservation}
+        rowKey={(row) => row.id}
+        storageKey="preservation"
+        searchText={(row) => `${row.code} ${row.itemDescription}`}
+        searchPlaceholder="Buscar por código o descripción…"
+        filters={[{ id: "status", label: "Estado", value: (row) => row.status }]}
+        emptyTitle="Todavía no hay registros de preservación"
+        emptyDescription="Deja constancia de cómo se identifica, manipula y almacena cada elemento."
+        columns={[
+          {
+            id: "item", header: "Elemento", primary: true, minWidth: 240, sortValue: (row) => row.itemDescription,
+            cell: (row) => <CellTitle title={row.itemDescription} meta={row.code} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+        ]}
+        actions={(row) => (
+          <RowActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending}
+            onEdit={() => { setError(""); setEditing(row); }}
+            onDelete={() => run(() => deletePreservationRecord(row.id), { successMessage: "Registro eliminado." })} />
+        )}
+      />
+    <FormModal open={creating || !!editing} title={editing ? "Editar registro" : "Nuevo registro de preservación"} pending={isPending} error={error} onClose={closeForm} onSubmit={submit}>
       <Field label="Elemento / salida"><input aria-label="Descripción del artículo" name="itemDescription" required className="nf-app-input" style={inputStyle} defaultValue={editing?.itemDescription ?? ""} /></Field>
       <Field label="Instrucciones de manipulación"><textarea aria-label="Instrucciones de manipulación" name="handlingInstructions" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editing?.handlingInstructions ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
@@ -203,17 +260,17 @@ function PreservationTab({ initial, run, isPending, setError, creating, editing,
         <Field label="Nota de embalaje/transporte"><textarea aria-label="Nota de embalaje" name="packagingNote" rows={2} className="nf-app-input" style={inputStyle} defaultValue={editing?.packagingNote ?? ""} /></Field>
       </div>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editing?.responsibleId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
-        <Field label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+        <Field label="Responsable"><Picker aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle} defaultValue={editing?.responsibleId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Picker></Field>
+        <Field label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{processOptions.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Picker></Field>
       </div>
-      <Field label="Estado"><select aria-label="Estado" name="status" className="nf-app-input" style={inputStyle} defaultValue={editing?.status ?? "UNDER_REVIEW"}><option value="UNDER_REVIEW">En revisión</option><option value="COMPLIANT">Conforme</option><option value="NON_COMPLIANT">No conforme</option></select></Field>
+      <Field label="Estado"><Picker aria-label="Estado" name="status" className="nf-app-input" style={inputStyle} defaultValue={editing?.status ?? "UNDER_REVIEW"}><option value="UNDER_REVIEW">En revisión</option><option value="COMPLIANT">Conforme</option><option value="NON_COMPLIANT">No conforme</option></Picker></Field>
     </FormModal>
   </>;
 }
 
 // ─── 4. Satisfacción del cliente ─────────────────────
-function FeedbackTab({ initial, run, isPending, setError, creating, openCreate, closeForm }: {
-  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; setError: (v: string) => void;
+function FeedbackTab({ initial, run, isPending, error, setError, creating, openCreate, closeForm }: {
+  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; error: string; setError: (v: string) => void;
   creating: boolean; openCreate: () => void; closeForm: () => void;
 }) {
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -230,41 +287,72 @@ function FeedbackTab({ initial, run, isPending, setError, creating, openCreate, 
     run(() => createCustomerFeedback(input), { onSuccess: closeForm, successMessage: "Retroalimentación registrada." });
   }
   return <>
-    <OperationalHeader title="Satisfacción del cliente" subtitle={`Percepción del cliente sobre el cumplimiento de sus necesidades y expectativas (§9.1.2).${initial.summary.avgSatisfaction != null ? ` Promedio: ${initial.summary.avgSatisfaction}/100.` : ""}`} canCreate={initial.access.canCreate} actionLabel="Nueva retroalimentación" onCreate={openCreate} />
-    {initial.feedback.length === 0 ? <EmptyOperational>No hay retroalimentación de clientes registrada.</EmptyOperational> : <OperationalGrid>
-      {initial.feedback.map((f) => <OperationalCard key={f.id}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{f.code} · {f.channel}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{f.customerName ?? "Cliente sin identificar"}</h3></div>
-          <Badge status={f.status} />
-        </div>
-        <div style={{ marginTop: 8, fontSize: 12, color: "var(--nf-ink-3)" }}>{f.score != null ? `Puntaje: ${f.score}/100 · ` : ""}{new Date(f.receivedAt).toLocaleDateString("es")}</div>
-        <div style={{ marginTop: 8, fontSize: 13 }}>{f.comment ?? "Sin comentario"}</div>
-        {initial.access.canUpdate && f.status !== "CLOSED" && <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-          {f.status === "RECEIVED" && <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(f.id, { status: "ANALYZED" }), { successMessage: "Marcada como analizada." })}>Analizar</button>}
-          {f.status === "ANALYZED" && f.linkedCapaId && <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(f.id, { status: "ACTION_TAKEN" }), { successMessage: "Acción registrada." })}>Marcar acción tomada</button>}
-          <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(f.id, { status: "CLOSED" }), { successMessage: "Cerrada." })}>Cerrar</button>
-        </div>}
-        <CardActions canUpdate={false} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => {}} onDelete={() => run(() => deleteCustomerFeedback(f.id), { successMessage: "Eliminada." })} />
-      </OperationalCard>)}
-    </OperationalGrid>}
-    <FormModal open={creating} title="Nueva retroalimentación de cliente" pending={isPending} error="" onClose={closeForm} onSubmit={submit}>
+    {/* El promedio es dato y se queda a la vista; la definición de la cláusula
+        es explicación y se pide. */}
+    <OperationalHeader
+      headingLevel={2}
+      title="Satisfacción del cliente"
+      subtitle="Percepción del cliente sobre el cumplimiento de sus necesidades y expectativas (§9.1.2)."
+      meta={initial.summary.avgSatisfaction != null
+        ? <span className="nf-page-header__chip">Promedio {initial.summary.avgSatisfaction}/100</span>
+        : undefined}
+      canCreate={initial.access.canCreate}
+      actionLabel="Nueva retroalimentación"
+      onCreate={openCreate}
+    />
+    <EntityTable
+        caption="Retroalimentación del cliente"
+        rows={initial.feedback}
+        rowKey={(row) => row.id}
+        storageKey="customer-feedback"
+        searchText={(row) => `${row.code} ${row.customerName ?? ""} ${row.comment ?? ""} ${row.channel}`}
+        searchPlaceholder="Buscar por cliente, canal o comentario…"
+        filters={[
+          { id: "status", label: "Estado", value: (row) => row.status },
+          { id: "channel", label: "Canal", value: (row) => row.channel, format: (value) => value },
+        ]}
+        emptyTitle="Todavía no hay retroalimentación"
+        emptyDescription="Quejas, felicitaciones y encuestas entran aquí y se enlazan con acciones correctivas."
+        columns={[
+          {
+            id: "customer", header: "Cliente", primary: true, minWidth: 220, sortValue: (row) => row.customerName ?? "",
+            cell: (row) => <CellTitle title={row.customerName ?? "Cliente sin identificar"} meta={`${row.code} · ${row.channel}`} />,
+          },
+          { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+          { id: "score", header: "Puntaje", numeric: true, align: "end", hideable: true, sortValue: (row) => row.score ?? null, cell: (row) => row.score != null ? `${row.score}/100` : "—" },
+          { id: "received", header: "Recibida", numeric: true, hideable: true, sortValue: (row) => row.receivedAt, cell: (row) => formatDate(row.receivedAt) },
+          { id: "comment", header: "Comentario", hideable: true, defaultHidden: true, minWidth: 260, cell: (row) => row.comment ?? "Sin comentario" },
+        ]}
+        actions={(row) => (
+          <RowActions canUpdate={false} canDelete={initial.access.canDelete} pending={isPending}
+            onEdit={() => {}} onDelete={() => run(() => deleteCustomerFeedback(row.id), { successMessage: "Eliminada." })}
+            extra={initial.access.canUpdate && row.status !== "CLOSED" ? (
+              <>
+                {row.status === "RECEIVED" && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(row.id, { status: "ANALYZED" }), { successMessage: "Marcada como analizada." })}>Analizar</button>}
+                {row.status === "ANALYZED" && row.linkedCapaId && <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(row.id, { status: "ACTION_TAKEN" }), { successMessage: "Acción registrada." })}>Acción tomada</button>}
+                <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" disabled={isPending} onClick={() => run(() => transitionCustomerFeedback(row.id, { status: "CLOSED" }), { successMessage: "Cerrada." })}>Cerrar</button>
+              </>
+            ) : undefined} />
+        )}
+      />
+    <FormModal open={creating} title="Nueva retroalimentación de cliente" pending={isPending} error={error} onClose={closeForm} onSubmit={submit}>
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <Field label="Cliente"><input aria-label="Cliente" name="customerName" className="nf-app-input" style={inputStyle} /></Field>
-        <Field label="Canal"><select aria-label="Canal" name="channel" className="nf-app-input" style={inputStyle}><option value="SURVEY">Encuesta</option><option value="COMPLAINT">Queja</option><option value="COMPLIMENT">Felicitación</option><option value="REVIEW">Reseña</option><option value="INTERVIEW">Entrevista</option><option value="OTHER">Otro</option></select></Field>
+        <Field label="Canal"><Picker aria-label="Canal" name="channel" className="nf-app-input" style={inputStyle}><option value="SURVEY">Encuesta</option><option value="COMPLAINT">Queja</option><option value="COMPLIMENT">Felicitación</option><option value="REVIEW">Reseña</option><option value="INTERVIEW">Entrevista</option><option value="OTHER">Otro</option></Picker></Field>
       </div>
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <Field label="Puntaje (0-100)"><input aria-label="Puntuación" name="score" type="number" min={0} max={100} className="nf-app-input" style={inputStyle} /></Field>
-        <Field label="Fecha recibida"><input aria-label="Fecha de recepción" name="receivedAt" type="date" className="nf-app-input" style={inputStyle} /></Field>
+        <Field label="Fecha recibida"><DateField aria-label="Fecha de recepción" name="receivedAt" className="nf-app-input" style={inputStyle} /></Field>
       </div>
       <Field label="Comentario"><textarea aria-label="Comentario" name="comment" rows={3} className="nf-app-input" style={inputStyle} /></Field>
-      <Field label="CAPA vinculada (si aplica)"><select aria-label="Ninguna" name="linkedCapaId" className="nf-app-input" style={inputStyle}><option value="">Ninguna</option>{initial.capas.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.title}</option>)}</select></Field>
+      <Field label="CAPA vinculada (si aplica)"><Picker aria-label="Ninguna" name="linkedCapaId" className="nf-app-input" style={inputStyle}><option value="">Ninguna</option>{initial.capas.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.title}</option>)}</Picker></Field>
     </FormModal>
   </>;
 }
 
 // ─── 5. Comunicación ──────────────────────────────────
-function CommunicationTab({ initial, run, isPending, setError, creating, editing, setEditing, openCreate, closeForm, memberOptions }: {
-  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; setError: (v: string) => void;
+function CommunicationTab({ initial, run, isPending, error, setError, creating, editing, setEditing, openCreate, closeForm, memberOptions }: {
+  initial: QualityOperationsPayload; run: RunFn; isPending: boolean; error: string; setError: (v: string) => void;
   creating: boolean; editing: Communication | null; setEditing: (v: Communication | null) => void;
   openCreate: () => void; closeForm: () => void; memberOptions: { id: string; name: string }[];
 }) {
@@ -285,29 +373,47 @@ function CommunicationTab({ initial, run, isPending, setError, creating, editing
     });
   }
   return <>
-    <OperationalHeader title="Comunicación" subtitle="Qué comunicar, cuándo, a quién, cómo y quién comunica — interna y externa (§7.4)." canCreate={initial.access.canCreate} actionLabel="Nueva comunicación" onCreate={openCreate} />
-    {initial.communications.length === 0 ? <EmptyOperational>No hay comunicaciones registradas.</EmptyOperational> : <OperationalGrid>
-      {initial.communications.map((c) => <OperationalCard key={c.id}>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-          <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{c.code} · {c.audience ?? "Sin audiencia"}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{c.subject}</h3></div>
-          <Badge status={c.direction === "INTERNAL" ? "PLANNED" : "ACTIVE"} />
-        </div>
-        <div style={{ marginTop: 8, fontSize: 12, color: "var(--nf-ink-3)" }}>{c.direction === "INTERNAL" ? "Interna" : "Externa"} · {c.channel ?? "Sin canal"} · {new Date(c.communicatedAt).toLocaleDateString("es")}</div>
-        <CardActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending} onEdit={() => { setError(""); setEditing(c); }} onDelete={() => run(() => deleteCommunicationRecord(c.id), { successMessage: "Comunicación eliminada." })} />
-      </OperationalCard>)}
-    </OperationalGrid>}
-    <FormModal open={creating || !!editing} title={editing ? "Editar comunicación" : "Nueva comunicación"} pending={isPending} error="" onClose={closeForm} onSubmit={submit}>
+    <OperationalHeader headingLevel={2} title="Comunicación" subtitle="Qué comunicar, cuándo, a quién, cómo y quién comunica — interna y externa (§7.4)." canCreate={initial.access.canCreate} actionLabel="Nueva comunicación" onCreate={openCreate} />
+    <EntityTable
+        caption="Comunicaciones"
+        rows={initial.communications}
+        rowKey={(row) => row.id}
+        storageKey="communications"
+        searchText={(row) => `${row.code} ${row.subject} ${row.audience ?? ""} ${row.channel ?? ""}`}
+        searchPlaceholder="Buscar por asunto, audiencia o canal…"
+        filters={[
+          { id: "direction", label: "Dirección", value: (row) => row.direction, format: (value) => value === "INTERNAL" ? "Interna" : "Externa" },
+          { id: "channel", label: "Canal", value: (row) => row.channel, format: (value) => value },
+        ]}
+        emptyTitle="Todavía no hay comunicaciones"
+        emptyDescription="Registra qué se comunicó, a quién y por qué canal: la norma pide poder demostrarlo."
+        columns={[
+          {
+            id: "subject", header: "Comunicación", primary: true, minWidth: 240, sortValue: (row) => row.subject,
+            cell: (row) => <CellTitle title={row.subject} meta={`${row.code} · ${row.audience ?? "Sin audiencia"}`} />,
+          },
+          { id: "direction", header: "Dirección", sortValue: (row) => row.direction, cell: (row) => <Badge status={row.direction === "INTERNAL" ? "PLANNED" : "ACTIVE"} label={row.direction === "INTERNAL" ? "Interna" : "Externa"} /> },
+          { id: "channel", header: "Canal", hideable: true, sortValue: (row) => row.channel ?? "", cell: (row) => row.channel ?? "—" },
+          { id: "date", header: "Fecha", numeric: true, sortValue: (row) => row.communicatedAt, cell: (row) => formatDate(row.communicatedAt) },
+        ]}
+        actions={(row) => (
+          <RowActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending}
+            onEdit={() => { setError(""); setEditing(row); }}
+            onDelete={() => run(() => deleteCommunicationRecord(row.id), { successMessage: "Comunicación eliminada." })} />
+        )}
+      />
+    <FormModal open={creating || !!editing} title={editing ? "Editar comunicación" : "Nueva comunicación"} pending={isPending} error={error} onClose={closeForm} onSubmit={submit}>
       <Field label="Asunto"><input aria-label="Asunto" name="subject" required className="nf-app-input" style={inputStyle} defaultValue={editing?.subject ?? ""} /></Field>
       <Field label="Contenido"><textarea aria-label="Contenido" name="content" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editing?.content ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Dirección"><select aria-label="Sentido" name="direction" className="nf-app-input" style={inputStyle} defaultValue={editing?.direction ?? "INTERNAL"}><option value="INTERNAL">Interna</option><option value="EXTERNAL">Externa</option></select></Field>
+        <Field label="Dirección"><Picker aria-label="Sentido" name="direction" className="nf-app-input" style={inputStyle} defaultValue={editing?.direction ?? "INTERNAL"}><option value="INTERNAL">Interna</option><option value="EXTERNAL">Externa</option></Picker></Field>
         <Field label="Audiencia"><input aria-label="Empleados, clientes, autoridad" name="audience" className="nf-app-input" style={inputStyle} placeholder="Empleados, clientes, autoridad…" defaultValue={editing?.audience ?? ""} /></Field>
       </div>
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <Field label="Canal"><input aria-label="Email, reunión, boletín" name="channel" className="nf-app-input" style={inputStyle} placeholder="Email, reunión, boletín…" defaultValue={editing?.channel ?? ""} /></Field>
-        <Field label="Fecha"><input aria-label="Fecha de comunicación" name="communicatedAt" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.communicatedAt?.slice(0, 10) ?? ""} /></Field>
+        <Field label="Fecha"><DateField aria-label="Fecha de comunicación" name="communicatedAt" className="nf-app-input" style={inputStyle} defaultValue={editing?.communicatedAt?.slice(0, 10) ?? ""} /></Field>
       </div>
-      <Field label="Quién comunica"><select aria-label="Comunicado por" name="communicatedById" className="nf-app-input" style={inputStyle} defaultValue={editing?.communicatedById ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+      <Field label="Quién comunica"><Picker aria-label="Comunicado por" name="communicatedById" className="nf-app-input" style={inputStyle} defaultValue={editing?.communicatedById ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Picker></Field>
     </FormModal>
   </>;
 }

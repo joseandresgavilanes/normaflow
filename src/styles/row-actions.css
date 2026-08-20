@@ -1,0 +1,148 @@
+/* ============================================================================
+ * NormaFlow — acciones de fila
+ *
+ * Una sola geometría para los botones que viven dentro de una tabla. Antes
+ * había cuatro: `nf-app-btn-ghost` con `style` en línea, `nf-app-btn-outline`
+ * con el rojo a fuego, y dos tamaños más repartidos por los módulos de norma.
+ * En el listado de registros los tres botones de cada fila se apilaban en
+ * vertical y triplicaban su alto.
+ * ========================================================================== */
+
+.nf-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--nf-space-1);
+  /* Nunca se parten en varias líneas: es lo que reventaba el alto de la fila. */
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.nf-row-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  /* 28 px: cabe en una fila compacta de 36 px sin empujarla. */
+  min-height: 28px;
+  padding: 0 var(--nf-space-2);
+  /* Borde y fondo desde el reposo: un botón sin contorno no se lee como
+     pulsable hasta que el ratón pasa por encima, y con el dedo no hay «encima».
+     El borde es el token fuerte (3.23:1 en claro, 3.47:1 en oscuro) porque
+     aquí es lo único que identifica el control — WCAG 1.4.11. */
+  border: 1px solid var(--nf-border-strong);
+  border-radius: var(--nf-radius-s);
+  background: var(--nf-surface);
+  color: var(--nf-text-secondary);
+  font-family: inherit;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--nf-duration-fast) var(--nf-ease-standard),
+    border-color var(--nf-duration-fast) var(--nf-ease-standard),
+    color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+.nf-row-action[data-compact] {
+  /* Cuadrado exacto: sin etiqueta, el relleno lateral descentraría el icono. */
+  width: 28px;
+  padding: 0;
+  justify-content: center;
+}
+
+.nf-row-action__label {
+  /* El icono va pegado a su palabra y ninguno de los dos se recorta. */
+  min-width: 0;
+}
+
+.nf-row-action svg {
+  flex: 0 0 auto;
+}
+
+.nf-row-action:hover:not(:disabled) {
+  background: var(--nf-surface-hover);
+  border-color: var(--nf-input-border-hover);
+  color: var(--nf-text-primary);
+}
+
+.nf-row-action:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
+.nf-row-action:disabled {
+  background: var(--nf-disabled-bg);
+  border-color: var(--nf-disabled-border);
+  color: var(--nf-disabled-text);
+  cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+ * Tonos
+ *
+ * Cada tono se identifica desde el reposo por el color del texto y del borde,
+ * y se rellena al apuntarlo. El relleno se reserva al hover a propósito: con
+ * el fondo macizo puesto de salida, una tabla de veinte filas con un botón
+ * rojo en cada una se lee como veinte alarmas y el rojo deja de avisar de
+ * nada. Texto y borde ya dan el color; el relleno da el énfasis.
+ * ------------------------------------------------------------------------ */
+
+/* Acción principal de la fila: la que se espera que se pulse. */
+.nf-row-action[data-tone="primary"] {
+  border-color: var(--nf-primary-border);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-text-link);
+}
+.nf-row-action[data-tone="primary"]:hover:not(:disabled) {
+  background: var(--nf-primary-subtle-hover);
+  border-color: var(--nf-primary);
+  color: var(--nf-primary-active);
+}
+
+.nf-row-action[data-tone="danger"] {
+  border-color: var(--nf-danger-border);
+  color: var(--nf-danger-text);
+}
+.nf-row-action[data-tone="danger"]:hover:not(:disabled) {
+  background: var(--nf-danger-subtle);
+  border-color: var(--nf-danger);
+  color: var(--nf-danger-text);
+}
+
+.nf-row-action[data-tone="success"] {
+  border-color: var(--nf-success-border);
+  color: var(--nf-success-text);
+}
+.nf-row-action[data-tone="success"]:hover:not(:disabled) {
+  background: var(--nf-success-subtle);
+  border-color: var(--nf-success);
+  color: var(--nf-success-text);
+}
+
+/* El monolito heredado impone `min-height: 34px` y `border-radius: 9px
+   !important` a TODO botón dentro de `.nf-iso-module`, con el selector
+   `.nf-iso-module button:not(.nf-quick-create-trigger):not(.nf-quick-create-item)`
+   — especificidad 0-3-1. Cargar después no basta: el orden solo desempata
+   entre selectores de la MISMA especificidad.
+   La clase va repetida a propósito para igualar esos 0-3-1; no es un descuido.
+   Es la única forma de que la acción de fila mida lo mismo en los módulos de
+   norma que en el resto del producto sin editar el monolito. */
+.nf-iso-module button.nf-row-action.nf-row-action {
+  min-height: 28px;
+  padding: 0 var(--nf-space-2);
+  border-radius: var(--nf-radius-s) !important;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-medium);
+}
+
+/* En la tarjeta de móvil que pinta `DataTable` las acciones ocupan su propia
+   fila y se reparten el ancho: ahí sí hay sitio y el pulgar lo agradece. */
+.nf-dt__card .nf-row-actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.nf-dt__card .nf-row-action {
+  min-height: 32px;
+}

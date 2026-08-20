@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { TrainingAssignmentStatus } from "@prisma/client";
-import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
+import { BookOpen, CircleCheck, GraduationCap, Pencil, PieChart, Play, Plus, ScrollText, Users, X } from "lucide-react";
 import Card from "@/components/ui/Card";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -29,6 +29,16 @@ import {
 } from "@/lib/actions/training";
 import type { TrainingAssignmentLive, TrainingCourseLive, TrainingPayload } from "@/lib/server-queries";
 import { formatDate } from "@/lib/utils";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import DateField from "@/components/ui/DateField";
+import { RowAction } from "@/components/ui/RowActions";
+import {
+  CellTitle,
+  CountCell,
+  ProgressCell,
+} from "@/components/operations/OperationalUi";
 
 type Tab = "catalog" | "assignments" | "people" | "compliance" | "trail";
 
@@ -184,15 +194,15 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       cell: (a) => a.processCode || a.processName || "—" },
     { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
       cell: (a) => a.triggeredByDocumentCode ? `${a.triggeredByDocumentCode} v${a.triggeredByVersion || "—"}` : "Manual" },
-    { id: "actions", header: "Acciones", minWidth: 230, hideable: false,
-      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
+    { id: "actions", header: "Acciones", minWidth: 360, hideable: false,
+      cell: (a) => <div className="nf-row-actions">
         {canManage && a.status !== "COMPLETED" && a.status !== "CANCELLED" && (<>
-          {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(a.status) && <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} className="nf-text-action">Iniciar</button>}
-          <button type="button" onClick={() => setEditingAssignment(a)} className="nf-text-action">Editar</button>
-          <button type="button" onClick={() => { setCompletingAssignment(a); setError(""); }} className="nf-text-action">Completar</button>
-          <button type="button" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} className="nf-text-action nf-text-action--danger">Cancelar</button>
+          {["ASSIGNED", "OVERDUE", "RETRAINING_REQUIRED"].includes(a.status) && <RowAction icon={Play} label="Iniciar" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.IN_PROGRESS }), { successMessage: "Formación iniciada." })} />}
+          <RowAction icon={Pencil} label="Editar" onClick={() => setEditingAssignment(a)} />
+          <RowAction icon={CircleCheck} label="Completar" tone="success" onClick={() => { setCompletingAssignment(a); setError(""); }} />
+          <RowAction icon={X} label="Cancelar" tone="danger" disabled={isPending} onClick={() => run(() => updateTrainingAssignment(a.id, { status: TrainingAssignmentStatus.CANCELLED }), { successMessage: "Asignación cancelada." })} />
         </>)}
-      </span> },
+      </div> },
   ], [canManage, isPending, run]);
 
   return (
@@ -243,7 +253,7 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
         <div>
           {canManage && (
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-              <button type="button" onClick={() => { setCreatingCourse(true); setError(""); }} className="nf-app-btn-primary">+ Nuevo curso</button>
+              <button type="button" onClick={() => { setCreatingCourse(true); setError(""); }} className="nf-app-btn-primary">Nuevo curso</button>
             </div>
           )}
           {!courses.length ? (
@@ -308,20 +318,52 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       {tab === "people" && (
         !personnel.length ? <EmptyState title="No hay personal activo" text="Registra personas antes de gestionar su formación." href="/app/info/personnel" actionLabel="Abrir Personal" /> : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 14 }}>
-            {personnel.map((person) => {
-              const rows = assignments.filter((assignment) => assignment.personnelId === person.id);
-              const done = rows.filter((assignment) => assignment.status === "COMPLETED").length;
-              return <Card key={person.id}><div style={{ display: "flex", gap: 10, alignItems: "center" }}><Users size={20} color="var(--nf-primary-active)" /><div><strong style={{ color: "var(--nf-ink)" }}>{person.name}</strong><div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600 }}>{person.role || person.email || "Sin cargo"}</div></div></div><div style={{ marginTop: 12, fontWeight: 700, color: "var(--nf-ink-2)" }}>{done}/{rows.length} completadas</div></Card>;
-            })}
-          </div>
+          <EntityTable
+            caption="Personal y formación"
+            rows={personnel}
+            rowKey={(row) => row.id}
+            storageKey="training-personnel"
+            searchText={(row) => `${row.name} ${row.role ?? ""} ${row.email ?? ""}`}
+            searchPlaceholder="Buscar por nombre, cargo o correo…"
+            filters={[{ id: "role", label: "Cargo", value: (row) => row.role, format: (value) => value }]}
+            emptyTitle="Todavía no hay personal"
+            emptyDescription="Da de alta al personal para poder asignarle cursos y llevar su registro de formación."
+            columns={[
+              {
+                id: "name", header: "Persona", primary: true, minWidth: 220, sortValue: (row) => row.name,
+                cell: (row) => <CellTitle title={row.name} meta={row.role || row.email || "Sin cargo"} />,
+              },
+              {
+                id: "assigned", header: "Asignadas", numeric: true, align: "end",
+                sortValue: (row) => assignments.filter((a) => a.personnelId === row.id).length,
+                cell: (row) => <CountCell value={assignments.filter((a) => a.personnelId === row.id).length} />,
+              },
+              {
+                id: "done", header: "Completadas", numeric: true, align: "end",
+                sortValue: (row) => assignments.filter((a) => a.personnelId === row.id && a.status === "COMPLETED").length,
+                cell: (row) => <CountCell value={assignments.filter((a) => a.personnelId === row.id && a.status === "COMPLETED").length} />,
+              },
+              {
+                id: "progress", header: "Avance", numeric: true,
+                sortValue: (row) => {
+                  const total = assignments.filter((a) => a.personnelId === row.id).length;
+                  return total ? assignments.filter((a) => a.personnelId === row.id && a.status === "COMPLETED").length / total : 0;
+                },
+                cell: (row) => {
+                  const total = assignments.filter((a) => a.personnelId === row.id).length;
+                  const hechas = assignments.filter((a) => a.personnelId === row.id && a.status === "COMPLETED").length;
+                  return <ProgressCell value={total ? Math.round((hechas / total) * 100) : 0} />;
+                },
+              },
+            ]}
+          />
         )
       )}
 
       {tab === "compliance" && (
         <Card>
           <h3 style={{ marginTop: 0, fontSize: 17, fontWeight: 600, color: "var(--nf-ink)", letterSpacing: "-0.02em" }}>Resumen para dirección</h3>
-          <p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con asignaciones persistidas y vencimientos reales.</p>
+          <p style={{ color: "var(--nf-ink-2)", fontSize: 13, lineHeight: 1.6 }}>Los indicadores se calculan con las asignaciones vigentes y sus fechas de vencimiento.</p>
           <ul style={{ fontSize: 13, lineHeight: 1.8, color: "var(--nf-ink)", fontWeight: 500, paddingLeft: 20 }}>
             <li>Cursos activos: {activeCourses.length}</li>
             <li>Cursos obligatorios: {activeCourses.filter((course) => course.mandatory).length}</li>
@@ -366,11 +408,11 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
       <Modal open={creatingAssignment} onClose={() => !isPending && setCreatingAssignment(false)} title="Nueva asignación" width={560}>
         <ModalForm onSubmit={submitAssignment}>
           {!activeCourses.length || !personnel.length ? <p style={{ color: "var(--nf-danger-text)", marginTop: 0 }}>Necesitas al menos un curso activo y una persona activa.</p> : <>
-            <ModalField label="Curso *"><select aria-label="Curso" name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></ModalField>
-            <ModalField label="Persona *"><select aria-label="Persona" name="personnelId" required className="nf-app-input">{personnel.map((person) => <option key={person.id} value={person.id}>{person.name}{person.role ? ` · ${person.role}` : ""}</option>)}</select></ModalField>
-            <ModalField label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-            <ModalField label="Fecha de vencimiento *"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
-            <ModalField label="Documento de origen"><select aria-label="Asignación manual" name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</select></ModalField>
+            <ModalField label="Curso *"><Picker aria-label="Curso" name="courseId" required className="nf-app-input">{activeCourses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</Picker></ModalField>
+            <ModalField label="Persona *"><PersonPicker name="personnelId" people={personnel} required ariaLabel="Persona" /></ModalField>
+            <ModalField label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</Picker></ModalField>
+            <ModalField label="Fecha de vencimiento *"><DateField aria-label="Fecha de vencimiento" name="dueAt" required defaultValue={datePlusDays(activeCourses[0]?.defaultDueDays ?? 30)} className="nf-app-input" /></ModalField>
+            <ModalField label="Documento de origen"><Picker aria-label="Asignación manual" name="triggeredByDocumentId" className="nf-app-input"><option value="">Asignación manual</option>{documents.map((document) => <option key={document.id} value={document.id}>{document.code} — {document.title}</option>)}</Picker></ModalField>
             <ModalField label="Versión del documento"><input aria-label="Versión" name="triggeredByVersion" placeholder="Ej. 2.0" className="nf-app-input" /></ModalField>
           </>}
           {error && <ModalError>{error}</ModalError>}
@@ -391,8 +433,8 @@ export default function TrainingLiveClient({ initial, canManage }: { initial: Tr
 
       <Modal open={editingAssignment != null} onClose={() => !isPending && setEditingAssignment(null)} title="Editar asignación" width={500}>
         <ModalForm onSubmit={submitAssignmentEdit}>
-          <ModalField label="Proceso"><select aria-label="Proceso" name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</select></ModalField>
-          <ModalField label="Fecha de vencimiento"><input aria-label="Fecha de vencimiento" type="date" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
+          <ModalField label="Proceso"><Picker aria-label="Proceso" name="processId" defaultValue={editingAssignment?.processId ?? ""} className="nf-app-input"><option value="">Sin proceso</option>{processes.map((process) => <option key={process.id} value={process.id}>{process.code ? `${process.code} — ` : ""}{process.name}</option>)}</Picker></ModalField>
+          <ModalField label="Fecha de vencimiento"><DateField aria-label="Fecha de vencimiento" name="dueAt" required defaultValue={editingAssignment?.dueAt.slice(0, 10)} className="nf-app-input" /></ModalField>
           {error && <ModalError>{error}</ModalError>}
           <FormFooter isPending={isPending} onCancel={() => setEditingAssignment(null)} />
         </ModalForm>

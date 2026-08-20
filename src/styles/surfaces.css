@@ -75,13 +75,6 @@
   font-weight: var(--nf-weight-semibold);
   line-height: var(--nf-leading-snug);
 }
-.nf-section-head__desc {
-  margin: 2px 0 0;
-  max-width: 72ch;
-  color: var(--nf-text-muted);
-  font-size: var(--nf-text-sm);
-  line-height: var(--nf-leading-normal);
-}
 .nf-section-head__action { flex: 0 0 auto; }
 
 /* --------------------------------------------------------------------------
@@ -346,7 +339,9 @@
 
 .nf-attention__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  /* Las fichas son de una línea desde que el detalle vive en la descripción
+     del enlace: caben más por fila y la lista deja de ser un muro. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 232px), 1fr));
   gap: var(--nf-space-2);
   list-style: none;
   margin: 0;
@@ -386,11 +381,6 @@
   color: var(--nf-text-primary);
   font-size: var(--nf-text-base);
   font-weight: var(--nf-weight-medium);
-}
-.nf-attention__detail {
-  color: var(--nf-text-muted);
-  font-size: var(--nf-text-xs);
-  line-height: var(--nf-leading-normal);
 }
 .nf-attention__count {
   flex: 0 0 auto;

@@ -9,6 +9,9 @@ import { planEntitlements, isTrialActive, assertPlanModule } from "@/lib/plan-en
 import { ensureDocumentTemplates } from "@/lib/document-templates";
 import { memberPayload } from "@/lib/payload-privacy";
 import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
+import { delegationsFor } from "@/lib/delegation";
+import { createSignedAvatarUrl } from "@/lib/storage";
+import { listUserSessions } from "@/lib/sessions";
 
 export async function getDashboardPayload() {
   const ctx = await requirePermission("dashboard:read");
@@ -105,6 +108,15 @@ export async function getDashboardPayload() {
   const pendingActions = actions.filter(a => a.status !== "COMPLETED" && a.status !== "CANCELLED").length;
 
   const criticalRisks = risks.filter(r => r.score >= 15).length;
+  /* Reparto completo del inventario, no solo el recuento de críticos: la fila
+     de avisos ya dice cuántos críticos hay, y un solo número no distingue una
+     organización con tres riesgos de otra con trescientos. Los cortes son los
+     de `riskLevel` (src/lib/utils.ts). */
+  const riskLevels = {
+    critical: criticalRisks,
+    high: risks.filter(r => r.score >= 8 && r.score < 15).length,
+    moderate: risks.filter(r => r.score < 8).length,
+  };
 
   const trainingNeedsRenewal = (assignment: (typeof trainingAssignments)[number]) => {
     if (assignment.status !== "COMPLETED" || !assignment.completedAt) return false;
@@ -144,6 +156,14 @@ export async function getDashboardPayload() {
     overdueCritical,
     pendingActions,
     criticalRisks,
+    riskLevels,
+    /* Todas las normas activas, no solo 9001 y 27001: el motor de normas
+       admite trece y el panel enseñaba dos. */
+    standardScores: orgStandards.map(row => ({
+      code: row.standard.code.replaceAll("_", " "),
+      name: row.standard.name,
+      pct: row.score != null ? Math.round(row.score) : null,
+    })),
     documentsInReview,
     auditsUpcoming,
     openNcs,
@@ -1653,14 +1673,50 @@ export async function getNotificationsPayload() {
 
 export async function getAccountPayload() {
   const { ctx } = await getServerAuthorization();
+  /* La preferencia de avisos existía en el esquema y la respetaba el envío,
+     pero nadie la leía para la pantalla: sin esto no había forma de saber qué
+     tenía marcado el usuario. Ausente = los valores por defecto que ya aplica
+     `notify.ts`, para que la pantalla no discrepe del comportamiento real. */
+  const preference = await prisma.notificationPreference.findUnique({
+    where: { organizationId_userId: { organizationId: ctx.organization.id, userId: ctx.user.id } },
+    select: { emailEnabled: true, disabledTypes: true },
+  });
   return {
     id: ctx.user.id,
     name: ctx.user.name,
     email: ctx.user.email,
-    avatarUrl: ctx.user.avatarUrl,
+    /* Se entrega firmada, no como ruta: el cliente no puede firmar y una ruta
+       cruda no es cargable desde el navegador. */
+    avatarUrl: ctx.user.avatarUrl
+      ? await createSignedAvatarUrl(ctx.user.avatarUrl, ctx.organization.id)
+      : null,
     organizationId: ctx.organization.id,
     organizationName: ctx.organization.name,
     role: ctx.role,
+    notifications: {
+      emailEnabled: preference?.emailEnabled ?? true,
+      disabledTypes: preference?.disabledTypes ?? [],
+    },
+    delegations: (await delegationsFor(ctx.organization.id, ctx.user.id)).map((row) => ({
+      id: row.id,
+      startsAt: row.startsAt.toISOString(),
+      endsAt: row.endsAt.toISOString(),
+      reason: row.reason,
+      revokedAt: row.revokedAt?.toISOString() ?? null,
+      toUser: row.toUser,
+    })),
+    /* Compañeros de la organización, para elegir suplente. Se excluye uno
+       mismo: delegarse a sí mismo no significa nada. */
+    sessions: await listUserSessions(ctx.user.id),
+    colleagues: (await prisma.user.findMany({
+      where: {
+        id: { not: ctx.user.id },
+        memberships: { some: { organizationId: ctx.organization.id, active: true } },
+      },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+      take: 200,
+    })),
   };
 }
 

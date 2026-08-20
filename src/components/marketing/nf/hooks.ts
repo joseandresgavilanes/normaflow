@@ -33,7 +33,13 @@ export function useMouseParallax(ref: React.RefObject<HTMLElement | null>, depth
       raf = requestAnimationFrame(() => {
         el.querySelectorAll<HTMLElement>("[data-parallax]").forEach((node) => {
           const d = parseFloat(node.dataset.parallax || "1");
-          node.style.transform = `translate3d(${dx * depth * d}px, ${dy * depth * d}px, 0)`;
+          /* Se escriben dos variables, no `transform`: la propiedad entera
+             borraba la inclinación 3D del panel en el primer movimiento del
+             ratón, y en las fichas con animación de deriva ni siquiera se
+             aplicaba (una animación gana a un estilo en línea). Cada hoja
+             compone `--px`/`--py` con lo suyo. */
+          node.style.setProperty("--px", `${dx * depth * d}px`);
+          node.style.setProperty("--py", `${dy * depth * d}px`);
         });
       });
     };

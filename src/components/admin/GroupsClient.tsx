@@ -390,7 +390,10 @@ export default function GroupsClient() {
                       <Pencil size={15} strokeWidth={2.25} aria-hidden />
                       Editar
                     </button>
-                    <button type="button" onClick={() => setConfirmDelete(current)} className="nf-app-btn-ghost nf-app-btn-sm nf-app-btn-ghost--danger">
+                    {/* Mismo tamaño que «Editar»: iban `outline` y `ghost--sm`,
+                        así que la pareja de acciones del panel se veía como dos
+                        botones de dos sistemas distintos. */}
+                    <button type="button" onClick={() => setConfirmDelete(current)} className="nf-app-btn-outline nf-app-btn-ghost--danger">
                       <Trash2 size={15} strokeWidth={2.25} aria-hidden />
                       Eliminar
                     </button>
@@ -505,7 +508,7 @@ export default function GroupsClient() {
                   <div className="grid gap-2">
                     {admin.state.processes.length === 0 ? <p className="text-xs nf-text-subtle-fg">No hay procesos disponibles.</p> : admin.state.processes.map((process) => (
                       <label key={process.id} className="flex cursor-pointer items-center gap-2 rounded-lg border nf-border-line px-3 py-2 text-sm hover:nf-surface-muted-bg">
-                        <input type="checkbox" checked={(current.processIds ?? []).includes(process.id)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("process", process.id)} className="accent-indigo-600" />
+                        <input type="checkbox" checked={(current.processIds ?? []).includes(process.id)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("process", process.id)} />
                         <span>{process.code ? `${process.code} · ` : ""}{process.name}</span>
                       </label>
                     ))}
@@ -517,7 +520,7 @@ export default function GroupsClient() {
                   <div className="grid gap-2 sm:grid-cols-2">
                     {["documents", "processes", "risks", "audits", "actions", "reporting"].map((module) => (
                       <label key={module} className="flex cursor-pointer items-center gap-2 rounded-lg border nf-border-line px-3 py-2 text-sm hover:nf-surface-muted-bg">
-                        <input type="checkbox" checked={(current.modules ?? []).includes(module)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("module", module)} className="accent-indigo-600" />
+                        <input type="checkbox" checked={(current.modules ?? []).includes(module)} disabled={!canEdit || isPending || !admin.setGroupAssociations} onChange={() => toggleAssociation("module", module)} />
                         <span className="capitalize">{module}</span>
                       </label>
                     ))}

@@ -9,9 +9,19 @@ import {
   createDesignStage, startDesignStage, completeDesignStage, deleteDesignStage,
 } from "@/lib/actions/design-development";
 import type { DesignDevelopmentPayload } from "@/lib/design-development/queries";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import DateField from "@/components/ui/DateField";
 import {
-  CardActions, EmptyOperational, Field, FormModal, inputStyle, Meta,
-  OperationalCard, OperationalGrid, OperationalHeader, OperationalMessages,
+  CellTitle,
+  CountCell,
+  Field,
+  FormModal,
+  Meta,
+  OperationalHeader,
+  OperationalMessages,
+  RowActions,
+  inputStyle,
 } from "./OperationalUi";
 
 type Project = DesignDevelopmentPayload["projects"][number];
@@ -83,30 +93,47 @@ export function DesignDevelopmentLive({ initial }: { initial: DesignDevelopmentP
     <OperationalHeader title="Diseño y desarrollo" subtitle="Proyectos con etapas configurables: entradas, salidas, revisión, verificación, validación, transferencia (§8.3)." canCreate={initial.access.canCreate} actionLabel="Nuevo proyecto" onCreate={() => { setError(""); setEditing(null); setCreating(true); }} />
     <OperationalMessages error={error} success={success} />
 
-    {initial.projects.length === 0 ? <EmptyOperational>No hay proyectos de diseño y desarrollo registrados.</EmptyOperational> : <OperationalGrid>
-      {initial.projects.map((p) => {
-        const completedStages = p.stages.filter((s) => s.status === "COMPLETED").length;
-        return <OperationalCard key={p.id} onClick={() => setDetail(p)}>
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <div><div style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 700 }}>{p.code}</div><h3 style={{ margin: "6px 0", fontSize: 17 }}>{p.name}</h3></div>
-            <Badge status={p.status} />
-          </div>
-          <div style={{ marginTop: 12, fontSize: 12, color: "var(--nf-ink-3)" }}>{p.stages.length} etapa(s) · {completedStages} completada(s)</div>
-          <CardActions canUpdate={initial.access.canUpdate && p.status !== "COMPLETED"} canDelete={initial.access.canDelete && p.status !== "IN_PROGRESS"} pending={isPending} onEdit={() => { setError(""); setEditing(p); setCreating(true); }} onDelete={() => run(() => deleteDesignProject(p.id), { onSuccess: () => setDetail(null), successMessage: "Proyecto eliminado." })} />
-        </OperationalCard>;
-      })}
-    </OperationalGrid>}
+    <EntityTable
+      caption="Proyectos de diseño"
+      rows={initial.projects}
+      rowKey={(row) => row.id}
+      rowAction={(row) => setDetail(row)}
+      storageKey="design-projects"
+      searchText={(row) => `${row.code} ${row.name}`}
+      searchPlaceholder="Buscar por código o nombre…"
+      filters={[{ id: "status", label: "Estado", value: (row) => row.status }]}
+      emptyTitle="Todavía no hay proyectos"
+      emptyDescription="Un proyecto de diseño y desarrollo agrupa etapas, entradas, salidas y verificaciones."
+      columns={[
+        {
+          id: "name", header: "Proyecto", primary: true, minWidth: 240, sortValue: (row) => row.name,
+          cell: (row) => <CellTitle title={row.name} meta={row.code} />,
+        },
+        { id: "status", header: "Estado", sortValue: (row) => row.status, cell: (row) => <Badge status={row.status} /> },
+        { id: "stages", header: "Etapas", numeric: true, align: "end", sortValue: (row) => row.stages.length, cell: (row) => <CountCell value={row.stages.length} /> },
+        {
+          id: "done", header: "Completadas", numeric: true, align: "end", hideable: true,
+          sortValue: (row) => row.stages.filter((stage) => stage.status === "COMPLETED").length,
+          cell: (row) => <CountCell value={row.stages.filter((stage) => stage.status === "COMPLETED").length} />,
+        },
+      ]}
+      actions={(row) => (
+        <RowActions canUpdate={initial.access.canUpdate && row.status !== "COMPLETED"} canDelete={initial.access.canDelete && row.status !== "IN_PROGRESS"}
+          pending={isPending} onEdit={() => { setError(""); setEditing(row); setCreating(true); }}
+          onDelete={() => run(() => deleteDesignProject(row.id), { onSuccess: () => setDetail(null), successMessage: "Proyecto eliminado." })} />
+      )}
+    />
 
     <FormModal open={creating} title={editing ? "Editar proyecto" : "Nuevo proyecto de diseño"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submitProject}>
       <Field label="Nombre"><input aria-label="Nombre" name="name" required className="nf-app-input" style={inputStyle} defaultValue={editing?.name ?? ""} /></Field>
       <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editing?.description ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Responsable"><select aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editing?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
-        <Field label="Proceso"><select aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>
+        <Field label="Responsable"><Picker aria-label="Responsable" name="ownerId" className="nf-app-input" style={inputStyle} defaultValue={editing?.ownerId ?? ""}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Picker></Field>
+        <Field label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={editing?.processId ?? ""}><option value="">Sin asignar</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Picker></Field>
       </div>
       <div className="nf-grid-2" style={{ gap: 12 }}>
-        <Field label="Inicio planificado"><input aria-label="Inicio planificado" name="plannedStart" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedStart?.slice(0, 10) ?? ""} /></Field>
-        <Field label="Fin planificado"><input aria-label="Fin planificado" name="plannedEnd" type="date" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedEnd?.slice(0, 10) ?? ""} /></Field>
+        <Field label="Inicio planificado"><DateField aria-label="Inicio planificado" name="plannedStart" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedStart?.slice(0, 10) ?? ""} /></Field>
+        <Field label="Fin planificado"><DateField aria-label="Fin planificado" name="plannedEnd" className="nf-app-input" style={inputStyle} defaultValue={editing?.plannedEnd?.slice(0, 10) ?? ""} /></Field>
       </div>
     </FormModal>
 
@@ -140,11 +167,11 @@ export function DesignDevelopmentLive({ initial }: { initial: DesignDevelopmentP
       </div>
     </div>}</Modal>
 
-    <FormModal open={addingStage} title="Nueva etapa" pending={isPending} error="" onClose={() => setAddingStage(false)} onSubmit={submitStage}>
-      <Field label="Tipo de etapa"><select aria-label="Tipo de etapa" name="stageType" className="nf-app-input" style={inputStyle}>{Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+    <FormModal open={addingStage} title="Nueva etapa" pending={isPending} error={error} onClose={() => setAddingStage(false)} onSubmit={submitStage}>
+      <Field label="Tipo de etapa"><Picker aria-label="Tipo de etapa" name="stageType" className="nf-app-input" style={inputStyle}>{Object.entries(STAGE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</Picker></Field>
       <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} /></Field>
       <Field label="Descripción / criterios de aceptación"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} /></Field>
-      <Field label="Responsable"><select aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field>
+      <Field label="Responsable"><Picker aria-label="Responsable" name="responsibleId" className="nf-app-input" style={inputStyle}><option value="">Sin asignar</option>{memberOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</Picker></Field>
     </FormModal>
 
     <Modal open={!!completing} onClose={() => setCompleting(null)} title={`Completar: ${completing?.title ?? ""}`} width={520}>{completing && <form onSubmit={submitComplete} style={{ display: "grid", gap: 12 }}>

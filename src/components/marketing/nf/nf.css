@@ -483,20 +483,36 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 @media (max-width: 1024px) { .nf-hero-grid { grid-template-columns: 1fr; } }
 .nf-hero-copy { position: relative; z-index: 2; }
 .nf-hero-stage {
+  /* Alto del lienzo de la ilustración. Las piezas decorativas se sitúan en
+     porcentaje sobre él, así que reencuadrar la composición es cambiar este
+     número y nada más. */
+  --nf-stage-h: 580px;
   position: relative;
-  min-height: 520px;
+  min-height: var(--nf-stage-h);
+  display: grid;
+  /* Una pista `auto` se dimensiona con el max-content del panel y NO se acota
+     al ancho del contenedor: sin esto el panel se desbordaba 27 px en móvil. */
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
   perspective: 1400px;
   perspective-origin: 50% 40%;
-  /* Las fichas decorativas se colocan hasta el 88% del ancho y con rotación,
-     así que la de la derecha llegaba a 1484 px en un lienzo de 1440: la página
-     desbordaba 44 px. `body { overflow-x: hidden }` ocultaba la barra pero
-     seguía recortando el contenido. `clip` recorta sin crear contexto de
-     desplazamiento, así que no rompe el `position: sticky` de la cabecera. */
+  /* Red de seguridad horizontal: con las fichas decorativas colocadas al 88 %
+     del ancho y rotadas, la de la derecha llegaba a 1484 px en un lienzo de
+     1440 y la página desbordaba 44 px. Ahora ninguna se sale, pero el recorte
+     se queda para que reencuadrar no vuelva a sacar barra horizontal.
+     `body { overflow-x: hidden }` la ocultaba pero seguía recortando el
+     contenido; `clip` recorta sin crear contexto de desplazamiento, así que no
+     rompe el `position: sticky` de la cabecera. */
   overflow-x: clip;
 }
 
 .nf-chaos {
   position: absolute;
+  /* Capa 1 de la ilustración: el desorden va DETRÁS del panel, que es el
+     sujeto. Sin z-index explícito el orden dependía del orden del DOM y
+     bastaba mover un bloque en el JSX para enterrar el panel. */
+  z-index: 1;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotate(var(--r, 0deg));
   padding: 8px 12px;
   border-radius: 10px;
   background: var(--nf-bg-1);
@@ -539,21 +555,46 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-chaos--folder .ic { background: #b45309; }
 .nf-chaos--bug .ic { background: #7c3aed; }
 
-@keyframes drift-a { 0%, 100% { transform: translate3d(var(--x,0), var(--y,0), 0) rotate(var(--r,0deg)); } 50% { transform: translate3d(calc(var(--x,0) + 6px), calc(var(--y,0) - 10px), 0) rotate(calc(var(--r,0deg) + 1deg)); } }
-@keyframes drift-b { 0%, 100% { transform: translate3d(var(--x,0), var(--y,0), 0) rotate(var(--r,0deg)); } 50% { transform: translate3d(calc(var(--x,0) - 8px), calc(var(--y,0) + 8px), 0) rotate(calc(var(--r,0deg) - 1deg)); } }
+/* La deriva usa las mismas variables que el paralaje del ratón (`--px`/`--py`)
+   para poder sumarse a él: una animación gana a `style.transform`, así que
+   mientras el hook escribía la transformación entera estas fichas se quedaban
+   quietas ante el ratón. El valor por defecto lleva unidad porque va dentro de
+   un `calc()`. */
+@keyframes drift-a { 0%, 100% { transform: translate3d(var(--px,0px), var(--py,0px), 0) rotate(var(--r,0deg)); } 50% { transform: translate3d(calc(var(--px,0px) + 6px), calc(var(--py,0px) - 10px), 0) rotate(calc(var(--r,0deg) + 1deg)); } }
+@keyframes drift-b { 0%, 100% { transform: translate3d(var(--px,0px), var(--py,0px), 0) rotate(var(--r,0deg)); } 50% { transform: translate3d(calc(var(--px,0px) - 8px), calc(var(--py,0px) + 8px), 0) rotate(calc(var(--r,0deg) - 1deg)); } }
 .nf-chaos.a { animation: drift-a 9s ease-in-out infinite; }
 .nf-chaos.b { animation: drift-b 11s ease-in-out infinite; }
 
+/* El cluster es el LIENZO de la composición, no el panel: ocupa todo el alto
+   del escenario para que las fichas flotantes y los sellos tengan franjas
+   arriba y abajo donde caer. Antes medía lo mismo que el panel, así que las
+   tres fichas flotantes no tenían más sitio que encima de sus datos: tapaban
+   el titular de «Cumplimiento», la matriz de riesgo y media CAPA, y el panel
+   —el sujeto de la ilustración— parecía estar debajo de todo. */
 .nf-dash-cluster {
   position: relative;
   width: 100%;
   max-width: 620px;
+  min-height: var(--nf-stage-h);
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  /* Capa 2: por encima del desorden. */
+  z-index: 2;
   transform-style: preserve-3d;
-  transform: rotateX(4deg) rotateY(-8deg);
+  /* El paralaje se aplica por variable y no sobrescribiendo `transform`: el
+     hook escribía la propiedad entera y borraba esta inclinación en el primer
+     movimiento del ratón. */
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotateX(4deg) rotateY(-8deg);
 }
 .nf-dash-main {
   position: relative;
+  /* El panel deja siempre 23 px de franja a cada lado del lienzo: es el
+     saliente del que se agarran las fichas flotantes ancladas a los bordes,
+     y se mantiene igual crezca o no la columna. */
+  width: calc(100% - 46px);
+  margin-inline: auto;
   border-radius: 16px;
   padding: 16px;
   background: var(--nf-bg-1);
@@ -605,7 +646,12 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   border: 1px solid var(--nf-line);
   box-shadow: var(--nf-shadow-2);
   min-width: 150px;
+  /* Sin tope, la ficha del asistente se estiraba a su ancho de contenido —415
+     px de una frase sin cortes— y cruzaba el panel entero en diagonal. */
+  max-width: 210px;
+  /* Capa 3: delante del panel, que es lo que las hace «flotar». */
   z-index: 3;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
 }
 .nf-float-tile .h { font-size: 11px; font-family: var(--font-mono); color: var(--nf-ink-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
 
@@ -653,17 +699,25 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 .nf-iso-badge .num { font-size: 14px; color: var(--nf-ink); }
 .nf-iso-badge .yr { font-size: 9px; color: var(--nf-ink-3); }
 
+/* Solo dentro del hero: las páginas de norma reutilizan el sello como pieza
+   suelta en el flujo (`position: relative`) y no quieren ni capa ni paralaje. */
+.nf-hero-stage .nf-iso-badge {
+  /* Capa 4: los sellos van delante de todo, incluidas las fichas flotantes. */
+  z-index: 4;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+}
+
 .nf-connectors { position: absolute; inset: 0; pointer-events: none; }
 .nf-connectors path { stroke: rgba(82, 102, 246, 0.2); stroke-width: 1; fill: none; }
 
 /* Responsive landing composition */
 @media (max-width: 1024px) {
   .nf-hero-stage {
-    min-height: 480px;
+    --nf-stage-h: 520px;
   }
 
   .nf-dash-cluster {
-    transform: none;
+    transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
   }
 
   .nf-ai-grid {
@@ -686,9 +740,19 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
     padding-top: 44px;
   }
 
+  /* Sin piezas decorativas no hace falta lienzo ni franjas: el panel manda en
+     el alto y ocupa todo el ancho. */
   .nf-hero-stage {
-    min-height: 390px;
+    --nf-stage-h: 0px;
     overflow: hidden;
+  }
+
+  .nf-dash-cluster {
+    min-height: 0;
+  }
+
+  .nf-dash-main {
+    width: 100%;
   }
 
   .nf-chaos,
@@ -827,7 +891,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   }
 
   .nf-hero-stage {
-    min-height: 340px;
+    --nf-stage-h: 0px;
   }
 
   .nf-dash-grid {

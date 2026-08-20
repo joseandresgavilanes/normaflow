@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { BookOpen, GraduationCap, PieChart, Plus, ScrollText, Users } from "lucide-react";
+import { BookOpen, CircleCheck, GraduationCap, PieChart, Plus, ScrollText, Users, Workflow } from "lucide-react";
 import { useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
@@ -14,6 +14,14 @@ import { useCreateFromQuery } from "@/hooks/useCreateFromQuery";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import { formatDate } from "@/lib/utils";
+import Picker from "@/components/ui/Picker";
+import EntityTable from "@/components/ui/EntityTable";
+import { RowAction } from "@/components/ui/RowActions";
+import {
+  CellTitle,
+  CountCell,
+  ProgressCell,
+} from "@/components/operations/OperationalUi";
 
 const STATUS_LABEL: Record<string, string> = {
   ASSIGNED: "Asignado",
@@ -200,11 +208,11 @@ export default function TrainingModule() {
         : <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>—</span> },
     { id: "origin", header: "Origen", minWidth: 150, sortValue: (a) => a.triggeredByDocumentCode ?? "",
       cell: (a) => <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{a.triggeredByDocumentCode ? `Doc ${a.triggeredByDocumentCode} v${a.triggeredByVersion ?? "—"}` : "Manual"}</span> },
-    { id: "actions", header: "Acciones", minWidth: 150, hideable: false,
-      cell: (a) => <span style={{ whiteSpace: "nowrap" }}>
-        {perm.training.manage && <button type="button" onClick={() => openEditProcess(a)} className="nf-text-action" style={{ marginRight: 10 }}>Proceso</button>}
-        {a.status !== "COMPLETED" && perm.training.manage && <button type="button" onClick={() => markComplete(a)} className="nf-text-action">Completar</button>}
-      </span> },
+    { id: "actions", header: "Acciones", minWidth: 210, hideable: false,
+      cell: (a) => <div className="nf-row-actions">
+        {perm.training.manage && <RowAction icon={Workflow} label="Proceso" onClick={() => openEditProcess(a)} />}
+        {a.status !== "COMPLETED" && perm.training.manage && <RowAction icon={CircleCheck} label="Completar" tone="success" onClick={() => markComplete(a)} />}
+      </div> },
   ], [perm.training.manage, trainingCourses, openEditProcess, markComplete]);
 
   return (
@@ -401,45 +409,43 @@ export default function TrainingModule() {
       )}
 
       {tab === "people" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 260px), 1fr))", gap: 14 }}>
-          {demoPeople.map((p, i) => {
-            const mine = trainingAssignments.filter(a => a.assigneeEmail === p.email);
-            const accent = ["var(--nf-primary)", "var(--nf-success)", "var(--nf-warning)"][i % 3];
-            return (
-              <Card key={p.id} style={{ padding: 0, overflow: "hidden", borderRadius: 14 }}>
-                
-                <div style={{ padding: "16px 18px 18px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <div
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 10,
-                        background: `${accent}18`,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: accent,
-                      }}
-                    >
-                      <Users size={20} strokeWidth={2.25} aria-hidden />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 600, color: "var(--nf-ink)", fontSize: 15, letterSpacing: "-0.02em" }}>{p.name}</div>
-                      <div style={{ fontSize: 12, color: "var(--nf-ink-3)", fontWeight: 600, marginTop: 2 }}>{p.roleLabel}</div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink-2)", marginBottom: 10 }}>
-                    {mine.filter(m => m.status === "COMPLETED").length}/{mine.length} completadas
-                  </div>
-                  <Link href="/app/activity" style={{ fontSize: 12, color: "var(--nf-primary-active)", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 4, textDecoration: "none" }}>
-                    Historial →
-                  </Link>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+        <EntityTable
+          caption="Personal y formación"
+          rows={demoPeople}
+          rowKey={(row) => row.id}
+          storageKey="demo-training-personnel"
+          searchText={(row) => `${row.name} ${row.email ?? ""}`}
+          searchPlaceholder="Buscar por nombre o correo…"
+          emptyTitle="Todavía no hay personal"
+          columns={[
+            {
+              id: "name", header: "Persona", primary: true, minWidth: 220, sortValue: (row) => row.name,
+              cell: (row) => <CellTitle title={row.name} meta={row.email} />,
+            },
+            {
+              id: "assigned", header: "Asignadas", numeric: true, align: "end",
+              sortValue: (row) => trainingAssignments.filter((a) => a.assigneeEmail === row.email).length,
+              cell: (row) => <CountCell value={trainingAssignments.filter((a) => a.assigneeEmail === row.email).length} />,
+            },
+            {
+              id: "done", header: "Completadas", numeric: true, align: "end",
+              sortValue: (row) => trainingAssignments.filter((a) => a.assigneeEmail === row.email && a.status === "COMPLETED").length,
+              cell: (row) => <CountCell value={trainingAssignments.filter((a) => a.assigneeEmail === row.email && a.status === "COMPLETED").length} />,
+            },
+            {
+              id: "progress", header: "Avance", numeric: true,
+              sortValue: (row) => {
+                const total = trainingAssignments.filter((a) => a.assigneeEmail === row.email).length;
+                return total ? trainingAssignments.filter((a) => a.assigneeEmail === row.email && a.status === "COMPLETED").length / total : 0;
+              },
+              cell: (row) => {
+                const total = trainingAssignments.filter((a) => a.assigneeEmail === row.email).length;
+                const hechas = trainingAssignments.filter((a) => a.assigneeEmail === row.email && a.status === "COMPLETED").length;
+                return <ProgressCell value={total ? Math.round((hechas / total) * 100) : 0} />;
+              },
+            },
+          ]}
+        />
       )}
 
       {tab === "compliance" && (
@@ -488,7 +494,7 @@ export default function TrainingModule() {
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Nueva asignación" width={480}>
         <div className="nf-modal-form">
         <label>Curso
-        <select
+        <Picker aria-label="Curso"
           className="nf-app-input"
           value={form.courseId}
           onChange={e => setForm({ ...form, courseId: e.target.value })}
@@ -499,10 +505,10 @@ export default function TrainingModule() {
               {c.code} — {c.title}
             </option>
           ))}
-        </select>
+        </Picker>
         </label>
         <label>Persona
-        <select
+        <Picker aria-label="Persona"
           className="nf-app-input"
           value={form.personId}
           onChange={e => setForm({ ...form, personId: e.target.value })}
@@ -513,10 +519,10 @@ export default function TrainingModule() {
               {p.name} ({p.roleLabel})
             </option>
           ))}
-        </select>
+        </Picker>
         </label>
         <label>Proceso asociado
-        <select
+        <Picker aria-label="Proceso asociado"
           className="nf-app-input"
           value={form.processCode}
           onChange={e => setForm({ ...form, processCode: e.target.value })}
@@ -528,7 +534,7 @@ export default function TrainingModule() {
               {p.code} — {p.name}
             </option>
           ))}
-        </select>
+        </Picker>
         </label>
         <label>Días hasta vencimiento
         <input
@@ -554,7 +560,7 @@ export default function TrainingModule() {
               {editAssign.assigneeName} · {trainingCourses.find(c => c.id === editAssign.courseId)?.code}
             </p>
             <label>Proceso
-            <select
+            <Picker aria-label="Proceso"
               className="nf-app-input"
               value={processLinkDraft}
               onChange={e => setProcessLinkDraft(e.target.value)}
@@ -566,7 +572,7 @@ export default function TrainingModule() {
                   {p.code} — {p.name}
                 </option>
               ))}
-            </select>
+            </Picker>
             </label>
             <div className="nf-modal-actions">
               <button type="button" className="nf-app-btn-ghost" onClick={() => setEditAssign(null)}>Cancelar</button>

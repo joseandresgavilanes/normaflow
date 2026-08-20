@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronRight, Sparkles } from "lucide-react";
 import Card from "@/components/ui/Card";
+import RiskMatrix from "@/components/charts/RiskMatrix";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Badge from "@/components/ui/Badge";
 import Avatar from "@/components/ui/Avatar";
@@ -12,6 +13,8 @@ import { useWorkspace, type ProcessRow, type RiskRow } from "@/context/Workspace
 import { processesLinkedToRisk } from "@/lib/process-linking";
 import { DEFAULT_RISK_CATEGORY, riskCategoryOptions } from "@/lib/risk-catalog";
 import type { Column } from "@/components/ui/Table";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 function RiskScore({ score }: { score: number }) {
   // El par relleno/fondo daba 2.94-4.36:1. Los tonos de texto sobre su fondo
@@ -203,80 +206,14 @@ export default function RisksModule() {
 
   return (
     <div>
-      <SectionTitle title="Gestión de Riesgos" sub="Registro, evaluación y tratamiento de riesgos" action="+ Nuevo Riesgo" onAction={openCreate} />
+      <SectionTitle title="Gestión de Riesgos" sub="Registro, evaluación y tratamiento de riesgos" action="Nuevo Riesgo" onAction={openCreate} />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: 20, marginBottom: 20 }}>
-        <Card>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--nf-ink)", marginBottom: 14 }}>Mapa de Calor 5×5</div>
-          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
-            <div style={{ display: "flex", gap: 8, minWidth: 260 }}>
-              <div style={{ width: 24, display: "flex", flexDirection: "column", justifyContent: "space-around", paddingBottom: 20 }}>
-                {[5, 4, 3, 2, 1].map(p => (
-                  <span key={p} style={{ fontSize: 11, color: "var(--nf-ink-3)", textAlign: "center" }}>
-                    {p}
-                  </span>
-                ))}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 6, paddingRight: 4 }}>
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <span key={i} style={{ fontSize: 11, color: "var(--nf-ink-3)", width: 36, textAlign: "center" }}>
-                      {i}
-                    </span>
-                  ))}
-                </div>
-                {[5, 4, 3, 2, 1].map(p => (
-                  <div key={p} style={{ display: "flex", gap: 4, marginBottom: 4 }}>
-                    {[1, 2, 3, 4, 5].map(i => {
-                      const score = p * i;
-                      const cellRisks = risks.filter(rk => rk.probability === p && rk.impact === i);
-                      const r = cellRisks[0];
-                      const bg = score >= 15 ? "var(--nf-danger-border)" : score >= 8 ? "var(--nf-warning-border)" : "var(--nf-success-border)";
-                      const textColor = score >= 15 ? "var(--nf-danger-text)" : score >= 8 ? "var(--nf-warning-text)" : "var(--nf-success-text)";
-                      return (
-                        <div
-                          key={i}
-                          onClick={() => r && setDetail(r)}
-                          title={cellRisks.map(x => x.title).join(" · ") || undefined}
-                          style={{
-                            width: 36,
-                            height: 30,
-                            background: bg,
-                            borderRadius: 4,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 11,
-                            fontWeight: r ? 700 : 400,
-                            color: textColor,
-                            cursor: r ? "pointer" : "default",
-                            border: r ? "2px solid rgba(0,0,0,0.12)" : "none",
-                            transition: "transform 0.1s",
-                          }}
-                        >
-                          {r ? (cellRisks.length > 1 ? `${cellRisks.length}` : score) : ""}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-                <div style={{ fontSize: 11, color: "var(--nf-ink-3)", textAlign: "center", marginTop: 6 }}>Impacto →</div>
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 14, justifyContent: "center" }}>
-            {[
-              { label: "Crítico (≥15)", color: "var(--nf-danger-border)", text: "var(--nf-danger-text)" },
-              { label: "Alto (8-14)", color: "var(--nf-warning-border)", text: "var(--nf-warning-text)" },
-              { label: "Moderado (<8)", color: "var(--nf-success-border)", text: "var(--nf-success-text)" },
-            ].map(l => (
-              <div key={l.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <div style={{ width: 12, height: 12, background: l.color, border: `1px solid ${l.text}40`, borderRadius: 2 }} />
-                <span style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{l.label}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
+        <RiskMatrix
+          risks={risks}
+          onSelect={(cell) => setDetail(cell[0])}
+          title="Mapa de calor 5×5"
+        />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[
@@ -561,7 +498,7 @@ function RiskFormFields({
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Categoría
-          <select
+          <Picker aria-label="Categoría"
             className="nf-app-input"
             value={form.category}
             onChange={e => setForm({ ...form, category: e.target.value })}
@@ -570,7 +507,7 @@ function RiskFormFields({
             {riskCategoryOptions(form.category).map(option => (
               <option key={option} value={option}>{option}</option>
             ))}
-          </select>
+          </Picker>
         </label>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Responsable
@@ -584,7 +521,7 @@ function RiskFormFields({
       </div>
       <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
         Proceso asociado
-        <select
+        <Picker aria-label="Proceso asociado"
           className="nf-app-input"
           value={form.linkedProcessCode}
           onChange={e => setForm({ ...form, linkedProcessCode: e.target.value })}
@@ -596,7 +533,7 @@ function RiskFormFields({
               {p.code} — {p.name}
             </option>
           ))}
-        </select>
+        </Picker>
       </label>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: 12 }}>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
@@ -625,9 +562,8 @@ function RiskFormFields({
         </label>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Vencimiento
-          <input
+          <DateField
             className="nf-app-input"
-            type="date"
             value={form.due}
             onChange={e => setForm({ ...form, due: e.target.value })}
             style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
@@ -647,7 +583,7 @@ function RiskFormFields({
       <div className="nf-grid-2" style={{ gap: 12 }}>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Estado
-          <select
+          <Picker aria-label="Estado"
             className="nf-app-input"
             value={form.status}
             onChange={e => setForm({ ...form, status: e.target.value as RiskRow["status"] })}
@@ -657,11 +593,11 @@ function RiskFormFields({
             <option value="UNDER_TREATMENT">En tratamiento</option>
             <option value="MITIGATED">Mitigado</option>
             <option value="ACCEPTED">Aceptado</option>
-          </select>
+          </Picker>
         </label>
         <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
           Tratamiento
-          <select
+          <Picker aria-label="Tratamiento"
             className="nf-app-input"
             value={form.treatment}
             onChange={e => setForm({ ...form, treatment: e.target.value as RiskRow["treatment"] })}
@@ -669,7 +605,7 @@ function RiskFormFields({
           >
             <option value="MITIGATE">Mitigar</option>
             <option value="ACCEPT">Aceptar</option>
-          </select>
+          </Picker>
         </label>
       </div>
     </div>

@@ -190,10 +190,13 @@ de la página.
   eyebrow="ISO 50001:2018"
   title="Gestión energética"
   subtitle="Revisión energética, SEU, línea base, EnPI y mejora."
-  meta={<StatusBadge status="ACTIVE" />}
+  meta={<span className="nf-page-header__chip">14 fuentes</span>}
   actions={<Button variant="primary">Nueva fuente</Button>}
 />
 ```
+
+`subtitle` **no se pinta como párrafo**: alimenta el `InfoTip` que sigue al
+título (§ 6.9). Lo que tiene que verse sin abrir nada va en `meta`.
 
 El `Breadcrumb` se deriva de la ruta y del modelo de navegación; se puede
 sobreescribir con `items` en páginas de detalle.
@@ -223,6 +226,52 @@ persistente y error. Nunca etiqueta solo por `placeholder`.
 - Borde `--nf-border-strong` (3.23 : 1), no el borde decorativo.
 - Alto mínimo 40 px; 44 px en móvil.
 
+### 6.2 bis Controles nativos — ninguno se queda con el cromo del navegador
+
+El sistema llegaba hasta el borde del campo. Dentro seguían mandando el sistema
+operativo y el motor: cuatro aspectos distintos por navegador, ninguno con los
+tokens, y varios ilegibles en oscuro. `controls-native.css` los redibuja con
+selectores de **elemento**, así que valen para las 79 casillas, los 155 campos
+numéricos y las 189 áreas de texto sin tocar un solo marcado; cualquier clase
+que ya fijara tamaño o color sigue mandando.
+
+| Control | Antes | Ahora |
+|---|---|---|
+| `checkbox` / `radio` | caja del SO, solo teñida con `accent-color` | caja propia; marca con `mask` y `currentColor`, así que contrasta en claro y en oscuro. Incluye estado indeterminado |
+| `number` | flechas del navegador, distintas en cada uno | sin flechas; cifras tabulares. Teclado y rueda siguen incrementando |
+| `search` | aspa de WebKit, con el trazo del SO | la misma aspa repintada con los tokens. No se retira: seis buscadores no dibujan la suya y quedarían sin forma de vaciarse. Quien ya trae la suya la desactiva con `data-nf-clear="propio"` |
+| `file` | botón y texto en el idioma del SO | botón con la geometría del producto. Lo recomendado sigue siendo `FileImportArea` |
+| `range` | pista y pulgar del SO | pista y pulgar con tokens |
+| `textarea` | asa en las dos direcciones | solo vertical; crece con el contenido donde el motor lo admite |
+| autorrelleno | fondo amarillo de Chrome | fondo y texto del tema |
+
+Regla: **no se declara `accent-color`**. Con `appearance: none` no pinta nada;
+tres sitios lo llevaban y ninguno hacía efecto.
+
+### 6.2 ter DateField — el calendario también es nuestro
+
+`<input type="date">` no se usa. `DateField` lo sustituye en los 85 campos de
+fecha del producto por las mismas razones por las que `Picker` sustituyó al
+`<select>`: el calendario lo pintaba el navegador —con su idioma, no el de la
+interfaz, y sin tokens ni tema oscuro—, Firefox de escritorio no trae ninguno, y
+el formato de lectura era el del sistema operativo, así que la preferencia
+«formato de fecha» de la cuenta no llegaba al único sitio donde se escriben
+fechas.
+
+```tsx
+<DateField name="dueDate" value={fecha} onChange={(e) => setFecha(e.target.value)} min="2026-01-01" />
+```
+
+Compatible con lo que sustituye: mismo `name`/`value`/`defaultValue`/`onChange`
+—`e.target.value` en `YYYY-MM-DD`—, mismos `min`/`max`, misma participación en el
+envío y en la validación del formulario. Teclado completo: flechas para el día,
+`PageUp`/`PageDown` para el mes (con `Shift`, el año), `Enter` elige, `Esc`
+cierra.
+
+Toda la aritmética va en UTC. Con fechas locales, `new Date("2026-08-14")` es
+medianoche UTC y al oeste de Greenwich se lee como el día 13: el error clásico
+que resta un día a media plantilla.
+
 ### 6.3 DataTable
 
 Contrato obligatorio: búsqueda, filtros, ordenación con `aria-sort`, columnas
@@ -238,6 +287,41 @@ guardadas.
 - Por debajo de 768 px la tabla se convierte en tarjetas resumidas y el detalle
   se abre en `Drawer`.
 - Estado vacío = `EmptyState`, no la cadena "Sin registros".
+
+### 6.3 bis Acciones de fila
+
+Los botones que viven dentro de una tabla van por `RowAction`, nunca por
+`nf-app-btn-*` con `style` en línea. Antes había cuatro sistemas conviviendo:
+en Registros los tres botones de cada fila se apilaban en vertical y
+triplicaban el alto, y en Usuarios y Personal el destructivo era un botón rojo
+macizo repetido en cada fila.
+
+```tsx
+<div className="nf-row-actions">
+  <RowAction icon={Eye} label="Detalle" tone="primary" onClick={abrir} />
+  <RowAction icon={Pencil} label="Editar" onClick={editar} />
+  <RowAction icon={Ban} label="Desactivar" tone="danger" onClick={darDeBaja} />
+</div>
+```
+
+Reglas:
+
+- **El icono se declara**, no se adivina. `AppActionIcons` lo deduce con
+  expresiones regulares sobre el TEXTO del botón, y eso falla de dos maneras:
+  «Desactivar» contiene «activar», así que dar de baja un registro se anunciaba
+  con el triángulo de reproducir; y los patrones solo cubren español e inglés,
+  de modo que en portugués media interfaz se quedaba sin icono. `RowAction`
+  lleva `data-nf-no-action-icon` y su propio icono.
+- **El destructivo no es rojo en reposo.** Una fila con un botón rojo por cada
+  registro convierte el listado en una alarma y el rojo deja de significar
+  nada. `tone="danger"` es gris hasta que se apunta.
+- **`tone="primary"` como mucho una vez por fila**: la acción que se espera que
+  se pulse.
+- Las acciones **no envuelven a varias líneas** (`flex-wrap: nowrap`): era lo
+  que reventaba el alto de la fila. Si no caben, la tabla desplaza en
+  horizontal, que ya trae sombra de aviso y menú de columnas.
+- El clic **detiene la propagación**: la fila suele abrir el detalle, y sin eso
+  «Eliminar» abría además el panel del registro recién borrado.
 
 ### 6.4 StatusBadge
 
@@ -271,6 +355,37 @@ las que el backend permite**; el componente recibe la lista, no la infiere.
 Patrón común: breadcrumb → título + código + estado → acciones → resumen y
 metadatos → tabs (General · Evidencias · Relaciones · Historial · Auditoría) →
 timeline y comentarios.
+
+### 6.9 InfoTip — la explicación se pide, no se impone
+
+Toda descripción fija de una pantalla, sección, tarjeta, gráfico o campo vive
+detrás del icono `ⓘ` que sigue a su título. Ya lo aplican `PageHeader`,
+`SectionTitle`, `OperationalHeader`, `SectionHeader`, `Card`, `ChartCard`,
+`Panel`, `IsoDashboardCard` e `IsoSectionHeader`: pasar `subtitle`/`description`
+a cualquiera de ellos produce un `InfoTip`, no un párrafo.
+
+Qué va dónde:
+
+| Contenido | Sitio |
+|---|---|
+| Explica lo que la pantalla ya enseña | `InfoTip` |
+| Dato (conteo, media, norma aplicable, estado) | `meta`, visible |
+| Consecuencia de una acción, aviso, límite | Texto visible junto a la acción |
+| Resultado de lo que el usuario acaba de elegir | Texto visible (p. ej. la vista previa del formato de fecha) |
+
+No es el tooltip de CSS que se retiró en su día. `InfoTip` es un `<button>`:
+responde a teclado y a toque, se cierra con `Esc`, con clic fuera y al
+desplazar, se posiciona en coordenadas de viewport —no lo recorta ningún
+contenedor con `overflow`— y su texto está **siempre** en el DOM enlazado con
+`aria-describedby`, así que un lector de pantalla lo anuncia sin abrirlo.
+
+Dos avisos de implementación:
+
+- El botón nunca va dentro de un `<label>`: el clic se reenviaría al control
+  asociado y en una casilla la conmutaría.
+- Nunca dentro de un `<fieldset disabled>` ni de un `<a>`: en el primero queda
+  deshabilitado y en el segundo es HTML inválido. Para un enlace-ficha, la
+  descripción va en `title` más un `span` de solo lectores.
 
 ---
 
@@ -316,7 +431,7 @@ timeline y comentarios.
 | `WorkflowStepper` | ⬜ especificado |
 | Patrón de página de detalle | ⬜ especificado |
 | `CommandPalette` (⌘K real) | ⬜ especificado |
-| `ModuleTabs` (pestañas dentro de cada módulo normativo) | ⬜ especificado |
+| `ModuleTabs` (pestañas dentro de cada módulo normativo) | ❌ descartado — las secciones se navegan solo desde el sidebar |
 | `Card` / `SectionHeader` / `MetricCard` | ✅ implementado (falta migrar los 55 usos) |
 | Anunciador `aria-live` global | ✅ implementado |
 | Migración de los 4.475 `style={{}}` inline | ⬜ pendiente |

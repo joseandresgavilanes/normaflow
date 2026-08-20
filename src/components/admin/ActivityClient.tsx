@@ -21,6 +21,7 @@ import { useAdminMock, type AuditTrailEntry } from "@/context/AdminMockStore";
 import { useI18n } from "@/context/I18nProvider";
 import { cn, formatDate, timeAgo } from "@/lib/utils";
 import type { Locale } from "@/lib/i18n/config";
+import Picker from "@/components/ui/Picker";
 
 const dateFnsLocales = { es, en: enUS, "pt-BR": ptBR } satisfies Record<Locale, typeof es>;
 
@@ -340,7 +341,7 @@ export default function ActivityClient({
           </div>
 
           <div className="nf-activity-chips-row" style={{ marginTop: 10 }}>
-            <select
+            <Picker
               value={moduleFilter}
               onChange={(e) => setModuleFilter(e.target.value)}
               className="nf-app-input"
@@ -353,8 +354,8 @@ export default function ActivityClient({
                   {moduleLabel(m)}
                 </option>
               ))}
-            </select>
-            <select
+            </Picker>
+            <Picker
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
               className="nf-app-input"
@@ -367,8 +368,8 @@ export default function ActivityClient({
                   {actionLabel(a)}
                 </option>
               ))}
-            </select>
-            <select
+            </Picker>
+            <Picker
               value={actorFilter}
               onChange={(e) => setActorFilter(e.target.value)}
               className="nf-app-input"
@@ -381,7 +382,7 @@ export default function ActivityClient({
                   {name}
                 </option>
               ))}
-            </select>
+            </Picker>
           </div>
         </div>
 

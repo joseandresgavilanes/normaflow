@@ -1,8 +1,33 @@
-import { test as base, type Page } from "@playwright/test";
+import { test as base, expect, type Locator, type Page } from "@playwright/test";
 
 type Fixtures = {
   authenticatedPage: Page;
 };
+
+/**
+ * Elige una opción en un `Picker`.
+ *
+ * `Picker` sustituyó al `<select>` nativo en todo el producto, así que
+ * `selectOption()` ya no sirve: su disparador es un `<button role="combobox">`
+ * y la lista se pinta en un portal al `body`, fuera del diálogo. Este ayudante
+ * hace lo que haría una persona — abrir y pulsar la fila.
+ */
+export async function elegirEnPicker(disparador: Locator, opcion: string | RegExp) {
+  await disparador.click();
+  const panel = disparador.page().locator(".nf-picker__panel");
+  await expect(panel).toBeVisible();
+  await panel.getByRole("option", { name: opcion }).first().click();
+  await expect(panel).toBeHidden();
+}
+
+/** Lo mismo para `DateField`, que sustituyó a `<input type="date">`. */
+export async function elegirFecha(disparador: Locator, dia: number) {
+  await disparador.click();
+  const panel = disparador.page().locator(".nf-datefield__panel");
+  await expect(panel).toBeVisible();
+  await panel.getByRole("button", { name: String(dia), exact: true }).click();
+  await expect(panel).toBeHidden();
+}
 
 export const test = base.extend<Fixtures>({
   authenticatedPage: async ({ page }, use) => {

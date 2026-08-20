@@ -46,6 +46,16 @@ export type DataTableColumn<T> = {
   primary?: boolean;
 };
 
+/**
+ * La columna de acciones se reconoce por su id: `EntityTable` la añade como
+ * `__acciones` y los listados que la escriben a mano la llaman `actions`.
+ * Se identifica para tratarla aparte en la tarjeta de móvil, donde no puede
+ * competir por sitio con los campos de datos.
+ */
+function esColumnaDeAcciones<T>(column: DataTableColumn<T>) {
+  return column.id === "__acciones" || column.id === "actions";
+}
+
 export type DataTableProps<T> = {
   columns: DataTableColumn<T>[];
   rows: T[];
@@ -322,6 +332,7 @@ export default function DataTable<T>({
                         scope="col"
                         className="nf-dt__th"
                         data-align={column.align}
+                        data-primary={column.primary || undefined}
                         style={column.minWidth ? { minWidth: column.minWidth } : undefined}
                         aria-sort={active ? (sort!.dir === "asc" ? "ascending" : "descending") : sortable ? "none" : undefined}
                       >
@@ -371,6 +382,7 @@ export default function DataTable<T>({
                           className="nf-dt__td"
                           data-align={column.align}
                           data-numeric={column.numeric || undefined}
+                          data-primary={column.primary || undefined}
                           /* Contenido del cliente: fuera del puente de i18n. */
                           data-i18n="off"
                         >
@@ -401,7 +413,17 @@ export default function DataTable<T>({
               const key = rowKey(row);
               const href = rowHref?.(row);
               const primary = visibleColumns.find((c) => c.primary) ?? visibleColumns[0];
-              const rest = visibleColumns.filter((c) => c.id !== primary.id).slice(0, 5);
+              /* Las acciones NO entran en el recorte de cinco campos.
+                 La columna de acciones es siempre la última, así que en toda
+                 tabla de siete columnas o más se quedaba fuera: en el móvil no
+                 había forma de editar ni de dar de baja un registro —los
+                 botones existían en la tabla de escritorio y desaparecían sin
+                 más al estrechar—. Ahora van en su propia fila al pie de la
+                 tarjeta, que es donde el pulgar las alcanza. */
+              const acciones = visibleColumns.find(esColumnaDeAcciones);
+              const rest = visibleColumns
+                .filter((c) => c.id !== primary.id && !esColumnaDeAcciones(c))
+                .slice(0, 5);
               return (
                 <li key={key} className="nf-dt__card">
                   <div className="nf-dt__card-title">
@@ -421,6 +443,7 @@ export default function DataTable<T>({
                       </div>
                     ))}
                   </dl>
+                  {acciones && <div className="nf-dt__card-actions">{acciones.cell(row)}</div>}
                 </li>
               );
             })}

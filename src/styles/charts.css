@@ -1,0 +1,412 @@
+/* ============================================================================
+ * NormaFlow — Gráficos
+ * ----------------------------------------------------------------------------
+ * Hoja del rediseño: se carga después del índice de globals, así que no
+ * necesita !important para ganarle a nada.
+ *
+ * Todo el color sale de tokens (`--nf-series-*`, `--nf-chart-*`), que ya están
+ * definidos para las dos apariencias: el modo oscuro no es un filtro sobre el
+ * claro, son pasos elegidos y medidos contra cada superficie.
+ * ========================================================================== */
+
+/* ── Marco ────────────────────────────────────────────────────────────────── */
+
+.nf-chart-card {
+  margin: 0;
+  padding: var(--nf-space-5);
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-lg);
+  background: var(--nf-surface);
+  display: flex;
+  flex-direction: column;
+  /* El aire entre cabecera, leyenda y trazado es lo que separa las tres
+     lecturas del gráfico; apretado se leen como un bloque. */
+  gap: var(--nf-space-4);
+  min-width: 0;
+}
+
+.nf-chart-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nf-chart-card__title {
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+}
+
+.nf-chart-card__empty {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+  line-height: 1.45;
+}
+
+/* La tarjeta vacía no reserva la altura del gráfico que no existe: en una
+   organización recién creada media pantalla eran cajas altas con una línea de
+   texto gris en el centro. */
+.nf-chart-card[data-empty] {
+  gap: var(--nf-space-2);
+}
+
+.nf-chart-card__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--nf-space-1) var(--nf-space-3);
+}
+
+.nf-chart-card__empty p {
+  margin: 0;
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+}
+
+.nf-chart-card__empty-action {
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-link);
+  text-decoration: none;
+}
+
+.nf-chart-card__empty-action:hover {
+  text-decoration: underline;
+}
+
+/* ── Medidor: una parte sobre un total ────────────────────────────────────── */
+
+.nf-meter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-2);
+}
+
+.nf-meter__readout {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--nf-space-2);
+}
+
+.nf-meter__value {
+  font-size: var(--nf-text-2xl);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.nf-meter__value[data-tone="alert"] { color: var(--nf-danger-text); }
+
+.nf-meter__of,
+.nf-meter__label {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+.nf-meter__pct {
+  margin-left: auto;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-meter__track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--nf-surface-sunken);
+  overflow: hidden;
+}
+
+.nf-meter__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--nf-series-1);
+  transition: width var(--nf-duration-base) var(--nf-ease-out);
+}
+
+.nf-meter__fill[data-tone="alert"] { background: var(--nf-danger); }
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-meter__fill { transition: none; }
+}
+
+.nf-chart-card__plot {
+  min-width: 0;
+}
+
+/* ── Leyenda ──────────────────────────────────────────────────────────────── */
+
+.nf-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nf-space-2) var(--nf-space-4);
+}
+
+.nf-chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* El texto de la leyenda va de tinta, nunca del color de su serie: la
+     muestra de al lado ya carga la identidad y un texto teñido se queda sin
+     contraste en cuanto la serie es clara. */
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+.nf-chart-legend__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+
+.nf-chart-legend__value {
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Sobrevuelo ───────────────────────────────────────────────────────────── */
+
+[data-nf-chart-host] {
+  position: relative;
+}
+
+.nf-chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  z-index: var(--nf-z-tooltip);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 9px;
+  border-radius: var(--nf-radius-sm);
+  background: var(--nf-chart-tooltip);
+  color: var(--nf-chart-tooltip-text);
+  box-shadow: var(--nf-elevation-2);
+  white-space: nowrap;
+  max-width: 240px;
+}
+
+.nf-chart-tooltip__label { font-size: 11px; opacity: 0.85; }
+.nf-chart-tooltip__value { font-size: var(--nf-text-sm); font-weight: var(--nf-weight-semibold); font-variant-numeric: tabular-nums; }
+.nf-chart-tooltip__note { font-size: 11px; opacity: 0.85; }
+
+/* ── Barras horizontales ──────────────────────────────────────────────────── */
+
+.nf-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-3);
+}
+
+.nf-chart-bars__row {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) 1fr auto;
+  align-items: center;
+  gap: var(--nf-space-3);
+}
+
+.nf-chart-bars__label {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-chart-bars__track {
+  /* La pista es el resto de la escala, no un adorno: sin ella una barra corta
+     no dice si le falta poco o mucho. */
+  position: relative;
+  height: 14px;
+  border-radius: 0 var(--nf-radius-xs) var(--nf-radius-xs) 0;
+  background: var(--nf-surface-sunken);
+  overflow: hidden;
+}
+
+.nf-chart-bars__fill {
+  display: block;
+  height: 100%;
+  /* Cuadrada en la línea base, redondeada en el extremo del dato. */
+  border-radius: 0 4px 4px 0;
+  transition: width var(--nf-duration-base) var(--nf-ease-out);
+}
+
+.nf-chart-bars__value {
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+/* ── Barra apilada ────────────────────────────────────────────────────────── */
+
+.nf-chart-stack {
+  display: flex;
+  /* El hueco es del color de la superficie: separa sin añadir tinta que no
+     sea dato, que es lo que haría un borde por tramo. */
+  gap: 3px;
+  height: 20px;
+}
+
+.nf-chart-stack__segment {
+  display: block;
+  min-width: 3px;
+  flex-basis: 0;
+}
+
+.nf-chart-stack__segment:first-child { border-radius: var(--nf-radius-xs) 0 0 var(--nf-radius-xs); }
+.nf-chart-stack__segment:last-child { border-radius: 0 var(--nf-radius-xs) var(--nf-radius-xs) 0; }
+
+/* ── Línea de tendencia ───────────────────────────────────────────────────── */
+
+.nf-chart-trend__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.nf-chart-trend__tick {
+  font-size: 9px;
+  fill: var(--nf-text-muted);
+}
+
+.nf-chart-trend__readout {
+  display: flex;
+  align-items: baseline;
+  gap: var(--nf-space-2);
+  margin-top: var(--nf-space-1);
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+.nf-chart-trend__readout-value {
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Matriz de riesgos ────────────────────────────────────────────────────── */
+
+.nf-risk-matrix {
+  display: grid;
+  grid-template-areas:
+    "axisy grid"
+    ".     axisx";
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--nf-space-3);
+  align-items: center;
+  padding-top: var(--nf-space-1);
+}
+
+.nf-risk-matrix__axis-y {
+  grid-area: axisy;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 10px;
+  color: var(--nf-text-muted);
+  justify-self: center;
+}
+
+.nf-risk-matrix__axis-x {
+  grid-area: axisx;
+  font-size: 10px;
+  color: var(--nf-text-muted);
+  text-align: center;
+}
+
+.nf-risk-matrix__grid {
+  grid-area: grid;
+  display: flex;
+  flex-direction: column;
+  /* 6px, no 4: con celdas de relleno muy claro un hueco fino no se ve y las
+     veinticinco casillas se leían como una sola mancha. */
+  gap: 6px;
+  min-width: 0;
+}
+
+.nf-risk-matrix__row {
+  display: grid;
+  grid-template-columns: 1.5rem repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  align-items: center;
+}
+
+.nf-risk-matrix__tick {
+  font-size: 10px;
+  color: var(--nf-text-muted);
+  text-align: center;
+}
+
+.nf-risk-matrix__cell {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--nf-radius-xs);
+  min-height: 34px;
+  padding: 0;
+  font: inherit;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  cursor: default;
+  /* Una celda vacía no es un dato, pero sigue siendo la cuadrícula: si se
+     apaga del todo se pierde la lectura por posición, que es lo que convierte
+     esto en una matriz y no en cinco cifras sueltas. */
+  opacity: 0.55;
+  box-shadow: inset 0 0 0 1px var(--nf-border-subtle);
+  transition: opacity var(--nf-duration-fast) var(--nf-ease-out), transform var(--nf-duration-fast) var(--nf-ease-out);
+}
+
+.nf-risk-matrix__cell[data-filled] {
+  opacity: 1;
+  border-color: currentColor;
+  box-shadow: none;
+}
+
+.nf-risk-matrix__cell[data-filled]:not(:disabled) {
+  cursor: pointer;
+}
+
+.nf-risk-matrix__cell[data-filled]:not(:disabled):hover {
+  transform: scale(1.04);
+}
+
+.nf-risk-matrix__cell:focus-visible {
+  outline: var(--nf-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Rejilla de gráficos dentro de un panel ───────────────────────────────── */
+
+.nf-chart-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: var(--nf-space-5);
+  /* Un gráfico solo no se estira a lo ancho de la pantalla: un medidor de
+     1.200 px de ancho para decir «0 de 1» es una pista vacía enorme. */
+  /* Separación propia arriba y abajo: la fila de gráficos se intercala entre
+     bloques que ya traen su propio margen y sin esto quedaba pegada al de
+     arriba y al de abajo a la vez. */
+  margin: var(--nf-space-6) 0;
+}
+
+.nf-chart-grid-2:has(> :only-child) {
+  grid-template-columns: minmax(0, 560px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nf-chart-bars__fill,
+  .nf-risk-matrix__cell {
+    transition: none;
+  }
+}

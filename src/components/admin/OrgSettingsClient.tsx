@@ -3,10 +3,12 @@
 import { useEffect, useState, useTransition } from "react";
 import { Building2, Globe, ImageIcon, Loader2, Sparkles } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
+import InfoTip from "@/components/ui/InfoTip";
 import { useAdminMock } from "@/context/AdminMockStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { PLAN_LIMITS, type PlanKey } from "@/lib/constants";
 import { Field as UiField } from "@/components/ui/Field";
+import Picker from "@/components/ui/Picker";
 
 function isLikelyImageUrl(url: string) {
   const u = url.trim().toLowerCase();
@@ -88,9 +90,12 @@ export default function OrgSettingsClient() {
       </div>
 
       <div className="nf-org-panel">
-        <div className="nf-org-panel-head">
+        <div className="nf-org-panel-head nf-heading-row">
           <h2 className="nf-org-panel-title">Datos generales</h2>
-            <p className="nf-org-panel-sub">Estos datos se aplican a todos los módulos, informes y usuarios de este tenant.</p>
+          <InfoTip
+            label="Datos generales"
+            text="Estos datos se aplican a todos los módulos, informes y usuarios de este tenant."
+          />
         </div>
 
         <div className="nf-org-panel-body">
@@ -128,14 +133,14 @@ export default function OrgSettingsClient() {
                 />
               </Field>
               <Field label="Tamaño">
-                <select aria-label="Selecciona un tamaño" value={size} onChange={(e) => setSize(e.target.value)} disabled={!canEdit} className="nf-app-input w-full">
+                <Picker aria-label="Selecciona un tamaño" value={size} onChange={(e) => setSize(e.target.value)} disabled={!canEdit} className="nf-app-input w-full">
                   <option value="">Selecciona un tamaño</option>
                   <option value="1-10">1–10 personas</option>
                   <option value="11-50">11–50 personas</option>
                   <option value="51-200">51–200 personas</option>
                   <option value="201-500">201–500 personas</option>
                   <option value="501+">501+ personas</option>
-                </select>
+                </Picker>
               </Field>
             </div>
 
@@ -167,7 +172,7 @@ export default function OrgSettingsClient() {
                   const checked = standards.includes(code);
                   return (
                     <label key={code} className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition ${checked ? "nf-border-primary nf-primary-subtle-bg" : "nf-border-line nf-surface-bg"}`}>
-                      <input type="checkbox" checked={checked} disabled={!canEdit || (checked && standards.length === 1)} onChange={() => setStandards((current) => checked ? current.filter((item) => item !== code) : [...current, code])} className="mt-1 accent-indigo-600" />
+                      <input type="checkbox" checked={checked} disabled={!canEdit || (checked && standards.length === 1)} onChange={() => setStandards((current) => checked ? current.filter((item) => item !== code) : [...current, code])} className="mt-1" />
                       <span><strong className="block text-sm nf-text-primary-fg">{label}</strong><span className="text-xs nf-text-subtle-fg">{detail}</span></span>
                     </label>
                   );

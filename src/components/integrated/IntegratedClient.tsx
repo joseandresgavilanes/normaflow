@@ -23,6 +23,10 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { toneChip } from "@/lib/tone";
+import BarChart from "@/components/charts/BarChart";
+import { formatDate } from "@/lib/format/datetime";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
 
 type Tab = "panel" | "scope" | "parties" | "objectives" | "crosswalk" | "audit" | "shared";
 
@@ -102,6 +106,25 @@ function PanelTab({ p }: { p: IntegratedPayload }) {
   const s = p.summary;
   return (
     <div style={{ display: "grid", gap: 16 }}>
+      {/* La cobertura por norma ya estaba calculada: el panel la resumía en un
+          único porcentaje global que escondía qué norma va rezagada. */}
+      <BarChart
+        title="Cobertura por norma"
+        subtitle="Porcentaje de requisitos cubiertos en cada norma activa del sistema integrado."
+        max={100}
+        unit="%"
+        data={p.activeStandards
+          .filter((standard): standard is typeof standard & { score: number } => standard.score != null)
+          .map((standard) => ({
+            label: `${standard.familyCode.replace("_", " ")}:${standard.editionCode}`,
+            value: standard.score,
+          }))}
+        /* Una norma sin evaluación GAP no entra en el gráfico: dibujarla al 0%
+           diría que no cumple nada, cuando lo que pasa es que nadie la ha
+           medido todavía. */
+        empty="Ninguna norma activa tiene evaluación de cobertura todavía."
+        action={{ label: "Abrir el motor de normas", href: "/app/standards" }}
+      />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(165px,1fr))", gap: 12 }}>
         <Stat label="Cumplimiento global" value={`${p.globalScore}%`} accent="var(--nf-primary)" />
         <Stat label="Grado de integración" value={`${p.integrationRate}%`} sub="requisitos compartidos" accent="var(--nf-success)" />
@@ -185,7 +208,7 @@ function ScopeTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; canUpd
         <h2 style={{ fontSize: 15, margin: "0 0 4px" }}>Política integrada</h2>
         <p style={{ fontSize: 12.5, color: "var(--nf-ink-2)", margin: "0 0 12px" }}>
           Documento único que declara el compromiso de calidad, ambiente y SST.
-          {p.system?.policyApprovedAt && <> · Aprobada el {new Date(p.system.policyApprovedAt).toLocaleDateString()} por {p.system.policyApprovedByName ?? "—"}.</>}
+          {p.system?.policyApprovedAt && <> · Aprobada el {formatDate(p.system.policyApprovedAt)} por {p.system.policyApprovedByName ?? "—"}.</>}
         </p>
         <textarea aria-label="Política" value={policy} onChange={(e) => setPolicy(e.target.value)} disabled={!canUpdate} rows={8} style={input} />
         <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
@@ -248,10 +271,7 @@ function SystemStandardRow({ standard, entry, members, canUpdate, pending, run }
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 8 }}>
         <input aria-label="Nota de alcance específica" placeholder="Nota de alcance específica" value={scopeNote} onChange={(e) => setScopeNote(e.target.value)} disabled={!canUpdate} style={input} />
         <input aria-label="Exclusiones de esta norma" placeholder="Exclusiones de esta norma" value={exclusions} onChange={(e) => setExclusions(e.target.value)} disabled={!canUpdate} style={input} />
-        <select aria-label="Responsable sin asignar" value={responsibleId} onChange={(e) => setResponsibleId(e.target.value)} disabled={!canUpdate} style={input}>
-          <option value="">Responsable sin asignar</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <PersonPicker people={members} value={responsibleId} onValueChange={(personId) => setResponsibleId(personId)} placeholder="Responsable sin asignar" ariaLabel="Responsable sin asignar" style={input} />
       </div>
     </div>
   );
@@ -272,7 +292,7 @@ function PartiesTab({ p, canManage, pending, run }: { p: IntegratedPayload; canM
     <div style={{ display: "grid", gap: 16 }}>
       {canManage && (
         <>
-          <button type="button" style={primaryBtn} onClick={() => setCreating(true)}>+ Nueva parte interesada</button>
+          <button type="button" style={primaryBtn} onClick={() => setCreating(true)}>Nueva parte interesada</button>
           <Modal open={creating} onClose={() => setCreating(false)} title="Nueva parte interesada" width={640}>
             <div className="nf-modal-form nf-iso-create-form">
               <ModalError />
@@ -345,7 +365,7 @@ function ObjectivesTab({ p, canManage, pending, run }: { p: IntegratedPayload; c
       </div>
       {canManage && (
         <>
-          <button type="button" style={primaryBtn} onClick={() => setCreating(true)}>+ Nuevo objetivo</button>
+          <button type="button" style={primaryBtn} onClick={() => setCreating(true)}>Nuevo objetivo</button>
           <Modal open={creating} onClose={() => setCreating(false)} title="Nuevo objetivo" width={640}>
             <div className="nf-modal-form nf-iso-create-form">
               <ModalError />
@@ -479,16 +499,16 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
           {query && <button type="button" className="nf-iso-table-search-clear" onClick={() => setQuery("")} aria-label="Limpiar búsqueda"><X size={14} aria-hidden /></button>}
         </label>
         <div style={{ display: "flex", gap: 10, flex: "1 1 100%", flexWrap: "wrap", alignItems: "center" }}>
-        <select aria-label="Familia" value={family} onChange={(e) => setFamily(e.target.value)} style={{ ...input, maxWidth: 190 }}>
+        <Picker aria-label="Familia" value={family} onChange={(e) => setFamily(e.target.value)} style={{ ...input, maxWidth: 190 }}>
           <option value="">Todas las normas</option>
           {families.map((f) => <option key={f} value={f}>{f.replace("_", " ")}</option>)}
-        </select>
-        <select aria-label="Tipo" value={kind} onChange={(e) => setKind(e.target.value)} style={{ ...input, maxWidth: 220 }}>
+        </Picker>
+        <Picker aria-label="Tipo" value={kind} onChange={(e) => setKind(e.target.value)} style={{ ...input, maxWidth: 220 }}>
           <option value="">Todos los tipos</option>
           <option value="EQUIVALENT">Equivalente</option>
           <option value="PARTIAL">Parcialmente equivalente</option>
           <option value="SPECIFIC">Específico</option>
-        </select>
+        </Picker>
         <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: "var(--nf-ink-2)" }}>
           <input type="checkbox" checked={onlyMissing} onChange={(e) => setOnlyMissing(e.target.checked)} /> Solo sin evidencia
         </label>
@@ -529,11 +549,7 @@ function CrosswalkTab({ p, canUpdate, pending, run }: { p: IntegratedPayload; ca
                 <td>{r.sharedEvidence.length ? r.sharedEvidence.join(", ") : <span style={{ color: "var(--nf-danger-text)" }}>falta</span>}</td>
                 <td>
                   {canUpdate ? (
-                    <select value={r.responsibleId ?? ""} disabled={pending} style={{ ...input, padding: "5px 7px", fontSize: 12, minWidth: 130 }}
-                      onChange={(e) => run(() => assignRequirementOwner({ requirementId: r.requirementId, responsibleId: e.target.value || null }))}>
-                      <option value="">Sin asignar</option>
-                      {p.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-                    </select>
+                    <PersonPicker people={p.members} value={r.responsibleId ?? ""} onValueChange={(personId) => run(() => assignRequirementOwner({ requirementId: r.requirementId, responsibleId: personId || null }))} placeholder="Sin asignar" style={{ ...input, padding: "5px 7px", fontSize: 12, minWidth: 130 }} />
                   ) : (r.responsibleName ?? "—")}
                 </td>
               </tr>
@@ -669,10 +685,10 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
       {canManage && (
         <section style={{ ...card, background: "var(--nf-surface-muted)", marginBottom: 12 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 }}>
-            <select aria-label="Selecciona proveedor" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} style={input}>
+            <Picker aria-label="Selecciona proveedor" value={supplierId} onChange={(e) => setSupplierId(e.target.value)} style={input}>
               <option value="">Selecciona proveedor…</option>
               {p.suppliers.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}
-            </select>
+            </Picker>
             <input aria-label="Calidad (0-100)" type="number" min={0} max={100} step="0.1" placeholder="Calidad (0-100)" value={qualityScore} onChange={(e) => setQualityScore(e.target.value)} style={input} />
             <input aria-label="Ambiente (0-100)" type="number" min={0} max={100} step="0.1" placeholder="Ambiente (0-100)" value={environmentScore} onChange={(e) => setEnvironmentScore(e.target.value)} style={input} />
             <input aria-label="SST (0-100)" type="number" min={0} max={100} step="0.1" placeholder="SST (0-100)" value={safetyScore} onChange={(e) => setSafetyScore(e.target.value)} style={input} />
@@ -693,7 +709,7 @@ function SupplierIntegratedSection({ p, canManage, pending, run }: {
         head={["Proveedor", "Última evaluación", "Nota", "Dimensiones"]}
         rows={p.suppliers.filter((s) => s.lastEvaluationAt).map((s) => [
           <span key="n">{s.code} · {s.name}</span>,
-          s.lastEvaluationAt ? new Date(s.lastEvaluationAt).toLocaleDateString() : "—",
+          s.lastEvaluationAt ? formatDate(s.lastEvaluationAt) : "—",
           s.lastScore != null ? String(s.lastScore) : "—",
           <span key="d" style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
             {s.lastDisciplines.map((d) => <span key={d} style={toneChip(DISCIPLINE_COLOR[d])}>{DISCIPLINE_LABEL[d]}</span>)}

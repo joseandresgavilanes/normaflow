@@ -8,7 +8,15 @@ import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
 import { getDemoOrg } from "@/lib/demo/organizations";
 import { planHasModule } from "@/lib/constants";
+/* Las claves se comparten con el botón de «Restablecer la navegación» de
+   Cuenta y preferencias: duplicar el literal deja el botón limpiando una
+   clave que ya no es la que escribe el sidebar. */
+import {
+  NAV_OPEN_GROUPS_STORAGE_KEY as OPEN_GROUPS_STORAGE_KEY,
+  NAV_PINNED_STORAGE_KEY as PINNED_STORAGE_KEY,
+} from "@/lib/preferences/config";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
+import Picker from "@/components/ui/Picker";
 import {
   CONTRIBUTOR_ROUTES,
   NAV_GROUPS,
@@ -21,8 +29,6 @@ import {
 
 type Membership = { organizationId: string; organizationName: string; role: string };
 
-const PINNED_STORAGE_KEY = "nf.nav.pinned";
-const OPEN_GROUPS_STORAGE_KEY = "nf.nav.openGroups";
 
 function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -217,12 +223,15 @@ export default function AppSidebar({
             `?section=`, que `useModuleSection` lee para cambiar la vista. */}
         {active && !locked && item.sections && item.sections.length > 0 && (
           <ul className="nf-sidenav__sections">
-            {item.sections.map((section) => {
-              const sectionHref = section.section === "panel"
-                ? item.href
-                : `${item.href}?section=${section.section}`;
+            {item.sections.map((section, index) => {
+              // Sin `?section=` la vista abierta es la primera de la lista, que
+              // en las normas se llama «panel» pero en otros módulos no: dar por
+              // hecho ese nombre dejaba módulos enteros sin ninguna sección
+              // marcada mientras la página sí mostraba una.
+              const isDefault = index === 0;
+              const sectionHref = isDefault ? item.href : `${item.href}?section=${section.section}`;
               const sectionActive = currentSection === section.section
-                || (!currentSection && section.section === "panel");
+                || (!currentSection && isDefault);
               return (
                 <li key={section.section}>
                   <Link
@@ -415,7 +424,7 @@ function OrgSwitcher({
     <span className="nf-sidenav__org nf-sidenav__org--switch">
       <span className="nf-sidenav__org-label">{t("common.organization")}</span>
       <span className="nf-sidenav__org-control">
-        <select
+        <Picker
           value={value}
           aria-label={t("common.organization")}
           onChange={(event) => {
@@ -426,7 +435,7 @@ function OrgSwitcher({
           {options.map((org) => (
             <option key={org.id} value={org.id}>{org.name}</option>
           ))}
-        </select>
+        </Picker>
         <ChevronDown size={14} strokeWidth={2} aria-hidden />
       </span>
     </span>

@@ -62,6 +62,9 @@ test.describe("Tema visual", () => {
     await page.goto("/app/dashboard");
     expect(await temaAplicado(page)).toBe("light");
 
+    // El conmutador dejó de estar suelto en la barra superior: vive dentro del
+    // menú de la cuenta, así que hay que abrirlo igual que haría una persona.
+    await page.locator(".nf-profile-menu__trigger").click();
     // Por nombre accesible y no por índice: el orden de las opciones es un
     // detalle de presentación y el nombre es lo que ve quien usa la interfaz.
     const conmutador = page.locator(".nf-theme-switch").last();

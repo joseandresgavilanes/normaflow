@@ -44,3 +44,13 @@ exports/
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Rastros de las herramientas de desarrollo: configuración local de editores y
+# agentes, e instantáneas de depuración. Se quedan en disco, fuera del repo.
+.claude/
+.cursor/
+.codex/
+.cursorrules
+AGENTS.md
+CLAUDE.md
+.playwright-cli/

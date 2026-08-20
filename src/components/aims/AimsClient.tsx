@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { BrainCircuit, LayoutDashboard, Boxes, Scale, AlertTriangle, Database, Cpu, UserCheck, Megaphone, Siren, Handshake, GitCompare, Activity, ArrowRight, Check, X, Send, Plus } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, ArrowUpRight, Boxes, BrainCircuit, Check, ChevronUp, Cpu, Database, Flag, Gauge, GitCompare, Handshake, LayoutDashboard, Megaphone, Pencil, Plus, RotateCcw, Save, Scale, Send, Siren, UserCheck, X } from "lucide-react";
 import type { AimsPayload } from "@/lib/aims/queries";
 import {
   decideHumanReview, submitForHumanReview, transitionAIIncident,
@@ -30,6 +30,9 @@ import { ActionDialogsProvider, usePromptAction } from "@/components/ui/ActionDi
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
 import { toneChip } from "@/lib/tone";
+import Meter from "@/components/charts/Meter";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
 
 type Tab = "panel" | "systems" | "outputs" | "impact" | "risks" | "datasets" | "models" | "oversight" | "transparency" | "incidents" | "suppliers" | "changes" | "monitoring";
 
@@ -64,7 +67,6 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRa
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-info-text)", background: "var(--nf-info-subtle)", color: "var(--nf-info-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const pct = (v: number | null | undefined) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "—");
 
@@ -128,7 +130,30 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de gobernanza de IA</strong><span>Accesos directos a los registros de gobernanza.</span></div><IsoQuickCreate modulePath="/app/aims" items={[{ label: "Nuevo sistema de IA", description: "Registrar un sistema", section: "systems", Icon: Boxes }, { label: "Nuevo caso de uso", description: "Definir un uso previsto", section: "systems", Icon: BrainCircuit }, { label: "Nueva evaluación de impacto", description: "Valorar impactos del sistema", section: "impact", Icon: Scale }, { label: "Nuevo riesgo de IA", description: "Registrar un riesgo", section: "risks", Icon: AlertTriangle }, { label: "Nuevo dataset", description: "Registrar un conjunto de datos", section: "datasets", Icon: Database }, { label: "Nueva versión de modelo", description: "Versionar un modelo", section: "models", Icon: Cpu }, { label: "Nuevo control de supervisión", description: "Configurar control humano", section: "oversight", Icon: UserCheck }, { label: "Reportar incidente de IA", description: "Registrar incidente", section: "incidents", Icon: Siren }]} /></div>
+          <div className="nf-chart-grid-2">
+            <Meter
+              title="Inventario de IA"
+              subtitle="Cuántos sistemas inventariados están en producción."
+              label="en producción"
+              restLabel="Otras fases del ciclo"
+              value={s.inProduction}
+              total={s.systems}
+              empty="Aún no hay sistemas de IA inventariados."
+              action={{ label: "Abrir el inventario de IA", href: "/app/aims?section=systems" }}
+            />
+            <Meter
+              title="Salvaguardas declaradas"
+              subtitle="Cuántos sistemas siguen sin salvaguardas declaradas."
+              label="sin salvaguardas"
+              restLabel="Con salvaguardas"
+              value={s.systemsMissingSafeguards}
+              total={s.systems}
+              tone="alert"
+              empty="Aún no hay sistemas de IA inventariados."
+              action={{ label: "Abrir el inventario de IA", href: "/app/aims?section=systems" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de gobernanza de IA</strong></div><IsoQuickCreate modulePath="/app/aims" items={[{ label: "Nuevo sistema de IA", description: "Registrar un sistema", section: "systems", Icon: Boxes }, { label: "Nuevo caso de uso", description: "Definir un uso previsto", section: "systems", Icon: BrainCircuit }, { label: "Nueva evaluación de impacto", description: "Valorar impactos del sistema", section: "impact", Icon: Scale }, { label: "Nuevo riesgo de IA", description: "Registrar un riesgo", section: "risks", Icon: AlertTriangle }, { label: "Nuevo dataset", description: "Registrar un conjunto de datos", section: "datasets", Icon: Database }, { label: "Nueva versión de modelo", description: "Versionar un modelo", section: "models", Icon: Cpu }, { label: "Nuevo control de supervisión", description: "Configurar control humano", section: "oversight", Icon: UserCheck }, { label: "Reportar incidente de IA", description: "Registrar incidente", section: "incidents", Icon: Siren }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><UserCheck size={16} aria-hidden />Regla humana (§A.9.2)</h3>
@@ -191,13 +216,13 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{system.missingSafeguards.length ? <span style={{ color: "var(--nf-danger-text)" }}>{system.missingSafeguards.join(", ")}</span> : <span style={{ color: "var(--nf-success-text)" }}>completas</span>}</td>
                 {(canUpdate || canApprove) && (
                   <td style={td}>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", maxWidth: 220 }}>
-                      {canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("system", system as unknown as Record<string, unknown>)}>Editar</button>}
+                    <div className="nf-row-actions">
+                      {canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("system", system as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}
                       {canApprove && system.status === "IN_VALIDATION" && (
-                        <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => run(() => approveAISystem(system.id))}><Check size={12} /> Aprobar</button>
+                        <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => approveAISystem(system.id))}><Check size={12} /> Aprobar</button>
                       )}
                       {canManage && system.status !== "RETIRED" && (
-                        <select aria-label="Cambiar estado" style={{ ...input, padding: "3px 6px", fontSize: 11 }} value="" onChange={(e) => {
+                        <Picker aria-label="Cambiar estado" style={{ ...input, padding: "3px 6px", fontSize: 11 }} value="" onChange={(e) => {
                           const to = e.target.value;
                           if (!to) return;
                           if (to === "RETIRED") {
@@ -208,7 +233,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                         }}>
                           <option value="">Cambiar estado…</option>
                           {nextSystemStatuses(system.status).filter((s) => s !== "APPROVED").map((s) => <option key={s} value={s}>{STATUS_LABEL[s] ?? s}</option>)}
-                        </select>
+                        </Picker>
                       )}
                     </div>
                   </td>
@@ -234,7 +259,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                   <td style={td}>{u.objective}</td>
                   <td style={td}>{u.decisionAutonomy}</td>
                   <td style={td}>{u.affectedCount ?? "—"}</td>
-                  {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("useCase", u as unknown as Record<string, unknown>)}>Editar</button></td>}
+                  {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("useCase", u as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}
                 </tr>
               ))}
             {initial.useCases.length === 0 && <tr><td style={td} colSpan={canUpdate ? 7 : 6}>Sin casos de uso registrados.</td></tr>}
@@ -280,12 +305,12 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}><span style={toneChip(REVIEW_COLORS[a.reviewStatus])}>{REVIEW_LABEL[a.reviewStatus]}</span></td>
                 {(canUpdate || canApprove) && (
                   <td style={td}>
-                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                      {canUpdate && a.reviewStatus === "DRAFT" && <><button type="button" style={miniBtn} onClick={() => openEditor("impactAssessment", a as unknown as Record<string, unknown>)}>Editar</button><button disabled={pending} onClick={() => run(() => submitForHumanReview("impactAssessment", a.id))} style={miniBtn}><Send size={12} /> Enviar a revisión</button></>}
+                    <div className="nf-row-actions">
+                      {canUpdate && a.reviewStatus === "DRAFT" && <><button type="button" className="nf-row-action" onClick={() => openEditor("impactAssessment", a as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button><button disabled={pending} onClick={() => run(() => submitForHumanReview("impactAssessment", a.id))} className="nf-row-action"><Send size={12} /> Enviar a revisión</button></>}
                       {canApprove && a.reviewStatus === "HUMAN_REVIEW" && (
                         <>
-                          <button disabled={pending} onClick={() => run(() => decideHumanReview("impactAssessment", a.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                          <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar evaluación de impacto", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("impactAssessment", a.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                          <button disabled={pending} onClick={() => run(() => decideHumanReview("impactAssessment", a.id, { to: "APPROVED" }))} className="nf-row-action" data-tone="success"><Check size={12} /> Aprobar</button>
+                          <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar evaluación de impacto", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("impactAssessment", a.id, { to: "REJECTED", note })) })} className="nf-row-action" data-tone="danger" data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden /><X size={12} /> Rechazar</button>
                         </>
                       )}
                     </div>
@@ -319,7 +344,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{risk.treatment}</td>
                 <td style={td}>{risk.status}</td>
                 <td style={td}>{nameOf(risk.ownerId)}</td>
-                {(canUpdate || canApprove) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("risk", risk as unknown as Record<string, unknown>)}>Editar</button>}{canApprove && risk.status !== "ACCEPTED" && <button disabled={pending} style={miniBtn} onClick={() => requestPrompt({ title: "Aceptar riesgo de IA", label: "Justificación de la aceptación", placeholder: "Explica por qué el riesgo es aceptable…", onConfirm: (rationale) => run(() => acceptAIRisk(risk.id, rationale)) })}>Aceptar riesgo</button>}</td>}
+                {(canUpdate || canApprove) && <td style={td}>{canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("risk", risk as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}{canApprove && risk.status !== "ACCEPTED" && <button disabled={pending} className="nf-row-action" onClick={() => requestPrompt({ title: "Aceptar riesgo de IA", label: "Justificación de la aceptación", placeholder: "Explica por qué el riesgo es aceptable…", onConfirm: (rationale) => run(() => acceptAIRisk(risk.id, rationale)) })} data-nf-no-action-icon><Check size={14} strokeWidth={2} aria-hidden />Aceptar riesgo</button>}</td>}
               </tr>
             ))}
             {initial.risks.length === 0 && <tr><td style={td} colSpan={canUpdate || canApprove ? 12 : 11}>Sin riesgos de IA registrados.</td></tr>}
@@ -379,7 +404,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
               <td style={td}>{control.effectiveness ?? "—"}</td>
               <td style={td}>{fmt(control.lastVerifiedAt)}</td>
               <td style={td}>{control.active ? "Sí" : "No"}</td>
-              {(canManage || canUpdate) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("oversight", control as unknown as Record<string, unknown>)}>Editar</button>}{canManage && <button disabled={pending} style={miniBtn} onClick={() => requestPrompt({ title: "Verificar control de supervisión", label: "Eficacia verificada (0–100)", initialValue: String(control.effectiveness ?? ""), placeholder: "Ejemplo: 85", multiline: false, onConfirm: (raw) => { const value = Number(raw); if (Number.isFinite(value) && value >= 0 && value <= 100) run(() => verifyOversightControl(control.id, value)); } })}>Verificar</button>}</td>}
+              {(canManage || canUpdate) && <td style={td}>{canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("oversight", control as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}{canManage && <button disabled={pending} className="nf-row-action" onClick={() => requestPrompt({ title: "Verificar control de supervisión", label: "Eficacia verificada (0–100)", initialValue: String(control.effectiveness ?? ""), placeholder: "Ejemplo: 85", multiline: false, onConfirm: (raw) => { const value = Number(raw); if (Number.isFinite(value) && value >= 0 && value <= 100) run(() => verifyOversightControl(control.id, value)); } })} data-nf-no-action-icon><Check size={14} strokeWidth={2} aria-hidden />Verificar</button>}</td>}
             </tr>
           ))}
           {initial.controls.length === 0 && <tr><td style={td} colSpan={11}>Sin controles de supervisión humana.</td></tr>}
@@ -405,7 +430,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{record.channel ?? "—"}</td>
                 <td style={td}>{record.version}</td>
                 <td style={td}>{fmt(record.publishedAt)}</td>
-                {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("transparency", record as unknown as Record<string, unknown>)}>Editar</button></td>}
+                {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("transparency", record as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}
               </tr>
             ))}
             {initial.transparency.length === 0 && <tr><td style={td} colSpan={canUpdate ? 9 : 8}>Sin registros de transparencia.</td></tr>}
@@ -435,7 +460,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{incident.affectedCount ?? "—"}</td>
                 <td style={td}>{incident.notificationRequired ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Requerida</span> : "—"}</td>
                 <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{INCIDENT_LABEL[incident.status] ?? incident.status}</span></td>
-                {(canUpdate || canManage) && <td style={td}>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("incident", incident as unknown as Record<string, unknown>)}>Editar</button>}{canManage && (next ? <button disabled={pending} onClick={() => run(() => transitionAIIncident(incident.id, { to: next as never }))} style={miniBtn}><ArrowRight size={12} /> {INCIDENT_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
+                {(canUpdate || canManage) && <td style={td}>{canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("incident", incident as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}{canManage && (next ? <button disabled={pending} onClick={() => run(() => transitionAIIncident(incident.id, { to: next as never }))} className="nf-row-action"><ArrowRight size={12} /> {INCIDENT_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
               </tr>
             );
           })}
@@ -462,7 +487,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
                 <td style={td}>{supplier.usesCustomerDataForTraining ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
                 <td style={td}>{fmt(supplier.assessedAt)}</td>
                 <td style={td}>{fmt(supplier.nextReviewDate)}</td>
-                {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("supplier", supplier as unknown as Record<string, unknown>)}>Editar</button></td>}
+                {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("supplier", supplier as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}
               </tr>
             ))}
             {initial.suppliers.length === 0 && <tr><td style={td} colSpan={canUpdate ? 9 : 8}>Sin evaluaciones de proveedores de IA.</td></tr>}
@@ -490,16 +515,16 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
               <td style={td}>{fmt(change.implementedAt)}</td>
               {(canUpdate || canManage || canApprove) && (
                 <td style={td}>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                    {canUpdate && change.reviewStatus === "DRAFT" && <button type="button" style={miniBtn} onClick={() => openEditor("change", change as unknown as Record<string, unknown>)}>Editar</button>}
-                    {canManage && change.reviewStatus === "DRAFT" && <button disabled={pending} onClick={() => run(() => submitForHumanReview("changeRequest", change.id))} style={miniBtn}><Send size={12} /> Enviar a revisión</button>}
+                  <div className="nf-row-actions">
+                    {canUpdate && change.reviewStatus === "DRAFT" && <button type="button" className="nf-row-action" onClick={() => openEditor("change", change as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}
+                    {canManage && change.reviewStatus === "DRAFT" && <button disabled={pending} onClick={() => run(() => submitForHumanReview("changeRequest", change.id))} className="nf-row-action"><Send size={12} /> Enviar a revisión</button>}
                     {canApprove && change.reviewStatus === "HUMAN_REVIEW" && (
                       <>
-                        <button disabled={pending} onClick={() => run(() => decideHumanReview("changeRequest", change.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                        <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar solicitud de cambio", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("changeRequest", change.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                        <button disabled={pending} onClick={() => run(() => decideHumanReview("changeRequest", change.id, { to: "APPROVED" }))} className="nf-row-action" data-tone="success"><Check size={12} /> Aprobar</button>
+                        <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar solicitud de cambio", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("changeRequest", change.id, { to: "REJECTED", note })) })} className="nf-row-action" data-tone="danger" data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden /><X size={12} /> Rechazar</button>
                       </>
                     )}
-                    {canManage && change.reviewStatus === "APPROVED" && !change.implementedAt && <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => run(() => implementAIChangeRequest(change.id))}>Marcar implementado</button>}
+                    {canManage && change.reviewStatus === "APPROVED" && !change.implementedAt && <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => implementAIChangeRequest(change.id))} data-nf-no-action-icon><Flag size={14} strokeWidth={2} aria-hidden />Marcar implementado</button>}
                   </div>
                 </td>
               )}
@@ -529,7 +554,7 @@ function AimsClientContent({ initial, demo = false }: { initial: AimsPayload; de
               <td style={td}>{metric.baseline ?? "—"}</td>
               <td style={td}>{metric.breached ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>Sí</span> : "No"}</td>
               <td style={td}>{metric.driftDetected ? <span style={chip("var(--nf-warning-border)", "var(--nf-warning-text)")}>Sí</span> : "No"}</td>
-              {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("metric", metric as unknown as Record<string, unknown>)}>Editar</button></td>}
+              {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("metric", metric as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}
             </tr>
           ))}
           {initial.metrics.length === 0 && <tr><td style={td} colSpan={canUpdate ? 10 : 9}>Sin mediciones de monitoreo.</td></tr>}
@@ -548,9 +573,8 @@ function Row({ k, v, danger }: { k: string; v: number; danger?: boolean }) {
   return (<div className="nf-iso-dashboard-row"><span className="nf-iso-dashboard-row-label">{k}</span><b className="nf-iso-dashboard-row-value" style={{ color: danger ? "var(--nf-danger-text)" : undefined }}>{v}</b></div>);
 }
 const input: React.CSSProperties = { padding: "8px 10px", border: "1px solid var(--nf-line)", borderRadius: 8, fontSize: 13, fontFamily: "inherit" };
-const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 14px", minHeight: 32, border: "1px solid var(--nf-app-accent)", borderRadius: 999, background: "var(--nf-app-accent)", color: "var(--nf-text-on-primary)", fontWeight: 600, fontSize: 12, fontFamily: "inherit", cursor: "pointer" };
 
-/** Modal "+ Nuevo X" form shell shared by every creation form in this module. */
+/** Modal "Nuevo X" form shell shared by every creation form in this module. */
 function NewFormToggle({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [closeRequested, setCloseRequested] = useState(false);
@@ -601,12 +625,12 @@ function NewSystemForm({ members, pending, run, onDone }: { members: AimsPayload
         <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Propietario…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <select aria-label="Tipo de proveedor" style={input} value={f.providerType} onChange={(e) => set("providerType", e.target.value)}>{["INTERNAL", "THIRD_PARTY_API", "THIRD_PARTY_LICENSED", "OPEN_SOURCE", "EMBEDDED_IN_PRODUCT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Autonomía" style={input} value={f.autonomy} onChange={(e) => set("autonomy", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "FULLY_AUTOMATED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Propietario…" ariaLabel="Propietario" style={input} />
+        <Picker aria-label="Tipo de proveedor" style={input} value={f.providerType} onChange={(e) => set("providerType", e.target.value)}>{["INTERNAL", "THIRD_PARTY_API", "THIRD_PARTY_LICENSED", "OPEN_SOURCE", "EMBEDDED_IN_PRODUCT", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <Picker aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <Picker aria-label="Autonomía" style={input} value={f.autonomy} onChange={(e) => set("autonomy", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "FULLY_AUTOMATED"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
-      <button disabled={pending || !f.name.trim() || !f.purpose.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.name.trim() || !f.purpose.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createAISystem({ name: f.name, purpose: f.purpose, ownerId: f.ownerId || undefined, providerType: f.providerType as never, criticality: f.criticality as never, autonomy: f.autonomy as never });
         onDone();
       })}>Crear sistema</button>
@@ -620,11 +644,11 @@ function NewUseCaseForm({ systems, pending, run, onDone }: { systems: AimsPayloa
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Título del caso de uso" style={input} placeholder="Título del caso de uso" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <input aria-label="Objetivo" style={input} placeholder="Objetivo" value={f.objective} onChange={(e) => set("objective", e.target.value)} />
       </div>
-      <button disabled={pending || !f.systemId || !f.title.trim() || !f.objective.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.systemId || !f.title.trim() || !f.objective.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createAIUseCase({ systemId: f.systemId, title: f.title, objective: f.objective, decisionAutonomy: f.decisionAutonomy as never });
         onDone();
       })}>Crear caso de uso</button>
@@ -643,17 +667,17 @@ function NewAssessmentForm({ systems, pending, run, onDone }: { systems: AimsPay
   const [dims, setDims] = useState<Record<string, string>>(Object.fromEntries(IMPACT_DIMENSIONS.map(([k]) => [k, "NOT_ASSESSED"])));
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select aria-label="Sistema" style={input} value={systemId} onChange={(e) => setSystemId(e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+      <Picker aria-label="Sistema" style={input} value={systemId} onChange={(e) => setSystemId(e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 8 }}>
         {IMPACT_DIMENSIONS.map(([key, label]) => (
           <label key={key} style={{ fontSize: 11.5 }}>{label}
-            <select style={{ ...input, width: "100%", marginTop: 3 }} value={dims[key]} onChange={(e) => setDims((p) => ({ ...p, [key]: e.target.value }))}>
+            <Picker aria-label={label} style={{ ...input, width: "100%", marginTop: 3 }} value={dims[key]} onChange={(e) => setDims((p) => ({ ...p, [key]: e.target.value }))}>
               {IMPACT_SEVERITY_OPTIONS.map((v) => <option key={v} value={v}>{v}</option>)}
-            </select>
+            </Picker>
           </label>
         ))}
       </div>
-      <button disabled={pending || !systemId} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !systemId} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createImpactAssessment({
           systemId, version: "1",
           rightsImpact: dims.rightsImpact as never, safetyImpact: dims.safetyImpact as never, privacyImpact: dims.privacyImpact as never,
@@ -674,16 +698,16 @@ function NewRiskForm({ systems, members, pending, run, onDone }: { systems: Aims
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Título del riesgo" style={input} placeholder="Título del riesgo" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{RISK_CATEGORIES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Probabilidad" style={input} value={f.likelihood} onChange={(e) => set("likelihood", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</select>
-        <select aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</select>
-        <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <Picker aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>{RISK_CATEGORIES.map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <Picker aria-label="Probabilidad" style={input} value={f.likelihood} onChange={(e) => set("likelihood", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Probabilidad {v}</option>)}</Picker>
+        <Picker aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>{[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>Impacto {v}</option>)}</Picker>
+        <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
       </div>
-      <button disabled={pending || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.title.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createAIRisk({ systemId: f.systemId || undefined, title: f.title, category: f.category as never, likelihood: Number(f.likelihood), impact: Number(f.impact), ownerId: f.ownerId || undefined, treatment: "MITIGATE" });
         onDone();
       })}>Crear riesgo</button>
@@ -701,11 +725,11 @@ function NewDatasetForm({ pending, run, onDone }: { pending: boolean; run: Runne
         <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, alignItems: "center" }}>
-        <select aria-label="Clasificación" style={input} value={f.classification} onChange={(e) => set("classification", e.target.value)}>{["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Clasificación" style={input} value={f.classification} onChange={(e) => set("classification", e.target.value)}>{["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}><input type="checkbox" checked={f.containsPersonalData} onChange={(e) => set("containsPersonalData", e.target.checked)} /> Contiene datos personales</label>
-        {f.containsPersonalData && <select aria-label="Base legal" style={input} value={f.legalBasis} onChange={(e) => set("legalBasis", e.target.value)}>{["CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>}
+        {f.containsPersonalData && <Picker aria-label="Base legal" style={input} value={f.legalBasis} onChange={(e) => set("legalBasis", e.target.value)}>{["CONSENT", "CONTRACT", "LEGAL_OBLIGATION", "VITAL_INTEREST", "PUBLIC_TASK", "LEGITIMATE_INTEREST", "ANONYMIZED"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>}
       </div>
-      <button disabled={pending || !f.name.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.name.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createDataset({ name: f.name, purpose: f.purpose || undefined, classification: f.classification as never, containsPersonalData: f.containsPersonalData, containsSpecialCategories: false, legalBasis: (f.containsPersonalData ? f.legalBasis : "NOT_APPLICABLE") as never });
         onDone();
       })}>Crear dataset</button>
@@ -735,53 +759,53 @@ function DatasetRow({ dataset, canManage, canUpdate, pending, run, openEditor }:
         <td style={td}>{dataset.lineageSteps}{!dataset.traceable && <div style={{ color: "var(--nf-danger-text)", fontSize: 11 }}>sin procedencia</div>}</td>
         <td style={td}>{dataset.biasFlags.length ? <span style={{ color: "var(--nf-danger-text)", fontSize: 12 }}>{dataset.biasFlags.join(", ")}</span> : <span style={{ color: "var(--nf-success-text)" }}>revisado</span>}</td>
         <td style={td}>{dataset.fitForTraining ? "Sí" : <span style={{ color: "var(--nf-danger-text)" }}>No</span>}</td>
-        {(canManage || canUpdate) && <td style={td}><button style={miniBtn} onClick={() => setOpen((v) => !v)}>{open ? "Cerrar" : "Gestionar"}</button>{canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("dataset", dataset as unknown as Record<string, unknown>)}>Editar</button>}</td>}
+        {(canManage || canUpdate) && <td style={td}><button className="nf-row-action" onClick={() => setOpen((v) => !v)} data-nf-no-action-icon><ChevronUp size={14} strokeWidth={2} aria-hidden />{open ? "Cerrar" : "Gestionar"}</button>{canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("dataset", dataset as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}</td>}
       </tr>
       {open && (canManage || canUpdate) && (
         <tr><td colSpan={12} style={{ ...td, background: "var(--nf-surface-muted)" }}>
           <div style={{ display: "grid", gap: 10 }}>
             <div>
               <strong style={{ fontSize: 12 }}>Calidad de datos (0-100)</strong>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+              <div className="nf-row-actions">
                 {(["completeness", "accuracy", "consistency", "timeliness", "representativeness"] as const).map((k) => (
                   <input aria-label={k} key={k} style={{ ...input, maxWidth: 100 }} type="number" min={0} max={100} placeholder={k} value={quality[k]} onChange={(e) => setQuality((p) => ({ ...p, [k]: e.target.value }))} />
                 ))}
-                <button disabled={pending} style={miniBtn} onClick={() => run(() => assessDatasetQuality(dataset.id, {
+                <button disabled={pending} className="nf-row-action" onClick={() => run(() => assessDatasetQuality(dataset.id, {
                   completeness: quality.completeness ? Number(quality.completeness) : undefined, accuracy: quality.accuracy ? Number(quality.accuracy) : undefined,
                   consistency: quality.consistency ? Number(quality.consistency) : undefined, timeliness: quality.timeliness ? Number(quality.timeliness) : undefined,
                   representativeness: quality.representativeness ? Number(quality.representativeness) : undefined,
-                }))}>Guardar calidad</button>
+                }))} data-nf-no-action-icon><Save size={14} strokeWidth={2} aria-hidden />Guardar calidad</button>
               </div>
             </div>
             <div>
               <strong style={{ fontSize: 12 }}>Revisión de sesgo</strong>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+              <div className="nf-row-actions">
                 <input aria-label="Hallazgos de sesgo" style={input} placeholder="Hallazgos de sesgo" value={bias.biasFindings} onChange={(e) => setBias((p) => ({ ...p, biasFindings: e.target.value }))} />
                 <input aria-label="Grupos subrepresentados" style={input} placeholder="Grupos subrepresentados" value={bias.underrepresentedGroups} onChange={(e) => setBias((p) => ({ ...p, underrepresentedGroups: e.target.value }))} />
-                <button disabled={pending} style={miniBtn} onClick={() => run(() => reviewDatasetBias(dataset.id, { biasFindings: bias.biasFindings || undefined, underrepresentedGroups: bias.underrepresentedGroups || undefined }))}>Guardar revisión</button>
+                <button disabled={pending} className="nf-row-action" onClick={() => run(() => reviewDatasetBias(dataset.id, { biasFindings: bias.biasFindings || undefined, underrepresentedGroups: bias.underrepresentedGroups || undefined }))} data-nf-no-action-icon><Save size={14} strokeWidth={2} aria-hidden />Guardar revisión</button>
               </div>
             </div>
             <div>
               <strong style={{ fontSize: 12 }}>Fuente de datos (procedencia)</strong>
-              <button type="button" style={miniBtn} onClick={() => setSourceModal(true)}>+ Añadir fuente</button>
-              {canUpdate && dataset.dataSources?.map((source) => <button key={source.id} type="button" style={miniBtn} onClick={() => openEditor("dataSource", source as unknown as Record<string, unknown>)}>Editar {source.code}</button>)}
+              <button type="button" className="nf-row-action" onClick={() => setSourceModal(true)} data-nf-no-action-icon><Plus size={14} strokeWidth={2} aria-hidden />Añadir fuente</button>
+              {canUpdate && dataset.dataSources?.map((source) => <button key={source.id} type="button" className="nf-row-action" onClick={() => openEditor("dataSource", source as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar {source.code}</button>)}
               <Modal open={sourceModal} onClose={() => setSourceModal(false)} title={`Nueva fuente · ${dataset.name}`} width={620}>
                 <div className="nf-modal-form nf-iso-create-form">
                   <AimsModalError />
                   <label>Nombre de la fuente<input style={input} value={source.name} onChange={(e) => setSource((p) => ({ ...p, name: e.target.value }))} /></label>
-                  <label>Tipo<select style={input} value={source.type} onChange={(e) => setSource((p) => ({ ...p, type: e.target.value }))}>{["INTERNAL_SYSTEM", "PUBLIC_DATASET", "THIRD_PARTY_PROVIDER", "WEB_SCRAPING", "USER_GENERATED", "SYNTHETIC", "SENSOR", "PURCHASED", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
+                  <label>Tipo<Picker aria-label="Tipo" style={input} value={source.type} onChange={(e) => setSource((p) => ({ ...p, type: e.target.value }))}>{["INTERNAL_SYSTEM", "PUBLIC_DATASET", "THIRD_PARTY_PROVIDER", "WEB_SCRAPING", "USER_GENERATED", "SYNTHETIC", "SENSOR", "PURCHASED", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker></label>
                   <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={() => setSourceModal(false)}>Cancelar</button><button disabled={pending || !source.name.trim()} className="nf-app-btn-primary" onClick={() => run(async () => { await createDataSource({ datasetId: dataset.id, name: source.name, type: source.type as never, legalBasis: "NOT_APPLICABLE", licenseVerified: false }); setSource({ name: "", type: "OTHER" }); setSourceModal(false); })}>Crear fuente</button></div>
                 </div>
               </Modal>
             </div>
             <div>
               <strong style={{ fontSize: 12 }}>Paso de linaje</strong>
-              <button type="button" style={miniBtn} onClick={() => setLineageModal(true)}>+ Añadir paso</button>
-              {canUpdate && dataset.dataLineage?.map((step) => <button key={step.id} type="button" style={miniBtn} onClick={() => openEditor("dataLineage", step as unknown as Record<string, unknown>)}>Editar paso {step.step}</button>)}
+              <button type="button" className="nf-row-action" onClick={() => setLineageModal(true)} data-nf-no-action-icon><Plus size={14} strokeWidth={2} aria-hidden />Añadir paso</button>
+              {canUpdate && dataset.dataLineage?.map((step) => <button key={step.id} type="button" className="nf-row-action" onClick={() => openEditor("dataLineage", step as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar paso {step.step}</button>)}
               <Modal open={lineageModal} onClose={() => setLineageModal(false)} title={`Nuevo paso de linaje · ${dataset.name}`} width={620}>
                 <div className="nf-modal-form nf-iso-create-form">
                   <AimsModalError />
-                  <label>Operación<select style={input} value={lineage.operation} onChange={(e) => setLineage((p) => ({ ...p, operation: e.target.value }))}>{["INGESTION", "CLEANING", "TRANSFORMATION", "LABELING", "AUGMENTATION", "ANONYMIZATION", "AGGREGATION", "SPLIT", "MERGE", "DERIVATION", "DELETION"].map((v) => <option key={v} value={v}>{v}</option>)}</select></label>
+                  <label>Operación<Picker aria-label="Operación" style={input} value={lineage.operation} onChange={(e) => setLineage((p) => ({ ...p, operation: e.target.value }))}>{["INGESTION", "CLEANING", "TRANSFORMATION", "LABELING", "AUGMENTATION", "ANONYMIZATION", "AGGREGATION", "SPLIT", "MERGE", "DERIVATION", "DELETION"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker></label>
                   <label>Descripción<input style={input} value={lineage.description} onChange={(e) => setLineage((p) => ({ ...p, description: e.target.value }))} /></label>
                   <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={() => setLineageModal(false)}>Cancelar</button><button disabled={pending} className="nf-app-btn-primary" onClick={() => run(async () => { await addDataLineageStep({ datasetId: dataset.id, operation: lineage.operation as never, description: lineage.description || undefined, reversible: false }); setLineage({ operation: "INGESTION", description: "" }); setLineageModal(false); })}>Crear paso</button></div>
                 </div>
@@ -800,13 +824,13 @@ function NewModelForm({ systems, datasets, pending, run, onDone }: { systems: Ai
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Nombre del modelo" style={input} placeholder="Nombre del modelo" value={f.modelName} onChange={(e) => set("modelName", e.target.value)} />
         <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
         <input aria-label="Técnica de explicabilidad" style={input} placeholder="Técnica de explicabilidad" value={f.explainabilityMethod} onChange={(e) => set("explainabilityMethod", e.target.value)} />
       </div>
-      <select aria-label="Dataset de entrenamiento (opcional)" style={input} value={f.trainingDatasetId} onChange={(e) => set("trainingDatasetId", e.target.value)}><option value="">Dataset de entrenamiento (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code} · {d.name}</option>)}</select>
-      <button disabled={pending || !f.systemId || !f.modelName.trim() || !f.version.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <Picker aria-label="Dataset de entrenamiento (opcional)" style={input} value={f.trainingDatasetId} onChange={(e) => set("trainingDatasetId", e.target.value)}><option value="">Dataset de entrenamiento (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code} · {d.name}</option>)}</Picker>
+      <button disabled={pending || !f.systemId || !f.modelName.trim() || !f.version.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createModelVersion({ systemId: f.systemId, modelName: f.modelName, version: f.version, trainingDatasetId: f.trainingDatasetId || undefined, explainabilityMethod: f.explainabilityMethod || undefined });
         onDone();
       })}>Crear versión</button>
@@ -837,19 +861,19 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
         <td style={td}>{model.explainabilityMethod ?? <span style={{ color: "var(--nf-danger-text)" }}>sin técnica</span>}</td>
         {(canManage || canUpdate || canApprove) && (
           <td style={td}>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("modelVersion", model as unknown as Record<string, unknown>)}>Editar</button>}
-              {canUpdate && model.evaluations?.[0] && <button type="button" style={miniBtn} onClick={() => openEditor("modelEvaluation", model.evaluations[0] as unknown as Record<string, unknown>)}>Editar evaluación</button>}
-              {canUpdate && model.evaluations?.slice(1).map((evaluation) => <button key={evaluation.id} type="button" style={miniBtn} onClick={() => openEditor("modelEvaluation", evaluation as unknown as Record<string, unknown>)}>Editar eval. {evaluation.code}</button>)}
-              {canManage && <button disabled={pending} style={miniBtn} onClick={() => setShowEval((v) => !v)}>Evaluar</button>}
-              {canManage && model.reviewStatus === "DRAFT" && <button disabled={pending} onClick={() => run(() => submitForHumanReview("modelVersion", model.id))} style={miniBtn}><Send size={12} /> Enviar a revisión</button>}
+            <div className="nf-row-actions">
+              {canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("modelVersion", model as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}
+              {canUpdate && model.evaluations?.[0] && <button type="button" className="nf-row-action" onClick={() => openEditor("modelEvaluation", model.evaluations[0] as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar evaluación</button>}
+              {canUpdate && model.evaluations?.slice(1).map((evaluation) => <button key={evaluation.id} type="button" className="nf-row-action" onClick={() => openEditor("modelEvaluation", evaluation as unknown as Record<string, unknown>)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar eval. {evaluation.code}</button>)}
+              {canManage && <button disabled={pending} className="nf-row-action" onClick={() => setShowEval((v) => !v)} data-nf-no-action-icon><Gauge size={14} strokeWidth={2} aria-hidden />Evaluar</button>}
+              {canManage && model.reviewStatus === "DRAFT" && <button disabled={pending} onClick={() => run(() => submitForHumanReview("modelVersion", model.id))} className="nf-row-action"><Send size={12} /> Enviar a revisión</button>}
               {canApprove && model.reviewStatus === "HUMAN_REVIEW" && (
                 <>
-                  <button disabled={pending} onClick={() => run(() => decideHumanReview("modelVersion", model.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar versión de modelo", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("modelVersion", model.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                  <button disabled={pending} onClick={() => run(() => decideHumanReview("modelVersion", model.id, { to: "APPROVED" }))} className="nf-row-action" data-tone="success"><Check size={12} /> Aprobar</button>
+                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar versión de modelo", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("modelVersion", model.id, { to: "REJECTED", note })) })} className="nf-row-action" data-tone="danger" data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden /><X size={12} /> Rechazar</button>
                 </>
               )}
-              {canApprove && model.reviewStatus === "APPROVED" && model.stage !== "PRODUCTION" && <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => run(() => promoteModelToProduction(model.id))}>Promover a producción</button>}
+              {canApprove && model.reviewStatus === "APPROVED" && model.stage !== "PRODUCTION" && <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => promoteModelToProduction(model.id))} data-nf-no-action-icon><ArrowUpRight size={14} strokeWidth={2} aria-hidden />Promover a producción</button>}
             </div>
           </td>
         )}
@@ -857,12 +881,12 @@ function ModelRow({ model, systems, datasets, canManage, canUpdate, canApprove, 
       <Modal open={showEval} onClose={() => setShowEval(false)} title={`Evaluar modelo · ${model.modelName}`} width={700}>
           <div className="nf-modal-form nf-iso-create-form">
             <AimsModalError />
-            <select aria-label="Dataset de evaluación (opcional)" style={input} value={ev.datasetId} onChange={(e) => setEv((p) => ({ ...p, datasetId: e.target.value }))}><option value="">Dataset de evaluación (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+            <Picker aria-label="Dataset de evaluación (opcional)" style={input} value={ev.datasetId} onChange={(e) => setEv((p) => ({ ...p, datasetId: e.target.value }))}><option value="">Dataset de evaluación (opcional)…</option>{datasets.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
             <input aria-label="Exactitud (0-1)" style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Exactitud (0-1)" value={ev.accuracy} onChange={(e) => setEv((p) => ({ ...p, accuracy: e.target.value }))} />
             <input aria-label="Equidad (0-1)" style={{ ...input, maxWidth: 110 }} type="number" min={0} max={1} step={0.01} placeholder="Equidad (0-1)" value={ev.fairnessScore} onChange={(e) => setEv((p) => ({ ...p, fairnessScore: e.target.value }))} />
             <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={ev.biasDetected} onChange={(e) => setEv((p) => ({ ...p, biasDetected: e.target.checked }))} /> Sesgo detectado</label>
-            <select aria-label="Resultado" style={input} value={ev.outcome} onChange={(e) => setEv((p) => ({ ...p, outcome: e.target.value }))}>{["NOT_EVALUATED", "PASSED", "PASSED_WITH_CONDITIONS", "FAILED"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-            <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={() => setShowEval(false)}>Cancelar</button><button disabled={pending} style={primaryBtn} onClick={() => {
+            <Picker aria-label="Resultado" style={input} value={ev.outcome} onChange={(e) => setEv((p) => ({ ...p, outcome: e.target.value }))}>{["NOT_EVALUATED", "PASSED", "PASSED_WITH_CONDITIONS", "FAILED"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+            <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={() => setShowEval(false)}>Cancelar</button><button disabled={pending} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => {
               const save = (conditions?: string) => run(async () => {
                 await createModelEvaluation({
                   modelVersionId: model.id, datasetId: ev.datasetId || undefined,
@@ -887,16 +911,16 @@ function NewOversightForm({ systems, members, pending, run, onDone }: { systems:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Nombre del control" style={input} placeholder="Nombre del control" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <PersonPicker people={members} value={f.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <select aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "DUAL_CONTROL", "SAMPLING_REVIEW", "APPEAL_CHANNEL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{["HUMAN_IN_THE_LOOP", "HUMAN_ON_THE_LOOP", "HUMAN_IN_COMMAND", "DUAL_CONTROL", "SAMPLING_REVIEW", "APPEAL_CHANNEL"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={f.canOverride} onChange={(e) => set("canOverride", e.target.checked)} /> Puede anular</label>
         <label style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}><input type="checkbox" checked={f.canStop} onChange={(e) => set("canStop", e.target.checked)} /> Puede detener</label>
       </div>
-      <button disabled={pending || !f.systemId || !f.name.trim() || (!f.canOverride && !f.canStop)} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.systemId || !f.name.trim() || (!f.canOverride && !f.canStop)} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createOversightControl({ systemId: f.systemId, name: f.name, type: f.type as never, responsibleId: f.responsibleId || undefined, canOverride: f.canOverride, canStop: f.canStop });
         onDone();
       })}>Crear control</button>
@@ -930,20 +954,20 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
         <td style={td}>{output.promotedAt ? `${output.promotedEntityType} · ${fmt(output.promotedAt)}` : "—"}</td>
         {(canManage || canApprove) && (
           <td style={td}>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {canManage && output.reviewStatus === "DRAFT" && <button disabled={pending} style={miniBtn} onClick={() => setEditing((v) => !v)}>Editar</button>}
+            <div className="nf-row-actions">
+              {canManage && output.reviewStatus === "DRAFT" && <button disabled={pending} className="nf-row-action" onClick={() => setEditing((v) => !v)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}
               {canManage && output.reviewStatus === "DRAFT" && (
-                <button disabled={pending} onClick={() => run(() => submitForHumanReview("output", output.id))} style={miniBtn}><Send size={12} /> Enviar a revisión</button>
+                <button disabled={pending} onClick={() => run(() => submitForHumanReview("output", output.id))} className="nf-row-action"><Send size={12} /> Enviar a revisión</button>
               )}
               {canApprove && output.reviewStatus === "HUMAN_REVIEW" && (
                 <>
-                  <button disabled={pending} onClick={() => run(() => decideHumanReview("output", output.id, { to: "APPROVED" }))} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }}><Check size={12} /> Aprobar</button>
-                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar salida de IA", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("output", output.id, { to: "REJECTED", note })) })} style={{ ...miniBtn, borderColor: "var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)" }}><X size={12} /> Rechazar</button>
+                  <button disabled={pending} onClick={() => run(() => decideHumanReview("output", output.id, { to: "APPROVED" }))} className="nf-row-action" data-tone="success"><Check size={12} /> Aprobar</button>
+                  <button disabled={pending} onClick={() => requestPrompt({ title: "Rechazar salida de IA", label: "Motivo del rechazo", placeholder: "Describe el motivo de la devolución…", onConfirm: (note) => run(() => decideHumanReview("output", output.id, { to: "REJECTED", note })) })} className="nf-row-action" data-tone="danger" data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden /><X size={12} /> Rechazar</button>
                 </>
               )}
-              {canManage && output.reviewStatus === "REJECTED" && <button disabled={pending} style={miniBtn} onClick={() => run(() => reopenForCorrection("output", output.id))}>Reabrir para corregir</button>}
+              {canManage && output.reviewStatus === "REJECTED" && <button disabled={pending} className="nf-row-action" onClick={() => run(() => reopenForCorrection("output", output.id))} data-nf-no-action-icon><RotateCcw size={14} strokeWidth={2} aria-hidden />Reabrir para corregir</button>}
               {canApprove && output.reviewStatus === "APPROVED" && !output.promotedAt && (
-                <button disabled={pending} style={{ ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" }} onClick={() => requestPrompt({ title: "Promover salida a registro oficial", label: "Tipo de registro oficial", placeholder: "Ejemplo: Document, Risk o Action…", onConfirm: (entityType) => run(() => promoteAIOutput(output.id, { entityType, entityId: output.id })) })}>Promover a registro oficial</button>
+                <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => requestPrompt({ title: "Promover salida a registro oficial", label: "Tipo de registro oficial", placeholder: "Ejemplo: Document, Risk o Action…", onConfirm: (entityType) => run(() => promoteAIOutput(output.id, { entityType, entityId: output.id })) })} data-nf-no-action-icon><ArrowUpRight size={14} strokeWidth={2} aria-hidden />Promover a registro oficial</button>
               )}
             </div>
           </td>
@@ -951,9 +975,9 @@ function OutputRow({ output, systemCode, nameOf, canManage, canApprove, pending,
       </tr>
       {editing && (
         <tr><td colSpan={12} style={{ ...td, background: "var(--nf-surface-muted)" }}>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div className="nf-row-actions">
             <input aria-label="Texto editado por una persona" style={{ ...input, flex: 1, minWidth: 280 }} placeholder="Texto editado por una persona" value={edits} onChange={(e) => setEdits(e.target.value)} />
-            <button disabled={pending || !edits.trim()} style={primaryBtn} onClick={() => run(async () => { await editAIOutput(output.id, edits); setEditing(false); setEdits(""); })}>Guardar edición humana</button>
+            <button disabled={pending || !edits.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => { await editAIOutput(output.id, edits); setEditing(false); setEdits(""); })}>Guardar edición humana</button>
           </div>
         </td></tr>
       )}
@@ -967,13 +991,13 @@ function NewOutputForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Modelo (p.ej. claude-sonnet-5)" style={input} placeholder="Modelo (p.ej. claude-sonnet-5)" value={f.model} onChange={(e) => set("model", e.target.value)} />
         <input aria-label="Versión del modelo" style={input} placeholder="Versión del modelo" value={f.modelVersionLabel} onChange={(e) => set("modelVersionLabel", e.target.value)} />
       </div>
       <textarea aria-label="Prompt" style={{ ...input, minHeight: 60 }} placeholder="Prompt" value={f.prompt} onChange={(e) => set("prompt", e.target.value)} />
       <textarea aria-label="Salida generada" style={{ ...input, minHeight: 60 }} placeholder="Salida generada" value={f.output} onChange={(e) => set("output", e.target.value)} />
-      <button disabled={pending || !f.prompt.trim() || !f.model.trim() || !f.modelVersionLabel.trim() || !f.output.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.prompt.trim() || !f.model.trim() || !f.modelVersionLabel.trim() || !f.output.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await recordAIOutput({ systemId: f.systemId || undefined, prompt: f.prompt, model: f.model, modelVersionLabel: f.modelVersionLabel, output: f.output, containsPersonalData: false, targetType: "OTHER", redacted: false });
         onDone();
       })}>Registrar salida</button>
@@ -987,12 +1011,12 @@ function NewTransparencyForm({ systems, pending, run, onDone }: { systems: AimsP
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
-        <select aria-label="Audiencia" style={input} value={f.audience} onChange={(e) => set("audience", e.target.value)}>{["END_USER", "DATA_SUBJECT", "CUSTOMER", "WORKER", "REGULATOR", "PUBLIC", "INTERNAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
+        <Picker aria-label="Audiencia" style={input} value={f.audience} onChange={(e) => set("audience", e.target.value)}>{["END_USER", "DATA_SUBJECT", "CUSTOMER", "WORKER", "REGULATOR", "PUBLIC", "INTERNAL"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
         <input aria-label="Canal (p.ej. portal, correo)" style={input} placeholder="Canal (p.ej. portal, correo)" value={f.channel} onChange={(e) => set("channel", e.target.value)} />
       </div>
       <textarea aria-label="Texto de divulgación del uso de IA" style={{ ...input, minHeight: 60 }} placeholder="Texto de divulgación del uso de IA" value={f.disclosure} onChange={(e) => set("disclosure", e.target.value)} />
-      <button disabled={pending || !f.systemId || !f.disclosure.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.systemId || !f.disclosure.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createTransparencyRecord({ systemId: f.systemId, audience: f.audience as never, disclosure: f.disclosure, channel: f.channel || undefined, aiUseDisclosed: true, version: "1", limitationsDisclosed: false, dataUseDisclosed: false, humanContactOffered: false });
         onDone();
       })}>Publicar registro</button>
@@ -1008,15 +1032,15 @@ function NewIncidentForm({ systems, members, pending, run, onDone }: { systems: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Título del incidente" style={input} placeholder="Título del incidente" value={f.title} onChange={(e) => set("title", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
-        <select aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{INCIDENT_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Responsable" style={input} value={f.responsibleId} onChange={(e) => set("responsibleId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <Picker aria-label="Tipo" style={input} value={f.type} onChange={(e) => set("type", e.target.value)}>{INCIDENT_TYPES.map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <Picker aria-label="Severidad" style={input} value={f.severity} onChange={(e) => set("severity", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <PersonPicker people={members} value={f.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
       </div>
-      <button disabled={pending || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.title.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await reportAIIncident({ systemId: f.systemId || undefined, title: f.title, type: f.type as never, severity: f.severity as never, responsibleId: f.responsibleId || undefined });
         onDone();
       })}>Reportar incidente</button>
@@ -1031,10 +1055,10 @@ function NewSupplierForm({ systems, pending, run, onDone }: { systems: AimsPaylo
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.supplierName} onChange={(e) => set("supplierName", e.target.value)} />
-        <select aria-label="Tipo de servicio" style={input} value={f.serviceType} onChange={(e) => set("serviceType", e.target.value)}>{["FOUNDATION_MODEL", "MODEL_API", "DATASET", "ANNOTATION", "MLOPS_PLATFORM", "EMBEDDED_FEATURE", "CONSULTING", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
-        <select aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Tipo de servicio" style={input} value={f.serviceType} onChange={(e) => set("serviceType", e.target.value)}>{["FOUNDATION_MODEL", "MODEL_API", "DATASET", "ANNOTATION", "MLOPS_PLATFORM", "EMBEDDED_FEATURE", "CONSULTING", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
+        <Picker aria-label="Sistema (opcional)" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema (opcional)…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
       </div>
-      <button disabled={pending || !f.supplierName.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.supplierName.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createSupplierAssessment({
           supplierName: f.supplierName, serviceType: f.serviceType as never, systemId: f.systemId || undefined,
           modelDocumentation: false, trainingDataDisclosed: false, evaluationResultsShared: false, biasTestingEvidence: false,
@@ -1052,11 +1076,11 @@ function NewChangeForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Título del cambio" style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["MODEL_UPDATE", "RETRAINING", "DATA_CHANGE", "PROMPT_CHANGE", "SCOPE_CHANGE", "INTEGRATION", "CONFIGURATION", "THRESHOLD_CHANGE", "DECOMMISSION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>{["MODEL_UPDATE", "RETRAINING", "DATA_CHANGE", "PROMPT_CHANGE", "SCOPE_CHANGE", "INTEGRATION", "CONFIGURATION", "THRESHOLD_CHANGE", "DECOMMISSION", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
-      <button disabled={pending || !f.systemId || !f.title.trim()} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.systemId || !f.title.trim()} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await createAIChangeRequest({ systemId: f.systemId, title: f.title, changeType: f.changeType as never, affectsImpactAssessment: false, requiresReassessment: false, requiresRetraining: false, requiresRevalidation: false });
         onDone();
       })}>Crear solicitud</button>
@@ -1070,16 +1094,16 @@ function NewMetricForm({ systems, pending, run, onDone }: { systems: AimsPayload
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</select>
+        <Picker aria-label="Sistema" style={input} value={f.systemId} onChange={(e) => set("systemId", e.target.value)}><option value="">Sistema…</option>{systems.map((s) => <option key={s.id} value={s.id}>{s.code} · {s.name}</option>)}</Picker>
         <input aria-label="Periodo (p.ej. 2026-07)" style={input} placeholder="Periodo (p.ej. 2026-07)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select aria-label="Tipo" style={input} value={f.kind} onChange={(e) => set("kind", e.target.value)}>{["ACCURACY", "PRECISION", "RECALL", "F1", "ERROR_RATE", "LATENCY", "THROUGHPUT", "DRIFT", "FAIRNESS", "TOXICITY", "HALLUCINATION_RATE", "HUMAN_OVERRIDE_RATE", "REJECTION_RATE", "COST", "AVAILABILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo" style={input} value={f.kind} onChange={(e) => set("kind", e.target.value)}>{["ACCURACY", "PRECISION", "RECALL", "F1", "ERROR_RATE", "LATENCY", "THROUGHPUT", "DRIFT", "FAIRNESS", "TOXICITY", "HALLUCINATION_RATE", "HUMAN_OVERRIDE_RATE", "REJECTION_RATE", "COST", "AVAILABILITY", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre de la métrica" style={input} placeholder="Nombre de la métrica" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <input aria-label="Valor" style={input} type="number" placeholder="Valor" value={f.value} onChange={(e) => set("value", e.target.value)} />
         <input aria-label="Umbral (opcional)" style={input} type="number" placeholder="Umbral (opcional)" value={f.threshold} onChange={(e) => set("threshold", e.target.value)} />
       </div>
-      <button disabled={pending || !f.systemId || !f.period.trim() || !f.name.trim() || !f.value} style={primaryBtn} onClick={() => run(async () => {
+      <button disabled={pending || !f.systemId || !f.period.trim() || !f.name.trim() || !f.value} className="nf-app-btn-primary nf-app-btn-sm" onClick={() => run(async () => {
         await recordPerformanceMetric({ systemId: f.systemId, period: f.period, kind: f.kind as never, name: f.name, value: Number(f.value), threshold: f.threshold ? Number(f.threshold) : undefined });
         onDone();
       })}>Registrar medición</button>
@@ -1129,7 +1153,7 @@ function AimsRecordEditor({ value, pending, systems, datasets, models, members, 
   const options = (field: AimsField) => field.key === "systemId" ? systems.map((s) => ({ value: s.id, label: `${s.code} · ${s.name}` })) : field.key === "datasetId" || field.key === "trainingDatasetId" ? datasets.map((d) => ({ value: d.id, label: `${d.code} · ${d.name}` })) : field.key === "modelVersionId" ? models.map((m) => ({ value: m.id, label: `${m.code} · ${m.modelName}` })) : field.key === "ownerId" || field.key === "stewardId" || field.key === "responsibleId" ? members.map((m) => ({ value: m.id, label: m.name })) : (field.options ?? []).map((option) => ({ value: option, label: option }));
   const submit = () => { const payload: Record<string, unknown> = {}; for (const field of fields) { const raw = form[field.key]; if (field.type === "checkbox") payload[field.key] = Boolean(raw); else if (field.type === "number") { if (raw !== "") payload[field.key] = Number(raw); } else if (field.type === "date") { if (raw) payload[field.key] = new Date(String(raw)).toISOString(); } else if (raw !== "") payload[field.key] = raw; } onSave(payload); };
   const title = value.kind === "impactAssessment" ? "evaluación de impacto" : value.kind === "useCase" ? "caso de uso" : value.kind === "dataSource" ? "fuente de datos" : value.kind === "dataLineage" ? "paso de linaje" : value.kind === "modelVersion" ? "versión de modelo" : value.kind === "modelEvaluation" ? "evaluación de modelo" : value.kind === "oversight" ? "control de supervisión" : value.kind === "transparency" ? "registro de transparencia" : value.kind === "incident" ? "incidente" : value.kind === "supplier" ? "evaluación de proveedor" : value.kind === "change" ? "solicitud de cambio" : value.kind === "metric" ? "métrica" : value.kind === "system" ? "sistema de IA" : value.kind === "dataset" ? "dataset" : "riesgo de IA";
-  return <Modal open title={`Editar ${title}`} onClose={onClose} width={820}><div className="nf-modal-form nf-iso-edit-form"><AimsModalError /><div className="nf-iso-edit-fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>{fields.map((field) => field.type === "checkbox" ? <label key={field.key} style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />{field.label}</label> : <label key={field.key}>{field.label}{field.type === "textarea" ? <textarea className="nf-app-input" rows={3} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} /> : field.type === "select" ? <select className="nf-app-input" value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)}><option value="">Seleccionar…</option>{options(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input className="nf-app-input" type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} />}</label>)}</div><div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !valid} onClick={submit}>Guardar cambios</button></div></div></Modal>;
+  return <Modal open title={`Editar ${title}`} onClose={onClose} width={820}><div className="nf-modal-form nf-iso-edit-form"><AimsModalError /><div className="nf-iso-edit-fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>{fields.map((field) => field.type === "checkbox" ? <label key={field.key} style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />{field.label}</label> : <label key={field.key}>{field.label}{field.type === "textarea" ? <textarea className="nf-app-input" rows={3} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} /> : field.type === "select" ? <Picker aria-label={field.label} className="nf-app-input" value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)}><option value="">Seleccionar…</option>{options(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Picker> : <input className="nf-app-input" type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} />}</label>)}</div><div className="nf-modal-actions nf-iso-edit-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !valid} onClick={submit}>Guardar cambios</button></div></div></Modal>;
 }
 
 function AimsModalError() {

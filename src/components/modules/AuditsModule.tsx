@@ -12,6 +12,8 @@ import AttestationModal from "@/components/compliance/AttestationModal";
 import { useWorkspace, type AuditRow, type ChecklistItem, type NcRow } from "@/context/WorkspaceStore";
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 export default function AuditsModule() {
   const { state, dispatch, nextNcCode, showToast } = useWorkspace();
@@ -546,7 +548,7 @@ export default function AuditsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Severidad
-              <select
+              <Picker aria-label="Severidad"
                 className="nf-app-input"
                 value={findingForm.severity}
                 onChange={e => setFindingForm({ ...findingForm, severity: e.target.value as NcRow["severity"] })}
@@ -555,7 +557,7 @@ export default function AuditsModule() {
                 <option value="MINOR">Menor</option>
                 <option value="MAJOR">Mayor</option>
                 <option value="CRITICAL">Crítica</option>
-              </select>
+              </Picker>
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Cláusula
@@ -580,9 +582,8 @@ export default function AuditsModule() {
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Fecha límite
-              <input
+              <DateField
                 className="nf-app-input"
-                type="date"
                 value={findingForm.due}
                 onChange={e => setFindingForm({ ...findingForm, due: e.target.value })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
@@ -630,7 +631,7 @@ export default function AuditsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Tipo
-              <select
+              <Picker aria-label="Tipo"
                 className="nf-app-input"
                 value={form.type}
                 onChange={e => setForm({ ...form, type: e.target.value as AuditRow["type"] })}
@@ -638,7 +639,7 @@ export default function AuditsModule() {
               >
                 <option value="INTERNAL">Interna</option>
                 <option value="EXTERNAL">Externa</option>
-              </select>
+              </Picker>
             </label>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Norma
@@ -653,9 +654,8 @@ export default function AuditsModule() {
           <div className="nf-grid-2" style={{ gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700, color: "var(--nf-ink)" }}>
               Fecha
-              <input
+              <DateField
                 className="nf-app-input"
-                type="date"
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}

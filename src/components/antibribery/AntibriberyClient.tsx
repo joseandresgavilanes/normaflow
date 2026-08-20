@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  ShieldBan, LayoutDashboard, AlertTriangle, Handshake, SearchCheck, Users,
-  Gift, HeartHandshake, UserX, Banknote, ShieldCheck, BadgeCheck, ScrollText, Siren,
-  ArrowRight, Check, X, Plus,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, BadgeCheck, Banknote, Check, ChevronRight, Gift, Handshake, HeartHandshake, LayoutDashboard, Plus, ScrollText, Search, SearchCheck, ShieldBan, ShieldCheck, Siren, UserX, Users, X } from "lucide-react";
 import type { AntibriberyPayload } from "@/lib/antibribery/queries";
 import {
   approveBriberyRiskAssessment,
@@ -43,6 +39,10 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import IsoQuickCreate from "@/components/ui/IsoQuickCreate";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
+import Meter from "@/components/charts/Meter";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import InfoTip from "@/components/ui/InfoTip";
 
 type Tab =
   | "panel" | "risks" | "associates" | "due-diligence" | "owners" | "gifts"
@@ -84,8 +84,6 @@ const card: React.CSSProperties = { border: "1px solid var(--nf-line)", borderRa
 const chip = (bg: string, fg: string): React.CSSProperties => ({ background: bg, color: fg, fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 99, display: "inline-block" });
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", fontSize: 12, color: "var(--nf-text-secondary)", borderBottom: "1px solid var(--nf-border)", whiteSpace: "nowrap" };
 const td: React.CSSProperties = { padding: "8px 10px", fontSize: 13, borderBottom: "1px solid #f1f5f9", verticalAlign: "top" };
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-danger)", background: "var(--nf-danger-subtle)", color: "var(--nf-danger-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
-const okBtn: React.CSSProperties = { ...miniBtn, borderColor: "var(--nf-success)", background: "var(--nf-success-subtle)", color: "var(--nf-success-text)" };
 const fmt = (d: Date | string | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : "—");
 const money = (v: number | null | undefined, c?: string | null) => (typeof v === "number" ? `${v.toLocaleString("es-ES")}${c ? ` ${c}` : ""}` : "—");
 const level = (value: string) => LEVEL_COLORS[value] ?? "var(--nf-text-secondary)";
@@ -95,7 +93,7 @@ const primaryBtn: React.CSSProperties = { display: "inline-flex", alignItems: "c
 type Runner = (action: () => Promise<unknown>) => void;
 type Associates = AntibriberyPayload["associates"];
 
-/** Modal "+ Nuevo X" form shell shared by every creation form in this module. */
+/** Modal "Nuevo X" form shell shared by every creation form in this module. */
 function NewFormToggle({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [closeRequested, setCloseRequested] = useState(false);
@@ -157,11 +155,9 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-danger-subtle)", display: "grid", placeItems: "center" }}>
           <ShieldBan size={22} color="var(--nf-danger-text)" />
         </div>
-        <div>
+        <div className="nf-heading-row">
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>
-            {SECTION_META[tab].sub}
-          </p>
+          <InfoTip text={SECTION_META[tab].sub} label={SECTION_META[tab].title} size={15} />
         </div>
         {demo && <span style={{ ...chip("var(--nf-primary-subtle)", "var(--nf-primary-active)"), marginLeft: "auto" }}>Demo</span>}
       </header>
@@ -179,7 +175,20 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen antisoborno</strong><span>Accesos directos para gestionar controles y terceros.</span></div><IsoQuickCreate modulePath="/app/antibribery" items={[{ label: "Nueva evaluación de riesgo", description: "Evaluar riesgo de soborno", section: "risks", Icon: AlertTriangle }, { label: "Nuevo socio de negocio", description: "Registrar un tercero", section: "associates", Icon: Handshake }, { label: "Nueva debida diligencia", description: "Abrir una revisión", section: "due-diligence", Icon: SearchCheck }, { label: "Nuevo regalo / hospitalidad", description: "Registrar una operación", section: "gifts", Icon: Gift }, { label: "Nueva donación / patrocinio", description: "Registrar donación", section: "donations", Icon: HeartHandshake }, { label: "Nueva declaración de conflicto", description: "Declarar conflicto", section: "conflicts", Icon: UserX }, { label: "Nueva prueba financiera", description: "Registrar prueba de control", section: "controls", Icon: ShieldCheck }, { label: "Nuevo compromiso antisoborno", description: "Registrar compromiso", section: "commitments", Icon: ScrollText }]} /></div>
+          <div className="nf-chart-grid-2">
+            <Meter
+              title="Riesgo residual de soborno"
+              subtitle="Cuántas evaluaciones quedan con riesgo residual alto."
+              label="con residual alto"
+              restLabel="Resto de evaluaciones"
+              value={s.highResidual}
+              total={s.assessments}
+              tone="alert"
+              empty="Aún no hay evaluaciones de riesgo."
+              action={{ label: "Abrir riesgo de soborno", href: "/app/antibribery?section=risks" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen antisoborno</strong></div><IsoQuickCreate modulePath="/app/antibribery" items={[{ label: "Nueva evaluación de riesgo", description: "Evaluar riesgo de soborno", section: "risks", Icon: AlertTriangle }, { label: "Nuevo socio de negocio", description: "Registrar un tercero", section: "associates", Icon: Handshake }, { label: "Nueva debida diligencia", description: "Abrir una revisión", section: "due-diligence", Icon: SearchCheck }, { label: "Nuevo regalo / hospitalidad", description: "Registrar una operación", section: "gifts", Icon: Gift }, { label: "Nueva donación / patrocinio", description: "Registrar donación", section: "donations", Icon: HeartHandshake }, { label: "Nueva declaración de conflicto", description: "Declarar conflicto", section: "conflicts", Icon: UserX }, { label: "Nueva prueba financiera", description: "Registrar prueba de control", section: "controls", Icon: ShieldCheck }, { label: "Nuevo compromiso antisoborno", description: "Registrar compromiso", section: "commitments", Icon: ScrollText }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><AlertTriangle size={16} aria-hidden />Riesgo de soborno (§4.5)</h3>
@@ -231,7 +240,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>{row.status}</td>
               <td style={td}>
                 {live && can.approve && row.status !== "APPROVED" && (
-                  <button disabled={pending} style={okBtn} onClick={() => run(() => approveBriberyRiskAssessment(row.id))}>
+                  <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => approveBriberyRiskAssessment(row.id))}>
                     <Check size={12} /> Aprobar
                   </button>
                 )}
@@ -282,7 +291,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                   <button
                     key={to}
                     disabled={pending}
-                    style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "var(--nf-text-secondary)", background: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", marginRight: 4 }}
+                    className="nf-row-action" data-tone={to === "APPROVED" ? "success" : to === "REJECTED" ? "danger" : "neutral"}
                     onClick={() => run(() => transitionDueDiligence(row.id, {
                       to: to as DueDiligenceStatus,
                       rejectionReason: to === "REJECTED" ? "Riesgo residual inaceptable / screening adverso" : undefined,
@@ -319,7 +328,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                 <td style={td}>{fmt(row.verifiedAt)}</td>
                 <td style={td}>
                   {live && can.sensitiveUpdate && !row.verifiedAt && (
-                    <button disabled={pending} style={okBtn} onClick={() => run(() => verifyBeneficialOwner(row.id))}>
+                    <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => verifyBeneficialOwner(row.id))}>
                       <Check size={12} /> Verificar
                     </button>
                   )}
@@ -353,7 +362,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                     <button
                       key={to}
                       disabled={pending}
-                      style={to === "APPROVED" ? okBtn : to === "REJECTED" ? miniBtn : { ...miniBtn, borderColor: "var(--nf-text-secondary)", background: "var(--nf-surface-muted)", color: "var(--nf-text-secondary)", marginRight: 4 }}
+                      className="nf-row-action" data-tone={to === "APPROVED" ? "success" : to === "REJECTED" ? "danger" : "neutral"}
                       onClick={() => run(() => transitionGiftHospitality(row.id, {
                         to: to as GiftHospitalityStatus,
                         rejectionReason: to === "REJECTED" ? "Fuera de política / riesgo de soborno" : undefined,
@@ -386,8 +395,8 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>
                 {live && can.approve && (row.status === "PROPOSED" || row.status === "UNDER_REVIEW") && (
                   <>
-                    <button disabled={pending} style={okBtn} onClick={() => run(() => decideDonationSponsorship(row.id, { decision: "APPROVED" }))}><Check size={12} /> Aprobar</button>{" "}
-                    <button disabled={pending} style={miniBtn} onClick={() => run(() => decideDonationSponsorship(row.id, { decision: "REJECTED", rejectionReason: "No alineada con política antisoborno" }))}><X size={12} /> Rechazar</button>
+                    <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => decideDonationSponsorship(row.id, { decision: "APPROVED" }))}><Check size={12} /> Aprobar</button>{" "}
+                    <button disabled={pending} className="nf-row-action" onClick={() => run(() => decideDonationSponsorship(row.id, { decision: "REJECTED", rejectionReason: "No alineada con política antisoborno" }))} data-nf-no-action-icon><X size={14} strokeWidth={2} aria-hidden /><X size={12} /> Rechazar</button>
                   </>
                 )}
               </td>
@@ -412,7 +421,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>{row.reviewStatus}</td>
               <td style={td}>
                 {live && can.approve && row.reviewStatus === "PENDING" && row.hasConflict && (
-                  <button disabled={pending} style={okBtn} onClick={() => run(() => reviewAbmsConflict(row.id, { decision: "MITIGATED", mitigationMeasures: "Abstención en decisiones del tercero", recusalRequired: true }))}>
+                  <button disabled={pending} className="nf-row-action" data-tone="success" onClick={() => run(() => reviewAbmsConflict(row.id, { decision: "MITIGATED", mitigationMeasures: "Abstención en decisiones del tercero", recusalRequired: true }))} data-nf-no-action-icon><ShieldCheck size={14} strokeWidth={2} aria-hidden />
                     Mitigar
                   </button>
                 )}
@@ -437,7 +446,7 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
               <td style={td}>{row.status}</td>
               <td style={td}>
                 {live && can.update && row.status === "REPORTED" && (
-                  <button disabled={pending} style={miniBtn} onClick={() => run(() => reviewFacilitationPayment(row.id, { status: "UNDER_REVIEW" }))}>Revisar</button>
+                  <button disabled={pending} className="nf-row-action" onClick={() => run(() => reviewFacilitationPayment(row.id, { status: "UNDER_REVIEW" }))} data-nf-no-action-icon><Search size={14} strokeWidth={2} aria-hidden />Revisar</button>
                 )}
               </td>
             </tr>
@@ -494,12 +503,11 @@ export default function AntibriberyClient({ initial, demo = false }: { initial: 
                     <button
                       key={to}
                       disabled={pending}
-                      style={to === "APPROVED" ? okBtn : miniBtn}
+                      className="nf-row-action" data-tone={to === "APPROVED" ? "success" : "danger"}
                       onClick={() => run(() => transitionHighRiskApproval(row.id, {
                         to: to as HighRiskApprovalStatus,
                         rejectionReason: to === "REJECTED" ? "Riesgo de soborno inaceptable" : undefined,
-                      }))}
-                    >
+                      }))} data-nf-no-action-icon><ChevronRight size={14} strokeWidth={2} aria-hidden />
                       {HR_LABEL[to] ?? to}
                     </button>
                   );
@@ -594,8 +602,8 @@ function NewAssessmentForm({ pending, run, onDone }: { pending: boolean; run: Ru
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Probabilidad" style={input} type="number" min={1} max={5} placeholder="Probabilidad" value={f.inherentLikelihood} onChange={(e) => set("inherentLikelihood", e.target.value)} />
         <input aria-label="Impacto" style={input} type="number" min={1} max={5} placeholder="Impacto" value={f.inherentImpact} onChange={(e) => set("inherentImpact", e.target.value)} />
-        <select aria-label="Riesgo país" style={input} value={f.countryRisk} onChange={(e) => set("countryRisk", e.target.value)}><option value="LOW">País: bajo</option><option value="MODERATE">País: moderado</option><option value="HIGH">País: alto</option><option value="CRITICAL">País: crítico</option></select>
-        <select aria-label="Riesgo sectorial" style={input} value={f.sectorRisk} onChange={(e) => set("sectorRisk", e.target.value)}><option value="LOW">Sector: bajo</option><option value="MODERATE">Sector: moderado</option><option value="HIGH">Sector: alto</option><option value="CRITICAL">Sector: crítico</option></select>
+        <Picker aria-label="Riesgo país" style={input} value={f.countryRisk} onChange={(e) => set("countryRisk", e.target.value)}><option value="LOW">País: bajo</option><option value="MODERATE">País: moderado</option><option value="HIGH">País: alto</option><option value="CRITICAL">País: crítico</option></Picker>
+        <Picker aria-label="Riesgo sectorial" style={input} value={f.sectorRisk} onChange={(e) => set("sectorRisk", e.target.value)}><option value="LOW">Sector: bajo</option><option value="MODERATE">Sector: moderado</option><option value="HIGH">Sector: alto</option><option value="CRITICAL">Sector: crítico</option></Picker>
       </div>
       <div style={{ display: "flex", gap: 16 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.publicOfficialRisk} onChange={(e) => set("publicOfficialRisk", e.target.checked)} /> Involucra funcionario público</label>
@@ -616,14 +624,14 @@ function NewAssociateForm({ pending, run, onDone }: { pending: boolean; run: Run
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del socio" style={input} placeholder="Nombre del socio" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Tipo de asociado" style={input} value={f.associateType} onChange={(e) => set("associateType", e.target.value)}>
+        <Picker aria-label="Tipo de asociado" style={input} value={f.associateType} onChange={(e) => set("associateType", e.target.value)}>
           <option value="SUPPLIER">Proveedor</option><option value="AGENT">Agente</option><option value="INTERMEDIARY">Intermediario</option>
           <option value="DISTRIBUTOR">Distribuidor</option><option value="JOINT_VENTURE">Joint venture</option><option value="CONSULTANT">Consultor</option>
           <option value="CUSTOMER">Cliente</option><option value="PUBLIC_BODY">Entidad pública</option><option value="NGO">ONG</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
         <input aria-label="País" style={input} placeholder="País" value={f.country} onChange={(e) => set("country", e.target.value)} />
       </div>
-      <select aria-label="Nivel de riesgo" style={input} value={f.riskTier} onChange={(e) => set("riskTier", e.target.value)}><option value="LOW">Riesgo bajo</option><option value="MEDIUM">Riesgo medio</option><option value="HIGH">Riesgo alto</option><option value="CRITICAL">Riesgo crítico</option></select>
+      <Picker aria-label="Nivel de riesgo" style={input} value={f.riskTier} onChange={(e) => set("riskTier", e.target.value)}><option value="LOW">Riesgo bajo</option><option value="MEDIUM">Riesgo medio</option><option value="HIGH">Riesgo alto</option><option value="CRITICAL">Riesgo crítico</option></Picker>
       <div style={{ display: "flex", gap: 16 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.isPublicOfficial} onChange={(e) => set("isPublicOfficial", e.target.checked)} /> Es funcionario público</label>
         <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.interactsWithPEPs} onChange={(e) => set("interactsWithPEPs", e.target.checked)} /> Interactúa con PEP</label>
@@ -639,8 +647,8 @@ function NewDueDiligenceForm({ associates, pending, run, onDone }: { associates:
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
-        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
-        <select aria-label="Nivel" style={input} value={f.level} onChange={(e) => set("level", e.target.value)}><option value="SIMPLIFIED">Simplificada</option><option value="STANDARD">Estándar</option><option value="ENHANCED">Reforzada</option></select>
+        <Picker aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</Picker>
+        <Picker aria-label="Nivel" style={input} value={f.level} onChange={(e) => set("level", e.target.value)}><option value="SIMPLIFIED">Simplificada</option><option value="STANDARD">Estándar</option><option value="ENHANCED">Reforzada</option></Picker>
       </div>
       <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       <button disabled={pending || !f.associateId} style={primaryBtn} onClick={() => { run(() => createDueDiligenceCase({ associateId: f.associateId, level: f.level, purpose: f.purpose || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -654,13 +662,13 @@ function NewOwnerForm({ associates, pending, run, onDone }: { associates: Associ
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
+        <Picker aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</Picker>
         <input aria-label="Nombre completo del beneficiario" style={input} placeholder="Nombre completo del beneficiario" value={f.fullName} onChange={(e) => set("fullName", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nacionalidad" style={input} placeholder="Nacionalidad" value={f.nationality} onChange={(e) => set("nationality", e.target.value)} />
         <input aria-label="% propiedad" style={input} type="number" min={0} max={100} placeholder="% propiedad" value={f.ownershipPercent} onChange={(e) => set("ownershipPercent", e.target.value)} />
-        <select aria-label="Tipo de control" style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}><option value="OWNERSHIP">Propiedad</option><option value="VOTING_RIGHTS">Derechos de voto</option><option value="OTHER_MEANS">Otros medios</option><option value="SENIOR_MANAGING_OFFICIAL">Alto directivo</option></select>
+        <Picker aria-label="Tipo de control" style={input} value={f.controlType} onChange={(e) => set("controlType", e.target.value)}><option value="OWNERSHIP">Propiedad</option><option value="VOTING_RIGHTS">Derechos de voto</option><option value="OTHER_MEANS">Otros medios</option><option value="SENIOR_MANAGING_OFFICIAL">Alto directivo</option></Picker>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.isPep} onChange={(e) => set("isPep", e.target.checked)} /> Es persona expuesta políticamente (PEP)</label>
       {f.isPep && <input aria-label="Cargo PEP" style={input} placeholder="Cargo PEP" value={f.pepRole} onChange={(e) => set("pepRole", e.target.value)} />}
@@ -679,9 +687,9 @@ function NewGiftForm({ associates, pending, run, onDone }: { associates: Associa
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="GIFT">Regalo</option><option value="HOSPITALITY">Hospitalidad</option><option value="TRAVEL">Viaje</option><option value="ENTERTAINMENT">Entretenimiento</option><option value="OTHER">Otro</option></select>
-        <select aria-label="Sentido" style={input} value={f.direction} onChange={(e) => set("direction", e.target.value)}><option value="GIVEN">Dado</option><option value="RECEIVED">Recibido</option></select>
-        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <Picker aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="GIFT">Regalo</option><option value="HOSPITALITY">Hospitalidad</option><option value="TRAVEL">Viaje</option><option value="ENTERTAINMENT">Entretenimiento</option><option value="OTHER">Otro</option></Picker>
+        <Picker aria-label="Sentido" style={input} value={f.direction} onChange={(e) => set("direction", e.target.value)}><option value="GIVEN">Dado</option><option value="RECEIVED">Recibido</option></Picker>
+        <Picker aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</Picker>
       </div>
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
@@ -705,14 +713,14 @@ function NewDonationForm({ associates, pending, run, onDone }: { associates: Ass
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
-        <select aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="DONATION">Donación</option><option value="SPONSORSHIP">Patrocinio</option><option value="COMMUNITY_INVESTMENT">Inversión comunitaria</option><option value="POLITICAL_CONTRIBUTION">Contribución política</option></select>
+        <Picker aria-label="Tipo de registro" style={input} value={f.recordType} onChange={(e) => set("recordType", e.target.value)}><option value="DONATION">Donación</option><option value="SPONSORSHIP">Patrocinio</option><option value="COMMUNITY_INVESTMENT">Inversión comunitaria</option><option value="POLITICAL_CONTRIBUTION">Contribución política</option></Picker>
         <input aria-label="Beneficiario" style={input} placeholder="Beneficiario" value={f.beneficiaryName} onChange={(e) => set("beneficiaryName", e.target.value)} />
       </div>
       <input aria-label="Propósito" style={input} placeholder="Propósito" value={f.purpose} onChange={(e) => set("purpose", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Importe" style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
         <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+        <Picker aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</Picker>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.beneficiaryName} style={primaryBtn} onClick={() => { run(() => createDonationSponsorship({ recordType: f.recordType, beneficiaryName: f.beneficiaryName, associateId: f.associateId || undefined, purpose: f.purpose || undefined, amount: f.amount ? Number(f.amount) : undefined, currency: f.currency || undefined, involvesPublicOfficial: f.involvesPublicOfficial, politicalDonation: f.recordType === "POLITICAL_CONTRIBUTION" })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -731,15 +739,15 @@ function NewConflictForm({ associates, pending, run, onDone }: { associates: Ass
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input aria-label="Periodo (p. ej. 2026)" style={input} placeholder="Periodo (p. ej. 2026)" value={f.period} onChange={(e) => set("period", e.target.value)} />
-        <select aria-label="Naturaleza del conflicto" style={input} value={f.conflictNature} onChange={(e) => set("conflictNature", e.target.value)}>
+        <Picker aria-label="Naturaleza del conflicto" style={input} value={f.conflictNature} onChange={(e) => set("conflictNature", e.target.value)}>
           <option value="PUBLIC_OFFICIAL_RELATIONSHIP">Relación con funcionario</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option>
           <option value="FAMILY_IN_COUNTERPARTY">Familiar en contraparte</option><option value="FINANCIAL_INTEREST">Interés financiero</option>
           <option value="OUTSIDE_EMPLOYMENT">Empleo externo</option><option value="GIFT_HOSPITALITY">Regalo/hospitalidad</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.hasConflict} onChange={(e) => set("hasConflict", e.target.checked)} /> Declara un conflicto real</label>
       {f.hasConflict && <input aria-label="Descripción del conflicto (obligatoria)" style={input} placeholder="Descripción del conflicto (obligatoria)" value={f.description} onChange={(e) => set("description", e.target.value)} />}
-      <select aria-label="Socio relacionado (opcional)" style={input} value={f.relatedAssociateId} onChange={(e) => set("relatedAssociateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+      <Picker aria-label="Socio relacionado (opcional)" style={input} value={f.relatedAssociateId} onChange={(e) => set("relatedAssociateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</Picker>
       <button disabled={pending || !f.period || (f.hasConflict && !f.description)} style={primaryBtn} onClick={() => { run(() => declareAbmsConflict({ period: f.period, hasConflict: f.hasConflict, conflictNature: f.conflictNature, description: f.description || undefined, relatedAssociateId: f.relatedAssociateId || undefined, recusalRequired: f.recusalRequired })); onDone(); }}><Plus size={12} /> Declarar</button>
     </div>
   );
@@ -778,15 +786,15 @@ function NewControlTestForm({ kind, pending, run, onDone }: { kind: "financial" 
       </div>
       <input aria-label="Descripción del control" style={input} placeholder="Descripción del control" value={f.controlDescription} onChange={(e) => set("controlDescription", e.target.value)} />
       {kind === "nonFinancial" && (
-        <select aria-label="Área de control" style={input} value={f.controlArea} onChange={(e) => set("controlArea", e.target.value)}>
+        <Picker aria-label="Área de control" style={input} value={f.controlArea} onChange={(e) => set("controlArea", e.target.value)}>
           <option value="PROCUREMENT">Compras</option><option value="HR_HIRING">Contratación</option><option value="SALES_TENDERS">Ventas/licitaciones</option>
           <option value="TRAVEL_EXPENSES">Viajes/gastos</option><option value="TRAINING_AWARENESS">Formación</option><option value="THIRD_PARTY_ONBOARDING">Alta de terceros</option>
           <option value="WHISTLEBLOWING">Canal de denuncias</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
       )}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Diseño adecuado" style={input} value={f.designAdequate} onChange={(e) => set("designAdequate", e.target.value)}><option value="true">Diseño adecuado</option><option value="false">Diseño inadecuado</option></select>
-        <select aria-label="Operación eficaz" style={input} value={f.operatingEffective} onChange={(e) => set("operatingEffective", e.target.value)}><option value="true">Operación eficaz</option><option value="false">Operación no eficaz</option></select>
+        <Picker aria-label="Diseño adecuado" style={input} value={f.designAdequate} onChange={(e) => set("designAdequate", e.target.value)}><option value="true">Diseño adecuado</option><option value="false">Diseño inadecuado</option></Picker>
+        <Picker aria-label="Operación eficaz" style={input} value={f.operatingEffective} onChange={(e) => set("operatingEffective", e.target.value)}><option value="true">Operación eficaz</option><option value="false">Operación no eficaz</option></Picker>
         <input aria-label="Excepciones" style={input} type="number" min={0} placeholder="Excepciones" value={f.exceptionsFound} onChange={(e) => set("exceptionsFound", e.target.value)} />
       </div>
       <input aria-label="Hallazgos" style={input} placeholder="Hallazgos" value={f.findings} onChange={(e) => set("findings", e.target.value)} />
@@ -811,18 +819,18 @@ function NewHighRiskForm({ associates, dueDiligence, pending, run, onDone }: {
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
         <input aria-label="Título de la operación" style={input} placeholder="Título de la operación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Tipo de transacción" style={input} value={f.transactionType} onChange={(e) => set("transactionType", e.target.value)}>
+        <Picker aria-label="Tipo de transacción" style={input} value={f.transactionType} onChange={(e) => set("transactionType", e.target.value)}>
           <option value="AGENT_COMMISSION">Comisión de agente</option><option value="SUCCESS_FEE">Éxito/success fee</option><option value="CASH_PAYMENT">Pago en efectivo</option>
           <option value="CROSS_BORDER_TRANSFER">Transferencia internacional</option><option value="PUBLIC_TENDER">Licitación pública</option><option value="CUSTOMS_CLEARANCE">Despacho aduanero</option>
           <option value="LICENSE_PERMIT">Licencia/permiso</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
       </div>
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Importe" style={input} type="number" min={0} placeholder="Importe" value={f.amount} onChange={(e) => set("amount", e.target.value)} />
         <input aria-label="Moneda" style={input} placeholder="Moneda" value={f.currency} onChange={(e) => set("currency", e.target.value)} />
-        <select aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
-        <select aria-label="DD (opcional)" style={input} value={f.dueDiligenceCaseId} onChange={(e) => set("dueDiligenceCaseId", e.target.value)}><option value="">DD (opcional)…</option>{dueDiligence.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</select>
+        <Picker aria-label="Socio (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</Picker>
+        <Picker aria-label="DD (opcional)" style={input} value={f.dueDiligenceCaseId} onChange={(e) => set("dueDiligenceCaseId", e.target.value)}><option value="">DD (opcional)…</option>{dueDiligence.map((d) => <option key={d.id} value={d.id}>{d.code}</option>)}</Picker>
       </div>
       <input aria-label="Justificación del riesgo" style={input} placeholder="Justificación del riesgo" value={f.riskRationale} onChange={(e) => set("riskRationale", e.target.value)} />
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
@@ -842,13 +850,13 @@ function NewCommitmentForm({ associates, members, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="Tipo de compromiso" style={input} value={f.commitmentType} onChange={(e) => set("commitmentType", e.target.value)}><option value="EMPLOYEE">Empleado</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option><option value="BOARD">Consejo</option><option value="SENIOR_MANAGEMENT">Alta dirección</option></select>
+        <Picker aria-label="Tipo de compromiso" style={input} value={f.commitmentType} onChange={(e) => set("commitmentType", e.target.value)}><option value="EMPLOYEE">Empleado</option><option value="BUSINESS_ASSOCIATE">Socio de negocio</option><option value="BOARD">Consejo</option><option value="SENIOR_MANAGEMENT">Alta dirección</option></Picker>
         <input aria-label="Versión" style={input} placeholder="Versión" value={f.version} onChange={(e) => set("version", e.target.value)} />
       </div>
       {f.commitmentType === "BUSINESS_ASSOCIATE" ? (
-        <select aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</select>
+        <Picker aria-label="Socio" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code} — {a.name}</option>)}</Picker>
       ) : (
-        <select aria-label="Persona" style={input} value={f.subjectUserId} onChange={(e) => set("subjectUserId", e.target.value)}><option value="">Persona…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <PersonPicker people={members} value={f.subjectUserId} onValueChange={(personId) => set("subjectUserId", personId)} placeholder="Persona…" ariaLabel="Persona" style={input} />
       )}
       <button disabled={pending || !f.version.trim() || (f.commitmentType === "BUSINESS_ASSOCIATE" ? !f.associateId : !f.subjectUserId)} style={primaryBtn} onClick={() => { run(() => recordAntiBriberyCommitment({ commitmentType: f.commitmentType, subjectUserId: f.subjectUserId || undefined, associateId: f.associateId || undefined, subjectName: f.subjectName || undefined, version: f.version })); onDone(); }}><Plus size={12} /> Registrar</button>
     </div>
@@ -866,12 +874,12 @@ function NewInvestigationForm({ associates, pending, run, onDone }: { associates
       <p style={{ margin: 0, fontSize: 12, color: "var(--nf-text-secondary)" }}>Puente a una Investigation ya abierta en el SGC — no crea una investigación nueva.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input aria-label="ID de la Investigation del SGC" style={input} placeholder="ID de la Investigation del SGC" value={f.investigationId} onChange={(e) => set("investigationId", e.target.value)} />
-        <select aria-label="Tipo de denuncia" style={input} value={f.allegationType} onChange={(e) => set("allegationType", e.target.value)}>
+        <Picker aria-label="Tipo de denuncia" style={input} value={f.allegationType} onChange={(e) => set("allegationType", e.target.value)}>
           <option value="BRIBE_OFFER">Oferta de soborno</option><option value="BRIBE_ACCEPTANCE">Aceptación de soborno</option><option value="FACILITATION_PAYMENT">Pago de facilitación</option>
           <option value="KICKBACK">Comisión ilícita</option><option value="INFLUENCE_PEDDLING">Tráfico de influencias</option><option value="EMBEZZLEMENT_RELATED">Relacionado con malversación</option><option value="OTHER">Otro</option>
-        </select>
+        </Picker>
       </div>
-      <select aria-label="Socio relacionado (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</select>
+      <Picker aria-label="Socio relacionado (opcional)" style={input} value={f.associateId} onChange={(e) => set("associateId", e.target.value)}><option value="">Socio relacionado (opcional)…</option>{associates.map((a) => <option key={a.id} value={a.id}>{a.code}</option>)}</Picker>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.involvesPublicOfficial} onChange={(e) => set("involvesPublicOfficial", e.target.checked)} /> Involucra funcionario público</label>
       <button disabled={pending || !f.investigationId} style={primaryBtn} onClick={() => { run(() => linkAntiBriberyInvestigation({ investigationId: f.investigationId, allegationType: f.allegationType, involvesPublicOfficial: f.involvesPublicOfficial, associateId: f.associateId || undefined })); onDone(); }}><Plus size={12} /> Vincular</button>
     </div>
@@ -882,11 +890,11 @@ function CloseInvestigationControl({ id, pending, run }: { id: string; pending: 
   const [outcome, setOutcome] = useState<"SUBSTANTIATED" | "PARTIALLY_SUBSTANTIATED" | "UNSUBSTANTIATED" | "INCONCLUSIVE" | "REFERRED_EXTERNALLY">("UNSUBSTANTIATED");
   return (
     <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-      <select aria-label="Resultado" style={{ ...input, padding: "4px 6px", fontSize: 11.5 }} value={outcome} onChange={(e) => setOutcome(e.target.value as typeof outcome)}>
+      <Picker aria-label="Resultado" style={{ ...input, padding: "4px 6px", fontSize: 11.5 }} value={outcome} onChange={(e) => setOutcome(e.target.value as typeof outcome)}>
         <option value="SUBSTANTIATED">Fundada</option><option value="PARTIALLY_SUBSTANTIATED">Parcialmente fundada</option>
         <option value="UNSUBSTANTIATED">No fundada</option><option value="INCONCLUSIVE">Inconclusa</option><option value="REFERRED_EXTERNALLY">Derivada externamente</option>
-      </select>
-      <button disabled={pending} style={miniBtn} onClick={() => run(() => closeAntiBriberyInvestigation(id, { outcome, status: "CLOSED" }))}><Check size={12} /> Cerrar</button>
+      </Picker>
+      <button disabled={pending} className="nf-row-action" onClick={() => run(() => closeAntiBriberyInvestigation(id, { outcome, status: "CLOSED" }))}><Check size={12} /> Cerrar</button>
     </div>
   );
 }

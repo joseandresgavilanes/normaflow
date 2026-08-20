@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { HardHat, Grid3x3, AlertOctagon, BarChart3, ClipboardList, ShieldCheck, FileWarning, Siren, Users, Stethoscope, LayoutDashboard, ArrowRight, Lock, Plus } from "lucide-react";
+import { AlertOctagon, ArrowRight, BarChart3, ClipboardList, FileWarning, Gauge, Grid3x3, HardHat, LayoutDashboard, Lock, Pencil, Play, Plus, RotateCcw, ShieldCheck, Siren, Stethoscope, Trash2, Users } from "lucide-react";
 import type { HealthSurveillancePayload, SafetyPayload } from "@/lib/safety/queries";
 import { createHazard, updateHazard, transitionIncident, setPermitStatus, createSafetyRecord, updateSafetyRecord, updateHealthSurveillance, deleteHealthSurveillance, type SafetyRecordKind } from "@/lib/actions/safety";
 import { useModuleSection } from "@/hooks/useModuleSection";
@@ -15,6 +15,9 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { toneChip } from "@/lib/tone";
+import Meter from "@/components/charts/Meter";
+import BarChart from "@/components/charts/BarChart";
+import Picker from "@/components/ui/Picker";
 
 type Tab = "panel" | "hazards" | "consultations" | "incidents" | "inspections" | "ppe" | "permits" | "drills" | "contractors" | "health";
 
@@ -154,7 +157,28 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de seguridad y salud</strong><span>Acceso directo a la matriz de peligros.</span></div><IsoQuickCreate modulePath="/app/safety" items={[{ label: "Nuevo peligro", description: "Abrir la matriz de riesgos", section: "hazards", Icon: AlertOctagon }]} /></div>
+          {/* El flujo de incidentes ya se contaba en el panel como lista de
+              números; en barras se ve de un vistazo dónde se atasca. */}
+          <div className="nf-chart-grid-2">
+            <BarChart
+              title="Incidentes por etapa"
+              subtitle="Dónde se acumula la investigación de incidentes."
+              data={initial.incidentFlow.map((stage) => ({ label: STATUS_LABEL[stage] ?? stage, value: initial.incidentsByStatus[stage] ?? 0 }))}
+              action={{ label: "Abrir incidentes", href: "/app/safety?section=incidents" }}
+            />
+            <Meter
+              title="Peligros por criticidad"
+              subtitle="Cuántos peligros identificados superan el umbral aceptado."
+              label="con riesgo crítico"
+              restLabel="Resto de peligros"
+              value={s.criticalRisks}
+              total={s.hazards}
+              tone="alert"
+              empty="Aún no hay peligros identificados."
+              action={{ label: "Abrir la matriz de peligros", href: "/app/safety?section=hazards" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen de seguridad y salud</strong></div><IsoQuickCreate modulePath="/app/safety" items={[{ label: "Nuevo peligro", description: "Abrir la matriz de riesgos", section: "hazards", Icon: AlertOctagon }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><BarChart3 size={16} aria-hidden />Indicadores de seguridad (año en curso)</h3>
@@ -167,14 +191,10 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
             <Row k="Acciones vencidas" v={ind.overdueActions} danger={ind.overdueActions > 0} />
             <p style={{ margin: "8px 0 0", color: "var(--nf-text-subtle)", fontSize: 12 }}>IF/IG requieren horas-hombre; configúralas al exportar el informe de indicadores.</p>
           </div>
-          <div className="nf-iso-dashboard-card" style={card}>
-            <h3 style={{ marginTop: 0 }}><Siren size={16} aria-hidden />Incidentes por etapa</h3>
-            {initial.incidentFlow.map((st) => (
-              <div key={st} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", borderBottom: "1px solid #f1f5f9", fontSize: 13 }}>
-                <span>{STATUS_LABEL[st] ?? st}</span><b>{initial.incidentsByStatus[st] ?? 0}</b>
-              </div>
-            ))}
-          </div>
+          {/* La lista de «Incidentes por etapa» vivía aquí como pares
+              etiqueta–número; ahora es el gráfico de barras de arriba, que dice
+              lo mismo y además compara. Repetirla dejaba el dato dos veces en
+              la misma pantalla. */}
           </div>
         </>
       )}
@@ -189,14 +209,14 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
               <td style={td}>{h.inherentLevel ? <span style={toneChip(LEVEL_COLORS[h.inherentLevel])}>{h.inherentLevel}</span> : "—"}</td>
               <td style={td}>{h.residualLevel ? <span style={toneChip(LEVEL_COLORS[h.residualLevel])}>{h.residualLevel}</span> : "—"}</td>
               <td style={td}>{h.acceptability ? (h.acceptability === "NOT_ACCEPTABLE" ? <span style={chip("var(--nf-danger-border)", "var(--nf-danger-text)")}>{ACCEPT_LABEL[h.acceptability]}</span> : ACCEPT_LABEL[h.acceptability]) : "—"}</td>
-              {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => setHazardEditor(h)}>Editar</button>{h.assessment && <button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", h.assessment as unknown as Record<string, unknown>, false)}>Evaluación</button>}<button type="button" style={{ ...miniBtn, color: h.active === false ? "var(--nf-success-text)" : "var(--nf-warning-text)", borderColor: h.active === false ? "var(--nf-success-border)" : "var(--nf-warning-border)", background: h.active === false ? "var(--nf-success-subtle)" : "var(--nf-warning-subtle)" }} disabled={pending} onClick={() => runHazardAction(() => updateHazard(h.id, { active: h.active === false }))}>{h.active === false ? "Activar" : "Archivar"}</button></td>}
+              {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => setHazardEditor(h)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>{h.assessment && <button type="button" className="nf-row-action" onClick={() => openEditor("riskAssessment", h.assessment as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Gauge size={14} strokeWidth={2} aria-hidden />Evaluación</button>}<button type="button" className="nf-row-action" data-tone={h.active === false ? "success" : "danger"} disabled={pending} onClick={() => runHazardAction(() => updateHazard(h.id, { active: h.active === false }))} data-nf-no-action-icon><Play size={14} strokeWidth={2} aria-hidden />{h.active === false ? "Activar" : "Archivar"}</button></td>}
             </tr>
           ))}
           {initial.hazards.length === 0 && <tr><td style={td} colSpan={canUpdate ? 10 : 9}>Sin peligros registrados.</td></tr>}
           </Table>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("riskAssessment")}><Plus size={13} /> Nueva evaluación de riesgo</button>}
           {initial.assessments.length > 0 && <Table head={["Peligro", "Probabilidad", "Consecuencia", "Exposición", "Nivel residual", "Aceptabilidad", canUpdate ? "Acciones" : ""]}>
-            {initial.assessments.map((a) => <tr key={a.id}><td style={td}>{a.hazard.code} — {a.hazard.hazard}</td><td style={td}>{a.probability}</td><td style={td}>{a.consequence}</td><td style={td}>{a.exposure}</td><td style={td}><span style={toneChip(LEVEL_COLORS[a.residualLevel])}>{a.residualLevel}</span></td><td style={td}>{ACCEPT_LABEL[a.acceptability] ?? a.acceptability}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("riskAssessment", a as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>)}
+            {initial.assessments.map((a) => <tr key={a.id}><td style={td}>{a.hazard.code} — {a.hazard.hazard}</td><td style={td}>{a.probability}</td><td style={td}>{a.consequence}</td><td style={td}>{a.exposure}</td><td style={td}><span style={toneChip(LEVEL_COLORS[a.residualLevel])}>{a.residualLevel}</span></td><td style={td}>{ACCEPT_LABEL[a.acceptability] ?? a.acceptability}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("riskAssessment", a as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>)}
           </Table>}
           <HazardEditor key={hazardEditor === "new" ? "new" : hazardEditor?.id ?? "none"} value={hazardEditor} pending={pending} error={error} onClose={() => setHazardEditor(null)} onSave={(value) => {
             const { id, exposedWorkers, processId, existingControls, responsibleId, ...fields } = value;
@@ -211,7 +231,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("consultation")}><Plus size={13} /> Nueva consulta</button>}
           <Table head={["Código", "Tema", "Método", "Participantes", "Fecha", "Conclusiones", canUpdate ? "Acciones" : ""]}>
-            {initial.consultations.map((c) => <tr key={c.id}><td style={td}>{c.code}</td><td style={td}>{c.topic}</td><td style={td}>{c.method}</td><td style={td}>{c.participants ?? "—"}</td><td style={td}>{fmt(c.heldAt)}</td><td style={td}>{c.conclusions ?? "—"}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("consultation", c as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>)}
+            {initial.consultations.map((c) => <tr key={c.id}><td style={td}>{c.code}</td><td style={td}>{c.topic}</td><td style={td}>{c.method}</td><td style={td}>{c.participants ?? "—"}</td><td style={td}>{fmt(c.heldAt)}</td><td style={td}>{c.conclusions ?? "—"}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("consultation", c as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>)}
             {initial.consultations.length === 0 && <tr><td style={td} colSpan={canUpdate ? 7 : 6}>Sin consultas registradas.</td></tr>}
           </Table>
         </div>
@@ -229,7 +249,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
                 <td style={td}><span style={toneChip(SEV_COLORS[i.severity])}>{i.severity}</span></td>
                 <td style={td}>{i.title}</td><td style={td}>{fmt(i.occurredAt)}</td><td style={td}>{i.lostDays}</td>
                 <td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{STATUS_LABEL[i.status] ?? i.status}</span></td>
-                {canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("incident", i as unknown as Record<string, unknown>, false)}>Editar</button>{canManage && (next ? <button disabled={pending} onClick={() => advance(i.id, next)} style={miniBtn}><ArrowRight size={12} /> {STATUS_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
+                {canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("incident", i as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>{canManage && (next ? <button disabled={pending} onClick={() => advance(i.id, next)} className="nf-row-action"><ArrowRight size={12} /> {STATUS_LABEL[next]}</button> : <span style={{ color: "var(--nf-text-subtle)" }}>Cerrado</span>)}</td>}
               </tr>
             );
           })}
@@ -242,7 +262,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("inspection")}><Plus size={13} /> Nueva inspección</button>}
           <Table head={["Código", "Tipo", "Área", "Fecha", "Hallazgos", canUpdate ? "Acciones" : ""]}>
-            {initial.inspections.map((i) => (<tr key={i.id}><td style={td}>{i.code}</td><td style={td}>{i.type}</td><td style={td}>{i.area ?? "—"}</td><td style={td}>{fmt(i.inspectedAt)}</td><td style={td}>{i.findings ?? "—"}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("inspection", i as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>))}
+            {initial.inspections.map((i) => (<tr key={i.id}><td style={td}>{i.code}</td><td style={td}>{i.type}</td><td style={td}>{i.area ?? "—"}</td><td style={td}>{fmt(i.inspectedAt)}</td><td style={td}>{i.findings ?? "—"}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("inspection", i as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>))}
             {initial.inspections.length === 0 && <tr><td style={td} colSpan={canUpdate ? 6 : 5}>Sin inspecciones.</td></tr>}
           </Table>
         </div>
@@ -252,11 +272,11 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <div style={{ display: "flex", gap: 8 }}><button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("ppeItem")}><Plus size={13} /> Nuevo EPP</button><button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("ppeAssignment")}><Plus size={13} /> Nueva asignación</button></div>}
           <Table head={["Código", "EPP", "Tipo", "Norma técnica", "Vida útil (m)", "Asignaciones", canUpdate ? "Acciones" : ""]}>
-            {initial.ppeItems.map((p) => (<tr key={p.id}><td style={td}>{p.code}</td><td style={td}>{p.name}</td><td style={td}>{p.ppeType}</td><td style={td}>{p.technicalStandard ?? "—"}</td><td style={td}>{p.lifespanMonths ?? "—"}</td><td style={td}>{p.assignments}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("ppeItem", p as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>))}
+            {initial.ppeItems.map((p) => (<tr key={p.id}><td style={td}>{p.code}</td><td style={td}>{p.name}</td><td style={td}>{p.ppeType}</td><td style={td}>{p.technicalStandard ?? "—"}</td><td style={td}>{p.lifespanMonths ?? "—"}</td><td style={td}>{p.assignments}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("ppeItem", p as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>))}
             {initial.ppeItems.length === 0 && <tr><td style={td} colSpan={canUpdate ? 7 : 6}>Sin EPP registrado.</td></tr>}
           </Table>
           <Table head={["EPP", "Trabajador", "Entrega", "Cantidad", "Capacitación", "Reposición", canUpdate ? "Acciones" : ""]}>
-            {initial.ppeAssignments.map((a) => (<tr key={a.id}><td style={td}>{a.ppeItem.code} — {a.ppeItem.name}</td><td style={td}>{a.workerName ?? a.personnelId ?? "—"}</td><td style={td}>{fmt(a.deliveredAt)}</td><td style={td}>{a.quantity}</td><td style={td}>{a.trainingProvided ? "Sí" : "No"}</td><td style={td}>{fmt(a.replacementDate)}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("ppeAssignment", a as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>))}
+            {initial.ppeAssignments.map((a) => (<tr key={a.id}><td style={td}>{a.ppeItem.code} — {a.ppeItem.name}</td><td style={td}>{a.workerName ?? a.personnelId ?? "—"}</td><td style={td}>{fmt(a.deliveredAt)}</td><td style={td}>{a.quantity}</td><td style={td}>{a.trainingProvided ? "Sí" : "No"}</td><td style={td}>{fmt(a.replacementDate)}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("ppeAssignment", a as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>))}
             {initial.ppeAssignments.length === 0 && <tr><td style={td} colSpan={canUpdate ? 7 : 6}>Sin asignaciones de EPP.</td></tr>}
           </Table>
         </div>
@@ -266,7 +286,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("permit")}><Plus size={13} /> Nuevo permiso</button>}
           <Table head={["Código", "Tipo de trabajo", "Área", "Estado", "Vigencia hasta", canUpdate ? "Acciones" : ""]}>
-            {initial.permits.map((p) => { const nextStatuses = permitNextStatuses(p.status); return <tr key={p.id}><td style={td}>{p.code}</td><td style={td}>{p.workType}</td><td style={td}>{p.area ?? "—"}</td><td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{p.status}</span></td><td style={td}>{fmt(p.validTo)}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("permit", p as unknown as Record<string, unknown>, false)}>Editar</button>{nextStatuses.map((next) => <button key={next} type="button" disabled={pending} style={miniBtn} onClick={() => startTransition(async () => { try { await setPermitStatus(p.id, next); router.refresh(); } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado."); } })}>{next === "ACTIVE" ? "Reactivar" : next === "SUSPENDED" ? "Suspender" : next === "CLOSED" ? "Cerrar" : "Expirar"}</button>)}</td>}</tr>; })}
+            {initial.permits.map((p) => { const nextStatuses = permitNextStatuses(p.status); return <tr key={p.id}><td style={td}>{p.code}</td><td style={td}>{p.workType}</td><td style={td}>{p.area ?? "—"}</td><td style={td}><span style={chip("var(--nf-primary-subtle)", "var(--nf-primary-active)")}>{p.status}</span></td><td style={td}>{fmt(p.validTo)}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("permit", p as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>{nextStatuses.map((next) => <button key={next} type="button" disabled={pending} className="nf-row-action" onClick={() => startTransition(async () => { try { await setPermitStatus(p.id, next); router.refresh(); } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado."); } })} data-nf-no-action-icon><RotateCcw size={14} strokeWidth={2} aria-hidden />{next === "ACTIVE" ? "Reactivar" : next === "SUSPENDED" ? "Suspender" : next === "CLOSED" ? "Cerrar" : "Expirar"}</button>)}</td>}</tr>; })}
             {initial.permits.length === 0 && <tr><td style={td} colSpan={canUpdate ? 6 : 5}>Sin permisos.</td></tr>}
           </Table>
         </div>
@@ -276,7 +296,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("drill")}><Plus size={13} /> Nuevo simulacro</button>}
           <Table head={["Código", "Escenario", "Resultado", "T. respuesta (min)", "Fecha", canUpdate ? "Acciones" : ""]}>
-            {initial.drills.map((d) => (<tr key={d.id}><td style={td}>{d.code}</td><td style={td}>{d.scenario}</td><td style={td}>{d.outcome ?? "—"}</td><td style={td}>{d.responseTimeMinutes ?? "—"}</td><td style={td}>{fmt(d.drillDate)}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("drill", d as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>))}
+            {initial.drills.map((d) => (<tr key={d.id}><td style={td}>{d.code}</td><td style={td}>{d.scenario}</td><td style={td}>{d.outcome ?? "—"}</td><td style={td}>{d.responseTimeMinutes ?? "—"}</td><td style={td}>{fmt(d.drillDate)}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("drill", d as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>))}
             {initial.drills.length === 0 && <tr><td style={td} colSpan={canUpdate ? 6 : 5}>Sin simulacros.</td></tr>}
           </Table>
         </div>
@@ -286,7 +306,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
         <div style={{ display: "grid", gap: 12 }}>
           {canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("contractor")}><Plus size={13} /> Nueva evaluación</button>}
           <Table head={["Código", "Contratista", "Evaluación", "Incidentes", "Próxima revisión", canUpdate ? "Acciones" : ""]}>
-            {initial.contractors.map((c) => (<tr key={c.id}><td style={td}>{c.code}</td><td style={td}>{c.contractorName ?? "—"}</td><td style={td}>{c.outcome}</td><td style={td}>{c.incidents}</td><td style={td}>{fmt(c.nextReviewDate)}</td>{canUpdate && <td style={td}><button type="button" style={miniBtn} onClick={() => openEditor("contractor", c as unknown as Record<string, unknown>, false)}>Editar</button></td>}</tr>))}
+            {initial.contractors.map((c) => (<tr key={c.id}><td style={td}>{c.code}</td><td style={td}>{c.contractorName ?? "—"}</td><td style={td}>{c.outcome}</td><td style={td}>{c.incidents}</td><td style={td}>{fmt(c.nextReviewDate)}</td>{canUpdate && <td style={td}><button type="button" className="nf-row-action" onClick={() => openEditor("contractor", c as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button></td>}</tr>))}
             {initial.contractors.length === 0 && <tr><td style={td} colSpan={canUpdate ? 6 : 5}>Sin evaluaciones de contratistas.</td></tr>}
           </Table>
         </div>
@@ -297,7 +317,7 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
           <div style={{ display: "grid", gap: 12 }}>
             {sensitive.canManage && <button type="button" className="nf-app-btn-primary nf-iso-create-button" onClick={() => openEditor("health")}><Plus size={13} /> Nuevo registro</button>}
             <Table head={["Código", "Trabajador", "Exposición", "Aptitud", "Restricciones", "Próxima revisión", sensitive.canUpdate || sensitive.canDelete ? "Acciones" : ""]}>
-              {sensitive.records.map((h) => (<tr key={h.id}><td style={td}>{h.code}</td><td style={td}>{h.workerName ?? "—"}</td><td style={td}>{h.exposure ?? "—"}</td><td style={td}>{h.fitness}</td><td style={td}>{h.restrictions ?? "—"}</td><td style={td}>{fmt(h.nextReviewDate)}</td>{(sensitive.canUpdate || sensitive.canDelete) && <td style={td}>{sensitive.canUpdate && <button type="button" style={miniBtn} onClick={() => openEditor("health", h as unknown as Record<string, unknown>, false)}>Editar</button>}{sensitive.canDelete && <button type="button" style={{ ...miniBtn, color: "var(--nf-danger-text)", borderColor: "var(--nf-danger-border)", background: "var(--nf-danger-subtle)" }} disabled={pending} onClick={() => setHealthRecordToDelete(h)}>Eliminar</button>}</td>}</tr>))}
+              {sensitive.records.map((h) => (<tr key={h.id}><td style={td}>{h.code}</td><td style={td}>{h.workerName ?? "—"}</td><td style={td}>{h.exposure ?? "—"}</td><td style={td}>{h.fitness}</td><td style={td}>{h.restrictions ?? "—"}</td><td style={td}>{fmt(h.nextReviewDate)}</td>{(sensitive.canUpdate || sensitive.canDelete) && <td style={td}>{sensitive.canUpdate && <button type="button" className="nf-row-action" onClick={() => openEditor("health", h as unknown as Record<string, unknown>, false)} data-nf-no-action-icon><Pencil size={14} strokeWidth={2} aria-hidden />Editar</button>}{sensitive.canDelete && <button type="button" className="nf-row-action" data-tone="danger" disabled={pending} onClick={() => setHealthRecordToDelete(h)} data-nf-no-action-icon><Trash2 size={14} strokeWidth={2} aria-hidden />Eliminar</button>}</td>}</tr>))}
               {sensitive.records.length === 0 && <tr><td style={td} colSpan={sensitive.canUpdate || sensitive.canDelete ? 7 : 6}>Sin vigilancia de salud.</td></tr>}
             </Table>
           </div>
@@ -333,7 +353,6 @@ export default function SafetyClient({ initial, sensitive, demo = false }: { ini
   );
 }
 
-const miniBtn: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", borderRadius: 7, border: "1px solid var(--nf-warning-text)", background: "var(--nf-warning-subtle)", color: "var(--nf-warning-text)", fontWeight: 600, fontSize: 12, cursor: "pointer" };
 
 function Stat({ label, value, accent }: { label: string; value: number; accent?: string }) {
   return <IsoMetricCard label={label} value={value} accent={accent} />;
@@ -383,9 +402,9 @@ function HazardEditor({ value, pending, error, onClose, onSave }: {
         <label>Peligro<input className="nf-app-input" value={form.hazard} onChange={(e) => set("hazard", e.target.value)} /></label>
         <label>Controles existentes<textarea className="nf-app-input" rows={2} value={form.existingControls} onChange={(e) => set("existingControls", e.target.value)} /></label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <label>Categoría<select className="nf-app-input" value={form.category} onChange={(e) => set("category", e.target.value as HazardFormValue["category"])}>
+          <label>Categoría<Picker aria-label="Categoría" className="nf-app-input" value={form.category} onChange={(e) => set("category", e.target.value as HazardFormValue["category"])}>
             {Object.keys(LEVEL_COLORS).length > 0 && ["PHYSICAL", "CHEMICAL", "BIOLOGICAL", "ERGONOMIC", "PSYCHOSOCIAL", "MECHANICAL", "ELECTRICAL", "FIRE_EXPLOSION", "LOCATIVE", "OTHER"].map((category) => <option key={category} value={category}>{category}</option>)}
-          </select></label>
+          </Picker></label>
           <label>Trabajadores expuestos<input className="nf-app-input" type="number" min={0} value={form.exposedWorkers} onChange={(e) => set("exposedWorkers", e.target.value)} /></label>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}><label>Proceso ID<input className="nf-app-input" value={form.processId} onChange={(e) => set("processId", e.target.value)} /></label><label>Responsable ID<input className="nf-app-input" value={form.responsibleId} onChange={(e) => set("responsibleId", e.target.value)} /></label></div>
@@ -481,7 +500,7 @@ function SafetyRecordEditor({ value, pending, error, hazards, ppeItems, onClose,
     <div className="nf-modal-form nf-iso-create-form" style={{ display: "grid", gap: 10 }}>
       {error && <div className="nf-modal-error" role="alert">{error}</div>}
       <div className="nf-iso-create-fields" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-        {fields.map((field) => field.type === "checkbox" ? <label key={field.key} style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />{field.label}</label> : <label key={field.key}>{field.label}{field.type === "textarea" ? <textarea className="nf-app-input" rows={3} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} /> : field.type === "select" ? <select className="nf-app-input" value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)}><option value="">Seleccionar…</option>{options(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input className="nf-app-input" type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} />}</label>)}
+        {fields.map((field) => field.type === "checkbox" ? <label key={field.key} style={{ display: "flex", alignItems: "center", gap: 8 }}><input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />{field.label}</label> : <label key={field.key}>{field.label}{field.type === "textarea" ? <textarea className="nf-app-input" rows={3} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} /> : field.type === "select" ? <Picker aria-label={field.label} className="nf-app-input" value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)}><option value="">Seleccionar…</option>{options(field).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Picker> : <input className="nf-app-input" type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={String(form[field.key] ?? "")} onChange={(e) => set(field.key, e.target.value)} />}</label>)}
       </div>
       <div className="nf-modal-actions nf-iso-create-form-actions"><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !valid} onClick={submit}>Guardar</button></div>
     </div>

@@ -1,0 +1,405 @@
+/* ============================================================================
+ * NormaFlow — Cuenta: menú de perfil y página de preferencias
+ * ----------------------------------------------------------------------------
+ * Hoja del rediseño: se carga después del índice de globals, así que no
+ * necesita !important para ganarle a nada.
+ * ========================================================================== */
+
+/* ── Menú de la cuenta (barra superior) ───────────────────────────────────── */
+
+.nf-profile-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nf-profile-menu__trigger {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  /* El avatar es el objetivo táctil: 32px de imagen dentro de 44px de zona. */
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+.nf-profile-menu__trigger:focus-visible {
+  outline: var(--nf-focus-ring);
+  outline-offset: 2px;
+}
+
+.nf-profile-menu__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: var(--nf-z-popover);
+  width: min(300px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-lg);
+  background: var(--nf-surface-raised);
+  box-shadow: var(--nf-elevation-3);
+  overflow: hidden;
+}
+
+.nf-profile-menu__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-3);
+  padding: var(--nf-space-4);
+  border-bottom: 1px solid var(--nf-border-subtle);
+  min-width: 0;
+}
+
+.nf-profile-menu__identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nf-profile-menu__name {
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+}
+
+.nf-profile-menu__email,
+.nf-profile-menu__role {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+  /* El correo puede ser largo: se recorta en vez de ensanchar el panel. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-profile-menu__role { color: var(--nf-text-muted); }
+
+.nf-profile-menu__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-3) var(--nf-space-4);
+  border-bottom: 1px solid var(--nf-border-subtle);
+}
+
+.nf-profile-menu__section-label {
+  font-size: 11px;
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nf-text-muted);
+}
+
+.nf-profile-menu__actions {
+  display: flex;
+  flex-direction: column;
+  padding: var(--nf-space-2);
+  gap: 2px;
+}
+
+.nf-profile-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  width: 100%;
+  min-height: 40px;
+  padding: 0 var(--nf-space-3);
+  border: 0;
+  border-radius: var(--nf-radius-sm);
+  background: none;
+  font: inherit;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nf-profile-menu__item:hover { background: var(--nf-surface-hover); }
+
+.nf-profile-menu__item:focus-visible {
+  outline: var(--nf-focus-ring);
+  outline-offset: -2px;
+}
+
+.nf-profile-menu__item--danger { color: var(--nf-danger-text); }
+
+/* ── Página de cuenta y preferencias ──────────────────────────────────────── */
+
+.nf-account {
+  padding: clamp(16px, 3vw, 32px);
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.nf-account__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-4);
+  flex-wrap: wrap;
+  padding: var(--nf-space-5);
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-lg);
+  background: var(--nf-surface);
+  margin-bottom: var(--nf-space-5);
+}
+
+.nf-account__identity-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-2);
+  min-width: 0;
+}
+
+.nf-account__name {
+  margin: 0;
+  font-size: var(--nf-text-xl);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nf-account__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-secondary);
+}
+
+.nf-account__meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-account__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nf-space-2);
+}
+
+.nf-account__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--nf-border);
+  border-radius: 999px;
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-secondary);
+  background: var(--nf-surface-sunken);
+}
+
+/* Dos columnas como mucho. Con `auto-fit` sin tope, en pantalla ancha salían
+   tres y cuatro columnas de tarjetas desiguales: la rejilla llenaba el ancho en
+   vez de ordenar la lectura. */
+.nf-account__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: var(--nf-space-5);
+  align-items: start;
+  max-width: 900px;
+}
+
+/* La ficha de identidad se lee como cabecera de la persona, no como una
+   tarjeta más: comparte el ancho de la rejilla. */
+.nf-account__identity {
+  max-width: 900px;
+}
+
+.nf-account__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-4);
+  padding: var(--nf-space-5);
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-lg);
+  background: var(--nf-surface);
+}
+
+.nf-account__card-head {
+  display: flex;
+  gap: var(--nf-space-3);
+  align-items: flex-start;
+}
+
+.nf-account__card-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: var(--nf-radius-sm);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+}
+
+.nf-account__card-title {
+  margin: 0;
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+}
+
+.nf-account__card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-4);
+  align-items: flex-start;
+}
+
+.nf-account__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* La etiqueta y su icono de ayuda comparten línea. El icono se sangra hacia la
+   izquierda para que su área táctil no separe visualmente los dos. */
+.nf-account__field-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nf-account__field-label {
+  font-size: var(--nf-text-xs);
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-text-primary);
+}
+
+.nf-account__field .nf-app-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* El campo de solo lectura se hunde y pierde el cursor de escritura: sin esto
+   parecía editable y devolvía la sensación de que la app no guardaba. */
+.nf-account__field .nf-app-input[readonly] {
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-muted);
+  cursor: not-allowed;
+}
+
+.nf-account__hint {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-muted);
+  line-height: 1.5;
+  margin: 0;
+  display: block;
+}
+
+/* ── Casillas de preferencia ──────────────────────────────────────────────── */
+
+/* La casilla, su nombre y su ayuda van en UNA línea. Antes cada preferencia
+   ocupaba tres: nombre, y debajo dos renglones explicando el nombre. */
+.nf-account__toggle {
+  display: flex;
+  gap: var(--nf-space-3);
+  align-items: center;
+  width: 100%;
+  /* Zona de pulsación cómoda: la casilla nativa mide 13px y por sí sola es un
+     objetivo demasiado pequeño para el pulgar. */
+  padding: 4px 0;
+}
+
+/* La caja y su marca las dibuja `controls-native.css`; aquí solo el margen. */
+.nf-account__toggle input[type="checkbox"] {
+  margin: 0;
+}
+
+.nf-account__toggle-label {
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+  cursor: pointer;
+}
+
+/* El icono de ayuda se pega a la etiqueta, no al borde de la tarjeta. */
+.nf-account__toggle .nf-infotip {
+  margin-inline-start: -6px;
+}
+
+.nf-account__fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nf-space-1);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Apagado el correo, la lista de tipos no desaparece: se atenúa. Ocultarla
+   dejaría al usuario sin saber qué recuperará al volver a encenderlo.
+   La marca es `data-disabled` y no `:disabled` porque el fieldset ya no se
+   deshabilita entero: apagaría también los botones de ayuda de cada tipo. */
+.nf-account__fieldset[data-disabled] .nf-account__toggle-label,
+.nf-account__fieldset[data-disabled] legend {
+  opacity: 0.55;
+}
+
+.nf-account__fieldset[data-disabled] .nf-account__toggle,
+.nf-account__fieldset[data-disabled] input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* La vista previa es el dato, no una nota al pie: se lee con el color del
+   texto principal aunque comparta la clase de las pistas. */
+.nf-account__preview strong {
+  color: var(--nf-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.nf-account__fieldset legend {
+  padding: 0;
+  margin-bottom: var(--nf-space-1);
+}
+
+/* ── Ausencia y suplencia ─────────────────────────────────────────────────── */
+
+.nf-account__delegation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-3);
+  flex-wrap: wrap;
+  width: 100%;
+  padding: var(--nf-space-3);
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-sm);
+  background: var(--nf-surface-sunken);
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+}
+
+/* La suplencia vigente se distingue de las programadas: es la única que está
+   desviando avisos ahora mismo. */
+.nf-account__delegation--active {
+  border-color: var(--nf-primary-border);
+  background: var(--nf-primary-subtle);
+  color: var(--nf-primary-active);
+}
+
+.nf-account__dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--nf-space-3);
+}
+
+.nf-account__dates label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

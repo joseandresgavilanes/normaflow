@@ -27,6 +27,13 @@ import IsoTableCard from "@/components/ui/IsoTableCard";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
 import { labelForKeyOrRaw } from "@/lib/field-labels";
+import { distribution } from "@/components/charts/aggregate";
+import Meter from "@/components/charts/Meter";
+import BarChart from "@/components/charts/BarChart";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import InfoTip from "@/components/ui/InfoTip";
+import DateField from "@/components/ui/DateField";
 
 type Tab =
   | "panel" | "sources" | "review" | "seu" | "baseline" | "enpi" | "meters" | "variables"
@@ -131,7 +138,7 @@ function submitCreate(valid: boolean, message: string, action: () => Promise<unk
   run(action);
   onDone();
 }
-/** Modal "+ Nuevo X" form shell shared by every creation form in this module. */
+/** Modal "Nuevo X" form shell shared by every creation form in this module. */
 function NewFormToggle({ label, children }: { label: string; children: (close: () => void) => React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [closeRequested, setCloseRequested] = useState(false);
@@ -220,11 +227,9 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-warning-subtle)", display: "grid", placeItems: "center" }}>
           <Flame size={22} color="var(--nf-warning-text)" />
         </div>
-        <div>
+        <div className="nf-heading-row">
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>
-            {SECTION_META[tab].sub}
-          </p>
+          <InfoTip text={SECTION_META[tab].sub} label={SECTION_META[tab].title} size={15} />
         </div>
         {demo && <span style={{ ...chip("var(--nf-primary-subtle)", "var(--nf-primary-active)"), marginLeft: "auto" }}>Demo</span>}
       </header>
@@ -242,7 +247,25 @@ export default function EnergyClient({ initial, demo = false }: { initial: Energ
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen energético</strong><span>Accesos directos a los registros operativos.</span></div><IsoQuickCreate modulePath="/app/energy" items={[{ label: "Nueva fuente de energía", description: "Registrar una fuente activa", section: "sources", Icon: Fuel }, { label: "Nueva revisión energética", description: "Abrir una revisión del periodo", section: "review", Icon: Search }, { label: "Nuevo uso significativo de energía", description: "Definir un SEU", section: "seu", Icon: Grid3x3 }, { label: "Nuevo medidor", description: "Configurar medición energética", section: "meters", Icon: Activity }, { label: "Nueva oportunidad de mejora", description: "Registrar una oportunidad", section: "opportunities", Icon: Lightbulb }, { label: "Nuevo plan de acción", description: "Crear una acción de mejora", section: "actions", Icon: ListChecks }]} /></div>
+          <div className="nf-chart-grid-2">
+            <Meter
+              title="Usos significativos de la energía"
+              subtitle="Cuántos usos energéticos están clasificados como SEU."
+              label="clasificados como SEU"
+              restLabel="Resto de usos"
+              value={initial.seus.length}
+              total={initial.uses.length}
+              empty="Aún no hay usos energéticos registrados."
+              action={{ label: "Abrir fuentes y usos", href: "/app/energy?section=sources" }}
+            />
+            <BarChart
+              title="Oportunidades por estado"
+              subtitle="Cartera de oportunidades de mejora energética."
+              data={distribution(initial.opportunities, (row) => row.status)}
+              action={{ label: "Abrir oportunidades", href: "/app/energy?section=opportunities" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen energético</strong></div><IsoQuickCreate modulePath="/app/energy" items={[{ label: "Nueva fuente de energía", description: "Registrar una fuente activa", section: "sources", Icon: Fuel }, { label: "Nueva revisión energética", description: "Abrir una revisión del periodo", section: "review", Icon: Search }, { label: "Nuevo uso significativo de energía", description: "Definir un SEU", section: "seu", Icon: Grid3x3 }, { label: "Nuevo medidor", description: "Configurar medición energética", section: "meters", Icon: Activity }, { label: "Nueva oportunidad de mejora", description: "Registrar una oportunidad", section: "opportunities", Icon: Lightbulb }, { label: "Nuevo plan de acción", description: "Crear una acción de mejora", section: "actions", Icon: ListChecks }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Search size={16} aria-hidden />Revisión y SEU (§6.3)</h3>
@@ -707,13 +730,13 @@ function EnergyRecordEditor({ kind, value, members, sources, uses, seus, reviews
     if (kind === "procurement") onSave({ title: form.title, sourceType: form.sourceType, supplierName: optional("supplierName"), period: optional("period"), recommendation: optional("recommendation"), result: form.result });
     if (kind === "design") onSave({ title: form.title, projectReference: optional("projectReference"), processId: optional("processId"), locationId: optional("locationId"), description: optional("description"), energyConsiderations: optional("energyConsiderations"), opportunitiesIdentified: optional("opportunitiesIdentified"), status: form.status, documentId: optional("documentId"), evidenceId: optional("evidenceId") });
   };
-  const select = (key: string, options: string[]) => <select aria-label={labelForKeyOrRaw(key)} style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select>;
-  const refSelect = (key: string, options: { id: string; label: string }[], placeholder: string) => <select style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}><option value="">{placeholder}</option>{options.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select>;
+  const select = (key: string, options: string[]) => <Picker aria-label={labelForKeyOrRaw(key)} style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}>{options.map((option) => <option key={option} value={option}>{option}</option>)}</Picker>;
+  const refSelect = (key: string, options: { id: string; label: string }[], placeholder: string) => <Picker aria-label={labelForKeyOrRaw(key)} style={input} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)}><option value="">{placeholder}</option>{options.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</Picker>;
   const field = (key: string, placeholder: string, type = "text") => <input aria-label={placeholder} style={input} type={type} placeholder={placeholder} value={form[key] ?? ""} onChange={(e) => set(key, e.target.value)} />;
   const active = <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={form.active === "true"} onChange={(e) => set("active", String(e.target.checked))} /> Activo</label>;
   return <div style={{ display: "grid", gap: 9 }}>
     {editorError && <div className="nf-modal-error" role="alert">{editorError}</div>}
-    {kind === "source" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>{field("name", "Nombre de la fuente")}{select("sourceType", ["ELECTRICITY", "NATURAL_GAS", "DIESEL", "LPG", "FUEL_OIL", "STEAM", "SOLAR", "WIND", "BIOMASS", "OTHER"])}{field("unit", "Unidad")}</div><div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>{field("emissionFactor", "Factor de emisión", "number")}{field("costPerUnit", "Coste/unidad", "number")}<select aria-label="Moneda" style={input} value={form.currency ?? ""} onChange={(e) => set("currency", e.target.value)}><option value="">Moneda…</option>{CURRENCY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}{form.currency && !CURRENCY_OPTIONS.some((option) => option.value === form.currency) && <option value={form.currency}>{form.currency}</option>}</select>{field("renewableShare", "% renovable", "number")}</div>{field("supplierId", "Proveedor (ID)")}{field("notes", "Notas")}{active}</>}
+    {kind === "source" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>{field("name", "Nombre de la fuente")}{select("sourceType", ["ELECTRICITY", "NATURAL_GAS", "DIESEL", "LPG", "FUEL_OIL", "STEAM", "SOLAR", "WIND", "BIOMASS", "OTHER"])}{field("unit", "Unidad")}</div><div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>{field("emissionFactor", "Factor de emisión", "number")}{field("costPerUnit", "Coste/unidad", "number")}<Picker aria-label="Moneda" style={input} value={form.currency ?? ""} onChange={(e) => set("currency", e.target.value)}><option value="">Moneda…</option>{CURRENCY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}{form.currency && !CURRENCY_OPTIONS.some((option) => option.value === form.currency) && <option value={form.currency}>{form.currency}</option>}</Picker>{field("renewableShare", "% renovable", "number")}</div>{field("supplierId", "Proveedor (ID)")}{field("notes", "Notas")}{active}</>}
     {kind === "use" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>{field("name", "Nombre del uso")}{refSelect("sourceId", sources.map((row) => ({ id: row.id, label: row.code })), "Fuente…")}{field("unit", "Unidad")}</div>{field("description", "Descripción")}{field("equipment", "Equipo")}{field("annualEstimate", "Estimación anual", "number")}<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{field("processId", "Proceso (ID)")}{field("locationId", "Sede (ID)")}</div>{active}</>}
     {kind === "review" && <><div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>{field("title", "Título")}{field("periodStart", "Inicio", "date")}{field("periodEnd", "Fin", "date")}</div>{field("scope", "Alcance")}{field("methodSummary", "Método")}{field("findings", "Hallazgos")}{field("documentId", "Documento (ID)")}{field("evidenceId", "Evidencia (ID)")}</>}
     {kind === "seu" && <><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{refSelect("energyUseId", uses.map((row) => ({ id: row.id, label: `${row.code} · ${row.name}` })), "Uso de energía…")}{refSelect("reviewId", reviews.map((row) => ({ id: row.id, label: row.code })), "Revisión…")}</div><div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>{field("consumptionShare", "% consumo", "number")}{field("improvementPotential", "% potencial", "number")}{select("status", ["DRAFT", "ACTIVE", "ARCHIVED", "SUPERSEDED"])}</div>{field("rationale", "Justificación")}{refSelect("ownerId", members.map((row) => ({ id: row.id, label: row.name })), "Responsable…")}<label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={form.significant === "true"} onChange={(e) => set("significant", String(e.target.checked))} /> Significativo</label></>}
@@ -759,13 +782,13 @@ function NewSourceForm({ pending, run, onDone }: { pending: boolean; run: Runner
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre de la fuente" style={input} placeholder="Nombre de la fuente" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Tipo de fuente" style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["ELECTRICITY", "NATURAL_GAS", "DIESEL", "LPG", "FUEL_OIL", "STEAM", "DISTRICT_HEATING", "DISTRICT_COOLING", "SOLAR", "WIND", "BIOMASS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo de fuente" style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["ELECTRICITY", "NATURAL_GAS", "DIESEL", "LPG", "FUEL_OIL", "STEAM", "DISTRICT_HEATING", "DISTRICT_COOLING", "SOLAR", "WIND", "BIOMASS", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
         <input aria-label="Factor emisión (tCO2e/unidad)" style={input} type="number" step="any" placeholder="Factor emisión (tCO2e/unidad)" value={f.emissionFactor} onChange={(e) => set("emissionFactor", e.target.value)} />
         <input aria-label="Coste/unidad" style={input} type="number" step="any" placeholder="Coste/unidad" value={f.costPerUnit} onChange={(e) => set("costPerUnit", e.target.value)} />
-        <select aria-label="Moneda" style={input} value={f.currency} onChange={(e) => set("currency", e.target.value)}><option value="">Moneda…</option>{CURRENCY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+        <Picker aria-label="Moneda" style={input} value={f.currency} onChange={(e) => set("currency", e.target.value)}><option value="">Moneda…</option>{CURRENCY_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</Picker>
         <input aria-label="% renovable" style={input} type="number" min={0} max={100} placeholder="% renovable" value={f.renewableShare} onChange={(e) => set("renewableShare", e.target.value)} />
       </div>
       <button disabled={pending || !filled(f.name) || !filled(f.unit) || !validOptionalNumber(f.emissionFactor) || !validOptionalNumber(f.costPerUnit) || !validOptionalNumber(f.renewableShare, 0, 100)} style={primaryBtn} onClick={() => submitCreate(filled(f.name) && filled(f.unit) && validOptionalNumber(f.emissionFactor) && validOptionalNumber(f.costPerUnit) && validOptionalNumber(f.renewableShare, 0, 100), "Completa el nombre y la unidad; los valores numéricos deben ser válidos.", () => createEnergySource({ name: f.name.trim(), sourceType: f.sourceType as never, unit: f.unit.trim(), emissionFactor: filled(f.emissionFactor) ? Number(f.emissionFactor) : undefined, costPerUnit: filled(f.costPerUnit) ? Number(f.costPerUnit) : undefined, currency: f.currency || undefined, renewableShare: filled(f.renewableShare) ? Number(f.renewableShare) : undefined }), run, onDone)}><Plus size={12} /> Crear</button>
@@ -780,7 +803,7 @@ function NewUseForm({ sources, pending, run, onDone }: { sources: EnergyPayload[
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del uso" style={input} placeholder="Nombre del uso" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Fuente" style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
+        <Picker aria-label="Fuente" style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Fuente…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker>
       </div>
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
@@ -800,8 +823,8 @@ function NewReviewForm({ pending, run, onDone }: { pending: boolean; run: Runner
     <div style={{ display: "grid", gap: 8 }}>
       <input aria-label="Título de la revisión" style={input} placeholder="Título de la revisión" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <DateField aria-label="Inicio del periodo" style={input} value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <DateField aria-label="Fin del periodo" style={input} value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
       </div>
       <input aria-label="Alcance" style={input} placeholder="Alcance" value={f.scope} onChange={(e) => set("scope", e.target.value)} />
       <input aria-label="Resumen del método" style={input} placeholder="Resumen del método" value={f.methodSummary} onChange={(e) => set("methodSummary", e.target.value)} />
@@ -816,13 +839,13 @@ function NewSeuForm({ uses, reviews, members, pending, run, onDone }: { uses: En
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="Uso de energía" style={input} value={f.energyUseId} onChange={(e) => set("energyUseId", e.target.value)}><option value="">Uso de energía…</option>{uses.map((u) => <option key={u.id} value={u.id}>{u.code} — {u.name}</option>)}</select>
-        <select aria-label="Revisión" style={input} value={f.reviewId} onChange={(e) => set("reviewId", e.target.value)}><option value="">Revisión…</option>{reviews.map((r) => <option key={r.id} value={r.id}>{r.code}</option>)}</select>
+        <Picker aria-label="Uso de energía" style={input} value={f.energyUseId} onChange={(e) => set("energyUseId", e.target.value)}><option value="">Uso de energía…</option>{uses.map((u) => <option key={u.id} value={u.id}>{u.code} — {u.name}</option>)}</Picker>
+        <Picker aria-label="Revisión" style={input} value={f.reviewId} onChange={(e) => set("reviewId", e.target.value)}><option value="">Revisión…</option>{reviews.map((r) => <option key={r.id} value={r.id}>{r.code}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="% participación" style={input} type="number" min={0} max={100} placeholder="% participación" value={f.consumptionShare} onChange={(e) => set("consumptionShare", e.target.value)} />
         <input aria-label="% potencial de mejora" style={input} type="number" min={0} max={100} placeholder="% potencial de mejora" value={f.improvementPotential} onChange={(e) => set("improvementPotential", e.target.value)} />
-        <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+        <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
       </div>
       <input aria-label="Motivo de significancia" style={input} placeholder="Motivo de significancia" value={f.rationale} onChange={(e) => set("rationale", e.target.value)} />
       <button disabled={pending || !filled(f.energyUseId) || !validOptionalNumber(f.consumptionShare, 0, 100) || !validOptionalNumber(f.improvementPotential, 0, 100)} style={primaryBtn} onClick={() => submitCreate(filled(f.energyUseId) && validOptionalNumber(f.consumptionShare, 0, 100) && validOptionalNumber(f.improvementPotential, 0, 100), "Selecciona un uso de energía; los porcentajes deben estar entre 0 y 100.", () => createSignificantEnergyUse({ energyUseId: f.energyUseId, reviewId: f.reviewId || undefined, consumptionShare: filled(f.consumptionShare) ? Number(f.consumptionShare) : undefined, improvementPotential: filled(f.improvementPotential) ? Number(f.improvementPotential) : undefined, rationale: filled(f.rationale) ? f.rationale.trim() : undefined, ownerId: f.ownerId || undefined }), run, onDone)}><Plus size={12} /> Crear</button>
@@ -839,14 +862,14 @@ function NewBaselineForm({ seus, pending, run, onDone }: { seus: EnergyPayload["
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <input aria-label="Código (opcional, para versionar)" style={input} placeholder="Código (opcional, para versionar)" value={f.code} onChange={(e) => set("code", e.target.value)} />
         <input aria-label="Título" style={input} placeholder="Título" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
+        <Picker aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: 8 }}>
-        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <DateField aria-label="Inicio del periodo" style={input} value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <DateField aria-label="Fin del periodo" style={input} value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
         <input aria-label="Consumo" style={input} type="number" step="any" placeholder="Consumo" value={f.consumption} onChange={(e) => set("consumption", e.target.value)} />
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
-        <select aria-label="Método de normalización" style={input} value={f.normalizationMethod} onChange={(e) => set("normalizationMethod", e.target.value)}>{["NONE", "RATIO", "LINEAR", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Método de normalización" style={input} value={f.normalizationMethod} onChange={(e) => set("normalizationMethod", e.target.value)}>{["NONE", "RATIO", "LINEAR", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
       <button disabled={pending || !filled(f.title) || !validDateRange(f.periodStart, f.periodEnd) || !validNumber(f.consumption) || !filled(f.unit)} style={primaryBtn} onClick={() => submitCreate(filled(f.title) && validDateRange(f.periodStart, f.periodEnd) && validNumber(f.consumption) && filled(f.unit), "Completa título, fechas, consumo y unidad; revisa que el periodo sea válido.", () => createEnergyBaseline({ code: filled(f.code) ? f.code.trim() : undefined, title: f.title.trim(), seuId: f.seuId || undefined, periodStart: new Date(`${f.periodStart}T00:00:00.000Z`).toISOString(), periodEnd: new Date(`${f.periodEnd}T00:00:00.000Z`).toISOString(), consumption: Number(f.consumption), unit: f.unit.trim(), normalizationMethod: f.normalizationMethod as never }), run, onDone)}><Plus size={12} /> Crear / versionar</button>
     </div>
@@ -864,9 +887,9 @@ function NewEnpiForm({ seus, baselines, pending, run, onDone }: { seus: EnergyPa
         <input aria-label="Nombre del EnPI" style={input} placeholder="Nombre del EnPI" value={f.name} onChange={(e) => set("name", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
-        <select aria-label="Línea base" style={input} value={f.baselineId} onChange={(e) => set("baselineId", e.target.value)}><option value="">Línea base…</option>{baselines.map((b) => <option key={b.id} value={b.id}>{b.code} v{b.formulaVersion}</option>)}</select>
-        <select aria-label="Tipo de fórmula" style={input} value={f.formulaKind} onChange={(e) => set("formulaKind", e.target.value)}>{["CONSUMPTION", "INTENSITY", "BASELINE_COMPARISON", "DEVIATION", "ABSOLUTE_SAVINGS", "NORMALIZED_SAVINGS", "COST", "EMISSIONS", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker>
+        <Picker aria-label="Línea base" style={input} value={f.baselineId} onChange={(e) => set("baselineId", e.target.value)}><option value="">Línea base…</option>{baselines.map((b) => <option key={b.id} value={b.id}>{b.code} v{b.formulaVersion}</option>)}</Picker>
+        <Picker aria-label="Tipo de fórmula" style={input} value={f.formulaKind} onChange={(e) => set("formulaKind", e.target.value)}>{["CONSUMPTION", "INTENSITY", "BASELINE_COMPARISON", "DEVIATION", "ABSOLUTE_SAVINGS", "NORMALIZED_SAVINGS", "COST", "EMISSIONS", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
@@ -886,14 +909,14 @@ function NewMeterForm({ sources, seus, pending, run, onDone }: { sources: Energy
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <label className="nf-modal-field"><span className="nf-modal-field-label">Nombre del medidor</span><input style={input} value={f.name} onChange={(e) => set("name", e.target.value)} /></label>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">Fuente</span><select style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Seleccionar…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select></label>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">SEU</span><select style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">Seleccionar…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">Fuente</span><Picker aria-label="Fuente" style={input} value={f.sourceId} onChange={(e) => set("sourceId", e.target.value)}><option value="">Seleccionar…</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">SEU</span><Picker aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">Seleccionar…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker></label>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <label className="nf-modal-field"><span className="nf-modal-field-label">Nº de serie</span><input style={input} value={f.serialNumber} onChange={(e) => set("serialNumber", e.target.value)} /></label>
         <label className="nf-modal-field"><span className="nf-modal-field-label">Unidad</span><input style={input} value={f.unit} onChange={(e) => set("unit", e.target.value)} /></label>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">Última calibración</span><input style={input} type="date" value={f.calibrationDate} onChange={(e) => set("calibrationDate", e.target.value)} /></label>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">Próxima calibración</span><input style={input} type="date" value={f.nextCalibration} onChange={(e) => set("nextCalibration", e.target.value)} /></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">Última calibración</span><DateField style={input} value={f.calibrationDate} onChange={(e) => set("calibrationDate", e.target.value)} /></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">Próxima calibración</span><DateField style={input} value={f.nextCalibration} onChange={(e) => set("nextCalibration", e.target.value)} /></label>
       </div>
       <button disabled={pending || !filled(f.name) || !filled(f.unit) || (filled(f.calibrationDate) && filled(f.nextCalibration) && !validDateRange(f.calibrationDate, f.nextCalibration))} style={primaryBtn} onClick={() => submitCreate(filled(f.name) && filled(f.unit) && (!filled(f.calibrationDate) || !filled(f.nextCalibration) || validDateRange(f.calibrationDate, f.nextCalibration)), "Completa el nombre y la unidad; la próxima calibración no puede ser anterior a la última.", () => createEnergyMeter({ name: f.name.trim(), sourceId: f.sourceId || undefined, seuId: f.seuId || undefined, serialNumber: filled(f.serialNumber) ? f.serialNumber.trim() : undefined, unit: f.unit.trim(), calibrationDate: f.calibrationDate || undefined, nextCalibration: f.nextCalibration || undefined }), run, onDone)}><Plus size={12} /> Crear</button>
     </div>
@@ -906,8 +929,8 @@ function NewReadingForm({ meters, pending, run, onDone }: { meters: EnergyPayloa
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">Medidor</span><select style={input} value={f.meterId} onChange={(e) => set("meterId", e.target.value)}><option value="">Seleccionar…</option>{meters.map((m) => <option key={m.id} value={m.id}>{m.code}</option>)}</select></label>
-        <label className="nf-modal-field"><span className="nf-modal-field-label">Fecha de lectura</span><input style={input} type="date" value={f.readingAt} onChange={(e) => set("readingAt", e.target.value)} /></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">Medidor</span><Picker aria-label="Medidor" style={input} value={f.meterId} onChange={(e) => set("meterId", e.target.value)}><option value="">Seleccionar…</option>{meters.map((m) => <option key={m.id} value={m.id}>{m.code}</option>)}</Picker></label>
+        <label className="nf-modal-field"><span className="nf-modal-field-label">Fecha de lectura</span><DateField style={input} value={f.readingAt} onChange={(e) => set("readingAt", e.target.value)} /></label>
         <label className="nf-modal-field"><span className="nf-modal-field-label">Valor</span><input style={input} type="number" step="any" value={f.value} onChange={(e) => set("value", e.target.value)} /></label>
       </div>
       <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5 }}><input type="checkbox" checked={f.estimated} onChange={(e) => set("estimated", e.target.checked)} /> Lectura estimada</label>
@@ -924,7 +947,7 @@ function NewVariableForm({ pending, run, onDone }: { pending: boolean; run: Runn
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre de la variable" style={input} placeholder="Nombre de la variable" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
-        <select aria-label="Tipo de variable" style={input} value={f.variableType} onChange={(e) => set("variableType", e.target.value)}>{["PRODUCTION", "OCCUPANCY", "DEGREE_DAYS", "OPERATING_HOURS", "THROUGHPUT", "WEATHER", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo de variable" style={input} value={f.variableType} onChange={(e) => set("variableType", e.target.value)}>{["PRODUCTION", "OCCUPANCY", "DEGREE_DAYS", "OPERATING_HOURS", "THROUGHPUT", "WEATHER", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <button disabled={pending || !filled(f.name) || !filled(f.unit)} style={primaryBtn} onClick={() => submitCreate(filled(f.name) && filled(f.unit), "Completa el nombre y la unidad de la variable.", () => createRelevantVariable({ name: f.name.trim(), unit: f.unit.trim(), description: filled(f.description) ? f.description.trim() : undefined, variableType: f.variableType as never }), run, onDone)}><Plus size={12} /> Crear</button>
@@ -956,13 +979,13 @@ function NewOpportunityForm({ seus, members, pending, run, onDone }: { seus: Ene
       <input aria-label="Título de la oportunidad" style={input} placeholder="Título de la oportunidad" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 8 }}>
-        <select aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</select>
+        <Picker aria-label="SEU" style={input} value={f.seuId} onChange={(e) => set("seuId", e.target.value)}><option value="">SEU…</option>{seus.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}</Picker>
         <input aria-label="Ahorro est." style={input} type="number" step="any" placeholder="Ahorro est." value={f.estimatedSaving} onChange={(e) => set("estimatedSaving", e.target.value)} />
         <input aria-label="Coste est." style={input} type="number" step="any" placeholder="Coste est." value={f.estimatedCost} onChange={(e) => set("estimatedCost", e.target.value)} />
         <input aria-label="Payback (meses)" style={input} type="number" step="any" placeholder="Payback (meses)" value={f.paybackMonths} onChange={(e) => set("paybackMonths", e.target.value)} />
-        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>{["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
-      <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
+      <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
       <button disabled={pending || !filled(f.title) || !validOptionalNumber(f.estimatedSaving) || !validOptionalNumber(f.estimatedCost) || !validOptionalNumber(f.paybackMonths)} style={primaryBtn} onClick={() => submitCreate(filled(f.title) && validOptionalNumber(f.estimatedSaving) && validOptionalNumber(f.estimatedCost) && validOptionalNumber(f.paybackMonths), "Completa el título; los importes y el payback deben ser números válidos.", () => createEnergyOpportunity({ title: f.title.trim(), description: filled(f.description) ? f.description.trim() : undefined, seuId: f.seuId || undefined, estimatedSaving: filled(f.estimatedSaving) ? Number(f.estimatedSaving) : undefined, estimatedCost: filled(f.estimatedCost) ? Number(f.estimatedCost) : undefined, paybackMonths: filled(f.paybackMonths) ? Number(f.paybackMonths) : undefined, priority: f.priority as never, ownerId: f.ownerId || undefined }), run, onDone)}><Plus size={12} /> Crear</button>
     </div>
   );
@@ -976,10 +999,10 @@ function NewActionPlanForm({ opportunities, members, pending, run, onDone }: { o
       <input aria-label="Título del plan" style={input} placeholder="Título del plan" value={f.title} onChange={(e) => set("title", e.target.value)} />
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Oportunidad" style={input} value={f.opportunityId} onChange={(e) => set("opportunityId", e.target.value)}><option value="">Oportunidad…</option>{opportunities.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</select>
-        <select aria-label="Responsable" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Responsable…</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select>
-        <input aria-label="Fecha de inicio" style={input} type="date" value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
-        <input aria-label="Fecha de vencimiento" style={input} type="date" value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
+        <Picker aria-label="Oportunidad" style={input} value={f.opportunityId} onChange={(e) => set("opportunityId", e.target.value)}><option value="">Oportunidad…</option>{opportunities.map((o) => <option key={o.id} value={o.id}>{o.code}</option>)}</Picker>
+        <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Responsable…" ariaLabel="Responsable" style={input} />
+        <DateField aria-label="Fecha de inicio" style={input} value={f.startDate} onChange={(e) => set("startDate", e.target.value)} />
+        <DateField aria-label="Fecha de vencimiento" style={input} value={f.dueDate} onChange={(e) => set("dueDate", e.target.value)} />
       </div>
       <button disabled={pending || !filled(f.title) || (filled(f.startDate) && filled(f.dueDate) && !validDateRange(f.startDate, f.dueDate))} style={primaryBtn} onClick={() => submitCreate(filled(f.title) && (!filled(f.startDate) || !filled(f.dueDate) || validDateRange(f.startDate, f.dueDate)), "Completa el título; la fecha de vencimiento no puede ser anterior al inicio.", () => createEnergyActionPlan({ title: f.title.trim(), description: filled(f.description) ? f.description.trim() : undefined, opportunityId: f.opportunityId || undefined, ownerId: f.ownerId || undefined, startDate: f.startDate || undefined, dueDate: f.dueDate || undefined }), run, onDone)}><Plus size={12} /> Crear</button>
     </div>
@@ -992,15 +1015,15 @@ function NewVerificationForm({ plans, pending, run, onDone }: { plans: EnergyPay
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Plan de acción" style={input} value={f.actionPlanId} onChange={(e) => set("actionPlanId", e.target.value)}><option value="">Plan de acción…</option>{plans.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</select>
-        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <Picker aria-label="Plan de acción" style={input} value={f.actionPlanId} onChange={(e) => set("actionPlanId", e.target.value)}><option value="">Plan de acción…</option>{plans.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}</Picker>
+        <DateField aria-label="Inicio del periodo" style={input} value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <DateField aria-label="Fin del periodo" style={input} value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 }}>
         <input aria-label="Consumo base" style={input} type="number" step="any" placeholder="Consumo base" value={f.baselineConsumption} onChange={(e) => set("baselineConsumption", e.target.value)} />
         <input aria-label="Consumo actual" style={input} type="number" step="any" placeholder="Consumo actual" value={f.actualConsumption} onChange={(e) => set("actualConsumption", e.target.value)} />
         <input aria-label="Unidad" style={input} placeholder="Unidad" value={f.unit} onChange={(e) => set("unit", e.target.value)} />
-        <select aria-label="Tipo de fórmula" style={input} value={f.formulaKind} onChange={(e) => set("formulaKind", e.target.value)}>{["ABSOLUTE_SAVINGS", "NORMALIZED_SAVINGS", "COST", "EMISSIONS", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo de fórmula" style={input} value={f.formulaKind} onChange={(e) => set("formulaKind", e.target.value)}>{["ABSOLUTE_SAVINGS", "NORMALIZED_SAVINGS", "COST", "EMISSIONS", "CUSTOM"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input aria-label="Factor de emisión (opcional)" style={input} type="number" step="any" placeholder="Factor de emisión (opcional)" value={f.emissionFactor} onChange={(e) => set("emissionFactor", e.target.value)} />
@@ -1018,7 +1041,7 @@ function NewProcurementForm({ pending, run, onDone }: { pending: boolean; run: R
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título de la evaluación" style={input} placeholder="Título de la evaluación" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Tipo de fuente" style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["ELECTRICITY", "NATURAL_GAS", "DIESEL", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</select>
+        <Picker aria-label="Tipo de fuente" style={input} value={f.sourceType} onChange={(e) => set("sourceType", e.target.value)}>{["ELECTRICITY", "NATURAL_GAS", "DIESEL", "OTHER"].map((v) => <option key={v} value={v}>{v}</option>)}</Picker>
         <input aria-label="Periodo" style={input} placeholder="Periodo" value={f.period} onChange={(e) => set("period", e.target.value)} />
       </div>
       <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.supplierName} onChange={(e) => set("supplierName", e.target.value)} />

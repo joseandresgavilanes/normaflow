@@ -1,0 +1,336 @@
+/* ============================================================================
+ * NormaFlow — desplegables
+ *
+ * Hoja de `Picker` y `PersonPicker`, que sustituyen al `<select>` nativo en
+ * toda la aplicación. El disparador reutiliza `.nf-app-input`: hereda alto,
+ * borde, radio y foco de los demás campos, de modo que en el formulario no se
+ * distingue de un campo normal hasta que se abre. Aquí solo va lo que un
+ * `<input>` no trae —la fila interna, el panel y la lista.
+ * ========================================================================== */
+
+/* El envoltorio tiene que desaparecer del reparto de espacio y dejar mandar al
+   disparador, que es quien lleva el `style` del campo original.
+   Con `width: 100%` cada filtro de una barra en flex se llevaba una fila entera
+   —y encima estrecho, porque su estilo propio es `width: auto`—; con `auto`,
+   en una rejilla o en columna sigue rellenando la celda (los ítems de grid y
+   los de un flex en columna se estiran solos) y en una barra horizontal se
+   ajusta al contenido, que es como estaban antes. */
+.nf-picker {
+  position: relative;
+  display: block;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.nf-picker__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.nf-picker__trigger[aria-expanded="true"] {
+  border-color: var(--nf-focus-ring);
+}
+
+.nf-picker__placeholder {
+  flex: 1;
+  min-width: 0;
+  color: var(--nf-text-subtle);
+}
+
+.nf-picker__value-text {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-picker__value-name {
+  color: var(--nf-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* El rol acompaña al nombre pero no compite con él: se recorta primero y
+   desaparece antes que el nombre cuando el campo es estrecho. */
+.nf-picker__value-group {
+  color: var(--nf-text-muted);
+  font-size: var(--nf-text-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 100;
+}
+
+.nf-picker__chips {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nf-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 2px 8px 2px 3px;
+  border: 1px solid var(--nf-border-subtle);
+  border-radius: 999px;
+  background: var(--nf-surface-sunken);
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nf-picker__chip--count {
+  padding: 2px 8px;
+  color: var(--nf-text-secondary);
+}
+
+.nf-picker__chevron {
+  flex-shrink: 0;
+  color: var(--nf-text-muted);
+}
+
+/* Lleva el valor al FormData y sostiene la validación nativa de `required`.
+   No puede ser `type="hidden"` ni `display: none`: el navegador se niega a
+   anclar el globo de error en un control que no está pintado. */
+.nf-picker__native {
+  position: absolute;
+  left: var(--nf-space-3);
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Panel ────────────────────────────────────────────────────────────────── */
+
+.nf-picker__panel {
+  position: fixed;
+  /* Por encima del modal (5000) y del aviso de error del formulario (5100):
+     el desplegable es lo que el usuario está manipulando en ese momento. */
+  z-index: 5200;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  border: 1px solid var(--nf-line);
+  border-radius: var(--nf-radius-lg);
+  background: var(--nf-surface-raised);
+  box-shadow: var(--nf-elevation-3);
+  overflow: hidden;
+}
+
+.nf-picker__search {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border-bottom: 1px solid var(--nf-border-subtle);
+  color: var(--nf-text-muted);
+  flex-shrink: 0;
+}
+
+.nf-picker__search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+  outline: none;
+}
+
+.nf-picker__search-input::placeholder {
+  color: var(--nf-text-subtle);
+  opacity: 1;
+}
+
+.nf-picker__clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-secondary);
+  cursor: pointer;
+}
+
+.nf-picker__clear:hover { background: var(--nf-surface-hover); }
+
+.nf-picker__groups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border-bottom: 1px solid var(--nf-border-subtle);
+  flex-shrink: 0;
+}
+
+.nf-picker__list {
+  margin: 0;
+  padding: var(--nf-space-1);
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nf-picker__option {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-2);
+  padding: 6px var(--nf-space-2);
+  border-radius: var(--nf-radius-sm);
+  cursor: pointer;
+  min-width: 0;
+}
+
+/* Un único resaltado para ratón y teclado: la fila activa es la que recibiría
+   el Intro, venga de la flecha o del puntero. */
+.nf-picker__option--active { background: var(--nf-surface-hover); }
+
+.nf-picker__option-blank {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px dashed var(--nf-border-subtle);
+  flex-shrink: 0;
+}
+
+.nf-picker__option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.nf-picker__option-name {
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-picker__option-detail {
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nf-picker__option-check {
+  flex-shrink: 0;
+  color: var(--nf-primary-active);
+}
+
+.nf-picker__empty {
+  padding: var(--nf-space-4) var(--nf-space-3);
+  font-size: var(--nf-text-sm);
+  color: var(--nf-text-muted);
+  text-align: center;
+}
+
+.nf-picker__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nf-space-2);
+  padding: var(--nf-space-2) var(--nf-space-3);
+  border-top: 1px solid var(--nf-border-subtle);
+  font-size: var(--nf-text-xs);
+  color: var(--nf-text-secondary);
+  flex-shrink: 0;
+}
+
+.nf-picker__footer-actions {
+  display: flex;
+  gap: var(--nf-space-3);
+}
+
+.nf-picker__link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--nf-weight-semibold);
+  color: var(--nf-primary-active);
+  cursor: pointer;
+}
+
+.nf-picker__link:hover { text-decoration: underline; }
+
+/* Las fichas del panel son más pequeñas que las de una barra de filtros: aquí
+   compiten con la lista, no la encabezan. */
+.nf-picker__groups .nf-chip {
+  padding: 3px 9px;
+  font-size: 11px;
+}
+
+.nf-picker__error {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--nf-text-xs);
+  color: var(--nf-danger-text);
+}
+
+.nf-picker__trigger[aria-invalid="true"] {
+  border-color: var(--nf-danger);
+  background: var(--nf-danger-subtle);
+}
+
+/* ── Desplegable general ──────────────────────────────────────────────────── */
+
+/* El <li> solo junta la cabecera de grupo con su fila. */
+.nf-picker__row { display: block; }
+
+.nf-picker__group-label {
+  display: block;
+  padding: 8px var(--nf-space-2) 4px;
+  font-size: 11px;
+  font-weight: var(--nf-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--nf-text-muted);
+}
+
+.nf-picker__option--off {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Sin buscador el foco recae en el panel; el resalte de la fila activa ya dice
+   dónde está el teclado, así que el anillo sobre la caja entera sobra. */
+.nf-picker__panel:focus { outline: none; }
+
+/* Ficha sin avatar, para valores que no son personas. */
+.nf-picker__chip--plain { padding: 2px 8px; }
+
+/* El chevron va al extremo derecho del campo, como en el desplegable nativo:
+   el valor ocupa el hueco libre en vez de arrastrarlo consigo. */
+.nf-picker__trigger > .nf-picker__value-name,
+.nf-picker__trigger > .nf-picker__placeholder {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}

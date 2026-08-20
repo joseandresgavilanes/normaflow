@@ -10,6 +10,7 @@ import { translate } from "@/lib/i18n/messages";
 import { getServerLocale } from "@/lib/i18n/server";
 import { absoluteUrl, SITE_NAME, SITE_URL, SOCIAL_IMAGE_PATH } from "@/lib/seo";
 import { getServerTheme } from "@/lib/theme/server";
+import { getServerPreferences } from "@/lib/preferences/server";
 // Los tokens deben cargarse antes que cualquier hoja que los consuma.
 import "@/styles/tokens.css";
 import "./globals.css";
@@ -21,6 +22,19 @@ import "@/styles/forms.css";
 import "@/styles/surfaces.css";
 import "@/styles/data-table.css";
 import "@/styles/detail.css";
+import "@/styles/charts.css";
+import "@/styles/account.css";
+import "@/styles/picker.css";
+import "@/styles/file-import.css";
+import "@/styles/infotip.css";
+// Redibuja el cromo que el navegador pone dentro del campo (casilla, radio,
+// flechas del número, aspa del buscador…). Va después de las hojas de módulo
+// para que ninguna clase heredada le devuelva el aspecto nativo.
+import "@/styles/controls-native.css";
+import "@/styles/date-field.css";
+import "@/styles/row-actions.css";
+// La última: apaga el movimiento por encima de cualquier hoja anterior.
+import "@/styles/motion.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
@@ -61,7 +75,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [locale, theme] = await Promise.all([getServerLocale(), getServerTheme()]);
+  const [locale, theme, preferences] = await Promise.all([
+    getServerLocale(),
+    getServerTheme(),
+    getServerPreferences(),
+  ]);
 
   return (
     // `data-theme` se pinta en el servidor desde la cookie, igual que `lang`:
@@ -71,10 +89,23 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html
       lang={locale}
       data-theme={theme === "system" ? undefined : theme}
+      /* Como con el tema: si la preferencia es `system` NO se pone el atributo,
+         para que siga mandando `@media (prefers-reduced-motion)`. */
+      data-reduced-motion={preferences.motion === "reduced" ? "true" : undefined}
+      /* La zona y el formato viajan en el HTML para que `formatDate` los lea sin
+         que haya que pasarlos por props por toda la jerarquía. */
+      data-timezone={preferences.timeZone}
+      data-datefmt={preferences.dateFormat}
       className={`${inter.variable} ${manrope.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased" suppressHydrationWarning>
+      {/* El modo privado se pinta desde el servidor: si se aplicara al hidratar,
+          los datos que oculta se verían durante un instante al recargar, que es
+          exactamente lo que se quiere evitar al compartir pantalla. */}
+      <body
+        className={`font-sans antialiased${preferences.privateMode ? " nf-private-mode" : ""}`}
+        suppressHydrationWarning
+      >
         <I18nProvider initialLocale={locale}>
           {/* En la raíz para que también cubra login y registro: los errores de
               autenticación tienen que anunciarse. */}

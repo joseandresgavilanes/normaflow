@@ -1,0 +1,29 @@
+/* ============================================================================
+ * NormaFlow — Movimiento reducido
+ * ----------------------------------------------------------------------------
+ * El resto de hojas ya respeta `@media (prefers-reduced-motion: reduce)`. Esto
+ * añade la elección explícita, para quien no lo tiene puesto en el sistema —o
+ * no sabe que existe— pero sí quiere una interfaz quieta.
+ *
+ * Se aplica desde `data-reduced-motion` en <html>, que pinta el servidor desde
+ * la cookie: sin destello de animación antes de hidratar.
+ * ========================================================================== */
+
+/* `!important` es deliberado y es la única excepción de esta hoja: hay ~4.500
+   estilos en línea en el producto y una transición declarada ahí gana a
+   cualquier regla de fichero. Sin esto, la preferencia solo funcionaría en la
+   mitad de la aplicación. */
+:root[data-reduced-motion="true"] *,
+:root[data-reduced-motion="true"] *::before,
+:root[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* El desplazamiento suave se pide con `scroll-behavior` en el contenedor, no
+   en sus hijos: la regla de arriba no lo alcanza. */
+:root[data-reduced-motion="true"] {
+  scroll-behavior: auto !important;
+}

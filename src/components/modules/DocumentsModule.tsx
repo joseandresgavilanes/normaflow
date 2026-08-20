@@ -18,6 +18,7 @@ import { AUDIT_ACTIONS, createAuditEvent } from "@/lib/domain/audit-event";
 import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
 import { formatDate } from "@/lib/utils";
 import type { Column } from "@/components/ui/Table";
+import Picker from "@/components/ui/Picker";
 
 function isPdfUrl(url: string) {
   return /\.pdf($|\?)/i.test(url) || url.includes("application/pdf");
@@ -290,7 +291,7 @@ export default function DocumentsModule() {
     <div>
       <SectionTitle
         title="Control de Documentos"
-        sub={`${documents.length} documentos en el espacio de trabajo`}
+        meta={<span className="nf-page-header__chip">{documents.length} documentos</span>}
         action={
           <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
             <Plus size={17} strokeWidth={2.25} aria-hidden />
@@ -392,7 +393,7 @@ export default function DocumentsModule() {
             placeholder="Buscar por título o código..."
             style={{ flex: "1 1 200px", minWidth: 160, maxWidth: 440, boxSizing: "border-box" }}
           />
-          <select aria-label="Filtrar por carpeta"
+          <Picker aria-label="Filtrar por carpeta"
             className="nf-app-input"
             value={folderFilter}
             onChange={e => setFolderFilter(e.target.value)}
@@ -404,8 +405,8 @@ export default function DocumentsModule() {
                 {f}
               </option>
             ))}
-          </select>
-          <select
+          </Picker>
+          <Picker
             className="nf-app-input"
             value={sortBy}
             onChange={e => setSortBy(e.target.value as DocumentSortKey)}
@@ -415,7 +416,7 @@ export default function DocumentsModule() {
             {DOCUMENT_SORT_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
-          </select>
+          </Picker>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <span className="nf-filter-label" style={{ marginRight: 4 }}>
@@ -509,7 +510,7 @@ export default function DocumentsModule() {
             </div>
             <div style={{ marginBottom: 14, padding: "12px 14px", background: "var(--nf-surface-muted)", borderRadius: 10, border: "1px solid var(--nf-line)" }}>
               <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginBottom: 8, textTransform: "none", letterSpacing: "0.5px" }}>Proceso asociado</div>
-              <select aria-label="Proceso vinculado"
+              <Picker aria-label="Proceso vinculado"
                 className="nf-app-input"
                 value={processLinkDraft}
                 onChange={e => setProcessLinkDraft(e.target.value)}
@@ -522,7 +523,7 @@ export default function DocumentsModule() {
                     {p.code} — {p.name}
                   </option>
                 ))}
-              </select>
+              </Picker>
               <button
                 type="button"
                 disabled={!perm.documents.edit}
@@ -800,6 +801,7 @@ export default function DocumentsModule() {
                   file={historyVersionFile}
                   onFileChange={setHistoryVersionFile}
                   label="Archivo de esta revisión (opcional)"
+                  maxSizeMB={50}
                   hint="PDF, Word e imágenes (PNG, JPG, WebP). Si no adjuntas archivo, se reutiliza la vista previa actual del documento."
                   compact
                 />
@@ -821,14 +823,14 @@ export default function DocumentsModule() {
             <input className="nf-app-input" value={newForm.code} onChange={e => setNewForm({ ...newForm, code: e.target.value })} />
           </label>
           <label>Tipo
-            <select className="nf-app-input" value={newForm.type} onChange={e => setNewForm({ ...newForm, type: e.target.value as DocumentRow["type"] })}>
+            <Picker aria-label="Tipo" className="nf-app-input" value={newForm.type} onChange={e => setNewForm({ ...newForm, type: e.target.value as DocumentRow["type"] })}>
               <option value="MANUAL">Manual</option>
               <option value="PROCEDURE">Procedimiento</option>
               <option value="POLICY">Política</option>
               <option value="PLAN">Plan</option>
               <option value="INSTRUCTION">Instrucción</option>
               <option value="FORM">Formulario</option>
-            </select>
+            </Picker>
           </label>
           <label>Norma de referencia
             <input className="nf-app-input" value={newForm.standard} onChange={e => setNewForm({ ...newForm, standard: e.target.value })} />
@@ -837,20 +839,21 @@ export default function DocumentsModule() {
             <input className="nf-app-input" value={newForm.clause} onChange={e => setNewForm({ ...newForm, clause: e.target.value })} />
           </label>
           <label>Proceso asociado
-            <select className="nf-app-input" value={newForm.linkedProcessCode} onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })} style={{ cursor: "pointer" }}>
+            <Picker aria-label="Proceso asociado" className="nf-app-input" value={newForm.linkedProcessCode} onChange={e => setNewForm({ ...newForm, linkedProcessCode: e.target.value })} style={{ cursor: "pointer" }}>
               <option value="">Sin proceso</option>
               {processes.map(p => (
                 <option key={p.id} value={p.code}>
                   {p.code} — {p.name}
                 </option>
               ))}
-            </select>
+            </Picker>
           </label>
           <FileImportArea
             baseId="doc-new-file"
             file={newFile}
             onFileChange={setNewFile}
             label="Archivo opcional"
+            maxSizeMB={50}
             hint="Adjunta PDF, imágenes u Office para vista previa en el navegador. Los datos no se envían a ningún servidor en esta sesión local."
           />
           <div className="nf-modal-actions">

@@ -1,0 +1,107 @@
+/* ============================================================================
+ * InfoTip — ayuda contextual detrás de un icono
+ *
+ * El globo se pinta en coordenadas de viewport para que no lo recorte ninguna
+ * tarjeta con overflow. Cerrado NO se oculta con display:none: se recorta a un
+ * píxel para que `aria-describedby` siga teniendo destino y el lector de
+ * pantalla lo anuncie sin necesidad de abrirlo.
+ * ========================================================================== */
+
+.nf-infotip {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.nf-infotip__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 24px de área táctil alrededor de un icono de 14: el mínimo cómodo sin
+     romper la línea de texto que lo acompaña. */
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nf-radius-full);
+  background: transparent;
+  color: var(--nf-text-subtle);
+  cursor: help;
+  transition: color var(--nf-duration-fast) var(--nf-ease-standard),
+    background-color var(--nf-duration-fast) var(--nf-ease-standard);
+}
+
+.nf-infotip__trigger:hover,
+.nf-infotip__trigger[aria-expanded="true"] {
+  background: var(--nf-surface-sunken);
+  color: var(--nf-text-secondary);
+}
+
+.nf-infotip__trigger:focus-visible {
+  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
+  outline-offset: 1px;
+}
+
+.nf-infotip__bubble {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nf-infotip__bubble[data-open="true"] {
+  position: fixed;
+  z-index: var(--nf-z-tooltip);
+  width: min(300px, calc(100vw - 24px));
+  height: auto;
+  margin: 0;
+  padding: var(--nf-space-3) var(--nf-space-3);
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 1px solid var(--nf-border);
+  border-radius: var(--nf-radius-m);
+  background: var(--nf-surface);
+  box-shadow: var(--nf-elevation-3);
+  color: var(--nf-text-secondary);
+  font-size: var(--nf-text-sm);
+  font-weight: var(--nf-weight-regular);
+  line-height: var(--nf-leading-normal);
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  animation: nf-infotip-in var(--nf-duration-fast) var(--nf-ease-out);
+}
+
+@keyframes nf-infotip-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------------------------
+ * Composición con los encabezados
+ *
+ * El icono va junto al título, no debajo: la línea de título deja de ser un
+ * bloque de dos alturas y las páginas empiezan por su contenido.
+ * ------------------------------------------------------------------------ */
+
+.nf-heading-row {
+  display: flex;
+  /* `flex-direction` explícito: esta clase se añade sobre encabezados que ya
+     apilaban título y descripción en columna, y sin declararla el icono seguía
+     cayendo bajo el título. */
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--nf-space-1);
+  min-width: 0;
+}
+
+.nf-heading-row > :first-child {
+  min-width: 0;
+}

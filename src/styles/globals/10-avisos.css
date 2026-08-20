@@ -414,3 +414,22 @@ button.nf-audit-card,
 /* Shared overview language for the ISO module dashboards.  The individual
    modules keep their domain-specific data, while this layer keeps the shell
    and hierarchy consistent with the rest of the application. */
+/* ── Avisos con un modal abierto ──────────────────────────────────────────── */
+/*
+ * Un error de formulario se pinta en la tira de avisos de la PÁGINA, que queda
+ * debajo de la capa del modal (z-index 5000): el usuario veía el formulario sin
+ * reaccionar y el motivo escondido detrás, solo visible si cerraba el modal.
+ *
+ * Con un modal abierto el aviso se despega y flota por encima. Es una red de
+ * seguridad: lo correcto es que el modal muestre su propio error, y los que lo
+ * hacen no dependen de esto.
+ */
+body.nf-modal-open .nf-alert--error {
+  position: fixed;
+  top: var(--nf-space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5100;
+  width: min(560px, calc(100vw - 32px));
+  box-shadow: var(--nf-elevation-3);
+}

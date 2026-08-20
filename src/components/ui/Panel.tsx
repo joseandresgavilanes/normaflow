@@ -1,3 +1,4 @@
+import InfoTip from "@/components/ui/InfoTip";
 import { cn } from "@/lib/utils";
 
 export function Panel({
@@ -27,9 +28,9 @@ export function PanelHeader({
 }) {
   return (
     <div className="nf-panel-head">
-      <div className="nf-panel-head-text">
+      <div className="nf-panel-head-text nf-heading-row">
         <h3 className="nf-panel-title">{title}</h3>
-        {subtitle && <p className="nf-panel-sub">{subtitle}</p>}
+        {subtitle && <InfoTip text={subtitle} label={title} />}
       </div>
       {action}
     </div>

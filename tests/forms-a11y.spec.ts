@@ -39,6 +39,14 @@ const SONDA = `() => {
   const sinNombre = [];
   for (const c of controles) {
     if (c instanceof HTMLInputElement && c.type === 'hidden') continue;
+    // Espejo del valor de un control compuesto: 'Picker' y 'DateField' llevan
+    // un input recortado que solo existe para que el campo viaje en el envío y
+    // para que la validación del navegador tenga a qué anclarse. Está fuera del
+    // arbol de accesibilidad por 'aria-hidden' y fuera del orden de tabulación
+    // por 'tabindex=-1', así que no tiene nombre que anunciar: quien se anuncia
+    // es el disparador. Exigirselo seria un fallo permanente que acaba tapando
+    // los campos sin nombre de verdad.
+    if (c.getAttribute('aria-hidden') === 'true' && c.getAttribute('tabindex') === '-1') continue;
     const estilo = getComputedStyle(c);
     if (estilo.display === 'none' || estilo.visibility === 'hidden') continue;
 

@@ -8,6 +8,9 @@ import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 import {
   addAssetDependency,
   addAssetRisk,
@@ -107,7 +110,7 @@ export default function AssetsLiveClient({ initial }: { initial: AssetsPayload }
         <Filter label="Estado" value={status} onChange={setStatus} options={[{ value: "ALL", label: "Todos" }, ...Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))]} />
         <Filter label="Criticidad" value={criticality} onChange={setCriticality} options={[{ value: "ALL", label: "Todas" }, ...Object.entries(CRIT_LABEL).map(([value, label]) => ({ value, label }))]} />
         {initial.canCreate && <><button type="button" className="nf-app-btn-primary" onClick={() => setCreating(true)}><Plus size={14} /> Nuevo activo</button><button type="button" className="nf-app-btn-ghost" onClick={() => setImporting(true)}><Upload size={14} /> Importar CSV</button></>}
-        {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+        {initial.canExport && <><Picker aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
       </div>
       <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginBottom: 10 }}>{filtered.length} de {initial.summary.total} activos</div>
       <DataTable
@@ -144,18 +147,18 @@ function AssetForm({ asset, initial, pending, onClose, onRun }: { asset?: Asset;
       </div>
       <label>Descripción<textarea className="nf-app-input" rows={2} value={f.description} onChange={(e) => set("description", e.target.value)} /></label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-        <label>Categoría<select className="nf-app-input" value={f.category} onChange={(e) => set("category", e.target.value)}>{Object.entries(CATEGORY_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-        <label>Criticidad<select className="nf-app-input" value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{Object.entries(CRIT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
-        <label>Estado<select className="nf-app-input" value={f.status} onChange={(e) => set("status", e.target.value)}>{Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label>Categoría<Picker aria-label="Categoría" className="nf-app-input" value={f.category} onChange={(e) => set("category", e.target.value)}>{Object.entries(CATEGORY_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
+        <label>Criticidad<Picker aria-label="Criticidad" className="nf-app-input" value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>{Object.entries(CRIT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
+        <label>Estado<Picker aria-label="Estado" className="nf-app-input" value={f.status} onChange={(e) => set("status", e.target.value)}>{Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label>Propietario<select className="nf-app-input" value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Sin asignar</option>{initial.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
-        <label>Custodio<select className="nf-app-input" value={f.custodianId} onChange={(e) => set("custodianId", e.target.value)}><option value="">Sin asignar</option>{initial.members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
+        <label>Propietario<PersonPicker people={initial.members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Sin asignar" ariaLabel="Propietario" /></label>
+        <label>Custodio<PersonPicker people={initial.members} value={f.custodianId} onValueChange={(personId) => set("custodianId", personId)} placeholder="Sin asignar" ariaLabel="Custodio" /></label>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-        <label>Proceso<select className="nf-app-input" value={f.processId} onChange={(e) => set("processId", e.target.value)}><option value="">Ninguno</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-        <label>Ubicación<select className="nf-app-input" value={f.locationId} onChange={(e) => set("locationId", e.target.value)}><option value="">Ninguna</option>{initial.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select></label>
-        <label>Próxima revisión<input className="nf-app-input" type="date" value={f.nextReviewDate ?? ""} onChange={(e) => set("nextReviewDate", e.target.value)} /></label>
+        <label>Proceso<Picker aria-label="Proceso" className="nf-app-input" value={f.processId} onChange={(e) => set("processId", e.target.value)}><option value="">Ninguno</option>{initial.processes.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</Picker></label>
+        <label>Ubicación<Picker aria-label="Ubicación" className="nf-app-input" value={f.locationId} onChange={(e) => set("locationId", e.target.value)}><option value="">Ninguna</option>{initial.locations.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</Picker></label>
+        <label>Próxima revisión<DateField className="nf-app-input" value={f.nextReviewDate ?? ""} onChange={(e) => set("nextReviewDate", e.target.value)} /></label>
       </div>
       <button type="button" className="nf-app-btn-primary" disabled={pending || !f.code.trim() || !f.name.trim()} onClick={() => onRun(() => asset ? updateAsset({ id: asset.id, ...payload() }) : createAsset(payload()), { onSuccess: onClose, successMessage: asset ? "Activo actualizado." : "Activo creado." })}>{asset ? "Guardar cambios" : "Crear activo"}</button>
     </div>
@@ -209,8 +212,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         <h4>Clasificación (CIA)</h4>
         {initial.canUpdate ? <div style={{ display: "grid", gap: 8 }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-            {(["confidentiality", "integrity", "availability"] as const).map((k) => <label key={k} style={{ fontSize: 11 }}>{k === "confidentiality" ? "Confidencialidad" : k === "integrity" ? "Integridad" : "Disponibilidad"}<select className="nf-app-input" value={cls[k]} onChange={(e) => setCls((p) => ({ ...p, [k]: e.target.value as never }))}>{Object.entries(CIA_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>)}
-            <label style={{ fontSize: 11 }}>Clasificación<select className="nf-app-input" value={cls.classification} onChange={(e) => setCls((p) => ({ ...p, classification: e.target.value as never }))}>{Object.entries(CLASS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+            {(["confidentiality", "integrity", "availability"] as const).map((k) => <label key={k} style={{ fontSize: 11 }}>{k === "confidentiality" ? "Confidencialidad" : k === "integrity" ? "Integridad" : "Disponibilidad"}<Picker aria-label={k === "confidentiality" ? "Confidencialidad" : k === "integrity" ? "Integridad" : "Disponibilidad"} className="nf-app-input" value={cls[k]} onChange={(e) => setCls((p) => ({ ...p, [k]: e.target.value as never }))}>{Object.entries(CIA_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>)}
+            <label style={{ fontSize: 11 }}>Clasificación<Picker aria-label="Clasificación" className="nf-app-input" value={cls.classification} onChange={(e) => setCls((p) => ({ ...p, classification: e.target.value as never }))}>{Object.entries(CLASS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
           </div>
           <input aria-label="Requisitos legales" className="nf-app-input" placeholder="Requisitos legales" value={cls.legalRequirements} onChange={(e) => setCls((p) => ({ ...p, legalRequirements: e.target.value }))} />
           <input aria-label="Retención" className="nf-app-input" placeholder="Retención" value={cls.retention} onChange={(e) => setCls((p) => ({ ...p, retention: e.target.value }))} />
@@ -222,7 +225,7 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Riesgos asociados">
         {asset.risks.map((r) => <Row key={r.id} text={`${r.riskTitle ?? r.threat ?? "Riesgo"}${r.vulnerability ? ` · ${r.vulnerability}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetRisk(r.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select aria-label="Riesgo del registro" className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</select>
+          <Picker aria-label="Riesgo del registro" className="nf-app-input" value={riskId} onChange={(e) => setRiskId(e.target.value)}><option value="">Riesgo del registro…</option>{initial.riskOptions.map((r) => <option key={r.id} value={r.id}>{r.title}</option>)}</Picker>
           <input aria-label="Amenaza" className="nf-app-input" placeholder="Amenaza" value={threat} onChange={(e) => setThreat(e.target.value)} style={{ maxWidth: 150 }} />
           <input aria-label="Vulnerabilidad" className="nf-app-input" placeholder="Vulnerabilidad" value={vuln} onChange={(e) => setVuln(e.target.value)} style={{ maxWidth: 150 }} />
           <button type="button" className="nf-app-btn-ghost" disabled={pending || (!riskId && !threat.trim())} onClick={() => onRun(() => addAssetRisk({ assetId: asset.id, riskId: riskId || null, threat: threat || undefined, vulnerability: vuln || undefined }), { successMessage: "Riesgo asociado." })}><Link2 size={14} /> Añadir</button>
@@ -233,8 +236,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
       <Section title="Controles Anexo A asociados">
         {asset.controls.map((ct) => <Row key={ct.id} text={`${ct.code} · ${ct.title} · ${CTRL_STATUS_LABEL[ct.status]}${ct.evidence ? ` · ${ct.evidence.title}` : ""}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetControl(ct.id)) : undefined} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select aria-label="Control" className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</select>
-          <select aria-label="Estado del control" className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
+          <Picker aria-label="Control" className="nf-app-input" value={ctrlId} onChange={(e) => setCtrlId(e.target.value)}><option value="">Control…</option>{initial.orgControlOptions.map((o) => <option key={o.id} value={o.id}>{o.code} · {o.title}</option>)}</Picker>
+          <Picker aria-label="Estado del control" className="nf-app-input" value={ctrlStatus} onChange={(e) => setCtrlStatus(e.target.value)} style={{ maxWidth: 150 }}>{Object.entries(CTRL_STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !ctrlId} onClick={() => onRun(() => upsertAssetControl({ assetId: asset.id, organizationControlId: ctrlId, status: ctrlStatus as never }), { successMessage: "Control asociado." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -244,8 +247,8 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
         {asset.dependencies.map((d) => <Row key={d.id} text={`${DEP_LABEL[d.type]} → ${d.asset.code} ${d.asset.name}`} onRemove={initial.canUpdate ? () => onRun(() => removeAssetDependency(d.id)) : undefined} pending={pending} />)}
         {asset.dependents.map((d) => <Row key={d.id} text={`${d.asset.code} ${d.asset.name} → ${DEP_LABEL[d.type]} este activo`} pending={pending} />)}
         {initial.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 6 }}>
-          <select aria-label="Tipo de dependencia" className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
-          <select aria-label="Activo dependiente" className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</select>
+          <Picker aria-label="Tipo de dependencia" className="nf-app-input" value={depType} onChange={(e) => setDepType(e.target.value)} style={{ maxWidth: 140 }}>{Object.entries(DEP_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker>
+          <Picker aria-label="Activo dependiente" className="nf-app-input" value={depId} onChange={(e) => setDepId(e.target.value)}><option value="">Activo dependiente…</option>{initial.assets.filter((x) => x.id !== asset.id).map((x) => <option key={x.id} value={x.id}>{x.code} · {x.name}</option>)}</Picker>
           <button type="button" className="nf-app-btn-ghost" disabled={pending || !depId} onClick={() => onRun(() => addAssetDependency({ sourceAssetId: asset.id, dependentAssetId: depId, type: depType as never }), { successMessage: "Dependencia añadida." })}><Link2 size={14} /> Añadir</button>
         </div>}
       </Section>
@@ -261,5 +264,5 @@ function AssetDetail({ asset, initial, pending, onClose, onRun }: { asset: Asset
 function Section({ title, children }: { title: string; children: React.ReactNode }) { return <div style={{ borderTop: "1px solid var(--nf-line)", paddingTop: 14 }}><h4>{title}</h4>{children}</div>; }
 function Row({ text, onRemove, pending }: { text: string; onRemove?: () => void; pending: boolean }) { return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid var(--nf-line)", fontSize: 13 }}><span>{text}</span>{onRemove && <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={onRemove}><Trash2 size={13} /></button>}</div>; }
 function Metric({ label, value, icon, color = "#5266F6" }: { label: string; value: string | number; icon: React.ReactNode; color?: string }) { return <div className="nf-metric-cell"><div className="nf-metric-cell-icon" style={{ background: `${color}14`, color }}>{icon}</div><div className="nf-metric-cell-body"><div className="nf-metric-cell-value" style={{ color }}>{value}</div><div className="nf-metric-cell-label">{label}</div></div></div>; }
-function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<select className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>; }
+function Filter({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) { return <label style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{label}<Picker aria-label={label} className="nf-app-input" value={value} onChange={(e) => onChange(e.target.value)} style={{ marginTop: 3 }}>{options.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</Picker></label>; }
 function Badge({ value, tone }: { value: string; tone: "green" | "gray" | "amber" | "red" | "blue" }) { const colors = { green: ["var(--nf-success-text)", "var(--nf-success-subtle)"], gray: ["var(--nf-text-secondary)", "var(--nf-surface-muted)"], amber: ["var(--nf-warning-text)", "var(--nf-warning-subtle)"], red: ["var(--nf-danger-text)", "var(--nf-danger-subtle)"], blue: ["var(--nf-primary-active)", "var(--nf-primary-subtle)"] } as const; const [color, background] = colors[tone]; return <span style={{ display: "inline-flex", padding: "4px 8px", borderRadius: 999, color, background, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{value}</span>; }

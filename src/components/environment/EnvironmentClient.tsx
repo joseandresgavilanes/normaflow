@@ -20,6 +20,11 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { toneChip } from "@/lib/tone";
+import Meter from "@/components/charts/Meter";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import InfoTip from "@/components/ui/InfoTip";
+import DateField from "@/components/ui/DateField";
 
 type Tab = "panel" | "matrix" | "compliance" | "objectives" | "trends" | "waste" | "emergencies" | "biodiversity";
 const SECTION_META: Record<Tab, { title: string; sub: string }> = {
@@ -99,9 +104,9 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
         <div style={{ width: 40, height: 40, borderRadius: 10, background: "var(--nf-success-border)", display: "grid", placeItems: "center" }}>
           <Leaf size={22} color="var(--nf-success-text)" />
         </div>
-        <div>
+        <div className="nf-heading-row">
           <h1 style={{ margin: 0, fontSize: 22 }}>{SECTION_META[tab].title}</h1>
-          <p style={{ margin: 0, color: "var(--nf-text-secondary)", fontSize: 13 }}>{SECTION_META[tab].sub}</p>
+          <InfoTip text={SECTION_META[tab].sub} label={SECTION_META[tab].title} size={15} />
         </div>
         {demo && <span style={{ ...chip("var(--nf-primary-subtle)", "var(--nf-primary-active)"), marginLeft: "auto" }}>Demo</span>}
       </header>
@@ -120,7 +125,31 @@ export default function EnvironmentClient({ initial, demo = false }: { initial: 
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen ambiental</strong><span>Acceso directo a la matriz de aspectos e impactos.</span></div><IsoQuickCreate modulePath="/app/environment" items={[{ label: "Nuevo aspecto ambiental", description: "Abrir la matriz ambiental", section: "matrix", Icon: Grid3x3 }]} /></div>
+          <div className="nf-chart-grid-2">
+            <Meter
+              title="Impactos ambientales"
+              subtitle="Cuántos impactos evaluados resultan significativos."
+              label="significativos"
+              restLabel="No significativos"
+              value={s.significant}
+              total={s.impacts}
+              tone="alert"
+              empty="Aún no hay impactos evaluados."
+              action={{ label: "Abrir aspectos e impactos", href: "/app/environment?section=matrix" }}
+            />
+            <Meter
+              title="Obligaciones legales"
+              subtitle="Cuántas obligaciones tienen la evaluación de cumplimiento vencida."
+              label="vencidas"
+              restLabel="En plazo"
+              value={s.overdue}
+              total={s.obligations}
+              tone="alert"
+              empty="Aún no hay obligaciones registradas."
+              action={{ label: "Abrir cumplimiento legal", href: "/app/environment?section=compliance" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen ambiental</strong></div><IsoQuickCreate modulePath="/app/environment" items={[{ label: "Nuevo aspecto ambiental", description: "Abrir la matriz ambiental", section: "matrix", Icon: Grid3x3 }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><Grid3x3 size={16} aria-hidden />Metodología de significancia</h3>
@@ -504,9 +533,9 @@ function AspectEditor({ value, pending, onClose, onSave }: {
           <label>Producto / servicio<input className="nf-app-input" value={form.productService} onChange={(e) => setForm((p) => ({ ...p, productService: e.target.value }))} /></label>
           <label>Etapa del ciclo de vida<input className="nf-app-input" value={form.lifeCycleStage} onChange={(e) => setForm((p) => ({ ...p, lifeCycleStage: e.target.value }))} /></label>
         </div>
-        <label>Condición<select className="nf-app-input" value={form.condition} onChange={(e) => setForm((p) => ({ ...p, condition: e.target.value as AspectFormValue["condition"] }))}>
+        <label>Condición<Picker aria-label="Condición" className="nf-app-input" value={form.condition} onChange={(e) => setForm((p) => ({ ...p, condition: e.target.value as AspectFormValue["condition"] }))}>
           <option value="NORMAL">Normal</option><option value="ABNORMAL">Anormal</option><option value="EMERGENCY">Emergencia</option>
-        </select></label>
+        </Picker></label>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           <label>Responsable (ID)<input className="nf-app-input" value={form.responsibleId} onChange={(e) => setForm((p) => ({ ...p, responsibleId: e.target.value }))} placeholder="Opcional" /></label>
           <label>Proceso (ID)<input className="nf-app-input" value={form.processId} onChange={(e) => setForm((p) => ({ ...p, processId: e.target.value }))} placeholder="Opcional" /></label>
@@ -550,10 +579,10 @@ function ObligationForm({ initial, members, pending, onCancel, onSave }: {
       <label>Obligación<textarea className="nf-app-input" rows={3} value={form.obligation} onChange={(event) => set("obligation", event.target.value)} placeholder="Describe el requisito aplicable…" /></label>
       <label>Aplicabilidad<input className="nf-app-input" value={form.applicability} onChange={(event) => set("applicability", event.target.value)} placeholder="Procesos, sedes o actividades alcanzadas" /></label>
       <div className="nf-form-grid-2">
-        <label>Responsable<select className="nf-app-input" value={form.responsibleId} onChange={(event) => set("responsibleId", event.target.value)}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
+        <label>Responsable<PersonPicker people={members} value={form.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Sin asignar" ariaLabel="Responsable" /></label>
         <label>Frecuencia de revisión (meses)<input className="nf-app-input" type="number" min={1} value={form.reviewFrequencyMonths} onChange={(event) => set("reviewFrequencyMonths", event.target.value)} placeholder="Ej. 12" /></label>
       </div>
-      <label>Próxima revisión<input className="nf-app-input" type="date" value={form.reviewDate} onChange={(event) => set("reviewDate", event.target.value)} /></label>
+      <label>Próxima revisión<DateField className="nf-app-input" value={form.reviewDate} onChange={(event) => set("reviewDate", event.target.value)} /></label>
       <div className="nf-form-grid-2"><label>Evidencia (ID)<input className="nf-app-input" value={form.evidenceId} onChange={(event) => set("evidenceId", event.target.value)} placeholder="Opcional" /></label><label>Documento (ID)<input className="nf-app-input" value={form.documentId} onChange={(event) => set("documentId", event.target.value)} placeholder="Opcional" /></label></div>
       <div className="nf-modal-actions">
         <button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button>
@@ -578,10 +607,10 @@ function EvaluationForm({ obligation, members, pending, onCancel, onSave }: {
   return (
     <div className="nf-modal-form">
       <div className="nf-modal-help">{obligation.source} · {obligation.obligation}</div>
-      <label>Resultado<select className="nf-app-input" value={form.result} onChange={(event) => setForm((current) => ({ ...current, result: event.target.value }))}>
+      <label>Resultado<Picker aria-label="Resultado" className="nf-app-input" value={form.result} onChange={(event) => setForm((current) => ({ ...current, result: event.target.value }))}>
         <option value="COMPLIANT">Conforme</option><option value="PARTIAL">Parcial</option><option value="NON_COMPLIANT">No conforme</option><option value="NOT_EVALUATED">Sin evaluar</option>
-      </select></label>
-      <label>Evaluador<select className="nf-app-input" value={form.evaluatorId} onChange={(event) => setForm((current) => ({ ...current, evaluatorId: event.target.value }))}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
+      </Picker></label>
+      <label>Evaluador<PersonPicker people={members} value={form.evaluatorId} onValueChange={(personId) => setForm((current) => ({ ...current, evaluatorId: personId }))} placeholder="Sin asignar" ariaLabel="Evaluador" /></label>
       <label>Hallazgos y observaciones<textarea className="nf-app-input" rows={4} value={form.findings} onChange={(event) => setForm((current) => ({ ...current, findings: event.target.value }))} placeholder="Evidencia revisada, desviaciones o notas…" /></label>
       <div className="nf-modal-actions">
         <button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button>
@@ -601,12 +630,12 @@ function ObjectiveForm({ initial, members, pending, onCancel, onSave }: {
   const [form, setForm] = useState({ code: initial?.code ?? "", objective: initial?.objective ?? "", baseline: initial?.baseline ?? "", target: initial?.target ?? "", indicatorId: initial?.indicatorId ?? "", responsibleId: initial?.responsibleId ?? "", resources: initial?.resources ?? "", dueDate: initial?.dueDate ? fmt(initial.dueDate) : "", status: initial?.status ?? "PLANNED", progress: initial?.progress != null ? String(initial.progress) : "0" });
   const set = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
   return <div className="nf-modal-form">
-    <div className="nf-form-grid-2"><label>Código<input className="nf-app-input" value={form.code} onChange={(event) => set("code", event.target.value)} placeholder="OBJ-0001 (opcional)" /></label><label>Responsable<select className="nf-app-input" value={form.responsibleId} onChange={(event) => set("responsibleId", event.target.value)}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label></div>
+    <div className="nf-form-grid-2"><label>Código<input className="nf-app-input" value={form.code} onChange={(event) => set("code", event.target.value)} placeholder="OBJ-0001 (opcional)" /></label><label>Responsable<PersonPicker people={members} value={form.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Sin asignar" ariaLabel="Responsable" /></label></div>
     <label>Objetivo<textarea className="nf-app-input" rows={2} value={form.objective} onChange={(event) => set("objective", event.target.value)} placeholder="Resultado ambiental que se desea alcanzar…" /></label>
     <div className="nf-form-grid-2"><label>Línea base<input className="nf-app-input" value={form.baseline} onChange={(event) => set("baseline", event.target.value)} /></label><label>Meta<input className="nf-app-input" value={form.target} onChange={(event) => set("target", event.target.value)} /></label></div>
-    <div className="nf-form-grid-2"><label>Indicador (ID)<input className="nf-app-input" value={form.indicatorId} onChange={(event) => set("indicatorId", event.target.value)} placeholder="Opcional" /></label><label>Fecha objetivo<input className="nf-app-input" type="date" value={form.dueDate} onChange={(event) => set("dueDate", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Indicador (ID)<input className="nf-app-input" value={form.indicatorId} onChange={(event) => set("indicatorId", event.target.value)} placeholder="Opcional" /></label><label>Fecha objetivo<DateField className="nf-app-input" value={form.dueDate} onChange={(event) => set("dueDate", event.target.value)} /></label></div>
     <label>Recursos<textarea className="nf-app-input" rows={2} value={form.resources} onChange={(event) => set("resources", event.target.value)} placeholder="Personas, presupuesto, equipos…" /></label>
-    <div className="nf-form-grid-2"><label>Estado<select className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}><option value="PLANNED">Planificado</option><option value="IN_PROGRESS">En curso</option><option value="ACHIEVED">Logrado</option><option value="DELAYED">Retrasado</option><option value="CANCELLED">Cancelado</option></select></label><label>Avance (%)<input className="nf-app-input" type="number" min={0} max={100} value={form.progress} onChange={(event) => set("progress", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Estado<Picker aria-label="Estado" className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}><option value="PLANNED">Planificado</option><option value="IN_PROGRESS">En curso</option><option value="ACHIEVED">Logrado</option><option value="DELAYED">Retrasado</option><option value="CANCELLED">Cancelado</option></Picker></label><label>Avance (%)<input className="nf-app-input" type="number" min={0} max={100} value={form.progress} onChange={(event) => set("progress", event.target.value)} /></label></div>
     <div className="nf-modal-actions"><button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !form.objective.trim()} onClick={() => onSave({ code: form.code || undefined, objective: form.objective, baseline: form.baseline || undefined, target: form.target || undefined, indicatorId: form.indicatorId || undefined, responsibleId: form.responsibleId || undefined, resources: form.resources || undefined, dueDate: form.dueDate ? new Date(`${form.dueDate}T00:00:00.000Z`).toISOString() : undefined, status: form.status as Parameters<typeof createObjective>[0]["status"], progress: Math.min(100, Math.max(0, Number(form.progress) || 0)) })}>{initial ? "Guardar cambios" : "Crear objetivo"}</button></div>
   </div>;
 }
@@ -624,9 +653,9 @@ function ProgramForm({ initial, objectiveId, members, pending, onCancel, onSave 
   return <div className="nf-modal-form">
     <label>Nombre del programa<input className="nf-app-input" value={form.name} onChange={(event) => set("name", event.target.value)} placeholder="Programa de reducción de consumo…" /></label>
     <label>Actividades<textarea className="nf-app-input" rows={3} value={form.activities} onChange={(event) => set("activities", event.target.value)} /></label>
-    <div className="nf-form-grid-2"><label>Responsable<select className="nf-app-input" value={form.responsibleId} onChange={(event) => set("responsibleId", event.target.value)}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label><label>Presupuesto<input className="nf-app-input" type="number" min={0} step="any" value={form.budget} onChange={(event) => set("budget", event.target.value)} /></label></div>
-    <div className="nf-form-grid-2"><label>Inicio<input className="nf-app-input" type="date" value={form.startDate} onChange={(event) => set("startDate", event.target.value)} /></label><label>Fecha objetivo<input className="nf-app-input" type="date" value={form.dueDate} onChange={(event) => set("dueDate", event.target.value)} /></label></div>
-    <div className="nf-form-grid-2"><label>Estado<select className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}><option value="NOT_STARTED">No iniciado</option><option value="IN_PROGRESS">En curso</option><option value="COMPLETED">Completado</option><option value="ON_HOLD">En pausa</option><option value="CANCELLED">Cancelado</option></select></label><label>Avance (%)<input className="nf-app-input" type="number" min={0} max={100} value={form.progress} onChange={(event) => set("progress", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Responsable<PersonPicker people={members} value={form.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Sin asignar" ariaLabel="Responsable" /></label><label>Presupuesto<input className="nf-app-input" type="number" min={0} step="any" value={form.budget} onChange={(event) => set("budget", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Inicio<DateField className="nf-app-input" value={form.startDate} onChange={(event) => set("startDate", event.target.value)} /></label><label>Fecha objetivo<DateField className="nf-app-input" value={form.dueDate} onChange={(event) => set("dueDate", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Estado<Picker aria-label="Estado" className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}><option value="NOT_STARTED">No iniciado</option><option value="IN_PROGRESS">En curso</option><option value="COMPLETED">Completado</option><option value="ON_HOLD">En pausa</option><option value="CANCELLED">Cancelado</option></Picker></label><label>Avance (%)<input className="nf-app-input" type="number" min={0} max={100} value={form.progress} onChange={(event) => set("progress", event.target.value)} /></label></div>
     <label>Evidencia (ID)<input className="nf-app-input" value={form.evidenceId} onChange={(event) => set("evidenceId", event.target.value)} placeholder="Opcional" /></label>
     <div className="nf-modal-actions"><button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !form.name.trim()} onClick={() => onSave({ objectiveId: initial?.objectiveId ?? objectiveId, name: form.name, activities: form.activities || undefined, responsibleId: form.responsibleId || undefined, budget: form.budget ? Number(form.budget) : undefined, progress: Math.min(100, Math.max(0, Number(form.progress) || 0)), status: form.status as Parameters<typeof createProgram>[0]["status"], startDate: form.startDate ? new Date(`${form.startDate}T00:00:00.000Z`).toISOString() : undefined, dueDate: form.dueDate ? new Date(`${form.dueDate}T00:00:00.000Z`).toISOString() : undefined, evidenceId: form.evidenceId || undefined })}>{initial ? "Guardar cambios" : "Crear programa"}</button></div>
   </div>;
@@ -657,7 +686,7 @@ function WasteForm({ initial, pending, onCancel, onSave }: {
   const [form, setForm] = useState({ wasteType: initial?.wasteType ?? "", classification: initial?.classification ?? "NON_HAZARDOUS", quantity: initial?.quantity != null ? String(initial.quantity) : "", unit: initial?.unit ?? "", period: initial?.period ?? "", storage: initial?.storage ?? "", managerName: initial?.managerName ?? "", disposition: initial?.disposition ?? "", manifest: initial?.manifest ?? "", processId: initial?.processId ?? "" });
   const set = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
   return <div className="nf-modal-form">
-    <div className="nf-form-grid-2"><label>Tipo de residuo<input className="nf-app-input" value={form.wasteType} onChange={(event) => set("wasteType", event.target.value)} placeholder="Cartón, aceite usado…" /></label><label>Clasificación<select className="nf-app-input" value={form.classification} onChange={(event) => set("classification", event.target.value)}>{Object.entries(WASTE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
+    <div className="nf-form-grid-2"><label>Tipo de residuo<input className="nf-app-input" value={form.wasteType} onChange={(event) => set("wasteType", event.target.value)} placeholder="Cartón, aceite usado…" /></label><label>Clasificación<Picker aria-label="Clasificación" className="nf-app-input" value={form.classification} onChange={(event) => set("classification", event.target.value)}>{Object.entries(WASTE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Picker></label></div>
     <div className="nf-form-grid-3"><label>Cantidad<input className="nf-app-input" type="number" step="any" min={0} value={form.quantity} onChange={(event) => set("quantity", event.target.value)} /></label><label>Unidad<input className="nf-app-input" value={form.unit} onChange={(event) => set("unit", event.target.value)} placeholder="kg, t, m³" /></label><label>Periodo<input className="nf-app-input" value={form.period} onChange={(event) => set("period", event.target.value)} placeholder="YYYY-MM" /></label></div>
     <div className="nf-form-grid-2"><label>Almacenamiento<input className="nf-app-input" value={form.storage} onChange={(event) => set("storage", event.target.value)} /></label><label>Proceso (ID)<input className="nf-app-input" value={form.processId} onChange={(event) => set("processId", event.target.value)} placeholder="Opcional" /></label></div>
     <div className="nf-form-grid-2"><label>Gestor<input className="nf-app-input" value={form.managerName} onChange={(event) => set("managerName", event.target.value)} /></label><label>Manifiesto<input className="nf-app-input" value={form.manifest} onChange={(event) => set("manifest", event.target.value)} /></label></div>
@@ -680,8 +709,8 @@ function EmergencyForm({ initial, members, pending, onCancel, onSave }: {
     <label>Impacto esperado<textarea className="nf-app-input" rows={2} value={form.impact} onChange={(event) => set("impact", event.target.value)} /></label>
     <label>Controles preventivos<textarea className="nf-app-input" rows={2} value={form.controls} onChange={(event) => set("controls", event.target.value)} /></label>
     <label>Plan de respuesta<textarea className="nf-app-input" rows={3} value={form.responsePlan} onChange={(event) => set("responsePlan", event.target.value)} /></label>
-    <div className="nf-form-grid-2"><label>Responsable<select className="nf-app-input" value={form.responsibleId} onChange={(event) => set("responsibleId", event.target.value)}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label><label>Último simulacro<input className="nf-app-input" type="date" value={form.lastDrillAt} onChange={(event) => set("lastDrillAt", event.target.value)} /></label></div>
-    <div className="nf-form-grid-2"><label>Próximo simulacro<input className="nf-app-input" type="date" value={form.nextDrillAt} onChange={(event) => set("nextDrillAt", event.target.value)} /></label><label>Documento (ID)<input className="nf-app-input" value={form.documentId} onChange={(event) => set("documentId", event.target.value)} placeholder="Opcional" /></label></div>
+    <div className="nf-form-grid-2"><label>Responsable<PersonPicker people={members} value={form.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Sin asignar" ariaLabel="Responsable" /></label><label>Último simulacro<DateField className="nf-app-input" value={form.lastDrillAt} onChange={(event) => set("lastDrillAt", event.target.value)} /></label></div>
+    <div className="nf-form-grid-2"><label>Próximo simulacro<DateField className="nf-app-input" value={form.nextDrillAt} onChange={(event) => set("nextDrillAt", event.target.value)} /></label><label>Documento (ID)<input className="nf-app-input" value={form.documentId} onChange={(event) => set("documentId", event.target.value)} placeholder="Opcional" /></label></div>
     <label>Resultados del simulacro<textarea className="nf-app-input" rows={2} value={form.drillResults} onChange={(event) => set("drillResults", event.target.value)} /></label>
     <div className="nf-modal-actions"><button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !form.scenario.trim()} onClick={() => onSave({ scenario: form.scenario, impact: form.impact || undefined, controls: form.controls || undefined, responsePlan: form.responsePlan || undefined, responsibleId: form.responsibleId || undefined, lastDrillAt: form.lastDrillAt ? new Date(`${form.lastDrillAt}T00:00:00.000Z`).toISOString() : undefined, nextDrillAt: form.nextDrillAt ? new Date(`${form.nextDrillAt}T00:00:00.000Z`).toISOString() : undefined, drillResults: form.drillResults || undefined, documentId: form.documentId || undefined })}>{initial ? "Guardar cambios" : "Crear escenario"}</button></div>
   </div>;
@@ -702,9 +731,9 @@ function BiodiversityForm({ initial, members, pending, onCancel, onSave }: {
     {form.protectedArea && <label>Nombre del área protegida<input className="nf-app-input" value={form.protectedAreaName} onChange={(event) => set("protectedAreaName", event.target.value)} /></label>}
     <label>Especie o hábitat<textarea className="nf-app-input" rows={2} value={form.speciesOrHabitat} onChange={(event) => set("speciesOrHabitat", event.target.value)} /></label>
     <div className="nf-form-grid-2"><label>Descripción del impacto<textarea className="nf-app-input" rows={2} value={form.impactDescription} onChange={(event) => set("impactDescription", event.target.value)} /></label><label>Medidas de mitigación<textarea className="nf-app-input" rows={2} value={form.mitigationMeasures} onChange={(event) => set("mitigationMeasures", event.target.value)} /></label></div>
-    <div className="nf-form-grid-2"><label>Frecuencia de monitoreo<input className="nf-app-input" value={form.monitoringFrequency} onChange={(event) => set("monitoringFrequency", event.target.value)} placeholder="Mensual, trimestral…" /></label><label>Estado<select className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}>{Object.entries(BIODIVERSITY_STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label></div>
-    <div className="nf-form-grid-2"><label>Último monitoreo<input className="nf-app-input" type="date" value={form.lastMonitoredAt} onChange={(event) => set("lastMonitoredAt", event.target.value)} /></label><label>Próximo monitoreo<input className="nf-app-input" type="date" value={form.nextMonitoringAt} onChange={(event) => set("nextMonitoringAt", event.target.value)} /></label></div>
-    <label>Responsable<select className="nf-app-input" value={form.responsibleId} onChange={(event) => set("responsibleId", event.target.value)}><option value="">Sin asignar</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>
+    <div className="nf-form-grid-2"><label>Frecuencia de monitoreo<input className="nf-app-input" value={form.monitoringFrequency} onChange={(event) => set("monitoringFrequency", event.target.value)} placeholder="Mensual, trimestral…" /></label><label>Estado<Picker aria-label="Estado" className="nf-app-input" value={form.status} onChange={(event) => set("status", event.target.value)}>{Object.entries(BIODIVERSITY_STATUS_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Picker></label></div>
+    <div className="nf-form-grid-2"><label>Último monitoreo<DateField className="nf-app-input" value={form.lastMonitoredAt} onChange={(event) => set("lastMonitoredAt", event.target.value)} /></label><label>Próximo monitoreo<DateField className="nf-app-input" value={form.nextMonitoringAt} onChange={(event) => set("nextMonitoringAt", event.target.value)} /></label></div>
+    <label>Responsable<PersonPicker people={members} value={form.responsibleId} onValueChange={(personId) => set("responsibleId", personId)} placeholder="Sin asignar" ariaLabel="Responsable" /></label>
     <div className="nf-form-grid-2"><label>Proceso (ID)<input className="nf-app-input" value={form.processId} onChange={(event) => set("processId", event.target.value)} placeholder="Opcional" /></label><label>Evidencia (ID)<input className="nf-app-input" value={form.evidenceId} onChange={(event) => set("evidenceId", event.target.value)} placeholder="Opcional" /></label></div>
     <div className="nf-modal-actions"><button type="button" className="nf-app-btn-ghost" onClick={onCancel}>Cancelar</button><button type="button" className="nf-app-btn-primary" disabled={pending || !form.site.trim() || (form.protectedArea && !form.protectedAreaName.trim())} onClick={() => onSave({ site: form.site, ecosystemType: form.ecosystemType || undefined, protectedArea: form.protectedArea, protectedAreaName: form.protectedAreaName || undefined, speciesOrHabitat: form.speciesOrHabitat || undefined, impactDescription: form.impactDescription || undefined, mitigationMeasures: form.mitigationMeasures || undefined, monitoringFrequency: form.monitoringFrequency || undefined, status: form.status as Parameters<typeof createBiodiversityRecord>[0]["status"], responsibleId: form.responsibleId || undefined, processId: form.processId || undefined, evidenceId: form.evidenceId || undefined, lastMonitoredAt: form.lastMonitoredAt ? new Date(`${form.lastMonitoredAt}T00:00:00.000Z`).toISOString() : undefined, nextMonitoringAt: form.nextMonitoringAt ? new Date(`${form.nextMonitoringAt}T00:00:00.000Z`).toISOString() : undefined })}>{initial ? "Guardar cambios" : "Crear registro"}</button></div>
   </div>;
@@ -716,7 +745,7 @@ function TableFilter({ value, onChange, placeholder }: { value: string; onChange
       <label className="nf-iso-inline-filter-search">
         <Search size={15} aria-hidden />
         <span className="sr-only">{placeholder}</span>
-        <input type="search" className="nf-app-input" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+        <input type="search" data-nf-clear="propio" className="nf-app-input" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
         {value && <button type="button" className="nf-iso-inline-filter-clear" onClick={() => onChange("")} aria-label="Limpiar búsqueda"><X size={14} aria-hidden /></button>}
       </label>
     </div>

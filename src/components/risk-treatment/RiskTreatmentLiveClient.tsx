@@ -8,6 +8,9 @@ import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { useServerAction } from "@/hooks/useServerAction";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 import {
   acceptResidualRisk,
   approveResidualRisk,
@@ -145,7 +148,7 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             {initial.canUpdate && planEditable && <button type="button" className="nf-app-btn-ghost" disabled={isPending} onClick={() => setCreating(true)}><Plus size={14} /> Añadir riesgo</button>}
             {initial.canApprove && planEditable && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => run(() => approveRiskTreatmentPlan({ id: plan.id }), { successMessage: "Plan aprobado." })}><CheckCircle2 size={14} /> Aprobar plan</button>}
-            {initial.canExport && <><select aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 180 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
+            {initial.canExport && <><Picker aria-label="Tipo de informe" className="nf-app-input" value={reportType} onChange={(e) => setReportType(e.target.value)} style={{ maxWidth: 180 }}>{Object.entries(REPORT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("EXCEL")}><Download size={14} />Excel</button><button type="button" className="nf-app-btn-ghost" disabled={exporting} onClick={() => void exportReport("PDF")}><Download size={14} />PDF</button></>}
           </div>
         </div>
 
@@ -203,13 +206,13 @@ function ItemForm({ planId, initial, pending, onClose, onRun }: { planId: string
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         <label>Impacto (1-5)<input className="nf-app-input" type="number" min={1} max={5} value={f.impact} onChange={(e) => set("impact", Number(e.target.value))} /></label>
         <label>Probabilidad (1-5)<input className="nf-app-input" type="number" min={1} max={5} value={f.probability} onChange={(e) => set("probability", Number(e.target.value))} /></label>
-        <label>Tratamiento<select className="nf-app-input" value={f.treatment} onChange={(e) => set("treatment", e.target.value)}>{Object.entries(TREATMENT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></label>
+        <label>Tratamiento<Picker aria-label="Tratamiento" className="nf-app-input" value={f.treatment} onChange={(e) => set("treatment", e.target.value)}>{Object.entries(TREATMENT_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</Picker></label>
       </div>
       <label>Controles existentes<textarea className="nf-app-input" rows={2} value={f.existingControls} onChange={(e) => set("existingControls", e.target.value)} /></label>
       <label>Controles propuestos<textarea className="nf-app-input" rows={2} value={f.proposedControls} onChange={(e) => set("proposedControls", e.target.value)} /></label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <label>Propietario<select className="nf-app-input" value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}><option value="">Sin asignar</option>{initial.members.map((mm) => <option key={mm.id} value={mm.id}>{mm.name}</option>)}</select></label>
-        <label>Fecha objetivo<input className="nf-app-input" type="date" value={f.targetDate} onChange={(e) => set("targetDate", e.target.value)} /></label>
+        <label>Propietario<PersonPicker people={initial.members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Sin asignar" ariaLabel="Propietario" /></label>
+        <label>Fecha objetivo<DateField className="nf-app-input" value={f.targetDate} onChange={(e) => set("targetDate", e.target.value)} /></label>
       </div>
       <button type="button" className="nf-app-btn-primary" disabled={pending || !f.title.trim()} onClick={() => onRun(() => createRiskTreatmentItem({ planId, title: f.title, asset: f.asset || undefined, threat: f.threat || undefined, vulnerability: f.vulnerability || undefined, impact: f.impact, probability: f.probability, treatment: f.treatment as never, existingControls: f.existingControls || undefined, proposedControls: f.proposedControls || undefined, ownerId: f.ownerId || null, targetDate: f.targetDate || null }), { onSuccess: onClose, successMessage: "Riesgo añadido." })}>Registrar riesgo</button>
     </div>

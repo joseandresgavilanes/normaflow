@@ -2540,10 +2540,6 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
     en: "New action",
     "pt-BR": "Nova ação",
   },
-  "+ Nueva acción": {
-    en: "+ New action",
-    "pt-BR": "+ Nova ação",
-  },
   "Nueva asignación": {
     en: "New assignment",
     "pt-BR": "Nova atribuição",
@@ -2568,10 +2564,6 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
     en: "New review",
     "pt-BR": "Nova análise",
   },
-  "+ Nueva revisión": {
-    en: "+ New review",
-    "pt-BR": "+ Nova análise",
-  },
   "Nueva revisión por la dirección": {
     en: "New management review",
     "pt-BR": "Nova análise crítica pela direção",
@@ -2580,17 +2572,13 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
     en: "Upload evidence",
     "pt-BR": "Enviar evidência",
   },
-  "+ Subir evidencia": {
-    en: "+ Upload evidence",
-    "pt-BR": "+ Enviar evidência",
+  "Nuevo Riesgo": {
+    en: "New risk",
+    "pt-BR": "Novo risco",
   },
-  "+ Nuevo Riesgo": {
-    en: "+ New risk",
-    "pt-BR": "+ Novo risco",
-  },
-  "+ Nuevo programa": {
-    en: "+ New program",
-    "pt-BR": "+ Novo programa",
+  "Nuevo programa": {
+    en: "New program",
+    "pt-BR": "Novo programa",
   },
   "Registrar evaluación": {
     en: "Register evaluation",
@@ -2888,7 +2876,7 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
   "Resultado: superada": { en: "Result: passed", "pt-BR": "Resultado: aprovada" },
   "parcial": { en: "partial", "pt-BR": "parcial" },
   "fallida": { en: "failed", "pt-BR": "falhou" },
-  "+ Acción de mejora": { en: "+ Improvement action", "pt-BR": "+ Ação de melhoria" },
+  "Acción de mejora": { en: "Improvement action", "pt-BR": "Ação de melhoria" },
   "Nueva BIA": { en: "New BIA", "pt-BR": "Nova BIA" },
   "Crear BIA": { en: "Create BIA", "pt-BR": "Criar BIA" },
   "Nueva actividad": { en: "New activity", "pt-BR": "Nova atividade" },

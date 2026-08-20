@@ -1,8 +1,23 @@
 "use client";
 
-import { useCallback, useId, useRef, useState, type ChangeEvent, type DragEvent } from "react";
-import { FileText, Upload, X } from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { FileText, ImageIcon, Upload, X } from "lucide-react";
 import { useI18n } from "@/context/I18nProvider";
+
+/**
+ * Zona de adjuntos.
+ *
+ * Es el patrón de «Entradas del registro»: se arrastra o se elige, y una vez
+ * elegido el archivo se ve —nombre, peso y, si es imagen, su miniatura— con
+ * «Cambiar» y «Quitar» a mano. Un `<input type="file">` pelado no dice qué has
+ * adjuntado más allá de un nombre en gris, no admite arrastrar, y su botón lo
+ * pinta el sistema operativo, así que ni sigue el tema ni está en español.
+ *
+ * El campo real sigue siendo un `<input type="file">` de verdad, solo que
+ * invisible: por eso el archivo viaja en el FormData con su `name` y `required`
+ * dispara la validación del navegador, sin que el formulario tenga que
+ * enterarse de nada.
+ */
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -10,263 +25,236 @@ function formatBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/** Lista de extensiones legible: «PDF, Word, Excel o imagen». */
+function describeAccept(accept?: string) {
+  if (!accept) return null;
+  const partes = accept.split(",").map((p) => p.trim().toLowerCase());
+  const grupos = new Set<string>();
+  partes.forEach((parte) => {
+    if (parte.startsWith("image/")) grupos.add("imagen");
+    else if ([".doc", ".docx"].includes(parte)) grupos.add("Word");
+    else if ([".xls", ".xlsx", ".csv"].includes(parte)) grupos.add("Excel");
+    else if ([".ppt", ".pptx"].includes(parte)) grupos.add("PowerPoint");
+    else if (parte.startsWith(".")) grupos.add(parte.slice(1).toUpperCase());
+    else grupos.add(parte);
+  });
+  return [...grupos].join(" · ");
+}
+
 export type FileImportAreaProps = {
-  /** Prefix for input id (`${baseId}-input`) so external triggers can call `.click()`. */
+  /** Prefijo del id del input (`${baseId}-input`) para dispararlo desde fuera. */
   baseId?: string;
+  /** Clave del FormData. Con ella el archivo viaja solo en el envío. */
+  name?: string;
   accept?: string;
-  file: File | null;
-  onFileChange: (file: File | null) => void;
-  /** Visible title (e.g. "Archivo de esta revisión") */
+  /** Modo controlado. Sin estas dos props el componente se gobierna solo. */
+  file?: File | null;
+  onFileChange?: (file: File | null) => void;
   label: string;
-  /** Short line under the zone (formats, demo notice, etc.) */
+  /** Línea de ayuda bajo la zona. */
   hint?: string;
-  /** Text shown inside the empty drop zone. */
+  /** Texto dentro de la zona vacía. Si falta, se describe `accept` y el máximo. */
   zoneNote?: string;
   disabled?: boolean;
-  /** Tighter layout for toolbars or dense modals */
+  required?: boolean;
+  /** Tamaño máximo en MB. Se avisa en el sitio, antes de enviar nada. */
+  maxSizeMB?: number;
+  /** Disposición apretada para modales densos. */
   compact?: boolean;
 };
 
-/**
- * Drop zone + file picker for modals and forms. Matches NormaFlow app surfaces and navy accent.
- */
 export default function FileImportArea({
   baseId: baseIdProp,
+  name,
   accept,
-  file,
+  file: fileProp,
   onFileChange,
   label,
   hint,
-  zoneNote = "Un solo archivo · vista previa local en esta sesión",
+  zoneNote,
   disabled = false,
+  required = false,
+  maxSizeMB,
   compact = false,
 }: FileImportAreaProps) {
   const { tx } = useI18n();
   const reactId = useId();
-  const baseId = baseIdProp ?? `nf-file-import-${reactId.replace(/:/g, "")}`;
+  const baseId = baseIdProp ?? `nf-file-${reactId.replace(/:/g, "")}`;
   const inputId = `${baseId}-input`;
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState("");
+  const [interno, setInterno] = useState<File | null>(null);
 
-  const pickFile = useCallback(
-    (f: File | undefined) => {
-      if (!f || disabled) return;
-      onFileChange(f);
+  const controlado = fileProp !== undefined;
+  const file = controlado ? fileProp : interno;
+
+  // Miniatura solo para imágenes: en un adjunto visual, el nombre del archivo
+  // no dice nada y la miniatura lo dice todo.
+  const [preview, setPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/")) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const aplicar = useCallback(
+    (elegido: File | null) => {
+      if (elegido && maxSizeMB && elegido.size > maxSizeMB * 1024 * 1024) {
+        setError(`El archivo pesa ${formatBytes(elegido.size)} y el máximo son ${maxSizeMB} MB.`);
+        return;
+      }
+      setError("");
+      if (!controlado) setInterno(elegido);
+      onFileChange?.(elegido);
     },
-    [disabled, onFileChange]
+    [controlado, maxSizeMB, onFileChange],
   );
 
-  const onInputChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      pickFile(e.target.files?.[0]);
-      e.target.value = "";
+  /** El archivo soltado tiene que acabar dentro del input real, o no viajaría
+   *  en el FormData: arrastrar y elegir deben dejar el campo en el mismo sitio. */
+  const soltar = useCallback(
+    (dropped: File | undefined) => {
+      if (!dropped || disabled) return;
+      const input = inputRef.current;
+      if (input) {
+        const datos = new DataTransfer();
+        datos.items.add(dropped);
+        input.files = datos.files;
+      }
+      aplicar(dropped);
     },
-    [pickFile]
+    [aplicar, disabled],
   );
 
-  const openPicker = useCallback(() => {
-    if (!disabled) inputRef.current?.click();
+  const onInputChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    aplicar(event.target.files?.[0] ?? null);
+  }, [aplicar]);
+
+  const abrir = useCallback(() => {
+    if (disabled) return;
+    // Se vacía ANTES de abrir: si no, volver a elegir el mismo archivo no
+    // dispararía `change` y parecería que el selector no responde.
+    if (inputRef.current) inputRef.current.value = "";
+    inputRef.current?.click();
   }, [disabled]);
 
-  const onDragOver = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!disabled) setDragOver(true);
-    },
-    [disabled]
-  );
+  const quitar = useCallback(() => {
+    if (inputRef.current) inputRef.current.value = "";
+    aplicar(null);
+  }, [aplicar]);
 
-  const onDragLeave = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const onDragOver = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!disabled) setDragOver(true);
+  }, [disabled]);
+
+  const onDragLeave = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setDragOver(false);
   }, []);
 
-  const onDrop = useCallback(
-    (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOver(false);
-      if (disabled) return;
-      pickFile(e.dataTransfer.files?.[0]);
-    },
-    [disabled, pickFile]
-  );
+  const onDrop = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragOver(false);
+    soltar(event.dataTransfer.files?.[0]);
+  }, [soltar]);
 
-  const minH = compact ? 92 : 128;
-  const pad = compact ? "14px 16px" : "20px 18px";
+  const formatos = describeAccept(accept);
+  const nota =
+    zoneNote ?? ([formatos, maxSizeMB ? `máximo ${maxSizeMB} MB` : null].filter(Boolean).join(" · ") || "Un solo archivo");
 
   return (
-    <div style={{ width: "100%" }}>
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: "var(--nf-ink)",
-          marginBottom: 8,
-          letterSpacing: "-0.01em",
-        }}
-      >
-        {tx(label)}
-      </div>
+    <div className="nf-file" data-compact={compact || undefined}>
+      <div className="nf-file__label">{tx(label)}</div>
 
+      {/* El campo real. Invisible pero presente y enfocable: así el archivo va
+          en el FormData y `required` puede anclar su validación. */}
       <input
         ref={inputRef}
         id={inputId}
+        className="nf-file__native"
         type="file"
+        name={name}
         accept={accept}
+        required={required && !file}
         disabled={disabled}
-        hidden
+        tabIndex={-1}
+        aria-hidden="true"
         onChange={onInputChange}
+        onInvalid={(event) => {
+          event.preventDefault();
+          setError("Adjunta un archivo.");
+        }}
       />
 
       {!file ? (
         <button
           type="button"
+          className="nf-file__zone"
+          data-drag={dragOver || undefined}
+          data-invalid={error ? true : undefined}
           disabled={disabled}
-          onClick={openPicker}
+          onClick={abrir}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           aria-describedby={hint ? `${baseId}-hint` : undefined}
-          style={{
-            width: "100%",
-            minHeight: minH,
-            padding: pad,
-            boxSizing: "border-box",
-            borderRadius: 14,
-            border: `2px dashed ${dragOver ? "var(--nf-primary)" : "rgba(82, 102, 246, 0.22)"}`,
-            background: dragOver
-              ? "var(--nf-app-accent-soft)"
-              : "var(--nf-app-surface-2)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            opacity: disabled ? 0.55 : 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: compact ? 8 : 10,
-            textAlign: "center",
-            transition: "border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease",
-            boxShadow: dragOver ? "0 0 0 3px var(--nf-app-accent-soft)" : "none",
-            color: "inherit",
-            font: "inherit",
-          }}
         >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: compact ? 40 : 48,
-              height: compact ? 40 : 48,
-              borderRadius: 12,
-              background: dragOver ? "rgba(82, 102, 246, 0.12)" : "rgba(82, 102, 246, 0.07)",
-              color: "var(--nf-primary-active)",
-            }}
-          >
+          <span className="nf-file__zone-icon">
             <Upload size={compact ? 20 : 24} strokeWidth={2} aria-hidden />
           </span>
-          <div>
-            <div style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: "var(--nf-ink)", lineHeight: 1.35 }}>
+          <span className="nf-file__zone-text">
+            <span className="nf-file__zone-title">
               {dragOver ? tx("Suelta para adjuntar") : tx("Arrastra aquí o elige archivo")}
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 4, lineHeight: 1.45 }}>
-              {tx(zoneNote)}
-            </div>
-          </div>
+            </span>
+            <span className="nf-file__zone-note">{tx(nota)}</span>
+          </span>
         </button>
       ) : (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            padding: "12px 14px",
-            borderRadius: 14,
-            border: "1px solid rgba(82, 102, 246, 0.14)",
-            background: "linear-gradient(135deg, #fff 0%, #f8fafc 100%)",
-            boxShadow: "0 1px 2px rgba(82, 102, 246, 0.06)",
-          }}
-        >
-          <span
-            style={{
-              flexShrink: 0,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "rgba(82, 102, 246, 0.08)",
-              color: "var(--nf-primary-active)",
-            }}
-          >
-            <FileText size={22} strokeWidth={2} aria-hidden />
+        <div className="nf-file__card">
+          <span className="nf-file__thumb">
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="" className="nf-file__thumb-img" />
+            ) : file.type.startsWith("image/") ? (
+              <ImageIcon size={22} strokeWidth={2} aria-hidden />
+            ) : (
+              <FileText size={22} strokeWidth={2} aria-hidden />
+            )}
           </span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--nf-ink)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-              title={file.name}
-            >
-              {file.name}
-            </div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--nf-ink-3)", marginTop: 3 }}>{formatBytes(file.size)}</div>
-          </div>
-          <div style={{ display: "flex", flexShrink: 0, gap: 6, alignItems: "center" }}>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={openPicker}
-              style={{
-                padding: "8px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(82, 102, 246, 0.2)",
-                background: "var(--nf-surface)",
-                fontSize: 12,
-                fontWeight: 700,
-                color: "var(--nf-primary-active)",
-                cursor: disabled ? "not-allowed" : "pointer",
-              }}
-            >
+          <span className="nf-file__meta">
+            <span className="nf-file__name" title={file.name}>{file.name}</span>
+            <span className="nf-file__size">{formatBytes(file.size)}</span>
+          </span>
+          <span className="nf-file__actions">
+            <button type="button" className="nf-app-btn-ghost nf-app-btn-sm" data-nf-no-action-icon disabled={disabled} onClick={abrir}>
               {tx("Cambiar")}
             </button>
             <button
               type="button"
+              className="nf-file__remove"
+              data-nf-no-action-icon
               disabled={disabled}
-              onClick={() => onFileChange(null)}
+              onClick={quitar}
               aria-label={tx("Quitar archivo")}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 38,
-                height: 38,
-                borderRadius: 10,
-                border: "1px solid var(--nf-line)",
-                background: "var(--nf-surface)",
-                color: "var(--nf-ink-3)",
-                cursor: disabled ? "not-allowed" : "pointer",
-              }}
             >
-              <X size={18} strokeWidth={2.5} aria-hidden />
+              <X size={16} strokeWidth={2.5} aria-hidden />
             </button>
-          </div>
+          </span>
         </div>
       )}
 
-      {hint && (
-        <p id={`${baseId}-hint`} className="nf-app-help" style={{ margin: "10px 0 0", fontSize: 12, lineHeight: 1.5 }}>
-          {tx(hint)}
-        </p>
+      {error && <p className="nf-file__error" role="alert">{tx(error)}</p>}
+      {hint && !error && (
+        <p id={`${baseId}-hint`} className="nf-file__hint">{tx(hint)}</p>
       )}
     </div>
   );

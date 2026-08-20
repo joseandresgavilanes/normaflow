@@ -38,13 +38,21 @@ function riskHeatMarkerStyle(lvl: number, marked: boolean): Pick<CSSProperties, 
 
 /* ============ Hero ============ */
 function HeroChaos() {
+  /* Las fichas del desorden viven en las franjas de arriba y de abajo del
+     lienzo, nunca sobre el panel: colocadas al 2 % y al 88 % del ANCHO —como
+     estaban— caían enteras encima de él, que mide todo el ancho útil. Tres de
+     las seis quedaban invisibles y otras dos las recortaba el `overflow-x`.
+     Las que llevan un `y` cercano al borde del panel se meten un poco por
+     debajo a propósito: papeles asomando por detrás. */
   const items = [
-    { cls: "nf-chaos a nf-chaos--xls", ic: "XLS", t: "registros_riesgos_v17_FINAL.xlsx", x: "4%", y: "8%", r: "-6deg", p: 1.4 },
-    { cls: "nf-chaos b nf-chaos--mail", ic: "@", t: "Fwd: Aprobar política v3 ?", x: "10%", y: "78%", r: "5deg", p: 1.6 },
-    { cls: "nf-chaos a nf-chaos--pdf", ic: "PDF", t: "Politica_seguridad_2022_v2.pdf", x: "2%", y: "42%", r: "3deg", p: 1.2 },
-    { cls: "nf-chaos b nf-chaos--folder", ic: "DIR", t: "/auditoría 2024 (copia copia)", x: "82%", y: "12%", r: "-4deg", p: 1.8 },
-    { cls: "nf-chaos a nf-chaos--bug", ic: "NC", t: "NC-2024-118 sin asignar · vence ayer", x: "78%", y: "82%", r: "4deg", p: 1.5 },
-    { cls: "nf-chaos b nf-chaos--xls", ic: "XLS", t: "KPI_Q3_borrador.xlsx", x: "88%", y: "48%", r: "-3deg", p: 1.3 },
+    // Cascada de arriba, hacia abajo y a la derecha.
+    { cls: "nf-chaos a nf-chaos--xls", ic: "XLS", t: "registros_riesgos_v17_FINAL.xlsx", x: "2%", y: "-4%", r: "-5deg", p: 1.4 },
+    { cls: "nf-chaos b nf-chaos--xls", ic: "XLS", t: "KPI_Q3_borrador.xlsx", x: "22%", y: "3%", r: "-3deg", p: 1.3 },
+    { cls: "nf-chaos b nf-chaos--folder", ic: "DIR", t: "/auditoría 2024 (copia copia)", x: "42%", y: "10%", r: "-4deg", p: 1.8 },
+    // Cascada de abajo, con el mismo desplazamiento.
+    { cls: "nf-chaos a nf-chaos--bug", ic: "NC", t: "NC-2024-118 sin asignar · vence ayer", x: "2%", y: "84%", r: "4deg", p: 1.5 },
+    { cls: "nf-chaos a nf-chaos--pdf", ic: "PDF", t: "Politica_seguridad_2022_v2.pdf", x: "16%", y: "92%", r: "3deg", p: 1.2 },
+    { cls: "nf-chaos b nf-chaos--mail", ic: "@", t: "Fwd: Aprobar política v3 ?", x: "30%", y: "100%", r: "5deg", p: 1.6 },
   ];
   return (
     <>
@@ -163,7 +171,10 @@ function HeroDashboard() {
         </div>
       </div>
 
-      <div className="nf-float-tile" style={{ left: "-8%", top: "8%" }} data-parallax="1.2">
+      {/* Las tres fichas flotantes se apoyan en las esquinas del panel, con la
+          mayor parte del cuerpo fuera de él. Antes caían en su vertical media
+          y tapaban justo los datos que la ilustración quiere enseñar. */}
+      <div className="nf-float-tile" style={{ left: "0%", top: "0%" }} data-parallax="1.2">
         <div className="h">Audit readiness</div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <svg width="40" height="40" viewBox="0 0 40 40">
@@ -178,7 +189,7 @@ function HeroDashboard() {
         </div>
       </div>
 
-      <div className="nf-float-tile" style={{ right: "-6%", top: "32%", minWidth: 180 }} data-parallax="1.4">
+      <div className="nf-float-tile" style={{ right: "2%", bottom: "-6%", minWidth: 180 }} data-parallax="1.4">
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
           <span style={{ width: 18, height: 18, borderRadius: 5, display: "grid", placeItems: "center", background: "linear-gradient(135deg, var(--nf-accent), var(--nf-accent-2))" }}>
             <Ic.spark style={{ color: "var(--nf-text-on-primary)" }}/>
@@ -193,7 +204,7 @@ function HeroDashboard() {
         </div>
       </div>
 
-      <div className="nf-float-tile" style={{ left: "-4%", bottom: "4%", minWidth: 170 }} data-parallax="1.1">
+      <div className="nf-float-tile" style={{ right: "2%", top: "-2%", minWidth: 170 }} data-parallax="1.1">
         <div className="h">Próxima auditoría</div>
         <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 18, letterSpacing: "-0.02em" }}>03 dic 2026</div>
         <div style={{ fontSize: 11, color: "var(--nf-ink-2)", marginTop: 3 }}>ISO 9001 · Interna · M. López</div>
@@ -204,14 +215,14 @@ function HeroDashboard() {
         </div>
       </div>
 
-      <div className="nf-iso-badge" style={{ right: "8%", bottom: "-2%", width: 70, height: 70 }} data-parallax="1.6">
+      <div className="nf-iso-badge" style={{ left: "42%", bottom: "1%", width: 70, height: 70 }} data-parallax="1.6">
         <div>
           <div className="top">ISO</div>
           <div className="num" style={{ color: "var(--nf-primary-active)" }}>9001</div>
           <div className="yr">2015</div>
         </div>
       </div>
-      <div className="nf-iso-badge" style={{ left: "30%", top: "-6%", width: 70, height: 70 }} data-parallax="1.8">
+      <div className="nf-iso-badge" style={{ left: "45%", top: "1%", width: 70, height: 70 }} data-parallax="1.8">
         <div>
           <div className="top">ISO</div>
           <div className="num" style={{ color: "var(--nf-accent-2)" }}>27001</div>

@@ -175,20 +175,13 @@
   padding: 2px 0;
 }
 
+/* La caja, la marca, el foco y el estado deshabilitado los dibuja
+   `controls-native.css` para las 79 casillas del producto, tengan la clase que
+   tengan. Aquí solo queda lo que es propio de este campo: su sitio en la fila.
+   El `accent-color` que había se quedó sin efecto al pasar a `appearance: none`
+   —solo teñía la marca del sistema operativo. */
 .nf-check__box {
-  flex: none;
-  width: 16px;
-  height: 16px;
-  margin: 3px 0 0;
-  accent-color: var(--nf-primary);
-  cursor: pointer;
-}
-.nf-check__box:focus-visible {
-  outline: var(--nf-focus-ring-width) solid var(--nf-focus-ring);
-  outline-offset: var(--nf-focus-ring-offset);
-}
-.nf-check__box:disabled {
-  cursor: not-allowed;
+  margin: 2px 0 0;
 }
 
 .nf-check__label {

@@ -56,6 +56,9 @@ test.describe("inventario de activos de información", () => {
     await page.waitForURL(/\/app\/dashboard/);
     await page.goto("/app/assets");
     await expect(page.getByText("Activos de información").first()).toBeVisible();
-    await expect(page.getByText("ACT-001")).toBeVisible();
+    // `.first()` porque `DataTable` pinta cada fila dos veces: la tabla para
+    // escritorio y la lista de tarjetas para móvil viven las dos en el DOM y es
+    // el CSS quien enseña una u otra.
+    await expect(page.getByText("ACT-001").first()).toBeVisible();
   });
 });

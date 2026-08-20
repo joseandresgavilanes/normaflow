@@ -36,6 +36,11 @@ import IsoSectionHeader from "@/components/ui/IsoSectionHeader";
 import { useCreateRequest } from "@/hooks/useCreateRequest";
 import { useModuleSection } from "@/hooks/useModuleSection";
 import { ConfirmActionModal } from "@/components/ui/ActionDialogs";
+import { distribution } from "@/components/charts/aggregate";
+import BarChart from "@/components/charts/BarChart";
+import PersonPicker from "@/components/ui/PersonPicker";
+import Picker from "@/components/ui/Picker";
+import DateField from "@/components/ui/DateField";
 
 type Tab =
   | "panel" | "catalog" | "sla" | "requests" | "incidents" | "problems"
@@ -184,7 +189,21 @@ export default function ItsmClient({ initial, demo = false }: { initial: ItsmPay
 
       {tab === "panel" && (
         <>
-          <div className="nf-iso-panel-toolbar"><div><strong>Resumen ITSM</strong><span>Accesos directos a servicios, tickets y cambios.</span></div><IsoQuickCreate modulePath="/app/itsm" items={[{ label: "Nuevo servicio", description: "Registrar servicio IT", section: "catalog", Icon: BookOpen }, { label: "Nuevo SLA", description: "Definir acuerdo de servicio", section: "sla", Icon: FileClock }, { label: "Nueva solicitud", description: "Registrar solicitud de servicio", section: "requests", Icon: Ticket }, { label: "Nuevo incidente de servicio", description: "Abrir incidente", section: "incidents", Icon: AlertOctagon }, { label: "Nuevo problema", description: "Registrar problema", section: "problems", Icon: Bug }, { label: "Nuevo cambio", description: "Solicitar cambio", section: "changes", Icon: GitPullRequest }, { label: "Nuevo elemento de configuración (CI)", description: "Agregar elemento a CMDB", section: "cmdb", Icon: Boxes }, { label: "Nuevo informe", description: "Registrar informe de desempeño", section: "panel", Icon: Activity }]} /></div>
+          <div className="nf-chart-grid-2">
+            <BarChart
+              title="Incidentes por estado"
+              subtitle="Reparto del registro de incidentes del servicio."
+              data={distribution(initial.incidents, (row) => row.status)}
+              action={{ label: "Abrir incidentes", href: "/app/itsm?section=incidents" }}
+            />
+            <BarChart
+              title="Cambios por estado"
+              subtitle="En qué punto del flujo está cada cambio registrado."
+              data={distribution(initial.changes, (row) => row.status)}
+              action={{ label: "Abrir cambios", href: "/app/itsm?section=changes" }}
+            />
+          </div>
+          <div className="nf-iso-panel-toolbar"><div><strong>Resumen ITSM</strong></div><IsoQuickCreate modulePath="/app/itsm" items={[{ label: "Nuevo servicio", description: "Registrar servicio IT", section: "catalog", Icon: BookOpen }, { label: "Nuevo SLA", description: "Definir acuerdo de servicio", section: "sla", Icon: FileClock }, { label: "Nueva solicitud", description: "Registrar solicitud de servicio", section: "requests", Icon: Ticket }, { label: "Nuevo incidente de servicio", description: "Abrir incidente", section: "incidents", Icon: AlertOctagon }, { label: "Nuevo problema", description: "Registrar problema", section: "problems", Icon: Bug }, { label: "Nuevo cambio", description: "Solicitar cambio", section: "changes", Icon: GitPullRequest }, { label: "Nuevo elemento de configuración (CI)", description: "Agregar elemento a CMDB", section: "cmdb", Icon: Boxes }, { label: "Nuevo informe", description: "Registrar informe de desempeño", section: "panel", Icon: Activity }]} /></div>
           <div className="nf-iso-dashboard-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14 }}>
           <div className="nf-iso-dashboard-card" style={card}>
             <h3 style={{ marginTop: 0 }}><BookOpen size={16} aria-hidden />Catálogo y acuerdos (§8.2–8.3)</h3>
@@ -808,7 +827,8 @@ function ItsmRecordEditor({ kind, value, services, members, catalog, slas, relea
       {fields.map((field) => <label key={field.key} style={{ display: "grid", gap: 4, gridColumn: field.span === 2 ? "1 / -1" : undefined, fontSize: 12, color: "var(--nf-text-secondary)" }}>
         <span>{field.label}</span>
         {field.type === "textarea" ? <textarea style={{ ...input, minHeight: 70 }} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />
-          : field.type === "select" ? <select style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{field.key === "userId" ? members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>) : renderSelectOptions(field)}</select>
+          : field.type === "select" && field.key === "userId" ? <PersonPicker people={members} value={String(form[field.key] ?? "")} onValueChange={(personId) => set(field.key, personId)} placeholder="Sin asignar" ariaLabel={field.label} style={input} />
+          : field.type === "select" ? <Picker aria-label={field.label} style={input} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)}><option value="">—</option>{renderSelectOptions(field)}</Picker>
           : field.type === "checkbox" ? <input type="checkbox" checked={Boolean(form[field.key])} onChange={(e) => set(field.key, e.target.checked)} />
           : <input style={input} type={field.type === "number" ? "number" : field.type === "date" ? "date" : "text"} value={form[field.key] ?? ""} onChange={(e) => set(field.key, e.target.value)} />}
       </label>)}
@@ -840,9 +860,9 @@ function NewServiceForm({ pending, run, onDone }: { pending: boolean; run: Runne
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del servicio" style={input} placeholder="Nombre del servicio" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <input aria-label="Categoría" style={input} placeholder="Categoría" value={f.category} onChange={(e) => set("category", e.target.value)} />
-        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        <Picker aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createITService({ name: f.name, category: f.category || undefined, criticality: f.criticality as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -851,10 +871,10 @@ function NewServiceForm({ pending, run, onDone }: { pending: boolean; run: Runne
 
 function ServiceSelect({ services, value, onChange }: { services: Services; value: string; onChange: (v: string) => void }) {
   return (
-    <select aria-label="Servicio" style={input} value={value} onChange={(e) => onChange(e.target.value)}>
+    <Picker aria-label="Servicio" style={input} value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">Servicio…</option>
       {services.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
-    </select>
+    </Picker>
   );
 }
 
@@ -880,14 +900,11 @@ function NewOwnerForm({ services, members, pending, run, onDone }: { services: S
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="Miembro" style={input} value={f.userId} onChange={(e) => set("userId", e.target.value)}>
-          <option value="">Miembro…</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <PersonPicker people={members} value={f.userId} onValueChange={(personId) => set("userId", personId)} placeholder="Miembro…" ariaLabel="Miembro" style={input} />
         <input aria-label="Nombre (si no es miembro)" style={input} placeholder="Nombre (si no es miembro)" value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} />
-        <select aria-label="Rol de propiedad" style={input} value={f.ownershipRole} onChange={(e) => set("ownershipRole", e.target.value)}>
+        <Picker aria-label="Rol de propiedad" style={input} value={f.ownershipRole} onChange={(e) => set("ownershipRole", e.target.value)}>
           {["PRIMARY", "BACKUP", "DELEGATE"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.serviceId || (!f.userId && !f.ownerName)} style={primaryBtn} onClick={() => { run(() => createServiceOwner({ serviceId: f.serviceId, userId: f.userId || undefined, ownerName: f.ownerName || undefined, ownershipRole: f.ownershipRole as "PRIMARY" | "BACKUP" | "DELEGATE" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -902,9 +919,9 @@ function NewSlaForm({ services, pending, run, onDone }: { services: Services; pe
       <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
         <input aria-label="Nombre del SLA" style={input} placeholder="Nombre del SLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <Picker aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>{itsmLabel(p)}</option>)}
-        </select>
+        </Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Respuesta (min)" style={input} type="number" min={1} placeholder="Respuesta (min)" value={f.responseTimeMinutes} onChange={(e) => set("responseTimeMinutes", e.target.value)} />
@@ -923,10 +940,10 @@ function NewOlaForm({ services, slas, pending, run, onDone }: { services: Servic
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="SLA (opcional)" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
+        <Picker aria-label="SLA (opcional)" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
           <option value="">SLA (opcional)…</option>
           {slas.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
-        </select>
+        </Picker>
         <input aria-label="Nombre del OLA" style={input} placeholder="Nombre del OLA" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <input aria-label="Equipo de soporte" style={input} placeholder="Equipo de soporte" value={f.supportingTeam} onChange={(e) => set("supportingTeam", e.target.value)} />
       </div>
@@ -943,19 +960,16 @@ function NewRequestForm({ services, catalog, members, pending, run, onDone }: { 
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título de la solicitud" style={input} placeholder="Título de la solicitud" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="Entrada de catálogo" style={input} value={f.catalogEntryId} onChange={(e) => set("catalogEntryId", e.target.value)}>
+        <Picker aria-label="Entrada de catálogo" style={input} value={f.catalogEntryId} onChange={(e) => set("catalogEntryId", e.target.value)}>
           <option value="">Entrada de catálogo…</option>
           {catalog.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
+        </Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
-          <option value="">Asignar a…</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
-        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <PersonPicker people={members} value={f.assigneeId} onValueChange={(personId) => set("assigneeId", personId)} placeholder="Asignar a…" ariaLabel="Asignar a" style={input} />
+        <Picker aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>{itsmLabel(p)}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createServiceRequest({ title: f.title, serviceId: f.serviceId || undefined, catalogEntryId: f.catalogEntryId || undefined, assigneeId: f.assigneeId || undefined, priority: f.priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -971,25 +985,22 @@ function NewIncidentForm({ services, slas, members, pending, run, onDone }: { se
       <input aria-label="Descripción" style={input} placeholder="Descripción" value={f.description} onChange={(e) => set("description", e.target.value)} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="SLA" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
+        <Picker aria-label="SLA" style={input} value={f.slaId} onChange={(e) => set("slaId", e.target.value)}>
           <option value="">SLA…</option>
           {slas.map((s) => <option key={s.id} value={s.id}>{s.code}</option>)}
-        </select>
-        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
-          <option value="">Asignar a…</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        </Picker>
+        <PersonPicker people={members} value={f.assigneeId} onValueChange={(personId) => set("assigneeId", personId)} placeholder="Asignar a…" ariaLabel="Asignar a" style={input} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
+        <Picker aria-label="Prioridad" style={input} value={f.priority} onChange={(e) => set("priority", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Prioridad: {p}</option>)}
-        </select>
-        <select aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Impacto" style={input} value={f.impact} onChange={(e) => set("impact", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Impacto: {p}</option>)}
-        </select>
-        <select aria-label="Urgencia" style={input} value={f.urgency} onChange={(e) => set("urgency", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Urgencia" style={input} value={f.urgency} onChange={(e) => set("urgency", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((p) => <option key={p} value={p}>Urgencia: {p}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createItsmIncident({ title: f.title, description: f.description || undefined, serviceId: f.serviceId || undefined, slaId: f.slaId || undefined, assigneeId: f.assigneeId || undefined, priority: f.priority as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL", impact: f.impact as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL", urgency: f.urgency as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1005,19 +1016,19 @@ function NewCrossLinkForm({ incidents, options, pending, run, onDone }: {
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr", gap: 8 }}>
-        <select aria-label="Incidente ITSM" style={input} value={f.itsmIncidentId} onChange={(e) => set("itsmIncidentId", e.target.value)}>
+        <Picker aria-label="Incidente ITSM" style={input} value={f.itsmIncidentId} onChange={(e) => set("itsmIncidentId", e.target.value)}>
           <option value="">Incidente ITSM…</option>
           {incidents.map((i) => <option key={i.id} value={i.id}>{i.code}</option>)}
-        </select>
-        <select aria-label="Dominio objetivo" style={input} value={f.targetDomain} onChange={(e) => { set("targetDomain", e.target.value as "SECURITY" | "AI" | "OCCUPATIONAL"); set("targetId", ""); }}>
+        </Picker>
+        <Picker aria-label="Dominio objetivo" style={input} value={f.targetDomain} onChange={(e) => { set("targetDomain", e.target.value as "SECURITY" | "AI" | "OCCUPATIONAL"); set("targetId", ""); }}>
           <option value="SECURITY">Seguridad (ISO 27001)</option>
           <option value="AI">IA (ISO/IEC 42001)</option>
           <option value="OCCUPATIONAL">Laboral (ISO 45001)</option>
-        </select>
-        <select aria-label="Incidente relacionado" style={input} value={f.targetId} onChange={(e) => set("targetId", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Incidente relacionado" style={input} value={f.targetId} onChange={(e) => set("targetId", e.target.value)}>
           <option value="">Incidente relacionado…</option>
           {domainOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-        </select>
+        </Picker>
       </div>
       <input aria-label="Tipo de relación (opcional, ej. 'causado por')" style={input} placeholder="Tipo de relación (opcional, ej. 'causado por')" value={f.relationType} onChange={(e) => set("relationType", e.target.value)} />
       <button disabled={pending || !f.itsmIncidentId || !f.targetId} style={primaryBtn} onClick={() => { run(() => linkItsmIncidentCrossDomain({ itsmIncidentId: f.itsmIncidentId, targetDomain: f.targetDomain, targetId: f.targetId, relationType: f.relationType || undefined })); onDone(); }}><Plus size={12} /> Vincular</button>
@@ -1033,10 +1044,7 @@ function NewProblemForm({ services, members, pending, run, onDone }: { services:
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título del problema" style={input} placeholder="Título del problema" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="Asignar a" style={input} value={f.assigneeId} onChange={(e) => set("assigneeId", e.target.value)}>
-          <option value="">Asignar a…</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <PersonPicker people={members} value={f.assigneeId} onValueChange={(personId) => set("assigneeId", personId)} placeholder="Asignar a…" ariaLabel="Asignar a" style={input} />
       </div>
       <input aria-label="Workaround (opcional)" style={input} placeholder="Workaround (opcional)" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createItsmProblem({ title: f.title, serviceId: f.serviceId || undefined, assigneeId: f.assigneeId || undefined, workaround: f.workaround || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1051,10 +1059,10 @@ function NewKnownErrorForm({ problems, pending, run, onDone }: { problems: ItsmP
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
         <input aria-label="Título del error conocido" style={input} placeholder="Título del error conocido" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Problema (opcional)" style={input} value={f.problemId} onChange={(e) => set("problemId", e.target.value)}>
+        <Picker aria-label="Problema (opcional)" style={input} value={f.problemId} onChange={(e) => set("problemId", e.target.value)}>
           <option value="">Problema (opcional)…</option>
           {problems.map((p) => <option key={p.id} value={p.id}>{p.code}</option>)}
-        </select>
+        </Picker>
       </div>
       <input aria-label="Workaround" style={input} placeholder="Workaround" value={f.workaround} onChange={(e) => set("workaround", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createKnownError({ title: f.title, problemId: f.problemId || undefined, workaround: f.workaround || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
@@ -1070,12 +1078,12 @@ function NewChangeForm({ services, pending, run, onDone }: { services: Services;
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título del cambio" style={input} placeholder="Título del cambio" value={f.title} onChange={(e) => set("title", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>
+        <Picker aria-label="Tipo de cambio" style={input} value={f.changeType} onChange={(e) => set("changeType", e.target.value)}>
           {["STANDARD", "NORMAL", "EMERGENCY"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
-        <select aria-label="Nivel de riesgo" style={input} value={f.riskLevel} onChange={(e) => set("riskLevel", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Nivel de riesgo" style={input} value={f.riskLevel} onChange={(e) => set("riskLevel", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>Riesgo: {itsmLabel(c)}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createItsmChange({ title: f.title, serviceId: f.serviceId || undefined, changeType: f.changeType as "STANDARD" | "NORMAL" | "EMERGENCY", riskLevel: f.riskLevel as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL", impact: "MEDIUM" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1103,17 +1111,17 @@ function NewDeploymentForm({ releases, cis, pending, run, onDone }: { releases: 
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="Release" style={input} value={f.releaseId} onChange={(e) => set("releaseId", e.target.value)}>
+        <Picker aria-label="Release" style={input} value={f.releaseId} onChange={(e) => set("releaseId", e.target.value)}>
           <option value="">Release…</option>
           {releases.map((r) => <option key={r.id} value={r.id}>{r.code} · {r.version}</option>)}
-        </select>
-        <select aria-label="Entorno" style={input} value={f.environment} onChange={(e) => set("environment", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Entorno" style={input} value={f.environment} onChange={(e) => set("environment", e.target.value)}>
           {["DEV", "TEST", "STAGING", "PROD"].map((e2) => <option key={e2} value={e2}>{itsmLabel(e2)}</option>)}
-        </select>
-        <select aria-label="CI (opcional)" style={input} value={f.configurationItemId} onChange={(e) => set("configurationItemId", e.target.value)}>
+        </Picker>
+        <Picker aria-label="CI (opcional)" style={input} value={f.configurationItemId} onChange={(e) => set("configurationItemId", e.target.value)}>
           <option value="">CI (opcional)…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.releaseId} style={primaryBtn} onClick={() => { run(() => createDeployment({ releaseId: f.releaseId, environment: f.environment as "DEV" | "TEST" | "STAGING" | "PROD", configurationItemId: f.configurationItemId || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1127,19 +1135,16 @@ function NewCiForm({ services, members, pending, run, onDone }: { services: Serv
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Nombre del CI" style={input} placeholder="Nombre del CI" value={f.name} onChange={(e) => set("name", e.target.value)} />
-        <select aria-label="Tipo de elemento de configuración" style={input} value={f.ciType} onChange={(e) => set("ciType", e.target.value)}>
+        <Picker aria-label="Tipo de elemento de configuración" style={input} value={f.ciType} onChange={(e) => set("ciType", e.target.value)}>
           {["APPLICATION", "SERVER", "DATABASE", "NETWORK", "SERVICE", "DOCUMENTATION", "OTHER"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
-        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
+        </Picker>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
-        <select aria-label="Propietario" style={input} value={f.ownerId} onChange={(e) => set("ownerId", e.target.value)}>
-          <option value="">Propietario…</option>
-          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-        </select>
+        <PersonPicker people={members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Propietario…" ariaLabel="Propietario" style={input} />
       </div>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createConfigurationItem({ name: f.name, ciType: f.ciType as "APPLICATION" | "SERVER" | "DATABASE" | "NETWORK" | "SERVICE" | "DOCUMENTATION" | "OTHER", serviceId: f.serviceId || undefined, ownerId: f.ownerId || undefined, criticality: f.criticality as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1152,17 +1157,17 @@ function NewCmdbRelForm({ cis, pending, run, onDone }: { cis: ItsmPayload["cis"]
   return (
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <select aria-label="CI origen" style={input} value={f.sourceCiId} onChange={(e) => set("sourceCiId", e.target.value)}>
+        <Picker aria-label="CI origen" style={input} value={f.sourceCiId} onChange={(e) => set("sourceCiId", e.target.value)}>
           <option value="">CI origen…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
-        <select aria-label="Tipo de relación" style={input} value={f.relationType} onChange={(e) => set("relationType", e.target.value)}>
+        </Picker>
+        <Picker aria-label="Tipo de relación" style={input} value={f.relationType} onChange={(e) => set("relationType", e.target.value)}>
           {["DEPENDS_ON", "RUNS_ON", "CONNECTS_TO", "USES", "OWNED_BY", "OTHER"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
-        </select>
-        <select aria-label="CI destino" style={input} value={f.targetCiId} onChange={(e) => set("targetCiId", e.target.value)}>
+        </Picker>
+        <Picker aria-label="CI destino" style={input} value={f.targetCiId} onChange={(e) => set("targetCiId", e.target.value)}>
           <option value="">CI destino…</option>
           {cis.map((c) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.sourceCiId || !f.targetCiId} style={primaryBtn} onClick={() => { run(() => createCmdbRelationship({ sourceCiId: f.sourceCiId, targetCiId: f.targetCiId, relationType: f.relationType as "DEPENDS_ON" | "RUNS_ON" | "CONNECTS_TO" | "USES" | "OWNED_BY" | "OTHER" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1229,9 +1234,9 @@ function NewSupplierForm({ services, pending, run, onDone }: { services: Service
         <input aria-label="Nombre del proveedor" style={input} placeholder="Nombre del proveedor" value={f.name} onChange={(e) => set("name", e.target.value)} />
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
         <input aria-label="Contrato" style={input} placeholder="Contrato" value={f.contractRef} onChange={(e) => set("contractRef", e.target.value)} />
-        <select aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
+        <Picker aria-label="Criticidad" style={input} value={f.criticality} onChange={(e) => set("criticality", e.target.value)}>
           {["LOW", "MEDIUM", "HIGH", "CRITICAL"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
+        </Picker>
       </div>
       <button disabled={pending || !f.name} style={primaryBtn} onClick={() => { run(() => createServiceSupplier({ name: f.name, serviceId: f.serviceId || undefined, contractRef: f.contractRef || undefined, criticality: f.criticality as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" })); onDone(); }}><Plus size={12} /> Crear</button>
     </div>
@@ -1245,9 +1250,9 @@ function NewArticleForm({ services, pending, run, onDone }: { services: Services
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título del artículo" style={input} placeholder="Título del artículo" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>
+        <Picker aria-label="Categoría" style={input} value={f.category} onChange={(e) => set("category", e.target.value)}>
           {["HOWTO", "KNOWN_ERROR", "FAQ", "RUNBOOK", "OTHER"].map((c) => <option key={c} value={c}>{itsmLabel(c)}</option>)}
-        </select>
+        </Picker>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
       </div>
       <textarea aria-label="Contenido" style={{ ...input, minHeight: 70 }} placeholder="Contenido" value={f.content} onChange={(e) => set("content", e.target.value)} />
@@ -1267,14 +1272,14 @@ function NewReportForm({ services, pending, run, onDone }: { services: Services;
     <div style={{ display: "grid", gap: 8 }}>
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 8 }}>
         <input aria-label="Título del informe" style={input} placeholder="Título del informe" value={f.title} onChange={(e) => set("title", e.target.value)} />
-        <select aria-label="Tipo de informe" style={input} value={f.reportType} onChange={(e) => set("reportType", e.target.value)}>
+        <Picker aria-label="Tipo de informe" style={input} value={f.reportType} onChange={(e) => set("reportType", e.target.value)}>
           {["SLA", "INCIDENTS", "AVAILABILITY", "CAPACITY", "CONTINUITY", "SUPPLIERS", "PERFORMANCE", "CUSTOM"].map((r) => <option key={r} value={r}>{itsmLabel(r)}</option>)}
-        </select>
+        </Picker>
         <ServiceSelect services={services} value={f.serviceId} onChange={(v) => set("serviceId", v)} />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-        <input aria-label="Inicio del periodo" style={input} type="date" value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
-        <input aria-label="Fin del periodo" style={input} type="date" value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
+        <DateField aria-label="Inicio del periodo" style={input} value={f.periodStart} onChange={(e) => set("periodStart", e.target.value)} />
+        <DateField aria-label="Fin del periodo" style={input} value={f.periodEnd} onChange={(e) => set("periodEnd", e.target.value)} />
       </div>
       <input aria-label="Resumen (opcional)" style={input} placeholder="Resumen (opcional)" value={f.summary} onChange={(e) => set("summary", e.target.value)} />
       <button disabled={pending || !f.title} style={primaryBtn} onClick={() => { run(() => createServiceReport({ title: f.title, reportType: f.reportType as "SLA" | "INCIDENTS" | "AVAILABILITY" | "CAPACITY" | "CONTINUITY" | "SUPPLIERS" | "PERFORMANCE" | "CUSTOM", serviceId: f.serviceId || undefined, periodStart: f.periodStart, periodEnd: f.periodEnd, summary: f.summary || undefined })); onDone(); }}><Plus size={12} /> Crear</button>
