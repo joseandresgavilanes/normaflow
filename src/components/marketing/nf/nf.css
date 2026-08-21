@@ -494,13 +494,15 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
      al ancho del contenedor: sin esto el panel se desbordaba 27 px en móvil. */
   grid-template-columns: minmax(0, 1fr);
   align-content: center;
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
+  /* El escenario aísla su propia pila para que las cuatro capas de la
+     ilustración se ordenen entre ellas y no contra el resto de la sección. */
+  isolation: isolate;
   /* Red de seguridad horizontal: con las fichas decorativas colocadas al 88 %
-     del ancho y rotadas, la de la derecha llegaba a 1484 px en un lienzo de
-     1440 y la página desbordaba 44 px. Ahora ninguna se sale, pero el recorte
-     se queda para que reencuadrar no vuelva a sacar barra horizontal.
-     `body { overflow-x: hidden }` la ocultaba pero seguía recortando el
+     del ancho, la de la derecha llegaba a 1484 px en un lienzo de 1440 y la
+     página desbordaba 44 px. Ahora ninguna se sale, pero el recorte se queda
+     para que reencuadrar no vuelva a sacar barra horizontal. Ojo: recorta a
+     ras del escenario, así que nada decorativo debe apoyarse en el borde.
+     `body { overflow-x: hidden }` ocultaba la barra pero seguía recortando el
      contenido; `clip` recorta sin crear contexto de desplazamiento, así que no
      rompe el `position: sticky` de la cabecera. */
   overflow-x: clip;
@@ -582,11 +584,17 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   align-content: center;
   /* Capa 2: por encima del desorden. */
   z-index: 2;
-  transform-style: preserve-3d;
-  /* El paralaje se aplica por variable y no sobrescribiendo `transform`: el
-     hook escribía la propiedad entera y borraba esta inclinación en el primer
-     movimiento del ratón. */
-  transform: translate3d(var(--px, 0px), var(--py, 0px), 0) rotateX(4deg) rotateY(-8deg);
+  /* El panel va RECTO. Llevaba `rotateX(4deg) rotateY(-8deg)` bajo una
+     `perspective`, y la combinación de los dos ejes no se lee como un giro en
+     3D sino como un cuadro mal colgado: las líneas horizontales salían con
+     medio grado de caída y el trapecio empujaba el lado izquierdo hasta 37 px
+     fuera del escenario, donde el recorte lo rebanaba. Además cualquier
+     transformación 3D rasteriza el texto en una capa escalada y lo dejaba
+     borroso, que en una maqueta de producto es justo lo que no quieres.
+     El único desorden que queda es el de las fichas de caos, que sí llevan su
+     rotación propia a propósito. El paralaje se aplica por variable, no
+     sobrescribiendo `transform`. */
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
 }
 .nf-dash-main {
   position: relative;
@@ -714,10 +722,6 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 @media (max-width: 1024px) {
   .nf-hero-stage {
     --nf-stage-h: 520px;
-  }
-
-  .nf-dash-cluster {
-    transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
   }
 
   .nf-ai-grid {
