@@ -207,8 +207,9 @@ export function AdminLiveProvider({
 
       // ─── Members ───────────────────────────────────────────
       inviteMember: async (data) => {
-        await adminA.inviteMember({ email: data.email, name: data.name, role: data.role as Role });
+        const outcome = await adminA.inviteMember({ email: data.email, name: data.name, role: data.role as Role });
         refresh();
+        return outcome;
       },
       updateMemberRole: async (membershipId, role) => {
         await adminA.updateMemberRole(membershipId, role as Role);
@@ -227,8 +228,9 @@ export function AdminLiveProvider({
         refresh();
       },
       resendMemberInvite: async (membershipId) => {
-        await adminA.resendMemberInvite(membershipId);
+        const outcome = await adminA.resendMemberInvite(membershipId);
         refresh();
+        return outcome;
       },
 
       // ─── Groups ────────────────────────────────────────────

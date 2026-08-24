@@ -1714,7 +1714,7 @@ export async function getAccountPayload() {
     })),
     /* Compañeros de la organización, para elegir suplente. Se excluye uno
        mismo: delegarse a sí mismo no significa nada. */
-    sessions: await listUserSessions(ctx.user.id),
+    sessions: await listUserSessions(ctx.user.authUserId),
     colleagues: (await prisma.user.findMany({
       where: {
         id: { not: ctx.user.id },

@@ -16,7 +16,7 @@ export async function revokeSession(sessionId: string): Promise<void> {
   const ctx = await requireLiveContext();
   if (!sessionId.trim()) throw new Error("Sesión no válida.");
 
-  await revokeUserSession(ctx.user.id, sessionId);
+  await revokeUserSession(ctx.user.authUserId, sessionId);
 
   /* Cerrar una sesión es un evento de seguridad: si alguien revoca la sesión
      de un dispositivo robado, el registro es la prueba de cuándo se hizo. */

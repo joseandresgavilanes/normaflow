@@ -13,6 +13,7 @@ import { clientAddress, rateLimitResponse, takeRateLimit } from "@/lib/rate-limi
 import { parseInput } from "@/lib/validation/common";
 import { bootstrapSchema } from "@/lib/validation/workflows";
 import { installAllPacks, syncCommercialPackEntitlements } from "@/lib/standard-packs";
+import { ACTIVE_ORG_COOKIE, activeOrgCookieOptions } from "@/lib/auth/session-cookies";
 
 async function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -82,15 +83,31 @@ export async function POST(request: NextRequest) {
     (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name) ||
     email.split("@")[0];
 
-  const created = await runSerializable(async tx => {
+  const outcome = await runSerializable(async tx => {
     const u = await tx.user.upsert({
       where: { email },
       create: { email, name, authUserId: user.id },
-      update: { authUserId: user.id, name },
+      // El nombre del perfil no se reescribe desde Supabase en cada alta.
+      update: { authUserId: user.id },
     });
 
-    const existing = await tx.membership.count({ where: { userId: u.id } });
-    if (existing > 0) return null;
+    /* Quien ya tiene organización no crea otra por aquí: esta ruta es el alta
+       inicial. Antes se devolvía `null` y un 200 igualmente, así que el nombre
+       de empresa del formulario se tiraba en silencio y la persona aterrizaba
+       en la organización que ya tenía. Ahora se dice cuál es. */
+    const existing = await tx.membership.findFirst({
+      where: { userId: u.id },
+      orderBy: { createdAt: "asc" },
+      select: { organization: { select: { id: true, name: true } } },
+    });
+    if (existing) {
+      return {
+        created: false as const,
+        organizationId: existing.organization.id,
+        organizationName: existing.organization.name,
+        userId: u.id,
+      };
+    }
 
     let base = slugify(organizationName) || "org";
     let slug = base;
@@ -139,23 +156,23 @@ export async function POST(request: NextRequest) {
 
     await ensureOrganizationDefaults(org.id, tx);
 
-    return { organizationId: org.id, organizationName: org.name, userId: u.id };
+    return { created: true as const, organizationId: org.id, organizationName: org.name, userId: u.id };
   });
 
-  if (created) {
+  if (outcome.created) {
     // Adopción de normas: catálogo global + evaluación GAP inicial por norma.
     // Fuera de la transacción principal — es idempotente y no debe bloquear el alta.
     await installAllPacks();
     const entitlementSync = await syncCommercialPackEntitlements({
-      organizationId: created.organizationId,
+      organizationId: outcome.organizationId,
       plan: "STARTER",
       trialEndsAt: new Date(Date.now() + 14 * 24 * 3600 * 1000),
-      grantedById: created.userId,
+      grantedById: outcome.userId,
     });
     await prisma.auditLog.create({
       data: {
-        organizationId: created.organizationId,
-        userId: created.userId,
+        organizationId: outcome.organizationId,
+        userId: outcome.userId,
         action: "create",
         module: "packs",
         recordId: "COMMERCIAL_ONBOARDING",
@@ -167,20 +184,33 @@ export async function POST(request: NextRequest) {
       try {
         const standard = await ensureStandardCatalog(spec);
         await adoptStandardForOrganization({
-          organizationId: created.organizationId,
+          organizationId: outcome.organizationId,
           standardCode: spec.code,
           standardId: standard.id,
-          assessorId: created.userId,
+          assessorId: outcome.userId,
         });
       } catch (e) {
         console.error("[bootstrap] adoptStandard", spec.code, e);
       }
     }
 
-    sendWelcomeEmail(email, name, created.organizationName).catch((e) =>
+    sendWelcomeEmail(email, name, outcome.organizationName).catch((e) =>
       console.error("[bootstrap] welcome email", e)
     );
   }
 
-  return response;
+  /* El cuerpo del `NextResponse` no se puede reescribir, y `response` existe
+     desde el principio solo para que el cliente de Supabase deposite ahí sus
+     cookies de sesión. Se traslada esa cosecha a la respuesta final. */
+  const result = NextResponse.json({
+    ok: true,
+    created: outcome.created,
+    organizationId: outcome.organizationId,
+    organizationName: outcome.organizationName,
+  });
+  for (const cookie of response.cookies.getAll()) result.cookies.set(cookie);
+  // Deja fijada la organización recién creada: sin esto se resolvía por el
+  // fallback de `getAppContext`, que con varias membresías es una lotería.
+  result.cookies.set(ACTIVE_ORG_COOKIE, outcome.organizationId, activeOrgCookieOptions());
+  return result;
 }

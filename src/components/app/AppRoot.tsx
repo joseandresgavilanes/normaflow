@@ -66,6 +66,7 @@ export default function AppRoot({
   const router = useRouter();
   const [aiOpen, setAiOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [orgError, setOrgError] = useState("");
   const isCompactNav = useMatchMedia("(max-width: 768px)");
   const { t } = useI18n();
   const onboardingStatus = initial.mode === "live" ? initial.organization.onboardingStatus : undefined;
@@ -220,12 +221,23 @@ export default function AppRoot({
           initial.mode === "live" ? initial.organization.id : undefined
         }
         onOrgChange={async (orgId) => {
-          await fetch("/api/auth/set-org", {
+          setOrgError("");
+          const response = await fetch("/api/auth/set-org", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ organizationId: orgId }),
           });
-          router.refresh();
+          /* Antes se refrescaba pasara lo que pasara: un 401/403 dejaba el
+             selector en la organización nueva y la app en la vieja, sin decir
+             nada. */
+          if (!response.ok) {
+            const body = await response.json().catch(() => ({}));
+            setOrgError(typeof body.error === "string" ? body.error : t("error.orgSwitchFailed"));
+            return;
+          }
+          /* Cambiar de organización es cambiar de inquilino: recarga dura para
+             que no quede ni un payload RSC del anterior en la caché del router. */
+          window.location.reload();
         }}
         drawerOpen={navOpen}
         onNavigate={() => setNavOpen(false)}
@@ -246,6 +258,9 @@ export default function AppRoot({
               normativos —que encabezan con IsoSectionHeader o con un <h1>
               propio— se quedaban sin ellas. */}
           <Breadcrumb />
+          {orgError && (
+            <div className="nf-alert nf-alert--error" style={{ marginBottom: 16 }} role="alert">{orgError}</div>
+          )}
           {children}
         </main>
       </div>

@@ -164,8 +164,10 @@ export default function MembersClient() {
             {admin.resendMemberInvite && (
               <RowAction icon={Send} label="Reenviar" disabled={isPending} onClick={() => startTransition(async () => {
                 try {
-                  await admin.resendMemberInvite?.(r.membershipId);
-                  setSuccess("Invitación reenviada.");
+                  const outcome = await admin.resendMemberInvite?.(r.membershipId);
+                  setSuccess(outcome == null || outcome.emailSent !== false
+                    ? "Invitación reenviada."
+                    : "Esta persona ya tiene cuenta en NormaFlow, así que no hay correo de invitación que reenviar: se le avisó desde la campana. Si no recuerda la contraseña, que use «¿Olvidaste tu contraseña?» en el acceso.");
                 } catch (err: unknown) {
                   setError(err instanceof Error ? err.message : "No se pudo reenviar la invitación.");
                 }
@@ -200,16 +202,21 @@ export default function MembersClient() {
     setSuccess("");
     startTransition(async () => {
       try {
-        await admin.inviteMember({
+        const outcome = await admin.inviteMember({
           email: String(fd.get("email") || ""),
           name: String(fd.get("name") || ""),
           role: String(fd.get("role") || "CONTRIBUTOR") as Role,
         });
         setInviting(false);
+        /* Si la cuenta ya existía en Supabase no sale ningún correo de alta:
+           decirlo evita que el admin espere un mensaje que nunca llega. */
+        const emailSent = outcome == null || outcome.emailSent !== false;
         setSuccess(
           isDemoMode
             ? "Invitación simulada: la persona se añadió al listado (sin correo real)."
-            : "Invitación enviada. La persona recibirá un correo para establecer su contraseña."
+            : emailSent
+              ? "Invitación enviada. La persona recibirá un correo para establecer su contraseña."
+              : "Persona añadida. Ya tenía cuenta en NormaFlow, así que no se envía correo para establecer contraseña: entra con la suya y la avisamos desde la campana."
         );
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : "No se pudo invitar.");

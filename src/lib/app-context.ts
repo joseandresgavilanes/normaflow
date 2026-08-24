@@ -149,6 +149,12 @@ export const getAppContext = cache(async function getAppContext(): Promise<AppCo
         memberships: {
           where: { active: true },
           include: { organization: true },
+          /* Sin orden explícito Postgres devuelve las filas como estén en el
+             heap, y ese orden cambia al actualizar cualquiera de ellas. Como
+             el fallback de abajo coge la primera, quien pertenece a varias
+             organizaciones entraba en una distinta según el día. La más
+             antigua es su organización de origen. */
+          orderBy: { createdAt: "asc" },
         },
       },
     });

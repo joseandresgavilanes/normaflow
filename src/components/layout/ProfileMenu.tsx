@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogOut, Settings } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
@@ -24,7 +23,6 @@ export default function ProfileMenu({ userName, email, roleLabel, organizationNa
   organizationName?: string;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
 
@@ -46,8 +44,11 @@ export default function ProfileMenu({ userName, email, roleLabel, organizationNa
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
+    /* Navegación dura: el router del cliente guarda 30 s de payloads RSC
+       (`staleTimes.dynamic` en next.config.ts), así que un `push` pintaba
+       primero los de la cuenta anterior y el `refresh` llegaba después. Al
+       cambiar de identidad se descarta todo el estado del cliente. */
+    window.location.assign("/login");
   }
 
   return (

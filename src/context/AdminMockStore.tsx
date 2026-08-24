@@ -1020,11 +1020,13 @@ type AdminMockContextValue = {
   updatePersonnel: (id: string, data: { firstName?: string; lastName?: string; email?: string; identification?: string; positionId?: string; hiredAt?: string }) => void;
   deactivatePersonnel: (id: string) => void;
   // members
-  inviteMember: (data: { name: string; email: string; role: OrgMemberMockRow["role"] }) => void | Promise<void>;
+  /** `emailSent: false` cuando la cuenta ya existía en Supabase y no sale correo. */
+  inviteMember: (data: { name: string; email: string; role: OrgMemberMockRow["role"] }) =>
+    void | Promise<void> | Promise<{ emailSent: boolean }>;
   updateMemberRole: (membershipId: string, role: OrgMemberMockRow["role"]) => void;
   removeMember: (membershipId: string) => void;
   setMemberActive?: (membershipId: string, active: boolean) => void | Promise<void>;
-  resendMemberInvite?: (membershipId: string) => void | Promise<void>;
+  resendMemberInvite?: (membershipId: string) => void | Promise<void> | Promise<{ emailSent: boolean }>;
   // groups
   createGroup: (data: { name: string; description?: string }) => void;
   updateGroup: (id: string, data: { name?: string; description?: string }) => void;

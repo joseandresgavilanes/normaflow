@@ -114,7 +114,12 @@ export async function updateOrganizationSettings(input: {
 
 const ROLES_VALUES: Role[] = ["OWNER", "ADMIN", "MANAGER", "AUDITOR", "VIEWER", "SUPER_ADMIN", "ORG_ADMIN", "COMPLIANCE_MANAGER", "CONTRIBUTOR"];
 
-export async function inviteMember(input: { email: string; name: string; role: Role }) {
+export type InviteMemberOutcome = {
+  /** `false` cuando Supabase no manda correo porque el email ya estaba registrado. */
+  emailSent: boolean;
+};
+
+export async function inviteMember(input: { email: string; name: string; role: Role }): Promise<InviteMemberOutcome> {
   const ctx = await requirePermission("members:*");
   const parsed = parseActionInput(inviteMemberSchema, input);
   const email = parsed.email.toLowerCase();
@@ -186,6 +191,22 @@ export async function inviteMember(input: { email: string; name: string; role: R
     },
   });
 
+  /* Supabase no reenvía el correo de invitación a una cuenta que ya existe:
+     devuelve "already registered" y `sendSupabaseMemberInvite` lo da por bueno.
+     Sin esto, quien ya se había registrado alguna vez —o a quien quitaste y
+     vuelves a añadir— entraba en la organización sin enterarse. */
+  if (inviteResult.method === "existing_auth_user") {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: user.id,
+      title: `Te han añadido a ${ctx.organization.name}`,
+      body: `Ya puedes entrar en ${ctx.organization.name} en NormaFlow con tu cuenta de siempre (${email}). Tu rol es ${role.replaceAll("_", " ")}.`,
+      type: "INFO",
+      link: "/app/dashboard",
+      idempotencyKey: `member-added:${membership.id}`,
+    }).catch((e) => console.error("[invite] notifyUser", e));
+  }
+
   await logAuditEvent({
     ctx,
     action: "invite",
@@ -200,9 +221,10 @@ export async function inviteMember(input: { email: string; name: string; role: R
   });
 
   revalidatePath("/app/settings/users");
+  return { emailSent: inviteResult.method === "invite" };
 }
 
-export async function resendMemberInvite(membershipId: string) {
+export async function resendMemberInvite(membershipId: string): Promise<InviteMemberOutcome> {
   membershipId = parseId(membershipId);
   const ctx = await requirePermission("members:*");
   if (!isSupabaseInviteConfigured()) {
@@ -242,8 +264,22 @@ export async function resendMemberInvite(membershipId: string) {
       },
     });
   }
-  await logAuditEvent({ ctx, action: "resend_invite", module: "member", recordId: membership.user.id, after: { email: membership.user.email } });
+  /* Igual que en el alta: si la cuenta ya existe en Supabase, "reenviar" no
+     manda ningún correo. Se avisa por la campana, que sí llega. */
+  if (result.method === "existing_auth_user") {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: membership.user.id,
+      title: `Te esperan en ${ctx.organization.name}`,
+      body: `Tienes acceso a ${ctx.organization.name} en NormaFlow con tu cuenta de siempre (${membership.user.email}). Tu rol es ${membership.role.replaceAll("_", " ")}.`,
+      type: "INFO",
+      link: "/app/dashboard",
+    }).catch((e) => console.error("[resend-invite] notifyUser", e));
+  }
+
+  await logAuditEvent({ ctx, action: "resend_invite", module: "member", recordId: membership.user.id, after: { email: membership.user.email, inviteMethod: result.method } });
   revalidatePath("/app/settings/users");
+  return { emailSent: result.method === "invite" };
 }
 
 export async function setMemberActive(membershipId: string, active: boolean) {
@@ -335,7 +371,10 @@ export async function updateMemberRole(membershipId: string, role: Role) {
 export async function removeMember(membershipId: string) {
   membershipId = parseId(membershipId);
   const ctx = await requirePermission("members:*");
-  const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
+  const existing = await prisma.membership.findFirst({
+    where: { id: membershipId, organizationId: ctx.organization.id },
+    include: { user: { select: { email: true } } },
+  });
   if (!existing) throw new Error("Miembro no encontrado.");
   if ((existing.role === "SUPER_ADMIN" || existing.role === "OWNER") && !["SUPER_ADMIN", "OWNER"].includes(ctx.role)) {
     throw new Error("Solo un Owner puede eliminar a otro Owner.");
@@ -347,7 +386,19 @@ export async function removeMember(membershipId: string) {
     });
     if (remainingAdmins === 0) throw new Error("No puedes eliminar al último Admin.");
   }
-  await prisma.membership.delete({ where: { id: membershipId } });
+  /* Quitar a alguien es quitarle todo lo que le daba acceso, no solo la
+     membresía. `GroupMembership` no cuelga de `User` ni tiene borrado en
+     cascada, así que sus permisos de grupo sobrevivían a la baja y volvían
+     enteros —sin que nadie los concediera— en cuanto se le reinvitaba. */
+  await prisma.$transaction([
+    prisma.membership.delete({ where: { id: membershipId } }),
+    prisma.groupMembership.deleteMany({
+      where: { userId: existing.userId, group: { organizationId: ctx.organization.id } },
+    }),
+    prisma.memberInvite.deleteMany({
+      where: { organizationId: ctx.organization.id, email: existing.user.email, acceptedAt: null },
+    }),
+  ]);
   await logAuditEvent({ ctx, action: "delete", module: "member", recordId: existing.userId, before: { role: existing.role } });
   revalidatePath("/app/settings/users");
 }

@@ -1,7 +1,14 @@
 import { z } from "zod";
 
-/** IDs are opaque application identifiers (CUID/UUID/Supabase UUID). */
-export const idSchema = z.string().trim().regex(/^[A-Za-z0-9_-]{3,128}$/, "El identificador no es válido.");
+/**
+ * IDs are opaque application identifiers: database CUID/UUIDs plus the
+ * deterministic slugs the standard packs mint, which carry the clause code —
+ * dots included — inside the id (`cl-9001-8.2`, `req-14001-6.1.2`). Hence the
+ * dot; `..` stays rejected so no id can climb a Storage path.
+ */
+export const idSchema = z.string().trim()
+  .regex(/^[A-Za-z0-9_.-]{3,128}$/, "El identificador no es válido.")
+  .refine((value) => !value.includes(".."), "El identificador no es válido.");
 export const emailSchema = z.string().trim().toLowerCase().email("El email no es válido.").max(254);
 export const shortText = (max = 160) => z.string().trim().min(1, "Este campo es obligatorio.").max(max);
 export const optionalText = (max = 500) => z.string().trim().max(max).optional();

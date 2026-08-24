@@ -110,7 +110,6 @@ const NOTIFICATION_TYPES: { value: NotificationType; label: string; description:
  */
 export default function ProfileSettingsModule({ serverProfile }: { serverProfile?: ServerProfile }) {
   const { state, dispatch, showToast } = useWorkspace();
-  const router = useRouter();
   /* Diez tarjetas en una sola rejilla se leían como un muro. Se reparten en
      secciones. La cuenta no es una norma y no cuelga del sidebar, así que su
      navegación vive aquí dentro. */
@@ -158,8 +157,11 @@ export default function ProfileSettingsModule({ serverProfile }: { serverProfile
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
+    /* Navegación dura: el router del cliente guarda 30 s de payloads RSC
+       (`staleTimes.dynamic` en next.config.ts), así que un `push` pintaba
+       primero los de la cuenta anterior y el `refresh` llegaba después. Al
+       cambiar de identidad se descarta todo el estado del cliente. */
+    window.location.assign("/login");
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { clearSupabaseLegacyStorage } from "@/lib/auth/clear-client-auth";
 import "@/components/marketing/nf/nf.css";
 import { Ic } from "@/components/marketing/nf/Icons";
@@ -16,7 +16,6 @@ export type DemoLoginCredentials = {
 };
 
 function LoginForm({ demoAccounts, home }: { demoAccounts?: DemoLoginCredentials; home: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { t, tx } = useI18n();
   /* `next` manda sobre la preferencia: si llegas a /login por haber pedido una
@@ -45,8 +44,12 @@ function LoginForm({ demoAccounts, home }: { demoAccounts?: DemoLoginCredentials
       const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) { setError(typeof data.error === "string" ? tx(data.error) : t("error.loginFailed")); return; }
-      router.push(next.startsWith("/") ? next : home);
-      router.refresh();
+      /* Navegación dura: el router del cliente guarda 30 s de payloads RSC
+         (`staleTimes.dynamic` en next.config.ts), así que un `push` pintaba
+         primero los de la cuenta anterior y el `refresh` llegaba después. Al
+         cambiar de identidad se descarta todo el estado del cliente. */
+      window.location.assign(next.startsWith("/") ? next : home);
+      return;
     } catch { setError(t("error.loginUnexpected")); }
     finally { setLoading(false); }
   }

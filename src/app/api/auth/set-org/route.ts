@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAppContext } from "@/lib/app-context";
 import { parseId } from "@/lib/validation/common";
+import { ACTIVE_ORG_COOKIE, activeOrgCookieOptions } from "@/lib/auth/session-cookies";
 
 export async function POST(request: NextRequest) {
   const ctx = await getAppContext();
@@ -22,12 +23,6 @@ export async function POST(request: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set("nf_org", organizationId, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 365 * 24 * 3600,
-    secure: process.env.NODE_ENV === "production",
-  });
+  res.cookies.set(ACTIVE_ORG_COOKIE, organizationId, activeOrgCookieOptions());
   return res;
 }

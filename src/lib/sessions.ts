@@ -24,6 +24,15 @@ export type ActiveSession = {
 };
 
 /**
+ * Los dos identificadores que cruzan este módulo van a columnas `uuid`, y
+ * Postgres rechaza el resto antes de mirar el `WHERE`. Comprobarlo aquí
+ * convierte un error crudo del driver en una respuesta vacía manejable.
+ */
+function isAuthUserId(value: string | null): value is string {
+  return !!value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
+/**
  * Identificador de la sesión en curso.
  *
  * Sale del `session_id` del token, que es el único vínculo entre la petición y
@@ -45,7 +54,15 @@ async function currentSessionId(): Promise<string | null> {
   }
 }
 
-export async function listUserSessions(userId: string): Promise<ActiveSession[]> {
+/**
+ * El identificador es siempre el de `auth.users` (un UUID), nunca `User.id`:
+ * la tabla de la aplicación usa CUID y `auth.sessions.user_id` es `uuid`, así
+ * que pasar el id de Prisma reventaba la consulta con un 22P02 y la pantalla
+ * se quedaba sin sesiones en silencio. `null` cuando la cuenta no tiene fila
+ * en `auth.users`, que entonces tampoco tiene sesiones que enseñar.
+ */
+export async function listUserSessions(authUserId: string | null): Promise<ActiveSession[]> {
+  if (!isAuthUserId(authUserId)) return [];
   try {
     const currentId = await currentSessionId();
     /* host(ip) y no ip::text: la columna es `inet` y el texto crudo sale como
@@ -57,7 +74,7 @@ export async function listUserSessions(userId: string): Promise<ActiveSession[]>
     }[]>`
       SELECT id::text, created_at, refreshed_at, host(ip) AS ip, user_agent, aal::text
       FROM auth.sessions
-      WHERE user_id = ${userId}::uuid
+      WHERE user_id = ${authUserId}::uuid
         AND (not_after IS NULL OR not_after > now())
       ORDER BY COALESCE(refreshed_at, created_at) DESC
       LIMIT 20
@@ -85,8 +102,9 @@ export async function listUserSessions(userId: string): Promise<ActiveSession[]>
  * Filtra por `user_id` además de por id: sin eso, un identificador de otra
  * persona cerraría su sesión.
  */
-export async function revokeUserSession(userId: string, sessionId: string): Promise<void> {
+export async function revokeUserSession(authUserId: string | null, sessionId: string): Promise<void> {
+  if (!isAuthUserId(authUserId)) throw new Error("Esta cuenta no tiene sesiones que cerrar.");
   await prisma.$executeRaw`
-    DELETE FROM auth.sessions WHERE id = ${sessionId}::uuid AND user_id = ${userId}::uuid
+    DELETE FROM auth.sessions WHERE id = ${sessionId}::uuid AND user_id = ${authUserId}::uuid
   `;
 }
