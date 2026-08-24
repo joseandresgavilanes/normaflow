@@ -626,7 +626,10 @@ function DocumentFormModal({
           </Field>
           <Field label="Norma">
             <Picker aria-label="Código de norma" name="standardCode" defaultValue={editing?.standardCode ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle}>
-              <option value="">— Ninguna —</option>
+              {/* Sin normas activas el desplegable solo ofrecía «Ninguna», que no
+                  distingue «este documento no responde a una norma» de «esta
+                  organización todavía no ha activado ninguna». */}
+              <option value="">{standards.length === 0 ? "Activa una norma en Normas" : "— Ninguna —"}</option>
               {standards.map((standard) => <option key={standard.code} value={standard.code}>{standard.name}</option>)}
             </Picker>
           </Field>
@@ -672,7 +675,7 @@ function DocumentFormModal({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Responsable elaboración">
-            <PersonPicker
+            <PersonPicker emptyMessage="Crea primero una persona en Personal"
               name="responsibleElaborationId"
               people={personnel}
               defaultValue={editing?.responsibleElaborationId ?? ""}
@@ -682,7 +685,7 @@ function DocumentFormModal({
             />
           </Field>
           <Field label="Responsable aprobación">
-            <PersonPicker
+            <PersonPicker emptyMessage="Crea primero una persona en Personal"
               name="responsibleApprovalId"
               people={personnel}
               defaultValue={editing?.responsibleApprovalId ?? ""}
@@ -692,7 +695,7 @@ function DocumentFormModal({
             />
           </Field>
           <Field label="Custodio">
-            <PersonPicker
+            <PersonPicker emptyMessage="Crea primero una persona en Personal"
               name="custodianId"
               people={personnel}
               defaultValue={editing?.custodianId ?? ""}

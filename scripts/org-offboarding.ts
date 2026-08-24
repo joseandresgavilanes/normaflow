@@ -6,6 +6,9 @@
  *
  * Deletion always exports first (the export is the retained record), then
  * `organization.delete` cascades every tenant row (FKs are ON DELETE CASCADE).
+ * The cascade reaches append-only `audit_logs`, so the delete runs inside a
+ * transaction that sets `normaflow.audit_log_purge` — the only sanctioned way
+ * past the trigger, and it dies with the transaction.
  * It refuses to touch production unless ALLOW_PRODUCTION_OFFBOARDING=true.
  *
  * NOT handled here (must be done in the provider consoles, see
@@ -14,29 +17,32 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const ORG_ID = process.env.ORG_ID?.trim();
+const RAW_ORG_ID = process.env.ORG_ID?.trim();
 const MODE = (process.env.MODE ?? "export").trim();
 function fail(msg: string): never { console.error(`\n❌ ${msg}\n`); process.exit(1); }
-if (!ORG_ID) fail("ORG_ID es obligatorio.");
+if (!RAW_ORG_ID) fail("ORG_ID es obligatorio.");
 if (!["export", "delete"].includes(MODE)) fail("MODE debe ser 'export' o 'delete'.");
+const ORG_ID: string = RAW_ORG_ID;
 
-// Top-level tenant models (each filtered by organizationId). Child rows also
-// carry organizationId so they are captured directly.
-const MODELS = [
-  "membership", "memberInvite", "document", "documentVersion", "process", "risk", "audit", "auditFinding",
-  "nonconformity", "action", "cAPA", "opportunity", "indicator", "indicatorValue", "evidenceFile",
-  "record", "recordEntry", "assessment", "auditProgram", "managementReview", "trainingCourse", "trainingAssignment",
-  "changeRequest", "supplier", "supplierSecurityProfile", "integration", "position", "personnel", "location",
-  "organizationControl", "controlEvidence", "controlReview", "riskControlLink",
-  "statementOfApplicability", "soAControlEntry", "riskAssessmentMethodology", "riskTreatmentPlan", "riskTreatmentItem", "residualRiskAssessment", "riskAcceptance",
-  "informationAsset", "assetClassification", "assetDependency", "assetRisk", "assetControl",
-  "securityIncident", "vulnerability", "remediation", "verification",
-  "businessContinuityPlan", "disasterRecoveryPlan", "continuityTest", "testResult", "improvementAction",
-  "subscription", "billingInvoice", "reportExport", "notification", "auditLog",
-] as const;
+// La lista de modelos se deriva del schema: todo modelo con `organizationId`
+// se exporta solo, así los módulos nuevos (14001, 45001, 22301…) entran sin
+// tocar este fichero y el export nunca se queda corto respecto al schema.
+const delegateOf = (model: string) => model.charAt(0).toLowerCase() + model.slice(1);
+const MODELS = Prisma.dmmf.datamodel.models
+  .filter((m) => m.name !== "Organization" && m.fields.some((f) => f.name === "organizationId"))
+  .map((m) => delegateOf(m.name));
+
+// Hijos que no llevan organizationId: se filtran por su padre (la FK al padre
+// es obligatoria en los cuatro, así que no se escapa ninguna fila).
+const CHILD_MODELS: Record<string, (orgId: string) => Record<string, unknown>> = {
+  documentVersion: (organizationId) => ({ document: { organizationId } }),
+  auditFinding: (organizationId) => ({ audit: { organizationId } }),
+  indicatorValue: (organizationId) => ({ indicator: { organizationId } }),
+  recordEntry: (organizationId) => ({ record: { organizationId } }),
+};
 
 async function exportOrg() {
   const org = await prisma.organization.findUnique({ where: { id: ORG_ID } });
@@ -44,11 +50,12 @@ async function exportOrg() {
 
   const data: Record<string, unknown> = { organization: org };
   const counts: Record<string, number> = {};
-  for (const model of MODELS) {
+  for (const model of [...MODELS, ...Object.keys(CHILD_MODELS)]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const delegate = (prisma as any)[model];
     if (!delegate?.findMany) continue;
-    const rows = await delegate.findMany({ where: { organizationId: ORG_ID } });
+    const where = CHILD_MODELS[model] ? CHILD_MODELS[model](ORG_ID) : { organizationId: ORG_ID };
+    const rows = await delegate.findMany({ where });
     data[model] = rows;
     counts[model] = rows.length;
   }
@@ -69,7 +76,17 @@ async function main() {
     const isProd = (process.env.NORMAFLOW_ENV || process.env.NODE_ENV) === "production";
     if (isProd && process.env.ALLOW_PRODUCTION_OFFBOARDING !== "true") fail("Offboarding en producción requiere ALLOW_PRODUCTION_OFFBOARDING=true.");
     if (process.env.OFFBOARDING_CONFIRM !== `delete-${ORG_ID}`) fail(`Para eliminar define OFFBOARDING_CONFIRM=delete-${ORG_ID} (export ya guardado en ${file}).`);
-    await prisma.organization.delete({ where: { id: ORG_ID } });
+    // El borrado arrastra audit_logs, que es append-only: la transacción declara
+    // el propósito con el flag que exige nf_audit_log_append_only (migración
+    // 20260824030000_audit_log_offboarding_purge). SET LOCAL muere con la
+    // transacción, así que no deja la puerta abierta después del borrado.
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRawUnsafe("SET LOCAL normaflow.audit_log_purge = 'on'");
+        await tx.organization.delete({ where: { id: ORG_ID } });
+      },
+      { timeout: 120_000, maxWait: 20_000 },
+    );
     console.log(`\n🗑️  Organización ${ORG_ID} eliminada (cascada DB). Recuerda borrar Storage org-${ORG_ID}/ y los usuarios Auth huérfanos.\n`);
   }
 }

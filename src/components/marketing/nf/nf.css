@@ -473,7 +473,18 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
 }
 
 /* Hero */
-.nf-hero { padding: clamp(48px, 7vw, 96px) 0 clamp(40px, 6vw, 72px); position: relative; }
+.nf-hero {
+  padding: clamp(48px, 7vw, 96px) 0 clamp(40px, 6vw, 72px);
+  position: relative;
+  /* Red de seguridad contra la barra horizontal. Estaba en `.nf-hero-stage`,
+     pero ahí recorta a ras del gráfico: bastaba que el paralaje desplazase una
+     ficha del borde para que la rebanase («AUDIT READINESS» se leía «DIT
+     READINESS»). Aquí recorta al ancho de la ventana, que es donde de verdad
+     importa, y las piezas tienen sitio para moverse.
+     `clip` recorta sin crear contexto de desplazamiento, así que no rompe el
+     `position: sticky` de la cabecera. */
+  overflow-x: clip;
+}
 .nf-hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
@@ -497,15 +508,6 @@ h1, h2, h3, h4 { font-family: var(--font-display); margin: 0; letter-spacing: -0
   /* El escenario aísla su propia pila para que las cuatro capas de la
      ilustración se ordenen entre ellas y no contra el resto de la sección. */
   isolation: isolate;
-  /* Red de seguridad horizontal: con las fichas decorativas colocadas al 88 %
-     del ancho, la de la derecha llegaba a 1484 px en un lienzo de 1440 y la
-     página desbordaba 44 px. Ahora ninguna se sale, pero el recorte se queda
-     para que reencuadrar no vuelva a sacar barra horizontal. Ojo: recorta a
-     ras del escenario, así que nada decorativo debe apoyarse en el borde.
-     `body { overflow-x: hidden }` ocultaba la barra pero seguía recortando el
-     contenido; `clip` recorta sin crear contexto de desplazamiento, así que no
-     rompe el `position: sticky` de la cabecera. */
-  overflow-x: clip;
 }
 
 .nf-chaos {

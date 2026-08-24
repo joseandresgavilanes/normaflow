@@ -7,7 +7,7 @@ import { requireAuthorization } from "@/lib/permissions/server";
 import { logAuditEvent } from "@/lib/audit-log";
 import { ensureOrganizationDefaults } from "@/lib/organization-defaults";
 import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/standards-adoption";
-import { getStandardSpec } from "@/lib/standards-catalog";
+import { getStandardSpec, withBaselineStandard } from "@/lib/standards-catalog";
 import { parseInput } from "@/lib/validation/common";
 import { onboardingSetupSchema } from "@/lib/validation/workflows";
 import { installAllPacks, syncCommercialPackEntitlements } from "@/lib/standard-packs";
@@ -113,13 +113,14 @@ export async function saveOnboardingSetup(input: {
     grantedById: ctx.user.id,
   });
 
-  for (const code of standards) {
+  // La norma base va siempre, aunque el wizard solo haya marcado otra.
+  for (const code of withBaselineStandard(standards)) {
     const spec = getStandardSpec(code);
     if (!spec) continue;
     const standard = await ensureStandardCatalog(spec);
     await adoptStandardForOrganization({
       organizationId: ctx.organization.id,
-      standardCode: code,
+      standardCode: spec.code,
       standardId: standard.id,
       assessorId: ctx.user.id,
     });

@@ -27,6 +27,7 @@
     "test:itsm": "tsx scripts/test-itsm.ts",
     "test:medical-devices": "tsx scripts/test-medical-devices.ts",
     "test:concurrency": "tsx scripts/test-concurrency.ts",
+    "test:scope": "tsx scripts/test-collaborator-scope.ts",
     "test:iso9001-completeness": "tsx scripts/test-iso9001-completeness.ts",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
@@ -47,6 +48,7 @@
     "storage:reconcile-documents": "tsx scripts/reconcile-document-storage.ts",
     "restore:drill": "tsx scripts/restore-drill.ts",
     "org:offboard": "tsx scripts/org-offboarding.ts",
+    "standards:baseline": "tsx scripts/backfill-baseline-standard.ts",
     "typecheck": "tsc --noEmit",
     "validate:i18n": "tsx scripts/validate-i18n.ts"
   },

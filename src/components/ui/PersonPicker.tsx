@@ -54,6 +54,7 @@ export default function PersonPicker({
   required = false,
   disabled = false,
   placeholder = "Sin asignar",
+  emptyMessage = "No hay personas para asignar",
   emptyValue = "",
   searchPlaceholder = "Buscar persona…",
   ariaLabel,
@@ -73,6 +74,10 @@ export default function PersonPicker({
   required?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  /** Qué decir cuando no hay ni una persona que elegir. Un desplegable que solo
+   *  ofrece «Sin asignar» parece roto: no distingue «no he asignado a nadie» de
+   *  «aquí todavía no hay a quién asignar». */
+  emptyMessage?: string;
   /** Valor de la fila «nadie». En un formulario es "", pero un filtro suele
    *  tener su propio centinela ("ALL") para decir «no filtres por esto». */
   emptyValue?: string;
@@ -97,9 +102,14 @@ export default function PersonPicker({
       })
       .filter((row) => row.value);
     // La fila de vaciado va primero y siempre: es la que representa «nadie», y
-    // sin ella un campo obligatorio no tendría forma de estar vacío.
-    return multiple ? rows : [{ value: emptyValue, label: placeholder, group: "", detail: "" }, ...rows];
-  }, [people, valueField, multiple, placeholder, emptyValue]);
+    // sin ella un campo obligatorio no tendría forma de estar vacío. Cuando no
+    // hay nadie a quien asignar, esa fila es además el único sitio donde cabe
+    // decirlo, así que lleva el aviso en vez del «Sin asignar» de siempre.
+    const emptyLabel = rows.length === 0 ? emptyMessage : placeholder;
+    return multiple ? rows : [{ value: emptyValue, label: emptyLabel, group: "", detail: "" }, ...rows];
+  }, [people, valueField, multiple, placeholder, emptyMessage, emptyValue]);
+
+  const sinPersonas = useMemo(() => options.every((option) => !option.value), [options]);
 
   const chips = useMemo(() => {
     const names = new Set(options.map((option) => option.group).filter((group): group is string => Boolean(group)));
@@ -118,7 +128,7 @@ export default function PersonPicker({
       className={className}
       style={style}
       aria-label={ariaLabel}
-      placeholder={placeholder}
+      placeholder={sinPersonas ? emptyMessage : placeholder}
       searchPlaceholder={searchPlaceholder}
       chips={chips}
       invalidMessage="Elige una persona."

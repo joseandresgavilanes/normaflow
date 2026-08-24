@@ -114,7 +114,10 @@ function HeroDashboard() {
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 6, marginTop: 6, fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--nf-ink-3)" }}>
+            {/* `auto` empuja los sellos al fondo: esta baldosa abarca las dos
+                filas de la rejilla y sin esto le quedaba media altura de verde
+                vacío debajo del último dato. */}
+            <div style={{ display: "flex", gap: 6, marginTop: "auto", fontSize: 9, fontFamily: "var(--font-mono)", color: "var(--nf-ink-3)" }}>
               <span style={{ padding: "2px 6px", border: "1px solid var(--nf-line)", borderRadius: 4 }}>148/156 controles</span>
               <span style={{ padding: "2px 6px", border: "1px solid var(--nf-line)", borderRadius: 4 }}>0 NC mayores</span>
             </div>
@@ -235,7 +238,9 @@ function HeroDashboard() {
 
 function NfHero() {
   const stageRef = useRef<HTMLDivElement>(null);
-  useMouseParallax(stageRef, 16);
+  /* 12, no 16: con el tope de [-1, 1] el recorrido máximo de una pieza pasa a
+     ser 12 × 1.8 = 22 px, que cabe de sobra dentro del lienzo. */
+  useMouseParallax(stageRef, 12);
   return (
     <section className="nf-hero" id="top">
       <div className="nf-container nf-hero-grid">

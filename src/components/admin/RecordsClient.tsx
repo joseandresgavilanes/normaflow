@@ -624,7 +624,7 @@ function RecordFormModal({
                 </Picker>
               </Field>
               <Field label="Custodio">
-                <PersonPicker
+                <PersonPicker emptyMessage="Crea primero una persona en Personal"
                   name="custodianId"
                   people={personnel.filter((p) => p.active)}
                   defaultValue={editing?.custodianId ?? ""}

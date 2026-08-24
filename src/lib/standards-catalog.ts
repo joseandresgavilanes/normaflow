@@ -129,3 +129,18 @@ export function clauseIdFor(standardCode: StandardSpec["code"], clauseCode: stri
 export function getStandardSpec(code: string): StandardSpec | null {
   return STANDARDS_CATALOG.find((s) => s.code === code) ?? null;
 }
+
+/**
+ * Norma base: toda organización la lleva activada, la pida o no.
+ *
+ * Sin ninguna norma activa la aplicación se queda medio muda —el selector de
+ * norma del alta de documentos solo ofrece «Ninguna», el de cláusulas dice «Sin
+ * cláusulas disponibles» y el GAP no tiene contra qué medir—, y una ISO 9001
+ * activada es un suelo razonable para cualquier sistema de gestión.
+ */
+export const BASELINE_STANDARD_CODE = "ISO_9001" as const;
+
+/** Añade la norma base a lo que se haya pedido, sin duplicarla. */
+export function withBaselineStandard(requested: readonly string[]): string[] {
+  return [...new Set([BASELINE_STANDARD_CODE as string, ...requested])];
+}

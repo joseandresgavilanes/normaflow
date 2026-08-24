@@ -39,8 +39,18 @@ export async function getCollaboratorScope(ctx: LiveAppContext): Promise<Collabo
 
   const organizationId = ctx.organization.id;
   const userId = ctx.user.id;
-  const [ownedProcesses, reviewedRecords, directDocuments, directRisks, directIndicators, directTraining, directChanges] = await Promise.all([
+  const [ownedProcesses, groupProcesses, reviewedRecords, directDocuments, directRisks, directIndicators, directTraining, directChanges] = await Promise.all([
     prisma.process.findMany({ where: { organizationId, ownerId: userId }, select: { id: true } }),
+    // Ser dueño del proceso no es la única forma de estar asignado a él: la vía
+    // normal es meter a la persona en un grupo y ligar el grupo a los procesos
+    // (GroupMembership + GroupProcess, lo que escribe `setGroupAssociations`).
+    // Sin leerlo aquí esa asignación no daba acceso a nada —el grupo solo servía
+    // para conceder permisos extra—, así que invitar a alguien a un proceso se
+    // quedaba en un gesto sin efecto.
+    prisma.groupProcess.findMany({
+      where: { group: { organizationId, members: { some: { userId } } } },
+      select: { processId: true },
+    }),
     prisma.record.findMany({ where: { organizationId, reviewerId: userId }, select: { id: true, processId: true } }),
     prisma.document.findMany({ where: { organizationId, OR: [{ ownerId: userId }, { approvals: { some: { approverId: userId } } }] }, select: { id: true, processId: true } }),
     prisma.risk.findMany({ where: { organizationId, ownerId: userId }, select: { id: true, processId: true } }),
@@ -51,6 +61,7 @@ export async function getCollaboratorScope(ctx: LiveAppContext): Promise<Collabo
 
   const processIds = unique([
     ...ownedProcesses.map((row) => row.id),
+    ...groupProcesses.map((row) => row.processId),
     ...reviewedRecords.map((row) => row.processId),
     ...directDocuments.map((row) => row.processId),
     ...directRisks.map((row) => row.processId),

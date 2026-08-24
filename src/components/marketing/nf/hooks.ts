@@ -27,8 +27,14 @@ export function useMouseParallax(ref: React.RefObject<HTMLElement | null>, depth
       const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const dx = (e.clientX - cx) / rect.width;
-      const dy = (e.clientY - cy) / rect.height;
+      /* Acotado a [-1, 1]. Sin el tope, `dx` es la distancia al centro medida
+         en anchos del escenario: con el ratón sobre el titular, en una pantalla
+         ancha, valía -1.9, y el desplazamiento se iba a 55 px en vez de los 22
+         de diseño. Las fichas de los bordes se salían del lienzo y el recorte
+         las rebanaba: «AUDIT READINESS» se leía «DIT READINESS». */
+      const tope = (v: number) => Math.max(-1, Math.min(1, v));
+      const dx = tope((e.clientX - cx) / rect.width);
+      const dy = tope((e.clientY - cy) / rect.height);
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
         el.querySelectorAll<HTMLElement>("[data-parallax]").forEach((node) => {

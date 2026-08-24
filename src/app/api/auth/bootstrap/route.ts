@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/utils";
 import { isSupabaseConfigured } from "@/lib/env";
-import { getStandardSpec } from "@/lib/standards-catalog";
+import { getStandardSpec, withBaselineStandard } from "@/lib/standards-catalog";
 import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/standards-adoption";
 import { ensureOrganizationDefaults } from "@/lib/organization-defaults";
 import { sendWelcomeEmail } from "@/lib/resend";
@@ -42,9 +42,11 @@ export async function POST(request: NextRequest) {
   try { body = parseInput(bootstrapSchema, await request.json().catch(() => ({}))) as z.infer<typeof bootstrapSchema>; }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Datos inválidos" }, { status: 400 }); }
   const organizationName = body.organizationName;
-  // Normas a adoptar al crear la organización (por defecto ISO 9001).
-  const requestedStandards = body.standards;
-  const standardSpecs = [...new Set(requestedStandards)]
+  // Normas a adoptar al crear la organización. La base va siempre, aunque el
+  // alta pida solo otra: una organización sin normas activas se queda sin
+  // selector de norma ni cláusulas en documentos.
+  const requestedStandards = withBaselineStandard(body.standards);
+  const standardSpecs = requestedStandards
     .map((code) => getStandardSpec(code))
     .filter((spec): spec is NonNullable<typeof spec> => spec != null);
   const onboardingGoal = body.goal as OnboardingGoal | null;

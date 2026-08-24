@@ -21,6 +21,8 @@ MODE=delete ORG_ID=<orgId> OFFBOARDING_CONFIRM=delete-<orgId> npm run org:offboa
 Runs the export first, then `organization.delete` — all tenant rows cascade
 (FKs are `ON DELETE CASCADE`). The `AuditLog` is append-only during operation but
 is removed with the org on hard-delete; keep the export as the erasure record.
+The delete runs inside a transaction that sets `normaflow.audit_log_purge` — the
+only sanctioned way past the append-only trigger, see [audit-log-policy.md](audit-log-policy.md).
 
 **Not covered by the DB delete (do these in the provider consoles as the final steps):**
 - **Supabase Storage:** delete all objects under `org-<orgId>/` in `documents` and `evidence` ([runbooks/storage.md](runbooks/storage.md)).

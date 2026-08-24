@@ -462,7 +462,7 @@ export default function ACPMClient() {
             <input aria-label="Auditoría interna, Voz del cliente, Reporte, etc." name="source" className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="Auditoría interna, Voz del cliente, Reporte, etc." />
           </Field>
           <Field label="Responsable de la acción">
-            <PersonPicker
+            <PersonPicker emptyMessage="Crea primero una persona en Personal"
               name="ownerId"
               people={personnel.filter((person) => person.active)}
               defaultValue=""
@@ -791,7 +791,7 @@ function StageEditor({
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
           <Field label="Responsable">
-            <PersonPicker
+            <PersonPicker emptyMessage="Crea primero una persona en Personal"
               people={personnel.filter((p) => p.active)}
               defaultValue={acpm.ownerId ?? ""}
               onValueChange={(personId) => onPatch("ownerId", personId || null)}
