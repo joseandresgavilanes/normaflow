@@ -19,7 +19,7 @@ import { nextDocumentVersion } from "@/lib/document-version";
 import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
 import { renderTemplateContent, type TemplateField } from "@/lib/document-templates";
-import { canPublishApprovedDocument, hasPendingAssignedApproval } from "@/lib/document-approval-workflow";
+import { canPublishApprovedDocument, hasPendingAssignedApproval, selfApprovalOutcome } from "@/lib/document-approval-workflow";
 import { persistWithStorageCompensation } from "@/lib/storage-compensation";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { documentContentSchema, documentInputSchema, documentReviewSchema } from "@/lib/validation/workflows";
@@ -155,6 +155,39 @@ async function assertDocumentApprovers(organizationId: string, approverIds: stri
   });
   if (unauthorized) throw new Error("Todos los revisores deben tener permiso para aprobar documentos.");
   return ids;
+}
+
+/**
+ * ¿Queda alguien más en la organización que pueda aprobar documentos?
+ *
+ * Es la condición que decide si la separación entre elaborar y aprobar se puede
+ * exigir. Mira rol y permisos de grupo, igual que `assertDocumentApprovers`.
+ */
+async function hasOtherApprover(
+  db: Pick<typeof prisma, "membership" | "groupMembership">,
+  organizationId: string,
+  exceptUserId: string,
+): Promise<boolean> {
+  const memberships = await db.membership.findMany({
+    where: { organizationId, active: true, userId: { not: exceptUserId } },
+    select: { userId: true, role: true },
+  });
+  if (memberships.length === 0) return false;
+
+  const groupMemberships = await db.groupMembership.findMany({
+    where: { userId: { in: memberships.map((membership) => membership.userId) }, group: { organizationId } },
+    select: { userId: true, group: { select: { permissions: { select: { permission: true } } } } },
+  });
+  const permissionsByUser = new Map<string, string[]>();
+  for (const membership of groupMemberships) {
+    const current = permissionsByUser.get(membership.userId) ?? [];
+    current.push(...membership.group.permissions.map((permission) => permission.permission));
+    permissionsByUser.set(membership.userId, current);
+  }
+
+  return memberships.some((membership) =>
+    roleOrGroupCan(membership.role, permissionsByUser.get(membership.userId) ?? [], "documents:approve"),
+  );
 }
 
 export async function createDocument(input: CreateDocumentInput): Promise<{ id: string }> {
@@ -697,9 +730,21 @@ export async function approveDocument(
           const targetVersion = await tx.documentVersion.findFirst({
             where: { documentId, status: "PENDING" },
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-            select: { id: true, version: true, status: true },
+            select: { id: true, version: true, status: true, createdById: true },
           });
           if (!targetVersion) throw new Error("No existe una versión pendiente de aprobación.");
+
+          // Separación entre elaborar y aprobar. Se resuelve aquí, sobre la fila
+          // concreta, porque no es una capacidad del rol: un responsable de
+          // calidad sí aprueba documentos, lo que no puede es firmar el suyo.
+          const separacion = selfApprovalOutcome({
+            approverId: ctx.user.id,
+            versionCreatedById: targetVersion.createdById,
+            otherApproversAvailable: await hasOtherApprover(tx, ctx.organization.id, ctx.user.id),
+          });
+          if (separacion === "blocked") {
+            throw new Error("No puedes aprobar una versión que subiste tú. Pide la aprobación a otra persona con permiso para aprobar.");
+          }
 
           const approvalsBefore = await tx.approval.findMany({
             where: { documentId, versionId: targetVersion.id },
@@ -737,7 +782,7 @@ export async function approveDocument(
             if (documentUpdate.count !== 1) throw new Error("El documento cambió durante la publicación. Intenta nuevamente.");
           }
 
-          const after = { status: published ? DocumentStatus.APPROVED : DocumentStatus.IN_REVIEW, currentVersion: published ? targetVersion.version : document.currentVersion, targetVersion: targetVersion.version, approvals: { pending, approved, rejected }, approverId: ctx.user.id, comment };
+          const after = { status: published ? DocumentStatus.APPROVED : DocumentStatus.IN_REVIEW, currentVersion: published ? targetVersion.version : document.currentVersion, targetVersion: targetVersion.version, approvals: { pending, approved, rejected }, approverId: ctx.user.id, comment, ...(separacion === "sole-approver" ? { selfApprovalException: "No hay otra persona con permiso para aprobar en la organización." } : {}) };
           await writeAuditLog(tx, { ctx, action: "approve", module: "document", recordId: documentId, before: { status: document.status, currentVersion: document.currentVersion, targetVersion: targetVersion.version, approvals: { pending: approvalsBefore.filter((item) => item.status === "PENDING").length, approved: approvalsBefore.filter((item) => item.status === "APPROVED").length, rejected: approvalsBefore.filter((item) => item.status === "REJECTED").length } }, after });
           if (published) await writeAuditLog(tx, { ctx, action: "publish", module: "document", recordId: documentId, before: { status: DocumentStatus.IN_REVIEW }, after: { status: DocumentStatus.APPROVED, currentVersion: targetVersion.version } });
 

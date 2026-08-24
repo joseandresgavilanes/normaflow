@@ -421,6 +421,12 @@ model Membership {
   userId         String
   organizationId String
   role           Role      @default(CONTRIBUTOR)
+  /// Acota lo que esta persona ve a lo que tiene asignado. Es propiedad de la
+  /// membresía y no del rol: permite un jefe de proceso acotado sin degradarlo
+  /// a contribuidor, y un contribuidor con visión completa donde haga falta.
+  /// El defecto es `false`; la migración lo puso a `true` en los contribuidores
+  /// existentes para no ensanchar el acceso de nadie al desplegarlo.
+  scoped         Boolean   @default(false)
   active         Boolean   @default(true)
   deactivatedAt  DateTime?
   createdAt      DateTime  @default(now())

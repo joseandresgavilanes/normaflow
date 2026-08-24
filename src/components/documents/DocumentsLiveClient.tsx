@@ -892,7 +892,7 @@ function UploadVersionModal({
   onSubmit,
   }: {
     document: DocumentRowLive | null;
-    members: { userId: string; name: string; email: string; role: string; canApprove: boolean }[];
+    members: { userId: string; name: string; email?: string; role: string; canApprove: boolean }[];
   isPending: boolean;
   onClose: () => void;
   onSubmit: (file: File, note: string, bump: "minor" | "major", approverIds: string[]) => void;
@@ -985,7 +985,7 @@ function SubmitReviewModal({
   onSubmit,
   }: {
     document: DocumentRowLive | null;
-    members: { userId: string; name: string; email: string; role: string; canApprove: boolean }[];
+    members: { userId: string; name: string; email?: string; role: string; canApprove: boolean }[];
   isPending: boolean;
   onClose: () => void;
   onSubmit: (approverIds: string[]) => void;
@@ -1013,7 +1013,7 @@ function SubmitReviewModal({
                 />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: "var(--nf-ink)" }}>{m.name}</div>
-                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{m.email} · {m.role}</div>
+                  <div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{[m.email, m.role].filter(Boolean).join(" · ")}</div>
                 </div>
               </label>
             ))}

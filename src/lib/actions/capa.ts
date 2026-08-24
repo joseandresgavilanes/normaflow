@@ -46,8 +46,8 @@ async function loadCAPA(id: string, organizationId: string) {
   return capa;
 }
 
-function assertCAPACollaborator(ctx: { role: string; user: { id: string } }, capa: { ownerId: string | null; requestedById: string }) {
-  if (ctx.role === "CONTRIBUTOR" && capa.ownerId !== ctx.user.id && capa.requestedById !== ctx.user.id) {
+function assertCAPACollaborator(ctx: { scoped: boolean; user: { id: string } }, capa: { ownerId: string | null; requestedById: string }) {
+  if (ctx.scoped && capa.ownerId !== ctx.user.id && capa.requestedById !== ctx.user.id) {
     throw new Error("No tienes acceso a esta CAPA porque no está asignada a tu usuario.");
   }
 }
@@ -110,7 +110,7 @@ export async function createCAPA(input: CreateCAPAInput): Promise<{ id: string; 
   if (!Object.values(NCSeverity).includes(input.severity)) throw new Error("La severidad no es válida.");
   if (!Object.values(Priority).includes(input.priority)) throw new Error("La prioridad no es válida.");
   await assertReferences(input, ctx.organization.id);
-  if (ctx.role === "CONTRIBUTOR" && input.processId) {
+  if (ctx.scoped && input.processId) {
     const process = await prisma.process.findFirst({ where: { id: input.processId, organizationId: ctx.organization.id, ownerId: ctx.user.id }, select: { id: true } });
     if (!process) throw new Error("Solo puedes registrar ACPM en procesos asignados a tu usuario.");
   }

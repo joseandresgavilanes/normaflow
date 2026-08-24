@@ -27,7 +27,9 @@ test.describe("document approval permissions", () => {
 
   test("limits approval and obsolescence capabilities to the approval roles", () => {
     expect(roleCan("MANAGER", "documents:approve")).toBe(true);
-    expect(roleCan("AUDITOR", "documents:approve")).toBe(true);
+    // El auditor evalúa el sistema, no lo firma: aprobar un documento que luego
+    // audita lo dejaría revisando su propio trabajo.
+    expect(roleCan("AUDITOR", "documents:approve")).toBe(false);
     expect(roleCan("CONTRIBUTOR", "documents:approve")).toBe(false);
     expect(roleCan("VIEWER", "documents:approve")).toBe(false);
     expect(roleCan("AUDITOR", "documents:export")).toBe(true);

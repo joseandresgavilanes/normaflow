@@ -11,6 +11,7 @@ import { notifyUser } from "@/lib/notify";
 import { planMaxUsers } from "@/lib/constants";
 import { isSupabaseInviteConfigured, sendSupabaseMemberInvite } from "@/lib/auth/invite-member";
 import { adoptStandardForOrganization, ensureStandardCatalog } from "@/lib/standards-adoption";
+import { defaultScopedFor } from "@/lib/permissions/scope";
 import { getStandardSpec } from "@/lib/standards-catalog";
 import {
   groupAssociationSchema,
@@ -158,7 +159,7 @@ export async function inviteMember(input: { email: string; name: string; role: R
   }
 
   const membership = await prisma.membership.create({
-    data: { userId: user.id, organizationId: ctx.organization.id, role },
+    data: { userId: user.id, organizationId: ctx.organization.id, role, scoped: defaultScopedFor(role) },
   });
 
   const inviteResult = await sendSupabaseMemberInvite({
@@ -266,6 +267,30 @@ export async function setMemberActive(membershipId: string, active: boolean) {
   revalidatePath("/app/settings/users");
 }
 
+/**
+ * Acota (o desacota) a una persona sin tocar su rol.
+ *
+ * Es lo que el modelo anterior no permitía decir: un gestor que solo opera sus
+ * procesos, o un contribuidor de confianza con visión completa.
+ */
+export async function setMemberScope(membershipId: string, scoped: boolean) {
+  membershipId = parseId(membershipId);
+  const ctx = await requirePermission("members:*");
+  const existing = await prisma.membership.findFirst({ where: { id: membershipId, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Miembro no encontrado.");
+
+  await prisma.membership.update({ where: { id: membershipId }, data: { scoped } });
+  await logAuditEvent({
+    ctx,
+    action: "update",
+    module: "member",
+    recordId: existing.userId,
+    before: { scoped: existing.scoped },
+    after: { scoped },
+  });
+  revalidatePath("/app/settings");
+}
+
 export async function updateMemberRole(membershipId: string, role: Role) {
   membershipId = parseId(membershipId);
   const ctx = await requirePermission("members:*");
@@ -285,7 +310,7 @@ export async function updateMemberRole(membershipId: string, role: Role) {
     if (remainingAdmins === 0) throw new Error("No puedes dejar la organización sin Admin.");
   }
 
-  await prisma.membership.update({ where: { id: membershipId }, data: { role } });
+  await prisma.membership.update({ where: { id: membershipId }, data: { role, scoped: defaultScopedFor(role) } });
   await logAuditEvent({
     ctx,
     action: "update",

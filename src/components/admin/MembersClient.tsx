@@ -77,6 +77,17 @@ export default function MembersClient() {
     });
   }
 
+  function changeScope(row: OrgMemberMockRow, scoped: boolean) {
+    setError("");
+    startTransition(async () => {
+      try {
+        await admin.setMemberScope?.(row.membershipId, scoped);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Error.");
+      }
+    });
+  }
+
   const columns: Column<OrgMemberMockRow>[] = [
     {
       key: "name",
@@ -98,6 +109,30 @@ export default function MembersClient() {
       key: "active",
       label: "Estado",
       render: (_, r) => <Badge status={r.active === false ? "OBSOLETE" : "ACTIVE"} label={r.active === false ? "Inactivo" : "Activo"} />,
+    },
+    {
+      key: "scoped",
+      label: "Alcance",
+      render: (_, r) => {
+        // El rol dice qué puede hacer; esto, sobre cuánto. Se pueden combinar:
+        // un gestor acotado a sus procesos, o un contribuidor con visión total.
+        const acotado = r.scoped === true;
+        const etiqueta = acotado ? "Solo lo asignado" : "Toda la organización";
+        return canEdit && !r.isSelf && admin.setMemberScope ? (
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, cursor: isPending ? "default" : "pointer" }}>
+            <input
+              type="checkbox"
+              checked={acotado}
+              disabled={isPending}
+              onChange={(event) => changeScope(r, event.target.checked)}
+              aria-label={`Acotar a ${r.name} a lo que tiene asignado`}
+            />
+            {etiqueta}
+          </label>
+        ) : (
+          <span style={{ fontSize: 12, color: "var(--nf-ink-3)" }}>{etiqueta}</span>
+        );
+      },
     },
     {
       key: "role",

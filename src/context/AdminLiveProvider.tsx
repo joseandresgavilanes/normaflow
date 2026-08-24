@@ -214,6 +214,10 @@ export function AdminLiveProvider({
         await adminA.updateMemberRole(membershipId, role as Role);
         refresh();
       },
+      setMemberScope: async (membershipId, scoped) => {
+        await adminA.setMemberScope(membershipId, scoped);
+        refresh();
+      },
       removeMember: async (membershipId) => {
         await adminA.removeMember(membershipId);
         refresh();

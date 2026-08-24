@@ -203,7 +203,7 @@ export async function createRisk(input: RiskInput) {
   input = parseInput(riskInputSchema, input) as RiskInput;
   const ctx = await requirePermission("risks:create");
   const data = riskData(input);
-  if (ctx.role === "CONTRIBUTOR") {
+  if (ctx.scoped) {
     data.ownerId = ctx.user.id;
     await assertCollaboratorProcessAccess(ctx, data.processId);
   }

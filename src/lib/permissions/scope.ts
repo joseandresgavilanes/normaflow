@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import type { Role } from "@prisma/client";
 import type { LiveAppContext } from "@/lib/app-context";
 
 export type CollaboratorScope = {
@@ -21,6 +22,18 @@ export type CollaboratorScope = {
   isScoped: boolean;
 };
 
+/**
+ * Alcance con el que nace una membresía.
+ *
+ * Es solo el punto de partida —después se cambia por membresía— pero tiene que
+ * existir: una persona invitada como contribuidor debe quedar acotada sin que
+ * nadie se acuerde de marcarlo, que es como funcionaba cuando el alcance se
+ * deducía del nombre del rol.
+ */
+export function defaultScopedFor(role: Role): boolean {
+  return role === "CONTRIBUTOR";
+}
+
 const unique = (values: (string | null | undefined)[]) => [...new Set(values.filter((value): value is string => Boolean(value)))];
 
 /**
@@ -29,7 +42,7 @@ const unique = (values: (string | null | undefined)[]) => [...new Set(values.fil
  * existing organization-wide behavior.
  */
 export async function getCollaboratorScope(ctx: LiveAppContext): Promise<CollaboratorScope> {
-  if (ctx.role !== "CONTRIBUTOR") {
+  if (!ctx.scoped) {
     return {
       processIds: [], riskIds: [], auditIds: [], nonconformityIds: [], actionIds: [],
       documentIds: [], recordIds: [], indicatorIds: [], opportunityIds: [], changeIds: [],
@@ -138,7 +151,7 @@ export async function assertCollaboratorCanAccess(
   module: keyof Omit<CollaboratorScope, "isScoped">,
   id: string,
 ) {
-  if (ctx.role !== "CONTRIBUTOR") return;
+  if (!ctx.scoped) return;
   const scope = await getCollaboratorScope(ctx);
   const ids = scope[module];
   if (!Array.isArray(ids) || !ids.includes(id)) {
@@ -147,7 +160,7 @@ export async function assertCollaboratorCanAccess(
 }
 
 export async function assertCollaboratorProcessAccess(ctx: LiveAppContext, processId?: string | null) {
-  if (ctx.role !== "CONTRIBUTOR" || !processId) return;
+  if (!ctx.scoped || !processId) return;
   const scope = await getCollaboratorScope(ctx);
   if (!scope.processIds.includes(processId)) {
     throw new Error("Solo puedes trabajar con procesos asignados a tu usuario.");

@@ -7,7 +7,7 @@ import { getCollaboratorScope } from "@/lib/permissions/scope";
 import { roleOrGroupCan } from "@/lib/permissions/matrix";
 import { planEntitlements, isTrialActive, assertPlanModule } from "@/lib/plan-entitlements";
 import { ensureDocumentTemplates } from "@/lib/document-templates";
-import { memberPayload } from "@/lib/payload-privacy";
+import { directoryPayload, memberAccessFor, memberPayload } from "@/lib/payload-privacy";
 import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
 import { delegationsFor } from "@/lib/delegation";
 import { createSignedAvatarUrl } from "@/lib/storage";
@@ -263,7 +263,8 @@ export async function getDocumentsPayload() {
   const scope = await getCollaboratorScope(ctx);
   const canCreate = can("documents:create");
   const canReadProcesses = can("processes:read");
-  const canReadMembers = can("members:*");
+  const memberAccess = memberAccessFor(can);
+  const canReadMembers = memberAccess !== "none";
   const [documents, locations, personnel, members, processes, clauses, standards, templates, packTemplates] = await Promise.all([
     prisma.document.findMany({
       where: {
@@ -434,7 +435,7 @@ export async function getDocumentsPayload() {
     processes: canCreate ? processes : [],
     standards: standards.map((item) => item.standard),
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
-    members: memberPayload(canReadMembers, members.map((m) => ({
+    members: directoryPayload(memberAccess, members.map((m) => ({
       userId: m.userId,
       name: m.user.name,
       email: m.user.email,
@@ -654,7 +655,7 @@ export async function getProcessesPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("processes:create"), canUpdate: can("processes:update"), canDelete: can("processes:delete") },
-    members: canManage && can("members:*") ? members : [],
+    members: canManage && can("members:directory") ? members : [],
     processes: processes.map((process) => {
       const counts = "_count" in process
         ? process._count as Partial<Record<keyof typeof linkedAccess, number>>
@@ -715,7 +716,7 @@ export async function getRisksPayload() {
   const processNames = new Map(processes.map((process) => [process.id, process]));
   return {
     access: { canCreate: can("risks:create"), canUpdate: can("risks:update"), canDelete: can("risks:delete") },
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     processes: canManage ? processes : [],
     risks: risks.map((risk) => ({
       id: risk.id,
@@ -767,7 +768,7 @@ export async function getOpportunitiesPayload() {
       canDelete: can("opportunities:delete"),
       currentUserId: ctx.user.id,
     },
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     opportunities: opportunities.map((opportunity) => ({
       id: opportunity.id,
       title: opportunity.title,
@@ -825,7 +826,7 @@ export async function getAuditsPayload() {
   return {
     access: { canCreate: can("audits:create"), canUpdate: can("audits:update"), canDelete: can("audits:delete"), canExport: can("audits:export"), canConvertFinding: can("actions:create") },
     programs: canManage ? programs : [],
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     processes,
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code })),
     evidenceFiles,
@@ -899,7 +900,7 @@ export async function getNonconformitiesPayload() {
     access: { canCreate: can("nc:create"), canUpdate: can("nc:update"), canDelete: can("nc:delete") },
     audits: canManage ? audits : [],
     findings: canManage ? findings : [],
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     nonconformities: nonconformities.map((nc) => ({
       id: nc.id,
       title: nc.title,
@@ -953,7 +954,7 @@ export async function getIndicatorsPayload() {
   return {
     access: { canCreate: can("indicators:create"), canUpdate: can("indicators:update"), canDelete: can("indicators:delete") },
     processes: canManage ? processes : [],
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     indicators: indicators.map((indicator) => ({
       id: indicator.id,
       name: indicator.name,
@@ -1084,7 +1085,7 @@ export async function getEvidencePayload() {
     targets: canManage ? targets : { process: [], risk: [], audit: [], finding: [], nc: [], indicator: [], document: [], managementReview: [], change: [], supplier: [], integration: [] },
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
     standards: standards.map((item) => item.standard),
-    members: memberPayload(can("members:*"), members.map((membership) => ({ id: membership.user.id, name: membership.user.name, email: membership.user.email, role: membership.role }))),
+    members: directoryPayload(memberAccessFor(can), members.map((membership) => ({ id: membership.user.id, name: membership.user.name, email: membership.user.email, role: membership.role }))),
   };
 }
 
@@ -1124,7 +1125,7 @@ export async function getChangesPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("changes:create"), canUpdate: can("changes:update"), canDelete: can("changes:delete"), currentUserId: ctx.user.id },
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     processes: canManage ? processes : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
@@ -1193,7 +1194,7 @@ export async function getSuppliersPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("suppliers:create"), canUpdate: can("suppliers:update"), canDelete: can("suppliers:delete") },
-    members: canManage && can("members:*") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
     nonconformities: canManage ? nonconformities : [],
@@ -1272,8 +1273,9 @@ export async function getCAPAPayload() {
   if (!can("actions:read")) {
     return { capas: [], members: [], processes: [], clauses: [], standards: [], access: { canCreate: false, canUpdate: false, canApprove: false, canExport: false } };
   }
-  const contributorScope = ctx.role === "CONTRIBUTOR";
-  const canReadMembers = can("members:*");
+  const contributorScope = ctx.scoped;
+  const memberAccess = memberAccessFor(can);
+  const canReadMembers = memberAccess !== "none";
   const [capas, members, processes, clauses, standards] = await Promise.all([
     prisma.cAPA.findMany({
       where: { organizationId, ...(contributorScope ? { OR: [{ ownerId: ctx.user.id }, { requestedById: ctx.user.id }] } : {}) },
@@ -1297,7 +1299,7 @@ export async function getCAPAPayload() {
   ]);
   return {
     capas,
-    members: memberPayload(canReadMembers, members.map((row) => row.user)),
+    members: directoryPayload(memberAccess, members.map((row) => row.user)),
     processes,
     clauses: clauses.map((row) => ({ id: row.id, code: row.code, title: row.title, standardCode: row.standard.code, standardName: row.standard.name })),
     standards: standards.map((row) => row.standard),
@@ -1325,7 +1327,11 @@ export async function getAdminPayload() {
   const currentUserId = ctx.user.id;
   const scope = await getCollaboratorScope(ctx);
   const canReadOrganization = can("org:*");
-  const canReadMembers = can("members:*");
+  const memberAccess = memberAccessFor(can);
+  // La pantalla de miembros muestra la ficha completa: aquí el grado mínimo
+  // no basta, hace falta lectura de ficha (`members:view`, que `members:*`
+  // ya satisface). Editar sigue exigiendo `members:*` en la propia pantalla.
+  const canReadMembers = memberAccess === "full";
   const canReadGroups = can("groups:read");
   const canReadPositions = can("positions:read");
   const canReadPersonnel = can("personnel:read");
@@ -1444,6 +1450,7 @@ export async function getAdminPayload() {
       email: m.user.email,
       role: m.role,
       active: m.active,
+      scoped: m.scoped,
       deactivatedAt: m.deactivatedAt?.toISOString() ?? null,
       createdAt: m.createdAt.toISOString(),
       isSelf: m.userId === currentUserId,
@@ -1855,7 +1862,7 @@ export async function getManagementReviewPayload() {
   const memberNames = new Map(members.map(m => [m.id, m.name]));
   return {
     access: { canManage, canExport: can("mgmt-review:export"), canCreateAction: can("actions:create") },
-    members: canManage && can("members:*") ? members : [],
+    members: canManage && can("members:directory") ? members : [],
     standards: standards.map((item) => ({ code: item.standard.code, name: item.standard.name, version: item.standard.version })),
     evidenceFiles,
     sources: { audits, indicators, risks, nonconformities, actions, capas },
@@ -1915,7 +1922,7 @@ export async function getAuditProgramPayload() {
   const memberNames = new Map(members.map(m => [m.id, m.name]));
   return {
     access: { canManage, canExport: can("audit-program:export") },
-    members: canManage && can("members:*") ? members : [],
+    members: canManage && can("members:directory") ? members : [],
     processes,
     standards: standards.map((row) => row.standard),
     programs: programs.map(p => {

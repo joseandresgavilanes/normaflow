@@ -7,8 +7,13 @@
  *               changes, suppliers, opportunities, integrations, reporting, activity,
  *               positions, personnel, locations, catalogs, groups,
  *               mgmt-review, audit-program, org, members, billing
- *   - action:   view | create | update | approve | delete | export | *
+ *   - action:   directory | view | create | update | approve | delete | export | *
  *               (`read` remains a backwards-compatible alias for `view`)
+ *
+ * `members` tiene tres grados y no son intercambiables:
+ *   members:directory → nombre y rol, para poder asignar trabajo
+ *   members:view      → además el correo y la ficha, en lectura
+ *   members:*         → invitar, cambiar rol y desactivar cuentas
  *
  * Used by both `src/lib/permissions/frontend.ts` (client gating) and
  * `src/lib/permissions/server.ts` (server-action enforcement).
@@ -19,6 +24,10 @@ import type { Role } from "@prisma/client";
 /** Actions supported by the live authorization contract. `read` and
  * `manage` are legacy aliases kept for existing server actions and groups. */
 export const PERMISSION_ACTIONS = [
+  // `directory` es más estrecho que `view`: da los nombres necesarios para
+  // asignar trabajo, sin la ficha de la persona. Existe porque leer un nombre
+  // y administrar la plantilla no deberían ser la misma concesión.
+  "directory",
   "view",
   "create",
   "update",
@@ -144,6 +153,8 @@ const MANAGER_PERMS = [
   "catalogs:view",
   "mgmt-review:*",
   "groups:view",
+  "members:directory",
+  "members:view",
   "security-controls:*",
   "soa:*",
   "risk-treatment:*",
@@ -204,6 +215,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "catalogs:read",
     "mgmt-review:*",
     "groups:read",
+    "members:directory",
+    "members:view",
     "security-controls:*",
     "soa:*",
     "risk-treatment:*",
@@ -237,6 +250,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
   AUDITOR: [
     "dashboard:read",
     "notifications:read",
+    // Nombres para poder asignar; sin correo y sin administrar la plantilla.
+    "members:directory",
     "audits:*",
     "audit-program:read",
     "audit-program:export",
@@ -253,7 +268,9 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
     "changes:read",
     "suppliers:read",
     "opportunities:read",
-    "documents:approve",
+    // Sin `documents:approve` a propósito: un auditor que aprueba el documento
+    // que después audita deja de ser independiente de lo que evalúa. Levanta
+    // hallazgos y no conformidades; aprobar es de quien opera el sistema.
     "documents:export",
     "actions:read",
     "actions:create",
@@ -321,6 +338,8 @@ export const ROLE_PERMISSIONS: Record<Role, readonly string[]> = {
   CONTRIBUTOR: [
     "dashboard:read",
     "notifications:read",
+    // Nombres para poder asignar; sin correo y sin administrar la plantilla.
+    "members:directory",
     "documents:read",
     "documents:create",
     "processes:read",

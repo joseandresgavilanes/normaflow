@@ -54,7 +54,7 @@ async function main() {
     data: { name: `Scope ${SUFFIX}`, slug: `scope-${SUFFIX}`, plan: "STARTER" },
   });
   const user = await prisma.user.create({ data: { email: `colab-${SUFFIX}@example.com`, name: "Colaborador" } });
-  await prisma.membership.create({ data: { organizationId: org.id, userId: user.id, role: "CONTRIBUTOR" } });
+  const membership = await prisma.membership.create({ data: { organizationId: org.id, userId: user.id, role: "CONTRIBUTOR", scoped: true } });
 
   // Dos procesos: uno asignado por grupo, otro de nadie (el control negativo).
   const viaGroup = await prisma.process.create({ data: { organizationId: org.id, name: "Producción", code: "P-01" } });
@@ -68,12 +68,14 @@ async function main() {
   const riesgoDentro = await prisma.risk.create({ data: { organizationId: org.id, processId: viaGroup.id, title: "Parada de línea", category: "OPERATIONAL", probability: 3, impact: 4, score: 12 } });
   const riesgoFuera = await prisma.risk.create({ data: { organizationId: org.id, processId: ajeno.id, title: "Proveedor único", category: "OPERATIONAL", probability: 2, impact: 5, score: 10 } });
 
-  const ctx = {
+  const contextoPara = (overrides: { role?: string; scoped?: boolean } = {}) => ({
     mode: "live",
-    role: "CONTRIBUTOR",
+    role: overrides.role ?? "CONTRIBUTOR",
+    scoped: overrides.scoped ?? true,
     organization: { id: org.id },
     user: { id: user.id, email: user.email },
-  } as unknown as LiveAppContext;
+  }) as unknown as LiveAppContext;
+  const ctx = contextoPara();
 
   const scope = await getCollaboratorScope(ctx);
 
@@ -85,6 +87,18 @@ async function main() {
 
   // Sin el grupo, el mismo usuario no debe ver nada: así se distingue el arreglo
   // de un alcance que estuviera abriéndose por otra vía.
+  // El alcance es propiedad de la membresía, no del nombre del rol: un gestor
+  // acotado ve lo suyo, y un contribuidor sin acotar lo ve todo.
+  const gestorAcotado = await getCollaboratorScope(contextoPara({ role: "MANAGER", scoped: true }));
+  check("un MANAGER acotado también queda dentro del alcance", gestorAcotado.isScoped && gestorAcotado.processIds.includes(viaGroup.id), `processIds=${gestorAcotado.processIds.length}`);
+
+  const contribuidorSinAcotar = await getCollaboratorScope(contextoPara({ role: "CONTRIBUTOR", scoped: false }));
+  check("un CONTRIBUTOR sin acotar deja de estarlo", !contribuidorSinAcotar.isScoped);
+
+  await prisma.membership.update({ where: { id: membership.id }, data: { scoped: false } });
+  check("la propiedad vive en la membresía", (await prisma.membership.findUniqueOrThrow({ where: { id: membership.id } })).scoped === false);
+  await prisma.membership.update({ where: { id: membership.id }, data: { scoped: true } });
+
   await prisma.groupMembership.deleteMany({ where: { groupId: group.id, userId: user.id } });
   const sinGrupo = await getCollaboratorScope(ctx);
   check("al salir del grupo pierde el proceso", !sinGrupo.processIds.includes(viaGroup.id), `processIds=${sinGrupo.processIds.length}`);

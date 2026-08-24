@@ -115,7 +115,7 @@ async function assertEvidenceReferences(input: {
 }
 
 async function assertCollaboratorLinks(ctx: Awaited<ReturnType<typeof requireAuthorization>>["ctx"], input: { processId?: string | null; links?: EvidenceLinksInput }) {
-  if (ctx.role !== "CONTRIBUTOR") return;
+  if (!ctx.scoped) return;
   await assertCollaboratorProcessAccess(ctx, input.processId);
   const checks: [keyof Omit<Awaited<ReturnType<typeof getCollaboratorScope>>, "isScoped">, string[] | undefined][] = [
     ["documentIds", input.links?.documentIds],

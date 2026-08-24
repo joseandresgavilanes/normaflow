@@ -13,6 +13,8 @@ export type LiveAppContext = {
   user: User;
   organization: Organization;
   role: Role;
+  /** Acotado a lo asignado. Viene de la membresía, no del nombre del rol. */
+  scoped: boolean;
   memberships: { organizationId: string; organizationName: string; role: Role }[];
 };
 
@@ -166,6 +168,7 @@ export const getAppContext = cache(async function getAppContext(): Promise<AppCo
       user,
       organization: membership.organization,
       role: membership.role,
+      scoped: membership.scoped,
       memberships: user.memberships.map(m => ({
         organizationId: m.organizationId,
         organizationName: m.organization.name,

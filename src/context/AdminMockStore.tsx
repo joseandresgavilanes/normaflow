@@ -156,6 +156,8 @@ export type OrgMemberMockRow = {
   email: string;
   role: "OWNER" | "ADMIN" | "MANAGER" | "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
   active?: boolean;
+  /** Acotado a lo asignado. Opcional para que el modo demo no tenga que fijarlo. */
+  scoped?: boolean;
   deactivatedAt?: string | null;
   createdAt: string;
   isSelf: boolean;
@@ -1030,6 +1032,7 @@ type AdminMockContextValue = {
   toggleGroupPermission: (groupId: string, permission: string) => void;
   toggleGroupMember: (groupId: string, userId: string) => void;
   setGroupAssociations?: (groupId: string, processIds: string[], modules: string[]) => void | Promise<void>;
+  setMemberScope?: (membershipId: string, scoped: boolean) => void | Promise<void>;
   createAdminCatalogItem?: (data: { kind: string; name: string; description?: string; sortOrder?: number }) => void | Promise<void>;
   updateAdminCatalogItem?: (data: { id: string; name?: string; description?: string; active?: boolean; sortOrder?: number }) => void | Promise<void>;
   deleteAdminCatalogItem?: (id: string) => void | Promise<void>;
