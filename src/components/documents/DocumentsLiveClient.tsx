@@ -217,7 +217,11 @@ export default function DocumentsLiveClient({
     {
       key: "currentVersion",
       label: "Versión",
-      render: (_, d) => <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>v{d.currentVersion}</span>,
+      /* `currentVersion` nace en "1.0" aunque todavía no exista ninguna versión,
+         así que pintarlo tal cual anuncia un contenido que no está. */
+      render: (_, d) => d.versions.length === 0
+        ? <span style={{ fontSize: 12, color: "var(--nf-ink-4)" }}>Sin versión</span>
+        : <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12 }}>v{d.currentVersion}</span>,
     },
     {
       key: "status",
@@ -346,16 +350,16 @@ export default function DocumentsLiveClient({
         clauses={clauses}
         isPending={isPending}
         onClose={() => { if (!isPending) { setCreating(false); setEditing(null); } }}
-        onSubmit={(form) => {
+        onSubmit={(form, file) => {
           if (editing) {
             run(() => updateDocumentMetadata(editing.id, form), {
               onSuccess: () => setEditing(null),
               successMessage: "Documento actualizado.",
             });
           } else {
-            run(() => createDocument(form), {
+            run(() => createDocument(form, file ? { file } : undefined), {
               onSuccess: () => setCreating(false),
-              successMessage: "Documento creado.",
+              successMessage: file ? "Documento creado con su versión 1.0." : "Documento creado.",
             });
           }
         }}
@@ -573,10 +577,14 @@ function DocumentFormModal({
   clauses: DocumentsPayload["clauses"];
   isPending: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateDocumentInput) => void;
+  onSubmit: (data: CreateDocumentInput, file: File | null) => void;
 }) {
+  /* Solo en el alta: «Editar documento» toca metadatos, y cambiar el archivo
+     desde ahí saltaría el versionado, que es justo lo que da trazabilidad. */
+  const [file, setFile] = useState<File | null>(null);
+
   return (
-    <Modal open={open} onClose={onClose} title={editing ? "Editar documento" : "Nuevo documento"} width={720}>
+    <Modal open={open} onClose={() => { setFile(null); onClose(); }} title={editing ? "Editar documento" : "Nuevo documento"} width={720}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -606,7 +614,8 @@ function DocumentFormModal({
               .map((s) => s.trim())
               .filter(Boolean),
           };
-          onSubmit(data);
+          onSubmit(data, editing ? null : file);
+          setFile(null);
         }}
         style={{ display: "flex", flexDirection: "column", gap: 14 }}
         className="nf-modal-form"
@@ -619,6 +628,15 @@ function DocumentFormModal({
             <input aria-label="Título" name="title" required defaultValue={editing?.title ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} />
           </Field>
         </div>
+        {!editing && (
+          <FileImportArea
+            label="Archivo"
+            maxSizeMB={50}
+            file={file}
+            onFileChange={setFile}
+            hint="Queda registrado como versión 1.0. Puedes dejarlo vacío y subirlo después, pero hasta que exista una versión el documento no se puede enviar a revisión."
+          />
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
           <Field label="Tipo">
             <Picker aria-label="Tipo" name="type" defaultValue={editing?.type ?? "PROCEDURE"} className={NF_INPUT_CLASS} style={modalInputStyle}>
@@ -1192,6 +1210,12 @@ function DocumentDetailModal({
   const approvalNotMine = canApprove && doc.status === "IN_REVIEW" && !myPending;
   const canShowSubmit = canCreate && doc.status === "DRAFT" && doc.versions.length > 0;
   const canShowUpload = canCreate && (doc.status === "DRAFT" || doc.status === "APPROVED");
+  /* «Nuevo documento» crea la ficha pero ninguna versión —solo las plantillas
+     traen una v1.0—, y sin versión no hay nada que firmar. La regla es
+     correcta, pero antes se aplicaba escondiendo el botón sin decir nada: la
+     ficha nace mostrando «v1.0» como versión actual, así que quien la mira da
+     por hecho que ya tiene contenido y no encuentra cómo enviarla. */
+  const needsFirstVersion = canCreate && doc.status === "DRAFT" && doc.versions.length === 0;
   const canShowDelete = canCreate && doc.status === "DRAFT";
   const canShowObsolete = canObsolete && doc.status === "APPROVED";
 
@@ -1200,7 +1224,9 @@ function DocumentDetailModal({
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
           <Meta label="Estado" value={<Badge status={doc.status} />} />
-          <Meta label="Versión actual" value={<span style={{ fontFamily: "ui-monospace, monospace" }}>v{doc.currentVersion}</span>} />
+          <Meta label="Versión actual" value={doc.versions.length === 0
+            ? "Sin versión"
+            : <span style={{ fontFamily: "ui-monospace, monospace" }}>v{doc.currentVersion}</span>} />
           <Meta label="Tipo" value={TYPE_LABEL.get(doc.type) ?? doc.type} />
           <Meta label="Norma" value={doc.standardCode ?? "—"} />
           <Meta label="Cláusula" value={doc.clauseCode ? `${doc.clauseCode} · ${doc.clauseTitle ?? ""}` : "—"} />
@@ -1250,6 +1276,11 @@ function DocumentDetailModal({
             <button type="button" onClick={onSubmitReview} className="nf-app-btn-primary">
               <Send size={14} aria-hidden /> Enviar a revisión
             </button>
+          )}
+          {needsFirstVersion && (
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
+              Todavía no tiene ninguna versión, y la versión es lo que firman los revisores. Súbela desde «Subir versión»: ahí mismo puedes marcar quién debe aprobarla y sale a revisión en el mismo paso.
+            </div>
           )}
           {approvalNotMine && (
             <div style={{ fontSize: 12, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>

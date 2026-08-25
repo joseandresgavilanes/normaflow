@@ -191,11 +191,26 @@ async function hasOtherApprover(
   );
 }
 
-export async function createDocument(input: CreateDocumentInput): Promise<ActionResult<{ id: string }>> {
-  return actionResult(() => createDocumentImpl(input));
+/**
+ * Alta de documento, con la primera versión en el mismo paso si se adjunta.
+ *
+ * El archivo va aparte del input validado porque `documentInputSchema` es un
+ * esquema de metadatos y un `File` no tiene sitio ahí. Adjuntarlo es opcional:
+ * la ficha sin versión sigue siendo un estado válido —así nacen las que se
+ * redactan dentro de la aplicación—, solo que no se puede enviar a revisión
+ * hasta que tenga una.
+ */
+export async function createDocument(
+  input: CreateDocumentInput,
+  firstVersion?: { file: File; changeDescription?: string },
+): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => createDocumentImpl(input, firstVersion));
 }
 
-async function createDocumentImpl(input: CreateDocumentInput): Promise<{ id: string }> {
+async function createDocumentImpl(
+  input: CreateDocumentInput,
+  firstVersion?: { file: File; changeDescription?: string },
+): Promise<{ id: string }> {
   input = parseInput(documentInputSchema, input) as CreateDocumentInput;
   const ctx = await requirePermission("documents:create");
   if (ctx.role === "CONTRIBUTOR") {
@@ -266,6 +281,23 @@ async function createDocumentImpl(input: CreateDocumentInput): Promise<{ id: str
     body: `${created.code} - «${created.title}» te fue asignado dentro del control documental. Revisa tu responsabilidad en NormaFlow.`,
     link: PATH,
   });
+
+  /* Se reutiliza la subida normal en vez de repetir aquí el guardado en
+     Storage: allí ya viven la cuota, la compensación si la transacción falla y
+     el numerado de versión —que con la ficha recién creada da v1.0—. */
+  if (firstVersion?.file) {
+    try {
+      await uploadDocumentVersionImpl(created.id, {
+        file: firstVersion.file,
+        changeDescription: firstVersion.changeDescription?.trim() || "Versión inicial",
+      });
+    } catch (error) {
+      /* La ficha ya está guardada, así que repetir el alta chocaría contra el
+         código duplicado. El mensaje tiene que decir dónde quedó la cosa. */
+      const detalle = error instanceof Error ? error.message : "error desconocido";
+      throw new Error(`El documento ${code} se creó, pero su archivo no se pudo subir (${detalle}). Ábrelo y usa «Subir versión».`);
+    }
+  }
 
   revalidatePath(PATH);
   return { id: created.id };
