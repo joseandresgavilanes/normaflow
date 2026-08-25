@@ -13,6 +13,7 @@ import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { recordInputSchema } from "@/lib/validation/workflows";
+import { actionResult, type ActionResult } from "@/lib/actions/action-result";
 
 const PATH = "/app/records";
 
@@ -89,7 +90,11 @@ async function assertRecordReferences(input: Partial<RecordInput>, organizationI
   if (input.reviewerId && !reviewer) throw new Error("El revisor no pertenece a la organización.");
 }
 
-export async function createRecord(input: RecordInput): Promise<void> {
+export async function createRecord(input: RecordInput): Promise<ActionResult<void>> {
+  return actionResult(() => createRecordImpl(input));
+}
+
+async function createRecordImpl(input: RecordInput): Promise<void> {
   input = parseInput(recordInputSchema, input) as RecordInput;
   const authorization = await getServerAuthorization();
   const { ctx, can } = authorization;
@@ -136,7 +141,11 @@ export async function createRecord(input: RecordInput): Promise<void> {
   revalidatePath("/app/activity");
 }
 
-export async function updateRecord(id: string, input: Partial<RecordInput>): Promise<void> {
+export async function updateRecord(id: string, input: Partial<RecordInput>): Promise<ActionResult<void>> {
+  return actionResult(() => updateRecordImpl(id, input));
+}
+
+async function updateRecordImpl(id: string, input: Partial<RecordInput>): Promise<void> {
   id = parseId(id);
   input = parseInput(recordInputSchema.partial(), input) as Partial<RecordInput>;
   const ctx = await requirePermission("records:*");
@@ -204,7 +213,11 @@ export async function updateRecord(id: string, input: Partial<RecordInput>): Pro
   revalidatePath("/app/activity");
 }
 
-export async function submitRecordForReview(recordId: string): Promise<void> {
+export async function submitRecordForReview(recordId: string): Promise<ActionResult<void>> {
+  return actionResult(() => submitRecordForReviewImpl(recordId));
+}
+
+async function submitRecordForReviewImpl(recordId: string): Promise<void> {
   const authorization = await getServerAuthorization();
   const { ctx, can } = authorization;
   if (!can("records:create")) throw new Error("No tienes permiso para enviar registros a revisión.");
@@ -280,15 +293,27 @@ async function reviewRecord(recordId: string, status: "APPROVED" | "REJECTED", c
   revalidatePath("/app/activity");
 }
 
-export async function approveRecord(recordId: string, comment?: string): Promise<void> {
+export async function approveRecord(recordId: string, comment?: string): Promise<ActionResult<void>> {
+  return actionResult(() => approveRecordImpl(recordId, comment));
+}
+
+async function approveRecordImpl(recordId: string, comment?: string): Promise<void> {
   return reviewRecord(recordId, "APPROVED", comment);
 }
 
-export async function rejectRecord(recordId: string, comment: string): Promise<void> {
+export async function rejectRecord(recordId: string, comment: string): Promise<ActionResult<void>> {
+  return actionResult(() => rejectRecordImpl(recordId, comment));
+}
+
+async function rejectRecordImpl(recordId: string, comment: string): Promise<void> {
   return reviewRecord(recordId, "REJECTED", comment);
 }
 
-export async function deactivateRecord(id: string): Promise<void> {
+export async function deactivateRecord(id: string): Promise<ActionResult<void>> {
+  return actionResult(() => deactivateRecordImpl(id));
+}
+
+async function deactivateRecordImpl(id: string): Promise<void> {
   const ctx = await requirePermission("records:*");
   const existing = await prisma.record.findFirst({ where: { id, organizationId: ctx.organization.id } });
   if (!existing) throw new Error("Registro no encontrado.");
@@ -306,6 +331,13 @@ export async function deactivateRecord(id: string): Promise<void> {
 }
 
 export async function addRecordEntry(
+  recordId: string,
+  input: { title: string; reference?: string; description?: string; entryDate?: string; status?: RecordEntryStatus; responsibleId?: string; file?: File }
+): Promise<ActionResult> {
+  return actionResult(() => addRecordEntryImpl(recordId, input));
+}
+
+async function addRecordEntryImpl(
   recordId: string,
   input: { title: string; reference?: string; description?: string; entryDate?: string; status?: RecordEntryStatus; responsibleId?: string; file?: File }
 ): Promise<void> {
@@ -369,7 +401,11 @@ export async function addRecordEntry(
   revalidatePath("/app/activity");
 }
 
-export async function getRecordEntryUrl(entryId: string): Promise<string> {
+export async function getRecordEntryUrl(entryId: string): Promise<ActionResult<string>> {
+  return actionResult(() => getRecordEntryUrlImpl(entryId));
+}
+
+async function getRecordEntryUrlImpl(entryId: string): Promise<string> {
   const authorization = await getServerAuthorization();
   const { ctx, can } = authorization;
   if (!can("records:read")) throw new Error("No tienes permiso para leer registros.");
@@ -382,7 +418,11 @@ export async function getRecordEntryUrl(entryId: string): Promise<string> {
   return url;
 }
 
-export async function deleteRecordEntry(entryId: string): Promise<void> {
+export async function deleteRecordEntry(entryId: string): Promise<ActionResult<void>> {
+  return actionResult(() => deleteRecordEntryImpl(entryId));
+}
+
+async function deleteRecordEntryImpl(entryId: string): Promise<void> {
   const ctx = await requirePermission("records:*");
   const entry = await prisma.recordEntry.findFirst({
     where: { id: entryId, record: { organizationId: ctx.organization.id } },
@@ -415,6 +455,10 @@ export type RecordExportFilters = {
 };
 
 export async function exportRecordsMatrix(input: { format: "PDF" | "EXCEL"; filters?: RecordExportFilters }) {
+  return actionResult(() => exportRecordsMatrixImpl(input));
+}
+
+async function exportRecordsMatrixImpl(input: { format: "PDF" | "EXCEL"; filters?: RecordExportFilters }) {
   if (input.format !== "PDF" && input.format !== "EXCEL") throw new Error("Formato de exportación no válido.");
   const { ctx } = await requireAuthorization("records:export");
   await assertExportQuota(ctx.organization.id, ctx.organization.plan);

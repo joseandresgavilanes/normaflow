@@ -22,6 +22,7 @@ import * as adminA from "@/lib/actions/admin";
 import * as catalogA from "@/lib/actions/catalogs";
 import * as personnelA from "@/lib/actions/personnel";
 import * as recordA from "@/lib/actions/records";
+import { unwrapAction } from "@/lib/actions/unwrap";
 import * as acpmA from "@/lib/actions/acpm";
 import * as adminCatalogA from "@/lib/actions/admin-catalogs";
 
@@ -284,7 +285,7 @@ export function AdminLiveProvider({
 
       // ─── Records ───────────────────────────────────────────
       createRecord: async (data) => {
-        await recordA.createRecord(data);
+        unwrapAction(await recordA.createRecord(data));
         refresh();
       },
       updateRecord: async (id, data) => {
@@ -302,32 +303,32 @@ export function AdminLiveProvider({
         if (data.physicalLocation !== undefined) cleaned.physicalLocation = data.physicalLocation ?? undefined;
         if (data.digitalLocation !== undefined) cleaned.digitalLocation = data.digitalLocation ?? undefined;
         if (data.observations !== undefined) cleaned.observations = data.observations ?? undefined;
-        await recordA.updateRecord(id, cleaned);
+        unwrapAction(await recordA.updateRecord(id, cleaned));
         refresh();
       },
       submitRecordForReview: async (id) => {
-        await recordA.submitRecordForReview(id);
+        unwrapAction(await recordA.submitRecordForReview(id));
         refresh();
       },
       approveRecord: async (id, comment) => {
-        await recordA.approveRecord(id, comment);
+        unwrapAction(await recordA.approveRecord(id, comment));
         refresh();
       },
       rejectRecord: async (id, comment) => {
-        await recordA.rejectRecord(id, comment);
+        unwrapAction(await recordA.rejectRecord(id, comment));
         refresh();
       },
       deactivateRecord: async (id) => {
-        await recordA.deactivateRecord(id);
+        unwrapAction(await recordA.deactivateRecord(id));
         refresh();
       },
       addRecordEntry: async (recordId, data) => {
-        await recordA.addRecordEntry(recordId, { ...data, title: data.title ?? data.reference ?? "Entrada" });
+        unwrapAction(await recordA.addRecordEntry(recordId, { ...data, title: data.title ?? data.reference ?? "Entrada" }));
         refresh();
       },
-      getRecordEntryUrl: recordA.getRecordEntryUrl,
+      getRecordEntryUrl: async (id) => unwrapAction(await recordA.getRecordEntryUrl(id)),
       deleteRecordEntry: async (id) => {
-        await recordA.deleteRecordEntry(id);
+        unwrapAction(await recordA.deleteRecordEntry(id));
         refresh();
       },
 

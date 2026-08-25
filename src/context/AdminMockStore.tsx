@@ -153,7 +153,8 @@ export type OrgMemberMockRow = {
   membershipId: string;
   userId: string;
   name: string;
-  email: string;
+  /** Ausente con acceso de directorio: para asignar basta el nombre. */
+  email?: string;
   role: "OWNER" | "ADMIN" | "MANAGER" | "SUPER_ADMIN" | "ORG_ADMIN" | "COMPLIANCE_MANAGER" | "AUDITOR" | "CONTRIBUTOR" | "VIEWER";
   active?: boolean;
   /** Acotado a lo asignado. Opcional para que el modo demo no tenga que fijarlo. */
@@ -1259,7 +1260,7 @@ export function AdminMockProvider({
       inviteMember: (data) => {
         const email = data.email.trim().toLowerCase();
         if (!email || !data.name.trim()) throw new Error("Nombre y email son obligatorios.");
-        if (state.members.some((m) => m.email.toLowerCase() === email)) {
+        if (state.members.some((m) => (m.email ?? "").toLowerCase() === email)) {
           throw new Error("Esa persona ya pertenece a la organización.");
         }
         // Plan quota enforcement

@@ -27,6 +27,7 @@ import { useAdminMock, type RecordEntryMockRow, type RecordMockRow } from "@/con
 import { useDemoPermission } from "@/hooks/useDemoPermission";
 import { formatDate, timeAgo } from "@/lib/utils";
 import { exportRecordsMatrix } from "@/lib/actions/records";
+import { unwrapAction } from "@/lib/actions/unwrap";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { Field as UiField } from "@/components/ui/Field";
 import ClausePicker from "@/components/ui/ClausePicker";
@@ -280,7 +281,7 @@ export default function RecordsClient() {
     setExportBusy(format);
     setFormError("");
     try {
-      const result = await exportRecordsMatrix({ format, filters: { search, status: statusFilter, processId: processFilter, recordTypeId: typeFilter, clauseId: clauseFilter } });
+      const result = unwrapAction(await exportRecordsMatrix({ format, filters: { search, status: statusFilter, processId: processFilter, recordTypeId: typeFilter, clauseId: clauseFilter } }));
       await downloadQueuedReport(result.id);
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : "No se pudo exportar la matriz.");
@@ -557,7 +558,7 @@ function RecordFormModal({
   dispositions: { id: string; name: string; active: boolean }[];
   archiveMethods: { id: string; name: string; active: boolean }[];
   personnel: { id: string; firstName: string; lastName: string; active: boolean }[];
-  members: { userId: string; name: string; email: string; role: string; isSelf?: boolean }[];
+  members: { userId: string; name: string; email?: string; role: string; isSelf?: boolean }[];
   processes: { id: string; code: string | null; name: string }[];
   persistenceMode: "demo" | "live";
   isPending: boolean;

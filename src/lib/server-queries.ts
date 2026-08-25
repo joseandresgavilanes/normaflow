@@ -431,7 +431,14 @@ export async function getDocumentsPayload() {
       })),
     })),
     locations: scope.isScoped ? [] : locations,
-    personnel: scope.isScoped ? [] : personnel,
+    /* Los selectores de custodio, elaboración y aprobación de la ficha del
+       documento salen de aquí: vaciarla por alcance dejaba el formulario a
+       medias para el contribuidor. Va el nombre, que es lo que un selector
+       necesita, y no el correo, que es dato de contacto. */
+    personnel: personnel.map((person) => ({
+      ...person,
+      email: scope.isScoped ? null : person.email,
+    })),
     processes: canCreate ? processes : [],
     standards: standards.map((item) => item.standard),
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
@@ -716,7 +723,7 @@ export async function getRisksPayload() {
   const processNames = new Map(processes.map((process) => [process.id, process]));
   return {
     access: { canCreate: can("risks:create"), canUpdate: can("risks:update"), canDelete: can("risks:delete") },
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     processes: canManage ? processes : [],
     risks: risks.map((risk) => ({
       id: risk.id,
@@ -768,7 +775,7 @@ export async function getOpportunitiesPayload() {
       canDelete: can("opportunities:delete"),
       currentUserId: ctx.user.id,
     },
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     opportunities: opportunities.map((opportunity) => ({
       id: opportunity.id,
       title: opportunity.title,
@@ -826,7 +833,7 @@ export async function getAuditsPayload() {
   return {
     access: { canCreate: can("audits:create"), canUpdate: can("audits:update"), canDelete: can("audits:delete"), canExport: can("audits:export"), canConvertFinding: can("actions:create") },
     programs: canManage ? programs : [],
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     processes,
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code })),
     evidenceFiles,
@@ -900,7 +907,7 @@ export async function getNonconformitiesPayload() {
     access: { canCreate: can("nc:create"), canUpdate: can("nc:update"), canDelete: can("nc:delete") },
     audits: canManage ? audits : [],
     findings: canManage ? findings : [],
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     nonconformities: nonconformities.map((nc) => ({
       id: nc.id,
       title: nc.title,
@@ -954,7 +961,7 @@ export async function getIndicatorsPayload() {
   return {
     access: { canCreate: can("indicators:create"), canUpdate: can("indicators:update"), canDelete: can("indicators:delete") },
     processes: canManage ? processes : [],
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     indicators: indicators.map((indicator) => ({
       id: indicator.id,
       name: indicator.name,
@@ -1125,7 +1132,7 @@ export async function getChangesPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("changes:create"), canUpdate: can("changes:update"), canDelete: can("changes:delete"), currentUserId: ctx.user.id },
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     processes: canManage ? processes : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
@@ -1194,7 +1201,7 @@ export async function getSuppliersPayload() {
   const memberNames = new Map(members.map((member) => [member.id, member.name]));
   return {
     access: { canCreate: can("suppliers:create"), canUpdate: can("suppliers:update"), canDelete: can("suppliers:delete") },
-    members: canManage && can("members:directory") ? members.filter((member) => !scope.isScoped || member.id === ctx.user.id) : [],
+    members: canManage && can("members:directory") ? members : [],
     documents: canManage ? documents : [],
     risks: canManage ? risks : [],
     nonconformities: canManage ? nonconformities : [],
@@ -1328,10 +1335,15 @@ export async function getAdminPayload() {
   const scope = await getCollaboratorScope(ctx);
   const canReadOrganization = can("org:*");
   const memberAccess = memberAccessFor(can);
-  // La pantalla de miembros muestra la ficha completa: aquí el grado mínimo
-  // no basta, hace falta lectura de ficha (`members:view`, que `members:*`
-  // ya satisface). Editar sigue exigiendo `members:*` en la propia pantalla.
-  const canReadMembers = memberAccess === "full";
+  // De esta lista comen dos consumidores con necesidades distintas: la pantalla
+  // de usuarios, que pinta la ficha entera, y los selectores de responsable,
+  // revisor y aprobador de media aplicación, a los que les basta el nombre.
+  // Exigir `members:view` para ambos dejaba sin gente los desplegables de quien
+  // solo tiene `members:directory` —el contribuidor—, que es justo el permiso
+  // que existe para poder asignar. El recorte por grado lo hace
+  // `directoryPayload` más abajo, y la pantalla de usuarios sigue cerrada por
+  // su propio `ServerPermissionGate permission="members:*"`.
+  const canReadMembers = memberAccess !== "none";
   const canReadGroups = can("groups:read");
   const canReadPositions = can("positions:read");
   const canReadPersonnel = can("personnel:read");
@@ -1443,7 +1455,10 @@ export async function getAdminPayload() {
       standards: organizationStandards.map((item) => item.standard.code),
       plan: ctx.organization.plan as "STARTER" | "GROWTH" | "ENTERPRISE",
     },
-    members: memberPayload(canReadMembers, memberships.filter((m) => !scope.isScoped || m.userId === currentUserId).map((m) => ({
+    /* Sin filtro por alcance: el alcance acota los registros de los que
+       alguien es responsable, no la agenda de a quién puede nombrar. Recortada
+       a uno mismo, un contribuidor solo podía asignarse a sí mismo. */
+    members: directoryPayload(memberAccess, memberships.map((m) => ({
       membershipId: m.id,
       userId: m.userId,
       name: m.user.name,
@@ -1482,15 +1497,21 @@ export async function getAdminPayload() {
       active: p.active,
       createdAt: p.createdAt.toISOString(),
     })),
-    personnel: (scope.isScoped ? [] : personnel).map((p) => ({
+    /* Mismo criterio que con los miembros, y por el mismo motivo: sin esta
+       lista el selector de custodio sale vacío y el alta de un registro se
+       queda a medias. A quien está acotado le llegan los nombres, que es lo que
+       un selector necesita; el contacto y los datos de plantilla —correo,
+       identificación, fecha de alta— se quedan fuera, igual que
+       `directoryPayload` hace con el correo de los miembros. */
+    personnel: personnel.map((p) => ({
       id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,
-      email: p.email,
-      identification: p.identification,
+      email: scope.isScoped ? null : p.email,
+      identification: scope.isScoped ? null : p.identification,
       positionId: p.positionId,
       active: p.active,
-      hiredAt: p.hiredAt?.toISOString() ?? null,
+      hiredAt: scope.isScoped ? null : p.hiredAt?.toISOString() ?? null,
       createdAt: p.createdAt.toISOString(),
     })),
     locations: (scope.isScoped ? [] : locations).map((l) => ({

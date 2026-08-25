@@ -60,7 +60,7 @@ export default function MembersClient() {
     if (!q) return rows;
     return rows.filter((r) =>
       r.name.toLowerCase().includes(q) ||
-      r.email.toLowerCase().includes(q) ||
+      (r.email ?? "").toLowerCase().includes(q) ||
       ROLE_LABELS[r.role].toLowerCase().includes(q)
     );
   }, [rows, search]);

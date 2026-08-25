@@ -24,6 +24,7 @@ import { persistWithStorageCompensation } from "@/lib/storage-compensation";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { documentContentSchema, documentInputSchema, documentReviewSchema } from "@/lib/validation/workflows";
 import { packTemplateDocumentType } from "@/lib/standard-packs/template-content";
+import { actionResult, type ActionResult } from "@/lib/actions/action-result";
 
 /**
  * Server actions para Control de Documentos (Phase 1.2).
@@ -190,7 +191,11 @@ async function hasOtherApprover(
   );
 }
 
-export async function createDocument(input: CreateDocumentInput): Promise<{ id: string }> {
+export async function createDocument(input: CreateDocumentInput): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => createDocumentImpl(input));
+}
+
+async function createDocumentImpl(input: CreateDocumentInput): Promise<{ id: string }> {
   input = parseInput(documentInputSchema, input) as CreateDocumentInput;
   const ctx = await requirePermission("documents:create");
   if (ctx.role === "CONTRIBUTOR") {
@@ -277,6 +282,13 @@ export type CreateDocumentFromTemplateInput = {
 
 /** Creates a controlled draft and its first version from the global template catalog. */
 export async function createDocumentFromTemplate(
+  templateId: string,
+  input: CreateDocumentFromTemplateInput,
+): Promise<ActionResult<{ id: string; version: string }>> {
+  return actionResult(() => createDocumentFromTemplateImpl(templateId, input));
+}
+
+async function createDocumentFromTemplateImpl(
   templateId: string,
   input: CreateDocumentFromTemplateInput,
 ): Promise<{ id: string; version: string }> {
@@ -385,6 +397,13 @@ export async function createDocumentFromTemplate(
 export async function updateDocumentContent(
   documentId: string,
   args: { content: string; changeDescription: string; bump?: "minor" | "major" },
+): Promise<ActionResult<{ version: string }>> {
+  return actionResult(() => updateDocumentContentImpl(documentId, args));
+}
+
+async function updateDocumentContentImpl(
+  documentId: string,
+  args: { content: string; changeDescription: string; bump?: "minor" | "major" },
 ): Promise<{ version: string }> {
   documentId = parseId(documentId);
   args = parseInput(documentContentSchema, args);
@@ -421,6 +440,13 @@ export async function updateDocumentContent(
 }
 
 export async function updateDocumentMetadata(
+  documentId: string,
+  patch: Partial<CreateDocumentInput>
+): Promise<ActionResult<void>> {
+  return actionResult(() => updateDocumentMetadataImpl(documentId, patch));
+}
+
+async function updateDocumentMetadataImpl(
   documentId: string,
   patch: Partial<CreateDocumentInput>
 ): Promise<void> {
@@ -526,6 +552,18 @@ export async function uploadDocumentVersion(
     bump?: "minor" | "major";
     approverIds?: string[];
   }
+): Promise<ActionResult<{ version: string; fileUrl: string }>> {
+  return actionResult(() => uploadDocumentVersionImpl(documentId, args));
+}
+
+async function uploadDocumentVersionImpl(
+  documentId: string,
+  args: {
+    file: File;
+    changeDescription?: string;
+    bump?: "minor" | "major";
+    approverIds?: string[];
+  }
 ): Promise<{ version: string; fileUrl: string }> {
   const ctx = await requirePermission("documents:create");
   const existing = await loadDocument(documentId, ctx.organization.id);
@@ -607,7 +645,11 @@ export async function uploadDocumentVersion(
 /**
  * Genera URL firmada temporal para previsualizar/descargar una versión.
  */
-export async function getDocumentVersionUrl(versionId: string): Promise<string> {
+export async function getDocumentVersionUrl(versionId: string): Promise<ActionResult<string>> {
+  return actionResult(() => getDocumentVersionUrlImpl(versionId));
+}
+
+async function getDocumentVersionUrlImpl(versionId: string): Promise<string> {
   const ctx = await requirePermission("documents:read");
   const version = await prisma.documentVersion.findFirst({
     where: { id: versionId, document: { organizationId: ctx.organization.id } },
@@ -633,6 +675,13 @@ export async function getDocumentVersionUrl(versionId: string): Promise<string> 
 // ─── Workflow de estado ───────────────────────────────────────────────
 
 export async function submitForReview(
+  documentId: string,
+  args: { approverIds: string[] }
+): Promise<ActionResult<void>> {
+  return actionResult(() => submitForReviewImpl(documentId, args));
+}
+
+async function submitForReviewImpl(
   documentId: string,
   args: { approverIds: string[] }
 ): Promise<void> {
@@ -689,6 +738,13 @@ export async function submitForReview(
 }
 
 export async function approveDocument(
+  documentId: string,
+  args: { comment?: string }
+): Promise<ActionResult<void>> {
+  return actionResult(() => approveDocumentImpl(documentId, args));
+}
+
+async function approveDocumentImpl(
   documentId: string,
   args: { comment?: string }
 ): Promise<void> {
@@ -851,6 +907,13 @@ export async function approveDocument(
 export async function rejectDocument(
   documentId: string,
   args: { comment: string }
+): Promise<ActionResult<void>> {
+  return actionResult(() => rejectDocumentImpl(documentId, args));
+}
+
+async function rejectDocumentImpl(
+  documentId: string,
+  args: { comment: string }
 ): Promise<void> {
   documentId = parseId(documentId);
   const authorization = await getServerAuthorization();
@@ -902,6 +965,14 @@ export async function rejectDocument(
  * El documento viejo NO se borra: queda como histórico trazable.
  */
 export async function supersedeDocument(
+  oldId: string,
+  newId: string,
+  args?: { reason?: string; transferProcess?: boolean },
+): Promise<ActionResult<void>> {
+  return actionResult(() => supersedeDocumentImpl(oldId, newId, args));
+}
+
+async function supersedeDocumentImpl(
   oldId: string,
   newId: string,
   args?: { reason?: string; transferProcess?: boolean },
@@ -958,6 +1029,13 @@ export async function supersedeDocument(
 export async function markDocumentObsolete(
   documentId: string,
   args: { reason?: string }
+): Promise<ActionResult<void>> {
+  return actionResult(() => markDocumentObsoleteImpl(documentId, args));
+}
+
+async function markDocumentObsoleteImpl(
+  documentId: string,
+  args: { reason?: string }
 ): Promise<void> {
   const ctx = await requirePermission("documents:*");
   const existing = await loadDocument(documentId, ctx.organization.id);
@@ -994,7 +1072,11 @@ export async function markDocumentObsolete(
 
 // ─── Borrar (solo borradores sin aprobaciones) ────────────────────────
 
-export async function deleteDraftDocument(documentId: string): Promise<void> {
+export async function deleteDraftDocument(documentId: string): Promise<ActionResult<void>> {
+  return actionResult(() => deleteDraftDocumentImpl(documentId));
+}
+
+async function deleteDraftDocumentImpl(documentId: string): Promise<void> {
   const ctx = await requirePermission("documents:*");
   const existing = await loadDocument(documentId, ctx.organization.id);
 
@@ -1043,6 +1125,13 @@ function exportFileSlug(value: string) {
 }
 
 export async function exportDocumentsList(input: {
+  format: "PDF" | "EXCEL";
+  filters?: DocumentExportFilters;
+}) {
+  return actionResult(() => exportDocumentsListImpl(input));
+}
+
+async function exportDocumentsListImpl(input: {
   format: "PDF" | "EXCEL";
   filters?: DocumentExportFilters;
 }) {

@@ -42,6 +42,7 @@ import {
   uploadDocumentVersion,
   type CreateDocumentInput,
 } from "@/lib/actions/documents";
+import { unwrapAction } from "@/lib/actions/unwrap";
 import type { DocumentsPayload, DocumentRowLive } from "@/lib/server-queries";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { DOCUMENT_SORT_OPTIONS, sortDocuments, type DocumentSortKey } from "@/lib/documents-sort";
@@ -163,7 +164,7 @@ export default function DocumentsLiveClient({
     setExportBusy(format);
     setError("");
     try {
-      const result = await exportDocumentsList({ format, filters: activeFilters });
+      const result = unwrapAction(await exportDocumentsList({ format, filters: activeFilters }));
       await downloadQueuedReport(result.id);
       setError("");
     } catch (err) {
@@ -1171,8 +1172,24 @@ function DocumentDetailModal({
 
   if (!doc) return null;
 
-  const myPending = doc.approvals.find((a) => a.approverId === currentUserId && a.status === "PENDING");
-  const canShowApprove = canApprove && doc.status === "IN_REVIEW";
+  /* La versión que la acción va a tocar es la pendiente más reciente, el mismo
+     criterio que aplica `approveDocument`. Buscar entre todas las aprobaciones
+     del documento daría un falso positivo cuando queda alguna pendiente de una
+     versión anterior. */
+  const targetVersion = doc.versions
+    .filter((version) => version.status === "PENDING")
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id.localeCompare(a.id))[0] ?? null;
+  const targetApprovals = targetVersion ? doc.approvals.filter((a) => a.versionId === targetVersion.id) : [];
+  const myPending = targetApprovals.find((a) => a.approverId === currentUserId && a.status === "PENDING");
+  const awaitingNames = targetApprovals
+    .filter((a) => a.status === "PENDING")
+    .map((a) => memberLookup.get(a.approverId) ?? a.approverId);
+  /* Aprobar y devolver exigen ser revisor asignado con la aprobación todavía
+     pendiente: el permiso no basta, porque un rol privilegiado no salta el
+     flujo de aprobación —si lo saltara, la firma dejaría de significar nada—.
+     Ofrecer los botones a quien no cumple eso solo lleva a un error seguro. */
+  const canShowApprove = canApprove && doc.status === "IN_REVIEW" && !!myPending;
+  const approvalNotMine = canApprove && doc.status === "IN_REVIEW" && !myPending;
   const canShowSubmit = canCreate && doc.status === "DRAFT" && doc.versions.length > 0;
   const canShowUpload = canCreate && (doc.status === "DRAFT" || doc.status === "APPROVED");
   const canShowDelete = canCreate && doc.status === "DRAFT";
@@ -1234,6 +1251,13 @@ function DocumentDetailModal({
               <Send size={14} aria-hidden /> Enviar a revisión
             </button>
           )}
+          {approvalNotMine && (
+            <div style={{ fontSize: 12, color: "var(--nf-ink-3)", lineHeight: 1.5 }}>
+              {awaitingNames.length > 0
+                ? `Esta versión espera la firma de ${awaitingNames.join(", ")}. Tu rol no sustituye al revisor asignado: para firmarla tú, añádete como aprobador al enviarla a revisión.`
+                : "Esta versión no tiene ninguna aprobación pendiente asignada."}
+            </div>
+          )}
           {canShowApprove && (
             <>
               <input aria-label="Comentario de aprobación (opcional)"
@@ -1250,7 +1274,7 @@ function DocumentDetailModal({
                 className="nf-app-btn-success"
               >
                 <CheckCircle2 size={14} aria-hidden />
-                {myPending ? "Aprobar mi parte" : "Aprobar"}
+                {awaitingNames.length > 1 ? "Aprobar mi parte" : "Aprobar"}
               </button>
               <button type="button" onClick={onReject} className="nf-app-btn-danger">
                 <XCircle size={14} aria-hidden /> Rechazar
@@ -1333,7 +1357,7 @@ function VersionRow({
     if (!v.fileUrl) return;
     setLoading(true);
     try {
-      const url = await getDocumentVersionUrl(v.id);
+      const url = unwrapAction(await getDocumentVersionUrl(v.id));
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (err) {
       setOpenError(err instanceof Error ? err.message : "Error.");
@@ -1346,7 +1370,7 @@ function VersionRow({
     if (!v.fileUrl) return;
     setLoading(true);
     try {
-      setPreviewUrl(await getDocumentVersionUrl(v.id));
+      setPreviewUrl(unwrapAction(await getDocumentVersionUrl(v.id)));
     } catch (err) {
       setOpenError(err instanceof Error ? err.message : "No se pudo generar la vista previa.");
     } finally {

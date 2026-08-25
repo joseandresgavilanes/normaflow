@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { isActionFailure } from "@/lib/actions/unwrap";
 
 /**
  * Ejecuta server actions (o mutaciones async del admin live) y:
@@ -33,7 +34,13 @@ export function useServerAction(options?: { refresh?: boolean }) {
       setSuccess("");
       startTransition(async () => {
         try {
-          await fn();
+          /* Una acción envuelta en `actionResult` devuelve el fallo en vez de
+             lanzarlo, porque Next reescribe el mensaje de cualquier excepción
+             que escape de una Server Action en las builds de producción. Aquí
+             vuelve a ser excepción, ya en el navegador, y el `catch` de abajo
+             enseña el texto que escribió la acción. */
+          const outcome = await fn();
+          if (isActionFailure(outcome)) throw new Error(outcome.message);
           if (refreshEnabled) router.refresh();
           if (typeof window !== "undefined") {
             window.dispatchEvent(new Event("normaflow:server-action-success"));
