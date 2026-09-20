@@ -62,7 +62,7 @@ export async function getSoAPayload() {
       select: { id: true, version: true, status: true, approvedAt: true, createdAt: true },
     }),
     prisma.controlCatalogVersion.findFirst({ where: { standard: { code: "ISO_27001" }, active: true }, select: { version: true, catalogDate: true } }),
-    authorization.can("members:read") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    authorization.can("members:directory") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
     prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true }, orderBy: { createdAt: "desc" }, take: 500 }),
     prisma.riskTreatmentItem.findMany({ where: { organizationId }, select: { id: true, reference: true, title: true }, orderBy: { reference: "asc" }, take: 500 }),
   ]);

@@ -327,6 +327,16 @@ export function AdminLiveProvider({
         refresh();
       },
       getRecordEntryUrl: async (id) => unwrapAction(await recordA.getRecordEntryUrl(id)),
+      uploadRecordFormatVersion: async (recordId, args) => {
+        unwrapAction(await recordA.uploadRecordFormatVersion(recordId, args));
+        refresh();
+      },
+      getRecordFormatVersionUrl: async (versionId) => unwrapAction(await recordA.getRecordFormatVersionUrl(versionId)),
+      replaceRecordEntryFile: async (entryId, file) => {
+        unwrapAction(await recordA.replaceRecordEntryFile(entryId, { file }));
+        refresh();
+      },
+      getRecordEntryAttachmentUrl: async (attachmentId) => unwrapAction(await recordA.getRecordEntryAttachmentUrl(attachmentId)),
       deleteRecordEntry: async (id) => {
         unwrapAction(await recordA.deleteRecordEntry(id));
         refresh();

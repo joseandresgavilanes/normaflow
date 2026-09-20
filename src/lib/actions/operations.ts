@@ -32,8 +32,10 @@ import {
   releaseStorageQuota,
   uploadEvidenceFile,
 } from "@/lib/storage";
+import { nextProcessCode } from "@/lib/process-code";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { auditInputSchema, indicatorInputSchema, nonconformityInputSchema, riskInputSchema } from "@/lib/validation/workflows";
+import { riskTreatmentGaps, TREATMENT_LABELS } from "@/lib/risk-treatment-rules";
 
 const PATHS = {
   process: "/app/processes",
@@ -87,6 +89,13 @@ async function assertProcess(organizationId: string, processId?: string | null) 
   return process;
 }
 
+async function assertEvidence(organizationId: string, evidenceId?: string | null) {
+  if (!evidenceId) return null;
+  const evidence = await prisma.evidenceFile.findFirst({ where: { id: evidenceId, organizationId, deletedAt: null }, select: { id: true } });
+  if (!evidence) throw new Error("La evidencia no pertenece a la organización.");
+  return evidence.id;
+}
+
 async function assertMember(organizationId: string, userId?: string | null) {
   if (!userId) return;
   const membership = await prisma.membership.findFirst({
@@ -127,6 +136,11 @@ export async function createProcess(input: ProcessInput) {
   if (data.code) {
     const duplicate = await prisma.process.findFirst({ where: { organizationId: ctx.organization.id, code: data.code } });
     if (duplicate) throw new Error(`Ya existe un proceso con el código ${data.code}.`);
+  } else {
+    // Sin código explícito, el tipo manda: PE para estratégicos, PO para
+    // operativos y PA para los de apoyo, cada uno con su propia numeración.
+    const codes = await prisma.process.findMany({ where: { organizationId: ctx.organization.id }, select: { code: true } });
+    data.code = nextProcessCode(data.type, codes.map((row) => row.code));
   }
   const created = await prisma.process.create({ data: { organizationId: ctx.organization.id, ...data } });
   await logAuditEvent({ ctx, action: "create", module: "process", recordId: created.id, after: data });
@@ -174,6 +188,7 @@ export type RiskInput = {
   impact: number;
   status: RiskStatus;
   treatment: RiskTreatment;
+  treatmentJustification?: string;
   ownerId?: string;
   processId?: string;
   dueDate?: string;
@@ -203,13 +218,23 @@ export async function createRisk(input: RiskInput) {
   input = parseInput(riskInputSchema, input) as RiskInput;
   const ctx = await requirePermission("risks:create");
   const data = riskData(input);
-  if (ctx.scoped) {
+  const treatmentJustification = input.treatmentJustification?.trim() || null;
+  if (data.treatment !== RiskTreatment.MITIGATE && !treatmentJustification) {
+    throw new Error(`Explica por qué se decide ${TREATMENT_LABELS[data.treatment].toLowerCase()} este riesgo.`);
+  }
+  /* Un contribuidor siempre es responsable del riesgo que registra. Algunos
+     miembros antiguos conservan `scoped = false`; basarnos solo en ese flag
+     dejaba el riesgo sin dueño y, por tanto, fuera de su propia lista. */
+  if (ctx.scoped || ctx.role === "CONTRIBUTOR") {
     data.ownerId = ctx.user.id;
     await assertCollaboratorProcessAccess(ctx, data.processId);
   }
-  data.status = RiskStatus.IDENTIFIED;
+  /* El tratamiento seleccionado al registrar un riesgo es una decisión real,
+     no una etiqueta. Queda firmada y pone el riesgo en el estado operativo
+     correspondiente desde el primer guardado. */
+  data.status = data.treatment === RiskTreatment.ACCEPT ? RiskStatus.ACCEPTED : RiskStatus.UNDER_TREATMENT;
   await Promise.all([assertProcess(ctx.organization.id, data.processId), assertMember(ctx.organization.id, data.ownerId)]);
-  const created = await prisma.risk.create({ data: { organizationId: ctx.organization.id, ...data } });
+  const created = await prisma.risk.create({ data: { organizationId: ctx.organization.id, ...data, treatmentJustification, treatmentDecidedById: ctx.user.id, treatmentDecidedAt: new Date() } });
   await logAuditEvent({ ctx, action: "create", module: "risk", recordId: created.id, after: data });
   if (data.ownerId && data.ownerId !== ctx.user.id) {
     await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un riesgo", body: `Eres responsable del riesgo «${data.title}». Revisa su evaluación y controles.`, type: "WARNING", link: PATHS.risk });
@@ -227,6 +252,12 @@ export async function updateRisk(id: string, input: RiskInput) {
   if (input.status !== existing.status) {
     throw new Error("El estado se modifica desde el flujo de tratamiento del riesgo.");
   }
+  /* El tratamiento tampoco se cambia por aquí. Reevaluar un riesgo y decidir
+     qué se hace con él son dos actos distintos: mezclarlos dejaba cambiar
+     «Mitigar» por «Aceptar» de pasada, sin justificar ni firmar nada. */
+  if (input.treatment !== existing.treatment) {
+    throw new Error("El tratamiento se decide desde la ficha del riesgo, con su justificación.");
+  }
   const data = riskData(input);
   await Promise.all([assertProcess(ctx.organization.id, data.processId), assertMember(ctx.organization.id, data.ownerId)]);
   await prisma.risk.update({ where: { id }, data });
@@ -235,6 +266,70 @@ export async function updateRisk(id: string, input: RiskInput) {
     await notifyUser({ organizationId: ctx.organization.id, userId: data.ownerId, title: "Se te asignó un riesgo", body: `Eres responsable del riesgo «${data.title}». Revisa su evaluación y controles.`, type: "WARNING", link: PATHS.risk });
   }
   refresh(PATHS.risk, PATHS.process);
+}
+
+/**
+ * Registra la decisión de tratamiento con su porqué, quién y cuándo.
+ *
+ * Va aparte de `updateRisk` a propósito: cambiar la valoración de un riesgo y
+ * decidir qué se hace con él son dos actos distintos, y solo el segundo tiene
+ * que quedar firmado. Si el riesgo está en un plan de tratamiento, el plan se
+ * entera: llevaban tratamientos distintos sin que nadie lo viera.
+ */
+export async function decideRiskTreatment(id: string, input: { treatment: RiskTreatment; justification?: string }) {
+  id = parseId(id);
+  const ctx = await requirePermission("risks:update");
+  const existing = await prisma.risk.findFirst({ where: { id, organizationId: ctx.organization.id } });
+  if (!existing) throw new Error("Riesgo no encontrado.");
+  if (!Object.values(RiskTreatment).includes(input.treatment)) throw new Error("El tratamiento no es válido.");
+  const justification = input.justification?.trim() || null;
+  if (input.treatment !== RiskTreatment.MITIGATE && !justification) {
+    throw new Error(`Explica por qué se decide ${TREATMENT_LABELS[input.treatment].toLowerCase()} este riesgo.`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.risk.update({
+      where: { id },
+      data: {
+        treatment: input.treatment,
+        treatmentJustification: justification,
+        treatmentDecidedById: ctx.user.id,
+        treatmentDecidedAt: new Date(),
+        /* La decisión activa el trabajo. Solo movemos riesgos aún identificados
+           para no pisar un seguimiento, una mitigación o un cierre ya vigente. */
+        ...(existing.status === RiskStatus.IDENTIFIED
+          ? { status: input.treatment === RiskTreatment.ACCEPT ? RiskStatus.ACCEPTED : RiskStatus.UNDER_TREATMENT }
+          : {}),
+      },
+    });
+    await tx.riskTreatmentItem.updateMany({ where: { riskId: id, organizationId: ctx.organization.id }, data: { treatment: input.treatment } });
+  });
+
+  await logAuditEvent({
+    ctx,
+    action: "treatment_decision",
+    module: "risk",
+    recordId: id,
+    before: { treatment: existing.treatment, treatmentJustification: existing.treatmentJustification },
+    after: {
+      treatment: input.treatment,
+      treatmentJustification: justification,
+      status: existing.status === RiskStatus.IDENTIFIED
+        ? (input.treatment === RiskTreatment.ACCEPT ? RiskStatus.ACCEPTED : RiskStatus.UNDER_TREATMENT)
+        : existing.status,
+    },
+  });
+  if (existing.ownerId && existing.ownerId !== ctx.user.id) {
+    await notifyUser({
+      organizationId: ctx.organization.id,
+      userId: existing.ownerId,
+      title: "Decisión de tratamiento de riesgo",
+      body: `El riesgo «${existing.title}» se tratará con: ${TREATMENT_LABELS[input.treatment]}.`,
+      type: "INFO",
+      link: PATHS.risk,
+    });
+  }
+  refresh(PATHS.risk, PATHS.process, "/app/risk-treatment");
 }
 
 const RISK_TRANSITIONS: Record<RiskStatus, RiskStatus[]> = {
@@ -253,7 +348,21 @@ export async function transitionRisk(id: string, status: RiskStatus) {
   if (!RISK_TRANSITIONS[existing.status].includes(status)) {
     throw new Error(`Transición ${existing.status} → ${status} no permitida.`);
   }
-  await prisma.risk.update({ where: { id }, data: { status } });
+  /* Aquí es donde el tratamiento deja de ser decorativo: cerrar un riesgo
+     exige lo que su tratamiento prometía. */
+  const [controls, actions] = await Promise.all([
+    prisma.control.count({ where: { riskId: id } }),
+    prisma.action.count({ where: { riskId: id } }),
+  ]);
+  const gaps = riskTreatmentGaps(existing, status, { controls, actions });
+  if (gaps.length) throw new Error(`Antes de mover el riesgo a ${status.replaceAll("_", " ")}: ${gaps.join("; ")}.`);
+
+  // Aceptar un riesgo es una firma: si no había decisión registrada, se estampa.
+  const stampDecision = status === RiskStatus.ACCEPTED && !existing.treatmentDecidedAt;
+  await prisma.risk.update({
+    where: { id },
+    data: { status, ...(stampDecision ? { treatmentDecidedById: ctx.user.id, treatmentDecidedAt: new Date() } : {}) },
+  });
   await logAuditEvent({ ctx, action: "status_change", module: "risk", recordId: id, before: { status: existing.status }, after: { status } });
   if (existing.ownerId && existing.ownerId !== ctx.user.id) {
     await notifyUser({ organizationId: ctx.organization.id, userId: existing.ownerId, title: "Estado de riesgo actualizado", body: `El riesgo «${existing.title}» pasó a ${status.replaceAll("_", " ")}.`, type: "INFO", link: PATHS.risk });
@@ -602,20 +711,24 @@ export async function addAuditChecklistItem(auditId: string, input: { clauseCode
   refresh(PATHS.audit);
 }
 
-export async function updateAuditChecklistItem(id: string, input: { response?: string; status: ChecklistItemStatus; notes?: string; evidenceUrl?: string }) {
+export async function updateAuditChecklistItem(id: string, input: { response?: string; status: ChecklistItemStatus; notes?: string; evidenceUrl?: string; evidenceId?: string | null }) {
   const ctx = await requirePermission("audits:update");
   const existing = await prisma.auditChecklistItem.findFirst({ where: { id, audit: { organizationId: ctx.organization.id } } });
   if (!existing) throw new Error("Ítem no encontrado.");
-  const data = { response: optional(input.response), status: input.status, notes: optional(input.notes), evidenceUrl: optional(input.evidenceUrl) };
+  // La respuesta apunta al repositorio; `evidenceUrl` queda para lo que vive
+  // fuera de NormaFlow y para no perder lo ya respondido.
+  const evidenceId = await assertEvidence(ctx.organization.id, input.evidenceId);
+  const data = { response: optional(input.response), status: input.status, notes: optional(input.notes), evidenceUrl: optional(input.evidenceUrl), evidenceId };
   await prisma.auditChecklistItem.update({ where: { id }, data });
   await logAuditEvent({ ctx, action: "update_checklist_item", module: "audit", recordId: existing.auditId, before: existing, after: data });
   refresh(PATHS.audit);
 }
 
-export async function createAuditFinding(auditId: string, input: { title: string; description?: string; type: FindingType; severity: FindingSeverity; clauseCode?: string; evidenceUrl?: string }) {
+export async function createAuditFinding(auditId: string, input: { title: string; description?: string; type: FindingType; severity: FindingSeverity; clauseCode?: string; evidenceUrl?: string; evidenceId?: string | null }) {
   const ctx = await requirePermission("audits:update");
   const audit = await prisma.audit.findFirst({ where: { id: auditId, organizationId: ctx.organization.id }, select: { id: true } });
   if (!audit) throw new Error("Auditoría no encontrada.");
+  const evidenceId = await assertEvidence(ctx.organization.id, input.evidenceId);
   const created = await prisma.auditFinding.create({
     data: {
       auditId,
@@ -628,7 +741,10 @@ export async function createAuditFinding(auditId: string, input: { title: string
       evidenceUrl: optional(input.evidenceUrl),
     },
   });
-  await logAuditEvent({ ctx, action: "create_finding", module: "audit", recordId: auditId, after: { findingId: created.id, title: created.title } });
+  if (evidenceId) {
+    await prisma.evidenceFindingLink.create({ data: { organizationId: ctx.organization.id, evidenceId, findingId: created.id, createdById: ctx.user.id } });
+  }
+  await logAuditEvent({ ctx, action: "create_finding", module: "audit", recordId: auditId, after: { findingId: created.id, title: created.title, evidenceId } });
   refresh(PATHS.audit);
 }
 

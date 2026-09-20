@@ -7,7 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { getServerAuthorization, requireAuthorization, requirePermission } from "@/lib/permissions/server";
 import { getCollaboratorScope } from "@/lib/permissions/scope";
 import { logAuditEvent, writeAuditLog } from "@/lib/audit-log";
-import { createSignedRecordUrl, deleteRecordFile, releaseStorageQuota, uploadRecordFile } from "@/lib/storage";
+import { createSignedRecordUrl, deleteRecordFile, releaseStorageQuota, uploadRecordFile, uploadRecordFormatFile } from "@/lib/storage";
+import { nextDocumentVersion } from "@/lib/document-version";
 import { notifyPersonnel, notifyUsers } from "@/lib/notify";
 import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
@@ -213,6 +214,192 @@ async function updateRecordImpl(id: string, input: Partial<RecordInput>): Promis
   revalidatePath("/app/activity");
 }
 
+// ─── Formato del registro (versionado) ────────────────────────────────
+
+/**
+ * Sube una versión del formato: el impreso en blanco que se rellena.
+ *
+ * No se aprueba por su cuenta. Queda en DRAFT y es el flujo de revisión del
+ * propio registro el que la mueve —enviar a revisión la pone PENDING, aprobar
+ * la deja en vigor—, para no montar un segundo circuito de firmas en paralelo
+ * al que el registro ya tiene.
+ */
+export async function uploadRecordFormatVersion(
+  recordId: string,
+  args: { file: File; changeDescription?: string; bump?: "minor" | "major" },
+): Promise<ActionResult<{ version: string }>> {
+  return actionResult(() => uploadRecordFormatVersionImpl(recordId, args));
+}
+
+async function uploadRecordFormatVersionImpl(
+  recordId: string,
+  args: { file: File; changeDescription?: string; bump?: "minor" | "major" },
+): Promise<{ version: string }> {
+  recordId = parseId(recordId);
+  const { ctx, can } = await getServerAuthorization();
+  if (!can("records:create")) throw new Error("No tienes permiso para subir formatos de registro.");
+  const record = await prisma.record.findFirst({
+    where: { id: recordId, organizationId: ctx.organization.id },
+    include: { formatVersions: { orderBy: { createdAt: "desc" } } },
+  });
+  if (!record) throw new Error("Registro no encontrado.");
+  if (!record.active) throw new Error("No puedes subir formatos a un registro inactivo.");
+  await assertContributorProcessAccess(ctx, can, record);
+  if (record.reviewStatus === "IN_REVIEW") {
+    throw new Error("El registro está en revisión: espera a que se resuelva antes de subir otro formato.");
+  }
+
+  const version = nextDocumentVersion(record.currentFormatVersion ?? "1.0", record.formatVersions, args.bump ?? "minor");
+  const uploaded = await uploadRecordFormatFile({ organizationId: ctx.organization.id, recordId, version, file: args.file });
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      const created = await tx.recordFormatVersion.create({
+        data: {
+          recordId,
+          version,
+          status: "DRAFT",
+          changeDescription: args.changeDescription?.trim() || null,
+          previousVersion: record.currentFormatVersion,
+          fileName: uploaded.fileName,
+          fileUrl: uploaded.path,
+          fileSize: uploaded.size,
+          mimeType: uploaded.mime,
+          createdById: ctx.user.id,
+        },
+      });
+      /* Subir un formato devuelve el registro a borrador: lo aprobado antes se
+         refería a la versión anterior, y arrastrar esa firma daría por revisado
+         algo que nadie miró. */
+      await tx.record.update({
+        where: { id: recordId },
+        data: { reviewStatus: "DRAFT", reviewComment: null, reviewedAt: null },
+      });
+      await writeAuditLog(tx, {
+        ctx, action: "upload_format", module: "record_format_version", recordId,
+        after: { versionId: created.id, version, previousVersion: record.currentFormatVersion, fileName: uploaded.fileName, fileSize: uploaded.size },
+      });
+    });
+  } catch (error) {
+    await deleteRecordFile(uploaded.path, ctx.organization.id).catch(() => undefined);
+    await releaseStorageQuota(ctx.organization.id, uploaded.size).catch(() => undefined);
+    throw error;
+  }
+
+  revalidatePath(PATH);
+  revalidatePath("/app/activity");
+  return { version };
+}
+
+export async function getRecordFormatVersionUrl(versionId: string): Promise<ActionResult<string>> {
+  return actionResult(() => getRecordFormatVersionUrlImpl(versionId));
+}
+
+async function getRecordFormatVersionUrlImpl(versionId: string): Promise<string> {
+  versionId = parseId(versionId);
+  const { ctx, can } = await getServerAuthorization();
+  if (!can("records:read")) throw new Error("No tienes permiso para consultar registros.");
+  const version = await prisma.recordFormatVersion.findFirst({
+    where: { id: versionId, record: { organizationId: ctx.organization.id } },
+    include: { record: { select: { id: true, organizationId: true, processId: true } } },
+  });
+  if (!version) throw new Error("Versión de formato no encontrada.");
+  await assertContributorProcessAccess(ctx, can, version.record);
+  if (!version.fileUrl) throw new Error("Esta versión no tiene archivo asociado.");
+  const url = await createSignedRecordUrl(version.fileUrl, ctx.organization.id, 300);
+  await logAuditEvent({ ctx, action: "download", module: "record_format_version", recordId: versionId, extra: { recordId: version.recordId, version: version.version } });
+  return url;
+}
+
+// ─── Adjuntos de entrada (historial) ──────────────────────────────────
+
+/**
+ * Sustituye el archivo de una entrada conservando el anterior.
+ *
+ * El de antes no se borra: se marca `supersededAt` y sigue descargable. Es la
+ * diferencia entre corregir una evidencia y hacer desaparecer la que había,
+ * que es justo lo que una auditoría no puede permitir.
+ */
+export async function replaceRecordEntryFile(
+  entryId: string,
+  args: { file: File },
+): Promise<ActionResult<{ version: number }>> {
+  return actionResult(() => replaceRecordEntryFileImpl(entryId, args));
+}
+
+async function replaceRecordEntryFileImpl(entryId: string, args: { file: File }): Promise<{ version: number }> {
+  entryId = parseId(entryId);
+  const { ctx, can } = await getServerAuthorization();
+  if (!can("records:create")) throw new Error("No tienes permiso para modificar entradas de registros.");
+  const entry = await prisma.recordEntry.findFirst({
+    where: { id: entryId, record: { organizationId: ctx.organization.id } },
+    include: { record: true, attachments: { orderBy: { version: "desc" }, take: 1 } },
+  });
+  if (!entry) throw new Error("Entrada no encontrada.");
+  if (!entry.record.active) throw new Error("No puedes modificar entradas de un registro inactivo.");
+  await assertContributorProcessAccess(ctx, can, entry.record);
+
+  const nextVersion = (entry.attachments[0]?.version ?? 0) + 1;
+  const uploaded = await uploadRecordFile({ organizationId: ctx.organization.id, recordId: entry.recordId, entryId, file: args.file });
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.recordEntryAttachment.updateMany({
+        where: { entryId, supersededAt: null },
+        data: { supersededAt: new Date() },
+      });
+      await tx.recordEntryAttachment.create({
+        data: {
+          entryId,
+          version: nextVersion,
+          fileName: uploaded.fileName,
+          fileUrl: uploaded.path,
+          fileSize: uploaded.size,
+          mimeType: uploaded.mime,
+          uploadedById: ctx.user.id,
+        },
+      });
+      /* Las columnas de la entrada siguen apuntando al adjunto vigente: es lo
+         que leen el listado y la vista previa, que no necesitan el historial. */
+      await tx.recordEntry.update({
+        where: { id: entryId },
+        data: { fileName: uploaded.fileName, fileUrl: uploaded.path, fileSize: uploaded.size, mimeType: uploaded.mime },
+      });
+      await writeAuditLog(tx, {
+        ctx, action: "replace_attachment", module: "record_entry", recordId: entry.recordId,
+        before: { entryId, fileName: entry.fileName },
+        after: { entryId, version: nextVersion, fileName: uploaded.fileName, fileSize: uploaded.size },
+      });
+    });
+  } catch (error) {
+    await deleteRecordFile(uploaded.path, ctx.organization.id).catch(() => undefined);
+    await releaseStorageQuota(ctx.organization.id, uploaded.size).catch(() => undefined);
+    throw error;
+  }
+
+  revalidatePath(PATH);
+  return { version: nextVersion };
+}
+
+export async function getRecordEntryAttachmentUrl(attachmentId: string): Promise<ActionResult<string>> {
+  return actionResult(() => getRecordEntryAttachmentUrlImpl(attachmentId));
+}
+
+async function getRecordEntryAttachmentUrlImpl(attachmentId: string): Promise<string> {
+  attachmentId = parseId(attachmentId);
+  const { ctx, can } = await getServerAuthorization();
+  if (!can("records:read")) throw new Error("No tienes permiso para consultar registros.");
+  const attachment = await prisma.recordEntryAttachment.findFirst({
+    where: { id: attachmentId, entry: { record: { organizationId: ctx.organization.id } } },
+    include: { entry: { include: { record: { select: { id: true, organizationId: true, processId: true } } } } },
+  });
+  if (!attachment) throw new Error("Adjunto no encontrado.");
+  await assertContributorProcessAccess(ctx, can, attachment.entry.record);
+  const url = await createSignedRecordUrl(attachment.fileUrl, ctx.organization.id, 300);
+  await logAuditEvent({ ctx, action: "download", module: "record_entry_attachment", recordId: attachmentId, extra: { entryId: attachment.entryId, version: attachment.version } });
+  return url;
+}
+
 export async function submitRecordForReview(recordId: string): Promise<ActionResult<void>> {
   return actionResult(() => submitRecordForReviewImpl(recordId));
 }
@@ -228,9 +415,23 @@ async function submitRecordForReviewImpl(recordId: string): Promise<void> {
   if (record.reviewStatus === "IN_REVIEW") throw new Error("El registro ya está en revisión.");
   if (!record.reviewerId) throw new Error("Asigna un revisor antes de enviar el registro a revisión.");
 
-  await prisma.record.update({
-    where: { id: recordId },
-    data: { reviewStatus: "IN_REVIEW", reviewComment: null, reviewedAt: null },
+  await prisma.$transaction(async (tx) => {
+    await tx.record.update({
+      where: { id: recordId },
+      data: { reviewStatus: "IN_REVIEW", reviewComment: null, reviewedAt: null },
+    });
+    /* La versión de formato en borrador entra a revisión con el registro: es
+       lo que el revisor va a mirar. Sin formato subido el registro se revisa
+       igual —hay registros que solo tienen ficha y ubicación—, así que no se
+       exige ninguna. */
+    const pendiente = await tx.recordFormatVersion.findFirst({
+      where: { recordId, status: "DRAFT" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true },
+    });
+    if (pendiente) {
+      await tx.recordFormatVersion.update({ where: { id: pendiente.id }, data: { status: "PENDING" } });
+    }
   });
   await logAuditEvent({
     ctx,
@@ -266,9 +467,25 @@ async function reviewRecord(recordId: string, status: "APPROVED" | "REJECTED", c
   }
   if (status === "REJECTED" && !comment?.trim()) throw new Error("Indica el motivo del rechazo.");
 
-  await prisma.record.update({
-    where: { id: recordId },
-    data: { reviewStatus: status, reviewComment: comment?.trim() || null, reviewedAt: new Date() },
+  await prisma.$transaction(async (tx) => {
+    await tx.record.update({
+      where: { id: recordId },
+      data: { reviewStatus: status, reviewComment: comment?.trim() || null, reviewedAt: new Date() },
+    });
+    const enRevision = await tx.recordFormatVersion.findFirst({
+      where: { recordId, status: "PENDING" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true, version: true },
+    });
+    if (!enRevision) return;
+    if (status === "APPROVED") {
+      /* La versión aprobada pasa a ser la vigente y las anteriores dejan de
+         serlo: `currentFormatVersion` es la que se reparte y se imprime. */
+      await tx.recordFormatVersion.update({ where: { id: enRevision.id }, data: { status: "APPROVED" } });
+      await tx.record.update({ where: { id: recordId }, data: { currentFormatVersion: enRevision.version } });
+    } else {
+      await tx.recordFormatVersion.update({ where: { id: enRevision.id }, data: { status: "REJECTED" } });
+    }
   });
   await logAuditEvent({
     ctx,
@@ -380,6 +597,21 @@ async function addRecordEntryImpl(
           enteredById: ctx.user.id,
         },
       });
+      /* El adjunto inicial entra también en el historial: si no, la primera
+         versión de la evidencia sería la única que no aparece en él. */
+      if (uploaded) {
+        await tx.recordEntryAttachment.create({
+          data: {
+            entryId: id,
+            version: 1,
+            fileName: uploaded.fileName,
+            fileUrl: uploaded.path,
+            fileSize: uploaded.size,
+            mimeType: uploaded.mime,
+            uploadedById: ctx.user.id,
+          },
+        });
+      }
       await writeAuditLog(tx, { ctx, action: "add_entry", module: "record_entry", recordId, after: { entryId: id, title, reference, entryDate: entryDate.toISOString(), status: input.status ?? RecordEntryStatus.VALID, responsibleId, fileName: uploaded?.fileName, fileSize: uploaded?.size, mimeType: uploaded?.mime } });
     });
   } catch (error) {

@@ -43,6 +43,7 @@ function demoPayload(): RiskTreatmentPayload {
     members: [],
     evidenceOptions: [],
     orgControlOptions: [],
+    pendingRisks: [],
     riskOptions: [],
   };
 }

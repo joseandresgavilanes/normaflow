@@ -18,6 +18,7 @@ import {
   updateProcess,
   updateRisk,
   updateRiskControl,
+  decideRiskTreatment,
   transitionRisk,
   transitionRiskControl,
   type ProcessInput,
@@ -26,12 +27,14 @@ import {
 } from "@/lib/actions/operations";
 import type { ProcessesPayload, RisksPayload } from "@/lib/server-queries";
 import { DEFAULT_RISK_CATEGORY, riskCategoryOptions } from "@/lib/risk-catalog";
+import { riskTreatmentGaps, TREATMENT_LABELS } from "@/lib/risk-treatment-rules";
 import { formatDate } from "@/lib/format/datetime";
 import PersonPicker from "@/components/ui/PersonPicker";
 import Picker from "@/components/ui/Picker";
 import EntityTable from "@/components/ui/EntityTable";
 import DateField from "@/components/ui/DateField";
-import { processTypeLabel } from "@/lib/status-labels";
+import { PROCESS_TYPE_LABELS, processTypeLabel } from "@/lib/status-labels";
+import { nextProcessCode } from "@/lib/process-code";
 import {
   CellTitle,
   CountCell,
@@ -93,6 +96,24 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
   const [editing, setEditing] = useState<ProcessRow | null>(null);
   const [detail, setDetail] = useState<ProcessRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ProcessRow | null>(null);
+  /* Código y tipo van juntos: el prefijo lo decide el tipo (PE/PO/PA) y la
+     propuesta se recalcula al cambiarlo, salvo que ya se haya escrito un código
+     a mano —o estemos editando uno existente, donde renumerar rompería todo lo
+     que ya cita ese proceso. */
+  const [codeForm, setCodeForm] = useState({ type: "core", code: "", manual: false });
+  const suggestCode = (type: string) => nextProcessCode(type, initial.processes.map((row) => row.code));
+
+  function openCreate() {
+    setError("");
+    setCodeForm({ type: "core", code: suggestCode("core"), manual: false });
+    setCreating(true);
+  }
+
+  function openEdit(row: ProcessRow) {
+    setError("");
+    setCodeForm({ type: row.type ?? "core", code: row.code ?? "", manual: true });
+    setEditing(row);
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -119,7 +140,7 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
   const formRow = editing;
   return (
     <div>
-      <OperationalHeader title="Mapa de procesos" subtitle="Mapa de procesos del SGC con responsable, entradas, salidas y sus documentos, riesgos e indicadores enlazados." canCreate={initial.access.canCreate} actionLabel="Nuevo proceso" onCreate={() => { setError(""); setCreating(true); }} />
+      <OperationalHeader title="Mapa de procesos" subtitle="Mapa de procesos del SGC con responsable, entradas, salidas y sus documentos, riesgos e indicadores enlazados." canCreate={initial.access.canCreate} actionLabel="Nuevo proceso" onCreate={openCreate} />
       <OperationalMessages error={error} success={success} />
         <EntityTable
         caption="Procesos"
@@ -148,17 +169,17 @@ export function ProcessesLiveClient({ initial }: { initial: ProcessesPayload }) 
         ]}
         actions={(row) => (
           <RowActions canUpdate={initial.access.canUpdate} canDelete={initial.access.canDelete} pending={isPending}
-            onEdit={() => { setError(""); setEditing(row); }} onDelete={() => remove(row)} />
+            onEdit={() => openEdit(row)} onDelete={() => remove(row)} />
         )}
       />
 
       <FormModal open={creating || !!editing} title={editing ? "Editar proceso" : "Nuevo proceso"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submit}>
         <div className="nf-grid-2" style={{ gap: 12 }}>
           <Field label="Nombre"><input aria-label="Nombre" name="name" className="nf-app-input" style={inputStyle} defaultValue={formRow?.name ?? ""} required /></Field>
-          <Field label="Código"><input aria-label="Código" name="code" className="nf-app-input" style={inputStyle} defaultValue={formRow?.code ?? ""} /></Field>
+          <Field label="Código"><input aria-label="Código" name="code" className="nf-app-input" style={inputStyle} value={codeForm.code} onChange={(event) => setCodeForm((form) => ({ ...form, code: event.target.value, manual: true }))} /></Field>
         </div>
         <div className="nf-grid-2" style={{ gap: 12 }}>
-          <Field label="Tipo"><Picker aria-label="Tipo" name="type" className="nf-app-input" style={inputStyle} defaultValue={formRow?.type ?? "core"}><option value="core">Core</option><option value="support">Soporte</option><option value="strategic">Estratégico</option></Picker></Field>
+          <Field label="Tipo"><Picker aria-label="Tipo" name="type" className="nf-app-input" style={inputStyle} value={codeForm.type} onChange={(event) => { const type = event.target.value; setCodeForm((form) => ({ ...form, type, code: form.manual ? form.code : suggestCode(type) })); }}><option value="strategic">{PROCESS_TYPE_LABELS.strategic}</option><option value="core">{PROCESS_TYPE_LABELS.core}</option><option value="support">{PROCESS_TYPE_LABELS.support}</option></Picker></Field>
           <Field label="Responsable"><PersonPicker name="ownerId" people={initial.members} defaultValue={formRow?.ownerId ?? ""} placeholder="Sin asignar" ariaLabel="Responsable" style={inputStyle} /></Field>
         </div>
         <Field label="Descripción"><textarea aria-label="Descripción" name="description" className="nf-app-input" style={inputStyle} rows={3} defaultValue={formRow?.description ?? ""} /></Field>
@@ -238,6 +259,7 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
   const [editing, setEditing] = useState<RiskRow | null>(null);
   const [detail, setDetail] = useState<RiskRow | null>(null);
   const [controlRisk, setControlRisk] = useState<RiskRow | null>(null);
+  const [decidingRisk, setDecidingRisk] = useState<RiskRow | null>(null);
   const [editingControl, setEditingControl] = useState<ControlRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<
     | { type: "risk"; row: RiskRow }
@@ -254,9 +276,32 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
       probability: Number(fd.get("probability")), impact: Number(fd.get("impact")), status: fd.get("status") as RiskStatus,
       treatment: fd.get("treatment") as RiskTreatment, ownerId: String(fd.get("ownerId") ?? "") || undefined,
       processId: String(fd.get("processId") ?? "") || undefined, dueDate: String(fd.get("dueDate") ?? "") || undefined,
-      residualScore: residual ? Number(residual) : null,
+      residualScore: residual ? Number(residual) : null, treatmentJustification: String(fd.get("treatmentJustification") ?? "") || undefined,
     };
-    run(() => editing ? updateRisk(editing.id, input) : createRisk(input), { onSuccess: () => { setCreating(false); setEditing(null); }, successMessage: editing ? "Riesgo actualizado." : "Riesgo creado." });
+    const justification = String(fd.get("treatmentJustification") ?? "");
+    run(async () => {
+      /* Si se cambia el tratamiento desde esta ficha, registramos primero la
+         decisión formal. Así el selector sí cambia el sistema: deja firma,
+         justificación y activa el estado de tratamiento correspondiente. */
+      if (editing && input.treatment !== editing.treatment) {
+        await decideRiskTreatment(editing.id, { treatment: input.treatment, justification });
+      }
+      return editing ? updateRisk(editing.id, input) : createRisk(input);
+    }, { onSuccess: () => { setCreating(false); setEditing(null); }, successMessage: editing && input.treatment !== editing.treatment ? "Tratamiento decidido y riesgo actualizado." : editing ? "Riesgo actualizado." : "Riesgo creado y tratamiento activado." });
+  }
+
+  /* Decidir el tratamiento es un acto aparte de reevaluar el riesgo, y por eso
+     tiene su propio formulario: la justificación es obligatoria en todo lo que
+     no sea mitigar, porque aceptar, transferir o evitar sin un porqué escrito
+     es exactamente lo que un auditor levanta como hallazgo. */
+  function submitDecision(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!decidingRisk) return;
+    const fd = new FormData(event.currentTarget);
+    run(() => decideRiskTreatment(decidingRisk.id, {
+      treatment: fd.get("treatment") as RiskTreatment,
+      justification: String(fd.get("justification") ?? ""),
+    }), { onSuccess: () => setDecidingRisk(null), successMessage: "Decisión de tratamiento registrada." });
   }
 
   function remove(row: RiskRow) {
@@ -335,16 +380,30 @@ export function RisksLiveClient({ initial }: { initial: RisksPayload }) {
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Categoría"><Picker aria-label="Categoría" name="category" className="nf-app-input" style={inputStyle} defaultValue={formRow?.category ?? DEFAULT_RISK_CATEGORY} required>{riskCategoryOptions(formRow?.category).map((option) => <option key={option} value={option}>{option}</option>)}</Picker></Field><Field label="Proceso"><Picker aria-label="Proceso" name="processId" className="nf-app-input" style={inputStyle} defaultValue={formRow?.processId ?? ""}><option value="">Sin proceso</option>{initial.processes.map((process) => <option key={process.id} value={process.id}>{process.code ?? "PROC"} · {process.name}</option>)}</Picker></Field></div>
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Probabilidad (1-5)"><input aria-label="Probabilidad" name="probability" type="number" min="1" max="5" className="nf-app-input" style={inputStyle} defaultValue={formRow?.probability ?? 3} /></Field><Field label="Impacto (1-5)"><input aria-label="Impacto" name="impact" type="number" min="1" max="5" className="nf-app-input" style={inputStyle} defaultValue={formRow?.impact ?? 3} /></Field></div>
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Estado"><div className="nf-app-input" style={{ ...inputStyle, color: "var(--nf-ink-2)" }}>{formRow?.status ?? RiskStatus.IDENTIFIED}</div><input type="hidden" name="status" value={formRow?.status ?? RiskStatus.IDENTIFIED} /></Field><Field label="Tratamiento"><Picker aria-label="Tratamiento" name="treatment" className="nf-app-input" style={inputStyle} defaultValue={formRow?.treatment ?? RiskTreatment.MITIGATE}>{Object.values(RiskTreatment).map((value) => <option key={value}>{value}</option>)}</Picker></Field></div>
+      <Field label="Justificación de la decisión">
+        <textarea aria-label="Justificación del tratamiento" name="treatmentJustification" rows={2} className="nf-app-input" style={inputStyle} defaultValue={formRow?.treatmentJustification ?? ""} placeholder="Obligatoria al aceptar, transferir o evitar. Al cambiar el tratamiento se registra quién tomó la decisión y se activa el flujo." />
+      </Field>
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Responsable"><PersonPicker name="ownerId" people={initial.members} defaultValue={formRow?.ownerId ?? ""} placeholder="Sin asignar" ariaLabel="Responsable" style={inputStyle} /></Field><Field label="Fecha objetivo"><DateField aria-label="Fecha de vencimiento" name="dueDate" className="nf-app-input" style={inputStyle} defaultValue={formRow?.dueDate?.slice(0, 10) ?? ""} /></Field></div>
       <Field label="Score residual (0-25)"><input aria-label="Puntuación residual" name="residualScore" type="number" min="0" max="25" className="nf-app-input" style={inputStyle} defaultValue={formRow?.residualScore ?? ""} /></Field>
       <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={formRow?.description ?? ""} /></Field>
     </FormModal>
-    <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.title ?? "Riesgo"} width={650}>{detail && <div style={{ display: "grid", gap: 18 }}><div className="nf-grid-2"><Meta label="Estado" value={detail.status} /><Meta label="Score inherente" value={detail.score} /><Meta label="Score residual" value={detail.residualScore} /><Meta label="Proceso" value={detail.processName} /><Meta label="Responsable" value={detail.ownerName} /></div><Meta label="Descripción" value={detail.description} />{initial.access.canUpdate && (NEXT_RISK_STATUS[detail.status] ?? []).length > 0 && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>{(NEXT_RISK_STATUS[detail.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-primary" onClick={() => run(() => transitionRisk(detail.id, status), { onSuccess: () => setDetail(null), successMessage: `Riesgo movido a ${status.replaceAll("_", " ")}.` })}>Mover a {status.replaceAll("_", " ")}</button>)}</div>}<div><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong style={{ fontSize: 13 }}>Controles ({detail.controls.length})</strong>{initial.access.canUpdate && <button type="button" className="nf-app-btn-ghost" onClick={() => { setDetail(null); setControlRisk(detail); setEditingControl(null); }}>Añadir control</button>}</div>{detail.controls.length ? <div style={{ display: "grid", gap: 8, marginTop: 9 }}>{detail.controls.map((control) => <div key={control.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 13, fontWeight: 750 }}>{control.title}</span><Badge status={control.status} /></div><div style={{ marginTop: 4, fontSize: 12, color: "var(--nf-ink-3)" }}>{control.type}{control.description ? ` · ${control.description}` : ""}</div>{initial.access.canUpdate && <div style={{ display: "flex", gap: 7, marginTop: 7, flexWrap: "wrap" }}>{(NEXT_CONTROL_STATUS[control.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-ghost" onClick={() => run(() => transitionRiskControl(control.id, status), { onSuccess: () => setDetail(null), successMessage: `Control movido a ${status}.` })}>{status}</button>)}<button type="button" className="nf-app-btn-ghost" onClick={() => { setDetail(null); setControlRisk(detail); setEditingControl(control); }}>Editar</button><button type="button" className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }} onClick={() => removeControl(control)}>Eliminar</button></div>}</div>)}</div> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin controles.</p>}</div></div>}</Modal>
+    <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.title ?? "Riesgo"} width={650}>{detail && <div style={{ display: "grid", gap: 18 }}><div className="nf-grid-2"><Meta label="Estado" value={detail.status} /><Meta label="Score inherente" value={detail.score} /><Meta label="Score residual" value={detail.residualScore ?? "Sin valorar"} /><Meta label="Proceso" value={detail.processName} /><Meta label="Responsable" value={detail.ownerName} /><Meta label="Tratamiento" value={TREATMENT_LABELS[detail.treatment]} /><Meta label="Decidido por" value={detail.treatmentDecidedByName ? `${detail.treatmentDecidedByName} · ${detail.treatmentDecidedAt ? formatDate(detail.treatmentDecidedAt) : ""}` : "Sin decisión registrada"} /></div>{detail.treatmentJustification && <Meta label="Justificación del tratamiento" value={detail.treatmentJustification} />}<Meta label="Descripción" value={detail.description} />{initial.access.canUpdate && <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><button type="button" className="nf-app-btn-outline" onClick={() => { setDetail(null); setDecidingRisk(detail); }}>Decidir tratamiento</button>{(NEXT_RISK_STATUS[detail.status] ?? []).map((status) => { const gaps = riskTreatmentGaps(detail, status, { controls: detail.controls.length, actions: detail.actionCount }); return <button key={status} type="button" className="nf-app-btn-primary" disabled={gaps.length > 0} onClick={() => run(() => transitionRisk(detail.id, status), { onSuccess: () => setDetail(null), successMessage: `Riesgo movido a ${status.replaceAll("_", " ")}.` })}>Mover a {status.replaceAll("_", " ")}</button>;})}</div>}{/* Lo que falta se lee antes de pulsar, no despues de que el servidor lo rechace: un boton apagado sin explicacion es peor que el error. */}{initial.access.canUpdate && (NEXT_RISK_STATUS[detail.status] ?? []).flatMap((status) => { const gaps = riskTreatmentGaps(detail, status, { controls: detail.controls.length, actions: detail.actionCount }); return gaps.length ? [<p key={status} style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)" }}>Para moverlo a <strong>{status.replaceAll("_", " ")}</strong> falta: {gaps.join("; ")}.</p>] : [];})}<div><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong style={{ fontSize: 13 }}>Controles ({detail.controls.length})</strong>{initial.access.canUpdate && <button type="button" className="nf-app-btn-ghost" onClick={() => { setDetail(null); setControlRisk(detail); setEditingControl(null); }}>Añadir control</button>}</div>{detail.controls.length ? <div style={{ display: "grid", gap: 8, marginTop: 9 }}>{detail.controls.map((control) => <div key={control.id} style={{ padding: 10, border: "1px solid var(--nf-line)", borderRadius: 9 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span style={{ fontSize: 13, fontWeight: 750 }}>{control.title}</span><Badge status={control.status} /></div><div style={{ marginTop: 4, fontSize: 12, color: "var(--nf-ink-3)" }}>{control.type}{control.description ? ` · ${control.description}` : ""}</div>{initial.access.canUpdate && <div style={{ display: "flex", gap: 7, marginTop: 7, flexWrap: "wrap" }}>{(NEXT_CONTROL_STATUS[control.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-ghost" onClick={() => run(() => transitionRiskControl(control.id, status), { onSuccess: () => setDetail(null), successMessage: `Control movido a ${status}.` })}>{status}</button>)}<button type="button" className="nf-app-btn-ghost" onClick={() => { setDetail(null); setControlRisk(detail); setEditingControl(control); }}>Editar</button><button type="button" className="nf-app-btn-ghost" style={{ color: "var(--nf-danger-text)" }} onClick={() => removeControl(control)}>Eliminar</button></div>}</div>)}</div> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin controles.</p>}</div></div>}</Modal>
     <FormModal open={!!controlRisk} title={editingControl ? "Editar control" : `Nuevo control · ${controlRisk?.title ?? ""}`} pending={isPending} error={error} onClose={() => { setControlRisk(null); setEditingControl(null); setError(""); }} onSubmit={submitControl}>
       <Field label="Título"><input aria-label="Título" name="title" required className="nf-app-input" style={inputStyle} defaultValue={editingControl?.title ?? ""} /></Field>
       <div className="nf-grid-2" style={{ gap: 12 }}><Field label="Tipo"><Picker aria-label="Tipo" name="type" className="nf-app-input" style={inputStyle} defaultValue={editingControl?.type ?? ControlType.PREVENTIVE}>{Object.values(ControlType).map((value) => <option key={value}>{value}</option>)}</Picker></Field><Field label="Estado"><div className="nf-app-input" style={{ ...inputStyle, color: "var(--nf-ink-2)" }}>{editingControl?.status ?? ControlStatus.PLANNED}</div><input type="hidden" name="status" value={editingControl?.status ?? ControlStatus.PLANNED} /></Field></div>
       <Field label="Responsable"><PersonPicker name="ownerId" people={initial.members} defaultValue={editingControl?.ownerId ?? ""} placeholder="Sin asignar" ariaLabel="Responsable" style={inputStyle} /></Field>
       <Field label="Descripción"><textarea aria-label="Descripción" name="description" rows={3} className="nf-app-input" style={inputStyle} defaultValue={editingControl?.description ?? ""} /></Field>
+    </FormModal>
+    <FormModal open={!!decidingRisk} title={`Tratamiento del riesgo · ${decidingRisk?.title ?? ""}`} pending={isPending} error={error} onClose={() => { setDecidingRisk(null); setError(""); }} onSubmit={submitDecision} submitLabel="Registrar decisión">
+      <Field label="Tratamiento">
+        <Picker aria-label="Tratamiento" name="treatment" className="nf-app-input" style={inputStyle} defaultValue={decidingRisk?.treatment ?? RiskTreatment.MITIGATE}>
+          {Object.values(RiskTreatment).map((value) => <option key={value} value={value}>{TREATMENT_LABELS[value]}</option>)}
+        </Picker>
+      </Field>
+      <Field label="Justificación">
+        <textarea aria-label="Justificación del tratamiento" name="justification" rows={4} className="nf-app-input" style={inputStyle} defaultValue={decidingRisk?.treatmentJustification ?? ""} placeholder="Por qué se trata así: controles previstos, a quién se transfiere, qué actividad se elimina o por qué se asume…" />
+      </Field>
+      <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)" }}>Mitigar se cierra con controles o acciones y el riesgo residual valorado. Aceptar, transferir y evitar exigen justificación, y quedan firmados con tu nombre y la fecha.</p>
     </FormModal>
     <ConfirmActionModal
       open={!!confirmDelete}

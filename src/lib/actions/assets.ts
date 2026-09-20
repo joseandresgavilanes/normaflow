@@ -68,7 +68,7 @@ export async function getAssetsPayload(input?: unknown) {
         dependents: { include: { sourceAsset: { select: { id: true, code: true, name: true } } } },
       },
     }),
-    authorization.can("members:read") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    authorization.can("members:directory") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
     prisma.process.findMany({ where: { organizationId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.location.findMany({ where: { organizationId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
     prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true }, orderBy: { createdAt: "desc" }, take: 500 }),

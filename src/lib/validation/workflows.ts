@@ -6,7 +6,7 @@ const optionalId = idSchema.optional().nullable();
 const standardCode = z.string().trim().regex(/^ISO_[0-9]{4,5}$/, "La norma no es válida.").max(20);
 
 export const onboardingSetupSchema = z.object({ organizationName: shortText(160), industry: optionalText(100), country: optionalText(80), size: optionalText(40), standards: boundedArray(z.enum(["ISO_9001", "ISO_27001"]), 2).min(1), goal: z.enum(["CERTIFY", "MAINTAIN_CERTIFICATION", "AUDIT_PREPARATION", "ORGANIZE_DOCUMENTS_EVIDENCE"]) });
-export const bootstrapSchema = z.object({ organizationName: shortText(160), industry: optionalText(100), country: optionalText(80), size: optionalText(40), standards: boundedArray(z.enum(["ISO_9001", "ISO_27001"]), 2).min(1).default(["ISO_9001"]), goal: z.enum(["CERTIFY", "MAINTAIN_CERTIFICATION", "AUDIT_PREPARATION", "ORGANIZE_DOCUMENTS_EVIDENCE"]).nullable().optional() });
+export const bootstrapSchema = z.object({ organizationName: shortText(160), industry: optionalText(100), country: optionalText(80), size: optionalText(40), standards: boundedArray(z.enum(["ISO_9001", "ISO_27001"]), 2).min(1).default(["ISO_9001"]), goal: z.enum(["CERTIFY", "MAINTAIN_CERTIFICATION", "AUDIT_PREPARATION", "ORGANIZE_DOCUMENTS_EVIDENCE"]).nullable().optional(), createNew: z.boolean().default(false) });
 export const loginSchema = z.object({ email: z.string().trim().toLowerCase().email().max(254), password: z.string().min(8).max(256) });
 
 export const documentInputSchema = z.object({ code: shortText(80), title: shortText(240), type: z.nativeEnum(DocumentType), ownerId: optionalId, processId: optionalId, clauseId: optionalId, standardCode: standardCode.optional().nullable(), reviewDate: optionalDateInputSchema, tags: boundedArray(z.string().trim().min(1).max(50), 30).optional(), observations: optionalText(4000), distributionList: boundedArray(z.string().trim().email().max(254), 100).optional(), locationId: optionalId, physicalLocation: optionalText(240), responsibleElaborationId: optionalId, responsibleApprovalId: optionalId, custodianId: optionalId, isExternal: z.boolean().optional(), externalLink: z.string().trim().url().max(2048).optional().nullable() });
@@ -17,10 +17,21 @@ export const acpmCreateSchema = z.object({ title: shortText(240), description: o
 export const acpmUpdateSchema = z.object({ title: shortText(240).optional(), description: optionalText(8000), priority: z.nativeEnum(Priority).optional(), type: z.nativeEnum(ActionType).optional(), source: optionalText(160), rootCause: optionalText(8000), proposedSolution: optionalText(8000), effectivenessCheck: optionalText(8000), effectivenessAt: optionalDateInputSchema, ownerId: optionalId, dueDate: optionalDateInputSchema, progress: finiteNumber(0, 100, "El avance").optional() });
 export const acpmTransitionSchema = z.object({ stage: z.nativeEnum(ACPMStage), comment: optionalText(2000) });
 
-export const riskInputSchema = z.object({ title: shortText(240), description: optionalText(8000), category: shortText(120), probability: finiteNumber(1, 5, "La probabilidad").int(), impact: finiteNumber(1, 5, "El impacto").int(), status: z.nativeEnum(RiskStatus), treatment: z.nativeEnum(RiskTreatment), ownerId: optionalId, processId: optionalId, dueDate: optionalDateInputSchema, residualScore: finiteNumber(0, 25, "El riesgo residual").int().nullable().optional() });
+export const riskInputSchema = z.object({ title: shortText(240), description: optionalText(8000), category: shortText(120), probability: finiteNumber(1, 5, "La probabilidad").int(), impact: finiteNumber(1, 5, "El impacto").int(), status: z.nativeEnum(RiskStatus), treatment: z.nativeEnum(RiskTreatment), treatmentJustification: optionalText(8000), ownerId: optionalId, processId: optionalId, dueDate: optionalDateInputSchema, residualScore: finiteNumber(0, 25, "El riesgo residual").int().nullable().optional() });
 export const auditInputSchema = z.object({ title: shortText(240), type: z.nativeEnum(AuditType), status: z.nativeEnum(AuditStatus), standardCode: standardCode.optional().nullable(), auditorId: optionalId, auditorExternal: optionalText(160), plannedDate: optionalDateInputSchema, scheduledDate: optionalDateInputSchema, scope: optionalText(8000), objectives: optionalText(8000), criteria: optionalText(8000), progress: finiteNumber(0, 100, "El progreso").optional(), programId: optionalId, processId: optionalId, startDate: optionalDateInputSchema, endDate: optionalDateInputSchema, auditeeIds: boundedArray(idSchema, 100).optional() });
 export const auditProgramSchema = z.object({ year: finiteNumber(2000, 2100, "El año").int(), title: shortText(240), objectives: optionalText(8000), scope: optionalText(8000), standards: boundedArray(standardCode, 10).optional(), criteria: optionalText(8000), responsibleId: optionalId });
-export const plannedProgramAuditSchema = z.object({ title: shortText(240), processId: idSchema, standardCode, date: dateInputSchema, auditorId: idSchema });
+/**
+ * Una línea del plan de auditoría: proceso, día y franja horaria.
+ *
+ * `title` es opcional porque el plan se escribe por procesos —«Compras el 8 a
+ * las 9:00»— y obligar a teclear un título por línea era justo la fricción que
+ * hacía planificar de una en una; si llega vacío, la acción lo deriva del
+ * proceso. `startAt`/`endAt` son instantes ISO completos, calculados en el
+ * navegador a partir del día y la hora: solo allí se conoce la zona horaria de
+ * quien planifica.
+ */
+export const plannedProgramAuditSchema = z.object({ title: optionalText(240), processId: idSchema, standardCode, date: dateInputSchema, startAt: optionalDateInputSchema, endAt: optionalDateInputSchema, auditorId: idSchema });
+export const plannedProgramAuditsSchema = boundedArray(plannedProgramAuditSchema, 60).min(1, "Añade al menos una línea al plan.");
 export const indicatorInputSchema = z.object({ name: shortText(240), description: optionalText(8000), unit: shortText(50), target: finiteNumber(-1_000_000_000, 1_000_000_000, "La meta"), frequency: optionalText(50), ownerId: optionalId, status: z.nativeEnum(IndicatorStatus), clauseCode: optionalText(80), processId: optionalId });
 
 export const recordInputSchema = z.object({ code: shortText(80), name: shortText(240), processId: optionalId, clauseId: optionalId, recordTypeId: optionalId, retentionTimeId: optionalId, dispositionId: optionalId, archiveMethodId: optionalId, custodianId: optionalId, reviewerId: optionalId, physicalLocation: optionalText(240), digitalLocation: optionalText(2048), observations: optionalText(8000) });

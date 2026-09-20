@@ -12,6 +12,7 @@ import type { PdfColumn } from "@/lib/export/pdf";
 import { parseInput } from "@/lib/validation/common";
 import { reportRequestSchema } from "@/lib/validation/p1";
 import { REPORT_IDS, type ExportFormat, type ReportFilters, type ReportId } from "@/lib/reporting-contract";
+import { isValidTimeZone, SYSTEM_TIME_ZONE } from "@/lib/format/datetime";
 export type { ExportFormat, ReportFilters, ReportId } from "@/lib/reporting-contract";
 type Cell = string | number | boolean | null;
 type Row = Record<string, Cell>;
@@ -34,6 +35,19 @@ export async function parseFilters(filters: ReportFilters) {
 }
 
 function rowDate(value: Date | null | undefined) { return value?.toISOString().slice(0, 10) ?? ""; }
+
+/**
+ * Franja horaria de una fila, en la zona de quien pidió el informe.
+ *
+ * Sin zona no se imprime nada: una hora en UTC dentro de un plan de auditoría
+ * es peor que ninguna, porque parece correcta y cita a la gente con horas de
+ * diferencia.
+ */
+function rowSlot(start: Date | null | undefined, end: Date | null | undefined, timeZone: string | undefined) {
+  if (!start || !timeZone || timeZone === SYSTEM_TIME_ZONE || !isValidTimeZone(timeZone)) return "";
+  const clock = (value: Date) => new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(value);
+  return end ? `${clock(start)}–${clock(end)}` : clock(start);
+}
 /** Resolve org user ids → display names for report rows that store scalar ids. */
 async function orgUserNames(organizationId: string): Promise<Map<string, string>> {
   const users = await prisma.user.findMany({ where: { memberships: { some: { organizationId } } }, select: { id: true, name: true } });
@@ -47,7 +61,18 @@ export async function reportRows(reportId: ReportId, organizationId: string, fil
   if (reportId === "gap") return (await prisma.assessmentAnswer.findMany({ where: { assessment: { organizationId, createdAt: range, ...(filters.standardCode ? { standard: { code: filters.standardCode } } : {}) }, ...(filters.status ? { status: filters.status as never } : {}) }, include: { assessment: { include: { standard: true } }, clause: true }, orderBy: { clause: { code: "asc" } } })).map(item => ({ norma: item.assessment.standard.code, clausula: item.clause.code, titulo: item.clause.title, score: item.score, estado: item.status, comentario: item.comment }));
   if (reportId === "documents") return (await prisma.document.findMany({ where: ({ organizationId, createdAt: range, ...dateFilter(filters), ...statusFilter(filters) }) as Prisma.DocumentWhereInput, include: { clause: true, process: true, owner: true }, orderBy: { code: "asc" } })).map(item => ({ codigo: item.code, titulo: item.title, tipo: item.type, norma: item.standardCode, clausula: item.clause?.code ?? "", proceso: item.process?.name ?? "", responsable: item.owner?.name ?? "", version: item.currentVersion, estado: item.status, revision: rowDate(item.reviewDate) }));
   if (reportId === "risks") return (await prisma.risk.findMany({ where: ({ organizationId, createdAt: range, ...statusFilter(filters) }) as Prisma.RiskWhereInput, include: { process: true }, orderBy: [{ score: "desc" }, { createdAt: "desc" }] })).map(item => ({ titulo: item.title, categoria: item.category, proceso: item.process?.name ?? "", probabilidad: item.probability, impacto: item.impact, score: item.score, tratamiento: item.treatment, estado: item.status, vencimiento: rowDate(item.dueDate) }));
-  if (reportId === "audit-program") return (await prisma.auditProgram.findMany({ where: ({ organizationId, createdAt: range, ...statusFilter(filters), ...(filters.recordId ? { id: filters.recordId } : {}) }) as Prisma.AuditProgramWhereInput, include: { audits: { include: { process: true }, orderBy: { plannedDate: "asc" } } }, orderBy: [{ year: "desc" }, { title: "asc" }] })).flatMap(program => program.audits.length ? program.audits.map(audit => ({ programa: `${program.year} · ${program.title}`, auditoria: audit.title, proceso: audit.process?.name ?? "", norma: audit.standardCode ?? "", fecha: rowDate(audit.plannedDate), auditor: audit.auditorId ?? "", estado: String(audit.status) })) : [{ programa: `${program.year} · ${program.title}`, auditoria: "Sin auditorías planificadas", proceso: "", norma: "", fecha: "", auditor: "", estado: String(program.status) }]);
+  if (reportId === "audit-program") {
+    // El plan de auditoría se lee por franjas —proceso, día y hora—, así que la
+    // fila lleva la hora junto a la fecha y el auditor por su nombre: hasta
+    // ahora salía el id de usuario, ilegible en el PDF que se entrega.
+    const [programs, names] = await Promise.all([
+      prisma.auditProgram.findMany({ where: ({ organizationId, createdAt: range, ...statusFilter(filters), ...(filters.recordId ? { id: filters.recordId } : {}) }) as Prisma.AuditProgramWhereInput, include: { audits: { include: { process: true }, orderBy: [{ plannedDate: "asc" }, { startDate: "asc" }] } }, orderBy: [{ year: "desc" }, { title: "asc" }] }),
+      orgUserNames(organizationId),
+    ]);
+    return programs.flatMap(program => program.audits.length
+      ? program.audits.map(audit => ({ programa: `${program.year} · ${program.title}`, auditoria: audit.title, proceso: audit.process?.name ?? "", norma: audit.standardCode ?? "", fecha: rowDate(audit.plannedDate), horario: rowSlot(audit.startDate, audit.endDate, filters.timeZone), auditor: audit.auditorId ? names.get(audit.auditorId) ?? "" : "", estado: String(audit.status) }))
+      : [{ programa: `${program.year} · ${program.title}`, auditoria: "Sin auditorías planificadas", proceso: "", norma: "", fecha: "", horario: "", auditor: "", estado: String(program.status) }]);
+  }
   if (reportId === "audit") return (await prisma.audit.findMany({ where: ({ organizationId, createdAt: range, ...dateFilter(filters), ...statusFilter(filters), ...(filters.recordId ? { id: filters.recordId } : {}) }) as Prisma.AuditWhereInput, include: { process: true, _count: { select: { findings: true, nonconformities: true, checklistItems: true } } }, orderBy: { createdAt: "desc" } })).map(item => ({ auditoria: item.title, tipo: item.type, proceso: item.process?.name ?? "", norma: item.standardCode ?? "", estado: item.status, inicio: rowDate(item.startDate), fin: rowDate(item.endDate), hallazgos: item._count.findings, no_conformidades: item._count.nonconformities, checklist: item._count.checklistItems, informe: item.reportUrl ?? "" }));
   if (reportId === "capa") return (await prisma.cAPA.findMany({ where: ({ organizationId, createdAt: range, ...dateFilter(filters), ...statusFilter(filters), ...(filters.ownerId ? { ownerId: filters.ownerId } : {}) }) as Prisma.CAPAWhereInput, include: { owner: true, nonconformity: true }, orderBy: { createdAt: "desc" } })).map(item => ({ codigo: item.code, titulo: item.title, origen: item.origin, severidad: item.severity, prioridad: item.priority, etapa: item.stage, responsable: item.owner?.name ?? "", no_conformidad: item.nonconformity?.title ?? "", vence: rowDate(item.dueDate), avance: item.progress }));
   if (reportId === "actions") return (await prisma.action.findMany({ where: ({ organizationId, createdAt: range, ...statusFilter(filters) }) as Prisma.ActionWhereInput, orderBy: { createdAt: "desc" } })).map(item => ({ titulo: item.title, tipo: item.type, prioridad: item.priority, origen: item.source ?? "", etapa: item.stage, estado: item.status, vence: rowDate(item.dueDate), avance: item.progress }));

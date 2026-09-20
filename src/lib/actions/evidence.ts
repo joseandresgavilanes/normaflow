@@ -19,6 +19,7 @@ export type EvidenceLinksInput = {
   documentIds?: string[];
   riskIds?: string[];
   auditIds?: string[];
+  auditProgramIds?: string[];
   findingIds?: string[];
   nonconformityIds?: string[];
   indicatorIds?: string[];
@@ -83,7 +84,7 @@ async function assertEvidenceReferences(input: {
   links?: EvidenceLinksInput;
 }) {
   const { organizationId, links } = input;
-  const [process, clause, responsible, standard, documentCount, riskCount, auditCount, findingCount, nonconformityCount, indicatorCount, managementReviewCount] = await Promise.all([
+  const [process, clause, responsible, standard, documentCount, riskCount, auditCount, auditProgramCount, findingCount, nonconformityCount, indicatorCount, managementReviewCount] = await Promise.all([
     input.processId ? prisma.process.findFirst({ where: { id: input.processId, organizationId }, select: { id: true } }) : null,
     input.clauseId ? prisma.standardRequirement.findFirst({ where: { id: input.clauseId, standard: { ...(input.standardCode ? { code: input.standardCode } : {}), orgStandards: { some: { organizationId } } } }, select: { id: true, standard: { select: { code: true } } } }) : null,
     input.responsibleId ? prisma.membership.findFirst({ where: { organizationId, userId: input.responsibleId, active: true }, select: { userId: true } }) : null,
@@ -91,6 +92,7 @@ async function assertEvidenceReferences(input: {
     links?.documentIds?.length ? prisma.document.count({ where: { organizationId, id: { in: uniqueIds(links.documentIds) } } }) : 0,
     links?.riskIds?.length ? prisma.risk.count({ where: { organizationId, id: { in: uniqueIds(links.riskIds) } } }) : 0,
     links?.auditIds?.length ? prisma.audit.count({ where: { organizationId, id: { in: uniqueIds(links.auditIds) } } }) : 0,
+    links?.auditProgramIds?.length ? prisma.auditProgram.count({ where: { organizationId, id: { in: uniqueIds(links.auditProgramIds) } } }) : 0,
     links?.findingIds?.length ? prisma.auditFinding.count({ where: { id: { in: uniqueIds(links.findingIds) }, audit: { organizationId } } }) : 0,
     links?.nonconformityIds?.length ? prisma.nonconformity.count({ where: { organizationId, id: { in: uniqueIds(links.nonconformityIds) } } }) : 0,
     links?.indicatorIds?.length ? prisma.indicator.count({ where: { organizationId, id: { in: uniqueIds(links.indicatorIds) } } }) : 0,
@@ -106,6 +108,7 @@ async function assertEvidenceReferences(input: {
     [links?.documentIds, documentCount, "documentos"],
     [links?.riskIds, riskCount, "riesgos"],
     [links?.auditIds, auditCount, "auditorías"],
+    [links?.auditProgramIds, auditProgramCount, "programas de auditoría"],
     [links?.findingIds, findingCount, "hallazgos"],
     [links?.nonconformityIds, nonconformityCount, "no conformidades"],
     [links?.indicatorIds, indicatorCount, "indicadores"],
@@ -131,6 +134,7 @@ async function assertCollaboratorLinks(ctx: Awaited<ReturnType<typeof requireAut
     if (!finding || !scope.auditIds.includes(finding.auditId)) throw new Error("No tienes acceso al hallazgo vinculado.");
   }
   if (uniqueIds(input.links?.managementReviewIds).length) throw new Error("Los colaboradores no pueden vincular evidencia a revisiones por dirección.");
+  if (uniqueIds(input.links?.auditProgramIds).length) throw new Error("Los colaboradores no pueden vincular evidencia al programa de auditorías.");
 }
 
 function linkData(evidenceId: string, organizationId: string, createdById: string, links: EvidenceLinksInput | undefined) {
@@ -139,6 +143,7 @@ function linkData(evidenceId: string, organizationId: string, createdById: strin
     document: uniqueIds(links?.documentIds).map((documentId) => ({ ...base, documentId })),
     risk: uniqueIds(links?.riskIds).map((riskId) => ({ ...base, riskId })),
     audit: uniqueIds(links?.auditIds).map((auditId) => ({ ...base, auditId })),
+    auditProgram: uniqueIds(links?.auditProgramIds).map((programId) => ({ ...base, programId })),
     finding: uniqueIds(links?.findingIds).map((findingId) => ({ ...base, findingId })),
     nonconformity: uniqueIds(links?.nonconformityIds).map((nonconformityId) => ({ ...base, nonconformityId })),
     indicator: uniqueIds(links?.indicatorIds).map((indicatorId) => ({ ...base, indicatorId })),
@@ -152,6 +157,7 @@ async function replaceLinks(tx: Prisma.TransactionClient, evidenceId: string, or
     tx.evidenceDocumentLink.deleteMany({ where: { evidenceId } }),
     tx.evidenceRiskLink.deleteMany({ where: { evidenceId } }),
     tx.evidenceAuditLink.deleteMany({ where: { evidenceId } }),
+    tx.evidenceAuditProgramLink.deleteMany({ where: { evidenceId } }),
     tx.evidenceFindingLink.deleteMany({ where: { evidenceId } }),
     tx.evidenceNonconformityLink.deleteMany({ where: { evidenceId } }),
     tx.evidenceIndicatorLink.deleteMany({ where: { evidenceId } }),
@@ -161,6 +167,7 @@ async function replaceLinks(tx: Prisma.TransactionClient, evidenceId: string, or
     data.document.length && tx.evidenceDocumentLink.createMany({ data: data.document }),
     data.risk.length && tx.evidenceRiskLink.createMany({ data: data.risk }),
     data.audit.length && tx.evidenceAuditLink.createMany({ data: data.audit }),
+    data.auditProgram.length && tx.evidenceAuditProgramLink.createMany({ data: data.auditProgram }),
     data.finding.length && tx.evidenceFindingLink.createMany({ data: data.finding }),
     data.nonconformity.length && tx.evidenceNonconformityLink.createMany({ data: data.nonconformity }),
     data.indicator.length && tx.evidenceIndicatorLink.createMany({ data: data.indicator }),

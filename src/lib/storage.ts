@@ -235,6 +235,38 @@ export async function uploadRecordFile(args: {
   return { path, size: file.size, mime: validated.mime, fileName: file.name.slice(0, 255) };
 }
 
+/**
+ * Formato del registro: el impreso en blanco, no una entrada rellenada.
+ *
+ * Va bajo `formats/` y no bajo la carpeta de una entrada porque no pertenece a
+ * ninguna: es la plantilla común, y mezclarlas haría imposible saber qué se
+ * puede purgar cuando una entrada se borra.
+ */
+export async function uploadRecordFormatFile(args: {
+  organizationId: string;
+  recordId: string;
+  version: string;
+  file: { name: string; type: string; size: number; arrayBuffer: () => Promise<ArrayBuffer> };
+}): Promise<{ path: string; size: number; mime: string; fileName: string }> {
+  const { file } = args;
+  const validated = await validateDocumentFile(file);
+  await assertStorageQuota(args.organizationId, file.size);
+  const supabase = getSupabaseAdmin();
+  if (!supabase) throw new StorageError("Supabase no está configurado en este entorno.");
+  const fileName = safeFilename(file.name) || "formato";
+  const path = `org-${args.organizationId}/records/${args.recordId}/formats/${args.version}/${Date.now()}-${fileName}`;
+  const { error } = await supabase.storage.from(DOCUMENTS_BUCKET).upload(path, validated.buffer, {
+    contentType: validated.mime,
+    upsert: false,
+    cacheControl: "3600",
+  });
+  if (error) {
+    await releaseStorageQuota(args.organizationId, file.size).catch(() => undefined);
+    throw new StorageError(`No se pudo subir el formato del registro: ${error.message}`, error);
+  }
+  return { path, size: file.size, mime: validated.mime, fileName: file.name.slice(0, 255) };
+}
+
 export function createSignedRecordUrl(path: string, organizationId: string, expiresInSeconds = 300) {
   return createSignedDownloadUrl(path, organizationId, expiresInSeconds);
 }

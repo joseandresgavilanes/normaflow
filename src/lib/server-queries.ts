@@ -353,6 +353,22 @@ export async function getDocumentsPayload() {
     permissions.push(...membership.group.permissions.map((permission) => permission.permission));
     groupPermissionsByUser.set(membership.userId, permissions);
   }
+  /* La ficha de Personal conserva las responsabilidades documentales, pero la
+     capacidad de aprobar vive en la membresía. Las unimos por correo solo en
+     el servidor: así el formulario puede nombrar a la persona correcta con el
+     nombre de su cuenta, sin exponer el correo a un contribuidor. */
+  const approverByEmail = new Map<string, { userId: string; name: string }>();
+  for (const membership of members) {
+    if (!roleOrGroupCan(membership.role, groupPermissionsByUser.get(membership.userId) ?? [], "documents:approve")) continue;
+    const email = membership.user.email.trim().toLowerCase();
+    if (email) approverByEmail.set(email, { userId: membership.userId, name: membership.user.name });
+  }
+  const approvalAccountByPersonnelId = new Map(
+    personnel.map((person) => [
+      person.id,
+      person.email ? approverByEmail.get(person.email.trim().toLowerCase()) ?? null : null,
+    ]),
+  );
   const memberNames = new Map(members.map((membership) => [membership.userId, membership.user.name]));
   const processNames = new Map(processes.map((process) => [process.id, process]));
   const clauseNames = new Map(clauses.map((clause) => [clause.id, clause]));
@@ -398,6 +414,9 @@ export async function getDocumentsPayload() {
       physicalLocation: d.physicalLocation,
       responsibleElaborationId: d.responsibleElaborationId,
       responsibleApprovalId: d.responsibleApprovalId,
+      responsibleApprovalUserId: d.responsibleApprovalId
+        ? approvalAccountByPersonnelId.get(d.responsibleApprovalId)?.userId ?? null
+        : null,
       custodianId: d.custodianId,
       createdAt: d.createdAt.toISOString(),
       updatedAt: d.updatedAt.toISOString(),
@@ -430,15 +449,27 @@ export async function getDocumentsPayload() {
         createdAt: a.createdAt.toISOString(),
       })),
     })),
-    locations: scope.isScoped ? [] : locations,
+    /* El selector «Ubicación / sede» del formulario sale de aquí, igual que el
+       de personal de abajo: vaciarlo por alcance dejaba al contribuidor sin
+       poder elegir sede en un documento que sí puede crear. El nombre de una
+       sede no es dato reservado, y el alcance del colaborador no distingue por
+       ubicación —no hay `locationIds`—, así que vaciarlo no protegía nada. */
+    locations,
     /* Los selectores de custodio, elaboración y aprobación de la ficha del
        documento salen de aquí: vaciarla por alcance dejaba el formulario a
        medias para el contribuidor. Va el nombre, que es lo que un selector
        necesita, y no el correo, que es dato de contacto. */
-    personnel: personnel.map((person) => ({
-      ...person,
-      email: scope.isScoped ? null : person.email,
-    })),
+    personnel: personnel.map((person) => {
+      const approver = approvalAccountByPersonnelId.get(person.id);
+      return {
+        ...person,
+        email: scope.isScoped ? null : person.email,
+        // Solo los responsables de aprobación necesitan esta identidad. El
+        // nombre es información de directorio; no se envía el correo.
+        approvalUserId: approver?.userId ?? null,
+        approvalUserName: approver?.name ?? null,
+      };
+    }),
     processes: canCreate ? processes : [],
     standards: standards.map((item) => item.standard),
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
@@ -709,7 +740,10 @@ export async function getRisksPayload() {
   const canReadActions = can("actions:read");
   const [risks, processes, members] = await Promise.all([
     prisma.risk.findMany({
-      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) },
+      /* Incluimos explícitamente los riesgos propios. El alcance también los
+         calcula, pero esta condición hace que un alta recién creada por un
+         contribuidor no dependa de una lista de alcance previa o desfasada. */
+      where: { organizationId, ...(scope.isScoped ? { OR: [{ id: { in: scope.riskIds } }, { ownerId: ctx.user.id }] } : {}) },
       include: {
         controls: { orderBy: { createdAt: "desc" } },
         ...(canReadActions ? { _count: { select: { actions: true } } } : {}),
@@ -735,6 +769,11 @@ export async function getRisksPayload() {
       score: risk.score,
       status: risk.status,
       treatment: risk.treatment,
+      /* La decisión, no solo la etiqueta: la ficha tiene que poder enseñar por
+         qué se trata así, quién lo decidió y cuándo. */
+      treatmentJustification: risk.treatmentJustification,
+      treatmentDecidedAt: risk.treatmentDecidedAt?.toISOString() ?? null,
+      treatmentDecidedByName: risk.treatmentDecidedById ? memberNames.get(risk.treatmentDecidedById) ?? null : null,
       ownerId: risk.ownerId,
       ownerName: risk.ownerId ? memberNames.get(risk.ownerId) ?? null : null,
       processId: risk.processId,
@@ -758,11 +797,15 @@ export async function getOpportunitiesPayload() {
   const { ctx, can } = await requireAuthorization("opportunities:read");
   assertPlanModule(ctx, "opportunities");
   const organizationId = ctx.organization.id;
-  const scope = await getCollaboratorScope(ctx);
   const canManage = can("opportunities:create") || can("opportunities:update");
   const [opportunities, members] = await Promise.all([
     prisma.opportunity.findMany({
-      where: { organizationId, ...(scope.isScoped ? { id: { in: scope.opportunityIds } } : {}) },
+      /* Las oportunidades son parte del contexto de cumplimiento común de la
+         organización. Un contribuidor puede consultarlas para identificar
+         mejoras y su seguimiento, aunque no sea su responsable o revisor.
+         Las acciones de crear, editar, aprobar y cerrar siguen protegidas por
+         sus permisos específicos. */
+      where: { organizationId },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
     }),
     getOrganizationMembers(organizationId),
@@ -794,6 +837,8 @@ export async function getOpportunitiesPayload() {
       dueDate: opportunity.dueDate?.toISOString() ?? null,
       materializedAt: opportunity.materializedAt?.toISOString() ?? null,
       closedAt: opportunity.closedAt?.toISOString() ?? null,
+      /* Quién firmó que se cumplió: sin eso, «Cerrada» no dice quién lo comprobó. */
+      closedByName: opportunity.closedById ? memberNames.get(opportunity.closedById) ?? null : null,
       rejectionReason: opportunity.rejectionReason,
       createdAt: opportunity.createdAt.toISOString(),
       updatedAt: opportunity.updatedAt.toISOString(),
@@ -816,8 +861,8 @@ export async function getAuditsPayload() {
         closedBy: { select: { id: true, name: true } },
         participants: { include: { user: { select: { id: true, name: true } } } },
         evidenceLinks: { include: { evidence: { select: { id: true, title: true, evidenceType: true, fileUrl: true } } } },
-        checklistItems: { orderBy: [{ order: "asc" }, { createdAt: "asc" }], include: { clause: { select: { id: true, code: true, title: true } } } },
-        findings: { orderBy: { createdAt: "desc" }, include: { capa: { select: { id: true, code: true, stage: true } } } },
+        checklistItems: { orderBy: [{ order: "asc" }, { createdAt: "asc" }], include: { clause: { select: { id: true, code: true, title: true } }, evidence: { select: { id: true, title: true } } } },
+        findings: { orderBy: { createdAt: "desc" }, include: { capa: { select: { id: true, code: true, stage: true } }, evidenceLinks: { include: { evidence: { select: { id: true, title: true } } } } } },
         ...(canReadNonconformities ? { _count: { select: { nonconformities: true } } } : {}),
       },
       orderBy: [{ plannedDate: "desc" }, { scheduledDate: "desc" }, { createdAt: "desc" }],
@@ -870,9 +915,10 @@ export async function getAuditsPayload() {
       checklistItems: audit.checklistItems.map((item) => ({
         ...item,
         clauseName: item.clause?.title ?? null,
+        evidenceTitle: item.evidence?.title ?? null,
         createdAt: item.createdAt.toISOString(),
       })),
-      findings: audit.findings.map((finding) => ({ ...finding, capaId: finding.capa?.id ?? null, capaCode: finding.capa?.code ?? null, capaStage: finding.capa?.stage ?? null, createdAt: finding.createdAt.toISOString(), updatedAt: finding.updatedAt.toISOString() })),
+      findings: audit.findings.map((finding) => ({ ...finding, capaId: finding.capa?.id ?? null, capaCode: finding.capa?.code ?? null, capaStage: finding.capa?.stage ?? null, evidenceTitles: finding.evidenceLinks.map((link) => link.evidence.title), createdAt: finding.createdAt.toISOString(), updatedAt: finding.updatedAt.toISOString() })),
       nonconformityCount: canReadNonconformities && "_count" in audit ? audit._count.nonconformities : 0,
       createdAt: audit.createdAt.toISOString(),
       updatedAt: audit.updatedAt.toISOString(),
@@ -997,7 +1043,7 @@ export async function getEvidencePayload() {
     ...(scope.nonconformityIds.length ? [{ nonconformityLinks: { some: { nonconformityId: { in: scope.nonconformityIds } } } }] : []),
     ...(scope.indicatorIds.length ? [{ indicatorLinks: { some: { indicatorId: { in: scope.indicatorIds } } } }] : []),
   ] : [];
-  const [evidence, processes, risks, audits, findings, nonconformities, indicators, documents, reviews, clauses, standards, members] = await Promise.all([
+  const [evidence, processes, risks, audits, auditPrograms, findings, nonconformities, indicators, documents, reviews, clauses, standards, members] = await Promise.all([
     prisma.evidenceFile.findMany({
       where: { organizationId, deletedAt: null, ...(scope.isScoped ? { OR: [{ uploadedById: ctx.user.id }, ...visibleEvidenceTargets] } : {}) },
       include: {
@@ -1009,6 +1055,7 @@ export async function getEvidencePayload() {
         documentLinks: { include: { document: { select: { id: true, code: true, title: true } } } },
         riskLinks: { include: { risk: { select: { id: true, title: true } } } },
         auditLinks: { include: { audit: { select: { id: true, title: true } } } },
+        auditProgramLinks: { include: { program: { select: { id: true, year: true, title: true } } } },
         findingLinks: { include: { finding: { select: { id: true, title: true } } } },
         nonconformityLinks: { include: { nonconformity: { select: { id: true, title: true } } } },
         indicatorLinks: { include: { indicator: { select: { id: true, name: true } } } },
@@ -1019,6 +1066,7 @@ export async function getEvidencePayload() {
     can("processes:read") ? prisma.process.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.processIds } } : {}) }, select: { id: true, name: true, code: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
     can("risks:read") ? prisma.risk.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.riskIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
     can("audits:read") ? prisma.audit.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
+    can("audit-program:read") && !scope.isScoped ? prisma.auditProgram.findMany({ where: { organizationId }, select: { id: true, year: true, title: true }, orderBy: [{ year: "desc" }, { title: "asc" }] }) : Promise.resolve([]),
     can("audits:read") ? prisma.auditFinding.findMany({ where: { audit: { organizationId, ...(scope.isScoped ? { id: { in: scope.auditIds } } : {}) } }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
     can("nc:read") ? prisma.nonconformity.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.nonconformityIds } } : {}) }, select: { id: true, title: true }, orderBy: { title: "asc" } }) : Promise.resolve([]),
     can("indicators:read") ? prisma.indicator.findMany({ where: { organizationId, ...(scope.isScoped ? { id: { in: scope.indicatorIds } } : {}) }, select: { id: true, name: true }, orderBy: { name: "asc" } }) : Promise.resolve([]),
@@ -1032,6 +1080,7 @@ export async function getEvidencePayload() {
     process: processes.map((item) => ({ id: item.id, label: `${item.code ?? "PROC"} · ${item.name}` })),
     risk: risks.map((item) => ({ id: item.id, label: item.title })),
     audit: audits.map((item) => ({ id: item.id, label: item.title })),
+    auditProgram: auditPrograms.map((item) => ({ id: item.id, label: `${item.year} · ${item.title}` })),
     finding: findings.map((item) => ({ id: item.id, label: item.title })),
     nc: nonconformities.map((item) => ({ id: item.id, label: item.title })),
     indicator: indicators.map((item) => ({ id: item.id, label: item.name })),
@@ -1080,6 +1129,8 @@ export async function getEvidencePayload() {
       riskLabels: item.riskLinks.map((link) => link.risk.title),
       auditIds: item.auditLinks.map((link) => link.auditId),
       auditLabels: item.auditLinks.map((link) => link.audit.title),
+      auditProgramIds: item.auditProgramLinks.map((link) => link.programId),
+      auditProgramLabels: item.auditProgramLinks.map((link) => `${link.program.year} · ${link.program.title}`),
       findingIds: item.findingLinks.map((link) => link.findingId),
       findingLabels: item.findingLinks.map((link) => link.finding.title),
       nonconformityIds: item.nonconformityLinks.map((link) => link.nonconformityId),
@@ -1089,7 +1140,7 @@ export async function getEvidencePayload() {
       managementReviewIds: item.managementReviewLinks.map((link) => link.managementReviewId),
       managementReviewLabels: item.managementReviewLinks.map((link) => link.managementReview.title),
     })),
-    targets: canManage ? targets : { process: [], risk: [], audit: [], finding: [], nc: [], indicator: [], document: [], managementReview: [], change: [], supplier: [], integration: [] },
+    targets: canManage ? targets : { process: [], risk: [], audit: [], auditProgram: [], finding: [], nc: [], indicator: [], document: [], managementReview: [], change: [], supplier: [], integration: [] },
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
     standards: standards.map((item) => item.standard),
     members: directoryPayload(memberAccessFor(can), members.map((membership) => ({ id: membership.user.id, name: membership.user.name, email: membership.user.email, role: membership.role }))),
@@ -1350,6 +1401,11 @@ export async function getAdminPayload() {
   const canReadLocations = can("locations:read");
   const canReadCatalogs = can("catalogs:read");
   const canReadRecords = can("records:read");
+  /* Estos catálogos no dan acceso a la administración de catálogos; son las
+     opciones necesarias para completar el alta de un registro. Un
+     contribuidor puede crear registros aunque su grupo haya retirado
+     `catalogs:read`, y sin esta excepción el selector de tipo quedaba vacío. */
+  const canUseRecordCatalogs = canReadCatalogs || can("records:create") || can("records:update");
   const canReadProcesses = can("processes:read");
   const canReadActions = can("actions:read");
   const recordsScopedToAssignedProcess = scope.isScoped;
@@ -1391,15 +1447,16 @@ export async function getAdminPayload() {
     canReadPositions ? prisma.position.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadPersonnel ? prisma.personnel.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { lastName: "asc" }] }) : Promise.resolve([]),
     canReadLocations ? prisma.location.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadCatalogs ? prisma.retentionTime.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { months: "asc" }] }) : Promise.resolve([]),
-    canReadCatalogs ? prisma.disposition.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadCatalogs ? prisma.archiveMethod.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadCatalogs ? prisma.recordType.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canUseRecordCatalogs ? prisma.retentionTime.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { months: "asc" }] }) : Promise.resolve([]),
+    canUseRecordCatalogs ? prisma.disposition.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canUseRecordCatalogs ? prisma.archiveMethod.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
+    canUseRecordCatalogs ? prisma.recordType.findMany({ where: { organizationId }, orderBy: [{ active: "desc" }, { name: "asc" }] }) : Promise.resolve([]),
     canReadRecords ? prisma.standardRequirement.findMany({ where: { standard: { orgStandards: { some: { organizationId } } } }, select: { id: true, code: true, title: true, standard: { select: { code: true, name: true } } }, orderBy: [{ standard: { code: "asc" } }, { order: "asc" }] }) : Promise.resolve([]),
     canReadRecords && canReadProcesses ? prisma.process.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.processIds } } : {}) }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
-    canReadRecords ? prisma.record.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }) : Promise.resolve([]),
+    canReadRecords ? prisma.record.findMany({ where: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) }, include: { formatVersions: { orderBy: [{ createdAt: "desc" }, { id: "desc" }] } }, orderBy: [{ active: "desc" }, { createdAt: "desc" }] }) : Promise.resolve([]),
     canReadRecords ? prisma.recordEntry.findMany({
       where: { record: { organizationId, ...(recordsScopedToAssignedProcess ? { id: { in: scope.recordIds } } : {}) } },
+      include: { attachments: { orderBy: { version: "desc" } } },
       orderBy: { enteredAt: "desc" },
     }) : Promise.resolve([]),
     canReadActions ? prisma.action.findMany({
@@ -1490,7 +1547,13 @@ export async function getAdminPayload() {
       createdAt: item.createdAt.toISOString(),
       updatedAt: item.updatedAt.toISOString(),
     })),
-    positions: (scope.isScoped ? [] : positions).map((p) => ({
+    /* Catálogos, no registros. El alcance del colaborador acota los registros
+       de los que alguien responde, no los valores que puede elegir al
+       rellenarlos: vaciarlos dejaba al contribuidor con «Tipo registro»,
+       «Tiempo de retención», «Disposición» y «Método de archivo» en blanco en
+       un formulario que sí tiene permiso para enviar. Mismo criterio que ya se
+       aplicaba a los miembros y al personal, unas líneas más arriba. */
+    positions: positions.map((p) => ({
       id: p.id,
       name: p.name,
       description: p.description,
@@ -1514,33 +1577,33 @@ export async function getAdminPayload() {
       hiredAt: scope.isScoped ? null : p.hiredAt?.toISOString() ?? null,
       createdAt: p.createdAt.toISOString(),
     })),
-    locations: (scope.isScoped ? [] : locations).map((l) => ({
+    locations: locations.map((l) => ({
       id: l.id,
       name: l.name,
       description: l.description,
       active: l.active,
       createdAt: l.createdAt.toISOString(),
     })),
-    retentionTimes: (scope.isScoped ? [] : retentionTimes).map((r) => ({
+    retentionTimes: retentionTimes.map((r) => ({
       id: r.id,
       name: r.name,
       months: r.months,
       active: r.active,
       createdAt: r.createdAt.toISOString(),
     })),
-    dispositions: (scope.isScoped ? [] : dispositions).map((d) => ({
+    dispositions: dispositions.map((d) => ({
       id: d.id,
       name: d.name,
       active: d.active,
       createdAt: d.createdAt.toISOString(),
     })),
-    archiveMethods: (scope.isScoped ? [] : archiveMethods).map((a) => ({
+    archiveMethods: archiveMethods.map((a) => ({
       id: a.id,
       name: a.name,
       active: a.active,
       createdAt: a.createdAt.toISOString(),
     })),
-    recordTypes: (scope.isScoped ? [] : recordTypes).map((t) => ({
+    recordTypes: recordTypes.map((t) => ({
       id: t.id,
       code: t.code,
       name: t.name,
@@ -1570,6 +1633,20 @@ export async function getAdminPayload() {
       active: r.active,
       createdAt: r.createdAt.toISOString(),
       lastEntryAt: lastEntryAtByRecord.get(r.id) ?? null,
+      currentFormatVersion: r.currentFormatVersion,
+      formatVersions: r.formatVersions.map((v) => ({
+        id: v.id,
+        version: v.version,
+        status: v.status,
+        changeDescription: v.changeDescription,
+        previousVersion: v.previousVersion,
+        fileName: v.fileName,
+        hasFile: Boolean(v.fileUrl),
+        fileSize: v.fileSize,
+        mimeType: v.mimeType,
+        createdById: v.createdById,
+        createdAt: v.createdAt.toISOString(),
+      })),
     })),
     recordEntries: recordEntries.map((e) => ({
       id: e.id,
@@ -1586,6 +1663,16 @@ export async function getAdminPayload() {
       status: e.status,
       responsibleId: e.responsibleId,
       enteredAt: e.enteredAt.toISOString(),
+      attachments: e.attachments.map((a) => ({
+        id: a.id,
+        version: a.version,
+        fileName: a.fileName,
+        fileSize: a.fileSize,
+        mimeType: a.mimeType,
+        uploadedById: a.uploadedById,
+        uploadedAt: a.uploadedAt.toISOString(),
+        supersededAt: a.supersededAt?.toISOString() ?? null,
+      })),
     })),
     clauses: clauses.map((clause) => ({ id: clause.id, code: clause.code, title: clause.title, standardCode: clause.standard.code, standardName: clause.standard.name })),
     acpms: actions.map((a, idx) => {
@@ -1924,13 +2011,14 @@ export async function getAuditProgramPayload() {
   const { ctx, can } = await requireAuthorization("audit-program:read");
   const organizationId = ctx.organization.id;
   const canManage = can("audit-program:*");
-  const [programs, members, processes, standards] = await Promise.all([
+  const [programs, members, processes, standards, evidenceFiles] = await Promise.all([
     prisma.auditProgram.findMany({
       where: { organizationId },
       include: {
         responsible: { select: { id: true, name: true } },
+        evidenceLinks: { include: { evidence: { select: { id: true, title: true, evidenceType: true } } } },
         audits: {
-          select: { id: true, title: true, status: true, progress: true, plannedDate: true, scheduledDate: true, type: true, processId: true, process: { select: { id: true, code: true, name: true } }, auditorId: true },
+          select: { id: true, title: true, status: true, progress: true, plannedDate: true, scheduledDate: true, startDate: true, endDate: true, type: true, processId: true, process: { select: { id: true, code: true, name: true } }, auditorId: true, _count: { select: { findings: true, nonconformities: true } } },
           orderBy: [{ plannedDate: "asc" }, { scheduledDate: "asc" }, { createdAt: "asc" }],
         },
       },
@@ -1939,10 +2027,12 @@ export async function getAuditProgramPayload() {
     getOrganizationMembers(organizationId),
     canManage ? prisma.process.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: [{ code: "asc" }, { name: "asc" }] }) : Promise.resolve([]),
     prisma.organizationStandard.findMany({ where: { organizationId }, select: { standard: { select: { code: true, name: true, version: true } } } }),
+    canManage && can("evidence:read") ? prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true, evidenceType: true }, orderBy: { createdAt: "desc" }, take: 500 }) : Promise.resolve([]),
   ]);
   const memberNames = new Map(members.map(m => [m.id, m.name]));
   return {
     access: { canManage, canExport: can("audit-program:export") },
+    evidenceFiles,
     members: canManage && can("members:directory") ? members : [],
     processes,
     standards: standards.map((row) => row.standard),
@@ -1950,6 +2040,14 @@ export async function getAuditProgramPayload() {
       const total = p.audits.length;
       const completed = p.audits.filter(a => a.status === "COMPLETED").length;
       const avgProgress = total ? Math.round(p.audits.reduce((s, a) => s + a.progress, 0) / total) : 0;
+      const approvalGaps = [
+        !p.objectives?.trim() ? "objetivos" : null,
+        !p.scope?.trim() ? "alcance" : null,
+        !p.standards.length ? "normas incluidas" : null,
+        !p.criteria?.trim() ? "criterios de auditoría" : null,
+        !p.responsibleId ? "responsable del programa" : null,
+        total === 0 ? "al menos una auditoría planificada" : null,
+      ].filter((item): item is string => Boolean(item));
       return {
         id: p.id,
         year: p.year,
@@ -1967,6 +2065,7 @@ export async function getAuditProgramPayload() {
         auditCount: total,
         completedCount: completed,
         avgProgress,
+        approvalGaps,
         audits: p.audits.map(a => ({
           id: a.id,
           title: a.title,
@@ -1975,11 +2074,20 @@ export async function getAuditProgramPayload() {
           type: a.type,
           plannedDate: a.plannedDate?.toISOString() ?? null,
           scheduledDate: a.scheduledDate?.toISOString() ?? null,
+          startDate: a.startDate?.toISOString() ?? null,
+          endDate: a.endDate?.toISOString() ?? null,
           processId: a.processId,
           processName: a.process?.name ?? null,
           processCode: a.process?.code ?? null,
           auditorId: a.auditorId,
+          auditorName: a.auditorId ? memberNames.get(a.auditorId) ?? null : null,
+          /* Adónde va la información del programa: cada auditoría arrastra sus
+             hallazgos y las no conformidades que salieron de ellos. Sin esto el
+             programa era una lista de títulos y no había forma de seguirlo. */
+          findingCount: a._count.findings,
+          nonconformityCount: a._count.nonconformities,
         })),
+        evidenceLinks: p.evidenceLinks.map((link) => ({ id: link.evidence.id, title: link.evidence.title, evidenceType: link.evidence.evidenceType })),
       };
     }),
   };

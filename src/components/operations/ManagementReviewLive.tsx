@@ -18,6 +18,7 @@ import {
   linkReviewEvidence,
   exportManagementReview,
 } from "@/lib/actions/management-review";
+import { unwrapAction } from "@/lib/actions/unwrap";
 import type { ManagementReviewPayload } from "@/lib/server-queries";
 import { downloadQueuedReport } from "@/components/reporting/ReportArtifactDownload";
 import { formatDate } from "@/lib/format/datetime";
@@ -77,6 +78,21 @@ function fmtDate(iso: string | null) {
   return iso ? formatDate(iso) : "—";
 }
 
+/**
+ * Lo que la cláusula 9.3 exige antes de dar una revisión por cerrada.
+ *
+ * Es la misma lista que comprueba el servidor, adelantada a la ficha: cerrar y
+ * que rebote —«sin entradas documentadas»— obliga a leer un error para
+ * enterarse de algo que se puede ver de un vistazo antes de pulsar.
+ */
+function closeBlockers(review: ReviewRow): string[] {
+  const pending: string[] = [];
+  if (!review.inputs.length) pending.push("registra al menos una entrada (9.3.2)");
+  if (!review.decisions.length) pending.push("registra al menos una decisión o acción (9.3.3)");
+  if (!review.summary?.trim()) pending.push("documenta las conclusiones");
+  return pending;
+}
+
 export function ManagementReviewLive({ initial }: { initial: ManagementReviewPayload }) {
   const { run, isPending, error, setError, success } = useServerAction();
   const canManage = initial.access.canManage;
@@ -108,6 +124,16 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
   function advance(row: ReviewRow) {
     const next = NEXT_STATUS[row.status];
     if (!next) return;
+    // Evita invocar la Server Action cuando el cierre todavía no cumple 9.3.
+    // Además de ser más claro, impide que una validación de negocio acabe
+    // convertida por Next en un error genérico de render en producción.
+    if (next === "COMPLETED") {
+      const blockers = closeBlockers(row);
+      if (blockers.length) {
+        setError(`Para cerrar la revisión falta: ${blockers.join("; ")}.`);
+        return;
+      }
+    }
     run(() => updateManagementReview(row.id, { title: row.title, status: next }), {
       successMessage: next === "COMPLETED" ? "Revisión cerrada." : "Revisión en curso.",
     });
@@ -130,7 +156,7 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
   async function downloadActa(review: ReviewRow) {
     setExporting(true);
     try {
-      const result = await exportManagementReview(review.id);
+      const result = unwrapAction(await exportManagementReview(review.id));
       await downloadQueuedReport(result.id);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo generar el acta PDF."); } finally { setExporting(false); }
   }
@@ -214,10 +240,18 @@ export function ManagementReviewLive({ initial }: { initial: ManagementReviewPay
                 <Meta label="Normas" value={detail.standards.join(" · ") || "—"} />
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {canManage && NEXT_STATUS[detail.status] && <button type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => advance(detail)}>{detail.status === "PLANNED" ? "Iniciar revisión" : "Cerrar revisión"}</button>}
+                {canManage && NEXT_STATUS[detail.status] && (() => {
+                  const blockers = detail.status === "IN_PROGRESS" ? closeBlockers(detail) : [];
+                  return <button type="button" className="nf-app-btn-primary" disabled={isPending || blockers.length > 0} title={blockers.length ? `Antes de cerrar falta: ${blockers.join("; ")}.` : undefined} onClick={() => advance(detail)}>{detail.status === "PLANNED" ? "Iniciar revisión" : "Cerrar revisión"}</button>;
+                })()}
                 {initial.access.canExport && <button type="button" className="nf-app-btn-outline" disabled={exporting} onClick={() => downloadActa(detail)}>{exporting ? "Generando…" : "Acta PDF"}</button>}
               </div>
             </div>
+            {canManage && detail.status === "IN_PROGRESS" && closeBlockers(detail).length > 0 && (
+              <p style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)" }}>
+                Para cerrar la revisión falta: {closeBlockers(detail).join("; ")}.
+              </p>
+            )}
             {detail.attendees.length > 0 && <Meta label="Asistentes" value={detail.attendees.join(" · ")} />}
             {detail.participants.length > 0 && <Meta label="Participantes internos" value={detail.participants.map(p => p.name).join(" · ")} />}
 

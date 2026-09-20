@@ -51,7 +51,7 @@ export async function getVulnerabilitiesPayload(input?: unknown) {
         remediations: { orderBy: { createdAt: "desc" }, include: { responsible: { select: { id: true, name: true } }, evidence: { select: { id: true, title: true } }, verifications: { orderBy: { verifiedAt: "desc" }, include: { verifiedBy: { select: { id: true, name: true } } } } } },
       },
     }),
-    authorization.can("members:read") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    authorization.can("members:directory") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
     prisma.informationAsset.findMany({ where: { organizationId }, select: { id: true, code: true, name: true }, orderBy: { code: "asc" }, take: 500 }),
     prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true }, orderBy: { createdAt: "desc" }, take: 500 }),
   ]);

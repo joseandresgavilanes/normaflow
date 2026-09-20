@@ -41,6 +41,7 @@ import {
   DEFAULT_CHANGE_TYPE,
 } from "@/lib/change-control-catalog";
 import { DEFAULT_SUPPLIER_CATEGORY, supplierCategoryOptions } from "@/lib/supplier-catalog";
+import { statusLabel } from "@/lib/status-labels";
 import type { ChangesPayload, IntegrationsPayload, SuppliersPayload } from "@/lib/server-queries";
 import { formatDate, formatDateTime } from "@/lib/format/datetime";
 import PersonPicker from "@/components/ui/PersonPicker";
@@ -139,7 +140,7 @@ export function ChangesLiveClient({ initial }: { initial: ChangesPayload }) {
       setRejectTransition(row);
       return;
     }
-    run(() => transitionChangeRequest(row.id, status), { onSuccess: () => setDetail(null), successMessage: `Estado actualizado a ${status}.` });
+    run(() => transitionChangeRequest(row.id, status), { onSuccess: () => setDetail(null), successMessage: `Estado actualizado a ${statusLabel(status)}.` });
   }
 
   function addTask(row: ChangeRow) {
@@ -235,11 +236,11 @@ export function ChangesLiveClient({ initial }: { initial: ChangesPayload }) {
     </FormModal>
 
     <Modal open={!!detail} onClose={() => setDetail(null)} title={detail ? `${detail.code} · ${detail.title}` : "Cambio"} width={720}>{detail && <div style={{ display: "grid", gap: 18 }}>
-      <div className="nf-grid-2"><Meta label="Estado" value={detail.status} /><Meta label="Impacto" value={detail.impact} /><Meta label="Solicitante" value={detail.requesterName} /><Meta label="Áreas" value={detail.affectedAreas.join(" · ")} /></div>
+      <div className="nf-grid-2"><Meta label="Estado" value={<Badge status={detail.status} />} /><Meta label="Impacto" value={detail.impact} /><Meta label="Solicitante" value={detail.requesterName} /><Meta label="Áreas" value={detail.affectedAreas.join(" · ")} /></div>
       <Meta label="Justificación" value={detail.reason} />
       <div><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><strong>Tareas</strong>{initial.access.canUpdate && detail.status !== "CLOSED" && <button type="button" className="nf-app-btn-ghost" onClick={() => addTask(detail)}>Añadir tarea</button>}</div>{detail.tasks.length ? <div style={{ display: "grid", gap: 7, marginTop: 8 }}>{detail.tasks.map((task) => <label key={task.id} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}><input type="checkbox" checked={task.done} disabled={!initial.access.canUpdate || isPending} onChange={(event) => run(() => toggleChangeTask(task.id, event.target.checked), { onSuccess: () => setDetail(null), successMessage: "Tarea actualizada." })} />{task.title}</label>)}</div> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin tareas.</p>}</div>
       <div><strong>Aprobadores</strong>{detail.approvers.length ? <div style={{ display: "grid", gap: 7, marginTop: 8 }}>{detail.approvers.map((approval) => <div key={approval.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: 8, border: "1px solid var(--nf-line)", borderRadius: 8 }}><span style={{ fontSize: 13 }}>{approval.userName}</span><Badge status={approval.status} /></div>)}</div> : <p style={{ fontSize: 13, color: "var(--nf-ink-3)" }}>Sin aprobadores; la aprobación puede avanzar sin firmas asignadas.</p>}{detail.approvers.some((item) => item.userId === initial.access.currentUserId && item.status === "PENDING") && initial.access.canUpdate && <div style={{ display: "flex", gap: 8, marginTop: 9 }}><button type="button" className="nf-app-btn-primary" onClick={() => decide(detail, "APPROVED")}>Aprobar</button><button type="button" className="nf-app-btn-outline" onClick={() => decide(detail, "REJECTED")}>Rechazar</button></div>}</div>
-      {initial.access.canUpdate && (NEXT_STATUS[detail.status] ?? []).length > 0 && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid var(--nf-line)" }}>{(NEXT_STATUS[detail.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => transition(detail, status)}>Mover a {status}</button>)}</div>}
+      {initial.access.canUpdate && (NEXT_STATUS[detail.status] ?? []).length > 0 && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid var(--nf-line)" }}>{(NEXT_STATUS[detail.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-primary" disabled={isPending} onClick={() => transition(detail, status)}>Mover a {statusLabel(status)}</button>)}</div>}
     </div>}</Modal>
     <ConfirmActionModal
       open={!!confirmDelete}

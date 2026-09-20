@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Download, FilePlus2, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Download, FilePlus2, ListPlus, Plus, ShieldAlert, ShieldCheck } from "lucide-react";
 import Card from "@/components/ui/Card";
 import DataTable, { type DataTableColumn } from "@/components/ui/DataTable";
 import EmptyState from "@/components/ui/EmptyState";
@@ -20,6 +20,7 @@ import {
   createRiskTreatmentItem,
   createRiskTreatmentPlan,
   exportRiskTreatment,
+  importRisksToPlan,
   updateRiskTreatmentItem,
   upsertMethodology,
   type RiskTreatmentPayload,
@@ -43,6 +44,10 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
 
   const plan = initial.plan;
   const planEditable = plan?.editable ?? false;
+  /* Los planes aprobados vacíos eran posibles en versiones anteriores. Se
+     permite una única recuperación: incorporar riesgos de la matriz, pero no
+     editar ni añadir contenido manual al documento ya aprobado. */
+  const canRecoverEmptyPlan = plan?.status === "APPROVED" && initial.items.length === 0;
 
   const columns = useMemo<DataTableColumn<Item>[]>(() => [
     {
@@ -152,6 +157,8 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
           </div>
         </div>
 
+        <PendingRisksCard planId={plan.id} editable={(planEditable || canRecoverEmptyPlan) && initial.canUpdate} initial={initial} pending={isPending} onRun={run} />
+
         <DataTable
           columns={columns}
           rows={initial.items}
@@ -159,7 +166,7 @@ export default function RiskTreatmentLiveClient({ initial }: { initial: RiskTrea
           rowAction={(row) => setSelected(row)}
           caption="Registro de riesgos del plan de tratamiento: referencia, riesgo, activo, riesgo inherente, tratamiento, riesgo residual, propietario y estado."
           storageKey="risk-treatment-items"
-          empty={<EmptyState kind="empty" title="Sin riesgos registrados todavía." description="Aquí se registran los riesgos del plan: activo, amenaza y vulnerabilidad, con su riesgo inherente, el tratamiento elegido y el riesgo residual aceptado." />}
+          empty={<EmptyState kind="empty" title="El plan todavía no tiene riesgos." description="Los riesgos de la matriz no entran solos: se traen aquí uno a uno con «Añadir riesgo», donde puedes elegir uno ya registrado o describir uno nuevo. De cada uno se guarda activo, amenaza y vulnerabilidad, su riesgo inherente, el tratamiento elegido y el riesgo residual aceptado." />}
           pageSize={25}
         />
       </Card>
@@ -191,12 +198,66 @@ function MethodologyCard({ initial, pending, onRun }: { initial: RiskTreatmentPa
   </Card>;
 }
 
+/**
+ * Riesgos de la matriz que aún no están en el plan.
+ *
+ * El plan de tratamiento no se alimenta solo del registro de riesgos, así que
+ * quien entra aquí sin haber tecleado nada veía el plan vacío aunque la
+ * organización tuviera decenas de riesgos abiertos. Esta tarjeta los enseña y
+ * permite incorporarlos —uno a uno o todos— sin volver a escribirlos.
+ */
+function PendingRisksCard({ planId, editable, initial, pending, onRun }: { planId: string; editable: boolean; initial: RiskTreatmentPayload; pending: boolean; onRun: ReturnType<typeof useServerAction>["run"] }) {
+  const [open, setOpen] = useState(false);
+  const rows = initial.pendingRisks;
+  if (!rows.length) return null;
+
+  const add = (riskIds: string[], successMessage: string) => onRun(() => importRisksToPlan({ planId, riskIds }), { successMessage });
+
+  return <div style={{ border: "1px solid var(--nf-line)", borderRadius: 12, padding: 14, marginBottom: 14, background: "var(--nf-surface-muted)" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+      <div>
+        <strong style={{ fontSize: 14 }}>Riesgos de la matriz sin tratamiento ({rows.length})</strong>
+        <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 2 }}>Están registrados en el mapa de riesgos pero todavía no forman parte de este plan.</div>
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button type="button" className="nf-app-btn-ghost" onClick={() => setOpen((v) => !v)}>{open ? "Ocultar" : "Ver riesgos"}</button>
+        {editable && <button type="button" className="nf-app-btn-primary" disabled={pending} onClick={() => add(rows.map((r) => r.id), `${rows.length} riesgo(s) incorporado(s) al plan.`)}><ListPlus size={14} /> Incorporar todos</button>}
+      </div>
+    </div>
+    {open && <div style={{ marginTop: 12, display: "grid", gap: 6 }}>
+      {rows.map((risk) => <div key={risk.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, border: "1px solid var(--nf-line)", background: "var(--nf-app-surface-2)", fontSize: 13 }}>
+        <span>{risk.title}<div style={{ fontSize: 11, color: "var(--nf-ink-3)" }}>{risk.category}{risk.processName ? ` · ${risk.processName}` : ""}{risk.ownerName ? ` · ${risk.ownerName}` : " · Sin responsable"}</div></span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Badge value={String(risk.score)} tone={riskTone(risk.score)} />
+          {editable && <button type="button" className="nf-app-btn-ghost" disabled={pending} onClick={() => add([risk.id], "Riesgo incorporado al plan.")}>Incorporar</button>}
+        </span>
+      </div>)}
+    </div>}
+  </div>;
+}
+
 function ItemForm({ planId, initial, pending, onClose, onRun }: { planId: string; initial: RiskTreatmentPayload; pending: boolean; onClose: () => void; onRun: ReturnType<typeof useServerAction>["run"] }) {
-  const [f, setF] = useState({ title: "", asset: "", threat: "", vulnerability: "", impact: 3, probability: 3, treatment: "MITIGATE", existingControls: "", proposedControls: "", ownerId: "", targetDate: "" });
+  const [f, setF] = useState({ riskId: "", title: "", asset: "", threat: "", vulnerability: "", impact: 3, probability: 3, treatment: "MITIGATE", existingControls: "", proposedControls: "", ownerId: "", targetDate: "" });
   const set = (k: string, v: string | number) => setF((prev) => ({ ...prev, [k]: v }));
+  /* Traer el riesgo ya registrado en vez de volver a escribirlo: el plan
+     guarda la relación (`riskId`), así que la matriz y el tratamiento dejan de
+     ser dos listas paralelas que hay que mantener a mano. */
+  const pickRisk = (riskId: string) => setF((prev) => ({
+    ...prev,
+    riskId,
+    title: initial.riskOptions.find((option) => option.id === riskId)?.title ?? prev.title,
+  }));
   return <div className="nf-modal-backdrop" role="dialog" aria-modal="true"><div className="nf-modal" style={{ maxWidth: 680, width: "calc(100% - 32px)", maxHeight: "90vh", overflow: "auto" }}>
     <div className="nf-modal-header"><h3>Nuevo riesgo</h3><button type="button" className="nf-app-btn-ghost" onClick={onClose}>Cerrar</button></div>
     <div style={{ display: "grid", gap: 12, padding: 20 }}>
+      {initial.riskOptions.length > 0 && (
+        <label>Riesgo ya registrado
+          <Picker aria-label="Riesgo ya registrado" className="nf-app-input" value={f.riskId} onChange={(e) => pickRisk(e.target.value)}>
+            <option value="">— Ninguno: lo describo aquí —</option>
+            {initial.riskOptions.map((option) => <option key={option.id} value={option.id}>{option.title}</option>)}
+          </Picker>
+        </label>
+      )}
       <label>Riesgo<input className="nf-app-input" value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="Descripción breve del riesgo" /></label>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <label>Activo<input className="nf-app-input" value={f.asset} onChange={(e) => set("asset", e.target.value)} /></label>
@@ -214,7 +275,7 @@ function ItemForm({ planId, initial, pending, onClose, onRun }: { planId: string
         <label>Propietario<PersonPicker people={initial.members} value={f.ownerId} onValueChange={(personId) => set("ownerId", personId)} placeholder="Sin asignar" ariaLabel="Propietario" /></label>
         <label>Fecha objetivo<DateField className="nf-app-input" value={f.targetDate} onChange={(e) => set("targetDate", e.target.value)} /></label>
       </div>
-      <button type="button" className="nf-app-btn-primary" disabled={pending || !f.title.trim()} onClick={() => onRun(() => createRiskTreatmentItem({ planId, title: f.title, asset: f.asset || undefined, threat: f.threat || undefined, vulnerability: f.vulnerability || undefined, impact: f.impact, probability: f.probability, treatment: f.treatment as never, existingControls: f.existingControls || undefined, proposedControls: f.proposedControls || undefined, ownerId: f.ownerId || null, targetDate: f.targetDate || null }), { onSuccess: onClose, successMessage: "Riesgo añadido." })}>Registrar riesgo</button>
+      <button type="button" className="nf-app-btn-primary" disabled={pending || !f.title.trim()} onClick={() => onRun(() => createRiskTreatmentItem({ planId, riskId: f.riskId || null, title: f.title, asset: f.asset || undefined, threat: f.threat || undefined, vulnerability: f.vulnerability || undefined, impact: f.impact, probability: f.probability, treatment: f.treatment as never, existingControls: f.existingControls || undefined, proposedControls: f.proposedControls || undefined, ownerId: f.ownerId || null, targetDate: f.targetDate || null }), { onSuccess: onClose, successMessage: "Riesgo añadido." })}>Registrar riesgo</button>
     </div>
   </div></div>;
 }

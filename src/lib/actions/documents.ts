@@ -159,6 +159,31 @@ async function assertDocumentApprovers(organizationId: string, approverIds: stri
 }
 
 /**
+ * La persona indicada como responsable de aprobación debe poder completar el
+ * paso posterior del flujo. `Document` conserva una ficha de Personal para la
+ * carátula, mientras la autorización pertenece a su cuenta de miembro; ambas
+ * se corresponden por correo.
+ */
+async function assertDocumentApprovalResponsible(organizationId: string, personnelId?: string | null) {
+  if (!personnelId) return;
+  const personnel = await prisma.personnel.findFirst({
+    where: { id: personnelId, organizationId, active: true },
+    select: { email: true },
+  });
+  if (!personnel?.email) {
+    throw new Error("El responsable de aprobación debe tener una cuenta activa con permiso para aprobar documentos.");
+  }
+  const member = await prisma.membership.findFirst({
+    where: { organizationId, active: true, user: { email: { equals: personnel.email, mode: "insensitive" } } },
+    select: { userId: true },
+  });
+  if (!member) {
+    throw new Error("El responsable de aprobación debe pertenecer a la organización.");
+  }
+  await assertDocumentApprovers(organizationId, [member.userId]);
+}
+
+/**
  * ¿Queda alguien más en la organización que pueda aprobar documentos?
  *
  * Es la condición que decide si la separación entre elaborar y aprobar se puede
@@ -218,6 +243,7 @@ async function createDocumentImpl(
     input = { ...input, ownerId: ctx.user.id };
   }
   await assertDocumentReferences(input, ctx.organization.id);
+  await assertDocumentApprovalResponsible(ctx.organization.id, input.responsibleApprovalId);
 
   const code = input.code.trim();
   const title = input.title.trim();
@@ -491,6 +517,9 @@ async function updateDocumentMetadataImpl(
   if (ctx.role === "CONTRIBUTOR" && patch.processId !== undefined) await assertCollaboratorProcessAccess(ctx, patch.processId);
   if (ctx.role === "CONTRIBUTOR") patch = { ...patch, ownerId: ctx.user.id };
   await assertDocumentReferences(patch, ctx.organization.id);
+  if (patch.responsibleApprovalId !== undefined) {
+    await assertDocumentApprovalResponsible(ctx.organization.id, patch.responsibleApprovalId);
+  }
 
   // Solo borrador puede editarse libremente.
   // En revisión / aprobado: bloqueamos metadata para preservar trazabilidad.

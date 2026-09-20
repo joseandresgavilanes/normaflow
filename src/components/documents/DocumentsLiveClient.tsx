@@ -254,17 +254,17 @@ export default function DocumentsLiveClient({
   return (
     <div>
       <SectionTitle
-        title="Control de Documentos"
-        sub="Lista maestra del SGC con versionado, flujo de aprobación y trazabilidad ISO."
-        action={canCreate ? "Nuevo documento" : undefined}
+        title="Gestión documental"
+        sub="Registro maestro con control de versiones, aprobaciones y trazabilidad ISO."
+        action={canCreate ? "Registrar documento" : undefined}
         onAction={canCreate ? () => { setCreating(true); setError(""); } : undefined}
       />
 
       <div className="nf-metric-strip">
-        <Stat label="Borradores"   value={stats.draft}    icon={<FileText size={20} strokeWidth={2.25}/>}      />
-        <Stat label="En revisión"  value={stats.inReview} icon={<Clock size={20} strokeWidth={2.25}/>}         tone="warn" />
-        <Stat label="Aprobados"    value={stats.approved} icon={<CheckCircle2 size={20} strokeWidth={2.25}/>} tone="ok" />
-        <Stat label="Obsoletos"    value={stats.obsolete} icon={<XCircle size={20} strokeWidth={2.25}/>}       muted />
+        <Stat label="En preparación"            value={stats.draft}    icon={<FileText size={20} strokeWidth={2.25}/>}      />
+        <Stat label="Pendientes de aprobación"  value={stats.inReview} icon={<Clock size={20} strokeWidth={2.25}/>}         tone="warn" />
+        <Stat label="Vigentes"                   value={stats.approved} icon={<CheckCircle2 size={20} strokeWidth={2.25}/>} tone="ok" />
+        <Stat label="Retirados"                  value={stats.obsolete} icon={<XCircle size={20} strokeWidth={2.25}/>}       muted />
       </div>
 
       {error && <div className="nf-alert nf-alert--error">{error}</div>}
@@ -570,7 +570,7 @@ function DocumentFormModal({
   open: boolean;
   editing: DocumentRowLive | null;
   locations: { id: string; name: string }[];
-  personnel: { id: string; firstName: string; lastName: string }[];
+  personnel: { id: string; firstName: string; lastName: string; approvalUserId: string | null; approvalUserName: string | null }[];
   members: { userId: string; name: string }[];
   processes: DocumentsPayload["processes"];
   standards: DocumentsPayload["standards"];
@@ -693,7 +693,7 @@ function DocumentFormModal({
           <input aria-label="calidad, seguridad, política" name="tags" defaultValue={editing?.tags.join(", ") ?? ""} className={NF_INPUT_CLASS} style={modalInputStyle} placeholder="calidad, seguridad, política" />
         </Field>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-          <Field label="Responsable elaboración">
+          <Field label="Responsable de elaboración">
             <PersonPicker emptyMessage="Crea primero una persona en Personal"
               name="responsibleElaborationId"
               people={personnel}
@@ -703,12 +703,15 @@ function DocumentFormModal({
               style={modalInputStyle}
             />
           </Field>
-          <Field label="Responsable aprobación">
-            <PersonPicker emptyMessage="Crea primero una persona en Personal"
+          <Field label="Responsable de aprobación">
+            <PersonPicker
               name="responsibleApprovalId"
-              people={personnel}
+              people={personnel
+                .filter((person) => person.approvalUserId)
+                .map((person) => ({ ...person, name: person.approvalUserName }))}
               defaultValue={editing?.responsibleApprovalId ?? ""}
-              placeholder="Sin asignar"
+              placeholder="Seleccionar aprobador"
+              emptyMessage="No hay aprobadores habilitados"
               ariaLabel="Responsable de aprobación"
               style={modalInputStyle}
             />
@@ -1011,6 +1014,13 @@ function SubmitReviewModal({
 }) {
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
+  /* La persona definida al crear el documento es la propuesta natural para
+     este paso. Se mantiene editable para añadir aprobadores adicionales o
+     cambiar la asignación si el flujo lo requiere. */
+  useEffect(() => {
+    setPicked(doc?.responsibleApprovalUserId ? new Set([doc.responsibleApprovalUserId]) : new Set());
+  }, [doc?.id, doc?.responsibleApprovalUserId]);
+
   return (
     <Modal open={doc != null} onClose={() => { setPicked(new Set()); onClose(); }} title="Enviar a revisión" width={520}>
       {doc && (
@@ -1218,6 +1228,12 @@ function DocumentDetailModal({
   const needsFirstVersion = canCreate && doc.status === "DRAFT" && doc.versions.length === 0;
   const canShowDelete = canCreate && doc.status === "DRAFT";
   const canShowObsolete = canObsolete && doc.status === "APPROVED";
+  /* Quién ha firmado ya, sin repetir a nadie que aparezca en dos versiones. */
+  const approvedBy = [...new Set(
+    doc.approvals
+      .filter((a) => a.status === "APPROVED")
+      .map((a) => memberLookup.get(a.approverId) ?? a.approverId),
+  )];
 
   return (
     <Modal open onClose={onClose} title={`${doc.code} — ${doc.title}`} width={820}>
@@ -1236,7 +1252,17 @@ function DocumentDetailModal({
           <Meta label="Ubicación" value={doc.locationName ?? doc.physicalLocation ?? "—"} />
           <Meta label="Custodio" value={doc.custodianId ? personnelLookup.get(doc.custodianId) ?? "—" : "—"} />
           <Meta label="Elaboración" value={doc.responsibleElaborationId ? personnelLookup.get(doc.responsibleElaborationId) ?? "—" : "—"} />
-          <Meta label="Aprobación" value={doc.responsibleApprovalId ? personnelLookup.get(doc.responsibleApprovalId) ?? "—" : "—"} />
+          {/* Antes de aprobar, la ficha dice quién *debe* aprobar —lo que se
+              eligió al crearla—; después dice quién aprobó de verdad, que es lo
+              que el documento tiene que poder demostrar. Eran dos datos
+              distintos y la cabecera enseñaba siempre el primero, así que se
+              contradecía con la lista de aprobaciones de más abajo. */}
+          <Meta
+            label={approvedBy.length ? "Aprobado por" : "Aprobación prevista"}
+            value={approvedBy.length
+              ? approvedBy.join(" · ")
+              : doc.responsibleApprovalId ? personnelLookup.get(doc.responsibleApprovalId) ?? "—" : "—"}
+          />
         </div>
 
         {(doc.tags.length > 0 || doc.distributionList.length > 0 || doc.externalLink) && (

@@ -17,6 +17,14 @@ export const messages = {
     "common.organization": "Organización",
     "common.account": "Cuenta",
     "common.notifications": "Notificaciones",
+    "organization.create.action": "Crear organización",
+    "organization.create.title": "Nueva organización",
+    "organization.create.description": "Se creará un workspace independiente y pasará a ser tu organización activa.",
+    "organization.create.name": "Nombre de la organización",
+    "organization.create.placeholder": "Ej. Acme Components",
+    "organization.create.nameError": "Indica un nombre de al menos 2 caracteres.",
+    "organization.create.submit": "Crear organización",
+    "organization.create.cancel": "Cancelar",
     "date.today": "Hoy",
     "date.yesterday": "Ayer",
     "audit.field": "Campo:",
@@ -315,6 +323,14 @@ export const messages = {
     "common.organization": "Organization",
     "common.account": "Account",
     "common.notifications": "Notifications",
+    "organization.create.action": "Create organization",
+    "organization.create.title": "New organization",
+    "organization.create.description": "A separate workspace will be created and become your active organization.",
+    "organization.create.name": "Organization name",
+    "organization.create.placeholder": "E.g. Acme Components",
+    "organization.create.nameError": "Enter a name with at least 2 characters.",
+    "organization.create.submit": "Create organization",
+    "organization.create.cancel": "Cancel",
     "date.today": "Today",
     "date.yesterday": "Yesterday",
     "audit.field": "Field:",
@@ -613,6 +629,14 @@ export const messages = {
     "common.organization": "Organização",
     "common.account": "Conta",
     "common.notifications": "Notificações",
+    "organization.create.action": "Criar organização",
+    "organization.create.title": "Nova organização",
+    "organization.create.description": "Um workspace independente será criado e se tornará sua organização ativa.",
+    "organization.create.name": "Nome da organização",
+    "organization.create.placeholder": "Ex. Acme Components",
+    "organization.create.nameError": "Informe um nome com pelo menos 2 caracteres.",
+    "organization.create.submit": "Criar organização",
+    "organization.create.cancel": "Cancelar",
     "date.today": "Hoje",
     "date.yesterday": "Ontem",
     "audit.field": "Campo:",
@@ -970,6 +994,25 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
   "Calidad": {
     en: "Quality",
     "pt-BR": "Qualidade",
+  },
+  /* La frase entera, que es la que aparece compuesta en las etiquetas de norma
+     («ISO 27001:2022 · Seguridad de la información»). Sin ella solo estaba la
+     mitad del titular partido de /iso27001, y esa mitad no puede traducir un
+     texto que la contenga. */
+  "Seguridad de la información": {
+    en: "Information security",
+    "pt-BR": "Segurança da informação",
+  },
+  /* La otra etiqueta de la misma lista del panel. «Calidad» ya está en el
+     catálogo, pero una sola palabra nunca entra en la sustitución por
+     fragmentos, así que la etiqueta compuesta necesita su propia entrada. */
+  "ISO 9001:2015 · Calidad": {
+    en: "ISO 9001:2015 · Quality",
+    "pt-BR": "ISO 9001:2015 · Qualidade",
+  },
+  "Estado de las asignaciones de capacitación.": {
+    en: "Training assignment status.",
+    "pt-BR": "Situação das atribuições de treinamento.",
   },
   "Seguridad": {
     en: "Security",
@@ -2395,6 +2438,23 @@ const knownTextTranslations: Record<string, KnownTextTranslation> = {
     en: "Date",
     "pt-BR": "Data",
   },
+  // Plan de auditoría: proceso, día y franja horaria de cada sesión.
+  "Auditor": {
+    en: "Auditor",
+    "pt-BR": "Auditor",
+  },
+  "Norma auditada": {
+    en: "Audited standard",
+    "pt-BR": "Norma auditada",
+  },
+  "Hora de inicio": {
+    en: "Start time",
+    "pt-BR": "Hora de início",
+  },
+  "Hora de fin": {
+    en: "End time",
+    "pt-BR": "Hora de término",
+  },
   "Prioridad": {
     en: "Priority",
     "pt-BR": "Prioridade",
@@ -3068,6 +3128,54 @@ const commonWordTranslations: Record<string, KnownTextTranslation> = {
 
 const fragmentEntriesByLocale = new Map<Locale, Array<[string, string]>>();
 
+/**
+ * Trozos de frase que solo valen por coincidencia exacta, nunca como fragmento.
+ *
+ * Hay dos maneras de que una frase entre partida en el catálogo:
+ *
+ * - Los héroes de las páginas de norma se maquetan en dos líneas —«Seguridad de
+ *   la<br/>Información.»— y el corte cae en un sitio distinto en cada idioma,
+ *   así que cada mitad se guarda por separado con la mitad que le toca por
+ *   posición: «Seguridad de la» → «Information», «Información.» → «Security.».
+ * - Algunos textos se componen con una variable al lado: «Estado de» + el
+ *   nombre del flujo, «Guardado a las» + la hora.
+ *
+ * Como nodo de texto completo se traducen bien, que es para lo que se
+ * escribieron. Como fragmento dentro de una frase mayor le comen la cabeza y
+ * dejan la cola en español: «ISO 27001:2022 · Seguridad de la información»
+ * salía «ISO 27001:2022 · Information información», y «Estado de las
+ * asignaciones de capacitación.» salía «State of las asignaciones…». Las peores
+ * eran «de la» → «» y «y la» → «and the», que borran o reescriben esas palabras
+ * en cualquier frase que las lleve.
+ *
+ * No hay forma de reconocerlas mirando el texto —«Seguridad de la» parece una
+ * frase corriente, y su traducción no es una traducción sino la mitad que toca
+ * por posición—, así que se enumeran.
+ */
+const EXACT_ONLY_TEXT = new Set([
+  // /iso27001 — «Seguridad de la» / «Información.»
+  "Seguridad de la",
+  // /iso9001 — «Sistema de Gestión» / «de la » / «Calidad.»
+  "Sistema de Gestión",
+  "de la",
+  // / (landing) — «Del caos ISO al» / «control continuo.»
+  "Del caos ISO al",
+  // / (landing) — «El cumplimiento no falla» / «de golpe.» / «Se rompe en silencio.»
+  "El cumplimiento no falla",
+  "de golpe.",
+  "Se rompe en silencio.",
+  // / (landing) — «IA que» / «redacta y sugiere.»
+  "IA que",
+]);
+
+/** Las mismas de arriba, del catálogo de `messages`, señaladas por su clave. */
+const EXACT_ONLY_MESSAGE_KEYS = new Set<string>([
+  "workflow.stateOf",            // «Estado de» + nombre del flujo
+  "form.autosaveSaved",          // «Guardado a las» + hora
+  "auth.signup.acceptPrefix",    // «Al registrarte aceptas los» + enlaces
+  "auth.signup.acceptConnector", // «y la» entre los dos enlaces
+]);
+
 export function translate(locale: Locale, key: MessageKey, params?: Params) {
   const template = messages[locale][key] ?? messages[DEFAULT_LOCALE][key] ?? key;
   if (!params) return template;
@@ -3150,6 +3258,9 @@ export function translateText(locale: Locale, text: string) {
     const sourceEntries = new Map<string, string>();
     for (const catalog of [knownTextTranslations, domainUiTranslations, commonWordTranslations]) {
       for (const [base, values] of Object.entries(catalog)) {
+        // Fuera la entrada entera —base y sus formas traducidas—: como fragmento
+        // parte la frase que la contiene. Sigue valiendo por coincidencia exacta.
+        if (EXACT_ONLY_TEXT.has(base)) continue;
         sourceEntries.set(base, locale === DEFAULT_LOCALE ? base : values[locale] ?? base);
         for (const sourceLocale of SUPPORTED_MESSAGE_LOCALES) {
           const source = sourceLocale === DEFAULT_LOCALE ? base : values[sourceLocale];
@@ -3158,6 +3269,7 @@ export function translateText(locale: Locale, text: string) {
       }
     }
     for (const key of Object.keys(messages[DEFAULT_LOCALE]) as MessageKey[]) {
+      if (EXACT_ONLY_MESSAGE_KEYS.has(key)) continue;
       const base = messages[DEFAULT_LOCALE][key];
       for (const sourceLocale of SUPPORTED_MESSAGE_LOCALES) {
         const source = messages[sourceLocale][key];

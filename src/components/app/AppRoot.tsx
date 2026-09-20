@@ -13,6 +13,8 @@ import { AdminMockProvider } from "@/context/AdminMockStore";
 import { useI18n } from "@/context/I18nProvider";
 import { ROLES } from "@/lib/constants";
 import type { AppRoleKey } from "@/lib/permissions/frontend";
+import Dialog from "@/components/ui/Dialog";
+import { TextField } from "@/components/ui/Field";
 
 // El panel de IA no participa en la primera pintura ni en la navegación normal.
 // Mantenerlo en un chunk separado evita cargar su código hasta que el usuario lo abre.
@@ -67,6 +69,10 @@ export default function AppRoot({
   const [aiOpen, setAiOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [orgError, setOrgError] = useState("");
+  const [createOrgOpen, setCreateOrgOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const [createOrgError, setCreateOrgError] = useState("");
+  const [creatingOrg, setCreatingOrg] = useState(false);
   const isCompactNav = useMatchMedia("(max-width: 768px)");
   const { t } = useI18n();
   const onboardingStatus = initial.mode === "live" ? initial.organization.onboardingStatus : undefined;
@@ -133,6 +139,43 @@ export default function AppRoot({
   const workspaceKind = initial.mode === "demo" ? initial.workspaceKind : "blank";
   const plan = initial.mode === "needs_organization" ? "STARTER" : initial.organization.plan;
   const groupPermissions = initial.mode === "live" ? initial.groupPermissions : EMPTY_PERMISSIONS;
+
+  async function createOrganization(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const organizationName = newOrgName.trim();
+    if (organizationName.length < 2) {
+      setCreateOrgError(t("organization.create.nameError"));
+      return;
+    }
+
+    setCreatingOrg(true);
+    setCreateOrgError("");
+    try {
+      const response = await fetch("/api/auth/bootstrap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organizationName, createNew: true }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok || body.created !== true) {
+        throw new Error(typeof body.error === "string" ? body.error : t("error.orgCreateFailed"));
+      }
+
+      // La respuesta ya fijó `nf_org`; la navegación dura descarta cualquier
+      // payload RSC y estado de workspace perteneciente a la organización anterior.
+      window.location.assign("/app/onboarding");
+    } catch (error) {
+      setCreateOrgError(error instanceof Error ? error.message : t("error.orgCreateFailed"));
+      setCreatingOrg(false);
+    }
+  }
+
+  function closeCreateOrganization() {
+    if (creatingOrg) return;
+    setCreateOrgOpen(false);
+    setNewOrgName("");
+    setCreateOrgError("");
+  }
 
   // AppRoot se vuelve a renderizar cuando cambia pathname. Estabilizar este
   // objeto evita que WorkspaceProvider reconstruya y rehidrate todo el estado
@@ -239,6 +282,10 @@ export default function AppRoot({
              que no quede ni un payload RSC del anterior en la caché del router. */
           window.location.reload();
         }}
+        onCreateOrganization={initial.mode === "live" ? () => {
+          setNavOpen(false);
+          setCreateOrgOpen(true);
+        } : undefined}
         drawerOpen={navOpen}
         onNavigate={() => setNavOpen(false)}
         onClose={() => setNavOpen(false)}
@@ -273,6 +320,30 @@ export default function AppRoot({
       )}
       <WorkspaceToast />
       <div id="nf-modal-root" />
+      <Dialog
+        open={createOrgOpen}
+        onClose={closeCreateOrganization}
+        title={t("organization.create.title")}
+        description={t("organization.create.description")}
+        error={createOrgError}
+        pending={creatingOrg}
+        dirty={Boolean(newOrgName.trim())}
+        onSubmit={createOrganization}
+        primaryAction={{ label: t("organization.create.submit"), loading: creatingOrg }}
+        secondaryAction={{ label: t("organization.create.cancel"), onClick: closeCreateOrganization }}
+        size="sm"
+      >
+        <TextField
+          label={t("organization.create.name")}
+          placeholder={t("organization.create.placeholder")}
+          value={newOrgName}
+          onChange={(event) => setNewOrgName(event.target.value)}
+          minLength={2}
+          maxLength={160}
+          required
+          autoFocus
+        />
+      </Dialog>
     </div>
   );
 

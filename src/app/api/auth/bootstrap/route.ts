@@ -14,6 +14,7 @@ import { parseInput } from "@/lib/validation/common";
 import { bootstrapSchema } from "@/lib/validation/workflows";
 import { installAllPacks, syncCommercialPackEntitlements } from "@/lib/standard-packs";
 import { ACTIVE_ORG_COOKIE, activeOrgCookieOptions } from "@/lib/auth/session-cookies";
+import { ensurePersonnelForMember } from "@/lib/personnel-sync";
 
 async function runSerializable<T>(work: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -91,16 +92,15 @@ export async function POST(request: NextRequest) {
       update: { authUserId: user.id },
     });
 
-    /* Quien ya tiene organización no crea otra por aquí: esta ruta es el alta
-       inicial. Antes se devolvía `null` y un 200 igualmente, así que el nombre
-       de empresa del formulario se tiraba en silencio y la persona aterrizaba
-       en la organización que ya tenía. Ahora se dice cuál es. */
+    /* El alta inicial sigue siendo idempotente. Crear una organización adicional
+       exige una intención explícita del cliente; así un reintento del registro no
+       abre otro tenant, pero el selector de organización sí puede hacerlo. */
     const existing = await tx.membership.findFirst({
-      where: { userId: u.id },
+      where: { userId: u.id, active: true },
       orderBy: { createdAt: "asc" },
       select: { organization: { select: { id: true, name: true } } },
     });
-    if (existing) {
+    if (existing && !body.createNew) {
       return {
         created: false as const,
         organizationId: existing.organization.id,
@@ -136,6 +136,10 @@ export async function POST(request: NextRequest) {
     await tx.membership.create({
       data: { userId: u.id, organizationId: org.id, role: "OWNER" },
     });
+
+    /* Quien crea la organización es su primera persona: sin ficha en Personal
+       no podría nombrarse a sí mismo responsable de un documento. */
+    await ensurePersonnelForMember(tx, { organizationId: org.id, email: u.email, name: u.name });
 
     await tx.subscription.create({
       data: {

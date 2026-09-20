@@ -143,6 +143,7 @@ export async function transitionOpportunity(
   id: string,
   status: OpportunityStatus,
   reason?: string,
+  closureEvidence?: string,
 ) {
   const ctx = await requirePermission("opportunities:update");
   const existing = await prisma.opportunity.findFirst({
@@ -164,6 +165,21 @@ export async function transitionOpportunity(
   if (status === OpportunityStatus.MATERIALIZED && !existing.materializationAnalysis?.trim()) {
     throw new Error("Documenta el análisis de materialización antes de marcarla como materializada.");
   }
+  /* Cerrar era el único paso que no pedía nada: bastaba pulsar. Una oportunidad
+     cerrada sin evidencia del resultado no se distingue de una abandonada, y es
+     justo lo que hay que enseñar cuando alguien pregunta qué salió de ella. La
+     comprobación la hace quien la revisó, igual que la aprobación. */
+  if (status === OpportunityStatus.CLOSED) {
+    const evidence = optional(closureEvidence) ?? existing.materializationEvidence?.trim() ?? null;
+    if (!evidence) {
+      throw new Error("Registra la evidencia del resultado antes de cerrar la oportunidad.");
+    }
+    const esRevisor = existing.reviewerId === ctx.user.id;
+    const esAdmin = ctx.role === "ORG_ADMIN" || ctx.role === "SUPER_ADMIN";
+    if (!esRevisor && !esAdmin) {
+      throw new Error("Solo el revisor asignado o un administrador puede verificar el cierre.");
+    }
+  }
 
   const now = new Date();
   const data = {
@@ -171,6 +187,10 @@ export async function transitionOpportunity(
     rejectionReason: status === OpportunityStatus.REJECTED ? optional(reason) : status === OpportunityStatus.IDENTIFIED ? null : existing.rejectionReason,
     materializedAt: status === OpportunityStatus.MATERIALIZED ? existing.materializedAt ?? now : existing.materializedAt,
     closedAt: status === OpportunityStatus.CLOSED ? existing.closedAt ?? now : existing.closedAt,
+    closedById: status === OpportunityStatus.CLOSED ? existing.closedById ?? ctx.user.id : existing.closedById,
+    materializationEvidence: status === OpportunityStatus.CLOSED
+      ? optional(closureEvidence) ?? existing.materializationEvidence
+      : existing.materializationEvidence,
   };
   await prisma.opportunity.update({ where: { id }, data });
   await logAuditEvent({

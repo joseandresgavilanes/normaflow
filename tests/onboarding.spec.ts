@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { onboardingProgress, trialDaysRemaining } from "@/lib/onboarding";
 import { roleCan } from "@/lib/permissions/matrix";
+import { bootstrapSchema } from "@/lib/validation/workflows";
 
 test.describe("onboarding de trial", () => {
   test("calcula activación y vencimiento de trial", () => {
@@ -15,6 +16,11 @@ test.describe("onboarding de trial", () => {
     expect(roleCan("MANAGER", "org:update")).toBe(false);
     expect(roleCan("OWNER", "billing:*")).toBe(true);
     expect(roleCan("VIEWER", "billing:*")).toBe(false);
+  });
+
+  test("distingue el alta inicial de una organización adicional", () => {
+    expect(bootstrapSchema.parse({ organizationName: "Inicial" }).createNew).toBe(false);
+    expect(bootstrapSchema.parse({ organizationName: "Segunda", createNew: true }).createNew).toBe(true);
   });
 
   test("muestra el wizard de valor en la sesión demo", async ({ page }) => {

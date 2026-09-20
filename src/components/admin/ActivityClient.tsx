@@ -68,6 +68,10 @@ const ACTION_LABEL: Record<string, string> = {
   add_entry: "Entrada añadida",
   close: "Cerrado",
   complete: "Completado",
+  status_change: "Cambio de estado",
+  attach_evidence: "Evidencia vinculada",
+  detach_evidence: "Evidencia desvinculada",
+  import_risks: "Riesgos incorporados",
 };
 
 /**

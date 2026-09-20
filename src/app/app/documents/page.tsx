@@ -6,7 +6,7 @@ import LiveDataUnavailable from "@/components/app/LiveDataUnavailable";
 import AccessDenied from "@/components/app/AccessDenied";
 import { isAuthorizationError } from "@/lib/permissions/server";
 
-export const metadata = { title: "Control de Documentos" };
+export const metadata = { title: "Gestión documental" };
 export const dynamic = "force-dynamic";
 
 export default async function DocumentsPage() {
@@ -26,7 +26,7 @@ export default async function DocumentsPage() {
     } catch (err) {
       if (isAuthorizationError(err)) return <AccessDenied />;
       console.error("[documents] live payload failed:", err);
-      return <LiveDataUnavailable section="Control de Documentos" />;
+      return <LiveDataUnavailable section="Gestión documental" />;
     }
   }
 

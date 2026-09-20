@@ -23,6 +23,7 @@ function inline(value) {
     return '<figure><img src="file://' + absolute + '" alt="' + alt + '"><figcaption>' + alt + "</figcaption></figure>";
   });
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
   html = html.replace(/&gt; /g, "> ");
   return html;
 }

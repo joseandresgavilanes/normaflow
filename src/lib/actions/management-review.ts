@@ -11,6 +11,7 @@ import { assertExportQuota } from "@/lib/plan-entitlements";
 import { queueReportForContext } from "@/lib/report-queue";
 import { parseId, parseInput } from "@/lib/validation/common";
 import { managementReviewSchema, managementReviewUpdateSchema, reviewDecisionSchema, reviewInputSchema } from "@/lib/validation/workflows";
+import { actionResult, type ActionResult } from "@/lib/actions/action-result";
 
 const PATH = "/app/management-review";
 
@@ -63,7 +64,20 @@ export type ManagementReviewInputData = {
   standards?: string[];
 };
 
-export async function createManagementReview(input: ManagementReviewInputData) {
+/**
+ * Cada acción de este módulo devuelve su fallo en vez de lanzarlo.
+ *
+ * Las reglas de la cláusula 9.3 —no cerrar una revisión sin entradas, sin
+ * decisiones o sin conclusiones— son mensajes escritos para que alguien los
+ * lea y sepa qué le falta. Lanzados desde una Server Action, Next los sustituye
+ * en producción por el párrafo genérico del digest y quien cerraba la revisión
+ * solo veía «An error occurred in the Server Components render».
+ */
+export async function createManagementReview(input: ManagementReviewInputData): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => createManagementReviewImpl(input));
+}
+
+async function createManagementReviewImpl(input: ManagementReviewInputData) {
   input = parseInput(managementReviewSchema, input) as ManagementReviewInputData;
   const ctx = await requirePermission("mgmt-review:*");
   const title = input.title.trim();
@@ -102,7 +116,11 @@ export type UpdateManagementReviewData = ManagementReviewInputData & {
   summary?: string;
 };
 
-export async function updateManagementReview(id: string, input: UpdateManagementReviewData) {
+export async function updateManagementReview(id: string, input: UpdateManagementReviewData): Promise<ActionResult<void>> {
+  return actionResult(() => updateManagementReviewImpl(id, input));
+}
+
+async function updateManagementReviewImpl(id: string, input: UpdateManagementReviewData) {
   id = parseId(id);
   input = parseInput(managementReviewUpdateSchema, input) as UpdateManagementReviewData;
   const ctx = await requirePermission("mgmt-review:*");
@@ -168,7 +186,11 @@ export async function updateManagementReview(id: string, input: UpdateManagement
   revalidatePath(PATH);
 }
 
-export async function deleteManagementReview(id: string) {
+export async function deleteManagementReview(id: string): Promise<ActionResult<void>> {
+  return actionResult(() => deleteManagementReviewImpl(id));
+}
+
+async function deleteManagementReviewImpl(id: string) {
   const ctx = await requirePermission("mgmt-review:*");
   await loadReview(id, ctx.organization.id);
   await prisma.managementReview.delete({ where: { id } });
@@ -199,7 +221,14 @@ async function validateSourceLinks(organizationId: string, links: ManagementRevi
   checks.forEach((row, index) => { if ([links.auditId, links.indicatorId, links.riskId, links.nonconformityId, links.actionId, links.capaId][index] && !row) throw new Error(`El vínculo con ${labels[index]} no pertenece a la organización.`); });
 }
 
-export async function addReviewInput(reviewId: string, input: { topic: ManagementReviewTopic; content: string } & ManagementReviewSourceLinks) {
+export async function addReviewInput(
+  reviewId: string,
+  input: { topic: ManagementReviewTopic; content: string } & ManagementReviewSourceLinks,
+): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => addReviewInputImpl(reviewId, input));
+}
+
+async function addReviewInputImpl(reviewId: string, input: { topic: ManagementReviewTopic; content: string } & ManagementReviewSourceLinks) {
   reviewId = parseId(reviewId);
   input = parseInput(reviewInputSchema, input) as typeof input;
   const ctx = await requirePermission("mgmt-review:*");
@@ -216,7 +245,11 @@ export async function addReviewInput(reviewId: string, input: { topic: Managemen
   return { id: created.id };
 }
 
-export async function deleteReviewInput(inputId: string) {
+export async function deleteReviewInput(inputId: string): Promise<ActionResult<void>> {
+  return actionResult(() => deleteReviewInputImpl(inputId));
+}
+
+async function deleteReviewInputImpl(inputId: string) {
   const ctx = await requirePermission("mgmt-review:*");
   const row = await prisma.managementReviewInput.findUnique({ where: { id: inputId }, include: { review: { select: { organizationId: true, id: true } } } });
   if (!row || row.review.organizationId !== ctx.organization.id) throw new Error("Entrada no encontrada.");
@@ -227,6 +260,13 @@ export async function deleteReviewInput(inputId: string) {
 
 // ─── Decisions (ISO 9.3.3 review outputs) ─────────────────────────────────
 export async function addReviewDecision(
+  reviewId: string,
+  input: { topic: string; decision: string; ownerId?: string; dueDate?: string },
+): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => addReviewDecisionImpl(reviewId, input));
+}
+
+async function addReviewDecisionImpl(
   reviewId: string,
   input: { topic: string; decision: string; ownerId?: string; dueDate?: string },
 ) {
@@ -262,7 +302,11 @@ export async function addReviewDecision(
   return { id: created.id };
 }
 
-export async function deleteReviewDecision(decisionId: string) {
+export async function deleteReviewDecision(decisionId: string): Promise<ActionResult<void>> {
+  return actionResult(() => deleteReviewDecisionImpl(decisionId));
+}
+
+async function deleteReviewDecisionImpl(decisionId: string) {
   const ctx = await requirePermission("mgmt-review:*");
   const row = await prisma.managementReviewDecision.findUnique({ where: { id: decisionId }, include: { review: { select: { organizationId: true, id: true } } } });
   if (!row || row.review.organizationId !== ctx.organization.id) throw new Error("Decisión no encontrada.");
@@ -271,7 +315,14 @@ export async function deleteReviewDecision(decisionId: string) {
   revalidatePath(PATH);
 }
 
-export async function createReviewAction(decisionId: string, input: { title: string; description?: string; ownerId?: string; dueDate?: string; priority?: Priority }) {
+export async function createReviewAction(
+  decisionId: string,
+  input: { title: string; description?: string; ownerId?: string; dueDate?: string; priority?: Priority },
+): Promise<ActionResult<{ id: string }>> {
+  return actionResult(() => createReviewActionImpl(decisionId, input));
+}
+
+async function createReviewActionImpl(decisionId: string, input: { title: string; description?: string; ownerId?: string; dueDate?: string; priority?: Priority }) {
   const ctx = await requirePermission("actions:create");
   const decision = await prisma.managementReviewDecision.findFirst({ where: { id: decisionId, review: { organizationId: ctx.organization.id } }, include: { review: { select: { id: true, title: true } }, action: { select: { id: true } } } });
   if (!decision) throw new Error("Decisión no encontrada.");
@@ -286,7 +337,11 @@ export async function createReviewAction(decisionId: string, input: { title: str
   return { id: action.id };
 }
 
-export async function linkReviewEvidence(reviewId: string, evidenceId: string) {
+export async function linkReviewEvidence(reviewId: string, evidenceId: string): Promise<ActionResult<void>> {
+  return actionResult(() => linkReviewEvidenceImpl(reviewId, evidenceId));
+}
+
+async function linkReviewEvidenceImpl(reviewId: string, evidenceId: string) {
   const ctx = await requirePermission("mgmt-review:*");
   const [review, evidence] = await Promise.all([
     prisma.managementReview.findFirst({ where: { id: reviewId, organizationId: ctx.organization.id }, select: { id: true } }),
@@ -300,6 +355,10 @@ export async function linkReviewEvidence(reviewId: string, evidenceId: string) {
 }
 
 export async function exportManagementReview(reviewId: string) {
+  return actionResult(() => exportManagementReviewImpl(reviewId));
+}
+
+async function exportManagementReviewImpl(reviewId: string) {
   const ctx = await requirePermission("mgmt-review:export");
   await assertExportQuota(ctx.organization.id, ctx.organization.plan);
   const review = await prisma.managementReview.findFirst({ where: { id: reviewId, organizationId: ctx.organization.id }, include: { participants: { include: { user: { select: { name: true } } } }, inputs: { orderBy: { createdAt: "asc" }, include: { audit: { select: { title: true } }, indicator: { select: { name: true } }, risk: { select: { title: true } }, nonconformity: { select: { title: true } }, action: { select: { title: true } }, capa: { select: { code: true, title: true } } } }, decisions: { orderBy: { createdAt: "asc" }, include: { action: { select: { title: true, status: true } } } }, evidenceLinks: { include: { evidence: { select: { title: true, evidenceType: true } } } } } });

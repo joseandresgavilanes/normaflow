@@ -261,17 +261,48 @@ export async function transitionChangeRequest(id: string, status: ChangeRequestS
   refresh(PATHS.changes);
 }
 
+/**
+ * Estados desde los que la decisión de los aprobadores todavía manda sobre la
+ * solicitud. Un cambio ya implementado o cerrado no vuelve atrás porque llegue
+ * tarde una firma.
+ */
+const CHANGE_IN_REVIEW: ChangeRequestStatus[] = [ChangeRequestStatus.SUBMITTED, ChangeRequestStatus.UNDER_REVIEW];
+
 export async function decideChangeApproval(changeRequestId: string, status: "APPROVED" | "REJECTED", comment?: string, attestationReason?: string) {
   const authorization = await getServerAuthorization();
   const { ctx } = authorization;
   const approval = await prisma.changeApprover.findFirst({
     where: { changeRequestId, userId: ctx.user.id, changeRequest: { organizationId: ctx.organization.id } },
-    include: { changeRequest: { select: { code: true, title: true, requesterId: true } } },
+    include: { changeRequest: { select: { code: true, title: true, requesterId: true, status: true } } },
   });
   if (!approval) throw new Error("No eres aprobador de este cambio.");
   if (approval.status !== ApprovalStatus.PENDING) throw new Error("Esta decisión ya fue registrada.");
-  await prisma.changeApprover.update({ where: { id: approval.id }, data: { status, comment: optional(comment), attestationReason: optional(attestationReason), decidedAt: new Date() } });
+
+  /* La firma y el estado de la solicitud se mueven juntos: si el visto bueno
+     quedara solo en la fila del aprobador, el cambio seguiría figurando «en
+     revisión» aunque ya no quedara nadie por firmar, y alguien tendría que
+     acordarse de avanzarlo a mano. */
+  const decided = await prisma.$transaction(async (tx) => {
+    await tx.changeApprover.update({ where: { id: approval.id }, data: { status, comment: optional(comment), attestationReason: optional(attestationReason), decidedAt: new Date() } });
+    const approvers = await tx.changeApprover.findMany({ where: { changeRequestId }, select: { status: true } });
+    const current = approval.changeRequest.status;
+    if (!CHANGE_IN_REVIEW.includes(current)) return null;
+    const next = status === "REJECTED"
+      ? ChangeRequestStatus.REJECTED
+      : approvers.every((item) => item.status === ApprovalStatus.APPROVED) ? ChangeRequestStatus.APPROVED : null;
+    if (!next) return null;
+    const now = new Date();
+    await tx.changeRequest.update({
+      where: { id: changeRequestId },
+      data: { status: next, approvedAt: next === ChangeRequestStatus.APPROVED ? now : undefined },
+    });
+    return { from: current, to: next };
+  });
+
   await logAuditEvent({ ctx, action: status === ApprovalStatus.APPROVED ? "approve" : "reject", module: "change", recordId: changeRequestId, after: { approverId: ctx.user.id, status }, extra: { reason: optional(attestationReason) } });
+  if (decided) {
+    await logAuditEvent({ ctx, action: "status_change", module: "change", recordId: changeRequestId, before: { status: decided.from }, after: { status: decided.to } });
+  }
 
   const label = `${approval.changeRequest.code} — «${approval.changeRequest.title}»`;
   const motivo = (attestationReason ?? comment)?.trim();
@@ -282,6 +313,15 @@ export async function decideChangeApproval(changeRequestId: string, status: "APP
       title: "Tu solicitud de cambio fue rechazada",
       body: `${ctx.user.name} rechazó el cambio ${label}.${motivo ? ` Motivo: ${motivo}` : ""}`,
       type: "ALERT",
+      link: PATHS.changes,
+    }, { skipUserId: ctx.user.id });
+  } else if (decided?.to === ChangeRequestStatus.APPROVED) {
+    const owners = await changeProcessOwnerIds(changeRequestId);
+    await notifyUsers([approval.changeRequest.requesterId, ...owners], {
+      organizationId: ctx.organization.id,
+      title: "Solicitud de cambio aprobada",
+      body: `El cambio ${label} fue aprobado y puede pasar a implementación.`,
+      type: "SUCCESS",
       link: PATHS.changes,
     }, { skipUserId: ctx.user.id });
   } else {

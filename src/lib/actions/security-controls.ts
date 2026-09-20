@@ -61,7 +61,7 @@ export async function getSecurityControlsPayload(input?: unknown) {
     prisma.controlCatalogVersion.findFirst({ where: { standard: { code: "ISO_27001" }, active: true }, select: { id: true, version: true, catalogDate: true, status: true } }),
     prisma.evidenceFile.findMany({ where: { organizationId: authorization.ctx.organization.id, deletedAt: null }, select: { id: true, title: true, status: true, expiresAt: true }, orderBy: { createdAt: "desc" }, take: 500 }),
     prisma.risk.findMany({ where: { organizationId: authorization.ctx.organization.id }, select: { id: true, title: true, score: true, status: true }, orderBy: { score: "desc" }, take: 500 }),
-    authorization.can("members:read") ? prisma.membership.findMany({ where: { organizationId: authorization.ctx.organization.id, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    authorization.can("members:directory") ? prisma.membership.findMany({ where: { organizationId: authorization.ctx.organization.id, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
   ]);
   const total = rows.length;
   const counts = rows.reduce<Record<string, number>>((acc, row) => { acc[row.status] = (acc[row.status] ?? 0) + 1; return acc; }, {});

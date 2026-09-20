@@ -56,6 +56,36 @@ export type RecordMockRow = {
   active: boolean;
   createdAt: string;
   lastEntryAt: string | null;
+  /** Versión del formato en vigor; nula mientras no haya ninguna aprobada. */
+  currentFormatVersion?: string | null;
+  formatVersions?: RecordFormatVersionRow[];
+};
+
+/** Una versión del impreso en blanco del registro. */
+export type RecordFormatVersionRow = {
+  id: string;
+  version: string;
+  status: "DRAFT" | "PENDING" | "APPROVED" | "REJECTED";
+  changeDescription: string | null;
+  previousVersion: string | null;
+  fileName: string | null;
+  hasFile: boolean;
+  fileSize: number | null;
+  mimeType: string | null;
+  createdById: string | null;
+  createdAt: string;
+};
+
+/** Un archivo del historial de una entrada. `supersededAt` marca los sustituidos. */
+export type RecordEntryAttachmentRow = {
+  id: string;
+  version: number;
+  fileName: string;
+  fileSize: number | null;
+  mimeType: string | null;
+  uploadedById: string | null;
+  uploadedAt: string;
+  supersededAt: string | null;
 };
 
 export type RecordEntryMockRow = {
@@ -75,6 +105,7 @@ export type RecordEntryMockRow = {
   fileSize?: number | null;
   enteredById: string | null;
   enteredAt: string;
+  attachments?: RecordEntryAttachmentRow[];
 };
 
 export type ACPMStage =
@@ -852,6 +883,7 @@ type Action =
   | { type: "updateRecord"; id: string; patch: Partial<RecordMockRow> }
   | { type: "deactivateRecord"; id: string }
   | { type: "addRecordEntry"; row: RecordEntryMockRow }
+  | { type: "replaceRecordEntryFile"; id: string; patch: Partial<RecordEntryMockRow> }
   | { type: "deleteRecordEntry"; id: string }
   | { type: "addACPM"; row: ACPMRow; history: ACPMHistoryRow }
   | { type: "updateACPM"; id: string; patch: Partial<ACPMRow>; history?: ACPMHistoryRow }
@@ -949,6 +981,8 @@ function reducer(state: AdminMockState, action: Action): AdminMockState {
         recordEntries: [action.row, ...state.recordEntries],
         records: state.records.map((r) => (r.id === action.row.recordId ? { ...r, lastEntryAt: action.row.enteredAt } : r)),
       };
+    case "replaceRecordEntryFile":
+      return { ...state, recordEntries: state.recordEntries.map((entry) => entry.id === action.id ? { ...entry, ...action.patch } : entry) };
     case "deleteRecordEntry": {
       const entry = state.recordEntries.find((e) => e.id === action.id);
       const recordEntries = state.recordEntries.filter((e) => e.id !== action.id);
@@ -1078,6 +1112,10 @@ type AdminMockContextValue = {
   ) => void;
   getRecordEntryUrl: (id: string) => Promise<string>;
   deleteRecordEntry: (id: string) => void;
+  uploadRecordFormatVersion: (recordId: string, args: { file: File; changeDescription?: string; bump?: "minor" | "major" }) => void | Promise<void>;
+  getRecordFormatVersionUrl: (versionId: string) => Promise<string>;
+  replaceRecordEntryFile: (entryId: string, file: File) => void | Promise<void>;
+  getRecordEntryAttachmentUrl: (attachmentId: string) => Promise<string>;
   // ACPMs
   createACPM: (data: { title: string; description?: string; type: ACPMType; priority: ACPMPriority; source?: string; dueDate?: string; ownerId?: string }) => void;
   updateACPMFields: (id: string, data: Partial<Pick<ACPMRow, "title" | "description" | "priority" | "type" | "source" | "rootCause" | "proposedSolution" | "effectivenessCheck" | "effectivenessAt" | "ownerId" | "dueDate" | "progress">>) => void;
@@ -1437,6 +1475,72 @@ export function AdminMockProvider({
         if (entry.blobUrl) return entry.blobUrl;
         if (!entry.fileName) throw new Error("Esta entrada no tiene un archivo adjunto.");
         const text = `NormaFlow demo\nReferencia: ${entry.reference}\nArchivo: ${entry.fileName}`;
+        return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+      },
+      /* En demo el versionado vive en memoria: basta para ver el flujo, y no
+         hay Storage contra el que subir. */
+      uploadRecordFormatVersion: (recordId, args) => {
+        const record = state.records.find((r) => r.id === recordId);
+        if (!record) throw new Error("Registro no encontrado.");
+        const previas = record.formatVersions ?? [];
+        const ultima = previas[0]?.version ?? record.currentFormatVersion ?? "1.0";
+        const version = previas.length === 0
+          ? ultima
+          : args.bump === "major"
+            ? `${Number(ultima.split(".")[0] ?? 1) + 1}.0`
+            : `${ultima.split(".")[0]}.${Number(ultima.split(".")[1] ?? 0) + 1}`;
+        dispatch({
+          type: "updateRecord",
+          id: recordId,
+          patch: {
+            reviewStatus: "DRAFT",
+            formatVersions: [{
+              id: `fmt-${Date.now()}`,
+              version,
+              status: "DRAFT",
+              changeDescription: args.changeDescription ?? null,
+              previousVersion: record.currentFormatVersion ?? null,
+              fileName: args.file.name,
+              hasFile: true,
+              fileSize: args.file.size,
+              mimeType: args.file.type || null,
+              createdById: null,
+              createdAt: new Date().toISOString(),
+            }, ...previas],
+          },
+        });
+      },
+      getRecordFormatVersionUrl: async (versionId) => {
+        const version = state.records.flatMap((r) => r.formatVersions ?? []).find((v) => v.id === versionId);
+        if (!version) throw new Error("Versión de formato no encontrada.");
+        const text = `NormaFlow demo\nFormato v${version.version}\nArchivo: ${version.fileName ?? "—"}`;
+        return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
+      },
+      replaceRecordEntryFile: (entryId, file) => {
+        const entry = state.recordEntries.find((e) => e.id === entryId);
+        if (!entry) throw new Error("Entrada no encontrada.");
+        const previos = entry.attachments ?? [];
+        const ahora = new Date().toISOString();
+        dispatch({
+          type: "replaceRecordEntryFile",
+          id: entryId,
+          patch: {
+          fileName: file.name,
+          hasFile: true,
+          fileSize: file.size,
+          mimeType: file.type || null,
+          blobUrl: typeof URL !== "undefined" ? URL.createObjectURL(file) : null,
+          attachments: [
+            { id: `att-${Date.now()}`, version: (previos[0]?.version ?? 0) + 1, fileName: file.name, fileSize: file.size, mimeType: file.type || null, uploadedById: null, uploadedAt: ahora, supersededAt: null },
+            ...previos.map((a) => ({ ...a, supersededAt: a.supersededAt ?? ahora })),
+          ],
+          },
+        });
+      },
+      getRecordEntryAttachmentUrl: async (attachmentId) => {
+        const attachment = state.recordEntries.flatMap((e) => e.attachments ?? []).find((a) => a.id === attachmentId);
+        if (!attachment) throw new Error("Adjunto no encontrado.");
+        const text = `NormaFlow demo\nAdjunto v${attachment.version}\nArchivo: ${attachment.fileName}`;
         return `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`;
       },
       deleteRecordEntry: (entryId) => {

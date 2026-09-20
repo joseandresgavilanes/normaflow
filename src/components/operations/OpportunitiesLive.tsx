@@ -31,6 +31,20 @@ import {
 
 type Row = OpportunitiesPayload["opportunities"][number];
 
+/**
+ * Lo que falta para verificar el cierre, en los mismos términos que lo exige el
+ * servidor. Cerrar era el único paso sin requisitos: bastaba pulsar, y una
+ * oportunidad cerrada sin evidencia no se distingue de una abandonada.
+ */
+function closureGaps(row: Row, target: OpportunityStatus, currentUserId: string | null): string[] {
+  if (target !== OpportunityStatus.CLOSED) return [];
+  const gaps: string[] = [];
+  if (row.reviewerId && currentUserId && row.reviewerId !== currentUserId) {
+    gaps.push(`la verificación la firma ${row.reviewerName ?? "el revisor asignado"}`);
+  }
+  return gaps;
+}
+
 const NEXT_STATUS: Partial<Record<OpportunityStatus, OpportunityStatus[]>> = {
   IDENTIFIED: [OpportunityStatus.UNDER_REVIEW],
   UNDER_REVIEW: [OpportunityStatus.APPROVED, OpportunityStatus.REJECTED],
@@ -39,6 +53,25 @@ const NEXT_STATUS: Partial<Record<OpportunityStatus, OpportunityStatus[]>> = {
   MATERIALIZED: [OpportunityStatus.CLOSED],
   REJECTED: [OpportunityStatus.IDENTIFIED],
 };
+
+function progressActionLabel(nextStatus: OpportunityStatus) {
+  switch (nextStatus) {
+    case OpportunityStatus.UNDER_REVIEW:
+      return "Enviar a revisión";
+    case OpportunityStatus.APPROVED:
+      return "Aprobar revisión";
+    case OpportunityStatus.IN_MATERIALIZATION:
+      return "Iniciar ejecución";
+    case OpportunityStatus.MATERIALIZED:
+      return "Registrar resultado";
+    case OpportunityStatus.CLOSED:
+      return "Verificar y cerrar";
+    case OpportunityStatus.IDENTIFIED:
+      return "Reabrir oportunidad";
+    default:
+      return "Actualizar estado";
+  }
+}
 
 function submitInput(event: FormEvent<HTMLFormElement>): OpportunityInput {
   const fd = new FormData(event.currentTarget);
@@ -63,6 +96,7 @@ export function OpportunitiesLive({ initial }: { initial: OpportunitiesPayload }
   const [editing, setEditing] = useState<Row | null>(null);
   const [detail, setDetail] = useState<Row | null>(null);
   const [rejecting, setRejecting] = useState<Row | null>(null);
+  const [closing, setClosing] = useState<Row | null>(null);
   const row = editing;
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -77,6 +111,10 @@ export function OpportunitiesLive({ initial }: { initial: OpportunitiesPayload }
   function move(rowToMove: Row, status: OpportunityStatus) {
     if (status === OpportunityStatus.REJECTED) {
       setRejecting(rowToMove);
+      return;
+    }
+    if (status === OpportunityStatus.CLOSED) {
+      setClosing(rowToMove);
       return;
     }
     run(() => transitionOpportunity(rowToMove.id, status), {
@@ -130,15 +168,36 @@ export function OpportunitiesLive({ initial }: { initial: OpportunitiesPayload }
           cell: (row) => row.dueDate ? formatDate(row.dueDate) : "—",
         },
       ]}
-      actions={(row) => (
-        <RowActions
-          canUpdate={initial.access.canUpdate && row.status !== OpportunityStatus.MATERIALIZED && row.status !== OpportunityStatus.CLOSED}
-          canDelete={initial.access.canDelete && (row.status === OpportunityStatus.IDENTIFIED || row.status === OpportunityStatus.REJECTED)}
-          pending={isPending}
-          onEdit={() => { setError(""); setEditing(row); }}
-          onDelete={() => run(() => deleteOpportunity(row.id), { onSuccess: () => setDetail(null), successMessage: "Oportunidad eliminada." })}
-        />
-      )}
+      actions={(row) => {
+        const nextStatus = NEXT_STATUS[row.status]?.[0];
+        const reviewerMustAct = row.status === OpportunityStatus.UNDER_REVIEW;
+        const isReviewer = row.reviewerId === initial.access.currentUserId;
+        const missingReviewer = row.status === OpportunityStatus.IDENTIFIED && !row.reviewerId;
+        const canProgress = initial.access.canUpdate && Boolean(nextStatus) && !missingReviewer && (!reviewerMustAct || isReviewer);
+
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {nextStatus && (
+              <button
+                type="button"
+                className="nf-app-btn-ghost nf-app-btn-sm"
+                disabled={isPending || !canProgress}
+                title={missingReviewer ? "Asigna un revisor antes de enviar la oportunidad a revisión." : reviewerMustAct && !isReviewer ? "La revisión debe ser resuelta por la persona asignada." : undefined}
+                onClick={() => move(row, nextStatus)}
+              >
+                {progressActionLabel(nextStatus)}
+              </button>
+            )}
+            <RowActions
+              canUpdate={initial.access.canUpdate && row.status !== OpportunityStatus.MATERIALIZED && row.status !== OpportunityStatus.CLOSED}
+              canDelete={initial.access.canDelete && (row.status === OpportunityStatus.IDENTIFIED || row.status === OpportunityStatus.REJECTED)}
+              pending={isPending}
+              onEdit={() => { setError(""); setEditing(row); }}
+              onDelete={() => run(() => deleteOpportunity(row.id), { onSuccess: () => setDetail(null), successMessage: "Oportunidad eliminada." })}
+            />
+          </div>
+        );
+      }}
     />
 
     <FormModal open={creating || !!editing} title={editing ? "Editar oportunidad" : "Nueva oportunidad"} pending={isPending} error={error} onClose={() => { setCreating(false); setEditing(null); setError(""); }} onSubmit={submit}>
@@ -153,11 +212,12 @@ export function OpportunitiesLive({ initial }: { initial: OpportunitiesPayload }
     </FormModal>
 
     <Modal open={!!detail} onClose={() => setDetail(null)} title={detail?.title ?? "Oportunidad"} width={720}>{detail && <div style={{ display: "grid", gap: 16 }}>
-      <div className="nf-grid-2"><Meta label="Estado" value={detail.status} /><Meta label="Norma" value={detail.standardCode} /><Meta label="Responsable" value={detail.ownerName} /><Meta label="Revisor" value={detail.reviewerName} /></div>
+      <div className="nf-grid-2"><Meta label="Estado" value={detail.status} /><Meta label="Norma" value={detail.standardCode} /><Meta label="Responsable" value={detail.ownerName} /><Meta label="Revisor" value={detail.reviewerName} />{detail.closedAt && <Meta label="Cierre verificado por" value={detail.closedByName ? `${detail.closedByName} · ${formatDate(detail.closedAt)}` : formatDate(detail.closedAt)} />}</div>
       <Meta label="Descripción" value={detail.description} /><Meta label="Análisis de materialización" value={detail.materializationAnalysis} /><Meta label="Plan de materialización" value={detail.materializationPlan} /><Meta label="Evidencia / resultado" value={detail.materializationEvidence} />
       {initial.access.canUpdate && detail.reviewerId === initial.access.currentUserId && detail.status === OpportunityStatus.UNDER_REVIEW && <div style={{ display: "flex", gap: 8 }}><button type="button" className="nf-app-btn-primary" onClick={() => move(detail, OpportunityStatus.APPROVED)}>Aprobar revisión</button><button type="button" className="nf-app-btn-outline" onClick={() => setRejecting(detail)}>Devolver</button></div>}
-      {initial.access.canUpdate && detail.status !== OpportunityStatus.UNDER_REVIEW && (NEXT_STATUS[detail.status] ?? []).length > 0 && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--nf-line)", paddingTop: 12 }}>{(NEXT_STATUS[detail.status] ?? []).map((status) => <button key={status} type="button" className="nf-app-btn-primary" onClick={() => move(detail, status)}>Mover a {status.replaceAll("_", " ")}</button>)}</div>}
+      {initial.access.canUpdate && detail.status !== OpportunityStatus.UNDER_REVIEW && (NEXT_STATUS[detail.status] ?? []).length > 0 && <div style={{ display: "flex", gap: 8, flexWrap: "wrap", borderTop: "1px solid var(--nf-line)", paddingTop: 12 }}>{(NEXT_STATUS[detail.status] ?? []).map((status) => { const falta = closureGaps(detail, status, initial.access.currentUserId); return <button key={status} type="button" className="nf-app-btn-primary" disabled={falta.length > 0} onClick={() => move(detail, status)}>{status === OpportunityStatus.CLOSED ? "Verificar y cerrar" : `Mover a ${status.replaceAll("_", " ")}`}</button>;})}</div>}{initial.access.canUpdate && (NEXT_STATUS[detail.status] ?? []).flatMap((status) => { const falta = closureGaps(detail, status, initial.access.currentUserId); return falta.length ? [<p key={status} style={{ margin: 0, fontSize: 12, color: "var(--nf-ink-3)" }}>Para cerrarla falta: {falta.join("; ")}.</p>] : [];})}
     </div>}</Modal>
     <PromptActionModal open={!!rejecting} title="Devolver oportunidad" label="Motivo" placeholder="Explica qué debe corregirse antes de aprobar." confirmLabel="Devolver" danger pending={isPending} onCancel={() => setRejecting(null)} onConfirm={(reason) => { if (!rejecting) return; run(() => transitionOpportunity(rejecting.id, OpportunityStatus.REJECTED, reason), { onSuccess: () => { setRejecting(null); setDetail(null); }, successMessage: "Oportunidad devuelta a identificación." }); }} />
+    <PromptActionModal open={!!closing} title="Verificar y cerrar oportunidad" label="Evidencia de cumplimiento" initialValue={closing?.materializationEvidence ?? ""} placeholder="Describe el resultado comprobado, la evidencia revisada y cómo se verificó el cumplimiento." confirmLabel="Registrar verificación y cerrar" multiline required pending={isPending} onCancel={() => setClosing(null)} onConfirm={(evidence) => { if (!closing) return; run(() => transitionOpportunity(closing.id, OpportunityStatus.CLOSED, undefined, evidence), { onSuccess: () => { setClosing(null); setDetail(null); }, successMessage: "Cumplimiento verificado y oportunidad cerrada." }); }} />
   </div>;
 }

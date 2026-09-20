@@ -751,6 +751,211 @@ function RecordFormModal({
   );
 }
 
+// ─── Formato del registro (versionado) ────────────────────────────────
+
+const FORMAT_STATUS_LABEL: Record<string, string> = { DRAFT: "Borrador", PENDING: "En revisión", APPROVED: "Vigente", REJECTED: "Devuelta" };
+
+/**
+ * El impreso en blanco del registro, con su historial.
+ *
+ * No trae botones de aprobar: la versión la mueve el flujo de revisión del
+ * propio registro, que está justo encima en esta misma ficha.
+ */
+function RecordFormatSection({ record, canEdit, onError }: { record: RecordMockRow; canEdit: boolean; onError: (message: string) => void }) {
+  const admin = useAdminMock();
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [note, setNote] = useState("");
+  const [bump, setBump] = useState<"minor" | "major">("minor");
+  const [isPending, startTransition] = useTransition();
+
+  const versions = record.formatVersions ?? [];
+  const vigente = record.currentFormatVersion;
+
+  function submit() {
+    if (!file) return;
+    onError("");
+    startTransition(async () => {
+      try {
+        await admin.uploadRecordFormatVersion(record.id, { file, changeDescription: note.trim() || undefined, bump });
+        setUploading(false);
+        setFile(null);
+        setNote("");
+      } catch (err: unknown) {
+        onError(err instanceof Error ? err.message : "No se pudo subir el formato.");
+      }
+    });
+  }
+
+  return (
+    <div style={{ padding: "14px 16px", borderRadius: 14, background: "var(--nf-app-surface-2)", border: "1px solid var(--nf-line)" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: versions.length ? 10 : 0 }}>
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--nf-ink)" }}>
+            Formato del registro
+            {vigente
+              ? <span style={{ marginLeft: 8, fontFamily: "ui-monospace, monospace", fontWeight: 600, color: "var(--nf-ink-3)" }}>v{vigente} en vigor</span>
+              : <span style={{ marginLeft: 8, fontWeight: 600, color: "var(--nf-ink-4)" }}>sin versión en vigor</span>}
+          </div>
+          <div style={{ fontSize: 12, color: "var(--nf-ink-3)", marginTop: 3, lineHeight: 1.5 }}>
+            El impreso en blanco que se rellena. Cada versión que subas entra a revisión con el registro y queda en vigor cuando el revisor la aprueba.
+          </div>
+        </div>
+        {canEdit && record.active && (
+          <button type="button" className="nf-app-btn-outline" style={{ fontSize: 12, padding: "8px 12px" }} disabled={isPending} onClick={() => setUploading((open) => !open)}>
+            <Plus size={14} strokeWidth={2.25} aria-hidden /> Subir formato
+          </button>
+        )}
+      </div>
+
+      {uploading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, padding: "12px 0", borderTop: "1px solid var(--nf-line)", marginTop: 10 }}>
+          <FileImportArea label="Archivo del formato *" maxSizeMB={50} file={file} onFileChange={setFile} hint="El impreso en blanco: la plantilla que se rellenará en cada entrada." />
+          <UiField label="Qué cambia respecto de la versión anterior">
+            <input aria-label="Descripción del cambio" value={note} onChange={(event) => setNote(event.target.value)} className="nf-app-input" style={inputFieldStyle} placeholder="Se añade la columna de firma del cliente…" />
+          </UiField>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <Picker aria-label="Tipo de cambio" className="nf-app-input" style={{ ...inputFieldStyle, maxWidth: 220, cursor: "pointer" }} value={bump} onChange={(event) => setBump(event.target.value as "minor" | "major")}>
+              <option value="minor">Cambio menor</option>
+              <option value="major">Cambio mayor</option>
+            </Picker>
+            <button type="button" className="nf-app-btn-primary" disabled={isPending || !file} onClick={submit}>
+              {isPending ? "Subiendo…" : "Subir formato"}
+            </button>
+            <button type="button" className="nf-app-btn-outline" disabled={isPending} onClick={() => { setUploading(false); setFile(null); setNote(""); }}>Cancelar</button>
+          </div>
+        </div>
+      )}
+
+      {versions.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {versions.map((v) => (
+            <div key={v.id} style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "var(--nf-app-surface-1)", border: "1px solid var(--nf-line)" }}>
+              <code style={{ fontSize: 11, fontWeight: 700, fontFamily: "ui-monospace, monospace", color: "var(--nf-primary-active)" }}>v{v.version}</code>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span className="nf-chip" style={{ fontSize: 10 }}>{FORMAT_STATUS_LABEL[v.status] ?? v.status}</span>
+                  {v.fileName && <span style={{ fontSize: 11, color: "var(--nf-ink-3)", fontWeight: 600 }}>{v.fileName}</span>}
+                  {v.fileSize != null && <span style={{ fontSize: 11, color: "var(--nf-ink-4)" }}>· {(v.fileSize / 1024).toFixed(1)} KB</span>}
+                </div>
+                {v.changeDescription && <div style={{ fontSize: 12, color: "var(--nf-ink-2)", marginTop: 2 }}>{v.changeDescription}</div>}
+                <div style={{ fontSize: 11, color: "var(--nf-ink-4)", marginTop: 2 }}>{formatDate(v.createdAt)}</div>
+              </div>
+              {v.hasFile && (
+                <button
+                  type="button"
+                  className="nf-app-btn-outline"
+                  style={{ fontSize: 12, padding: "6px 10px", whiteSpace: "nowrap" }}
+                  disabled={isPending}
+                  onClick={() => startTransition(async () => {
+                    try {
+                      const url = await admin.getRecordFormatVersionUrl(v.id);
+                      window.open(url, "_blank", "noopener,noreferrer");
+                    } catch (err: unknown) {
+                      onError(err instanceof Error ? err.message : "No se pudo abrir el formato.");
+                    }
+                  })}
+                >
+                  <Eye size={13} strokeWidth={2.25} aria-hidden /> Abrir
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Adjuntos de una entrada ──────────────────────────────────────────
+
+/** Sustituye el archivo de la entrada; el anterior queda en el historial. */
+function ReplaceEntryFileButton({ entry, onError }: { entry: RecordEntryMockRow; onError: (message: string) => void }) {
+  const admin = useAdminMock();
+  const [isPending, startTransition] = useTransition();
+  const inputId = `nf-replace-${entry.id}`;
+
+  return (
+    <>
+      <input
+        id={inputId}
+        type="file"
+        style={{ display: "none" }}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (!file) return;
+          onError("");
+          startTransition(async () => {
+            try {
+              await admin.replaceRecordEntryFile(entry.id, file);
+            } catch (err: unknown) {
+              onError(err instanceof Error ? err.message : "No se pudo sustituir el archivo.");
+            }
+          });
+        }}
+      />
+      <label
+        htmlFor={inputId}
+        className="nf-app-btn-outline"
+        style={{ fontSize: 12, padding: "8px 12px", display: "inline-flex", alignItems: "center", gap: 6, cursor: isPending ? "wait" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}
+        title="Sustituir el archivo conservando el anterior"
+      >
+        <Paperclip size={14} strokeWidth={2.25} aria-hidden />
+        {isPending ? "Subiendo…" : "Sustituir"}
+      </label>
+    </>
+  );
+}
+
+/** Versiones anteriores del adjunto. Solo aparece cuando hubo sustituciones. */
+function EntryAttachmentHistory({ entry, onError }: { entry: RecordEntryMockRow; onError: (message: string) => void }) {
+  const admin = useAdminMock();
+  const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const anteriores = (entry.attachments ?? []).filter((a) => a.supersededAt);
+  if (anteriores.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: 4 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        style={{ background: "none", border: "none", padding: 0, fontSize: 11, fontWeight: 600, color: "var(--nf-primary-active)", cursor: "pointer", fontFamily: "inherit" }}
+      >
+        <Clock size={11} strokeWidth={2.5} aria-hidden style={{ verticalAlign: "-1px", marginRight: 4 }} />
+        {open ? "Ocultar" : `${anteriores.length} ${anteriores.length === 1 ? "versión anterior" : "versiones anteriores"}`}
+      </button>
+      {open && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 6 }}>
+          {anteriores.map((a) => (
+            <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, color: "var(--nf-ink-3)", flexWrap: "wrap" }}>
+              <code style={{ fontFamily: "ui-monospace, monospace", fontWeight: 700 }}>v{a.version}</code>
+              <span style={{ fontWeight: 600 }}>{a.fileName}</span>
+              <span style={{ color: "var(--nf-ink-4)" }}>sustituido {formatDate(a.supersededAt ?? a.uploadedAt)}</span>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => startTransition(async () => {
+                  try {
+                    const url = await admin.getRecordEntryAttachmentUrl(a.id);
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  } catch (err: unknown) {
+                    onError(err instanceof Error ? err.message : "No se pudo abrir el adjunto.");
+                  }
+                })}
+                style={{ background: "none", border: "none", padding: 0, fontSize: 11, fontWeight: 600, color: "var(--nf-primary-active)", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                Abrir
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Detail modal (entries) ─────────────────────────────────────────
 
 function RecordEntryAttachmentPreview({ entry }: { entry: RecordEntryMockRow }) {
@@ -945,6 +1150,8 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
           </div>
         )}
 
+        <RecordFormatSection record={record} canEdit={canEdit} onError={setEntryError} />
+
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1082,6 +1289,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                   <div style={{ minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}><div style={{ fontSize: 13, color: "var(--nf-ink)", fontWeight: 700, lineHeight: 1.45 }}>{e.title ?? e.reference}</div><span className="nf-chip" style={{ fontSize: 10 }}>{e.status === "DRAFT" ? "Borrador" : e.status === "EXPIRED" ? "Vencido" : e.status === "ARCHIVED" ? "Archivado" : "Vigente"}</span></div>
                     {e.description && <div style={{ fontSize: 13, color: "var(--nf-ink-2)", fontWeight: 500, lineHeight: 1.45 }}>{e.description}</div>}
+                    <EntryAttachmentHistory entry={e} onError={setEntryError} />
                     {e.fileName && (
                       <div style={{ fontSize: 11, color: "var(--nf-ink-3)", marginTop: 4, display: "flex", alignItems: "center", gap: 5, fontWeight: 600, flexWrap: "wrap" }}>
                         <Paperclip size={13} strokeWidth={2.25} aria-hidden />
@@ -1143,6 +1351,7 @@ function RecordDetailModal({ record, canEdit, canSubmit, canAddEntry, onClose }:
                         {admin.mode === "live" || e.hasFile || e.blobUrl ? "Abrir archivo" : "Ver referencia"}
                       </button>
                     )}
+                    {canEdit && <ReplaceEntryFileButton entry={e} onError={setEntryError} />}
                     {canEdit && (
                       <button
                         type="button"

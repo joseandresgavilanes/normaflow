@@ -53,6 +53,12 @@ export const itemCreateSchema = z.object({
 
 export const itemUpdateSchema = itemCreateSchema.extend({ id: idSchema }).omit({ planId: true });
 
+/** Incorporación en bloque de riesgos ya registrados en la matriz. */
+export const itemImportSchema = z.object({
+  planId: idSchema,
+  riskIds: z.array(idSchema).min(1, "Selecciona al menos un riesgo.").max(200),
+}).strict();
+
 export const residualAssessmentSchema = z.object({
   itemId: idSchema,
   residualImpact: scoreField,

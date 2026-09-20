@@ -50,12 +50,29 @@ async function exportOrg() {
 
   const data: Record<string, unknown> = { organization: org };
   const counts: Record<string, number> = {};
+  /* Modelos cuya tabla todavía no existe en esta base: pasa cuando el esquema
+     va por delante de las migraciones aplicadas. Una tabla que no existe no
+     puede contener filas del tenant, así que saltarla no deja nada fuera del
+     export —pero se anota y se avisa, porque un export silenciosamente
+     incompleto sería exactamente lo que este fichero existe para evitar. */
+  const missingTables: string[] = [];
   for (const model of [...MODELS, ...Object.keys(CHILD_MODELS)]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const delegate = (prisma as any)[model];
     if (!delegate?.findMany) continue;
     const where = CHILD_MODELS[model] ? CHILD_MODELS[model](ORG_ID) : { organizationId: ORG_ID };
-    const rows = await delegate.findMany({ where });
+    let rows: unknown[];
+    try {
+      rows = await delegate.findMany({ where });
+    } catch (error) {
+      // P2021 es «la tabla no existe». Cualquier otro fallo sí aborta: no se
+      // borra un tenant con un export que no se sabe si está completo.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021") {
+        missingTables.push(model);
+        continue;
+      }
+      throw error;
+    }
     data[model] = rows;
     counts[model] = rows.length;
   }
@@ -64,9 +81,13 @@ async function exportOrg() {
   mkdirSync(exportsDir, { recursive: true });
   const ts = new Date().toISOString().replace(/[:.]/g, "-");
   const file = path.join(exportsDir, `org-${ORG_ID}-${ts}.json`);
-  writeFileSync(file, JSON.stringify({ exportedAt: new Date().toISOString(), organizationId: ORG_ID, counts, data }, null, 2));
+  writeFileSync(file, JSON.stringify({ exportedAt: new Date().toISOString(), organizationId: ORG_ID, counts, missingTables, data }, null, 2));
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   console.log(`\n✅ Export de ${org.name} → ${file}\n   ${total} registros en ${Object.keys(counts).length} tablas.`);
+  if (missingTables.length) {
+    console.log(`   ⚠️  ${missingTables.length} modelo(s) sin tabla en esta base (migraciones pendientes), omitidos por vacíos:`);
+    console.log(`      ${missingTables.join(", ")}`);
+  }
   return file;
 }
 

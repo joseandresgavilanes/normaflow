@@ -111,6 +111,37 @@
   min-width: 0;
   color: var(--nf-text-subtle);
 }
+.nf-sidenav__org-row {
+  display: flex;
+  align-items: center;
+  gap: var(--nf-space-1);
+  min-width: 0;
+}
+.nf-sidenav__org-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+.nf-sidenav__org-create {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nf-radius-xs);
+  background: transparent;
+  color: var(--nf-text-secondary);
+  cursor: pointer;
+}
+.nf-sidenav__org-create:hover {
+  background: var(--nf-surface-hover);
+  color: var(--nf-text-primary);
+}
+.nf-sidenav__org-create:focus-visible {
+  outline: 2px solid var(--nf-focus-ring);
+  outline-offset: 2px;
+}
 .nf-sidenav__org-control select {
   appearance: none;
   border: 0;

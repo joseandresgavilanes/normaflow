@@ -23,6 +23,7 @@ import {
   standardCodeSchema,
 } from "@/lib/validation/admin";
 import { parseId } from "@/lib/validation/common";
+import { ensurePersonnelForMemberSafe } from "@/lib/personnel-sync";
 
 // ─── Organization settings ──────────────────────────────────────────
 
@@ -166,6 +167,11 @@ export async function inviteMember(input: { email: string; name: string; role: R
   const membership = await prisma.membership.create({
     data: { userId: user.id, organizationId: ctx.organization.id, role, scoped: defaultScopedFor(role) },
   });
+
+  /* Quien entra en la organización también es una persona de la organización:
+     sin su ficha en Personal no se le podía nombrar responsable de aprobación
+     de un documento, aunque fuera justo quien lo aprueba en el flujo. */
+  await ensurePersonnelForMemberSafe({ organizationId: ctx.organization.id, email, name });
 
   const inviteResult = await sendSupabaseMemberInvite({
     email,

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, LogOut, Pin, PinOff, Search, Sparkles, X } from "lucide-react";
+import { ChevronDown, LogOut, Pin, PinOff, Plus, Search, Sparkles, X } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { useWorkspaceOptional } from "@/context/WorkspaceStore";
 import { useI18n } from "@/context/I18nProvider";
@@ -59,6 +59,7 @@ export default function AppSidebar({
   memberships = [],
   currentOrgId,
   onOrgChange,
+  onCreateOrganization,
   demoSession = false,
   drawerOpen = false,
   onNavigate,
@@ -74,6 +75,7 @@ export default function AppSidebar({
   memberships?: Membership[];
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
+  onCreateOrganization?: () => void;
   demoSession?: boolean;
   drawerOpen?: boolean;
   onNavigate?: () => void;
@@ -317,6 +319,7 @@ export default function AppSidebar({
           memberships={memberships}
           currentOrgId={currentOrgId}
           onOrgChange={onOrgChange}
+          onCreateOrganization={onCreateOrganization}
         />
 
         {onClose && (
@@ -393,12 +396,14 @@ function OrgSwitcher({
   memberships,
   currentOrgId,
   onOrgChange,
+  onCreateOrganization,
 }: {
   displayOrgName: string;
   demoSession: boolean;
   memberships: Membership[];
   currentOrgId?: string;
   onOrgChange?: (organizationId: string) => void;
+  onCreateOrganization?: () => void;
 }) {
   const ws = useWorkspaceOptional();
   const { t } = useI18n();
@@ -411,32 +416,40 @@ function OrgSwitcher({
   const value = demoSession && ws ? ws.state.session.activeOrgId : currentOrgId ?? "";
   const canSwitch = options.length > 1 && (demoSession ? Boolean(ws) : Boolean(onOrgChange));
 
-  if (!canSwitch) {
-    return (
-      <span className="nf-sidenav__org">
-        <span className="nf-sidenav__org-label">{t("common.organization")}</span>
-        <span className="nf-sidenav__org-name" title={displayOrgName}>{displayOrgName}</span>
-      </span>
-    );
-  }
-
   return (
     <span className="nf-sidenav__org nf-sidenav__org--switch">
       <span className="nf-sidenav__org-label">{t("common.organization")}</span>
-      <span className="nf-sidenav__org-control">
-        <Picker
-          value={value}
-          aria-label={t("common.organization")}
-          onChange={(event) => {
-            if (demoSession && ws) ws.switchDemoOrg(event.target.value);
-            else onOrgChange?.(event.target.value);
-          }}
-        >
-          {options.map((org) => (
-            <option key={org.id} value={org.id}>{org.name}</option>
-          ))}
-        </Picker>
-        <ChevronDown size={14} strokeWidth={2} aria-hidden />
+      <span className="nf-sidenav__org-row">
+        {canSwitch ? (
+          <span className="nf-sidenav__org-control">
+            <Picker
+              value={value}
+              aria-label={t("common.organization")}
+              onChange={(event) => {
+                if (demoSession && ws) ws.switchDemoOrg(event.target.value);
+                else onOrgChange?.(event.target.value);
+              }}
+            >
+              {options.map((org) => (
+                <option key={org.id} value={org.id}>{org.name}</option>
+              ))}
+            </Picker>
+            <ChevronDown size={14} strokeWidth={2} aria-hidden />
+          </span>
+        ) : (
+          <span className="nf-sidenav__org-name" title={displayOrgName}>{displayOrgName}</span>
+        )}
+        {onCreateOrganization && (
+          <button
+            type="button"
+            className="nf-sidenav__org-create"
+            onClick={onCreateOrganization}
+            aria-label={t("organization.create.action")}
+            title={t("organization.create.action")}
+          >
+            <Plus size={15} strokeWidth={2.25} aria-hidden />
+          </button>
+        )}
       </span>
     </span>
   );

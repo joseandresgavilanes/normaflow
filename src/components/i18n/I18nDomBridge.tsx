@@ -99,9 +99,6 @@ export default function I18nDomBridge() {
       });
     }
 
-    translateElement(document.body);
-    translateHead();
-
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "characterData" && mutation.target.nodeType === Node.TEXT_NODE) {
@@ -121,18 +118,62 @@ export default function I18nDomBridge() {
       }
     });
 
-    observer.observe(document.body, {
-      childList: true,
-      characterData: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: [...TRANSLATABLE_ATTRIBUTES],
-    });
-
     const headObserver = new MutationObserver(translateHead);
-    headObserver.observe(document.head, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["content"] });
+
+    /**
+     * El puente escribe en el DOM por fuera de React, así que no puede empezar
+     * mientras quede algo por hidratar.
+     *
+     * La página llega por streaming: React hidrata cada trozo cuando aterriza.
+     * Si para entonces el puente ya cambió «Pendiente» por «Pending», React
+     * compara su texto con el del DOM, no coinciden y aborta la hidratación de
+     * ese árbol —«Hydration failed because the server rendered text…»— en todas
+     * las pantallas de `/app`.
+     *
+     * `load` marca el final del HTML que venía en la respuesta, y el turno de
+     * inactividad posterior llega cuando React ya ha vaciado su cola: hidratar
+     * tiene más prioridad que un callback ocioso. A partir de ahí todo lo que
+     * aparece lo monta React en el cliente y el observador puede traducirlo sin
+     * pisarle nada.
+     *
+     * Nada de `requestAnimationFrame` aquí: no se dispara en una pestaña de
+     * fondo, y con él la página abierta en segundo plano se quedaba entera sin
+     * traducir hasta que alguien la miraba.
+     */
+    let cancelled = false;
+    let timer = 0;
+    let idle = 0;
+
+    function start() {
+      if (cancelled) return;
+      cancelled = true; // una sola pasada inicial, venga del ocio o del plazo
+      translateElement(document.body);
+      translateHead();
+      observer.observe(document.body, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: [...TRANSLATABLE_ATTRIBUTES],
+      });
+      headObserver.observe(document.head, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["content"] });
+    }
+
+    function scheduleStart() {
+      // El plazo es el suelo: si la pestaña nunca queda ociosa, se traduce igual.
+      timer = window.setTimeout(start, 250);
+      const ric = window.requestIdleCallback;
+      if (ric) idle = ric(start, { timeout: 250 });
+    }
+
+    if (document.readyState === "complete") scheduleStart();
+    else window.addEventListener("load", scheduleStart, { once: true });
 
     return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+      window.cancelIdleCallback?.(idle);
+      window.removeEventListener("load", scheduleStart);
       observer.disconnect();
       headObserver.disconnect();
     };

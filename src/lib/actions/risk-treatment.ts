@@ -12,6 +12,7 @@ import {
   closeItemSchema,
   itemControlLinkSchema,
   itemCreateSchema,
+  itemImportSchema,
   itemUpdateSchema,
   methodologySchema,
   planApprovalSchema,
@@ -46,12 +47,14 @@ async function ensureMember(organizationId: string, userId: string | null | unde
   if (!member) throw new Error("El usuario no pertenece a la organización.");
   return userId;
 }
-function nextReference(existing: string[]) {
-  const max = existing.reduce((acc, ref) => {
+function lastReference(existing: string[]) {
+  return existing.reduce((acc, ref) => {
     const match = /(\d+)$/.exec(ref);
     return match ? Math.max(acc, Number(match[1])) : acc;
   }, 0);
-  return `R-${String(max + 1).padStart(3, "0")}`;
+}
+function nextReference(existing: string[]) {
+  return `R-${String(lastReference(existing) + 1).padStart(3, "0")}`;
 }
 
 export async function getRiskTreatmentPayload() {
@@ -79,14 +82,28 @@ export async function getRiskTreatmentPayload() {
       },
     }),
     prisma.riskAssessmentMethodology.findFirst({ where: { organizationId }, orderBy: { version: "desc" }, include: { owner: { select: { id: true, name: true } } } }),
-    authorization.can("members:read") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
+    authorization.can("members:directory") ? prisma.membership.findMany({ where: { organizationId, active: true }, select: { user: { select: { id: true, name: true } } }, orderBy: { user: { name: "asc" } } }) : Promise.resolve([]),
     prisma.evidenceFile.findMany({ where: { organizationId, deletedAt: null }, select: { id: true, title: true }, orderBy: { createdAt: "desc" }, take: 500 }),
     prisma.organizationControl.findMany({ where: { organizationId }, select: { id: true, control: { select: { code: true, title: true } } }, orderBy: { control: { sortOrder: "asc" } }, take: 200 }),
-    prisma.risk.findMany({ where: { organizationId }, select: { id: true, title: true }, orderBy: { score: "desc" }, take: 500 }),
+    prisma.risk.findMany({
+      where: { organizationId },
+      select: { id: true, title: true, score: true, category: true, treatment: true, ownerId: true, process: { select: { id: true, name: true } }, treatmentItems: { select: { planId: true } } },
+      orderBy: { score: "desc" },
+      take: 500,
+    }),
     prisma.riskTreatmentPlan.findMany({ where: { organizationId }, orderBy: { version: "desc" }, select: { id: true, version: true, title: true, status: true, approvedAt: true } }),
   ]);
 
   const items = plan?.items ?? [];
+  /* La matriz de riesgos y el plan de tratamiento eran dos listas paralelas: el
+     plan solo tenía lo que alguien hubiera vuelto a escribir a mano, así que
+     quien no había registrado ningún riesgo entraba aquí y no veía ninguno de
+     los de sus compañeros. Estos son los riesgos de la organización que aún no
+     están incorporados a este plan. */
+  const pendingRisks = plan
+    ? riskOptions.filter((risk) => !risk.treatmentItems.some((link: { planId: string }) => link.planId === plan.id))
+    : riskOptions;
+  const memberNames = new Map(members.map((m) => [m.user.id, m.user.name]));
   const summary = {
     total: items.length,
     open: items.filter((i) => i.status === "OPEN").length,
@@ -151,7 +168,16 @@ export async function getRiskTreatmentPayload() {
     members: members.map((m) => m.user),
     evidenceOptions,
     orgControlOptions: orgControlOptions.map((c) => ({ id: c.id, code: c.control.code, title: c.control.title })),
-    riskOptions,
+    riskOptions: riskOptions.map((r) => ({ id: r.id, title: r.title })),
+    pendingRisks: pendingRisks.map((r) => ({
+      id: r.id,
+      title: r.title,
+      score: r.score,
+      category: r.category,
+      treatment: r.treatment,
+      ownerName: r.ownerId ? memberNames.get(r.ownerId) ?? null : null,
+      processName: r.process?.name ?? null,
+    })),
   };
 }
 
@@ -201,7 +227,30 @@ export async function createRiskTreatmentPlan(input: unknown) {
     }
     const latest = await tx.riskTreatmentPlan.aggregate({ where: { organizationId }, _max: { version: true } });
     const plan = await tx.riskTreatmentPlan.create({ data: { organizationId, version: (latest._max.version ?? 0) + 1, title: data.title, methodologyId: data.methodologyId ?? null, soaId: data.soaId ?? null, ownerId: ctx.user.id } });
-    await writeAuditLog(tx, { ctx, action: "create", module: "risk_treatment_plan", recordId: plan.id, after: { version: plan.version } });
+    /* Un plan es la ejecución de la matriz, no una segunda lista vacía que
+       alguien deba reconstruir. Al abrir una nueva versión incorpora el
+       inventario actual con valoración, tratamiento y responsable. */
+    const risks = await tx.risk.findMany({ where: { organizationId }, orderBy: [{ score: "desc" }, { createdAt: "asc" }] });
+    if (risks.length) {
+      await tx.riskTreatmentItem.createMany({
+        data: risks.map((risk, index) => ({
+          organizationId,
+          planId: plan.id,
+          reference: `R-${String(index + 1).padStart(3, "0")}`,
+          title: risk.title,
+          description: risk.description,
+          riskId: risk.id,
+          impact: risk.impact,
+          probability: risk.probability,
+          inherentRisk: risk.score,
+          treatment: risk.treatment,
+          ownerId: risk.ownerId,
+          targetDate: risk.dueDate,
+          status: "OPEN",
+        })),
+      });
+    }
+    await writeAuditLog(tx, { ctx, action: "create", module: "risk_treatment_plan", recordId: plan.id, after: { version: plan.version, importedRisks: risks.length } });
     return plan;
   });
   revalidatePath(PATH);
@@ -217,6 +266,10 @@ export async function approveRiskTreatmentPlan(input: unknown) {
     const plan = await tx.riskTreatmentPlan.findFirst({ where: { id: data.id, organizationId } });
     if (!plan) throw new Error("Plan de tratamiento no encontrado.");
     if (!PLAN_EDITABLE.includes(plan.status as (typeof PLAN_EDITABLE)[number])) throw new Error("El plan ya está aprobado o reemplazado.");
+    const itemCount = await tx.riskTreatmentItem.count({ where: { planId: plan.id } });
+    if (itemCount === 0) {
+      throw new Error("Incorpora al menos un riesgo de la matriz antes de aprobar el plan.");
+    }
     if (data.evidenceId) {
       const ev = await tx.evidenceFile.findFirst({ where: { id: data.evidenceId, organizationId, deletedAt: null } });
       if (!ev) throw new Error("La evidencia de aprobación no pertenece a la organización.");
@@ -272,6 +325,71 @@ export async function createRiskTreatmentItem(input: unknown) {
   });
   revalidatePath(PATH);
   return { id: result.id, reference: result.reference };
+}
+
+/**
+ * Incorpora al plan riesgos ya registrados en la matriz.
+ *
+ * Sin esto el plan solo contenía lo que alguien hubiera vuelto a teclear, y los
+ * riesgos de los demás no aparecían por ninguna parte. Cada riesgo llega con su
+ * valoración, tratamiento, responsable y fecha, y queda enlazado (`riskId`) para
+ * que matriz y plan dejen de divergir.
+ */
+export async function importRisksToPlan(input: unknown) {
+  const data = parseInput(itemImportSchema, input);
+  const ctx = await requirePermission("risk-treatment:update");
+  const organizationId = ctx.organization.id;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const plan = await tx.riskTreatmentPlan.findFirst({ where: { id: data.planId, organizationId } });
+    if (!plan) throw new Error("Plan de tratamiento no encontrado.");
+    const itemCount = await tx.riskTreatmentItem.count({ where: { planId: plan.id } });
+    /* Recuperación acotada para planes aprobados vacíos creados antes de que
+       el plan se enlazara con la matriz. No permite alterar un plan aprobado
+       con contenido: únicamente incorpora los riesgos que faltaban al único
+       caso donde el plan no contenía absolutamente nada que aprobar. */
+    const recoveringEmptyApprovedPlan = plan.status === "APPROVED" && itemCount === 0;
+    if (!PLAN_EDITABLE.includes(plan.status as (typeof PLAN_EDITABLE)[number]) && !recoveringEmptyApprovedPlan) {
+      throw new Error("Un plan aprobado o reemplazado ya no admite riesgos nuevos.");
+    }
+    const risks = await tx.risk.findMany({ where: { id: { in: data.riskIds }, organizationId } });
+    if (risks.length !== new Set(data.riskIds).size) throw new Error("Algún riesgo no pertenece a la organización.");
+    const already = await tx.riskTreatmentItem.findMany({ where: { planId: plan.id, riskId: { in: data.riskIds } }, select: { riskId: true } });
+    const linked = new Set(already.map((row) => row.riskId));
+    const pending = risks.filter((risk) => !linked.has(risk.id));
+    if (!pending.length) return { created: 0, references: [] as string[] };
+
+    const refs = await tx.riskTreatmentItem.findMany({ where: { planId: plan.id }, select: { reference: true } });
+    let counter = lastReference(refs.map((r) => r.reference));
+    const references: string[] = [];
+    for (const risk of pending) {
+      counter += 1;
+      const reference = `R-${String(counter).padStart(3, "0")}`;
+      references.push(reference);
+      await tx.riskTreatmentItem.create({
+        data: {
+          organizationId,
+          planId: plan.id,
+          reference,
+          title: risk.title,
+          description: risk.description,
+          riskId: risk.id,
+          impact: risk.impact,
+          probability: risk.probability,
+          inherentRisk: risk.impact * risk.probability,
+          treatment: risk.treatment,
+          ownerId: risk.ownerId,
+          targetDate: risk.dueDate,
+          status: "OPEN",
+        },
+      });
+    }
+    await writeAuditLog(tx, { ctx, action: "import_risks", module: "risk_treatment_plan", recordId: plan.id, after: { imported: pending.length, references, recoveredEmptyApprovedPlan: recoveringEmptyApprovedPlan } });
+    return { created: pending.length, references };
+  });
+
+  revalidatePath(PATH);
+  return result;
 }
 
 export async function updateRiskTreatmentItem(input: unknown) {

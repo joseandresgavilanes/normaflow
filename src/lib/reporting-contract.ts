@@ -53,4 +53,10 @@ export const REPORT_IDS = [
 
 export type ReportId = (typeof REPORT_IDS)[number];
 export type ExportFormat = "PDF" | "EXCEL";
-export type ReportFilters = { from: string; to: string; standardCode?: string; status?: string; recordId?: string; ownerId?: string; domain?: string; applicability?: string; hoursWorked?: string };
+/**
+ * `timeZone` viaja con el informe porque el trabajador que lo renderiza corre
+ * más tarde y fuera de la petición: no tiene cookie ni navegador de quien lo
+ * pidió, y sin ella una franja horaria —«auditoría de 09:00 a 11:00»— saldría
+ * impresa en UTC, desplazada tantas horas como huso tenga la organización.
+ */
+export type ReportFilters = { from: string; to: string; standardCode?: string; status?: string; recordId?: string; ownerId?: string; domain?: string; applicability?: string; hoursWorked?: string; timeZone?: string };

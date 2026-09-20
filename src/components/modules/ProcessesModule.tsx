@@ -24,6 +24,7 @@ import {
   type TrainingAssignmentRow,
   type TrainingCourseRow,
 } from "@/context/WorkspaceStore";
+import { nextProcessCode } from "@/lib/process-code";
 import {
   changesLinkedToProcess,
   documentsLinkedToProcess,
@@ -39,7 +40,7 @@ function processTypeMeta(type: ProcessRow["type"]) {
   if (type === "strategic") {
     return { label: "Estratégico", color: "var(--nf-primary-active)", soft: "rgba(91, 63, 166, 0.09)", gradientEnd: "#7c5cc9" };
   }
-  return { label: "Core", color: "var(--nf-primary-active)", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "var(--nf-success)" };
+  return { label: "Clave", color: "var(--nf-primary-active)", soft: "rgba(82, 102, 246, 0.08)", gradientEnd: "var(--nf-success)" };
 }
 
 function getProcessLinkStats(
@@ -433,11 +434,14 @@ export default function ProcessesModule() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ProcessRow | null>(null);
-  const [form, setForm] = useState({ name: "", code: "", type: "core", description: "", owner: "", inputs: "", outputs: "" });
+  /* `codeManual` distingue el código propuesto por el tipo (PE/PO/PA) del que
+     alguien escribe a mano: solo el primero se recalcula al cambiar el tipo. */
+  const [form, setForm] = useState({ name: "", code: "", type: "core", description: "", owner: "", inputs: "", outputs: "", codeManual: false });
+  const suggestCode = (type: string) => nextProcessCode(type, processes.map(p => p.code));
 
   function openCreate() {
     setEditingId(null);
-    setForm({ name: "", code: "", type: "core", description: "", owner: state.session.name, inputs: "", outputs: "" });
+    setForm({ name: "", code: suggestCode("core"), type: "core", description: "", owner: state.session.name, inputs: "", outputs: "", codeManual: false });
     setCreateOpen(true);
   }
 
@@ -451,6 +455,7 @@ export default function ProcessesModule() {
       owner: p.owner,
       inputs: p.inputs.join(", "),
       outputs: p.outputs.join(", "),
+      codeManual: true,
     });
     setDetail(null);
     setCreateOpen(true);
@@ -487,7 +492,7 @@ export default function ProcessesModule() {
     const p: ProcessRow = {
       id: `p-${Date.now()}`,
       name: form.name.trim(),
-      code: form.code.trim() || `P-${String(processes.length + 1).padStart(2, "0")}`,
+      code: form.code.trim() || suggestCode(form.type),
       type: form.type as ProcessRow["type"],
       description: form.description.trim() || "",
       owner: form.owner.trim() || state.session.name,
@@ -719,7 +724,7 @@ export default function ProcessesModule() {
               <input
                 className="nf-app-input"
                 value={form.code}
-                onChange={e => setForm({ ...form, code: e.target.value })}
+                onChange={e => setForm({ ...form, code: e.target.value, codeManual: true })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box" }}
               />
             </label>
@@ -728,12 +733,12 @@ export default function ProcessesModule() {
               <Picker aria-label="Tipo"
                 className="nf-app-input"
                 value={form.type}
-                onChange={e => setForm({ ...form, type: e.target.value })}
+                onChange={e => setForm({ ...form, type: e.target.value, code: form.codeManual ? form.code : suggestCode(e.target.value) })}
                 style={{ width: "100%", marginTop: 6, boxSizing: "border-box", cursor: "pointer" }}
               >
-                <option value="core">Core</option>
-                <option value="support">Soporte</option>
                 <option value="strategic">Estratégico</option>
+                <option value="core">Clave</option>
+                <option value="support">Soporte</option>
               </Picker>
             </label>
           </div>

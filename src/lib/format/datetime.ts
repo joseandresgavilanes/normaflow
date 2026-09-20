@@ -118,6 +118,22 @@ export function formatDateTime(value: Date | string | number, context?: DateForm
   }).format(date);
 }
 
+/** Solo la hora, para franjas donde el día ya está escrito al lado. */
+export function formatTime(value: Date | string | number, context?: DateFormatContext): string {
+  const { timeZone, locale } = currentContext(context);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat(INTL_LOCALES[locale], { ...zoneOption(timeZone), hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
+/** `HH:MM` en la zona elegida, para rellenar `<input type="time">`. */
+export function formatTimeInput(value: Date | string | number, context?: DateFormatContext): string {
+  const { timeZone } = currentContext(context);
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-GB", { ...zoneOption(timeZone), hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+}
+
 /** `YYYY-MM-DD` en la zona elegida, para rellenar `<input type="date">`. */
 export function formatDateInput(value: Date | string | number, context?: DateFormatContext): string {
   const { timeZone } = currentContext(context);

@@ -84,6 +84,7 @@ model Organization {
   evidenceDocumentLinks         EvidenceDocumentLink[]
   evidenceRiskLinks             EvidenceRiskLink[]
   evidenceAuditLinks            EvidenceAuditLink[]
+  evidenceAuditProgramLinks     EvidenceAuditProgramLink[]
   evidenceFindingLinks          EvidenceFindingLink[]
   evidenceNonconformityLinks    EvidenceNonconformityLink[]
   evidenceIndicatorLinks        EvidenceIndicatorLink[]
@@ -352,6 +353,8 @@ model User {
   reviewedRecords                Record[]                      @relation("RecordReviewer")
   responsibleRecordEntries       RecordEntry[]                 @relation("RecordEntryResponsible")
   enteredRecordEntries           RecordEntry[]                 @relation("RecordEntryEnteredBy")
+  createdRecordFormatVersions    RecordFormatVersion[]         @relation("RecordFormatVersionCreatedBy")
+  uploadedRecordEntryAttachments RecordEntryAttachment[]       @relation("RecordEntryAttachmentUploadedBy")
   capaOwners                     CAPA[]                        @relation("CAPAOwner")
   capaRequesters                 CAPA[]                        @relation("CAPARequester")
   capaRootCauseApprovals         CAPA[]                        @relation("CAPARootCauseApprovedBy")
@@ -374,6 +377,8 @@ model User {
   ownedRiskPlans                 RiskTreatmentPlan[]           @relation("RiskPlanOwner")
   approvedRiskPlans              RiskTreatmentPlan[]           @relation("RiskPlanApprover")
   ownedRiskItems                 RiskTreatmentItem[]           @relation("RiskItemOwner")
+  riskTreatmentDecisions         Risk[]                        @relation("RiskTreatmentDecidedBy")
+  closedOpportunities            Opportunity[]                 @relation("OpportunityClosedBy")
   residualRiskAssessments        ResidualRiskAssessment[]      @relation("ResidualRiskAssessor")
   riskAcceptances                RiskAcceptance[]              @relation("RiskAcceptedBy")
   ownedAssets                    InformationAsset[]            @relation("AssetOwner")
@@ -1179,6 +1184,12 @@ model Risk {
   ownerId        String?
   dueDate        DateTime?
   residualScore  Int?
+  /// La decisión de tratamiento, no solo la etiqueta. Aceptar, transferir o
+  /// evitar un riesgo es una decisión que alguien firma: sin el porqué, quién y
+  /// cuándo, el desplegable no dice nada y un auditor no puede revisarla.
+  treatmentJustification String?
+  treatmentDecidedById   String?
+  treatmentDecidedAt     DateTime?
   /// SIG: riesgos y oportunidades integrados — un riesgo puede pertenecer a
   /// varias disciplinas (QUALITY / ENVIRONMENT / SAFETY / SECURITY) y normas.
   disciplines    Discipline[]  @default([])
@@ -1196,6 +1207,7 @@ model Risk {
   managementReviewInputs ManagementReviewInput[]
   securityControlLinks   RiskControlLink[]
   treatmentItems         RiskTreatmentItem[]     @relation("RiskTreatmentItemRisk")
+  treatmentDecidedBy     User?                   @relation("RiskTreatmentDecidedBy", fields: [treatmentDecidedById], references: [id], onDelete: SetNull)
   assetRisks             AssetRisk[]
 
   @@index([processId])
@@ -1366,6 +1378,9 @@ model Opportunity {
   dueDate                 DateTime?
   materializedAt          DateTime?
   closedAt                DateTime?
+  /// Quién verificó que la oportunidad se cumplió antes de cerrarla. Cerrar sin
+  /// firma ni evidencia es indistinguible de abandonarla.
+  closedById              String?
   rejectionReason         String?
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
@@ -1373,6 +1388,7 @@ model Opportunity {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   owner        User?        @relation("OpportunityOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   reviewer     User?        @relation("OpportunityReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  closedBy     User?        @relation("OpportunityClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
 
   @@index([organizationId, status])
   @@index([organizationId, reviewerId, status])
@@ -1861,6 +1877,8 @@ model EvidenceFile {
   documentLinks             EvidenceDocumentLink[]
   riskLinks                 EvidenceRiskLink[]
   auditLinks                EvidenceAuditLink[]
+  auditProgramLinks         EvidenceAuditProgramLink[]
+  checklistAnswers          AuditChecklistItem[]
   findingLinks              EvidenceFindingLink[]
   nonconformityLinks        EvidenceNonconformityLink[]
   indicatorLinks            EvidenceIndicatorLink[]
@@ -1922,6 +1940,26 @@ model EvidenceRiskLink {
   @@unique([evidenceId, riskId])
   @@index([organizationId, riskId])
   @@map("evidence_risk_links")
+}
+
+/// El plan anual de auditorías también se sostiene con evidencias —convocatoria,
+/// acta de aprobación, competencia del equipo auditor— y hasta ahora solo podían
+/// colgar de una auditoría concreta.
+model EvidenceAuditProgramLink {
+  id             String   @id @default(cuid())
+  organizationId String
+  evidenceId     String
+  programId      String
+  createdById    String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  evidence     EvidenceFile @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+  program      AuditProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([evidenceId, programId])
+  @@index([organizationId, programId])
+  @@map("evidence_audit_program_links")
 }
 
 model EvidenceAuditLink {
@@ -2845,6 +2883,8 @@ model Record {
   physicalLocation String?
   digitalLocation  String?
   observations     String?
+  /// Versión del formato en vigor. Nula mientras el registro no tenga formato subido.
+  currentFormatVersion String?
   active           Boolean            @default(true)
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -2859,6 +2899,7 @@ model Record {
   custodian     Personnel?           @relation("RecordCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
   reviewer      User?                @relation("RecordReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   entries       RecordEntry[]
+  formatVersions RecordFormatVersion[]
 
   @@unique([organizationId, code])
   @@index([processId])
@@ -2887,11 +2928,63 @@ model RecordEntry {
   record      Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
   responsible User?  @relation("RecordEntryResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
   enteredBy   User?  @relation("RecordEntryEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
+  attachments RecordEntryAttachment[]
 
   @@index([recordId, entryDate])
   @@index([recordId, status])
   @@index([responsibleId])
   @@map("record_entries")
+}
+
+/// Formato del registro: el impreso en blanco que se rellena, versionado.
+/// El ciclo de aprobación es el del propio registro —`Record.reviewStatus`—,
+/// no uno paralelo: enviar el registro a revisión pone en PENDING la versión
+/// pendiente y aprobarlo la deja en APPROVED como versión en vigor.
+model RecordFormatVersion {
+  id                String                    @id @default(cuid())
+  recordId          String
+  version           String
+  status            RecordFormatVersionStatus @default(DRAFT)
+  changeDescription String?
+  previousVersion   String?
+  fileName          String?
+  fileUrl           String?
+  fileSize          Int?
+  mimeType          String?
+  createdById       String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  record    Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("RecordFormatVersionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([recordId, version])
+  @@index([recordId, createdAt])
+  @@index([recordId, status])
+  @@map("record_format_versions")
+}
+
+/// Historial de adjuntos de una entrada. Sustituir el archivo de una entrada
+/// deja de perder el anterior: la fila vieja se marca `supersededAt` y sigue
+/// descargable, que es lo que un auditor pide cuando la evidencia cambió.
+model RecordEntryAttachment {
+  id           String    @id @default(cuid())
+  entryId      String
+  version      Int
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  uploadedById String?
+  uploadedAt   DateTime  @default(now())
+  supersededAt DateTime?
+
+  entry      RecordEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  uploadedBy User?       @relation("RecordEntryAttachmentUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@unique([entryId, version])
+  @@index([entryId, uploadedAt])
+  @@map("record_entry_attachments")
 }
 
 // § 15 Programa de Auditoría (annual program grouping audits)
@@ -2911,9 +3004,10 @@ model AuditProgram {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  responsible  User?        @relation("AuditProgramResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
-  audits       Audit[]
+  organization  Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responsible   User?                      @relation("AuditProgramResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  audits        Audit[]
+  evidenceLinks EvidenceAuditProgramLink[]
 
   @@unique([organizationId, year, title])
   @@map("audit_programs")
@@ -2928,13 +3022,18 @@ model AuditChecklistItem {
   expected    String?
   response    String?
   status      ChecklistItemStatus @default(PENDING)
+  /// Enlace externo heredado. La evidencia real vive en el repositorio
+  /// (`evidenceId`); esto se conserva para lo ya respondido y para pruebas que
+  /// viven fuera de NormaFlow.
   evidenceUrl String?
+  evidenceId  String?
   notes       String?
   order       Int                 @default(0)
   createdAt   DateTime            @default(now())
 
-  audit  Audit                @relation(fields: [auditId], references: [id], onDelete: Cascade)
-  clause StandardRequirement? @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  audit    Audit                @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  clause   StandardRequirement? @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  evidence EvidenceFile?        @relation(fields: [evidenceId], references: [id], onDelete: SetNull)
 
   @@map("audit_checklist_items")
 }
@@ -9368,6 +9467,13 @@ enum DocumentStatus {
   IN_REVIEW
   APPROVED
   OBSOLETE
+}
+
+enum RecordFormatVersionStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum RecordEntryStatus {

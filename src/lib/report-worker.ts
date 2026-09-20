@@ -36,6 +36,7 @@ function filtersFromArtifact(value: Prisma.JsonValue | null): ReportFilters {
     ...(typeof filters.ownerId === "string" ? { ownerId: filters.ownerId } : {}),
     ...(typeof filters.domain === "string" ? { domain: filters.domain } : {}),
     ...(typeof filters.applicability === "string" ? { applicability: filters.applicability } : {}),
+    ...(typeof filters.timeZone === "string" ? { timeZone: filters.timeZone } : {}),
   };
 }
 
