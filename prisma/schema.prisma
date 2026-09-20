@@ -1170,20 +1170,20 @@ model Process {
 // ─── RISK MANAGEMENT ─────────────────────────────────
 
 model Risk {
-  id             String        @id @default(cuid())
-  organizationId String
-  processId      String?
-  title          String
-  description    String?
-  category       String
-  probability    Int // 1-5
-  impact         Int // 1-5
-  score          Int // probability * impact
-  status         RiskStatus    @default(IDENTIFIED)
-  treatment      RiskTreatment @default(MITIGATE)
-  ownerId        String?
-  dueDate        DateTime?
-  residualScore  Int?
+  id                     String        @id @default(cuid())
+  organizationId         String
+  processId              String?
+  title                  String
+  description            String?
+  category               String
+  probability            Int // 1-5
+  impact                 Int // 1-5
+  score                  Int // probability * impact
+  status                 RiskStatus    @default(IDENTIFIED)
+  treatment              RiskTreatment @default(MITIGATE)
+  ownerId                String?
+  dueDate                DateTime?
+  residualScore          Int?
   /// La decisión de tratamiento, no solo la etiqueta. Aceptar, transferir o
   /// evitar un riesgo es una decisión que alguien firma: sin el porqué, quién y
   /// cuándo, el desplegable no dice nada y un auditor no puede revisarla.
@@ -1192,10 +1192,10 @@ model Risk {
   treatmentDecidedAt     DateTime?
   /// SIG: riesgos y oportunidades integrados — un riesgo puede pertenecer a
   /// varias disciplinas (QUALITY / ENVIRONMENT / SAFETY / SECURITY) y normas.
-  disciplines    Discipline[]  @default([])
-  standards      String[]      @default([])
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  disciplines            Discipline[]  @default([])
+  standards              String[]      @default([])
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
 
   organization           Organization            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   process                Process?                @relation(fields: [processId], references: [id], onDelete: SetNull)
@@ -2865,40 +2865,40 @@ model RecordType {
 
 // § 13.2 Control de Registros
 model Record {
-  id               String             @id @default(cuid())
-  organizationId   String
-  code             String
-  name             String
-  processId        String?
-  clauseId         String?
-  recordTypeId     String?
-  retentionTimeId  String?
-  dispositionId    String?
-  archiveMethodId  String?
-  custodianId      String?
-  reviewerId       String?
-  reviewStatus     RecordReviewStatus @default(DRAFT)
-  reviewComment    String?
-  reviewedAt       DateTime?
-  physicalLocation String?
-  digitalLocation  String?
-  observations     String?
+  id                   String             @id @default(cuid())
+  organizationId       String
+  code                 String
+  name                 String
+  processId            String?
+  clauseId             String?
+  recordTypeId         String?
+  retentionTimeId      String?
+  dispositionId        String?
+  archiveMethodId      String?
+  custodianId          String?
+  reviewerId           String?
+  reviewStatus         RecordReviewStatus @default(DRAFT)
+  reviewComment        String?
+  reviewedAt           DateTime?
+  physicalLocation     String?
+  digitalLocation      String?
+  observations         String?
   /// Versión del formato en vigor. Nula mientras el registro no tenga formato subido.
   currentFormatVersion String?
-  active           Boolean            @default(true)
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
+  active               Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
-  organization  Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  process       Process?             @relation(fields: [processId], references: [id], onDelete: SetNull)
-  clause        StandardRequirement? @relation(fields: [clauseId], references: [id], onDelete: SetNull)
-  recordType    RecordType?          @relation(fields: [recordTypeId], references: [id])
-  retentionTime RetentionTime?       @relation(fields: [retentionTimeId], references: [id])
-  disposition   Disposition?         @relation(fields: [dispositionId], references: [id])
-  archiveMethod ArchiveMethod?       @relation(fields: [archiveMethodId], references: [id])
-  custodian     Personnel?           @relation("RecordCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
-  reviewer      User?                @relation("RecordReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  entries       RecordEntry[]
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  process        Process?              @relation(fields: [processId], references: [id], onDelete: SetNull)
+  clause         StandardRequirement?  @relation(fields: [clauseId], references: [id], onDelete: SetNull)
+  recordType     RecordType?           @relation(fields: [recordTypeId], references: [id])
+  retentionTime  RetentionTime?        @relation(fields: [retentionTimeId], references: [id])
+  disposition    Disposition?          @relation(fields: [dispositionId], references: [id])
+  archiveMethod  ArchiveMethod?        @relation(fields: [archiveMethodId], references: [id])
+  custodian      Personnel?            @relation("RecordCustodian", fields: [custodianId], references: [id], onDelete: SetNull)
+  reviewer       User?                 @relation("RecordReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  entries        RecordEntry[]
   formatVersions RecordFormatVersion[]
 
   @@unique([organizationId, code])
@@ -2925,9 +2925,9 @@ model RecordEntry {
   enteredAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  record      Record @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  responsible User?  @relation("RecordEntryResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
-  enteredBy   User?  @relation("RecordEntryEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
+  record      Record                  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  responsible User?                   @relation("RecordEntryResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
+  enteredBy   User?                   @relation("RecordEntryEnteredBy", fields: [enteredById], references: [id], onDelete: SetNull)
   attachments RecordEntryAttachment[]
 
   @@index([recordId, entryDate])
@@ -3004,7 +3004,7 @@ model AuditProgram {
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 
-  organization  Organization                @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization  Organization               @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   responsible   User?                      @relation("AuditProgramResponsible", fields: [responsibleId], references: [id], onDelete: SetNull)
   audits        Audit[]
   evidenceLinks EvidenceAuditProgramLink[]
